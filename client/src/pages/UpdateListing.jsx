@@ -138,7 +138,7 @@ export default function UpdateListing() {
 
   // eslint-disable-next-line no-unused-vars
   const handleImageSubmit = (e) => {
-    if (files.length > 0 && files.length + formData.imageUrls.length < 10) {
+    if (files.length > 0 && files.length + formData.imageUrls.length <= 10) {
       setUploading(true);
       setImageUploadError(false);
       const promises = [];
@@ -155,13 +155,12 @@ export default function UpdateListing() {
           setImageUploadError(false);
           setUploading(false);
         })
-        // eslint-disable-next-line no-unused-vars
         .catch((err) => {
-          setImageUploadError('Image upload failed (2 mb max per image)');
+          setImageUploadError(err?.message || 'Image upload failed. Please check the file and try again.');
           setUploading(false);
         });
     } else {
-      setImageUploadError('You can only upload 6 images per listing');
+      setImageUploadError('You can upload up to 10 images per listing');
       setUploading(false);
     }
   };
@@ -474,7 +473,7 @@ export default function UpdateListing() {
                      <input
                        type="file"
                        id="images"
-                       accept="image/*"
+                       accept="image/*,.avif,.webp,.heic,.heif,.jpg,.jpeg,.png,.gif,.svg"
                        multiple
                        onChange={(e) => setFiles(e.target.files)}
                        className="hidden"

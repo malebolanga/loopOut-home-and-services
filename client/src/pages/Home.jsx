@@ -1061,7 +1061,7 @@ function MobileAppHomepage({
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">Live · {getFilteredItems().length}</span>
             </div>
           </div>
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl pt-3 flex overflow-x-auto gap-3 pb-3 mb-8 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0 border-b border-slate-100 shadow-[0_4px_12px_rgba(0,0,0,0.04)]">
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl pt-3 flex overflow-x-auto gap-3 pb-3 mb-8 scrollbar-hide -mx-4 px-6 lg:mx-0 lg:px-0">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -1200,7 +1200,7 @@ function DesktopHomepage({
       `}</style>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/98 backdrop-blur-2xl py-3 border-b border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {

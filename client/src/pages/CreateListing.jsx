@@ -253,7 +253,7 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
       <input
         type="file"
         id={`${type}-upload`}
-        accept={type === 'image' ? 'image/*' : 'video/*'}
+        accept={type === 'image' ? 'image/*,.avif,.webp,.heic,.heif,.jpg,.jpeg,.png,.gif,.svg' : 'video/*,.mp4,.webm,.mov,.m4v'}
         multiple={type === 'image'}
         onChange={onChange}
         className="hidden"
@@ -988,59 +988,24 @@ export default function CreateListing() {
 
   const checkImageQuality = (file) => {
     return new Promise((resolve) => {
+      // SVGs, GIFs, AVIF, and HEIC or files without direct image constructor decode
+      if (file.type === 'image/svg+xml' || file.type === 'image/gif' || file.name.match(/\.(svg|gif|avif|heic|heif)$/i)) {
+        return resolve({ valid: true });
+      }
+
       const img = new Image();
       img.onload = () => {
-        // 1. Check dimensions (resolution must be >= 400x400)
-        if (img.width < 400 || img.height < 400) {
+        // Ensure image has dimensions
+        if (img.width < 50 || img.height < 50) {
           resolve({ valid: false, reason: "not_quality" });
           return;
         }
-
-        // 2. Check blurriness
-        try {
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          // Resize to small size (120x120) for consistent and fast calculation
-          canvas.width = 120;
-          canvas.height = 120;
-          ctx.drawImage(img, 0, 0, 120, 120);
-
-          const imgData = ctx.getImageData(0, 0, 120, 120);
-          const data = imgData.data;
-
-          let diffSum = 0;
-          let pixelCount = 0;
-
-          for (let y = 0; y < 120; y++) {
-            for (let x = 0; x < 119; x++) {
-              const idx = (y * 120 + x) * 4;
-              const nextIdx = idx + 4;
-
-              // Simple grayscale formula: 0.299*R + 0.587*G + 0.114*B
-              const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-              const nextLum = 0.299 * data[nextIdx] + 0.587 * data[nextIdx + 1] + 0.114 * data[nextIdx + 2];
-
-              diffSum += Math.abs(lum - nextLum);
-              pixelCount++;
-            }
-          }
-
-          const avgDiff = diffSum / pixelCount;
-          
-          // A threshold of 6.8 detects flat, out of focus, or blurry images
-          if (avgDiff < 6.8) {
-            resolve({ valid: false, reason: "blurry" });
-          } else {
-            resolve({ valid: true });
-          }
-        } catch (e) {
-          console.error("Canvas blur analysis failed, skipping:", e);
-          resolve({ valid: true }); // fallback to allow if canvas fails
-        }
+        resolve({ valid: true });
       };
       
       img.onerror = () => {
-        resolve({ valid: false, reason: "invalid" });
+        // If browser fails to preview canvas (e.g. specialized format), fallback gracefully to valid
+        resolve({ valid: true });
       };
       
       img.src = URL.createObjectURL(file);
@@ -1089,19 +1054,26 @@ export default function CreateListing() {
   };
 
   const compressImage = async (file) => {
-    const options = {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1200,
-      useWebWorker: true,
-      fileType: 'image/jpeg',
-      initialQuality: 0.8
-    };
-    try {
-      return await imageCompression(file, options);
-    } catch (error) {
-      console.error("Compression failed, using original file:", error);
+    // Preserve vector and animated formats without lossy re-encoding
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif' || file.name.match(/\.(svg|gif)$/i)) {
       return file;
     }
+    // For large files (>2MB), gently optimize while preserving crisp high quality
+    if (file.size > 2 * 1024 * 1024) {
+      const options = {
+        maxSizeMB: 4,
+        maxWidthOrHeight: 2560,
+        useWebWorker: true,
+        initialQuality: 0.9
+      };
+      try {
+        return await imageCompression(file, options);
+      } catch (error) {
+        console.warn("Compression skipped, using original file:", error);
+        return file;
+      }
+    }
+    return file;
   };
 
   const handleFileChange = async (e) => {
@@ -1116,13 +1088,11 @@ export default function CreateListing() {
           return;
         }
 
-        // Check 2: Resolution & Blurriness
+        // Check 2: Quality & Dimensions check
         const qualityResult = await checkImageQuality(file);
         if (!qualityResult.valid) {
-          if (qualityResult.reason === "blurry") {
-            setImageUploadError(`Rejected blurry picture: "${file.name}". Please upload a clear, high-quality picture.`);
-          } else if (qualityResult.reason === "not_quality") {
-            setImageUploadError(`Rejected low quality picture: "${file.name}". Resolution must be at least 400x400.`);
+          if (qualityResult.reason === "not_quality") {
+            setImageUploadError(`Rejected low resolution picture: "${file.name}". Image must be at least 50x50 pixels.`);
           } else {
             setImageUploadError(`Invalid image file: "${file.name}".`);
           }
@@ -1137,20 +1107,22 @@ export default function CreateListing() {
       setImageUploadError(null);
     } catch (error) {
       console.error("Image processing error:", error);
-      setImageUploadError("Failed to process images due to a quality check issue.");
+      setImageUploadError("Failed to process images. Please try selecting the files again.");
     }
   };
 
   const storeImage = async (file) => {
-    if (!file.type.match('image.*')) throw new Error('Only image files are allowed');
-    if (file.size > 2 * 1024 * 1024) throw new Error('Image size must be less than 2MB');
+    const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|svg|avif|heic|heif)$/i.test(file.name);
+    if (!isImage) throw new Error('Only image files (JPEG, PNG, WebP, AVIF, GIF, SVG, HEIC) are allowed');
+    if (file.size > 25 * 1024 * 1024) throw new Error('Image size must be less than 25MB');
     const [url] = await uploadFiles([file], setUploadProgress);
     return url;
   };
 
   const storeVideo = async (file) => {
-    if (!file.type.match('video.*')) throw new Error('Only video files are allowed');
-    if (file.size > 10 * 1024 * 1024) throw new Error('Video size must be less than 10MB');
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|m4v|mkv)$/i.test(file.name);
+    if (!isVideo) throw new Error('Only video files (MP4, WebM, MOV) are allowed');
+    if (file.size > 50 * 1024 * 1024) throw new Error('Video size must be less than 50MB');
     const [url] = await uploadFiles([file], setUploadProgress);
     return url;
   };
@@ -1169,7 +1141,7 @@ export default function CreateListing() {
         return;
       }
 
-      if (files.length > 10) {
+      if (files.length + listingForm.imageUrls.length > 10) {
         setImageUploadError("You can only upload up to 10 images per listing");
         return;
       }
@@ -1178,52 +1150,17 @@ export default function CreateListing() {
       setImageUploadError(null);
       setUploadProgress(0);
 
-      const MAX_RETRIES = 3;
-      const uploadPromises = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        let retries = 0;
-        let success = false;
-        let lastError = null;
-
-        while (retries < MAX_RETRIES && !success) {
-          try {
-            const uploadPromise = storeImage(file);
-            uploadPromises.push(uploadPromise);
-            success = true;
-          } catch (error) {
-            lastError = error;
-            retries++;
-            if (retries < MAX_RETRIES) {
-              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-            }
-          }
-        }
-
-        if (!success) {
-          throw lastError || new Error(`Failed to upload image after ${MAX_RETRIES} attempts`);
-        }
-      }
-
-      const urls = await Promise.all(uploadPromises);
+      const urls = await uploadFiles(files, setUploadProgress);
       setListingForm({
         ...listingForm,
-        imageUrls: [...listingForm.imageUrls, ...urls],
+        imageUrls: [...listingForm.imageUrls, ...(Array.isArray(urls) ? urls : [urls])],
       });
 
       setFiles([]);
       setImageUploadError(null);
     } catch (err) {
-      let errorMessage = "Image upload failed";
-      if (err.message.includes('CORS')) {
-        errorMessage = "Server configuration error. Please try again later.";
-      } else if (err.message.includes('permission')) {
-        errorMessage = "You don't have permission to upload files";
-      } else if (err.message.includes('size')) {
-        errorMessage = "Image size must be less than 2MB";
-      }
-      setImageUploadError(errorMessage);
+      console.error("Upload error:", err);
+      setImageUploadError(err.message || "Image upload failed. Please try again.");
     } finally {
       setUploading(false);
       setUploadProgress(0);

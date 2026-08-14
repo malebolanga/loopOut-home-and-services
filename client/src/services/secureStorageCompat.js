@@ -27,9 +27,13 @@ const upload = (storageRef, file) => {
   queueMicrotask(() => {
     const formData = new FormData();
     formData.append('files', file);
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
     const request = new XMLHttpRequest();
     request.open('POST', '/api/uploads');
     request.withCredentials = true;
+    if (token) {
+      request.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
     request.upload.addEventListener('progress', (event) => {
       task.snapshot.bytesTransferred = event.loaded;
       task.snapshot.totalBytes = event.total || file.size;
