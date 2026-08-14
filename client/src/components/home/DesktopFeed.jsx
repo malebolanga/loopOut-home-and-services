@@ -9,66 +9,8 @@ import DailyLoopHub from './DailyLoopHub';
 import ContinueSearchingCard from './ContinueSearchingCard';
 import MyBookingsConsumer from '../MyBookingsConsumer';
 
-// ─── Category icon details ────────────────────────────────────────────────────
-const CATEGORY_ICON_DETAILS = {
-  Universe: {
-    main: '🪐',
-    details: ['✨', '🌙', '🚀'],
-    bg: 'from-slate-950 via-indigo-950 to-fuchsia-900'
-  },
-  Homes: {
-    main: '🏡',
-    details: ['🔑', '🪴', '📍'],
-    bg: 'from-emerald-600 via-teal-500 to-sky-500'
-  },
-  Services: {
-    main: '🛠️',
-    details: ['⚡', '🧽', '🔧'],
-    bg: 'from-amber-500 via-orange-500 to-rose-500'
-  },
-  Helper: {
-    main: '🧹',
-    details: ['💅', '💈', '🍳'],
-    bg: 'from-sky-500 via-blue-600 to-violet-600'
-  },
-  Events: {
-    main: '🎟️',
-    details: ['🎪', '🎭', '🎉'],
-    bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
-  }
-};
 
-// ─── Animated category icon ───────────────────────────────────────────────────
-const CategoryIcon = ({ type, size = 'w-6 h-6' }) => {
-  const icon = CATEGORY_ICON_DETAILS[type] || {
-    main: '✨',
-    details: ['•', '•', '•'],
-    bg: 'from-gray-900 to-gray-700'
-  };
 
-  return (
-    <div className={`${size} relative flex items-center justify-center overflow-visible`}>
-      <motion.div
-        animate={{ y: [0, -2, 0], rotate: [0, -3, 3, 0] }}
-        transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut' }}
-        className={`relative w-full h-full rounded-full bg-gradient-to-br ${icon.bg} shadow-[0_6px_16px_rgba(15,23,42,0.2)] ring-1 ring-white/40 hover:scale-110 transition-transform duration-300 flex items-center justify-center`}
-      >
-        <span className="relative z-10 text-[1.1rem] leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-          {icon.main}
-        </span>
-        <span className="absolute -top-1 -right-1 text-[0.5rem] leading-none rounded-full bg-white shadow-sm p-0.5">
-          {icon.details[0]}
-        </span>
-        <span className="absolute -bottom-1 -left-1 text-[0.5rem] leading-none rounded-full bg-white shadow-sm p-0.5">
-          {icon.details[1]}
-        </span>
-        <span className="absolute -bottom-1 -right-1 text-[0.45rem] leading-none rounded-full bg-white/95 shadow-sm p-0.5">
-          {icon.details[2]}
-        </span>
-      </motion.div>
-    </div>
-  );
-};
 
 // ─── Desktop Feed Component ───────────────────────────────────────────────────
 export const DesktopFeed = ({
@@ -106,31 +48,49 @@ export const DesktopFeed = ({
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
 
           {/* Tabs */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
+          <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`group flex items-center gap-2.5 px-4 py-2.5 rounded-full transition-all duration-300 cursor-pointer focus:outline-none border whitespace-nowrap ${
-                    isActive
-                      ? 'bg-white border-gray-900 shadow-md scale-105'
-                      : 'bg-transparent border-transparent text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                  whileTap={{ scale: 0.92 }}
+                  whileHover={{ y: -3 }}
+                  className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative group"
                 >
-                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105 opacity-70 group-hover:opacity-100'}`}>
-                    <CategoryIcon type={tab.iconType} size="w-6 h-6" />
-                  </div>
-                  <span className={`text-[10px] font-black tracking-widest uppercase transition-colors duration-200 ${isActive ? 'text-gray-950' : 'text-gray-500'}`}>
-                    {tab.id}
-                  </span>
-                  {isActive && (
-                    <span className="ml-1 text-[9px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-full border border-rose-100">
-                      {items.length}
+                  {/* Colorful Gradient Icon Container */}
+                  <motion.div
+                    animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.35, ease: 'easeInOut' }}
+                    className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl flex items-center justify-center transition-all duration-300 relative ${
+                      isActive
+                        ? 'bg-slate-900 shadow-md ring-2 ring-slate-900'
+                        : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
+                    }`}
+                  >
+                    <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
+                      {tab.emoji || (tab.iconType === 'Universe' ? '🪐' : tab.iconType === 'Homes' ? '🏡' : tab.iconType === 'Services' ? '🛠️' : tab.iconType === 'Helper' ? '🧹' : '🎟️')}
                     </span>
-                  )}
-                </button>
+                    {isActive && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm">
+                        {items.length}
+                      </span>
+                    )}
+                  </motion.div>
+
+                  {/* Bold Colorful Label */}
+                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${
+                    isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-gray-700')
+                  }`}>
+                    {tab.label || tab.id}
+                  </span>
+
+                  {/* Small description */}
+                  <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
+                    {tab.desc || (tab.id === 'Properties' || tab.id === 'Property' ? 'Rooms & stays' : tab.id === 'Services' ? 'Book pros' : tab.id === 'Helper' ? 'Chores & care' : tab.id === 'Events' ? 'Live & tickets' : 'All listings')}
+                  </span>
+                </motion.button>
               );
             })}
           </div>
@@ -189,7 +149,7 @@ export const DesktopFeed = ({
             <h1 className="text-3xl font-black uppercase tracking-tighter">
               <span className="text-gray-950">Explore </span>
               <span className="text-rose-500">
-                {activeTab === 'Universe' ? 'Top Discoveries' : activeTab}
+                {activeTab === 'Explore all' || activeTab === 'Universe' ? 'Top Discoveries' : activeTab}
               </span>
             </h1>
             <p className="text-xs text-gray-400 font-medium mt-1 uppercase tracking-wider">
@@ -217,13 +177,17 @@ export const DesktopFeed = ({
                 <AirbnbCard
                   item={item}
                   type={
-                    activeTab === 'Universe'
+                    (activeTab === 'Explore all' || activeTab === 'Universe')
                       ? (item.itemType || 'property')
                       : activeTab === 'Helper'
                       ? 'helper'
-                      : activeTab === 'Properties'
+                      : (activeTab === 'Properties' || activeTab === 'Property')
                       ? 'property'
-                      : activeTab.slice(0, -1).toLowerCase()
+                      : activeTab === 'Services'
+                      ? 'service'
+                      : activeTab === 'Events'
+                      ? 'event'
+                      : 'property'
                   }
                   onClick={(path) => navigate(path)}
                 />

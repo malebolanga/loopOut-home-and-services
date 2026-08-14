@@ -31,7 +31,7 @@ const cookieOptions = () => ({
 const issueSession = (res, user, status = 200) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
   const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
-  return res.cookie('access_token', token, cookieOptions()).status(status).json(safeUser);
+  return res.cookie('access_token', token, cookieOptions()).status(status).json({ ...safeUser, token, access_token: token });
 };
 
 const sendVerificationCode = async (user, subject = 'Your LoopOut verification code', purpose = 'verify') => {

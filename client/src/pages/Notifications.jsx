@@ -15,6 +15,10 @@ export default function Notifications() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const getToken = useCallback(() => {
+        return localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.access_token || currentUser?.token || '';
+    }, [currentUser]);
+
     useEffect(() => {
         if (!currentUser) {
             navigate('/sign-in');
@@ -28,7 +32,7 @@ export default function Notifications() {
             if (selectedNotification?.data?.bookingId) {
                 setLoadingBooking(true);
                 try {
-                    const token = localStorage.getItem('token');
+                    const token = getToken();
                     const res = await fetch(`/api/bookings/${selectedNotification.data.bookingId}`, {
                         credentials: 'include',
                         headers: {
@@ -53,7 +57,7 @@ export default function Notifications() {
         };
 
         fetchBookingDetails();
-    }, [selectedNotification]);
+    }, [selectedNotification, getToken]);
 
     const fetchNotifications = async () => {
         try {
@@ -61,7 +65,7 @@ export default function Notifications() {
             setError(null);
             let apiNotifs = [];
             try {
-                const token = localStorage.getItem('token');
+                const token = getToken();
                 const res = await fetch('/api/notifications', {
                     credentials: 'include',
                     headers: {
@@ -114,7 +118,7 @@ export default function Notifications() {
 
     const markAsRead = async (id) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             await fetch(`/api/notifications/${id}/read`, {
                 method: 'PUT',
                 credentials: 'include',
@@ -139,7 +143,7 @@ export default function Notifications() {
 
     const deleteNotification = async (id) => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             await fetch(`/api/notifications/${id}`, {
                 method: 'DELETE',
                 credentials: 'include',
@@ -164,7 +168,7 @@ export default function Notifications() {
 
     const markAllAsRead = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             await fetch('/api/notifications/read-all', {
                 method: 'PUT',
                 credentials: 'include',
@@ -189,7 +193,7 @@ export default function Notifications() {
 
     const clearAllNotifications = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = getToken();
             await fetch('/api/notifications/clear-all', {
                 method: 'DELETE',
                 credentials: 'include',
@@ -202,49 +206,57 @@ export default function Notifications() {
         }
 
         setNotifications([]);
-        try {
-            localStorage.removeItem('loopout_local_notifications');
-        } catch (_e) { /* ignore */ }
+        localStorage.removeItem('loopout_local_notifications');
     };
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'booking': return <span className="text-blue-500 bg-blue-100 p-2 rounded-full">📅</span>;
-            case 'message': return <span className="text-green-500 bg-green-100 p-2 rounded-full">💬</span>;
-            case 'comment': return <span className="text-amber-500 bg-amber-100 p-2 rounded-full">📝</span>;
-            case 'review': return <span className="text-yellow-500 bg-yellow-100 p-2 rounded-full">⭐</span>;
-            case 'system': return <span className="text-purple-500 bg-purple-100 p-2 rounded-full">⚙️</span>;
-            case 'new_post': return <span className="text-orange-500 bg-orange-100 p-2 rounded-full">🏠</span>;
-            case 'alert': return <span className="text-rose-500 bg-rose-100 p-2 rounded-full">⚠️</span>;
-            default: return <span className="text-gray-500 bg-gray-100 p-2 rounded-full"><FiBell /></span>;
+            case 'booking':
+                return <span className="text-2xl">📅</span>;
+            case 'payment':
+                return <span className="text-2xl">💳</span>;
+            case 'message':
+                return <span className="text-2xl">💬</span>;
+            case 'review':
+                return <span className="text-2xl">⭐</span>;
+            case 'new_post':
+                return <span className="text-2xl">✨</span>;
+            case 'comment':
+                return <span className="text-2xl">💭</span>;
+            case 'food_order':
+                return <span className="text-2xl">🍱</span>;
+            default:
+                return <span className="text-2xl">🔔</span>;
         }
     };
 
     const handleNotificationClick = (notification) => {
         if (!notification.read) {
-            markAsRead(notification._id || notification.id);
+            markAsRead(notification._id);
         }
         setSelectedNotification(notification);
     };
 
     const handleNotificationAction = (notification) => {
         if (notification.data) {
-            const { itemType, itemId, orderId, orderCode } = notification.data;
+            const { itemType, itemId, orderId, orderCode, canReview } = notification.data;
             
             if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
                 navigate('/lunch');
+            } else if (notification.type === 'review' || canReview) {
+                if (itemType && itemId) {
+                    navigate(`/${itemType}/${itemId}`);
+                } else {
+                    navigate('/dashboard');
+                }
             } else if (notification.type === 'booking' && itemType && itemId) {
-                // Navigate directly to the booked item's page
                 navigate(`/${itemType}/${itemId}`);
             } else if (notification.type === 'booking') {
-                // Fallback: go to user's bookings page
                 navigate('/my-bookings');
             } else if (notification.type === 'new_post' || notification.type === 'comment') {
                 if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
                 }
-            } else if (notification.type === 'review') {
-                navigate(`/user-profile/${currentUser._id || currentUser.id}`);
             }
         } else if (notification.title && notification.title.includes('Food')) {
             navigate('/lunch');
@@ -254,7 +266,6 @@ export default function Notifications() {
         setSelectedNotification(null);
     };
 
-    // Stable reference — never re-created between renders
     const formatDate = useCallback((dateString) => {
         const date = new Date(dateString);
         const now = new Date();
@@ -276,8 +287,6 @@ export default function Notifications() {
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }, []);
 
-    // Pre-compute all formatted dates once when notifications data changes
-    // avoids calling formatDate on every render for every list item
     const formattedDates = useMemo(() => {
         const map = {};
         notifications.forEach(n => {
@@ -286,6 +295,25 @@ export default function Notifications() {
         });
         return map;
     }, [notifications, formatDate]);
+
+    const myId = (currentUser?._id || currentUser?.id)?.toString();
+    const hostId = (
+        bookingDetails?.listing?.userRef?._id || bookingDetails?.listing?.userRef ||
+        bookingDetails?.helper?.userRef?._id || bookingDetails?.helper?.userRef ||
+        bookingDetails?.service?.userRef?._id || bookingDetails?.service?.userRef ||
+        bookingDetails?.service?.creator?._id || bookingDetails?.service?.creator ||
+        bookingDetails?.event?.userRef?._id || bookingDetails?.event?.userRef ||
+        bookingDetails?.hostUserId
+    )?.toString();
+    const clientUserId = (bookingDetails?.user?._id || bookingDetails?.user)?.toString();
+    const isHost = Boolean(myId && hostId && myId === hostId);
+    const isClient = Boolean(myId && clientUserId && myId === clientUserId);
+    const isPending = bookingDetails?.status === 'pending';
+    const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
+    const isCompleted = bookingDetails?.status === 'completed';
+
+    const itemType = bookingDetails?.listing ? 'listing' : bookingDetails?.helper ? 'helper' : bookingDetails?.service ? 'service' : 'event';
+    const itemId = bookingDetails?.listing?._id || bookingDetails?.helper?._id || bookingDetails?.service?._id || bookingDetails?.event?._id;
 
     if (loading) {
         return (
@@ -321,7 +349,7 @@ export default function Notifications() {
                             </span>
                         )}
                     </h1>
-                    <p className="text-gray-500 mt-1">Stay updated with your latest activity and messages.</p>
+                    <p className="text-gray-500 mt-1">Stay updated with your latest bookings, requests, and reviews.</p>
                 </div>
 
                 {notifications.length > 0 && (
@@ -363,13 +391,13 @@ export default function Notifications() {
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">You're all caught up!</h2>
                     <p className="text-gray-500 max-w-sm mx-auto">
-                        When you have new bookings, messages, or account updates, they'll appear here.
+                        When you have new bookings, requests to accept, or reviews, they'll appear here.
                     </p>
                     <button
-                        onClick={() => navigate('/explore')}
+                        onClick={() => navigate('/')}
                         className="mt-6 px-6 py-2.5 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors"
                     >
-                        Explore loopOut
+                        Explore Services & Helpers
                     </button>
                 </div>
             ) : (
@@ -396,9 +424,21 @@ export default function Notifications() {
                                 </div>
 
                                 <div className="flex-1 min-w-0 pr-2 sm:pr-8">
-                                    <h3 className={`text-sm sm:text-base font-semibold mb-1 truncate ${notification.read ? 'text-gray-800' : 'text-gray-900'}`}>
-                                        {notification.title}
-                                    </h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.read ? 'text-gray-800' : 'text-gray-900'}`}>
+                                            {notification.title}
+                                        </h3>
+                                        {notification.type === 'review' && (
+                                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+                                                Review
+                                            </span>
+                                        )}
+                                        {notification.title?.toLowerCase().includes('request') && (
+                                            <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                                                Action Required
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className={`text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500' : 'text-gray-700'}`}>
                                         {notification.message}
                                     </p>
@@ -410,38 +450,12 @@ export default function Notifications() {
                                         </span>
                                     </div>
                                 </div>
-
-                                <div className="flex flex-col gap-2 justify-start flex-shrink-0">
-                                    {!notification.read && (
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                markAsRead(notification._id);
-                                            }}
-                                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
-                                            title="Mark as read"
-                                        >
-                                            <FiCheck className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteNotification(notification._id);
-                                        }}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                                        title="Delete"
-                                    >
-                                        <FiTrash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
                             </motion.div>
                         ))}
                     </AnimatePresence>
                 </div>
             )}
 
-            {/* Full Page Notification Modal */}
             <AnimatePresence>
                 {selectedNotification && (
                     <motion.div
@@ -493,26 +507,26 @@ export default function Notifications() {
 
                                 {bookingDetails && !loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200">
-                                        <h3 className="font-semibold text-gray-900 mb-4">Booking Details</h3>
+                                        <h3 className="font-semibold text-gray-900 mb-4">Booking Request Details</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <p className="text-sm text-gray-500">Service / Listing</p>
                                                 <p className="font-medium text-gray-900">
-                                                    {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.event?.title || 'N/A'}
+                                                    {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500">Client Name</p>
-                                                <p className="font-medium text-gray-900">{bookingDetails.user?.username || 'Unknown'}</p>
+                                                <p className="font-medium text-gray-900">{bookingDetails.user?.username || 'Client'}</p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500">Total Price</p>
-                                                <p className="font-medium text-gray-900">ZAR {bookingDetails.totalPrice}</p>
+                                                <p className="font-medium text-emerald-600 font-bold">ZAR {Number(bookingDetails.totalPrice || 0).toLocaleString()}</p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500">Dates</p>
                                                 <p className="font-medium text-gray-900">
-                                                    {new Date(bookingDetails.startDate).toLocaleDateString()} - {new Date(bookingDetails.endDate).toLocaleDateString()}
+                                                    {bookingDetails.startDate ? new Date(bookingDetails.startDate).toLocaleDateString() : 'N/A'} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `- ${new Date(bookingDetails.endDate).toLocaleDateString()}` : ''}
                                                 </p>
                                             </div>
                                             {bookingDetails.phone && (
@@ -521,25 +535,33 @@ export default function Notifications() {
                                                     <p className="font-medium text-gray-900">{bookingDetails.phone}</p>
                                                 </div>
                                             )}
+                                            {bookingDetails.requestLocation && (
+                                                <div>
+                                                    <p className="text-sm text-gray-500">Location</p>
+                                                    <p className="font-medium text-gray-900">{bookingDetails.requestLocation}</p>
+                                                </div>
+                                            )}
                                             {bookingDetails.status && (
-                                                <div className="col-span-full">
+                                                <div className="col-span-full pt-2">
                                                     <p className="text-sm text-gray-500 mb-2">Status</p>
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
-                                                            bookingDetails.status === 'confirmed' ? 'bg-green-100 text-green-800 border border-green-200' :
-                                                            bookingDetails.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                                            isConfirmed ? 'bg-green-100 text-green-800 border border-green-200' :
+                                                            isPending ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                                            isCompleted ? 'bg-purple-100 text-purple-800 border border-purple-200' :
+                                                            bookingDetails.status === 'declined' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
                                                             bookingDetails.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
                                                             'bg-gray-100 text-gray-800 border border-gray-200'
                                                         }`}>
                                                             {bookingDetails.status}
                                                         </span>
 
-                                                        {bookingDetails.status === 'pending' && selectedNotification.title === 'New Booking Request' && (
+                                                        {isPending && (isHost || selectedNotification.title?.toLowerCase().includes('request')) && (
                                                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                                                 <button
                                                                     onClick={async () => {
                                                                         try {
-                                                                            const token = localStorage.getItem('token');
+                                                                            const token = getToken();
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
                                                                                 method: 'POST',
                                                                                 credentials: 'include',
@@ -560,12 +582,12 @@ export default function Notifications() {
                                                                     }}
                                                                     className="flex-1 sm:flex-none px-5 py-2 text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg transition-colors border border-red-200"
                                                                 >
-                                                                    Decline
+                                                                    ✕ Decline
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
                                                                         try {
-                                                                            const token = localStorage.getItem('token');
+                                                                            const token = getToken();
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
                                                                                 method: 'POST',
                                                                                 credentials: 'include',
@@ -584,20 +606,18 @@ export default function Notifications() {
                                                                             console.error('Failed to approve booking:', err);
                                                                         }
                                                                     }}
-                                                                    className="flex-1 sm:flex-none px-5 py-2 text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg transition-colors shadow-sm"
+                                                                    className="flex-1 sm:flex-none px-5 py-2 text-white bg-green-600 hover:bg-green-700 font-semibold rounded-lg transition-colors shadow-sm"
                                                                 >
-                                                                    Approve
+                                                                    ✓ Accept Request
                                                                 </button>
                                                             </div>
                                                         )}
 
-                                                        {(bookingDetails.status === 'pending' || bookingDetails.status === 'confirmed') && (selectedNotification.title !== 'New Booking Request' || bookingDetails.status === 'confirmed') && (
+                                                        {isConfirmed && isHost && (
                                                             <button
                                                                 onClick={async () => {
-                                                                    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
                                                                     try {
-                                                                        const token = localStorage.getItem('token');
-                                                                        const isUser = (currentUser?._id || currentUser?.id) === (bookingDetails.user?._id || bookingDetails.user);
+                                                                        const token = getToken();
                                                                         const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
                                                                             method: 'POST',
                                                                             credentials: 'include',
@@ -605,7 +625,49 @@ export default function Notifications() {
                                                                                 'Content-Type': 'application/json',
                                                                                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                             },
-                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: isUser ? 'user' : 'host' })
+                                                                            body: JSON.stringify({ status: 'completed' })
+                                                                        });
+                                                                        if (res.ok) {
+                                                                            const updatedBooking = await res.json();
+                                                                            setBookingDetails(updatedBooking);
+                                                                            fetchNotifications();
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.error('Failed to complete booking:', err);
+                                                                    }
+                                                                }}
+                                                                className="px-4 py-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold rounded-lg transition-colors border border-purple-200"
+                                                            >
+                                                                ✓ Mark as Completed
+                                                            </button>
+                                                        )}
+
+                                                        {(isConfirmed || isCompleted) && !isHost && itemId && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    navigate(`/${itemType}/${itemId}`);
+                                                                    setSelectedNotification(null);
+                                                                }}
+                                                                className="px-5 py-2 text-white bg-amber-500 hover:bg-amber-600 font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
+                                                            >
+                                                                ⭐ Leave a Review
+                                                            </button>
+                                                        )}
+
+                                                        {(isPending || isConfirmed) && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+                                                                    try {
+                                                                        const token = getToken();
+                                                                        const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                            method: 'POST',
+                                                                            credentials: 'include',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json',
+                                                                                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                                                            },
+                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: isClient ? 'user' : 'host' })
                                                                         });
                                                                         if (res.ok) {
                                                                             const updatedBooking = await res.json();
@@ -616,7 +678,7 @@ export default function Notifications() {
                                                                         console.error('Failed to cancel booking:', err);
                                                                     }
                                                                 }}
-                                                                className="px-4 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 font-bold rounded-lg transition-colors border border-red-200"
+                                                                className="px-3 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg transition-colors border border-red-200"
                                                             >
                                                                 Cancel Booking
                                                             </button>
@@ -645,7 +707,7 @@ export default function Notifications() {
                                         onClick={() => handleNotificationAction(selectedNotification)}
                                         className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 text-center"
                                     >
-                                        View Details
+                                        {selectedNotification.type === 'review' || selectedNotification.data?.canReview ? '⭐ Write Review' : 'View Details'}
                                     </button>
                                 )}
                             </div>

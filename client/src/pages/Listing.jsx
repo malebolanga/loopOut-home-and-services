@@ -16,6 +16,7 @@ import MutualFriends from '../components/MutualFriends';
 import OperatingSchedule from '../components/OperatingSchedule';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
+import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingHistory from '../components/BookingHistory';
 
 
@@ -504,9 +505,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         message: bookingDetails.specialRequests || '',
       };
 
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
       const bookingRes = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         credentials: 'include',
         body: JSON.stringify(bookingData)
       });
@@ -518,6 +523,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         setIsSubmitting(false);
         return;
       }
+
+      pushPhoneNotification({
+        title: '🎉 Booking Request Sent',
+        message: `Your booking for ${listing?.name || 'Listing'} has been submitted! Check notifications for updates.`,
+        type: 'success',
+        link: '/notifications'
+      });
 
       const bookingResult = await bookingRes.json();
       savedBookingId = bookingResult.booking?._id;

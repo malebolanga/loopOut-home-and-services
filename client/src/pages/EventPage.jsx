@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import {
   MapPinIcon,
   StarIcon,
@@ -329,9 +330,13 @@ export default function EventPage() {
 
     // Save to database for accurate tracking
     try {
-      await fetch('/api/bookings', {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
+      const res = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         credentials: 'include',
         body: JSON.stringify({
           userId: currentUser?._id || 'guest',
@@ -346,6 +351,15 @@ export default function EventPage() {
           status: 'pending'
         })
       });
+
+      if (res.ok) {
+        pushPhoneNotification({
+          title: '🎉 Event Registration Submitted',
+          message: `Your booking for ${event?.title || 'Event'} has been placed. Check notifications for updates!`,
+          type: 'success',
+          link: '/notifications'
+        });
+      }
     } catch (err) {
       console.error('Failed to record event booking:', err);
     }

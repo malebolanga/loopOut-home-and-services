@@ -11,6 +11,7 @@ import { app } from "../firebase";
 import MutualFriends from '../components/MutualFriends';
 import OperatingSchedule from '../components/OperatingSchedule';
 import { useWishlist } from '../hooks/useWishlist';
+import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import { Link } from "react-router-dom";
 import {
   StarIcon,
@@ -1833,13 +1834,24 @@ export default function HelperPage() {
     };
 
 
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
     fetch('/api/bookings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       credentials: 'include',
       body: JSON.stringify(bookingToSave)
     }).then(async (res) => {
-      if (!res.ok) {
+      if (res.ok) {
+        pushPhoneNotification({
+          title: '🎉 Booking Request Sent',
+          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          type: 'success',
+          link: '/notifications'
+        });
+      } else {
         const err = await res.json().catch(() => ({}));
         console.error('Booking save failed:', err?.error || res.status);
       }
@@ -2120,13 +2132,24 @@ export default function HelperPage() {
       type: 'helper'
     };
 
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
     fetch('/api/bookings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       credentials: 'include',
       body: JSON.stringify(bookingToSave)
     }).then(async (res) => {
-      if (!res.ok) {
+      if (res.ok) {
+        pushPhoneNotification({
+          title: '🎉 Booking Request Sent',
+          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          type: 'success',
+          link: '/notifications'
+        });
+      } else {
         const err = await res.json().catch(() => ({}));
         console.error('Booking save failed:', err?.error || res.status);
       }

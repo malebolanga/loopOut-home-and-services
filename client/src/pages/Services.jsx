@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { Link } from "react-router-dom";
+import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import {
   MapPinIcon,
   StarIcon,
@@ -1279,12 +1280,25 @@ const ServicePage = () => {
           status: 'pending'
         };
 
-        await fetch('/api/bookings', {
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
+        const bookRes = await fetch('/api/bookings', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
           credentials: 'include',
           body: JSON.stringify(bookingToSave)
         });
+
+        if (bookRes.ok) {
+          pushPhoneNotification({
+            title: '🎉 Booking Request Sent',
+            message: `Your booking for ${service?.title || 'Service'} has been placed. Check notifications for updates!`,
+            type: 'success',
+            link: '/notifications'
+          });
+        }
 
         window.open(result.url, '_blank');
       }

@@ -366,6 +366,9 @@ export const updateBookingStatus = async (req, res) => {
 
     const itemName = item?.name || item?.title || 'Service';
 
+    const itemType = booking.listing ? 'listing' : booking.helper ? 'helper' : booking.service ? 'service' : 'event';
+    const itemId = booking.listing?._id || booking.listing || booking.helper?._id || booking.helper || booking.service?._id || booking.service || booking.event?._id || booking.event;
+
     // Notify relevant party of status change
     if (status !== previousStatus) {
       try {
@@ -383,13 +386,17 @@ export const updateBookingStatus = async (req, res) => {
             messageText = `Your booking for "${itemName}" has been cancelled by the host.`;
           }
         } else if (status === 'confirmed' || status === 'approved') {
-          title = 'Booking Confirmed';
+          title = 'Booking Approved';
           recipientId = bookingUserId;
-          messageText = `Your booking for "${itemName}" has been confirmed!`;
+          messageText = `Your booking request for "${itemName}" has been approved!`;
         } else if (status === 'declined') {
           title = 'Booking Declined';
           recipientId = bookingUserId;
-          messageText = `Your booking for "${itemName}" was declined by the host.`;
+          messageText = `Your booking request for "${itemName}" was declined by the host.`;
+        } else if (status === 'completed') {
+          title = 'Booking Completed - Rate & Review';
+          recipientId = bookingUserId;
+          messageText = `Your booking for "${itemName}" is completed! Please leave a review to share your experience.`;
         } else {
           recipientId = bookingUserId;
         }
@@ -397,10 +404,10 @@ export const updateBookingStatus = async (req, res) => {
         if (recipientId) {
           await new Notification({
             userId: recipientId,
-            type: 'booking',
+            type: status === 'completed' ? 'review' : 'booking',
             title,
             message: messageText,
-            data: { bookingId: booking._id, status }
+            data: { bookingId: booking._id, itemType, itemId, status, canReview: (status === 'completed' || status === 'confirmed') }
           }).save();
         }
       } catch (notifErr) {

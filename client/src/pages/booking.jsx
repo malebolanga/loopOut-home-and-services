@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLoopPoints } from "../hooks/useLoopPoints";
+import LoopPointsToast from "../components/LoopPointsToast";
 
 export default function Booking({ listing = {} }) {
   const [showCalendar, setShowCalendar] = useState(false);
@@ -11,6 +13,7 @@ export default function Booking({ listing = {} }) {
   const [endDate, setEndDate] = useState(null);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
+  const { awardPoints, lastEarned, clearLastEarned } = useLoopPoints();
 
   const sendBookingInformation = async (userId, startDate, endDate, name, contact) => {
     try {
@@ -214,6 +217,8 @@ export default function Booking({ listing = {} }) {
                           name,
                           contact
                         );
+                        // 🌟 Award LoopOut points
+                        awardPoints('Property Booking');
                         setShowCalendar(false);
                       } else {
                         alert("Please select both check-in and check-out dates.");
@@ -230,6 +235,16 @@ export default function Booking({ listing = {} }) {
           </>
         )}
       </AnimatePresence>
+
+      {/* LoopOut Points Toast */}
+      {lastEarned && (
+        <LoopPointsToast
+          earned={lastEarned.amount}
+          label={lastEarned.label}
+          total={lastEarned.total}
+          onDismiss={clearLastEarned}
+        />
+      )}
     </div>
   );
 }

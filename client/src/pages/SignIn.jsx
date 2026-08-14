@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaSpinner } from 'react-icons/fa';
-import { FiMail, FiLock, FiLogIn } from 'react-icons/fi';
 import {
   signInStart,
   signInSuccess,
@@ -39,7 +38,6 @@ export default function SignIn() {
 
       const data = await res.json();
 
-
       if (!res.ok) {
         if (data.requiresVerification) {
           navigate('/sign-up', { state: { email: formData.email, verify: true } });
@@ -51,6 +49,11 @@ export default function SignIn() {
       if (data.success === false) {
         dispatch(signInFailure(data.message));
         return;
+      }
+
+      if (data.token || data.access_token) {
+        localStorage.setItem('access_token', data.access_token || data.token);
+        localStorage.setItem('token', data.access_token || data.token);
       }
 
       dispatch(signInSuccess(data));

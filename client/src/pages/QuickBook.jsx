@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { ChevronLeftIcon, BoltIcon, CheckCircleIcon, XMarkIcon, CheckIcon, PhoneIcon } from '@heroicons/react/24/outline';
 import { SparklesIcon, HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { useLoopPoints } from '../hooks/useLoopPoints';
+import LoopPointsToast from '../components/LoopPointsToast';
 
 const FALLBACK_HELPERS = [
   { id: 'h1', name: 'Mpho Khumalo', type: 'Instant Car Wash', price: 'R150', rating: 4.9, avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=800', phone: '27712345678', location: 'Polokwane' },
@@ -46,6 +48,7 @@ export default function QuickBook() {
   const [bookingStep, setBookingStep] = useState(0); // 0: Idle, 1: Scanning, 2: Approve/Reject Matrix, 3: Success
   const [candidates, setCandidates] = useState([]);
   const [activeNode, setActiveNode] = useState(null);
+  const { awardPoints, lastEarned, clearLastEarned } = useLoopPoints();
 
   const services = [
     { id: 'wash', name: 'Instant Car Wash', price: 'R150', icon: '🚗', query: 'carwash' },
@@ -99,6 +102,8 @@ export default function QuickBook() {
 
   const handleApprove = () => {
     if (activeNode) {
+      // 🌟 Award LoopOut points for quick service booking
+      awardPoints('Service Booking');
       setBookingStep(3); // Success Screen
     }
   };
@@ -417,6 +422,16 @@ export default function QuickBook() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* LoopOut Points Toast */}
+      {lastEarned && (
+        <LoopPointsToast
+          earned={lastEarned.amount}
+          label={lastEarned.label}
+          total={lastEarned.total}
+          onDismiss={clearLastEarned}
+        />
+      )}
     </div>
   );
 }
