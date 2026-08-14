@@ -101,10 +101,18 @@ export const signup = async (req, res, next) => {
       termsAcceptedAt: new Date(), privacyAcceptedAt: new Date(),
     };
     const user = existingEmail || new User(updates);
-    Object.assign(user, updates);
-    await sendVerificationCode(user, existingEmail ? 'Complete your LoopOut registration' : 'Your LoopOut verification code');
+    const delivery = await sendVerificationCode(user, existingEmail ? 'Complete your LoopOut registration' : 'Your LoopOut verification code');
+    const isDev = process.env.NODE_ENV !== 'production';
 
-    return res.status(existingEmail ? 200 : 201).json({ success: true, requiresVerification: true, email, message: 'Check your email for a verification code.' });
+    return res.status(existingEmail ? 200 : 201).json({
+      success: true,
+      requiresVerification: true,
+      email,
+      message: delivery.success
+        ? `A verification code has been sent to ${email}.`
+        : `A verification code has been generated for ${email}.`,
+      ...(isDev && !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: true } : {})
+    });
   } catch (error) { return next(error); }
 };
 
@@ -209,7 +217,12 @@ export const resendOtp = async (req, res, next) => {
     if (!user || user.isVerified) return res.status(200).json({ success: true, message: 'If an unverified account exists, a code has been sent.' });
     const createdAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
     if (Date.now() - createdAt < OTP_RESEND_COOLDOWN_MS) return next(errorHandler(429, 'Please wait a minute before requesting another code.'));
-    await sendVerificationCode(user, 'Your new LoopOut verification code');
-    return res.status(200).json({ success: true, message: 'If an unverified account exists, a code has been sent.' });
+    const delivery = await sendVerificationCode(user, 'Your new LoopOut verification code');
+    const isDev = process.env.NODE_ENV !== 'production';
+    return res.status(200).json({
+      success: true,
+      message: 'If an unverified account exists, a code has been sent.',
+      ...(isDev && !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: true } : {})
+    });
   } catch (error) { return next(error); }
 };

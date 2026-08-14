@@ -13,6 +13,7 @@ export default function SignUp() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '', phone: '', location: '', acceptedTerms: false, otp: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [devCode, setDevCode] = useState('');
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,6 +43,9 @@ export default function SignUp() {
       const response = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to create your account.');
+      if (data.devCode) {
+        setDevCode(data.devCode);
+      }
       setStep(3);
     } catch (requestError) { setError(requestError.message); } finally { setLoading(false); }
   };
@@ -59,7 +63,11 @@ export default function SignUp() {
     try {
       setResending(true); setError('');
       const response = await fetch('/api/auth/resend-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: formData.email }) });
-      const data = await response.json(); if (!response.ok) throw new Error(data.message || 'Unable to send a new code.');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Unable to send a new code.');
+      if (data.devCode) {
+        setDevCode(data.devCode);
+      }
     } catch (requestError) { setError(requestError.message); } finally { setResending(false); }
   };
   return <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950">
@@ -79,6 +87,18 @@ export default function SignUp() {
           <label className="flex items-start gap-3 text-sm text-gray-100"><input id="acceptedTerms" type="checkbox" className="mt-1" checked={formData.acceptedTerms} onChange={change} required /><span>I agree to the <Link className="underline" to="/terms" target="_blank">Terms of Service</Link> and <Link className="underline" to="/privacy" target="_blank">Privacy Policy</Link>.</span></label>
           <p className="text-xs text-gray-300">LoopOut does not access your contacts during sign-up.</p><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Send verification code'}</button></form></>}
       {step === 3 && <><button onClick={() => setStep(2)} className="flex items-center gap-2 text-sm text-gray-200 mb-4"><FaArrowLeft /> Back</button><h1 className="text-2xl font-semibold text-center mb-2">Verify your email</h1><p className="text-center text-gray-200 mb-6">Step 3 of 3 · Enter the six-digit code sent to {formData.email}.</p>
+        {devCode && (
+          <div className="mb-4 p-3 bg-amber-500/20 border border-amber-400/40 rounded-xl text-center text-xs text-amber-200">
+            <span>Dev Mode Code: <strong className="text-white text-sm font-mono tracking-widest">{devCode}</strong></span>
+            <button
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, otp: devCode }))}
+              className="ml-2 underline font-semibold text-amber-300 hover:text-white"
+            >
+              (Auto-fill)
+            </button>
+          </div>
+        )}
         <form onSubmit={verify} className="space-y-4"><label className="block text-sm">Verification code<input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength="6" className={`${inputClass} mt-1 tracking-[0.4em] text-center`} value={formData.otp} onChange={change} required /></label><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Verify and continue'}</button></form><button disabled={resending} onClick={resend} className="w-full mt-4 text-sm underline disabled:opacity-60">{resending ? 'Sending…' : 'Resend code'}</button></>}
       {error && <p role="alert" className="mt-5 p-3 text-center text-sm bg-red-500/25 border border-red-300/40 rounded-xl">{error}</p>}
       <p className="mt-7 text-center text-sm text-gray-200">Already have an account? <Link to="/sign-in" className="font-semibold underline">Sign in</Link></p>
