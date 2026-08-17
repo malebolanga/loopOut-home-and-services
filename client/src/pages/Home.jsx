@@ -865,7 +865,7 @@ function MobileAppHomepage({
         <FoodCollectionReadyBanner navigate={navigate} />
         <ContinueSearchingCard navigate={navigate} />
         {/* Mobile Elite Slider Banner */}
-          <div className="relative h-[520px] -mx-4 lg:mx-0 lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
+          <div className="relative h-[520px] -mx-4 lg:mx-0 rounded-b-[2rem] lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
           <Swiper
             modules={[Autoplay, Pagination]}
             autoplay={{ delay: 6500, disableOnInteraction: false }}

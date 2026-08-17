@@ -51,7 +51,7 @@ export const createBooking = async (req, res) => {
     const {
       listingId, helperId, serviceId, eventId,
       startDate, endDate,
-      phone, message, subtype,
+      phone, message, subtype, numberOfGuests, functionType,
       selectedPerformer, performerExperience, performerImage
     } = req.body;
 
@@ -59,6 +59,13 @@ export const createBooking = async (req, res) => {
     if (!mainId || !startDate || !endDate) {
       console.warn('[createBooking] validation failed: missing required fields', { mainId, startDate, endDate });
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const parsedGuestCount = numberOfGuests === '' || numberOfGuests === undefined
+      ? undefined
+      : Number(numberOfGuests);
+    if (parsedGuestCount !== undefined && (!Number.isInteger(parsedGuestCount) || parsedGuestCount < 1)) {
+      return res.status(400).json({ error: 'Number of guests must be a positive whole number.' });
     }
 
     // Fetch item from DB to calculate server-authoritative price
@@ -127,6 +134,8 @@ export const createBooking = async (req, res) => {
       phone,
       message,
       subtype,
+      numberOfGuests: parsedGuestCount,
+      functionType,
       selectedPerformer,
       performerExperience,
       performerImage,

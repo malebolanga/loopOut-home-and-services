@@ -11,6 +11,7 @@ import HelperItem from '../../components/HelperItem';
 import ImageGallery from '../../components/ImageGallery';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import CompareItemReviews from '../../components/CompareItemReviews';
+import { authenticatedFetch } from '../../utils/authenticatedFetch';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
@@ -892,8 +893,8 @@ export const UpcomingBookingsSection = ({ navigate }) => {
     const load = async () => {
       try {
         const [userRes, hostRes] = await Promise.all([
-          fetch(`/api/bookings/user/${currentUser._id}`),
-          fetch(`/api/bookings/host/${currentUser._id}`)
+          authenticatedFetch(`/api/bookings/user/${currentUser._id}`),
+          authenticatedFetch(`/api/bookings/host/${currentUser._id}`)
         ]);
         let all = [];
         if (userRes.ok)  all = [...all, ...(await userRes.json())];

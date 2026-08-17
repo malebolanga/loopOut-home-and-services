@@ -91,8 +91,9 @@ const BrandLogo = ({ className = "h-8 w-auto", showText = true, textColor = "tex
     >
       <BrandIcon className="h-full w-auto aspect-square" />
       {showText && (
-        <span className="text-2xl font-bold bg-gradient-to-r from-[#FF385C] via-[#E61E4D] to-[#D70466] text-transparent bg-clip-text">
-          loopOut
+        <span className="text-2xl font-black tracking-tight">
+          <span className="text-rose-500">loop</span>
+          <span className="text-orange-500">Out</span>
         </span>
       )}
     </motion.div>

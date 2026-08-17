@@ -5,6 +5,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo, { BrandIcon } from './BrandLogo';
 import { motion, AnimatePresence } from 'framer-motion';
+import { authenticatedFetch, clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
 import { pushPhoneNotification } from './PhoneNotificationManager';
 
@@ -253,19 +254,8 @@ export default function Header() {
     if (!currentUser) return;
 
     try {
-      const token = localStorage.getItem('token') || '';
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-      // Only attach if it's a real token, not 'null' string or empty
-      if (token && token !== 'null') {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch('/api/notifications', {
-        headers,
-        credentials: 'include',
+      const res = await authenticatedFetch('/api/notifications', {
+        headers: { 'Content-Type': 'application/json' },
         signal
       });
 
@@ -437,6 +427,7 @@ export default function Header() {
         dispatch(signOutUserFailure(data.message));
         return;
       }
+      clearPersistedSessionToken();
       dispatch(signOutUserSuccess(data));
       navigate('/sign-in');
       setShowProfileDropdown(false);
@@ -712,7 +703,10 @@ export default function Header() {
                   <BrandIcon className="w-9 h-9 md:w-8 md:h-8 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
                 </div>
                 <div className="block">
-                  <h1 className="text-base md:text-xl font-black tracking-tighter text-gray-900 leading-none">loopOut</h1>
+                  <h1 className="text-base md:text-xl font-black tracking-tighter leading-none">
+                    <span className="text-rose-500">loop</span>
+                    <span className="text-orange-500">Out</span>
+                  </h1>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="h-[1px] w-3 bg-rose-500/50" />
                     <span className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em] leading-none hidden sm:inline">Your local hub</span>

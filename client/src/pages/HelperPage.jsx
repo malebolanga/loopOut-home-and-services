@@ -12,6 +12,7 @@ import MutualFriends from '../components/MutualFriends';
 import OperatingSchedule from '../components/OperatingSchedule';
 import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { Link } from "react-router-dom";
 import {
   StarIcon,
@@ -144,7 +145,7 @@ export default function HelperPage() {
 
   const fetchBookingSummary = async () => {
     try {
-      const res = await fetch(`/api/bookings/helper-summary/${helper._id}`);
+      const res = await authenticatedFetch(`/api/bookings/helper-summary/${helper._id}`);
       if (res.ok) {
         const data = await res.json();
         setBookingSummary(data);
@@ -758,6 +759,7 @@ export default function HelperPage() {
     mealType: '',
     cuisinePreference: '',
     numberOfGuests: '',
+    functionType: '',
     dietaryRestrictions: '',
     cookingEquipment: '',
     ingredientsProvided: 'no',
@@ -1943,11 +1945,23 @@ export default function HelperPage() {
 
     // Validate service selection
     if (
-      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'transport') &&
+      (helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'cooking' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'transport') &&
       bookingData.selectedServices.length === 0
     ) {
       alert("Please select at least one service you need.");
       return;
+    }
+
+    // Chef-specific required validations
+    if (helper.type === 'chef' || helper.type === 'cooking') {
+      if (!bookingData.functionType) {
+        alert("Please select the type of function (e.g., Function Party, Baby Shower, Small Party, etc.) before booking.");
+        return;
+      }
+      if (!bookingData.numberOfGuests) {
+        alert("Please select or enter the number of guests who will attend (e.g. 50 guests).");
+        return;
+      }
     }
 
     if (helper.type === 'handyman' || helper.type === 'maintenance') {
@@ -2033,8 +2047,14 @@ export default function HelperPage() {
       if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
       if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
     } else if (helper.type === 'chef' || helper.type === 'cooking') {
+      message += `\n🎉 *EVENT & FUNCTION DETAILS:*\n`;
+      if (bookingData.functionType) message += `🎈 *Function Type:* ${bookingData.functionType}\n`;
+      if (bookingData.numberOfGuests) message += `👥 *Number of Guests:* ${bookingData.numberOfGuests} Guests\n`;
       if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `🌍 *Cuisine:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.cuisinePreference) message += `🌍 *Cuisine Preference:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.dietaryRestrictions) message += `🥗 *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
+      if (bookingData.cookingEquipment) message += `🍳 *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
+      if (bookingData.ingredientsProvided) message += `🛒 *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
     } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
       if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
       if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
@@ -2123,6 +2143,8 @@ export default function HelperPage() {
       phone: bookingData.phone,
       message: bookingData.specialRequirements || message,
       subtype: bookingSubtype,
+      numberOfGuests: bookingData.numberOfGuests || undefined,
+      functionType: bookingData.functionType || undefined,
       selectedPerformer: bookingData.selectedPerformer,
       performerExperience: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
@@ -2422,7 +2444,7 @@ export default function HelperPage() {
         )}
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-60">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 pb-60 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -3389,6 +3411,228 @@ export default function HelperPage() {
                     </div>
                   </div>
 
+                  {/* Chef / Cooking Specific Fields */}
+                  {helper && (
+                    <>
+                      <div className="rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white p-5 space-y-6 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-orange-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-xl shadow-md shadow-orange-200">
+                              👨‍🍳
+                            </div>
+                            <div>
+                              <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Chef & Function Details</h4>
+                              <p className="text-xs text-orange-700 font-medium">Select your function type & number of guests</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                            Required *
+                          </span>
+                        </div>
+
+                        {/* Function / Party Type */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                              🎉 Select Function / Event Type <span className="text-rose-500">*</span>
+                            </label>
+                            {bookingData.functionType && (
+                              <span className="text-xs font-bold text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-md">
+                                Selected: {bookingData.functionType}
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            {[
+                              { id: 'Function Party', emoji: '🎈', label: 'Function Party' },
+                              { id: 'Baby Shower', emoji: '🍼', label: 'Baby Shower' },
+                              { id: 'Small Party / Small Function', emoji: '🎉', label: 'Small Party' },
+                              { id: 'Birthday Party', emoji: '🎂', label: 'Birthday Party' },
+                              { id: 'Wedding Reception', emoji: '💍', label: 'Wedding' },
+                              { id: 'Private Dinner', emoji: '🕯️', label: 'Private Dinner' },
+                              { id: 'Bridal Shower', emoji: '💐', label: 'Bridal Shower' },
+                              { id: 'Office / Corporate Function', emoji: '🏢', label: 'Office Function' },
+                              { id: 'Kitchen Party', emoji: '🥂', label: 'Kitchen Party' },
+                              { id: 'Graduation Celebration', emoji: '🎓', label: 'Graduation' },
+                              { id: 'Anniversary', emoji: '💕', label: 'Anniversary' },
+                              { id: 'Family Gathering', emoji: '👨‍👩‍👧‍👦', label: 'Family Gathering' },
+                              { id: 'Braai / BBQ Gathering', emoji: '🥩', label: 'Braai / BBQ' },
+                              { id: 'Other Special Event', emoji: '✨', label: 'Other' },
+                            ].map(fn => {
+                              const isSelected = bookingData.functionType === fn.id || (fn.id === 'Function Party' && bookingData.functionType === 'Function Party') || (fn.id === 'Small Party / Small Function' && (bookingData.functionType === 'Small Party' || bookingData.functionType === 'Small Function'));
+                              return (
+                                <button
+                                  key={fn.id}
+                                  type="button"
+                                  onClick={() => setBookingData(prev => ({ ...prev, functionType: fn.id }))}
+                                  className={`flex items-center gap-2.5 p-3 rounded-xl text-xs font-bold border-2 transition-all text-left shadow-sm ${
+                                    isSelected
+                                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 border-orange-500 text-white shadow-md shadow-orange-300/50 scale-[1.02]'
+                                      : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50/30'
+                                  }`}
+                                >
+                                  <span className="text-lg leading-none">{fn.emoji}</span>
+                                  <span className="truncate font-semibold">{fn.label}</span>
+                                  {isSelected && <span className="ml-auto text-xs">✓</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Number of Guests */}
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                              👥 How Many Guests Are Attending? <span className="text-rose-500">*</span>
+                            </label>
+                            {bookingData.numberOfGuests && (
+                              <span className="text-xs font-black text-orange-700 bg-orange-100 px-2 py-0.5 rounded-md">
+                                {bookingData.numberOfGuests} Guests
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Quick selection chips */}
+                          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-3">
+                            {[1, 2, 5, 10, 15, 20, 30, 50, 75, 100].map(n => {
+                              const isSelected = String(bookingData.numberOfGuests) === String(n);
+                              return (
+                                <button
+                                  key={n}
+                                  type="button"
+                                  onClick={() => setBookingData(prev => ({ ...prev, numberOfGuests: String(n) }))}
+                                  className={`py-2 px-1 rounded-xl text-xs font-black border-2 transition-all text-center ${
+                                    isSelected
+                                      ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-200 scale-105'
+                                      : n === 50
+                                      ? 'bg-amber-50 border-orange-300 text-orange-900 font-bold hover:bg-orange-100'
+                                      : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300'
+                                  }`}
+                                >
+                                  {n}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Custom input */}
+                          <div className="relative">
+                            <input
+                              type="number"
+                              name="numberOfGuests"
+                              value={bookingData.numberOfGuests || ''}
+                              onChange={handleBookingChange}
+                              min="1"
+                              placeholder="Or enter custom number of guests (e.g. 50)..."
+                              className="w-full p-3 pl-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-sm font-medium bg-white"
+                            />
+                            <span className="absolute left-3 top-3.5 text-base text-gray-400">👥</span>
+                          </div>
+                        </div>
+
+                        {/* Meal Type */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
+                            🍽️ Meal Type / Service Format
+                          </label>
+                          <select
+                            name="mealType"
+                            value={bookingData.mealType}
+                            onChange={handleBookingChange}
+                            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-sm font-medium bg-white"
+                          >
+                            <option value="">Select meal type...</option>
+                            <option value="dinner">Private Dinner</option>
+                            <option value="lunch">Lunch Feast</option>
+                            <option value="brunch">Brunch & Breakfast</option>
+                            <option value="appetizers">Cocktails & Canapés / Finger Food</option>
+                            <option value="buffet">Buffet Spread</option>
+                            <option value="full-course">Multi-Course Tasting Menu</option>
+                            <option value="desserts">Desserts & High Tea</option>
+                            <option value="meal-prep">Meal Prep / Batch Cooking</option>
+                          </select>
+                        </div>
+
+                        {/* Cuisine Preference */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
+                            🌍 Cuisine Preference
+                          </label>
+                          <select
+                            name="cuisinePreference"
+                            value={bookingData.cuisinePreference}
+                            onChange={handleBookingChange}
+                            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-sm font-medium bg-white"
+                          >
+                            <option value="">Select cuisine preference...</option>
+                            <option value="african">Traditional African / Local Cuisine</option>
+                            <option value="mediterranean">Mediterranean</option>
+                            <option value="italian">Italian</option>
+                            <option value="french">French Fine Dining</option>
+                            <option value="asian">Asian Fusion & Sushi</option>
+                            <option value="seafood">Seafood & Grill</option>
+                            <option value="bbq">BBQ & Braai Smokehouse</option>
+                            <option value="indian">Indian / Curries</option>
+                            <option value="mexican">Mexican / Tex-Mex</option>
+                            <option value="vegan">Vegan / Plant-Based</option>
+                            <option value="custom">Custom Gourmet Menu</option>
+                          </select>
+                        </div>
+
+                        {/* Dietary Restrictions */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
+                            🥗 Dietary Requirements & Allergies
+                          </label>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {['Halal', 'Kosher', 'Vegetarian', 'Vegan', 'Nut Allergy', 'Gluten-Free', 'Dairy-Free', 'No Restrictions'].map(diet => {
+                              const isIncluded = (bookingData.dietaryRestrictions || '').includes(diet);
+                              return (
+                                <button
+                                  key={diet}
+                                  type="button"
+                                  onClick={() => {
+                                    if (diet === 'No Restrictions') {
+                                      setBookingData(prev => ({ ...prev, dietaryRestrictions: 'None / Standard' }));
+                                      return;
+                                    }
+                                    const current = bookingData.dietaryRestrictions || '';
+                                    if (isIncluded) {
+                                      setBookingData(prev => ({
+                                        ...prev,
+                                        dietaryRestrictions: current.replace(diet, '').replace(/,\s*,/g, ',').trim().replace(/^,|,$/g, '')
+                                      }));
+                                    } else {
+                                      const updated = current ? `${current}, ${diet}` : diet;
+                                      setBookingData(prev => ({ ...prev, dietaryRestrictions: updated }));
+                                    }
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                                    isIncluded
+                                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                                      : 'bg-white text-gray-700 border-gray-200 hover:border-orange-300'
+                                  }`}
+                                >
+                                  {diet}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <input
+                            type="text"
+                            name="dietaryRestrictions"
+                            value={bookingData.dietaryRestrictions || ''}
+                            onChange={handleBookingChange}
+                            placeholder="e.g. 2 guests halal, 1 severe nut allergy, 3 vegan..."
+                            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 text-sm font-medium bg-white"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  
                   {/* Sneaker Cleaner Specific Fields */}
                   {helper.type === 'sneaker' && (
                     <>

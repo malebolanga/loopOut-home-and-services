@@ -29,6 +29,7 @@ import {
   signOutUserSuccess,
   signOutUserFailure,
 } from "../redux/user/userSlice";
+import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -95,6 +96,7 @@ const BottomNav = () => {
         dispatch(signOutUserFailure(data.message));
         return;
       }
+      clearPersistedSessionToken();
       dispatch(signOutUserSuccess(data));
       navigate('/sign-in');
       setShowProfileDropup(false);

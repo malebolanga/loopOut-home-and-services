@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { signInStart, signInSuccess, signInFailure } from './redux/user/userSlice';
+import { persistSessionToken } from './utils/authenticatedFetch';
 
 function App() {
   const dispatch = useDispatch();
@@ -18,6 +19,7 @@ function App() {
         const data = await res.json();
 
         if (data.valid) {
+          persistSessionToken(data);
           dispatch(signInSuccess(data.user));
         } else {
           dispatch(signInFailure(null));

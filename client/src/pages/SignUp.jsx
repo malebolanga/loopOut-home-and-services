@@ -5,6 +5,7 @@ import { FaSpinner, FaArrowLeft } from 'react-icons/fa';
 import BrandLogo from '../components/BrandLogo';
 import { useDispatch } from 'react-redux';
 import { signInSuccess } from '../redux/user/userSlice';
+import { persistSessionToken } from '../utils/authenticatedFetch';
 
 const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-white';
 
@@ -56,6 +57,7 @@ export default function SignUp() {
       const response = await fetch('/api/auth/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email, otp: formData.otp }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to verify that code.');
+      persistSessionToken(data);
       dispatch(signInSuccess(data.user || data)); navigate('/');
     } catch (requestError) { setError(requestError.message); } finally { setLoading(false); }
   };

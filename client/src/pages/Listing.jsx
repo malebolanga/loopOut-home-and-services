@@ -2199,7 +2199,7 @@ export default function Listing() {
       />
 
       {/* Main Content - Optimized for large screens */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 py-8 lg:py-12 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8 lg:space-y-10">

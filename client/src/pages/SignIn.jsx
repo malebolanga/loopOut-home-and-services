@@ -9,6 +9,7 @@ import {
 } from '../redux/user/userSlice';
 import OAuth from '../components/OAuth';
 import BrandLogo from '../components/BrandLogo';
+import { persistSessionToken } from '../utils/authenticatedFetch';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -82,6 +83,7 @@ export default function SignIn() {
 
         const data = await res.json();
         if (data && data.valid) {
+          persistSessionToken(data);
           dispatch(signInSuccess(data.user));
           navigate('/');
         } else {

@@ -10,8 +10,8 @@ import { sendSMS } from '../utils/sms.js';
 const OTP_TTL_MS = 10 * 60 * 1000;
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
-const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
-const SESSION_EXPIRES_IN = '8h';
+const SESSION_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;
+const SESSION_EXPIRES_IN = '365d';
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
@@ -162,7 +162,14 @@ export const validateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password -otp');
     if (!user || !user.isVerified) return res.status(200).json({ valid: false });
-    return res.status(200).json({ valid: true, user: { _id: user._id, username: user.username, email: user.email, avatar: user.avatar } });
+    // Renew both the cookie and bearer token while the session is valid.
+    const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
+    return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({
+      valid: true,
+      user: { _id: user._id, username: user.username, email: user.email, avatar: user.avatar },
+      token: refreshedToken,
+      access_token: refreshedToken,
+    });
   } catch (error) { return res.status(200).json({ valid: false }); }
 };
 

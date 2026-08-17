@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { XMarkIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { useSelector } from 'react-redux';
+import { authenticatedFetch } from '../../utils/authenticatedFetch';
 
 const DISMISSED_BANNERS_KEY = 'loopout_dismissed_food_collection_banners';
 
@@ -28,7 +29,7 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
     }
 
     try {
-      const response = await fetch('/api/lunch/orders', { credentials: 'include' });
+      const response = await authenticatedFetch('/api/lunch/orders');
       if (response.status === 429) return;
       const allOrders = response.ok ? await response.json() : [];
       const activeStatuses = ['Pending', 'Preparing', 'Ready for Collection'];

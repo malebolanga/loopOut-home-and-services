@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { FcGoogle } from 'react-icons/fc';
 import { motion } from 'framer-motion';
 import { FaSpinner } from 'react-icons/fa';
+import { persistSessionToken } from '../utils/authenticatedFetch';
 
 export default function OAuth() {
   const { loading } = useSelector((state) => state.user);
@@ -33,6 +34,7 @@ export default function OAuth() {
       const data = await res.json();
 
       if (res.ok) {
+        persistSessionToken(data);
         dispatch(signInSuccess(data));
         navigate('/');
       } else {

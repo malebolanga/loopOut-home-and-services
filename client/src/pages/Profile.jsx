@@ -21,6 +21,7 @@ import {
   deleteUserSuccess,
   signOutUserStart,
 } from "../redux/user/userSlice";
+import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
 import {
   MdLocationOn,
   MdVerifiedUser,
@@ -803,6 +804,7 @@ export default function Profile() {
         dispatch(deleteUserFailure(data.message));
         return;
       }
+      clearPersistedSessionToken();
       dispatch(deleteUserSuccess(data));
     } catch (error) {
       dispatch(deleteUserFailure(error.message));
@@ -818,6 +820,7 @@ export default function Profile() {
         dispatch(deleteUserFailure(data.message));
         return;
       }
+      clearPersistedSessionToken();
       dispatch(deleteUserSuccess(data));
     } catch (error) {
       dispatch(deleteUserFailure(error.message));

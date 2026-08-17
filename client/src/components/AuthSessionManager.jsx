@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { signOutUserSuccess } from '../redux/user/userSlice';
+import { clearPersistedSessionToken, persistSessionToken } from '../utils/authenticatedFetch';
 
 /**
  * Periodically validates the session in the background
@@ -28,7 +29,10 @@ export default function AuthSessionManager() {
           if (!data.valid) {
             // Only sign out if the server explicitly says it's invalid
             // (e.g. user deleted from DB)
+            clearPersistedSessionToken();
             dispatch(signOutUserSuccess());
+          } else {
+            persistSessionToken(data);
           }
         }
       } catch (error) {
