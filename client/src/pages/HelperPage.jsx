@@ -350,7 +350,7 @@ export default function HelperPage() {
   // Prioritize dynamic serviceList from database, fallback to hardcoded options
   const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
-        id: s._id || `${s.name}-${index}`, 
+        id: s._id ? String(s._id) : (s.id ? String(s.id) : `${s.name || 'service'}-${index}`), 
         name: s.name, 
         type: s.type,
         description: s.description,

@@ -204,14 +204,20 @@ export default function ChefPage() {
     ];
 
     const chefOptions = [
-      { id: 'mealPrep', name: 'Meal Prep', icon: <FaUtensils className="text-orange-500" /> },
-      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" /> },
-      { id: 'cookingClasses', name: 'Classes', icon: <FaGraduationCap className="text-green-500" /> },
-      { id: 'eventCatering', name: 'Catering', icon: <FaGlassCheers className="text-purple-500" /> },
-      { id: 'dietMeals', name: 'Diet Plans', icon: <FaCookie className="text-blue-500" /> },
-      { id: 'baking', name: 'Baking', icon: <FaCookie className="text-yellow-500" /> },
-      { id: 'groceryShopping', name: 'Shopping', icon: <FaShoppingBasket className="text-teal-500" /> },
-      { id: 'menuPlanning', name: 'Planning', icon: <FaUtensils className="text-indigo-500" /> }
+      { id: 'mealPrep', name: 'Meal Prep', icon: <FaUtensils className="text-orange-500" />, description: 'Weekly meal preparation and portioning for the whole family', price: 450 },
+      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" />, description: 'Intimate fine-dining experience in the comfort of your home', price: 800 },
+      { id: 'eventCatering', name: 'Event Catering', icon: <FaGlassCheers className="text-purple-500" />, description: 'Full-service catering for parties, functions and corporate events', price: 1200 },
+      { id: 'functionParty', name: 'Function / Party', icon: <FaGlassCheers className="text-pink-500" />, description: 'Catering for large function parties, celebrations and social events', price: 1500 },
+      { id: 'babyShower', name: 'Baby Shower', icon: <FaBaby className="text-blue-400" />, description: 'Delightful finger foods, dessert platters and full meals for baby showers', price: 900 },
+      { id: 'braaiService', name: 'Braai / BBQ', icon: <FaFire className="text-orange-600" />, description: 'Professional braai master service with full setup and cooking', price: 700 },
+      { id: 'baking', name: 'Baking & Pastry', icon: <FaCookie className="text-yellow-500" />, description: 'Custom cakes, pastries, bread and baked goods for any occasion', price: 350 },
+      { id: 'cookingClasses', name: 'Cooking Classes', icon: <FaGraduationCap className="text-green-500" />, description: 'Private cooking lessons tailored to your skill level and cuisine interest', price: 500 },
+      { id: 'menuPlanning', name: 'Menu Planning', icon: <FaUtensils className="text-indigo-500" />, description: 'Personalised weekly or monthly menu design for households', price: 200 },
+      { id: 'dietMeals', name: 'Diet & Health Meals', icon: <FaLeaf className="text-green-400" />, description: 'Nutritious, balanced meals tailored to dietary goals and health needs', price: 550 },
+      { id: 'groceryShopping', name: 'Grocery Shopping', icon: <FaShoppingBasket className="text-teal-500" />, description: 'Professional grocery sourcing and procurement for your menu', price: 150 },
+      { id: 'weddingCatering', name: 'Wedding Catering', icon: <FaRing className="text-rose-500" />, description: 'Premium catering services for weddings and receptions', price: 3000 },
+      { id: 'kidsMeals', name: "Kids' Meals", icon: <FaSmile className="text-yellow-500" />, description: 'Nutritious, kid-friendly meals that children will actually enjoy', price: 280 },
+      { id: 'veganVeg', name: 'Vegan / Vegetarian', icon: <FaLeaf className="text-emerald-500" />, description: 'Fully plant-based cuisine with rich flavours and balanced nutrition', price: 480 },
     ];
 
     const tattooOptions = [
@@ -320,7 +326,7 @@ export default function ChefPage() {
   // Prioritize dynamic serviceList from database, fallback to hardcoded options
   const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
-        id: s.name, 
+        id: s._id ? String(s._id) : (s.id ? String(s.id) : `${s.name || 'service'}-${index}`), 
         name: s.name, 
         type: s.type,
         description: s.description,
@@ -2386,11 +2392,11 @@ export default function ChefPage() {
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {serviceOptions.map((service) => {
+                  {serviceOptions.map((service, index) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
                       <div 
-                        key={service.id} 
+                        key={`${service.id || service.name || 'service'}-${index}`} 
                         onClick={() => setSelectedModalService(service)}
                         className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
@@ -2648,10 +2654,10 @@ export default function ChefPage() {
 
                 <div className="space-y-4 pt-6 border-t border-gray-50">
                   {bookingData.selectedServices.length > 0 ? (
-                    bookingData.selectedServices.map(id => {
+                    bookingData.selectedServices.map((id, index) => {
                       const s = serviceOptions.find(opt => opt.id === id);
                       return s ? (
-                        <div key={id} className="flex justify-between items-center">
+                        <div key={`${id}-${index}`} className="flex justify-between items-center">
                           <span className="text-xs font-bold text-gray-500">{s.name}</span>
                           <span className="text-xs font-black text-gray-950">R{s.price}</span>
                         </div>
@@ -3462,9 +3468,9 @@ export default function ChefPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Select services</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {serviceOptions.map((service) => (
+                  {serviceOptions.map((service, index) => (
                     <button
-                      key={service.id}
+                      key={`${service.id || service.name || 'service'}-${index}`}
                       type="button"
                       onClick={() => handleServiceSelection(service.id)}
                       className={`p-4 border-2 rounded-xl text-left transition-all relative ${bookingData.selectedServices.includes(service.id)
