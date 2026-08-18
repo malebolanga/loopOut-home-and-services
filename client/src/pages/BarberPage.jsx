@@ -1833,15 +1833,13 @@ export default function BarberPage() {
       message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n`;
     }
 
-    // Add service-specific details
-    if (helper.type === 'barber' || helper.type === 'barbar') {
+    // Add service-specific details (Barbershop)
+    if (helper.type === 'barber' || helper.type === 'barbar' || !helper.type) {
+      message += `\n💈 *BARBERSHOP & GROOMING DETAILS:*\n`;
       if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
-      if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
-    } else if (helper.type === 'chef' || helper.type === 'cooking') {
-      if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `🌍 *Cuisine:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.beardStyle) message += `🧔 *Beard & Shave:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
+      if (bookingData.hairLength) message += `📏 *Hair Length:* ${bookingData.hairLength}\n`;
     }
-    message += `\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `📍 *LOCATION & NAVIGATION*\n`;
@@ -2937,268 +2935,118 @@ export default function BarberPage() {
                     </div>
                   </div>
 
-                  {/* Sneaker Cleaner Specific Fields */}
-                  {helper.type === 'sneaker' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Brand</label>
-                        <select
-                          name="shoeBrands"
-                          value={bookingData.shoeBrands}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select shoe brand</option>
-                          {shoeBrands.map(brand => (
-                            <option key={brand.id} value={brand.id}>{brand.name}</option>
-                          ))}
-                        </select>
+                  {/* Barbershop & Haircut Specific Details */}
+                  <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-white p-5 space-y-6 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-md shadow-blue-200">
+                          💈
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Barbershop & Haircut Details</h4>
+                          <p className="text-xs text-blue-700 font-medium">Select your haircut style, beard grooming & preferences</p>
+                        </div>
                       </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                        Haircut & Grooming
+                      </span>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Condition</label>
-                        <select
-                          name="shoeCondition"
-                          value={bookingData.shoeCondition}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select condition</option>
-                          {shoeConditions.map(condition => (
-                            <option key={condition.id} value={condition.id}>{condition.name}</option>
-                          ))}
-                        </select>
+                    {/* Haircut Style Selection */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          ✂️ Select Haircut Style
+                        </label>
+                        {bookingData.selectedHaircut && (
+                          <span className="text-xs font-bold text-blue-600 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {haircutStyles.map(style => {
+                          const isSelected = bookingData.selectedHaircut === style.id;
+                          return (
+                            <button
+                              key={style.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, selectedHaircut: style.id }))}
+                              className={`p-3 rounded-xl text-xs font-bold border-2 transition-all text-left ${
+                                isSelected
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
+                              }`}
+                            >
+                              <div className="font-bold">{style.name}</div>
+                              <div className={`text-[10px] ${isSelected ? 'text-blue-100' : 'text-gray-400'} font-normal mt-0.5`}>
+                                {style.description}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Type</label>
-                        <select
-                          name="cleaningType"
-                          value={bookingData.cleaningType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select cleaning type</option>
-                          {cleaningTypes.map(type => (
-                            <option key={type.id} value={type.id}>{type.name}</option>
-                          ))}
-                        </select>
+                    {/* Beard & Shave Style */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          🧔 Beard & Shave Grooming
+                        </label>
+                        {bookingData.beardStyle && (
+                          <span className="text-xs font-bold text-blue-600 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {beardStyles.map(beard => {
+                          const isSelected = bookingData.beardStyle === beard.id;
+                          return (
+                            <button
+                              key={beard.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, beardStyle: beard.id }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-left ${
+                                isSelected
+                                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300'
+                              }`}
+                            >
+                              <div className="font-bold">{beard.name}</div>
+                              <div className={`text-[10px] ${isSelected ? 'text-indigo-100' : 'text-gray-400'} font-normal mt-0.5`}>
+                                {beard.description}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="restorationNeeded"
-                          checked={bookingData.restorationNeeded}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Restoration needed</label>
+                    {/* Hair Length */}
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                        📏 Current Hair Length
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {['Short (Buzz / Fade)', 'Medium (Top length)', 'Long Hair', 'Dreadlocks / Locs'].map(len => (
+                          <button
+                            key={len}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, hairLength: len }))}
+                            className={`py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                              bookingData.hairLength === len
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
+                            }`}
+                          >
+                            {len}
+                          </button>
+                        ))}
                       </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="waterproofing"
-                          checked={bookingData.waterproofing}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Waterproofing service</label>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Washing Mat Specific Fields */}
-                  {helper.type === 'washingmat' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Size</label>
-                        <select
-                          name="matSize"
-                          value={bookingData.matSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select mat size</option>
-                          {matSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Material</label>
-                        <select
-                          name="matMaterial"
-                          value={bookingData.matMaterial}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select material</option>
-                          {matMaterials.map(material => (
-                            <option key={material.id} value={material.id}>{material.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Stain Level</label>
-                        <select
-                          name="stainLevel"
-                          value={bookingData.stainLevel}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select stain level</option>
-                          {stainLevels.map(level => (
-                            <option key={level.id} value={level.id}>{level.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Drying Preference</label>
-                        <select
-                          name="dryingPreference"
-                          value={bookingData.dryingPreference}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select drying preference</option>
-                          {dryingPreferences.map(pref => (
-                            <option key={pref.id} value={pref.id}>{pref.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="pickupDelivery"
-                          checked={bookingData.pickupDelivery}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Pickup & Delivery required (additional fee may apply)</label>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Animal Care Specific Fields - FIXED: Changed FaBird to FaDove */}
-                  {helper.type === 'animals' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Type</label>
-                        <select
-                          name="animalType"
-                          value={bookingData.animalType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select animal type</option>
-                          {animalTypes.map(animal => (
-                            <option key={animal.id} value={animal.id}>{animal.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Breed (if applicable)</label>
-                        <input
-                          type="text"
-                          name="animalBreed"
-                          value={bookingData.animalBreed}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="e.g., Labrador, Persian, etc."
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Size</label>
-                        <select
-                          name="animalSize"
-                          value={bookingData.animalSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select size</option>
-                          {animalSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Age</label>
-                        <select
-                          name="animalAge"
-                          value={bookingData.animalAge}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select age range</option>
-                          {animalAgeRanges.map(age => (
-                            <option key={age.id} value={age.id}>{age.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Service Duration</label>
-                        <select
-                          name="serviceDuration"
-                          value={bookingData.serviceDuration}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select duration</option>
-                          {serviceDurations.map(duration => (
-                            <option key={duration.id} value={duration.id}>{duration.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Vaccination Status</label>
-                        <select
-                          name="vaccinationStatus"
-                          value={bookingData.vaccinationStatus}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select status</option>
-                          <option value="upToDate">Up to date</option>
-                          <option value="notUpToDate">Not up to date</option>
-                          <option value="unknown">Unknown</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Special Needs or Instructions</label>
-                        <textarea
-                          name="specialNeeds"
-                          value={bookingData.specialNeeds}
-                          onChange={handleBookingChange}
-                          rows="2"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="Any medical conditions, behavioral issues, or special requirements"
-                        />
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="ownSupplies"
-                          checked={bookingData.ownSupplies}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">I will provide my own supplies (food, leash, etc.)</label>
-                      </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -20,7 +20,7 @@ import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingHistory from '../components/BookingHistory';
 
 
-import { HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { FiShare2, FiHeart, FiMessageSquare } from "react-icons/fi";
 
@@ -139,7 +139,12 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     childGuests: 0,
     selectedDate: '',
     startTime: '09:00',
-    endTime: '17:00'
+    endTime: '17:00',
+    inquiryType: 'Schedule a Viewing',
+    viewingDate: '',
+    viewingTime: '10:00',
+    leaseDuration: '12 Months',
+    occupantsCount: '1'
   });
 
   useEffect(() => {
@@ -420,7 +425,16 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `*👤 CLIENT DETAILS*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `👤 *Name:* ${bookingDetails.fullName}\n`;
-      message += `📞 *Phone:* ${bookingDetails.phone}\n\n`;
+      message += `📞 *Phone:* ${bookingDetails.phone}\n`;
+      if (bookingDetails.email) message += `✉️ *Email:* ${bookingDetails.email}\n\n`;
+
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📋 INQUIRY DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (bookingDetails.inquiryType) message += `📌 *Purpose:* ${bookingDetails.inquiryType}\n`;
+      if (bookingDetails.viewingDate) message += `📅 *Preferred Viewing Date:* ${formatDate(bookingDetails.viewingDate)} at ${bookingDetails.viewingTime || '10:00'}\n`;
+      if (isRent && bookingDetails.leaseDuration) message += `⏳ *Preferred Lease Term:* ${bookingDetails.leaseDuration}\n`;
+      if (bookingDetails.occupantsCount) message += `👥 *Number of Occupants:* ${bookingDetails.occupantsCount}\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*📅 SESSION DETAILS*\n`;
@@ -958,6 +972,122 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                 )}
               </div>
             </>
+          )}
+
+          {/* Property Inquiry & Viewing Schedule */}
+          {(isSale || isRent) && (
+            <div className="space-y-6 pt-6 border-t border-gray-100">
+              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+                <HomeIcon className="w-6 h-6 text-rose-500" />
+                Property Viewing & Details
+              </h3>
+
+              {/* Inquiry Reason */}
+              <div>
+                <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                  📌 Reason for Inquiry
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    'Schedule a Viewing',
+                    'Rental Application',
+                    'Price & Lease Terms',
+                    'General Inquiry'
+                  ].map(reason => {
+                    const isSelected = bookingDetails.inquiryType === reason;
+                    return (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setBookingDetails(prev => ({ ...prev, inquiryType: reason }))}
+                        className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                          isSelected
+                            ? 'bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-200'
+                            : 'bg-white border-gray-200 text-gray-700 hover:border-rose-300'
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Preferred Viewing Schedule */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <input
+                    type="date"
+                    id="viewingDate"
+                    name="viewingDate"
+                    value={bookingDetails.viewingDate || ''}
+                    onChange={handleChange}
+                    min={today}
+                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white"
+                  />
+                  <label htmlFor="viewingDate" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    Preferred Viewing Date (Optional)
+                  </label>
+                </div>
+
+                <div className="relative">
+                  <select
+                    id="viewingTime"
+                    name="viewingTime"
+                    value={bookingDetails.viewingTime || '10:00'}
+                    onChange={handleChange}
+                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                  >
+                    {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <label htmlFor="viewingTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    Viewing Time Slot
+                  </label>
+                </div>
+              </div>
+
+              {/* Lease Duration & Occupants */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {isRent && (
+                  <div className="relative">
+                    <select
+                      id="leaseDuration"
+                      name="leaseDuration"
+                      value={bookingDetails.leaseDuration || '12 Months'}
+                      onChange={handleChange}
+                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                    >
+                      <option value="Month-to-Month">Month-to-Month</option>
+                      <option value="6 Months">6 Months</option>
+                      <option value="12 Months">12 Months (Standard)</option>
+                      <option value="24+ Months Long Term">24+ Months (Long-term)</option>
+                    </select>
+                    <label htmlFor="leaseDuration" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                      Target Lease Duration
+                    </label>
+                  </div>
+                )}
+
+                <div className="relative">
+                  <select
+                    id="occupantsCount"
+                    name="occupantsCount"
+                    value={bookingDetails.occupantsCount || '1'}
+                    onChange={handleChange}
+                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map(n => (
+                      <option key={n} value={n}>{n} {n === 1 ? 'Occupant / Tenant' : 'Occupants / Family'}</option>
+                    ))}
+                  </select>
+                  <label htmlFor="occupantsCount" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    Total Occupants
+                  </label>
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Special Requests */}

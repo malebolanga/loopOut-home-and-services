@@ -188,13 +188,17 @@ export default function HelperPage() {
   const getServiceOptions = (type) => {
     const baseOptions = [
       { id: 'laundry', name: 'Laundry', icon: <FaTshirt className="text-blue-500" /> },
-      { id: 'cleaning', name: 'Deep Cleaning', icon: <FaBroom className="text-green-500" /> },
       { id: 'ironing', name: 'Ironing', icon: <FaTshirt className="text-purple-500" /> },
-      { id: 'yard', name: 'Yard Work', icon: <FaBroom className="text-yellow-600" /> },
-      { id: 'cooking', name: 'Meal Prep', icon: <FaFire className="text-red-500" /> },
+      { id: 'houseCleaning', name: 'Cleaning the House', icon: <FaBroom className="text-green-500" /> },
+      { id: 'yardCleaning', name: 'Cleaning the Yard', icon: <FaLeaf className="text-lime-600" /> },
+      { id: 'fullHouseCleaning', name: 'Full House Cleaning', icon: <FaHome className="text-emerald-600" /> },
+      { id: 'springCleaning', name: 'Spring Cleaning', icon: <FaHandSparkles className="text-amber-500" /> },
+      { id: 'curtainWashing', name: 'Washing Curtains', icon: <FaSprayCan className="text-indigo-500" /> },
+      { id: 'windowWashing', name: 'Windows Wash', icon: <FaWater className="text-cyan-500" /> },
+      { id: 'cooking', name: 'Cooking / Meal Prep', icon: <FaFire className="text-red-500" /> },
       { id: 'babysitting', name: 'Child Care', icon: <FaBaby className="text-pink-500" /> },
-      { id: 'eventCleaning', name: 'Event Cleanup', icon: <FaGlassCheers className="text-indigo-500" /> },
-      { id: 'other', name: 'Other', icon: <FaEllipsisH className="text-gray-500" /> }
+      { id: 'eventCleaning', name: 'Event Cleanup', icon: <FaGlassCheers className="text-purple-500" /> },
+      { id: 'other', name: 'Other Helper Services', icon: <FaEllipsisH className="text-gray-500" /> }
     ];
 
     const beautyOptions = [
@@ -801,7 +805,14 @@ export default function HelperPage() {
     handymanJobType: '',
     handymanJobDescription: '',
     handymanMaterialsRequired: '',
-    handymanUrgency: 'normal'
+    handymanUrgency: 'normal',
+    // Domestic helper / maid specific fields
+    houseSize: '',
+    numberOfBedrooms: '',
+    numberOfBathrooms: '',
+    cleaningSuppliesProvided: 'yes',
+    hasPets: 'no',
+    ironingLoad: ''
   });
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -2055,6 +2066,14 @@ export default function HelperPage() {
       if (bookingData.dietaryRestrictions) message += `🥗 *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
       if (bookingData.cookingEquipment) message += `🍳 *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
       if (bookingData.ingredientsProvided) message += `🛒 *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
+    } else if (helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') {
+      message += `\n🧹 *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
+      if (bookingData.houseSize) message += `🏠 *Property Size:* ${bookingData.houseSize}\n`;
+      if (bookingData.numberOfBedrooms) message += `🛏️ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
+      if (bookingData.numberOfBathrooms) message += `🚿 *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
+      if (bookingData.cleaningSuppliesProvided) message += `🧼 *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
+      if (bookingData.hasPets) message += `🐾 *Pets in House:* ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
+      if (bookingData.ironingLoad) message += `👔 *Ironing/Laundry Load:* ${bookingData.ironingLoad}\n`;
     } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
       if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
       if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
@@ -3411,8 +3430,168 @@ export default function HelperPage() {
                     </div>
                   </div>
 
-                  {/* Chef / Cooking Specific Fields */}
-                  {helper && (
+                  {/* Domestic Helper / Maid Housekeeping Specific Fields */}
+                  {(helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') && (
+                    <>
+                      <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-white p-5 space-y-6 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-emerald-100 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-200">
+                              🧹
+                            </div>
+                            <div>
+                              <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Housekeeping & Maid Details</h4>
+                              <p className="text-xs text-emerald-700 font-medium">Select your property size, tasks & preferences</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Domestic Services
+                          </span>
+                        </div>
+
+                        {/* Property / House Size */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                            🏠 Property / House Size
+                          </label>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {[
+                              { id: '1 Bedroom / Studio', label: '1 Bed / Studio' },
+                              { id: '2-3 Bedroom House', label: '2-3 Bed House' },
+                              { id: '4+ Bedroom Full House', label: '4+ Bed House' },
+                              { id: 'Apartment / Flat', label: 'Apartment / Flat' },
+                              { id: 'Townhouse / Duplex', label: 'Townhouse' },
+                              { id: 'Office / Commercial', label: 'Office Space' }
+                            ].map(size => {
+                              const isSelected = bookingData.houseSize === size.id;
+                              return (
+                                <button
+                                  key={size.id}
+                                  type="button"
+                                  onClick={() => setBookingData(prev => ({ ...prev, houseSize: size.id }))}
+                                  className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                    isSelected
+                                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200'
+                                      : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300'
+                                  }`}
+                                >
+                                  {size.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Number of Bathrooms */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                            🚿 Number of Bathrooms
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {['1 Bathroom', '2 Bathrooms', '3+ Bathrooms'].map(b => (
+                              <button
+                                key={b}
+                                type="button"
+                                onClick={() => setBookingData(prev => ({ ...prev, numberOfBathrooms: b }))}
+                                className={`py-2 px-3 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                  bookingData.numberOfBathrooms === b
+                                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200'
+                                    : 'bg-white border-gray-200 text-gray-700 hover:border-emerald-300'
+                                }`}
+                              >
+                                {b}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Cleaning Supplies Provided */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                            🧼 Cleaning Supplies & Detergents
+                          </label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <label className="flex items-center gap-2.5 p-3 rounded-xl border-2 cursor-pointer bg-white border-gray-200 hover:border-emerald-300">
+                              <input
+                                type="radio"
+                                name="cleaningSuppliesProvided"
+                                value="yes"
+                                checked={bookingData.cleaningSuppliesProvided === 'yes'}
+                                onChange={handleBookingChange}
+                                className="accent-emerald-600"
+                              />
+                              <span className="text-xs font-semibold text-gray-800">I will provide supplies</span>
+                            </label>
+                            <label className="flex items-center gap-2.5 p-3 rounded-xl border-2 cursor-pointer bg-white border-gray-200 hover:border-emerald-300">
+                              <input
+                                type="radio"
+                                name="cleaningSuppliesProvided"
+                                value="no"
+                                checked={bookingData.cleaningSuppliesProvided === 'no'}
+                                onChange={handleBookingChange}
+                                className="accent-emerald-600"
+                              />
+                              <span className="text-xs font-semibold text-gray-800">Helper to bring supplies</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Ironing & Laundry Details */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                            👔 Ironing & Laundry Load Estimate
+                          </label>
+                          <select
+                            name="ironingLoad"
+                            value={bookingData.ironingLoad || ''}
+                            onChange={handleBookingChange}
+                            className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm font-medium bg-white"
+                          >
+                            <option value="">Select load estimate (optional)...</option>
+                            <option value="None / No Laundry">None / No Laundry needed</option>
+                            <option value="Small Basket (1-2 people)">Small Basket (1-2 people)</option>
+                            <option value="Medium Basket (3-4 people)">Medium Basket (3-4 people)</option>
+                            <option value="Large Basket / Full Family Load">Large Basket / Full Family Load</option>
+                            <option value="Curtains, Bedding & Heavy Ironing">Curtains, Bedding & Heavy Ironing</option>
+                          </select>
+                        </div>
+
+                        {/* Pets in House */}
+                        <div>
+                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                            🐾 Are There Pets In The House?
+                          </label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="hasPets"
+                                value="no"
+                                checked={bookingData.hasPets === 'no'}
+                                onChange={handleBookingChange}
+                                className="accent-emerald-600"
+                              />
+                              <span className="text-xs font-semibold text-gray-700">No pets</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="hasPets"
+                                value="yes"
+                                checked={bookingData.hasPets === 'yes'}
+                                onChange={handleBookingChange}
+                                className="accent-emerald-600"
+                              />
+                              <span className="text-xs font-semibold text-gray-700">Yes (Dogs / Cats / Other)</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Chef / Cooking Specific Fields (Strictly for Chef type) */}
+                  {(helper.type === 'chef' || helper.type === 'cooking') && (
                     <>
                       <div className="rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50/80 via-amber-50/50 to-white p-5 space-y-6 shadow-sm">
                         <div className="flex items-center justify-between border-b border-orange-100 pb-3">

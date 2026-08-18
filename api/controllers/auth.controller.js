@@ -17,8 +17,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
 const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
-const isStrongPassword = (password) => typeof password === 'string'
-  && password.length >= 12 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password);
+const isStrongPassword = (password) => typeof password === 'string' && password.length >= 6;
 
 const cookieOptions = () => ({
   httpOnly: true,
@@ -76,7 +75,7 @@ const firebaseAuth = async () => {
 const validateSignup = ({ username, email, password, phone, location, acceptedTerms }) => {
   if (!/^[a-zA-Z0-9_]{3,30}$/.test(String(username || '').trim())) return 'Choose a username with 3–30 letters, numbers, or underscores.';
   if (!emailPattern.test(normalizeEmail(email))) return 'Enter a valid email address.';
-  if (!isStrongPassword(password)) return 'Use a password of at least 12 characters with uppercase, lowercase, and a number.';
+  if (!isStrongPassword(password)) return 'Use a password of at least 6 characters.';
   if (!String(phone || '').trim() || !String(location || '').trim()) return 'Phone number and location are required.';
   if (acceptedTerms !== true) return 'You must accept the Terms of Service and Privacy Policy.';
   return null;
@@ -95,14 +94,28 @@ export const signup = async (req, res, next) => {
     if (existingUsername && (!existingEmail || String(existingUsername._id) !== String(existingEmail._id))) return next(errorHandler(409, 'That username is already taken.'));
 
     const updates = {
-      username, email, password: await bcryptjs.hash(req.body.password, 12),
-      phone: String(req.body.phone).trim(), location: String(req.body.location).trim(),
-      accessContacts: false, contacts: [], isVerified: false,
-      termsAcceptedAt: new Date(), privacyAcceptedAt: new Date(),
+      username,
+      email,
+      password: await bcryptjs.hash(req.body.password, 12),
+      phone: String(req.body.phone).trim(),
+      location: String(req.body.location).trim(),
+      accessContacts: false,
+      contacts: [],
+      isVerified: false,
+      termsAcceptedAt: new Date(),
+      privacyAcceptedAt: new Date(),
     };
-    const user = existingEmail || new User(updates);
+    
+    let user;
+    if (existingEmail) {
+      Object.assign(existingEmail, updates);
+      user = existingEmail;
+    } else {
+      user = new User(updates);
+    }
+
     const delivery = await sendVerificationCode(user, existingEmail ? 'Complete your LoopOut registration' : 'Your LoopOut verification code');
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isDev = process.env.NODE_ENV !== 'production' || !process.env.EMAIL_USER;
 
     return res.status(existingEmail ? 200 : 201).json({
       success: true,
@@ -111,7 +124,7 @@ export const signup = async (req, res, next) => {
       message: delivery.success
         ? `A verification code has been sent to ${email}.`
         : `A verification code has been generated for ${email}.`,
-      ...(isDev && !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: true } : {})
+      ...(isDev || delivery.simulated || !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
     });
   } catch (error) { return next(error); }
 };
@@ -153,20 +166,34 @@ export const google = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
-export const signOut = async (req, res) => res.clearCookie('access_token', { path: '/' }).status(200).json({ success: true });
+export const signOut = async (req, res) => {
+  res.clearCookie('access_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/'
+  });
+  return res.status(200).json({ success: true, message: 'Signed out successfully' });
+};
 
 export const validateToken = async (req, res, next) => {
   try {
-    const token = req.cookies.access_token;
-    if (!token) return res.status(200).json({ valid: false });
+    let token = req.cookies.access_token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(200).json({ valid: false });
+    }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password -otp');
     if (!user || !user.isVerified) return res.status(200).json({ valid: false });
     // Renew both the cookie and bearer token while the session is valid.
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
+    const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
     return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({
       valid: true,
-      user: { _id: user._id, username: user.username, email: user.email, avatar: user.avatar },
+      user: safeUser,
       token: refreshedToken,
       access_token: refreshedToken,
     });
@@ -225,11 +252,11 @@ export const resendOtp = async (req, res, next) => {
     const createdAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
     if (Date.now() - createdAt < OTP_RESEND_COOLDOWN_MS) return next(errorHandler(429, 'Please wait a minute before requesting another code.'));
     const delivery = await sendVerificationCode(user, 'Your new LoopOut verification code');
-    const isDev = process.env.NODE_ENV !== 'production';
+    const isDev = process.env.NODE_ENV !== 'production' || !process.env.EMAIL_USER;
     return res.status(200).json({
       success: true,
       message: 'If an unverified account exists, a code has been sent.',
-      ...(isDev && !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: true } : {})
+      ...(isDev || delivery.simulated || !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
     });
   } catch (error) { return next(error); }
 };

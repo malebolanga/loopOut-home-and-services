@@ -10,6 +10,7 @@ import { useEffect, lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
+import { authenticatedFetch, clearPersistedSessionToken, persistSessionToken } from "./utils/authenticatedFetch";
 import { setWishlistCount } from "./redux/frontendSlice";
 import { getWishlistBackend } from "./services/wishlist.service";
 import { AnimatePresence } from 'framer-motion';
@@ -407,7 +408,7 @@ export default function App() {
     const validateTokenOnMount = async () => {
       if (!currentUser) return;
       try {
-        const res = await fetch('/api/auth/validate-token', {
+        const res = await authenticatedFetch('/api/auth/validate-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -415,9 +416,14 @@ export default function App() {
         if (!res.ok) return;
 
         const data = await res.json();
-        if (data.success === false || !data.valid) {
+        if (data && data.valid === false) {
+          clearPersistedSessionToken();
           dispatch(signOutUserSuccess());
           return;
+        }
+
+        if (data && data.valid && (data.token || data.access_token)) {
+          persistSessionToken(data);
         }
 
         // Hydrate database wishlist for logged in user
@@ -430,7 +436,7 @@ export default function App() {
       }
     };
     validateTokenOnMount();
-  }, [dispatch, currentUser]);
+  }, [dispatch, currentUser?._id]);
 
   return (
     <HelmetProvider>

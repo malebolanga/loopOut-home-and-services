@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { signOutUserSuccess } from '../redux/user/userSlice';
-import { clearPersistedSessionToken, persistSessionToken } from '../utils/authenticatedFetch';
+import { clearPersistedSessionToken, persistSessionToken, authenticatedFetch } from '../utils/authenticatedFetch';
 
 /**
  * Periodically validates the session in the background
@@ -17,7 +17,7 @@ export default function AuthSessionManager() {
     // Validate every 4 hours
     const interval = setInterval(async () => {
       try {
-        const res = await fetch('/api/auth/validate-token', {
+        const res = await authenticatedFetch('/api/auth/validate-token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

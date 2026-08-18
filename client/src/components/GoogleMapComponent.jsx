@@ -1,182 +1,166 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-
-            
+import React, { useState, useEffect, useRef } from 'react';
 import { geocodeAddress } from '../utils/geocoding';
-import { FaMapMarkerAlt, FaExternalLinkAlt } from 'react-icons/fa';
-
-const darkMapStyles = [
-  { elementType: 'geometry', stylers: [{ color: '#212121' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#757575' }] },
-  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
-  { featureType: 'administrative.land_parcel', stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
-  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
-  { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
-  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
-  { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
-  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
-  { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
-  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
-  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
-  { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
-];
-
-const containerStyle = {
-  width: '100%',
-  height: '100%',
-  borderRadius: '0.75rem'
-};
+import { FaMapMarkerAlt, FaExternalLinkAlt, FaCompass } from 'react-icons/fa';
 
 const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
-  const [map, setMap] = useState(null);
   const [coords, setCoords] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showInfoWindow, setShowInfoWindow] = useState(false);
+  const mapContainerRef = useRef(null);
+  const leafletMapRef = useRef(null);
+  const markerRef = useRef(null);
 
-  // Load Google Maps API
-  // Using an environment variable or a default placeholder
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""
-  });
-
+  // Resolve coordinates from lat/lng or address geocoding
   useEffect(() => {
-    const getCoords = async () => {
-      if (latitude && longitude) {
-        setCoords({ lat: parseFloat(latitude), lng: parseFloat(longitude) });
-        setLoading(false);
-      } else if (address) {
-        const result = await geocodeAddress(address);
-        if (result) {
-          setCoords(result);
+    let isMounted = true;
+    const resolveLocation = async () => {
+      setLoading(true);
+      if (latitude && longitude && !isNaN(parseFloat(latitude)) && !isNaN(parseFloat(longitude))) {
+        if (isMounted) {
+          setCoords({ lat: parseFloat(latitude), lng: parseFloat(longitude) });
+          setLoading(false);
         }
-        setLoading(false);
+      } else if (address) {
+        try {
+          const result = await geocodeAddress(address);
+          if (isMounted && result && !isNaN(result.lat) && !isNaN(result.lng)) {
+            setCoords(result);
+          }
+        } catch (e) {
+          console.warn('Geocoding fallback failed:', e);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
       } else {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
-    getCoords();
+    resolveLocation();
+    return () => { isMounted = false; };
   }, [latitude, longitude, address]);
 
-  const onLoad = useCallback(function callback(map) {
-    setMap(map);
-  }, []);
+  // Initialize or update Leaflet map when coords are available
+  useEffect(() => {
+    if (!coords || !mapContainerRef.current) return;
+    let mounted = true;
 
-  const onUnmount = useCallback(function callback(map) {
-    setMap(null);
-  }, []);
+    const setupMap = () => {
+      const L = window.L;
+      if (!L || !mapContainerRef.current || !mounted) return;
+
+      if (!leafletMapRef.current) {
+        const map = L.map(mapContainerRef.current, {
+          zoomControl: true,
+          attributionControl: false,
+          scrollWheelZoom: false,
+        }).setView([coords.lat, coords.lng], 15);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 20,
+        }).addTo(map);
+
+        const customPin = L.divIcon({
+          className: 'custom-map-pin',
+          html: `
+            <div style="transform: translate(-50%, -100%);" class="flex flex-col items-center">
+              <div style="background: linear-gradient(135deg, #FF385C, #E61E4D); box-shadow: 0 4px 14px rgba(230,30,77,0.5);" class="px-3 py-1.5 rounded-full text-white text-xs font-bold whitespace-nowrap border-2 border-white flex items-center gap-1.5 animate-bounce">
+                <span>📍</span>
+                <span>${(title || 'Location').slice(0, 20)}</span>
+              </div>
+              <div style="width: 2px; height: 10px; background: #E61E4D;"></div>
+            </div>
+          `,
+          iconSize: [0, 0],
+          iconAnchor: [0, 0],
+        });
+
+        const marker = L.marker([coords.lat, coords.lng], { icon: customPin }).addTo(map);
+        if (address || title) {
+          marker.bindPopup(`
+            <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 4px;">
+              <strong style="color: #111;">${title || 'Location'}</strong><br/>
+              <span style="color: #666; font-size: 11px;">${address || ''}</span>
+            </div>
+          `);
+        }
+
+        leafletMapRef.current = map;
+        markerRef.current = marker;
+      } else {
+        leafletMapRef.current.setView([coords.lat, coords.lng], 15);
+        if (markerRef.current) {
+          markerRef.current.setLatLng([coords.lat, coords.lng]);
+        }
+      }
+    };
+
+    if (!window.L) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => { if (mounted) setupMap(); };
+      document.head.appendChild(script);
+    } else {
+      setupMap();
+    }
+
+    return () => {
+      mounted = false;
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove();
+        leafletMapRef.current = null;
+      }
+    };
+  }, [coords, title, address]);
 
   const googleMapsUrl = coords 
     ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "")}`;
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || "South Africa")}`;
 
-  if (!isLoaded && !loadError && (import.meta.env.VITE_GOOGLE_MAPS_API_KEY)) {
+  if (loading) {
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center animate-pulse rounded-2xl border border-slate-800">
-        <div className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Transmission Map...</div>
-      </div>
-    );
-  }
-
-  // Fallback if no API key, load error (expired key), or not loaded
-  if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY || !isLoaded || loadError) {
-    return (
-      <div className="w-full h-full bg-black flex flex-col items-center justify-center border border-slate-800/80 rounded-2xl p-6 text-center text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-rose-500/10 to-transparent pointer-events-none" />
-        <FaMapMarkerAlt className="text-4xl text-rose-500 mb-3 animate-bounce relative z-10" />
-        <h4 className="font-black uppercase tracking-widest text-sm mb-1 text-white relative z-10">{title || "Location"}</h4>
-        <p className="text-xs text-slate-400 mb-4 px-4 line-clamp-2 max-w-md relative z-10">{address}</p>
-        <a 
-          href={googleMapsUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 shadow-lg shadow-rose-600/30 hover:scale-105 active:scale-95 relative z-10 border border-rose-500/20"
-        >
-          View on Google Maps <FaExternalLinkAlt className="text-[10px]" />
-        </a>
-        {loadError && (
-          <div className="mt-4 p-3 bg-rose-950/40 border border-rose-900/50 rounded-2xl max-w-sm relative z-10 backdrop-blur-sm">
-            <p className="text-[10px] text-rose-500 italic font-black uppercase tracking-widest mb-1">
-              Google Maps Protocol Failure
-            </p>
-            <p className="text-[10px] text-slate-300 font-medium">
-              {loadError.message?.includes('ExpiredKeyMapError') 
-                ? "The Google Maps API key has expired. Please rotate the VITE_GOOGLE_MAPS_API_KEY in the cloud console." 
-                : loadError.message || "Invalid or Expired API Key"}
-            </p>
-          </div>
-        )}
-        {!import.meta.env.VITE_GOOGLE_MAPS_API_KEY && !loadError && (
-          <p className="text-[10px] text-slate-500 mt-4 italic relative z-10">Interactive map requires a Google Maps API key.</p>
-        )}
+      <div className="w-full h-full min-h-[220px] bg-slate-900 flex flex-col items-center justify-center rounded-2xl border border-slate-800 p-6 text-center animate-pulse">
+        <FaCompass className="text-3xl text-rose-500 animate-spin mb-3" />
+        <div className="text-slate-300 font-bold text-xs uppercase tracking-widest">Pinpointing Location...</div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full relative group">
+    <div className="w-full h-full min-h-[260px] relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm group">
       {coords ? (
-        <GoogleMap
-          mapContainerStyle={containerStyle}
-          center={coords}
-          zoom={15}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          options={{
-            disableDefaultUI: false,
-            zoomControl: true,
-            mapTypeControl: false,
-            scaleControl: true,
-            streetViewControl: false,
-            rotateControl: false,
-            fullscreenControl: true,
-            styles: darkMapStyles,
-          }}
-        >
-          <Marker 
-            position={coords} 
-            title={title}
-            onClick={() => setShowInfoWindow(true)}
-          />
-
-          {showInfoWindow && (
-            <InfoWindow position={coords} onCloseClick={() => setShowInfoWindow(false)}>
-              <div className="p-2 max-w-[200px]">
-                <h4 className="font-bold text-sm mb-1">{title}</h4>
-                <p className="text-xs text-gray-600 mb-2">{address}</p>
-                <a 
-                  href={googleMapsUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 font-semibold hover:underline flex items-center gap-1"
-                >
-                  Get Directions <FaExternalLinkAlt className="text-[10px]" />
-                </a>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
+        <>
+          <div ref={mapContainerRef} className="w-full h-full min-h-[260px] z-0" />
+          <div className="absolute bottom-3 right-3 z-[400]">
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3.5 py-2 bg-white/95 hover:bg-white text-gray-900 rounded-xl text-xs font-bold shadow-md border border-gray-200 transition-all hover:scale-105 active:scale-95"
+            >
+              <span>Directions</span>
+              <FaExternalLinkAlt className="text-[10px] text-rose-500" />
+            </a>
+          </div>
+        </>
       ) : (
-        <div className="w-full h-full bg-black flex flex-col items-center justify-center border border-slate-800 rounded-2xl p-4 text-center text-white relative overflow-hidden">
-           <div className="absolute inset-0 bg-gradient-to-b from-slate-500/5 to-transparent pointer-events-none" />
-           <FaMapMarkerAlt className="text-3xl text-slate-500 mb-2 animate-pulse relative z-10" />
-           <p className="text-sm text-slate-300 relative z-10">Coordinates not available for this address.</p>
-           <a 
-             href={googleMapsUrl} 
-             target="_blank" 
-             rel="noopener noreferrer" 
-             className="text-xs text-rose-500 hover:text-rose-400 font-bold uppercase tracking-wider underline mt-2 relative z-10 block transition-colors"
-           >
-             Try searching on Google Maps
-           </a>
+        <div className="w-full h-full min-h-[260px] bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 flex flex-col items-center justify-center p-6 text-center text-white relative">
+          <FaMapMarkerAlt className="text-4xl text-rose-500 mb-3 animate-bounce" />
+          <h4 className="font-bold text-sm mb-1 text-white">{title || "Property / Service Location"}</h4>
+          <p className="text-xs text-slate-300 mb-4 px-4 max-w-sm line-clamp-2">{address || "Location specified by host"}</p>
+          <a 
+            href={googleMapsUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#E61E4D] to-[#D70466] text-white rounded-xl text-xs font-bold transition-all shadow-md hover:scale-105 active:scale-95"
+          >
+            Open in Google Maps <FaExternalLinkAlt className="text-[10px]" />
+          </a>
         </div>
       )}
     </div>

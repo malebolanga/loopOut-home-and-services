@@ -741,27 +741,13 @@ export default function TattooPage() {
     cleaningArrengement: 'no',
     equipmentProvided: 'no',
     otherDetails: '',
-    // Sneaker cleaner specific fields
-    shoeBrands: '',
-    shoeCondition: '',
-    cleaningType: '',
-    restorationNeeded: false,
-    waterproofing: false,
-    // Washing mat specific fields
-    matSize: '',
-    matMaterial: '',
-    stainLevel: '',
-    dryingPreference: '',
-    pickupDelivery: false,
-    // Animal care specific fields
-    animalType: '',
-    animalSize: '',
-    animalAge: '',
-    animalBreed: '',
-    serviceDuration: '',
-    vaccinationStatus: '',
-    specialNeeds: '',
-    ownSupplies: false,
+    // Tattoo & Body Art specific fields
+    tattooPlacement: '',
+    tattooStyle: '',
+    tattooSize: '',
+    tattooInkColor: 'Black & Grey',
+    isFirstTattoo: 'no',
+    tattooDesignDescription: ''
   });
 
   // AI Assessment States
@@ -1832,6 +1818,14 @@ export default function TattooPage() {
       message += `💰 *Base Price:* R${helper.regularPrice || 0}\n`;
       message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n`;
     }
+    // Add service-specific details (Tattoo & Body Art)
+    message += `\n🎨 *TATTOO & BODY ART DETAILS:*\n`;
+    if (bookingData.tattooPlacement) message += `📍 *Placement / Body Area:* ${bookingData.tattooPlacement}\n`;
+    if (bookingData.tattooStyle) message += `✒️ *Tattoo Style:* ${bookingData.tattooStyle}\n`;
+    if (bookingData.tattooSize) message += `📐 *Estimated Size:* ${bookingData.tattooSize}\n`;
+    if (bookingData.tattooInkColor) message += `🎨 *Ink Choice:* ${bookingData.tattooInkColor}\n`;
+    if (bookingData.isFirstTattoo) message += `✨ *First-Time Tattoo:* ${bookingData.isFirstTattoo === 'yes' ? 'Yes' : 'No'}\n`;
+    if (bookingData.tattooDesignDescription) message += `💡 *Design Concept:* ${bookingData.tattooDesignDescription}\n`;
     message += `\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
@@ -2997,268 +2991,200 @@ export default function TattooPage() {
                     </div>
                   </div>
 
-                  {/* Sneaker Cleaner Specific Fields */}
-                  {helper.type === 'sneaker' && (
-                    <>
+                  {/* Tattoo & Body Art Specific Details */}
+                  <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50/80 via-slate-50/40 to-white p-5 space-y-6 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-purple-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-purple-700 text-white flex items-center justify-center text-xl shadow-md shadow-purple-200">
+                          🎨
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Tattoo & Body Art Details</h4>
+                          <p className="text-xs text-purple-700 font-medium">Select placement, style, size & design concept</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                        Custom Art
+                      </span>
+                    </div>
+
+                    {/* Tattoo Placement */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          📍 Body Placement / Location
+                        </label>
+                        {bookingData.tattooPlacement && (
+                          <span className="text-xs font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.tattooPlacement}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        {[
+                          'Forearm',
+                          'Upper Arm / Bicep',
+                          'Shoulder',
+                          'Chest',
+                          'Back / Spine',
+                          'Thigh',
+                          'Calf / Ankle',
+                          'Hand / Wrist',
+                          'Ribs / Side',
+                          'Neck'
+                        ].map(loc => {
+                          const isSelected = bookingData.tattooPlacement === loc;
+                          return (
+                            <button
+                              key={loc}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, tattooPlacement: loc }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-purple-700 border-purple-700 text-white shadow-md shadow-purple-200'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300'
+                              }`}
+                            >
+                              {loc}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Tattoo Style */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          ✒️ Tattoo Style
+                        </label>
+                        {bookingData.tattooStyle && (
+                          <span className="text-xs font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.tattooStyle}
+                          </span>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          'Fine Line / Micro',
+                          'Realism (Black & Grey)',
+                          'Traditional / Old School',
+                          'Tribal / Polynesian',
+                          'Blackwork / Dotwork',
+                          'Japanese / Irezumi',
+                          'Lettering / Script',
+                          'Watercolor',
+                          'Geometric / Mandala'
+                        ].map(st => {
+                          const isSelected = bookingData.tattooStyle === st;
+                          return (
+                            <button
+                              key={st}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, tattooStyle: st }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-purple-700 border-purple-700 text-white shadow-md shadow-purple-200'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300'
+                              }`}
+                            >
+                              {st}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Estimated Size & Color Palette */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Brand</label>
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                          📐 Estimated Tattoo Size
+                        </label>
                         <select
-                          name="shoeBrands"
-                          value={bookingData.shoeBrands}
+                          name="tattooSize"
+                          value={bookingData.tattooSize || ''}
                           onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 text-xs font-medium bg-white"
                         >
-                          <option value="">Select shoe brand</option>
-                          {shoeBrands.map(brand => (
-                            <option key={brand.id} value={brand.id}>{brand.name}</option>
+                          <option value="">Select size estimate...</option>
+                          <option value="Small (under 5cm / 2 inches)">Small (under 5cm / 2 inches)</option>
+                          <option value="Medium (5cm - 15cm / palm size)">Medium (5cm - 15cm / palm size)</option>
+                          <option value="Large (15cm - 30cm / forearm/thigh)">Large (15cm - 30cm / forearm/thigh)</option>
+                          <option value="Half / Full Sleeve or Backpiece">Half / Full Sleeve or Backpiece</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                          🎨 Ink Choice
+                        </label>
+                        <div className="flex gap-2">
+                          {['Black & Grey', 'Full Color', 'Color Accents'].map(ink => (
+                            <button
+                              key={ink}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, tattooInkColor: ink }))}
+                              className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                bookingData.tattooInkColor === ink
+                                  ? 'bg-purple-700 border-purple-700 text-white shadow-md shadow-purple-200'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300'
+                              }`}
+                            >
+                              {ink}
+                            </button>
                           ))}
-                        </select>
+                        </div>
                       </div>
+                    </div>
 
+                    {/* First Tattoo & Design Notes */}
+                    <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Condition</label>
-                        <select
-                          name="shoeCondition"
-                          value={bookingData.shoeCondition}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select condition</option>
-                          {shoeConditions.map(condition => (
-                            <option key={condition.id} value={condition.id}>{condition.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Type</label>
-                        <select
-                          name="cleaningType"
-                          value={bookingData.cleaningType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select cleaning type</option>
-                          {cleaningTypes.map(type => (
-                            <option key={type.id} value={type.id}>{type.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="restorationNeeded"
-                          checked={bookingData.restorationNeeded}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Restoration needed</label>
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="waterproofing"
-                          checked={bookingData.waterproofing}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Waterproofing service</label>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Washing Mat Specific Fields */}
-                  {helper.type === 'washingmat' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Size</label>
-                        <select
-                          name="matSize"
-                          value={bookingData.matSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select mat size</option>
-                          {matSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Material</label>
-                        <select
-                          name="matMaterial"
-                          value={bookingData.matMaterial}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select material</option>
-                          {matMaterials.map(material => (
-                            <option key={material.id} value={material.id}>{material.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Stain Level</label>
-                        <select
-                          name="stainLevel"
-                          value={bookingData.stainLevel}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select stain level</option>
-                          {stainLevels.map(level => (
-                            <option key={level.id} value={level.id}>{level.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Drying Preference</label>
-                        <select
-                          name="dryingPreference"
-                          value={bookingData.dryingPreference}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select drying preference</option>
-                          {dryingPreferences.map(pref => (
-                            <option key={pref.id} value={pref.id}>{pref.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="pickupDelivery"
-                          checked={bookingData.pickupDelivery}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Pickup & Delivery required (additional fee may apply)</label>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Animal Care Specific Fields - FIXED: Changed FaBird to FaDove */}
-                  {helper.type === 'animals' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Type</label>
-                        <select
-                          name="animalType"
-                          value={bookingData.animalType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select animal type</option>
-                          {animalTypes.map(animal => (
-                            <option key={animal.id} value={animal.id}>{animal.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Breed (if applicable)</label>
-                        <input
-                          type="text"
-                          name="animalBreed"
-                          value={bookingData.animalBreed}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="e.g., Labrador, Persian, etc."
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Size</label>
-                        <select
-                          name="animalSize"
-                          value={bookingData.animalSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select size</option>
-                          {animalSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Age</label>
-                        <select
-                          name="animalAge"
-                          value={bookingData.animalAge}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select age range</option>
-                          {animalAgeRanges.map(age => (
-                            <option key={age.id} value={age.id}>{age.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Service Duration</label>
-                        <select
-                          name="serviceDuration"
-                          value={bookingData.serviceDuration}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select duration</option>
-                          {serviceDurations.map(duration => (
-                            <option key={duration.id} value={duration.id}>{duration.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Vaccination Status</label>
-                        <select
-                          name="vaccinationStatus"
-                          value={bookingData.vaccinationStatus}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select status</option>
-                          <option value="upToDate">Up to date</option>
-                          <option value="notUpToDate">Not up to date</option>
-                          <option value="unknown">Unknown</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Special Needs or Instructions</label>
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
+                          💡 Design Concept & Idea Description
+                        </label>
                         <textarea
-                          name="specialNeeds"
-                          value={bookingData.specialNeeds}
+                          name="tattooDesignDescription"
+                          value={bookingData.tattooDesignDescription || ''}
                           onChange={handleBookingChange}
                           rows="2"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="Any medical conditions, behavioral issues, or special requirements"
+                          placeholder="Describe your tattoo idea, quote, elements you want included, or if you have reference photos..."
+                          className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-purple-400 text-xs font-medium bg-white"
                         />
                       </div>
 
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="ownSupplies"
-                          checked={bookingData.ownSupplies}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">I will provide my own supplies (food, leash, etc.)</label>
+                      <div>
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1">
+                          ✨ Is this your first tattoo?
+                        </label>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="isFirstTattoo"
+                              value="no"
+                              checked={bookingData.isFirstTattoo === 'no'}
+                              onChange={handleBookingChange}
+                              className="accent-purple-700"
+                            />
+                            <span className="text-xs font-semibold text-gray-700">No, I have existing tattoos</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="isFirstTattoo"
+                              value="yes"
+                              checked={bookingData.isFirstTattoo === 'yes'}
+                              onChange={handleBookingChange}
+                              className="accent-purple-700"
+                            />
+                            <span className="text-xs font-semibold text-gray-700">Yes, this is my first tattoo!</span>
+                          </label>
+                        </div>
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

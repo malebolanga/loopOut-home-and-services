@@ -31,7 +31,7 @@ export default function SignUp() {
   const checkCredentials = (event) => {
     event.preventDefault(); setError('');
     if (!/^[a-zA-Z0-9_]{3,30}$/.test(formData.username)) return setError('Use 3–30 letters, numbers, or underscores for your username.');
-    if (formData.password.length < 12 || !/[a-z]/.test(formData.password) || !/[A-Z]/.test(formData.password) || !/\d/.test(formData.password)) return setError('Use at least 12 characters, including uppercase, lowercase, and a number.');
+    if (formData.password.length < 6) return setError('Use at least 6 characters for your password.');
     if (formData.password !== formData.confirmPassword) return setError('Your passwords do not match.');
     setStep(2);
   };

@@ -741,27 +741,17 @@ export default function BeautyPage() {
     cleaningArrengement: 'no',
     equipmentProvided: 'no',
     otherDetails: '',
-    // Sneaker cleaner specific fields
-    shoeBrands: '',
-    shoeCondition: '',
-    cleaningType: '',
-    restorationNeeded: false,
-    waterproofing: false,
-    // Washing mat specific fields
-    matSize: '',
-    matMaterial: '',
-    stainLevel: '',
-    dryingPreference: '',
-    pickupDelivery: false,
-    // Animal care specific fields
-    animalType: '',
-    animalSize: '',
-    animalAge: '',
-    animalBreed: '',
-    serviceDuration: '',
-    vaccinationStatus: '',
-    specialNeeds: '',
-    ownSupplies: false,
+    // Beauty & Glam specific fields
+    beautyCategory: '',
+    beautyOccasion: '',
+    glamFinish: '',
+    peopleCount: '1 Person (Solo)',
+    lashPreference: '',
+    nailStyle: '',
+    hairStyle: '',
+    touchUpKit: 'Standard Appointment',
+    skinHairNotes: '',
+    serviceLocationType: 'client_home'
   });
 
   // AI Assessment States
@@ -1833,15 +1823,17 @@ export default function BeautyPage() {
       message += `💰 *TOTAL PRICE:* *R${totalPrice}*\n`;
     }
 
-    // Add service-specific details (Barber, Chef, etc.)
-    if (helper.type === 'barber' || helper.type === 'barbar') {
-      if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
-      if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
-    } else if (helper.type === 'chef' || helper.type === 'cooking') {
-      if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `🌍 *Cuisine:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
-    }
-    message += `\n`;
+    // Add service-specific details (Beauty & Glam)
+    message += `\n💄 *BEAUTY & GLAM DETAILS:*\n`;
+    if (bookingData.beautyOccasion) message += `✨ *Occasion:* ${bookingData.beautyOccasion}\n`;
+    if (bookingData.beautyCategory) message += `💅 *Glam Category / Focus:* ${bookingData.beautyCategory}\n`;
+    if (bookingData.glamFinish) message += `🌟 *Look Finish & Style:* ${bookingData.glamFinish}\n`;
+    if (bookingData.peopleCount) message += `👥 *Number of People / Party:* ${bookingData.peopleCount}\n`;
+    if (bookingData.lashPreference) message += `👁️ *Lashes Preference:* ${bookingData.lashPreference}\n`;
+    if (bookingData.hairStyle) message += `💇‍♀️ *Hair Styling / Prep:* ${bookingData.hairStyle}\n`;
+    if (bookingData.nailStyle) message += `💅 *Nails & Shape:* ${bookingData.nailStyle}\n`;
+    if (bookingData.touchUpKit) message += `🎁 *Touch-Up Kit:* ${bookingData.touchUpKit}\n`;
+    if (bookingData.skinHairNotes) message += `📝 *Skin / Hair Notes & Allergies:* ${bookingData.skinHairNotes}\n`;
 
     message += `━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `📍 *LOCATION & NAVIGATION*\n`;
@@ -2418,6 +2410,205 @@ export default function BeautyPage() {
               </div>
             )}
 
+            {/* Interactive Beauty & Glam Customizer on Main Page */}
+            <div className="pb-8 border-b border-gray-200">
+              <div className="rounded-3xl border-2 border-pink-200 bg-gradient-to-br from-pink-50/80 via-rose-50/40 to-white p-6 sm:p-8 space-y-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-pink-200">
+                      💄
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900 tracking-tight">Customize Your Glam Experience</h3>
+                      <p className="text-xs text-pink-700 font-medium">Select your occasion, glam finish & styles below — prefilled for your WhatsApp booking</p>
+                    </div>
+                  </div>
+                  <span className="self-start sm:self-auto text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
+                    Glam Builder
+                  </span>
+                </div>
+
+                {/* 1. Occasion */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                      ✨ 1. Select Occasion
+                    </label>
+                    {bookingData.beautyOccasion && (
+                      <span className="text-xs font-bold text-pink-600 bg-pink-100/90 px-2.5 py-0.5 rounded-full">
+                        {bookingData.beautyOccasion}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {[
+                      { id: 'Bridal / Wedding', emoji: '👰', label: 'Bridal / Wedding' },
+                      { id: 'Matric Farewell / Dance', emoji: '💃', label: 'Matric Dance' },
+                      { id: 'Birthday Celebration', emoji: '🎂', label: 'Birthday' },
+                      { id: 'Photoshoot / Media', emoji: '📸', label: 'Photoshoot' },
+                      { id: 'Gala / Red Carpet Event', emoji: '🥂', label: 'Gala / Event' },
+                      { id: 'Baby / Bridal Shower', emoji: '💐', label: 'Shower' },
+                      { id: 'Date Night / Night Out', emoji: '🕯️', label: 'Night Out' },
+                      { id: 'Everyday / Casual Glam', emoji: '✨', label: 'Everyday Glam' }
+                    ].map(occ => {
+                      const isSelected = bookingData.beautyOccasion === occ.id;
+                      return (
+                        <button
+                          key={occ.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, beautyOccasion: occ.id }))}
+                          className={`flex items-center gap-2 p-3 rounded-2xl text-xs font-bold border-2 transition-all text-left shadow-sm ${
+                            isSelected
+                              ? 'bg-pink-500 border-pink-500 text-white shadow-md shadow-pink-200 scale-[1.02]'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300 hover:bg-pink-50/50'
+                          }`}
+                        >
+                          <span className="text-base">{occ.emoji}</span>
+                          <span className="truncate">{occ.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Look Finish & Style */}
+                <div>
+                  <div className="flex items-center justify-between mb-2.5">
+                    <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                      🌟 2. Desired Look Finish & Coverage
+                    </label>
+                    {bookingData.glamFinish && (
+                      <span className="text-xs font-bold text-pink-600 bg-pink-100/90 px-2.5 py-0.5 rounded-full">
+                        {bookingData.glamFinish}
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'Full Matte / Airbrush', icon: '🎨', label: 'Full Matte / Airbrush' },
+                      { id: 'Dewy / Glass Skin Glow', icon: '✨', label: 'Dewy / Glass Skin Glow' },
+                      { id: 'Soft Velvet Natural', icon: '🌸', label: 'Soft Velvet Natural' },
+                      { id: 'Ultra Long-Wear Waterproof', icon: '🛡️', label: 'Long-Wear Waterproof' },
+                      { id: 'Bold Cut-Crease & Glitter', icon: '💎', label: 'Bold Cut-Crease & Glitter' },
+                      { id: 'Clean Girl Minimalist', icon: '🌿', label: 'Clean Girl Minimalist' }
+                    ].map(finish => {
+                      const isSelected = bookingData.glamFinish === finish.id;
+                      return (
+                        <button
+                          key={finish.id}
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, glamFinish: finish.id }))}
+                          className={`flex items-center gap-2 p-3 rounded-2xl text-xs font-bold border-2 transition-all text-left shadow-sm ${
+                            isSelected
+                              ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-200 scale-[1.02]'
+                              : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/50'
+                          }`}
+                        >
+                          <span className="text-base">{finish.icon}</span>
+                          <span className="truncate">{finish.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Party Size & Lashes in 2 columns */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Party Size */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                        👥 3. Party Size
+                      </label>
+                      {bookingData.peopleCount && (
+                        <span className="text-[11px] font-bold text-pink-600">
+                          {bookingData.peopleCount}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: '1 Person (Solo)', label: 'Solo (1)', icon: '👤' },
+                        { id: '2 People (Duo)', label: 'Duo (2)', icon: '👥' },
+                        { id: '3-4 People (Group)', label: 'Group (3-4)', icon: '✨' },
+                        { id: '5+ People (Bridal/Party)', label: 'Party (5+)', icon: '👑' }
+                      ].map(party => {
+                        const isSelected = bookingData.peopleCount === party.id;
+                        return (
+                          <button
+                            key={party.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, peopleCount: party.id }))}
+                            className={`flex items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold border-2 transition-all justify-center ${
+                              isSelected
+                                ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                            }`}
+                          >
+                            <span>{party.icon}</span>
+                            <span className="truncate">{party.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Lashes Preference */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                        👁️ 4. Lashes Preference
+                      </label>
+                      {bookingData.lashPreference && (
+                        <span className="text-[11px] font-bold text-pink-600 truncate max-w-[120px]">
+                          {bookingData.lashPreference}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'Dramatic 3D/Mink Lashes', label: 'Dramatic 3D' },
+                        { id: 'Soft Wispy / Cluster Lashes', label: 'Soft Wispy' },
+                        { id: 'Natural Strip Lashes', label: 'Natural Strip' },
+                        { id: 'No Lashes (Mascara Only)', label: 'No Lashes' }
+                      ].map(lash => {
+                        const isSelected = bookingData.lashPreference === lash.id;
+                        return (
+                          <button
+                            key={lash.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, lashPreference: lash.id }))}
+                            className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center truncate ${
+                              isSelected
+                                ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200'
+                                : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                            }`}
+                          >
+                            {lash.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Direct WhatsApp Booking Button */}
+                <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 bg-pink-100/60 p-4 rounded-2xl border border-pink-200">
+                  <div>
+                    <p className="text-xs font-black text-gray-900">Ready to secure your booking?</p>
+                    <p className="text-[11px] text-pink-800">All selections above will be formatted into your WhatsApp reservation message.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openBookingFormOverlay}
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 whitespace-nowrap"
+                  >
+                    Proceed to WhatsApp Booking →
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-center gap-2 mb-8">
@@ -2597,9 +2788,49 @@ export default function BeautyPage() {
                       name="name"
                       value={bookingData.name}
                       onChange={handleBookingChange}
-                      placeholder="Full Designation"
+                      placeholder="Your Full Name"
                       className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
                     />
+                  </div>
+
+                  {/* Beauty Occasion Dropdown */}
+                  <div className="p-4 bg-pink-50/60 rounded-2xl border border-pink-100 hover:border-pink-300 transition-all">
+                    <label className="block text-[9px] font-black text-pink-900 uppercase tracking-widest mb-1.5">✨ Occasion</label>
+                    <select
+                      name="beautyOccasion"
+                      value={bookingData.beautyOccasion || ''}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, beautyOccasion: e.target.value }))}
+                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                    >
+                      <option value="">Select Occasion...</option>
+                      <option value="Bridal / Wedding">👰 Bridal / Wedding</option>
+                      <option value="Matric Farewell / Dance">💃 Matric Dance</option>
+                      <option value="Birthday Celebration">🎂 Birthday</option>
+                      <option value="Photoshoot / Media">📸 Photoshoot / Media</option>
+                      <option value="Gala / Red Carpet Event">🥂 Gala / Red Carpet</option>
+                      <option value="Baby / Bridal Shower">💐 Baby / Bridal Shower</option>
+                      <option value="Date Night / Night Out">🕯️ Date Night / Night Out</option>
+                      <option value="Everyday / Casual Glam">✨ Everyday Glam</option>
+                    </select>
+                  </div>
+
+                  {/* Glam Finish & Look */}
+                  <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-100 hover:border-purple-300 transition-all">
+                    <label className="block text-[9px] font-black text-purple-900 uppercase tracking-widest mb-1.5">🌟 Glam Finish & Style</label>
+                    <select
+                      name="glamFinish"
+                      value={bookingData.glamFinish || ''}
+                      onChange={(e) => setBookingData(prev => ({ ...prev, glamFinish: e.target.value }))}
+                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer"
+                    >
+                      <option value="">Select Glam Finish...</option>
+                      <option value="Full Matte / Airbrush">🎨 Full Matte / Airbrush</option>
+                      <option value="Dewy / Glass Skin Glow">✨ Dewy / Glass Skin Glow</option>
+                      <option value="Soft Velvet Natural">🌸 Soft Velvet Natural</option>
+                      <option value="Ultra Long-Wear Waterproof">🛡️ Long-Wear Waterproof</option>
+                      <option value="Bold Cut-Crease & Glitter">💎 Bold Cut-Crease & Glitter</option>
+                      <option value="Clean Girl Minimalist">🌿 Clean Girl Minimalist</option>
+                    </select>
                   </div>
                 </div>
 
@@ -2937,268 +3168,356 @@ export default function BeautyPage() {
                     </div>
                   </div>
 
-                  {/* Sneaker Cleaner Specific Fields */}
-                  {helper.type === 'sneaker' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Brand</label>
-                        <select
-                          name="shoeBrands"
-                          value={bookingData.shoeBrands}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select shoe brand</option>
-                          {shoeBrands.map(brand => (
-                            <option key={brand.id} value={brand.id}>{brand.name}</option>
-                          ))}
-                        </select>
+                  {/* Beauty, Glam & Aesthetics Specific Details */}
+                  <div className="rounded-2xl border-2 border-pink-200 bg-gradient-to-br from-pink-50/90 via-rose-50/50 to-white p-5 space-y-6 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500 text-white flex items-center justify-center text-xl shadow-md shadow-pink-200">
+                          💄
+                        </div>
+                        <div>
+                          <h4 className="font-black text-sm text-gray-900 uppercase tracking-wider">Beauty, Glam & Aesthetics Options</h4>
+                          <p className="text-xs text-pink-700 font-medium">Select your custom glam preferences for WhatsApp booking</p>
+                        </div>
                       </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
+                        Glam Setup
+                      </span>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Shoe Condition</label>
-                        <select
-                          name="shoeCondition"
-                          value={bookingData.shoeCondition}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select condition</option>
-                          {shoeConditions.map(condition => (
-                            <option key={condition.id} value={condition.id}>{condition.name}</option>
-                          ))}
-                        </select>
+                    {/* Occasion Selection */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          ✨ What is the Occasion?
+                        </label>
+                        {bookingData.beautyOccasion && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.beautyOccasion}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: 'Bridal / Wedding', emoji: '👰', label: 'Bridal / Wedding' },
+                          { id: 'Matric Farewell / Dance', emoji: '💃', label: 'Matric Dance' },
+                          { id: 'Birthday Celebration', emoji: '🎂', label: 'Birthday' },
+                          { id: 'Photoshoot / Media', emoji: '📸', label: 'Photoshoot' },
+                          { id: 'Gala / Red Carpet Event', emoji: '🥂', label: 'Gala / Event' },
+                          { id: 'Baby / Bridal Shower', emoji: '💐', label: 'Shower' },
+                          { id: 'Date Night / Night Out', emoji: '🕯️', label: 'Night Out' },
+                          { id: 'Everyday / Casual Glam', emoji: '✨', label: 'Everyday Glam' }
+                        ].map(occ => {
+                          const isSelected = bookingData.beautyOccasion === occ.id;
+                          return (
+                            <button
+                              key={occ.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, beautyOccasion: occ.id }))}
+                              className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-left ${
+                                isSelected
+                                  ? 'bg-pink-500 border-pink-500 text-white shadow-md shadow-pink-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              <span>{occ.emoji}</span>
+                              <span className="truncate">{occ.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Cleaning Type</label>
-                        <select
-                          name="cleaningType"
-                          value={bookingData.cleaningType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select cleaning type</option>
-                          {cleaningTypes.map(type => (
-                            <option key={type.id} value={type.id}>{type.name}</option>
-                          ))}
-                        </select>
+                    {/* Beauty Service Focus / Category */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          💅 Primary Glam / Service Focus
+                        </label>
+                        {bookingData.beautyCategory && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.beautyCategory}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          'Full Glam Makeup',
+                          'Soft Glam / Natural',
+                          'Acrylic / Gel Nails',
+                          'Hair Styling & Braids',
+                          'Lash Extensions & Tint',
+                          'Facial Skincare / Peel'
+                        ].map(cat => {
+                          const isSelected = bookingData.beautyCategory === cat;
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, beautyCategory: cat }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="restorationNeeded"
-                          checked={bookingData.restorationNeeded}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Restoration needed</label>
+                    {/* Look Finish & Coverage Style */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          🌟 Desired Look Finish & Coverage
+                        </label>
+                        {bookingData.glamFinish && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.glamFinish}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Full Matte / Airbrush', icon: '🎨', label: 'Full Matte / Airbrush' },
+                          { id: 'Dewy / Glass Skin Glow', icon: '✨', label: 'Dewy / Glass Skin Glow' },
+                          { id: 'Soft Velvet Natural', icon: '🌸', label: 'Soft Velvet Natural' },
+                          { id: 'Ultra Long-Wear Waterproof', icon: '🛡️', label: 'Long-Wear Waterproof' },
+                          { id: 'Bold Cut-Crease & Glitter', icon: '💎', label: 'Bold Cut-Crease & Glitter' },
+                          { id: 'Clean Girl Minimalist', icon: '🌿', label: 'Clean Girl Minimalist' }
+                        ].map(finish => {
+                          const isSelected = bookingData.glamFinish === finish.id;
+                          return (
+                            <button
+                              key={finish.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, glamFinish: finish.id }))}
+                              className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-left ${
+                                isSelected
+                                  ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              <span>{finish.icon}</span>
+                              <span className="truncate">{finish.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="waterproofing"
-                          checked={bookingData.waterproofing}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Waterproofing service</label>
+                    {/* Party Size & Number of People */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          👥 Number of People / Party Size
+                        </label>
+                        {bookingData.peopleCount && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            {bookingData.peopleCount}
+                          </span>
+                        )}
                       </div>
-                    </>
-                  )}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: '1 Person (Solo)', label: '1 Person (Solo)', icon: '👤' },
+                          { id: '2 People (Duo)', label: '2 People (Duo)', icon: '👥' },
+                          { id: '3-4 People (Group)', label: '3-4 People (Group)', icon: '✨' },
+                          { id: '5+ People (Bridal/Party)', label: '5+ People (Bridal/Party)', icon: '👑' }
+                        ].map(party => {
+                          const isSelected = bookingData.peopleCount === party.id;
+                          return (
+                            <button
+                              key={party.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, peopleCount: party.id }))}
+                              className={`flex items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center justify-center ${
+                                isSelected
+                                  ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              <span>{party.icon}</span>
+                              <span className="truncate">{party.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                  {/* Washing Mat Specific Fields */}
-                  {helper.type === 'washingmat' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Size</label>
-                        <select
-                          name="matSize"
-                          value={bookingData.matSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select mat size</option>
-                          {matSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
+                    {/* Lashes Preference */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          👁️ Lashes Style Preference
+                        </label>
+                        {bookingData.lashPreference && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.lashPreference}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Dramatic 3D/Mink Lashes', label: 'Dramatic 3D/Mink Lashes' },
+                          { id: 'Soft Wispy / Cluster Lashes', label: 'Soft Wispy / Clusters' },
+                          { id: 'Natural Strip Lashes', label: 'Natural Strip Lashes' },
+                          { id: 'Bringing My Own Lashes', label: 'Bringing My Own Lashes' },
+                          { id: 'No Lashes (Mascara Only)', label: 'No Lashes (Mascara Only)' }
+                        ].map(lash => {
+                          const isSelected = bookingData.lashPreference === lash.id;
+                          return (
+                            <button
+                              key={lash.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, lashPreference: lash.id }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              {lash.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Mat Material</label>
-                        <select
-                          name="matMaterial"
-                          value={bookingData.matMaterial}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select material</option>
-                          {matMaterials.map(material => (
-                            <option key={material.id} value={material.id}>{material.name}</option>
-                          ))}
-                        </select>
+                    {/* Hair Prep & Styling */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          💇‍♀️ Hair Prep / Styling Requirement
+                        </label>
+                        {bookingData.hairStyle && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.hairStyle}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          'Wig Install & Customization',
+                          'Braids & Cornrows',
+                          'Silk Press & Curls',
+                          'Sew-In / Weave Install',
+                          'Updo / Bridal Bun',
+                          'No Hair Service Needed'
+                        ].map(hair => {
+                          const isSelected = bookingData.hairStyle === hair;
+                          return (
+                            <button
+                              key={hair}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, hairStyle: hair }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              {hair}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Stain Level</label>
-                        <select
-                          name="stainLevel"
-                          value={bookingData.stainLevel}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select stain level</option>
-                          {stainLevels.map(level => (
-                            <option key={level.id} value={level.id}>{level.name}</option>
-                          ))}
-                        </select>
+                    {/* Nails & Shape */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          💅 Nails & Length Preference
+                        </label>
+                        {bookingData.nailStyle && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            Selected: {bookingData.nailStyle}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          'Short Natural / Plain Gel',
+                          'Medium Almond / Oval',
+                          'Long Coffin / Stiletto',
+                          'Custom 3D Art & Gems',
+                          'Classic French Tip',
+                          'Not Doing Nails'
+                        ].map(nail => {
+                          const isSelected = bookingData.nailStyle === nail;
+                          return (
+                            <button
+                              key={nail}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, nailStyle: nail }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              {nail}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Drying Preference</label>
-                        <select
-                          name="dryingPreference"
-                          value={bookingData.dryingPreference}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select drying preference</option>
-                          {dryingPreferences.map(pref => (
-                            <option key={pref.id} value={pref.id}>{pref.name}</option>
-                          ))}
-                        </select>
+                    {/* Touch-Up Kit & Aftercare */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                          🎁 Emergency Touch-Up Kit
+                        </label>
+                        {bookingData.touchUpKit && (
+                          <span className="text-xs font-bold text-pink-600 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                            {bookingData.touchUpKit}
+                          </span>
+                        )}
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { id: 'Yes - Include Mini Touch-Up Kit (Lipstick & Blotting Powder)', label: '💄 Yes - Include Touch-Up Kit' },
+                          { id: 'Standard Appointment (No Kit)', label: '✨ Standard Appointment' }
+                        ].map(kit => {
+                          const isSelected = bookingData.touchUpKit === kit.id;
+                          return (
+                            <button
+                              key={kit.id}
+                              type="button"
+                              onClick={() => setBookingData(prev => ({ ...prev, touchUpKit: kit.id }))}
+                              className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
+                                isSelected
+                                  ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200 scale-[1.02]'
+                                  : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
+                              }`}
+                            >
+                              {kit.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="pickupDelivery"
-                          checked={bookingData.pickupDelivery}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">Pickup & Delivery required (additional fee may apply)</label>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Animal Care Specific Fields - FIXED: Changed FaBird to FaDove */}
-                  {helper.type === 'animals' && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Type</label>
-                        <select
-                          name="animalType"
-                          value={bookingData.animalType}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select animal type</option>
-                          {animalTypes.map(animal => (
-                            <option key={animal.id} value={animal.id}>{animal.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Breed (if applicable)</label>
-                        <input
-                          type="text"
-                          name="animalBreed"
-                          value={bookingData.animalBreed}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="e.g., Labrador, Persian, etc."
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Size</label>
-                        <select
-                          name="animalSize"
-                          value={bookingData.animalSize}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select size</option>
-                          {animalSizes.map(size => (
-                            <option key={size.id} value={size.id}>{size.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Animal Age</label>
-                        <select
-                          name="animalAge"
-                          value={bookingData.animalAge}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select age range</option>
-                          {animalAgeRanges.map(age => (
-                            <option key={age.id} value={age.id}>{age.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Service Duration</label>
-                        <select
-                          name="serviceDuration"
-                          value={bookingData.serviceDuration}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select duration</option>
-                          {serviceDurations.map(duration => (
-                            <option key={duration.id} value={duration.id}>{duration.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Vaccination Status</label>
-                        <select
-                          name="vaccinationStatus"
-                          value={bookingData.vaccinationStatus}
-                          onChange={handleBookingChange}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                        >
-                          <option value="">Select status</option>
-                          <option value="upToDate">Up to date</option>
-                          <option value="notUpToDate">Not up to date</option>
-                          <option value="unknown">Unknown</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Special Needs or Instructions</label>
-                        <textarea
-                          name="specialNeeds"
-                          value={bookingData.specialNeeds}
-                          onChange={handleBookingChange}
-                          rows="2"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                          placeholder="Any medical conditions, behavioral issues, or special requirements"
-                        />
-                      </div>
-
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="ownSupplies"
-                          checked={bookingData.ownSupplies}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        <label className="text-sm text-gray-700">I will provide my own supplies (food, leash, etc.)</label>
-                      </div>
-                    </>
-                  )}
+                    {/* Skin & Hair Notes */}
+                    <div>
+                      <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
+                        📝 Skin / Hair Notes, Sensitivities & Allergies
+                      </label>
+                      <textarea
+                        name="skinHairNotes"
+                        value={bookingData.skinHairNotes || ''}
+                        onChange={handleBookingChange}
+                        rows="2"
+                        placeholder="e.g., Sensitive skin / eczema, bringing own foundation, preferred lash glue brand, 26-inch braiding hair..."
+                        className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-400 focus:border-pink-400 text-xs font-medium bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

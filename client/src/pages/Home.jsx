@@ -71,6 +71,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 
 import { 
@@ -1505,19 +1506,17 @@ const Home = () => {
     const fetchBookingCount = async () => {
       if (!currentUser?._id) return;
       try {
-        const res = await fetch(`/api/bookings/user/${currentUser._id}`, {
+        const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`, {
           signal: controller.signal
         });
-        // Silently handle not-ready / bad-request states
-        if (res.status === 503 || res.status === 400) return;
-        if (res.ok) {
-          const data = await res.json();
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data)) {
           const activeBookings = data.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'declined');
           setRequestCount(activeBookings.length);
         }
       } catch (error) {
         if (error.name === 'AbortError') return;
-        console.error('Failed to fetch booking count:', error);
       }
     };
 

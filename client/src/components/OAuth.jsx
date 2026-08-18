@@ -43,7 +43,9 @@ export default function OAuth() {
     } catch (error) {
       console.error('Google Auth Error:', error);
       let errorMessage = 'Could not sign in with Google';
-      if (error.code === 'auth/popup-closed-by-user') {
+      if (error.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Google Sign-In is not enabled in the Firebase Console. Please enable Google under Authentication > Sign-in method.';
+      } else if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in popup was closed before completion.';
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = 'Network error. Please check your connection.';

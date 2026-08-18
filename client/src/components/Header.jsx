@@ -421,19 +421,16 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       dispatch(signOutUserStart());
-      const res = await fetch('/api/auth/signout');
-      const data = await res.json();
-      if (data.success === false) {
-        dispatch(signOutUserFailure(data.message));
-        return;
-      }
+      fetch('/api/auth/signout', { credentials: 'include' }).catch(() => {});
       clearPersistedSessionToken();
-      dispatch(signOutUserSuccess(data));
+      dispatch(signOutUserSuccess());
       navigate('/sign-in');
       setShowProfileDropdown(false);
       setShowMobileMenu(false);
     } catch (error) {
-      dispatch(signOutUserFailure(error.message));
+      clearPersistedSessionToken();
+      dispatch(signOutUserSuccess());
+      navigate('/sign-in');
     }
   };
 

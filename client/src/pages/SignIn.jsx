@@ -13,11 +13,21 @@ import { persistSessionToken } from '../utils/authenticatedFetch';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { loading, error } = useSelector((state) => state.user);
+  const { loading, error, currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // If already signed in, redirect to home
+  useEffect(() => {
+    if (currentUser) {
+      navigate('/', { replace: true });
+    }
+    // Clear any previous sign in errors when mounting
+    dispatch(signInFailure(null));
+  }, [currentUser, navigate, dispatch]);
+
   const handleChange = (e) => {
+    if (error) dispatch(signInFailure(null));
     setFormData({
       ...formData,
       [e.target.id]: e.target.value,
@@ -44,7 +54,7 @@ export default function SignIn() {
           navigate('/sign-up', { state: { email: formData.email, verify: true } });
           return;
         }
-        throw new Error(data.message || 'Failed to sign in. Please try again.');
+        throw new Error(data.message || 'Failed to sign in. Please check your email and password.');
       }
 
       if (data.success === false) {
@@ -53,60 +63,15 @@ export default function SignIn() {
       }
 
       if (data.token || data.access_token) {
-        localStorage.setItem('access_token', data.access_token || data.token);
-        localStorage.setItem('token', data.access_token || data.token);
+        persistSessionToken(data);
       }
 
       dispatch(signInSuccess(data));
       navigate('/');
-    } catch (error) {
-      dispatch(signInFailure(error.message));
+    } catch (err) {
+      dispatch(signInFailure(err.message || 'Unable to sign in. Please try again.'));
     }
   };
-
-  // Token validation on mount
-  useEffect(() => {
-    const validateSession = async () => {
-      if (formData.email || formData.password) return;
-      dispatch(signInStart());
-      try {
-        const res = await fetch('/api/auth/validate-token', {
-          method: 'POST',
-          credentials: 'include'
-        });
-
-        if (!res.ok) {
-           console.warn('Initial session validation check failed on server:', res.status);
-           dispatch(signInFailure(null));
-           return;
-        }
-
-        const data = await res.json();
-        if (data && data.valid) {
-          persistSessionToken(data);
-          dispatch(signInSuccess(data.user));
-          navigate('/');
-        } else {
-          dispatch(signInFailure(null));
-        }
-      } catch (error) {
-        dispatch(signInFailure(null));
-      }
-    };
-    validateSession();
-  }, [dispatch, navigate]);
-
-  // Full-page loading spinner for initial session validation
-  if (loading && !formData.email && !formData.password) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <FaSpinner className="animate-spin text-4xl text-[#FF5A5F] mx-auto mb-4" />
-          <p className="text-base text-[#717171] font-normal">Checking your session...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8">
@@ -167,6 +132,7 @@ export default function SignIn() {
 
           {/* Sign In Button */}
           <button
+            type="submit"
             disabled={loading}
             className="mt-4 w-full bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] text-white py-3.5 px-6 rounded-xl font-semibold text-[16px] hover:shadow-lg hover:-translate-y-[1px] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0"
           >

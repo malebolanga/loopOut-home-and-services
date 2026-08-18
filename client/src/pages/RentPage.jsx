@@ -107,10 +107,15 @@ const GalleryOverlay = ({ images, startIndex, onClose }) => {
 const InquiryModal = ({ listing, onClose }) => {
   const { currentUser } = useSelector((s) => s.user);
   const [form, setForm] = useState({
-    name:    currentUser?.username || "",
-    phone:   String(currentUser?.contact || ""),
-    email:   currentUser?.email || "",
-    message: "Hi, I'm interested in this rental. Please get in touch!",
+    name:          currentUser?.username || "",
+    phone:         String(currentUser?.contact || ""),
+    email:         currentUser?.email || "",
+    inquiryType:   "Schedule a Viewing",
+    viewingDate:   "",
+    viewingTime:   "10:00",
+    leaseDuration: "12 Months",
+    occupants:     "1",
+    message:       "Hi, I'm interested in this rental. Please get in touch!",
   });
   const [sent, setSent] = useState(false);
 
@@ -124,15 +129,19 @@ const InquiryModal = ({ listing, onClose }) => {
     const host = listing?.contact || listing?.userRef?.contact || "";
     if (!host) { alert("Host contact not available"); return; }
 
-    const msg =
-      `*🏠 RENTAL INQUIRY*%0A%0A` +
+    let msg =
+      `*🏠 RENTAL INQUIRY & VIEWING*%0A%0A` +
       `*Property:* ${listing.name}%0A` +
       `*Address:* ${listing.address}%0A` +
       `*Price:* R${listing.regularPrice?.toLocaleString()}/month%0A%0A` +
       `*Name:* ${form.name}%0A` +
-      `*Phone:* ${form.phone}%0A` +
-      `*Email:* ${form.email}%0A%0A` +
-      `*Message:* ${form.message}`;
+      `*Phone:* ${form.phone}%0A`;
+    if (form.email) msg += `*Email:* ${form.email}%0A`;
+    msg += `*Purpose:* ${form.inquiryType}%0A`;
+    if (form.viewingDate) msg += `*Preferred Viewing Date:* ${form.viewingDate} at ${form.viewingTime}%0A`;
+    msg += `*Target Lease Term:* ${form.leaseDuration}%0A`;
+    msg += `*Occupants:* ${form.occupants}%0A%0A`;
+    msg += `*Message:* ${form.message}`;
 
     window.open(`https://wa.me/${formatWA(host)}?text=${msg}`, "_blank");
     setSent(true);
@@ -140,15 +149,15 @@ const InquiryModal = ({ listing, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-        className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden"
+        className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col"
       >
-        <div className="bg-gray-950 p-8 flex items-center justify-between">
+        <div className="bg-gray-950 p-6 sm:p-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black text-white tracking-tight">Contact Host</h2>
-            <p className="text-gray-400 text-xs uppercase tracking-widest mt-1">Send inquiry via WhatsApp</p>
+            <p className="text-gray-400 text-xs uppercase tracking-widest mt-1">Property Inquiry & Viewing Schedule</p>
           </div>
           <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition">
             <XMarkIcon className="w-5 h-5 text-white" />
@@ -161,34 +170,110 @@ const InquiryModal = ({ listing, onClose }) => {
             <p className="font-black text-gray-900 text-xl">Message Sent!</p>
           </div>
         ) : (
-          <form onSubmit={handleSend} className="p-8 space-y-4">
+          <form onSubmit={handleSend} className="p-6 sm:p-8 space-y-4 overflow-y-auto">
             {[
               { id: "name",  label: "Your Name",    type: "text",  placeholder: "John Doe" },
               { id: "phone", label: "Phone Number",  type: "tel",   placeholder: "082 123 4567" },
               { id: "email", label: "Email Address", type: "email", placeholder: "john@example.com" },
             ].map(({ id, label, type, placeholder }) => (
               <div key={id}>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{label}</label>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">{label}</label>
                 <input
                   type={type} required value={form[id]}
                   onChange={(e) => setForm((p) => ({ ...p, [id]: e.target.value }))}
                   placeholder={placeholder}
-                  className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition"
+                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-sm"
                 />
               </div>
             ))}
+
+            {/* Inquiry Purpose */}
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Message</label>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Inquiry Purpose</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Schedule a Viewing', 'Rental Application', 'Price & Terms', 'General Question'].map(purpose => (
+                  <button
+                    key={purpose}
+                    type="button"
+                    onClick={() => setForm(p => ({ ...p, inquiryType: purpose }))}
+                    className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition text-center ${
+                      form.inquiryType === purpose
+                        ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    {purpose}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preferred Viewing Date & Time */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Viewing Date (Optional)</label>
+                <input
+                  type="date"
+                  value={form.viewingDate}
+                  onChange={(e) => setForm(p => ({ ...p, viewingDate: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Viewing Time</label>
+                <select
+                  value={form.viewingTime}
+                  onChange={(e) => setForm(p => ({ ...p, viewingTime: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                >
+                  {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Lease Duration & Occupants */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Target Lease</label>
+                <select
+                  value={form.leaseDuration}
+                  onChange={(e) => setForm(p => ({ ...p, leaseDuration: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                >
+                  <option value="Month-to-Month">Month-to-Month</option>
+                  <option value="6 Months">6 Months</option>
+                  <option value="12 Months">12 Months (Standard)</option>
+                  <option value="24+ Months">24+ Months</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Occupants</label>
+                <select
+                  value={form.occupants}
+                  onChange={(e) => setForm(p => ({ ...p, occupants: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                >
+                  {[1, 2, 3, 4, 5, 6].map(n => (
+                    <option key={n} value={String(n)}>{n} {n === 1 ? 'Person' : 'People'}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Message / Questions</label>
               <textarea
-                rows={3} value={form.message}
+                rows={2} value={form.message}
                 onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
-                className="w-full px-5 py-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition resize-none"
+                className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition resize-none text-sm"
               />
             </div>
             <button type="submit"
-              className="w-full py-5 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl uppercase tracking-widest flex items-center justify-center gap-3 transition active:scale-95 shadow-xl shadow-green-100"
+              className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-black rounded-2xl uppercase tracking-widest flex items-center justify-center gap-3 transition active:scale-95 shadow-xl shadow-green-100 text-sm"
             >
-              <FaWhatsapp size={22} /> Send via WhatsApp
+              <FaWhatsapp size={20} /> Send via WhatsApp
             </button>
           </form>
         )}
