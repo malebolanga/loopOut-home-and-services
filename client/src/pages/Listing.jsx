@@ -285,6 +285,19 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         const checkOut = new Date(bookingDetails.checkOut);
         if (checkOut <= checkIn) {
           newErrors.checkOut = 'Check-out must be after check-in';
+        } else {
+          checkIn.setHours(0, 0, 0, 0);
+          checkOut.setHours(0, 0, 0, 0);
+          const hasOverlap = bookedDates.some(range => {
+            const start = new Date(range.start);
+            const end = new Date(range.end);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            return checkIn < end && checkOut > start;
+          });
+          if (hasOverlap) {
+            newErrors.checkIn = 'The selected dates are already booked or occupied. Please choose available dates.';
+          }
         }
       }
 
@@ -300,6 +313,23 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     if (isOffice) {
       if (!bookingDetails.selectedDate) {
         newErrors.selectedDate = 'Date is required';
+      } else if (bookingDetails.startTime && bookingDetails.endTime) {
+        const [sH, sM] = bookingDetails.startTime.split(':').map(Number);
+        const [eH, eM] = bookingDetails.endTime.split(':').map(Number);
+        const startDt = new Date(bookingDetails.selectedDate);
+        startDt.setHours(sH, sM, 0, 0);
+        const endDt = new Date(bookingDetails.selectedDate);
+        endDt.setHours(eH, eM, 0, 0);
+
+        const hasOverlap = bookedDates.some(range => {
+          const start = new Date(range.start);
+          const end = new Date(range.end);
+          return startDt < end && endDt > start;
+        });
+
+        if (hasOverlap) {
+          newErrors.selectedDate = 'This time slot is already booked. Please choose an available time.';
+        }
       }
     }
 
@@ -1792,6 +1822,25 @@ export default function Listing() {
       window.location.href = '/sign-in';
       return;
     }
+
+    if (isOvernight && dateRange && dateRange[0] && dateRange[1]) {
+      const checkIn = new Date(dateRange[0]);
+      const checkOut = new Date(dateRange[1]);
+      checkIn.setHours(0, 0, 0, 0);
+      checkOut.setHours(0, 0, 0, 0);
+      const hasOverlap = bookedDates.some(range => {
+        const start = new Date(range.start);
+        const end = new Date(range.end);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        return checkIn < end && checkOut > start;
+      });
+      if (hasOverlap) {
+        alert('The selected reservation dates are already booked or occupied. Please select available dates on the calendar.');
+        return;
+      }
+    }
+
     try {
       setIsContacting(true);
       const res = await fetch('/api/payment/escrow', {
@@ -2695,6 +2744,23 @@ export default function Listing() {
                         }}
                         className="rounded-xl border border-gray-200 shadow-sm w-full"
                       />
+
+                      {dateRange && dateRange[0] && dateRange[1] && bookedDates.some(range => {
+                        const checkIn = new Date(dateRange[0]);
+                        const checkOut = new Date(dateRange[1]);
+                        const start = new Date(range.start);
+                        const end = new Date(range.end);
+                        checkIn.setHours(0, 0, 0, 0);
+                        checkOut.setHours(0, 0, 0, 0);
+                        start.setHours(0, 0, 0, 0);
+                        end.setHours(0, 0, 0, 0);
+                        return checkIn < end && checkOut > start;
+                      }) && (
+                        <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
+                          <span className="text-base">⚠️</span>
+                          <span>Selected dates include already booked / occupied days. Please select available dates.</span>
+                        </div>
+                      )}
                     </div>
                   )}
 

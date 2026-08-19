@@ -94,12 +94,12 @@ export const createBooking = async (req, res) => {
     // Overlap check to prevent double-booking
     // For single-time appointments (like helpers/services where start == end), treat slot window as 1 hour
     const slotStart = new Date(startDate);
-    const slotEnd = end.getTime() === start.getTime()
+    const slotEnd = end.getTime() <= start.getTime()
       ? new Date(start.getTime() + 60 * 60 * 1000)
       : new Date(endDate);
 
     const overlapQuery = {
-      status: { $in: ['confirmed', 'approved', 'ongoing', 'assigned'] },
+      status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned', 'enroute'] },
       $and: [
         { startDate: { $lt: slotEnd } },
         { 
@@ -118,7 +118,7 @@ export const createBooking = async (req, res) => {
     const existingBooking = await Booking.findOne(overlapQuery);
     if (existingBooking) {
       console.warn('[createBooking] validation failed: time slot already reserved', { overlapQuery, existingBookingId: existingBooking._id });
-      return res.status(400).json({ error: 'This time slot is already reserved. Please select another time.' });
+      return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
     }
 
     // Create booking with server-authoritative user ID and price
@@ -128,8 +128,8 @@ export const createBooking = async (req, res) => {
       helper: helperId || undefined,
       service: serviceId || undefined,
       event: eventId || undefined,
-      startDate,
-      endDate,
+      startDate: slotStart,
+      endDate: slotEnd,
       totalPrice: serverTotalPrice,
       phone,
       message,
@@ -199,6 +199,10 @@ export const createBooking = async (req, res) => {
 export const getBookedDates = async (req, res) => {
   try {
     const { listingId } = req.params;
+    if (!listingId || !mongoose.Types.ObjectId.isValid(listingId)) {
+      return res.json([]);
+    }
+
     const bookings = await Booking.find({
       $or: [
         { listing: listingId },
@@ -206,12 +210,17 @@ export const getBookedDates = async (req, res) => {
         { service: listingId },
         { event: listingId }
       ],
-      status: { $in: ['pending', 'confirmed', 'approved'] }
-    });
+      status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned', 'enroute'] }
+    }).select('startDate endDate status');
 
-    const bookedDates = bookings.map(b => ({ start: b.startDate, end: b.endDate }));
+    const bookedDates = bookings.map(b => ({
+      start: b.startDate,
+      end: b.endDate,
+      status: b.status
+    }));
     res.json(bookedDates);
   } catch (error) {
+    console.error('[getBookedDates] error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

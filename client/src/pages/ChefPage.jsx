@@ -8,6 +8,9 @@ import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { useWishlist } from '../hooks/useWishlist';
+import { useBookedSlots } from '../hooks/useBookedSlots';
+import BookingTimeSlots from '../components/BookingTimeSlots';
+import BookingDateNotice from '../components/BookingDateNotice';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import { Link } from "react-router-dom";
 import {
@@ -770,6 +773,8 @@ export default function ChefPage() {
     specialNeeds: '',
     ownSupplies: false,
   });
+
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(helper?._id || id);
 
   // AI Assessment States
   const [aiAssessment, setAiAssessment] = useState({
@@ -1583,6 +1588,16 @@ export default function ChefPage() {
       return;
     }
 
+    if (bookingData.date && isDateFullyBooked(bookingData.date)) {
+      alert("This date is not available (fully booked). Please select another date.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+      alert("This time slot is already booked and not available. Please choose another time.");
+      return;
+    }
+
     // Enhanced location validation for quick booking
     if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
       alert("Please provide your address for home service in the booking form.");
@@ -1701,6 +1716,17 @@ export default function ChefPage() {
       window.location.href = '/sign-in';
       return;
     }
+
+    if (bookingData.date && isDateFullyBooked(bookingData.date)) {
+      alert("This date is not available (fully booked). Please select another date.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+      alert("This time slot is already booked and not available. Please choose another time.");
+      return;
+    }
+
     try {
       setIsUploading(true);
       const res = await fetch('/api/payment/escrow', {
@@ -1744,6 +1770,16 @@ export default function ChefPage() {
 
     if (!helper?.contact) {
       alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
+      return;
+    }
+
+    if (bookingData.date && isDateFullyBooked(bookingData.date)) {
+      alert("This date is not available (fully booked). Please select another date.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+      alert("This time slot is already booked and not available. Please choose another time.");
       return;
     }
 
@@ -2596,29 +2632,30 @@ export default function ChefPage() {
 
                 {/* Quick Booking Options */}
                 <div className="space-y-4 mb-8">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={bookingData.date}
-                        onChange={handleBookingChange}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                      />
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Time Frame</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                      />
-                    </div>
+                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
+                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      value={bookingData.date}
+                      onChange={handleBookingChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
+                    />
                   </div>
+
+                  {bookingData.date && (
+                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                      <BookingTimeSlots
+                        selectedDate={bookingData.date}
+                        selectedTime={bookingData.time}
+                        onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                        isTimeSlotBooked={isTimeSlotBooked}
+                        isDateFullyBooked={isDateFullyBooked}
+                      />
+                    </div>
+                  )}
+
                   <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
                     <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
                     <input
@@ -2812,7 +2849,7 @@ export default function ChefPage() {
                   </div>
 
                   {/* Date & Time */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
                       <input
@@ -2824,16 +2861,14 @@ export default function ChefPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      />
-                    </div>
+
+                    <BookingTimeSlots
+                      selectedDate={bookingData.date}
+                      selectedTime={bookingData.time}
+                      onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                      isTimeSlotBooked={isTimeSlotBooked}
+                      isDateFullyBooked={isDateFullyBooked}
+                    />
                   </div>
 
                   {/* Service Frequency */}

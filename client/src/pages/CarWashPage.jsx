@@ -30,6 +30,8 @@ import 'swiper/css/free-mode';
 
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
+import { useBookedSlots } from '../hooks/useBookedSlots';
+import BookingTimeSlots from '../components/BookingTimeSlots';
 
 export default function CarWashPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -43,6 +45,9 @@ export default function CarWashPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
+
+  const params = useParams();
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(carWash?._id || params.carWashId || params.id);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -275,6 +280,11 @@ export default function CarWashPage() {
     // Basic validation
     if (!bookingData.name || !bookingData.phone) {
       alert("Please fill in your name and phone number.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, 60)) {
+      alert("This time slot is already booked. Please choose an available time.");
       return;
     }
 
@@ -853,28 +863,25 @@ export default function CarWashPage() {
 
                 {/* Quick Booking Form */}
                 <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                  <div className="grid grid-cols-2 border-b border-gray-300">
-                    <div className="p-3 border-r border-gray-300">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Date</label>
-                      <input 
-                        type="date"
-                        name="date"
-                        value={bookingData.date}
-                        onChange={handleBookingChange}
-                        className="w-full text-sm text-gray-700 outline-none"
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className="p-3">
-                      <label className="block text-xs font-bold text-gray-900 uppercase">Time</label>
-                      <input 
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full text-sm text-gray-700 outline-none"
-                      />
-                    </div>
+                  <div className="p-3 border-b border-gray-300">
+                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Date</label>
+                    <input 
+                      type="date"
+                      name="date"
+                      value={bookingData.date}
+                      onChange={handleBookingChange}
+                      className="w-full text-sm text-gray-700 outline-none"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div className="p-3 border-b border-gray-300">
+                    <BookingTimeSlots
+                      selectedDate={bookingData.date}
+                      selectedTime={bookingData.time}
+                      onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                      isTimeSlotBooked={isTimeSlotBooked}
+                      isDateFullyBooked={isDateFullyBooked}
+                    />
                   </div>
                   <div className="p-3">
                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Your Name</label>

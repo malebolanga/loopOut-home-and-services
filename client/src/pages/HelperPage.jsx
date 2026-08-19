@@ -95,12 +95,17 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 import BookingHistory from '../components/BookingHistory';
+import { useBookedSlots } from '../hooks/useBookedSlots';
+import BookingTimeSlots from '../components/BookingTimeSlots';
 
 export default function HelperPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const params = useParams();
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(helper?._id || params.id || params.helperId);
   const [error, setError] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -1926,6 +1931,11 @@ export default function HelperPage() {
       return;
     }
 
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, 60)) {
+      alert("This time slot is already booked. Please choose an available time.");
+      return;
+    }
+
     // Business hours validation
     if (isSelectedTimeClosed()) {
       alert("The selected time falls outside of this professional's operating hours. Please check their schedule and select another time.");
@@ -3210,7 +3220,7 @@ export default function HelperPage() {
               {/* Date & Time */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Date & time</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                     <input
@@ -3223,23 +3233,13 @@ export default function HelperPage() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time *</label>
-                    <input
-                      type="time"
-                      name="time"
-                      value={bookingData.time}
-                      onChange={handleBookingChange}
-                      required
-                      className={`w-full px-4 py-2 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
-                    />
-                    {isSelectedTimeClosed() && (
-                      <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
-                        <ClockIcon className="w-3 h-3" />
-                        Outside business hours
-                      </p>
-                    )}
-                  </div>
+                  <BookingTimeSlots
+                    selectedDate={bookingData.date}
+                    selectedTime={bookingData.time}
+                    onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                    isTimeSlotBooked={isTimeSlotBooked}
+                    isDateFullyBooked={isDateFullyBooked}
+                  />
                 </div>
               </div>
 
@@ -3271,7 +3271,7 @@ export default function HelperPage() {
                   </div>
 
                   {/* Date & Time */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
                       <input
@@ -3283,22 +3283,13 @@ export default function HelperPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className={`w-full p-3 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
-                      />
-                      {isSelectedTimeClosed() && (
-                        <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
-                          <ClockIcon className="w-3 h-3" />
-                          Outside business hours
-                        </p>
-                      )}
-                    </div>
+                    <BookingTimeSlots
+                      selectedDate={bookingData.date}
+                      selectedTime={bookingData.time}
+                      onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                      isTimeSlotBooked={isTimeSlotBooked}
+                      isDateFullyBooked={isDateFullyBooked}
+                    />
                   </div>
 
                   {/* Service Frequency */}

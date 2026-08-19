@@ -90,12 +90,17 @@ import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import BookingHistory from '../components/BookingHistory';
+import { useBookedSlots } from '../hooks/useBookedSlots';
+import BookingTimeSlots from '../components/BookingTimeSlots';
 
 export default function PrivateTutor() {
   const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [helper, setHelper] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const params = useParams();
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(helper?._id || params.id || params.helperId);
   const [error, setError] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -1856,6 +1861,11 @@ export default function PrivateTutor() {
       return;
     }
 
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, 60)) {
+      alert("This time slot is already booked. Please choose an available time.");
+      return;
+    }
+
     // Enhanced location validation
     if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
       alert("Please provide your address for home service.");
@@ -2987,7 +2997,7 @@ export default function PrivateTutor() {
                   </div>
 
                   {/* Date & Time */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">📅 Date</label>
                       <input
@@ -2999,16 +3009,13 @@ export default function PrivateTutor() {
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">⏰ Time</label>
-                      <input
-                        type="time"
-                        name="time"
-                        value={bookingData.time}
-                        onChange={handleBookingChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      />
-                    </div>
+                    <BookingTimeSlots
+                      selectedDate={bookingData.date}
+                      selectedTime={bookingData.time}
+                      onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
+                      isTimeSlotBooked={isTimeSlotBooked}
+                      isDateFullyBooked={isDateFullyBooked}
+                    />
                   </div>
 
                   {/* Service Frequency */}

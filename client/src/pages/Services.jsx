@@ -7,6 +7,9 @@ import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
 import { Link } from "react-router-dom";
+import { useBookedSlots } from '../hooks/useBookedSlots';
+import BookingTimeSlots from '../components/BookingTimeSlots';
+import BookingDateNotice from '../components/BookingDateNotice';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import {
   MapPinIcon,
@@ -538,6 +541,8 @@ const ServicePage = () => {
   // Get current service configuration
   const currentServiceConfig = service ? getServiceConfig(service.type) : null;
   const requiresVehicleType = currentServiceConfig?.requiresVehicleType || false;
+
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(service?._id || id);
 
   useEffect(() => {
     if (service) {
@@ -1148,6 +1153,16 @@ const ServicePage = () => {
       return;
     }
 
+    if (bookingData.date && isDateFullyBooked(bookingData.date)) {
+      alert("This date is not available (fully booked). Please select another date.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+      alert("This time slot is already booked and not available. Please choose another time.");
+      return;
+    }
+
     if (isSelectedTimeClosed()) {
       alert("The selected time falls outside of this service's operating hours. Please check their schedule and select another time.");
       return;
@@ -1163,6 +1178,17 @@ const ServicePage = () => {
       window.location.href = '/sign-in';
       return;
     }
+
+    if (bookingData.date && isDateFullyBooked(bookingData.date)) {
+      alert("This date is not available (fully booked). Please select another date.");
+      return;
+    }
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+      alert("This time slot is already booked and not available. Please choose another time.");
+      return;
+    }
+
     try {
       setIsUploading(true);
       const res = await fetch('/api/payment/escrow', {
@@ -2417,7 +2443,7 @@ const ServicePage = () => {
               {/* Date & Time */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Date & time</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                     <input

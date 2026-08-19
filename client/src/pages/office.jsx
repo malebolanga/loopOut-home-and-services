@@ -52,6 +52,7 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import jsPDF from "jspdf";
 import emailjs from "emailjs-com";
+import { useBookedSlots } from "../hooks/useBookedSlots";
 
 const mapContainerStyle = {
   width: "100%",
@@ -81,6 +82,7 @@ export default function OfficeListing() {
 
   const params = useParams();
   const { currentUser } = useSelector((state) => state.user);
+  const { bookedDates, isDateBooked, isDateRangeBooked } = useBookedSlots(listing?._id || params.listingId);
 
   useEffect(() => {
     const fetchListing = async () => {
@@ -160,6 +162,23 @@ export default function OfficeListing() {
   const sendBookingInformation = () => {
     if (!name || !contact || !startDate || !endDate) {
       alert("Please fill in all required fields and select dates.");
+      return;
+    }
+
+    const checkIn = new Date(startDate);
+    const checkOut = new Date(endDate);
+    checkIn.setHours(0, 0, 0, 0);
+    checkOut.setHours(0, 0, 0, 0);
+    const hasOverlap = bookedDates.some(range => {
+      const start = new Date(range.start);
+      const end = new Date(range.end);
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+      return checkIn < end && checkOut > start;
+    });
+
+    if (hasOverlap) {
+      alert("The selected dates are already booked or occupied. Please select available dates.");
       return;
     }
 
@@ -615,8 +634,38 @@ export default function OfficeListing() {
                 value={[startDate, endDate]}
                 selectRange
                 minDate={new Date()}
+                tileDisabled={({ date, view }) => {
+                  if (view === 'month') {
+                    return bookedDates.some(range => {
+                      const start = new Date(range.start);
+                      const end = new Date(range.end);
+                      const current = new Date(date);
+                      current.setHours(0, 0, 0, 0);
+                      start.setHours(0, 0, 0, 0);
+                      end.setHours(0, 0, 0, 0);
+                      return current >= start && current <= end;
+                    });
+                  }
+                  return false;
+                }}
                 className="border-0"
               />
+
+              {startDate && endDate && bookedDates.some(range => {
+                const checkIn = new Date(startDate);
+                const checkOut = new Date(endDate);
+                const start = new Date(range.start);
+                const end = new Date(range.end);
+                checkIn.setHours(0, 0, 0, 0);
+                checkOut.setHours(0, 0, 0, 0);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(0, 0, 0, 0);
+                return checkIn < end && checkOut > start;
+              }) && (
+                <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
+                  <span>⚠️ Selected dates include already booked / occupied days.</span>
+                </div>
+              )}
               <div className="flex space-x-3 mt-6">
                 <button
                   onClick={() => setShowCalendar(false)}
