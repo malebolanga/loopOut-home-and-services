@@ -57,6 +57,18 @@ const listingSchema = new mongoose.Schema(
     numberOfUsed: { type: Number, required: false },
     checkInTime: { type: String, required: false, default: '14:00' },
     checkOutTime: { type: String, required: false, default: '11:00' },
+    numberOfApartments: { type: Number, default: 0 },
+    numberOfRooms: { type: Number, default: 1 },
+    totalUnits: { type: Number, default: 1 },
+    roomTypes: [
+      {
+        name: { type: String },
+        count: { type: Number, default: 1 },
+        price: { type: Number },
+        capacity: { type: Number },
+        description: { type: String }
+      }
+    ],
     operatingHours: {
       monday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },
       tuesday: { open: { type: String, default: '08:00' }, close: { type: String, default: '19:00' }, closed: { type: Boolean, default: false } },

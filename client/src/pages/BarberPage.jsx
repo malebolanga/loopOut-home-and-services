@@ -767,6 +767,9 @@ export default function BarberPage() {
     ownSupplies: false,
   });
 
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(helper?._id || id);
 
   // AI Assessment States
@@ -781,9 +784,6 @@ export default function BarberPage() {
 
   const [commentAnalysis, setCommentAnalysis] = useState({});
   const [analyzingComments, setAnalyzingComments] = useState(false);
-
-  const { id } = useParams();
-  const navigate = useNavigate();
 
   // Calculate total price
   useEffect(() => {

@@ -542,7 +542,7 @@ const ServicePage = () => {
   const currentServiceConfig = service ? getServiceConfig(service.type) : null;
   const requiresVehicleType = currentServiceConfig?.requiresVehicleType || false;
 
-  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(service?._id || id);
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(service?._id || serviceId);
 
   useEffect(() => {
     if (service) {

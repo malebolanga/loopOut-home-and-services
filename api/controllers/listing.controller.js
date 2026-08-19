@@ -57,6 +57,10 @@ export const createListing = async (req, res, next) => {
       wheelchairAccessible,
       parkingAvailable,
       environmentallyFriendly,
+      numberOfApartments,
+      numberOfRooms,
+      totalUnits,
+      roomTypes,
     } = req.body;
 
     // Always assign the authenticated user as the owner — ignore client-supplied userRef
@@ -76,8 +80,8 @@ export const createListing = async (req, res, next) => {
       period,
       cancel,
       type,
-      bedrooms,
-      bathrooms,
+      bedrooms: Number(bedrooms) || 1,
+      bathrooms: Number(bathrooms) || 1,
       regularPrice,
       discountPrice,
       parking,
@@ -103,6 +107,10 @@ export const createListing = async (req, res, next) => {
       wheelchairAccessible,
       parkingAvailable,
       environmentallyFriendly,
+      numberOfApartments: Number(numberOfApartments) || 0,
+      numberOfRooms: Number(numberOfRooms) || (Number(bedrooms) || 1),
+      totalUnits: Number(totalUnits) || 1,
+      roomTypes: Array.isArray(roomTypes) ? roomTypes : [],
     });
 
     createAreaNotifications(listing, 'listing');
@@ -169,7 +177,8 @@ export const updateListing = async (req, res, next) => {
       parking, pool, wifi, kitchen, stove, tv, storage, security, furnished, offer,
       hot, pets, prepaid, fridge, share, breakfast, party,
       instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
-      operatingHours
+      operatingHours,
+      numberOfApartments, numberOfRooms, totalUnits, roomTypes
     } = req.body;
 
     const allowedUpdate = {
@@ -178,7 +187,8 @@ export const updateListing = async (req, res, next) => {
       parking, pool, wifi, kitchen, stove, tv, storage, security, furnished, offer,
       hot, pets, prepaid, fridge, share, breakfast, party,
       instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
-      operatingHours
+      operatingHours,
+      numberOfApartments, numberOfRooms, totalUnits, roomTypes
     };
 
     // Strip undefined values to avoid clearing existing fields unintentionally
@@ -323,7 +333,7 @@ export const getListings = async (req, res, next) => {
     let type = req.query.type;
 
     if (type === undefined || type === 'all') {
-      type = { $in: ['sale', 'rent', 'over', 'office', 'land', 'resort', 'guest_house'] };
+      type = { $in: ['sale', 'rent', 'over', 'office', 'land', 'resort', 'guest_house', 'hotel', 'apartment', 'guesthouse'] };
     }
 
     const searchTerm = req.query.searchTerm || '';
@@ -336,12 +346,16 @@ export const getListings = async (req, res, next) => {
 
     let bedrooms = req.query.bedrooms;
     if (bedrooms === undefined || bedrooms === '0') {
-      bedrooms = { $in: [1, 2, 3, 4, 5, 6, 10] }; // Allowing all common bedroom counts
+      bedrooms = { $gte: 0 };
+    } else {
+      bedrooms = Number(bedrooms);
     }
 
     let bathrooms = req.query.bathrooms;
     if (bathrooms === undefined || bathrooms === '0') {
-      bathrooms = { $in: [1, 2, 3, 4, 5, 6, 10] };
+      bathrooms = { $gte: 0 };
+    } else {
+      bathrooms = Number(bathrooms);
     }
 
     const sort = req.query.sort || 'createdAt';

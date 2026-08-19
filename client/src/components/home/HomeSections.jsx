@@ -1064,10 +1064,9 @@ export const NeuralPicksSection = ({ navigate }) => {
                 />
               ))}
             </div>
-         
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500">Neural Recommendation Engine</span>
           </div>
-         
-          <p className="text-gray-500 mt-1 uppercase text-[10px] font-black tracking-[0.2em]">Based on your performance and interest history</p>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Top Verified Helpers For You</h2>
         </div>
         <div className="hidden md:flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
           <div className="flex items-center gap-2">
@@ -2325,9 +2324,9 @@ export const CompareRecommendedSection = ({ navigate }) => {
           const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
 
           if (type === 'property') {
-            if (text.includes('guest house') || text.includes('guesthouse') || text.includes('b&b')) return 'guesthouses';
-            if (text.includes('resort') || text.includes('self-catering') || text.includes('self catering') || text.includes('chalet') || text.includes('lodge')) return 'resorts';
-            if (item.type === 'over' || text.includes('hotel') || text.includes('motel')) return 'hotels';
+            if (item.type === 'over' || item.type === 'guesthouse' || item.kind === 'guest_house' || text.includes('guest house') || text.includes('guesthouse') || text.includes('b&b') || text.includes('bed and breakfast') || text.includes('guest')) return 'guesthouses';
+            if (item.type === 'resort' || item.type === 'land' || item.kind === 'resort' || text.includes('resort') || text.includes('self-catering') || text.includes('self catering') || text.includes('chalet') || text.includes('lodge')) return 'resorts';
+            if (item.type === 'hotel' || item.kind === 'hotel' || text.includes('hotel') || text.includes('motel')) return 'hotels';
             return 'rental_rooms';
           }
           if (text.includes('sneaker') || text.includes('kicks') || text.includes('shoe clean')) return 'sneakers';
@@ -2464,7 +2463,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
   };
 
   const fetchedForCategory = dbItemsByCategory[activeCategory] || [];
-  const rawCandidates = fetchedForCategory;
+  const rawCandidates = fetchedForCategory.length > 0 ? fetchedForCategory : (FALLBACK_ITEMS[activeCategory] || []);
   const hasGpsLocation = Boolean(userCoords?.latitude && userCoords?.longitude);
   const normalizedLocation = userLocationName.trim().toLowerCase();
 

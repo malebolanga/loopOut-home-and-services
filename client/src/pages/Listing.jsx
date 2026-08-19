@@ -2453,7 +2453,17 @@ export default function Listing() {
                <div className="flex flex-wrap gap-3 mt-6">
               {listing.bedrooms && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
-                  <FaBed className="text-rose-400" /> {listing.bedrooms} bed{listing.bedrooms > 1 ? "s" : ""}
+                  <FaBed className="text-rose-400" /> {listing.bedrooms} {listing.bedrooms > 1 ? "rooms/beds" : "bed"}
+                </div>
+              )}
+              {listing.numberOfApartments > 0 && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-2xl text-sm font-bold text-blue-700">
+                  🏢 {listing.numberOfApartments} Apartment{listing.numberOfApartments > 1 ? "s" : ""} in complex
+                </div>
+              )}
+              {listing.numberOfRooms > 1 && listing.numberOfRooms !== listing.bedrooms && (
+                <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-2xl text-sm font-bold text-purple-700">
+                  🛌 {listing.numberOfRooms} Guest Rooms Available
                 </div>
               )}
               {listing.bathrooms && (

@@ -471,6 +471,10 @@ export default function CreateListing() {
     cancel: "Flexible - Free cancellation 48 hours before check-in",
     bedrooms: 1,
     bathrooms: 1,
+    numberOfApartments: 0,
+    numberOfRooms: 1,
+    totalUnits: 1,
+    roomTypes: [],
     discountPrice: 0,
     parking: false,
     pool: false,
@@ -614,9 +618,12 @@ export default function CreateListing() {
     switch(type) {
       case 'rent': return 'apartment';
       case 'over': return 'guest_house';
+      case 'hotel': return 'hotel';
+      case 'apartment': return 'apartment';
       case 'office': return 'hourly_room';
       case 'land': return 'Self Catering';
-      case 'sale': return 'Hotel';
+      case 'sale': return 'house';
+      case 'resort': return 'resort';
       default: return 'apartment';
     }
   };
@@ -1403,9 +1410,12 @@ export default function CreateListing() {
         bookAuthor: listingForm.bookAuthor || "",
         bookYear: listingForm.bookYear || "",
         bookUsageHistory: listingForm.bookUsageHistory || "",
-        numberOfUsed: listingForm.numberOfUsed || 0,
         checkInTime: listingForm.checkInTime || '14:00',
         checkOutTime: listingForm.checkOutTime || '11:00',
+        numberOfApartments: Number(listingForm.numberOfApartments) || 0,
+        numberOfRooms: Number(listingForm.numberOfRooms) || Number(listingForm.bedrooms) || 1,
+        totalUnits: Number(listingForm.totalUnits) || (Number(listingForm.numberOfApartments) || 0) + (Number(listingForm.numberOfRooms) || Number(listingForm.bedrooms) || 1),
+        roomTypes: Array.isArray(listingForm.roomTypes) ? listingForm.roomTypes : [],
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
         performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
         
@@ -1591,11 +1601,14 @@ export default function CreateListing() {
     switch (selectedCategory) {
       case 'property':
         return [
-          { id: "rent", label: "Room/Home to Rent", emoji: "🏠", description: "Monthly rental" },
-          { id: "over", label: "Guest House", emoji: "🛌", description: "Nightly stays" },
-          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering rentals" },
-          { id: "sale", label: "Hotel", emoji: "🏨", description: "Hotel rentals" },
-          { id: "resort", label: "Resort", emoji: "🏖️", description: "Resort stays" },
+          { id: "rent", label: "Room / Home to Rent", emoji: "🏠", description: "Monthly & short/long-term rental" },
+          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "Nightly guest house stays" },
+          { id: "sale", label: "Property / Hotel for Sale", emoji: "🏷️", description: "Houses, hotels, guest houses for sale" },
+          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "Hotels, multi-room suites & lodging" },
+          { id: "apartment", label: "Apartment / Complex", emoji: "🏢", description: "Single or multi-unit apartment complexes" },
+          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering chalets & houses" },
+          { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️", description: "Holiday resorts & vacation chalets" },
+          { id: "office", label: "Hourly Room / Office", emoji: "🚪", description: "Hourly rooms, day rooms & workspaces" },
         ];
       case 'experiences':
         return [
@@ -2047,24 +2060,59 @@ export default function CreateListing() {
                     />
 
                     {selectedCategory === 'property' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
-                        <FormInput
-                          label="Property Type"
-                          id="kind"
-                          value={listingForm.kind}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Apartment, House, Villa"
-                          required
-                        />
-                        <FormInput
-                          label="Available From"
-                          id="period"
-                          value={listingForm.period}
-                          onChange={handleFormChange}
-                          placeholder="e.g., Immediate, Next month"
-                          required
-                        />
-                        <div className="md:col-span-2">
+                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                        <div>
+                          <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+                            Property Classification / Kind *
+                          </label>
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {[
+                              { id: 'apartment', label: '🏢 Apartment / Flat' },
+                              { id: 'guest_house', label: '🛌 Guest House / B&B' },
+                              { id: 'hotel', label: '🏨 Hotel / Lodge' },
+                              { id: 'room', label: '🚪 Room / Hourly Room' },
+                              { id: 'house', label: '🏠 Entire House' },
+                              { id: 'villa', label: '🏰 Villa / Mansion' },
+                              { id: 'townhouse', label: '🏘️ Townhouse' },
+                              { id: 'studio', label: '🛋️ Studio / Bachelor' },
+                              { id: 'cottage', label: '🏡 Cottage / Chalet' },
+                              { id: 'resort', label: '🏖️ Resort' },
+                              { id: 'complex', label: '🏬 Multi-Unit Complex' },
+                              { id: 'office', label: '💼 Office / Workspace' },
+                            ].map((k) => (
+                              <button
+                                key={k.id}
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, kind: k.id }))}
+                                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
+                                  listingForm.kind === k.id
+                                    ? 'bg-rose-500 text-white shadow-md shadow-rose-200 scale-105'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {k.label}
+                              </button>
+                            ))}
+                          </div>
+                          <FormInput
+                            label="Or Custom Property Type"
+                            id="kind"
+                            value={listingForm.kind}
+                            onChange={handleFormChange}
+                            placeholder="e.g., Apartment, Guest House, Hotel, Room"
+                            required
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormInput
+                            label="Available From"
+                            id="period"
+                            value={listingForm.period}
+                            onChange={handleFormChange}
+                            placeholder="e.g., Immediate, Next month"
+                            required
+                          />
                           <FormInput
                             label="Cancellation Policy"
                             id="cancel"
@@ -2640,53 +2688,255 @@ export default function CreateListing() {
                 </SectionCard>
 
                 {selectedCategory === 'property' && (
-                  <SectionCard title="Room details">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-base font-medium text-gray-900 mb-3">
-                          {selectedType === "land" || selectedType === "office" ? "Square Meters" : "Bedrooms"}
-                        </label>
-                        <div className="flex items-center gap-4">
-                          <button
-                            type="button"
-                            onClick={() => setListingForm({...listingForm, bedrooms: Math.max(0, listingForm.bedrooms - 1)})}
-                            className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
-                          >
-                            <MinusIcon className="w-5 h-5" />
-                          </button>
-                          <span className="text-xl font-semibold w-8 text-center">{listingForm.bedrooms}</span>
-                          <button
-                            type="button"
-                            onClick={() => setListingForm({...listingForm, bedrooms: listingForm.bedrooms + 1})}
-                            className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
-                          >
-                            <PlusIcon className="w-5 h-5" />
-                          </button>
+                  <SectionCard title="Rooms & Multi-Unit Inventory">
+                    <p className="text-gray-500 text-sm mb-8">
+                      Configure the number of rooms (1 to 100), bathrooms, and multi-unit capacity for apartments and guest houses in this single listing.
+                    </p>
+
+                    <div className="space-y-8">
+                      {/* Bedrooms / Total Rooms (1 to 100) */}
+                      <div className="p-6 bg-gray-50/80 rounded-3xl border border-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                          <div>
+                            <label className="block text-base font-black text-gray-900">
+                              {selectedType === "land" || selectedType === "office" ? "Square Meters / Rooms" : "Bedrooms / Available Rooms (1 to 100)"}
+                            </label>
+                            <span className="text-xs text-gray-500 font-medium">
+                              Type directly or use buttons/slider to add from 1 up to 100 rooms
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setListingForm(prev => {
+                                const val = Math.max(1, (Number(prev.bedrooms) || 1) - 1);
+                                return { ...prev, bedrooms: val, numberOfRooms: val };
+                              })}
+                              className="w-11 h-11 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:border-gray-900 transition-colors shadow-sm font-bold"
+                            >
+                              <MinusIcon className="w-5 h-5 text-gray-700" />
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              value={listingForm.bedrooms}
+                              onChange={(e) => {
+                                const val = Math.min(100, Math.max(1, Number(e.target.value) || 1));
+                                setListingForm(prev => ({ ...prev, bedrooms: val, numberOfRooms: val }));
+                              }}
+                              className="w-20 py-2.5 text-center font-black text-xl text-gray-900 bg-white border-2 border-gray-200 rounded-2xl focus:border-rose-500 outline-none shadow-sm"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setListingForm(prev => {
+                                const val = Math.min(100, (Number(prev.bedrooms) || 1) + 1);
+                                return { ...prev, bedrooms: val, numberOfRooms: val };
+                              })}
+                              className="w-11 h-11 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:border-gray-900 transition-colors shadow-sm font-bold"
+                            >
+                              <PlusIcon className="w-5 h-5 text-gray-700" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Slider for quick range selection */}
+                        <div className="space-y-2 mb-4">
+                          <input
+                            type="range"
+                            min="1"
+                            max="100"
+                            value={listingForm.bedrooms}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setListingForm(prev => ({ ...prev, bedrooms: val, numberOfRooms: val }));
+                            }}
+                            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-rose-500"
+                          />
+                          <div className="flex justify-between text-[10px] font-bold text-gray-400">
+                            <span>1 Room</span>
+                            <span>25</span>
+                            <span>50 Rooms</span>
+                            <span>75</span>
+                            <span>100 Rooms</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Presets */}
+                        <div className="flex flex-wrap items-center gap-2 pt-2">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 mr-2">Quick Presets:</span>
+                          {[1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 50, 100].map(n => (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => setListingForm(prev => ({ ...prev, bedrooms: n, numberOfRooms: n }))}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
+                                Number(listingForm.bedrooms) === n
+                                  ? 'bg-rose-500 text-white shadow-md'
+                                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                              }`}
+                            >
+                              {n} {n === 1 ? 'room' : 'rooms'}
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      
+
+                      {/* Bathrooms (1 to 50) */}
                       {selectedType !== "land" && selectedType !== "office" && (
-                        <div>
-                          <label className="block text-base font-medium text-gray-900 mb-3">Bathrooms</label>
-                          <div className="flex items-center gap-4">
+                        <div className="p-6 bg-gray-50/80 rounded-3xl border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div>
+                            <label className="block text-base font-black text-gray-900">Bathrooms (1 to 50)</label>
+                            <span className="text-xs text-gray-500 font-medium">Number of bathrooms / en-suites in the property</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
                             <button
                               type="button"
-                              onClick={() => setListingForm({...listingForm, bathrooms: Math.max(1, listingForm.bathrooms - 1)})}
-                              className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                              onClick={() => setListingForm(prev => ({ ...prev, bathrooms: Math.max(1, (Number(prev.bathrooms) || 1) - 1) }))}
+                              className="w-11 h-11 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:border-gray-900 transition-colors shadow-sm font-bold"
                             >
-                              <MinusIcon className="w-5 h-5" />
+                              <MinusIcon className="w-5 h-5 text-gray-700" />
                             </button>
-                            <span className="text-xl font-semibold w-8 text-center">{listingForm.bathrooms}</span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="50"
+                              value={listingForm.bathrooms}
+                              onChange={(e) => {
+                                const val = Math.min(50, Math.max(1, Number(e.target.value) || 1));
+                                setListingForm(prev => ({ ...prev, bathrooms: val }));
+                              }}
+                              className="w-20 py-2.5 text-center font-black text-xl text-gray-900 bg-white border-2 border-gray-200 rounded-2xl focus:border-rose-500 outline-none shadow-sm"
+                            />
                             <button
                               type="button"
-                              onClick={() => setListingForm({...listingForm, bathrooms: listingForm.bathrooms + 1})}
-                              className="w-12 h-12 rounded-full border border-gray-300 flex items-center justify-center hover:border-black transition-colors"
+                              onClick={() => setListingForm(prev => ({ ...prev, bathrooms: Math.min(50, (Number(prev.bathrooms) || 1) + 1) }))}
+                              className="w-11 h-11 rounded-2xl bg-white border border-gray-200 flex items-center justify-center hover:border-gray-900 transition-colors shadow-sm font-bold"
                             >
-                              <PlusIcon className="w-5 h-5" />
+                              <PlusIcon className="w-5 h-5 text-gray-700" />
                             </button>
                           </div>
                         </div>
                       )}
+
+                      {/* Multi-Apartments and Multi-Guest House Configuration */}
+                      <div className="p-6 bg-gradient-to-br from-rose-50/50 to-orange-50/50 rounded-3xl border-2 border-rose-100/60 space-y-6">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">🏢</span>
+                          <div>
+                            <h3 className="text-base font-black text-gray-900">Multi-Unit Complex / Guest House Capacity</h3>
+                            <p className="text-xs text-gray-500">Add the number of apartments and guest house rooms available in this one listing</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                          {/* Number of Apartments */}
+                          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+                            <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                              🏢 Number of Apartments (0 - 100)
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, numberOfApartments: Math.max(0, (Number(prev.numberOfApartments) || 0) - 1) }))}
+                                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
+                              >
+                                <MinusIcon className="w-4 h-4" />
+                              </button>
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={listingForm.numberOfApartments || 0}
+                                onChange={(e) => setListingForm(prev => ({ ...prev, numberOfApartments: Math.min(100, Math.max(0, Number(e.target.value) || 0)) }))}
+                                className="w-full py-2 text-center font-black text-lg text-gray-900 bg-gray-50 rounded-xl border border-gray-200 focus:border-rose-500 outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, numberOfApartments: Math.min(100, (Number(prev.numberOfApartments) || 0) + 1) }))}
+                                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
+                              >
+                                <PlusIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {[0, 1, 2, 4, 6, 10, 20, 50, 100].map(cnt => (
+                                <button
+                                  key={cnt}
+                                  type="button"
+                                  onClick={() => setListingForm(prev => ({ ...prev, numberOfApartments: cnt }))}
+                                  className={`px-2 py-1 text-[10px] font-bold rounded-lg ${
+                                    Number(listingForm.numberOfApartments) === cnt
+                                      ? 'bg-rose-500 text-white'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {cnt} apts
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Number of Guest House Rooms */}
+                          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm space-y-3">
+                            <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
+                              🛌 Guest House / Hotel Rooms (1 - 100)
+                            </label>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, numberOfRooms: Math.max(1, (Number(prev.numberOfRooms) || 1) - 1) }))}
+                                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
+                              >
+                                <MinusIcon className="w-4 h-4" />
+                              </button>
+                              <input
+                                type="number"
+                                min="1"
+                                max="100"
+                                value={listingForm.numberOfRooms || 1}
+                                onChange={(e) => setListingForm(prev => ({ ...prev, numberOfRooms: Math.min(100, Math.max(1, Number(e.target.value) || 1)) }))}
+                                className="w-full py-2 text-center font-black text-lg text-gray-900 bg-gray-50 rounded-xl border border-gray-200 focus:border-rose-500 outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setListingForm(prev => ({ ...prev, numberOfRooms: Math.min(100, (Number(prev.numberOfRooms) || 1) + 1) }))}
+                                className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
+                              >
+                                <PlusIcon className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {[1, 2, 5, 8, 10, 15, 25, 50, 100].map(cnt => (
+                                <button
+                                  key={cnt}
+                                  type="button"
+                                  onClick={() => setListingForm(prev => ({ ...prev, numberOfRooms: cnt }))}
+                                  className={`px-2 py-1 text-[10px] font-bold rounded-lg ${
+                                    Number(listingForm.numberOfRooms) === cnt
+                                      ? 'bg-rose-500 text-white'
+                                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {cnt} rooms
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Summary badge */}
+                        <div className="p-4 bg-white/80 rounded-2xl border border-rose-100 flex items-center justify-between">
+                          <div className="text-xs font-bold text-gray-700">
+                            Total Units in this Listing: <span className="text-rose-600 font-black">{(Number(listingForm.numberOfApartments) || 0) + (Number(listingForm.numberOfRooms) || Number(listingForm.bedrooms) || 1)} Total Units / Rooms</span>
+                          </div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+                            Multi-Unit Enabled
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </SectionCard>
                 )}

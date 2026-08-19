@@ -756,8 +756,15 @@ function MobileAppHomepage({
       id: 'Property',
       label: 'Property',
       emoji: '🏡',
-      desc: 'Rooms & stays',
+      desc: 'Rooms & rentals',
       textColor: 'text-emerald-600',
+    },
+    {
+      id: 'Guest House',
+      label: 'Guest House',
+      emoji: '🛌',
+      desc: 'B&B & stays',
+      textColor: 'text-rose-600',
     },
     {
       id: 'Services',
@@ -784,6 +791,21 @@ function MobileAppHomepage({
 
   const getFilteredItems = () => {
     switch (activeTab) {
+      case 'Guest House':
+      case 'Guest Houses':
+      case 'guesthouse':
+      case 'guesthouses':
+        return (featuredProperties || []).filter(p =>
+          p.type === 'over' ||
+          p.type === 'guesthouse' ||
+          p.type === 'hotel' ||
+          p.type === 'resort' ||
+          p.kind === 'guest_house' ||
+          p.kind === 'hotel' ||
+          p.kind === 'resort' ||
+          (p.name && /guest\s*house|guesthouse|b&b|lodge|hotel|resort/i.test(p.name)) ||
+          (p.description && /guest\s*house|guesthouse|b&b|lodge|hotel|resort/i.test(p.description))
+        );
       case 'Properties':
       case 'Property':
         return featuredProperties;
@@ -816,6 +838,7 @@ function MobileAppHomepage({
 
   const getTabColor = (id) => {
     switch (id) {
+      case 'Guest House': return 'bg-rose-600';
       case 'Properties': return 'bg-rose-500';
       case 'Services': return 'bg-amber-500';
       case 'Helper': return 'bg-blue-500';
