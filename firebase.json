@@ -13,7 +13,10 @@
       }
     ]
   },
-  "storage": {
-    "rules": "storage.rules"
-  }
+  "storage": [
+    {
+      "bucket": "central-cinema-218106.firebasestorage.app",
+      "rules": "storage.rules"
+    }
+  ]
 }

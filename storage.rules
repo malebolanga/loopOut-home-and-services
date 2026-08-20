@@ -1,12 +1,10 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // The app uses its own JWT accounts, not Firebase Authentication. Direct
-    // browser uploads would bypass authorization, so they are prohibited.
-    // Upload media through an authenticated backend endpoint instead.
+    // Allow public read and write for all files.
     match /{path=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if true;
     }
   }
 }

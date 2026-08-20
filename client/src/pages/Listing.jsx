@@ -2,6 +2,7 @@
 /* eslint-disable react/prop-types */
 
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from "swiper/modules";
@@ -1578,6 +1579,7 @@ export default function Listing() {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showFullGallery, setShowFullGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [roomsDrawerOpen, setRoomsDrawerOpen] = useState(false);
 
   // State declarations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -2484,16 +2486,17 @@ export default function Listing() {
             </div>
             </div>
 
-            {/* Specific Units, Rooms & Apartments Showcase */}
+            {/* Available Units & Rooms — horizontal scroll carousel */}
             {listing.roomTypes && listing.roomTypes.length > 0 && (
               <div className="py-6 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg lg:text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                       <span>🏢</span> Available Units &amp; Rooms
                     </h2>
                     <p className="text-xs text-gray-500 font-medium mt-0.5">
-                      Explore specific room numbers, apartments, and suites at this property.
+                      {listing.roomTypes.length} {listing.roomTypes.length === 1 ? 'unit' : 'units'} at this property
                     </p>
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
@@ -2501,54 +2504,54 @@ export default function Listing() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Horizontal scroll strip */}
+                <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-hide">
                   {listing.roomTypes.map((room, index) => (
-                    <div
+                    <motion.div
                       key={index}
-                      className="p-5 bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                      initial={{ opacity: 0, x: 24 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.07, duration: 0.35 }}
+                      className="flex-none w-64 snap-start bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden group flex flex-col"
                     >
-                      <div>
-                        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100 mb-3.5 border border-gray-100">
-                          {room.image ? (
-                            <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          ) : listing.imageUrls && listing.imageUrls[0] ? (
-                            <img src={listing.imageUrls[0]} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-100 to-gray-200">
-                              🚪
-                            </div>
-                          )}
-                          <div className="absolute top-2.5 right-2.5 px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-white text-xs font-black shadow-sm">
-                            R{room.price ? room.price.toLocaleString() : listing.regularPrice?.toLocaleString()}
-                          </div>
+                      {/* Image */}
+                      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 flex-shrink-0">
+                        {room.image ? (
+                          <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : listing.imageUrls && listing.imageUrls[0] ? (
+                          <img src={listing.imageUrls[0]} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-100 to-gray-200">🚪</div>
+                        )}
+                        <div className="absolute top-2.5 right-2.5 px-2.5 py-1 bg-black/75 backdrop-blur-md rounded-full text-white text-[11px] font-black">
+                          R{room.price ? Number(room.price).toLocaleString() : listing.regularPrice?.toLocaleString()}
                         </div>
+                      </div>
 
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <h3 className="font-black text-gray-900 text-base">{room.name}</h3>
+                      {/* Details */}
+                      <div className="p-3.5 flex flex-col flex-1">
+                        <div className="flex items-start justify-between gap-1 mb-1">
+                          <h3 className="font-black text-gray-900 text-sm leading-snug">{room.name}</h3>
                           {room.capacity && (
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded-md">
-                              👥 {room.capacity} {room.capacity === 1 ? 'Guest' : 'Guests'}
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                              👥 {room.capacity}
                             </span>
                           )}
                         </div>
-
                         {room.description && (
-                          <p className="text-xs text-gray-600 font-medium leading-relaxed mb-4">
-                            {room.description}
-                          </p>
+                          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{room.description}</p>
                         )}
+                        <button
+                          onClick={() => {
+                            setSpecialRequests(`Inquiring about ${room.name} (R${room.price || listing.regularPrice})`);
+                            handleContactHost();
+                          }}
+                          className="w-full py-2 px-3 bg-slate-900 hover:bg-rose-600 active:scale-95 text-white rounded-xl text-[11px] font-bold transition-all shadow-sm cursor-pointer mt-auto"
+                        >
+                          Inquire
+                        </button>
                       </div>
-
-                      <button
-                        onClick={() => {
-                          setSpecialRequests(`Inquiring about ${room.name} (R${room.price || listing.regularPrice})`);
-                          handleContactHost();
-                        }}
-                        className="w-full py-2.5 px-4 bg-slate-900 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-colors shadow-sm active:scale-95 cursor-pointer mt-2"
-                      >
-                        Inquire about {room.name}
-                      </button>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
