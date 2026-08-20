@@ -539,7 +539,12 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState('map');
+  const [viewMode, setViewMode] = useState(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      return 'grid';
+    }
+    return 'map';
+  });
   const [loading, setLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [listings, setListings] = useState([]);
@@ -596,7 +601,14 @@ const SearchPage = () => {
       mode: urlParams.get('mode') || ''
     });
 
-    if (urlParams.get('mode') === 'map') setViewMode('map');
+    const modeParam = urlParams.get('mode');
+    if (modeParam === 'map') {
+      setViewMode('map');
+    } else if (modeParam === 'grid') {
+      setViewMode('grid');
+    } else if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setViewMode('grid');
+    }
 
     // Set selected category if subType matches
     if (subType) {
@@ -1121,7 +1133,7 @@ const SearchPage = () => {
           className={`transition-all duration-500 overflow-hidden relative ${
             viewMode === 'map'
               ? 'w-full lg:flex-1 fixed inset-0 lg:relative lg:inset-auto z-[150] lg:z-auto h-[100dvh] lg:h-auto'
-              : 'hidden lg:block lg:flex-1 sticky top-[120px] h-[calc(100vh-120px)]'
+              : 'hidden'
           }`}
         >
           {/* Back Button for Mobile full-screen map */}
@@ -1130,10 +1142,10 @@ const SearchPage = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setViewMode('grid')}
-              className="lg:hidden absolute top-6 left-6 z-[160] flex items-center gap-2 px-4 py-3 bg-white rounded-full shadow-lg text-sm font-semibold text-gray-900 active:scale-95 transition-all border border-gray-100"
+              className="lg:hidden absolute top-6 left-6 z-[160] flex items-center gap-2 px-4 py-2.5 bg-white/95 backdrop-blur-md rounded-full shadow-xl text-sm font-semibold text-gray-900 active:scale-95 transition-all border border-gray-200 cursor-pointer"
             >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Show list
+              <ArrowLeftIcon className="w-4 h-4 text-gray-700" />
+              <span>Show list</span>
             </motion.button>
           )}
 
@@ -1152,10 +1164,10 @@ const SearchPage = () => {
         {viewMode !== 'map' && (
           <button
             onClick={() => setViewMode('map')}
-            className="lg:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[50] flex items-center gap-2 bg-gray-900 text-white px-6 py-3.5 rounded-full text-sm font-semibold shadow-xl transition-all hover:bg-gray-800 active:scale-95"
+            className="lg:hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 bg-gray-900/95 backdrop-blur-md text-white px-5 py-3 rounded-full text-sm font-semibold shadow-2xl transition-all hover:bg-gray-800 active:scale-95 border border-white/10"
           >
-            <MapIcon className="w-4 h-4" />
-            Show map
+            <MapIcon className="w-4 h-4 text-rose-400" />
+            <span>Show map</span>
           </button>
         )}
       </main>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin,
@@ -14,6 +14,24 @@ import {
 const defaultCenter = {
   lat: -23.9058, // Polokwane
   lng: 29.4505
+};
+
+const isValidCoord = (lat, lng) => {
+  if (lat === null || lat === undefined || lng === null || lng === undefined) return false;
+  const numLat = typeof lat === 'number' ? lat : parseFloat(lat);
+  const numLng = typeof lng === 'number' ? lng : parseFloat(lng);
+  return (
+    typeof numLat === 'number' &&
+    typeof numLng === 'number' &&
+    Number.isFinite(numLat) &&
+    Number.isFinite(numLng) &&
+    !isNaN(numLat) &&
+    !isNaN(numLng) &&
+    numLat >= -90 &&
+    numLat <= 90 &&
+    numLng >= -180 &&
+    numLng <= 180
+  );
 };
 
 const MapView = ({ 
@@ -37,8 +55,16 @@ const MapView = ({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          leafletMapRef.current.flyTo([latitude, longitude], 14, { duration: 1.5 });
-        }
+          if (isValidCoord(latitude, longitude)) {
+            try {
+              leafletMapRef.current.flyTo([latitude, longitude], 14, { duration: 1.5 });
+            } catch (err) {
+              console.warn('flyTo failed in locateMe:', err);
+            }
+          }
+        },
+        (err) => console.warn('Geolocation error:', err),
+        { timeout: 10000 }
       );
     }
   };
@@ -53,14 +79,30 @@ const MapView = ({
       const L = window.L;
       if (!L) return;
 
-      const startCenter = center ? [center.lat, center.lng] : [defaultCenter.lat, defaultCenter.lng];
+      const startCenter = (center && isValidCoord(center.lat, center.lng))
+        ? [Number(center.lat), Number(center.lng)]
+        : [defaultCenter.lat, defaultCenter.lng];
       
-      const map = L.map(mapContainerRef.current, {
-        zoomControl: false,
-        attributionControl: false,
-        // Prevent the ScrollWheelZoom setTimeout from firing after unmount
-        scrollWheelZoom: true,
-      }).setView(startCenter, 13);
+      let map;
+      try {
+        map = L.map(mapContainerRef.current, {
+          zoomControl: false,
+          attributionControl: false,
+          scrollWheelZoom: true,
+        }).setView(startCenter, 13);
+      } catch (err) {
+        console.warn('Leaflet map initialization fallback to defaultCenter:', err);
+        try {
+          map = L.map(mapContainerRef.current, {
+            zoomControl: false,
+            attributionControl: false,
+            scrollWheelZoom: true,
+          }).setView([defaultCenter.lat, defaultCenter.lng], 13);
+        } catch (e) {
+          console.error('Leaflet map initialization failed entirely:', e);
+          return;
+        }
+      }
 
       // Light, clean Airbnb-style theme
       L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -88,27 +130,36 @@ const MapView = ({
 
       // Function to add markers for a given item list
       const addMarkers = (data) => {
-        if (!leafletMapRef.current) return;
+        if (!leafletMapRef.current || !Array.isArray(data)) return;
         // Clean up existing markers
-        markersRef.current.forEach(m => map.removeLayer(m));
+        markersRef.current.forEach(m => {
+          try { map.removeLayer(m); } catch (_) {}
+        });
         markersRef.current = [];
 
         data.forEach(item => {
-          let lat = parseFloat(item.latitude);
-          let lng = parseFloat(item.longitude);
+          if (!item) return;
+          const rawLat = item.latitude ?? item.lat ?? item.locationCoords?.lat ?? item.coords?.lat;
+          const rawLng = item.longitude ?? item.lng ?? item.locationCoords?.lng ?? item.coords?.lng;
           
-          // Never invent a location. A random pin is misleading for customers.
-          if (isNaN(lat) || isNaN(lng)) return;
+          if (!isValidCoord(rawLat, rawLng)) return;
           
-          const marker = L.marker([lat, lng], { 
-            icon: createPriceIcon(item, selectedItem?._id === item._id) 
-          })
-          .addTo(map)
-          .on('click', () => {
-            setSelectedItem({ ...item, latitude: lat, longitude: lng });
-          });
+          const lat = Number(rawLat);
+          const lng = Number(rawLng);
 
-          markersRef.current.push(marker);
+          try {
+            const marker = L.marker([lat, lng], { 
+              icon: createPriceIcon(item, selectedItem?._id === item._id) 
+            })
+            .addTo(map)
+            .on('click', () => {
+              setSelectedItem({ ...item, latitude: lat, longitude: lng });
+            });
+
+            markersRef.current.push(marker);
+          } catch (err) {
+            console.warn('Skipping invalid marker creation:', err);
+          }
         });
       };
 
@@ -145,13 +196,10 @@ const MapView = ({
         leafletMapRef.current = null;
         try {
           // Directly cancel the pending ScrollWheelZoom setTimeout.
-          // .disable() only blocks future events — the already-queued timer
-          // still fires and crashes on _leaflet_pos. clearTimeout prevents that.
           if (map.scrollWheelZoom && map.scrollWheelZoom._timer != null) {
             clearTimeout(map.scrollWheelZoom._timer);
             map.scrollWheelZoom._timer = null;
           }
-          // Also patch _performZoom to a no-op as a second safety net
           if (map.scrollWheelZoom) {
             map.scrollWheelZoom._performZoom = () => {};
           }
@@ -161,8 +209,6 @@ const MapView = ({
         } catch (_) { /* ignore */ }
       }
     };
-  // NOTE: `items` intentionally omitted — markers are refreshed by the effect below.
-  // Including `items` here would destroy/recreate the map on every data update.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center]);
 
@@ -174,19 +220,23 @@ const MapView = ({
   }, [items]);
 
   useEffect(() => {
-    if (leafletMapRef.current && center && typeof center.lat === 'number' && !isNaN(center.lat) && typeof center.lng === 'number' && !isNaN(center.lng)) {
+    if (leafletMapRef.current && center && isValidCoord(center.lat, center.lng)) {
+      const lat = Number(center.lat);
+      const lng = Number(center.lng);
       try {
         leafletMapRef.current.invalidateSize();
         const size = leafletMapRef.current.getSize();
         
-        if (size.x > 0 && size.y > 0) {
-           leafletMapRef.current.flyTo([center.lat, center.lng], 13, { duration: 1.5 });
+        if (size && size.x > 0 && size.y > 0) {
+           leafletMapRef.current.flyTo([lat, lng], 13, { duration: 1.5 });
         } else {
-           leafletMapRef.current.setView([center.lat, center.lng], 13, { animate: false });
+           leafletMapRef.current.setView([lat, lng], 13, { animate: false });
         }
       } catch (e) {
         console.warn("Leaflet map center update recovered:", e);
-        leafletMapRef.current.setView([center.lat, center.lng], 13, { animate: false });
+        try {
+          leafletMapRef.current.setView([lat, lng], 13, { animate: false });
+        } catch (_) {}
       }
     }
   }, [center]);

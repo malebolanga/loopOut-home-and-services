@@ -2,6 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { geocodeAddress } from '../utils/geocoding';
 import { FaMapMarkerAlt, FaExternalLinkAlt, FaCompass } from 'react-icons/fa';
 
+const isValidCoord = (lat, lng) => {
+  if (lat === null || lat === undefined || lng === null || lng === undefined) return false;
+  const numLat = typeof lat === 'number' ? lat : parseFloat(lat);
+  const numLng = typeof lng === 'number' ? lng : parseFloat(lng);
+  return (
+    typeof numLat === 'number' &&
+    typeof numLng === 'number' &&
+    Number.isFinite(numLat) &&
+    Number.isFinite(numLng) &&
+    !isNaN(numLat) &&
+    !isNaN(numLng) &&
+    numLat >= -90 &&
+    numLat <= 90 &&
+    numLng >= -180 &&
+    numLng <= 180
+  );
+};
+
 const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
   const [coords, setCoords] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +32,7 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
     let isMounted = true;
     const resolveLocation = async () => {
       setLoading(true);
-      if (latitude && longitude && !isNaN(parseFloat(latitude)) && !isNaN(parseFloat(longitude))) {
+      if (latitude != null && longitude != null && isValidCoord(latitude, longitude)) {
         if (isMounted) {
           setCoords({ lat: parseFloat(latitude), lng: parseFloat(longitude) });
           setLoading(false);
@@ -22,16 +40,22 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
       } else if (address) {
         try {
           const result = await geocodeAddress(address);
-          if (isMounted && result && !isNaN(result.lat) && !isNaN(result.lng)) {
-            setCoords(result);
+          if (isMounted && result && isValidCoord(result.lat, result.lng)) {
+            setCoords({ lat: Number(result.lat), lng: Number(result.lng) });
+          } else if (isMounted) {
+            setCoords(null);
           }
         } catch (e) {
           console.warn('Geocoding fallback failed:', e);
+          if (isMounted) setCoords(null);
         } finally {
           if (isMounted) setLoading(false);
         }
       } else {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setCoords(null);
+          setLoading(false);
+        }
       }
     };
 
@@ -41,55 +65,66 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
 
   // Initialize or update Leaflet map when coords are available
   useEffect(() => {
-    if (!coords || !mapContainerRef.current) return;
+    if (!coords || !isValidCoord(coords.lat, coords.lng) || !mapContainerRef.current) return;
     let mounted = true;
 
     const setupMap = () => {
       const L = window.L;
       if (!L || !mapContainerRef.current || !mounted) return;
 
+      const lat = Number(coords.lat);
+      const lng = Number(coords.lng);
+
       if (!leafletMapRef.current) {
-        const map = L.map(mapContainerRef.current, {
-          zoomControl: true,
-          attributionControl: false,
-          scrollWheelZoom: false,
-        }).setView([coords.lat, coords.lng], 15);
+        try {
+          const map = L.map(mapContainerRef.current, {
+            zoomControl: true,
+            attributionControl: false,
+            scrollWheelZoom: false,
+          }).setView([lat, lng], 15);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-          maxZoom: 20,
-        }).addTo(map);
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+          }).addTo(map);
 
-        const customPin = L.divIcon({
-          className: 'custom-map-pin',
-          html: `
-            <div style="transform: translate(-50%, -100%);" class="flex flex-col items-center">
-              <div style="background: linear-gradient(135deg, #FF385C, #E61E4D); box-shadow: 0 4px 14px rgba(230,30,77,0.5);" class="px-3 py-1.5 rounded-full text-white text-xs font-bold whitespace-nowrap border-2 border-white flex items-center gap-1.5 animate-bounce">
-                <span>📍</span>
-                <span>${(title || 'Location').slice(0, 20)}</span>
+          const customPin = L.divIcon({
+            className: 'custom-map-pin',
+            html: `
+              <div style="transform: translate(-50%, -100%);" class="flex flex-col items-center">
+                <div style="background: linear-gradient(135deg, #FF385C, #E61E4D); box-shadow: 0 4px 14px rgba(230,30,77,0.5);" class="px-3 py-1.5 rounded-full text-white text-xs font-bold whitespace-nowrap border-2 border-white flex items-center gap-1.5 animate-bounce">
+                  <span>📍</span>
+                  <span>${(title || 'Location').slice(0, 20)}</span>
+                </div>
+                <div style="width: 2px; height: 10px; background: #E61E4D;"></div>
               </div>
-              <div style="width: 2px; height: 10px; background: #E61E4D;"></div>
-            </div>
-          `,
-          iconSize: [0, 0],
-          iconAnchor: [0, 0],
-        });
+            `,
+            iconSize: [0, 0],
+            iconAnchor: [0, 0],
+          });
 
-        const marker = L.marker([coords.lat, coords.lng], { icon: customPin }).addTo(map);
-        if (address || title) {
-          marker.bindPopup(`
-            <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 4px;">
-              <strong style="color: #111;">${title || 'Location'}</strong><br/>
-              <span style="color: #666; font-size: 11px;">${address || ''}</span>
-            </div>
-          `);
+          const marker = L.marker([lat, lng], { icon: customPin }).addTo(map);
+          if (address || title) {
+            marker.bindPopup(`
+              <div style="font-family: sans-serif; font-size: 13px; line-height: 1.4; padding: 4px;">
+                <strong style="color: #111;">${title || 'Location'}</strong><br/>
+                <span style="color: #666; font-size: 11px;">${address || ''}</span>
+              </div>
+            `);
+          }
+
+          leafletMapRef.current = map;
+          markerRef.current = marker;
+        } catch (err) {
+          console.warn('Leaflet map creation failed in GoogleMapComponent:', err);
         }
-
-        leafletMapRef.current = map;
-        markerRef.current = marker;
       } else {
-        leafletMapRef.current.setView([coords.lat, coords.lng], 15);
-        if (markerRef.current) {
-          markerRef.current.setLatLng([coords.lat, coords.lng]);
+        try {
+          leafletMapRef.current.setView([lat, lng], 15);
+          if (markerRef.current) {
+            markerRef.current.setLatLng([lat, lng]);
+          }
+        } catch (err) {
+          console.warn('Leaflet map setView failed in GoogleMapComponent:', err);
         }
       }
     };
@@ -112,7 +147,9 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
     return () => {
       mounted = false;
       if (leafletMapRef.current) {
-        leafletMapRef.current.remove();
+        try {
+          leafletMapRef.current.remove();
+        } catch (_) {}
         leafletMapRef.current = null;
       }
     };
@@ -133,7 +170,7 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
 
   return (
     <div className="w-full h-full min-h-[260px] relative rounded-2xl overflow-hidden border border-gray-200 shadow-sm group">
-      {coords ? (
+      {coords && isValidCoord(coords.lat, coords.lng) ? (
         <>
           <div ref={mapContainerRef} className="w-full h-full min-h-[260px] z-0" />
           <div className="absolute bottom-3 right-3 z-[400]">

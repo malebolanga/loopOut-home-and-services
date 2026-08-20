@@ -1378,7 +1378,7 @@ function DesktopHomepage({
       `}</style>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 border-b border-gray-100 shadow-xs">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
