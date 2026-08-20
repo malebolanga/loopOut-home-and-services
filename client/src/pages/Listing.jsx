@@ -2484,6 +2484,76 @@ export default function Listing() {
             </div>
             </div>
 
+            {/* Specific Units, Rooms & Apartments Showcase */}
+            {listing.roomTypes && listing.roomTypes.length > 0 && (
+              <div className="py-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-lg lg:text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                      <span>🏢</span> Available Units &amp; Rooms
+                    </h2>
+                    <p className="text-xs text-gray-500 font-medium mt-0.5">
+                      Explore specific room numbers, apartments, and suites at this property.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700 px-3 py-1 rounded-full">
+                    {listing.roomTypes.length} {listing.roomTypes.length === 1 ? 'Unit' : 'Units'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {listing.roomTypes.map((room, index) => (
+                    <div
+                      key={index}
+                      className="p-5 bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
+                    >
+                      <div>
+                        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100 mb-3.5 border border-gray-100">
+                          {room.image ? (
+                            <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : listing.imageUrls && listing.imageUrls[0] ? (
+                            <img src={listing.imageUrls[0]} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-slate-100 to-gray-200">
+                              🚪
+                            </div>
+                          )}
+                          <div className="absolute top-2.5 right-2.5 px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-white text-xs font-black shadow-sm">
+                            R{room.price ? room.price.toLocaleString() : listing.regularPrice?.toLocaleString()}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <h3 className="font-black text-gray-900 text-base">{room.name}</h3>
+                          {room.capacity && (
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded-md">
+                              👥 {room.capacity} {room.capacity === 1 ? 'Guest' : 'Guests'}
+                            </span>
+                          )}
+                        </div>
+
+                        {room.description && (
+                          <p className="text-xs text-gray-600 font-medium leading-relaxed mb-4">
+                            {room.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSpecialRequests(`Inquiring about ${room.name} (R${room.price || listing.regularPrice})`);
+                          handleContactHost();
+                        }}
+                        className="w-full py-2.5 px-4 bg-slate-900 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition-colors shadow-sm active:scale-95 cursor-pointer mt-2"
+                      >
+                        Inquire about {room.name}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Listing Highlights */}
             <div className="py-6 border-b border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-5">What makes this place special</h2>

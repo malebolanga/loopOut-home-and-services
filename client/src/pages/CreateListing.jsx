@@ -247,7 +247,7 @@ const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
   </label>
 );
 
-const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 10, label, uploading, uploadProgress }) => (
+const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 20, label, uploading, uploadProgress }) => (
   <div className="space-y-6">
     <div className="flex flex-col gap-6">
       <input
@@ -446,6 +446,17 @@ export default function CreateListing() {
   const [newListingId, setNewListingId] = useState(null);
   const [promotionSteps, setPromotionSteps] = useState(0);
   const [promotionPackage, setPromotionPackage] = useState('');
+
+  // Individual unit / room / apartment builder state
+  const [newRoom, setNewRoom] = useState({
+    name: '',
+    price: '',
+    description: '',
+    image: '',
+    capacity: 1,
+    count: 1
+  });
+  const [roomImageUploading, setRoomImageUploading] = useState(false);
 
   // Combined form state with all required fields
   const [listingForm, setListingForm] = useState({
@@ -1148,8 +1159,8 @@ export default function CreateListing() {
         return;
       }
 
-      if (files.length + listingForm.imageUrls.length > 10) {
-        setImageUploadError("You can only upload up to 10 images per listing");
+      if (files.length + listingForm.imageUrls.length > 20) {
+        setImageUploadError("You can only upload up to 20 images per listing");
         return;
       }
 
@@ -1172,6 +1183,60 @@ export default function CreateListing() {
       setUploading(false);
       setUploadProgress(0);
     }
+  };
+
+  const handleRoomImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setRoomImageUploading(true);
+      const compressedFile = await compressImage(file);
+      const [url] = await uploadFiles([compressedFile], setUploadProgress);
+      setNewRoom(prev => ({
+        ...prev,
+        image: url
+      }));
+      setUploadProgress(0);
+    } catch (err) {
+      alert("Failed to upload room photo: " + (err.message || err));
+    } finally {
+      setRoomImageUploading(false);
+    }
+  };
+
+  const handleAddRoom = () => {
+    if (!newRoom.name.trim()) return;
+    const roomToAdd = {
+      name: newRoom.name.trim(),
+      price: Number(newRoom.price) || Number(listingForm.regularPrice) || 0,
+      description: newRoom.description.trim(),
+      image: newRoom.image || '',
+      capacity: Number(newRoom.capacity) || 1,
+      count: Number(newRoom.count) || 1
+    };
+    setListingForm(prev => {
+      const updatedRooms = [...(prev.roomTypes || []), roomToAdd];
+      return {
+        ...prev,
+        roomTypes: updatedRooms,
+        numberOfRooms: updatedRooms.length,
+        totalUnits: updatedRooms.length
+      };
+    });
+    setNewRoom({ name: '', price: '', description: '', image: '', capacity: 1, count: 1 });
+  };
+
+  const handleRemoveRoom = (index) => {
+    setListingForm(prev => {
+      const updatedRooms = (prev.roomTypes || []).filter((_, i) => i !== index);
+      return {
+        ...prev,
+        roomTypes: updatedRooms,
+        numberOfRooms: updatedRooms.length > 0 ? updatedRooms.length : prev.bedrooms || 1,
+        totalUnits: updatedRooms.length > 0 ? updatedRooms.length : 1
+      };
+    });
   };
 
   const handlePerformerImageChange = async (e) => {
@@ -2121,6 +2186,188 @@ export default function CreateListing() {
                             placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
                             required
                           />
+                        </div>
+
+                        {/* Individual Units / Rooms / Apartments Builder */}
+                        <div className="pt-6 border-t border-gray-200">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                            <div>
+                              <h3 className="text-base font-black text-gray-900 tracking-tight flex items-center gap-2">
+                                <span>🏢</span> Specific Units, Rooms &amp; Apartments
+                              </h3>
+                              <p className="text-xs text-gray-500 font-medium mt-0.5">
+                                Add apartment numbers, room names, suites or motel rooms with individual prices, photos &amp; descriptions.
+                              </p>
+                            </div>
+                            {listingForm.roomTypes && listingForm.roomTypes.length > 0 && (
+                              <span className="self-start sm:self-auto text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 px-3 py-1 rounded-full">
+                                {listingForm.roomTypes.length} {listingForm.roomTypes.length === 1 ? 'Unit' : 'Units'} Added
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Quick Preset Buttons */}
+                          <div className="mb-4">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                              Quick Auto-Fill Presets:
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { prefix: 'Apartment ', icon: '🏢' },
+                                { prefix: 'Room ', icon: '🚪' },
+                                { prefix: 'Guest House Room ', icon: '🛌' },
+                                { prefix: 'Hotel Room ', icon: '🏨' },
+                                { prefix: 'Motel Room ', icon: '🏩' },
+                                { prefix: 'Townhouse Unit ', icon: '🏘️' },
+                                { prefix: 'Studio ', icon: '🛋️' },
+                              ].map((p, idx) => {
+                                const nextNum = (listingForm.roomTypes?.filter(r => r.name.toLowerCase().includes(p.prefix.toLowerCase())).length || 0) + 1;
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setNewRoom(prev => ({ ...prev, name: `${p.prefix}${nextNum}` }))}
+                                    className="px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-gray-200 text-xs font-bold text-gray-700 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                                  >
+                                    <span>{p.icon}</span>
+                                    <span>+ {p.prefix}{nextNum}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Add New Unit Card */}
+                          <div className="p-5 bg-gradient-to-br from-slate-50 to-gray-50 rounded-3xl border-2 border-dashed border-gray-200 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                                  Unit / Room Name or Number *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={newRoom.name}
+                                  onChange={(e) => setNewRoom(prev => ({ ...prev, name: e.target.value }))}
+                                  placeholder="e.g., Apartment 1, Room 101, Suite A"
+                                  className="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                                  Price (R)
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-rose-500 text-sm">R</span>
+                                  <input
+                                    type="number"
+                                    value={newRoom.price}
+                                    onChange={(e) => setNewRoom(prev => ({ ...prev, price: e.target.value }))}
+                                    placeholder={listingForm.regularPrice ? `${listingForm.regularPrice}` : "e.g., 650"}
+                                    className="w-full pl-9 pr-5 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                                Unit Description
+                              </label>
+                              <textarea
+                                value={newRoom.description}
+                                onChange={(e) => setNewRoom(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="e.g., 1 Bedroom with ensuite bathroom, balcony, prepaid electricity and built-in cupboards..."
+                                rows={2}
+                                className="w-full px-5 py-3 bg-white border border-gray-200 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all resize-none shadow-sm"
+                              />
+                            </div>
+
+                            {/* Unit Photo Upload */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+                              <div className="flex items-center gap-3">
+                                {newRoom.image ? (
+                                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-gray-200 shadow-sm shrink-0">
+                                    <img src={newRoom.image} alt="Unit preview" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => setNewRoom(prev => ({ ...prev, image: '' }))}
+                                      className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-0.5 hover:bg-rose-500 transition-colors"
+                                    >
+                                      <XMarkIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <label className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-100 border border-gray-200 rounded-2xl cursor-pointer text-xs font-bold text-gray-700 shadow-sm transition-all active:scale-95">
+                                    <CameraIcon className="w-4 h-4 text-rose-500" />
+                                    <span>{roomImageUploading ? "Uploading..." : "Upload Unit Picture"}</span>
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      disabled={roomImageUploading}
+                                      onChange={handleRoomImageChange}
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={handleAddRoom}
+                                disabled={!newRoom.name.trim() || roomImageUploading}
+                                className="w-full sm:w-auto px-6 py-3 bg-slate-950 hover:bg-rose-600 disabled:opacity-50 text-white rounded-2xl text-xs font-black uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
+                              >
+                                + Add Unit to Listing
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Rendered Configured Units List */}
+                          {listingForm.roomTypes && listingForm.roomTypes.length > 0 && (
+                            <div className="mt-5 space-y-3">
+                              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                                Configured Units ({listingForm.roomTypes.length}):
+                              </label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {listingForm.roomTypes.map((room, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-start gap-3.5 group hover:border-gray-300 transition-all"
+                                  >
+                                    <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center border border-gray-100">
+                                      {room.image ? (
+                                        <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <span className="text-2xl">🚪</span>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center justify-between gap-1">
+                                        <h4 className="font-black text-gray-900 text-sm truncate">{room.name}</h4>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveRoom(idx)}
+                                          className="text-gray-300 hover:text-rose-500 p-1 transition-colors"
+                                          title="Remove this unit"
+                                        >
+                                          <XMarkIcon className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                      <p className="text-xs font-black text-rose-600 mt-0.5">
+                                        R{room.price?.toLocaleString()}
+                                      </p>
+                                      {room.description && (
+                                        <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mt-1">
+                                          {room.description}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -3188,7 +3435,7 @@ export default function CreateListing() {
             {currentStep === 8 && (
               <div className="space-y-8">
                 <SectionCard title="Add some photos of your place">
-                  <p className="text-gray-600 mb-6">You'll need 1 photo to get started. You can add more later.</p>
+                  <p className="text-gray-600 mb-6">You'll need at least 1 photo to get started (upload up to 20 photos).</p>
                   
                   <MediaUploadArea
                     type="image"

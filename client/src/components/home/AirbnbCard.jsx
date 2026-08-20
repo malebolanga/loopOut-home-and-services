@@ -21,9 +21,12 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       case 'rent-short':
         return '/ month';
       case 'over':
+      case 'guest_house':
+      case 'hotel':
+      case 'resort':
+      case 'land':
         return '/ night';
       case 'sale':
-      case 'land':
         return '';
       case 'office':
         return '/ hour';
@@ -42,22 +45,75 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         case 'sale':
           return 'For Sale';
         case 'land':
-          return 'Land';
+          return 'Self Catering';
+        case 'hotel':
+          return 'Hotel';
+        case 'apartment':
+          return 'Apartment';
         case 'office':
-          return 'Office';
+          return 'Hourly Room';
         case 'over':
-          return 'Short Stay';
         case 'guest_house':
           return 'Guest House';
         case 'resort':
           return 'Resort';
         default:
-          return 'Property';
+          return item.kind ? item.kind.replace('_', ' ') : 'Property';
       }
     }
-    if (type === 'service') return item.category || item.type || 'Service';
-    if (type === 'helper') return item.type || item.category || 'Helper';
+    if (type === 'service') {
+      switch (item.type) {
+        case 'schoolTransport':
+        case 'transport':
+          return 'Transport';
+        case 'carwash':
+          return 'Car Wash';
+        case 'catering':
+        case 'baker':
+          return 'Catering';
+        case 'landscaping':
+          return 'Landscaping';
+        case 'moving':
+          return 'Moving';
+        case 'storage':
+          return 'Storage';
+        case 'handyman':
+          return 'Handyman';
+        default:
+          return item.category || item.type || 'Service';
+      }
+    }
+    if (type === 'helper') {
+      switch (item.type) {
+        case 'domestic':
+          return 'Domestic Helper';
+        case 'tutor':
+          return 'Private Tutor';
+        case 'chef':
+          return 'Private Chef';
+        case 'beauty':
+          return 'Beauty Specialist';
+        case 'tattoo':
+          return 'Tattoo Artist';
+        case 'barber':
+          return 'Barbershop';
+        case 'photography':
+        case 'photograph':
+          return 'Photographer';
+        case 'sneaker':
+        case 'sneakers':
+          return 'Sneaker Cleaner';
+        case 'animals':
+        case 'animal':
+          return 'Animal Care';
+        default:
+          return item.type || item.category || 'Helper';
+      }
+    }
     if (type === 'event') return 'Event';
+    if (type === 'selling' || type === 'sell') {
+      return item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'For Sale';
+    }
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
@@ -75,12 +131,15 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
     if (resolvedType === 'listing' || resolvedType === 'property'
         || resolvedType === 'rent' || resolvedType === 'over'
         || resolvedType === 'sale' || resolvedType === 'land'
-        || resolvedType === 'resort') {
+        || resolvedType === 'resort' || resolvedType === 'hotel'
+        || resolvedType === 'apartment' || resolvedType === 'office') {
       path = `/listing/${item._id}`;
     } else if (resolvedType === 'event') {
       path = `/event/${item._id}`;
+    } else if (resolvedType === 'selling' || resolvedType === 'sell') {
+      path = `/sell-item/${item._id}`;
     } else if (resolvedType === 'helper') {
-      const specializedTypes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
+      const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
       if (specializedTypes.includes(item.type)) {
         path = `/${item.type}/${item._id}`;
       } else if (item.type === 'tutor') {

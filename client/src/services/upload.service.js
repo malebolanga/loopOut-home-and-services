@@ -1,31 +1,60 @@
-export const uploadFiles = async (files, onProgress = () => {}) => {
-  const formData = new FormData();
-  files.forEach((file) => formData.append('files', file));
+/**
+ * upload.service.js
+ *
+ * Uploads files directly to Firebase Cloud Storage so that images persist
+ * permanently across server restarts and deployments.  All pages that call
+ * `uploadFiles()` will automatically benefit from cloud storage.
+ */
 
-  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+import { storage } from '../firebase';
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL
+} from 'firebase/storage';
 
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    request.open('POST', '/api/uploads');
-    request.withCredentials = true;
-    if (token) {
-      request.setRequestHeader('Authorization', `Bearer ${token}`);
+/**
+ * Upload one or more File objects to Firebase Storage.
+ *
+ * @param {File[]} files        - Array of File objects to upload.
+ * @param {Function} onProgress - Optional callback receiving 0-100 percent.
+ * @returns {Promise<string[]>} - Resolves to an array of permanent cloud download URLs.
+ */
+export const uploadFiles = (files, onProgress = () => {}) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const uploadPromises = files.map((file, idx) => {
+        return new Promise((res, rej) => {
+          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+          const path = `uploads/${Date.now()}_${idx}_${cleanName}`;
+          const storageRef = ref(storage, path);
+          const task = uploadBytesResumable(storageRef, file);
+
+          task.on(
+            'state_changed',
+            (snapshot) => {
+              const pct = Math.round(
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+              );
+              onProgress(pct);
+            },
+            (err) => rej(err),
+            async () => {
+              try {
+                const url = await getDownloadURL(task.snapshot.ref);
+                res(url);
+              } catch (e) {
+                rej(e);
+              }
+            }
+          );
+        });
+      });
+
+      const urls = await Promise.all(uploadPromises);
+      resolve(urls);
+    } catch (err) {
+      reject(err);
     }
-    request.upload.addEventListener('progress', (event) => {
-      if (event.lengthComputable) onProgress((event.loaded / event.total) * 100);
-    });
-    request.addEventListener('load', () => {
-      let payload = {};
-      try {
-        payload = request.responseText ? JSON.parse(request.responseText) : {};
-      } catch (e) {
-        payload = { message: request.responseText };
-      }
-      if (request.status >= 200 && request.status < 300) return resolve(payload.urls);
-      reject(new Error(payload.message || `Upload failed with status ${request.status}`));
-    });
-    request.addEventListener('error', () => reject(new Error('Upload network error.')));
-    request.send(formData);
   });
 };
-

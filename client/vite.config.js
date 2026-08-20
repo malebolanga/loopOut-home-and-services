@@ -5,9 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vitejs.dev/config/
 export default defineConfig({
   resolve: {
-    alias: {
-      'firebase/storage': fileURLToPath(new URL('./src/services/secureStorageCompat.js', import.meta.url)),
-    },
+    alias: {},
   },
   server: {
     host: true,

@@ -66,7 +66,9 @@ const listingSchema = new mongoose.Schema(
         count: { type: Number, default: 1 },
         price: { type: Number },
         capacity: { type: Number },
-        description: { type: String }
+        description: { type: String },
+        image: { type: String },
+        imageUrls: { type: [String], default: [] }
       }
     ],
     operatingHours: {

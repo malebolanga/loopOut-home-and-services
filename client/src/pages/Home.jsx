@@ -74,11 +74,11 @@ import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 
-import { 
-  NeuralPicksSection, 
-  SellItemsSection, 
-  SmartRecommendations, 
-  ServicesToYourDoor, 
+import {
+  NeuralPicksSection,
+  SellItemsSection,
+  SmartRecommendations,
+  ServicesToYourDoor,
   WeeklySpecialsSection,
   UpcomingBookingsSection,
   CompareRecommendedSection
@@ -102,7 +102,7 @@ import {
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENTLY_VIEWED = 12;
-const DATA_FETCH_LIMIT = 8;
+const DATA_FETCH_LIMIT = 50;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 15000;
@@ -478,18 +478,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
   );
 };
 
-// RecentlyAddedCard is now a thin wrapper around AirbnbCard for consistency
-const RecentlyAddedCard = ({ item, onClick, type = 'property' }) => {
-  return (
-    <AirbnbCard
-      item={item}
-      type={type}
-      onClick={onClick ? () => onClick() : undefined}
-      reducedSize
-      showOwner={false}
-    />
-  );
-};
+
 
 // --- ELITE CARD FOR EXPLORE UNIVERSE ---
 const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) => {
@@ -520,7 +509,7 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
         <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
-        
+
         {/* Top Badges */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
           <div className="bg-gray-900/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
@@ -544,7 +533,7 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
           </div>
         </div>
         <p className="text-xs text-gray-500 font-medium line-clamp-1 mb-2">{item.name}</p>
-        
+
         <div className="flex items-baseline gap-1 mt-1 bg-rose-50/50 w-fit px-3 py-1 rounded-lg border border-rose-100/30">
           <span className="text-base font-black text-rose-600">{formatPrice()}</span>
           <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{getPriceSuffix()}</span>
@@ -737,34 +726,50 @@ function MobileAppHomepage({
     }
   };
 
-  const [activeTab, setActiveTab] = useState('Explore all');
-  const [visibleCount, setVisibleCount] = useState(10);
+  const [activeTab, setActiveTab] = useState('RecentAdded');
+  const [activeSubcategory, setActiveSubcategory] = useState('all');
+  const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => {
-    setVisibleCount(10);
-  }, [activeTab]);
+    setVisibleCount(12);
+  }, [activeTab, activeSubcategory]);
 
   const tabs = [
     {
-      id: 'Explore all',
-      label: 'Explore all',
-      emoji: '🪐',
-      desc: 'All listings',
-      textColor: 'text-indigo-600',
+      id: 'RecentAdded',
+      label: 'Recent Added',
+      emoji: '⚡',
+      desc: 'New listings',
+      textColor: 'text-rose-600',
+      bgColor: 'bg-rose-500',
+      subcategories: [
+        { id: 'all', label: 'All Recent', emoji: '⚡' },
+        { id: 'property', label: 'Properties', emoji: '🏡' },
+        { id: 'service', label: 'Services', emoji: '🛠️' },
+        { id: 'helper', label: 'Helpers', emoji: '🧹' },
+        { id: 'event', label: 'Events', emoji: '🎟️' },
+        { id: 'selling', label: 'Items for Sale', emoji: '🏷️' }
+      ]
     },
     {
       id: 'Property',
       label: 'Property',
       emoji: '🏡',
-      desc: 'Rooms & rentals',
+      desc: 'Rooms & stays',
       textColor: 'text-emerald-600',
-    },
-    {
-      id: 'Guest House',
-      label: 'Guest House',
-      emoji: '🛌',
-      desc: 'B&B & stays',
-      textColor: 'text-rose-600',
+      bgColor: 'bg-emerald-500',
+      subcategories: [
+        { id: 'all', label: 'All Properties', emoji: '🏡' },
+        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: '🏠' },
+        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌' },
+        { id: 'hotel', label: 'Hotels', emoji: '🏨' },
+        { id: 'lodge', label: 'Lodges', emoji: '🏡' },
+        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
+        { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
+        { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
+        { id: 'hourly_room', label: 'Hourly Rooms', emoji: '🚪' },
+        { id: 'sale', label: 'Properties for Sale', emoji: '🏷️' }
+      ]
     },
     {
       id: 'Services',
@@ -772,6 +777,18 @@ function MobileAppHomepage({
       emoji: '🛠️',
       desc: 'Book pros',
       textColor: 'text-amber-600',
+      bgColor: 'bg-amber-500',
+      subcategories: [
+        { id: 'all', label: 'All Services', emoji: '🛠️' },
+        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗' },
+        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️' },
+        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿' },
+        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚' },
+        { id: 'storage', label: 'Booking Storage', emoji: '📦' },
+        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧' },
+        { id: 'others', label: 'Others & General', emoji: '✨' }
+      ]
     },
     {
       id: 'Helper',
@@ -779,75 +796,275 @@ function MobileAppHomepage({
       emoji: '🧹',
       desc: 'Chores & care',
       textColor: 'text-sky-600',
+      bgColor: 'bg-sky-500',
+      subcategories: [
+        { id: 'all', label: 'All Helpers', emoji: '🧹' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹' },
+        { id: 'tutor', label: 'Private Tutor', emoji: '📚' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅' },
+        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉' },
+        { id: 'barber', label: 'Barbershop', emoji: '💈' },
+        { id: 'photography', label: 'Photographer', emoji: '📸' },
+        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟' },
+        { id: 'animals', label: 'Animal Care', emoji: '🐕' }
+      ]
     },
     {
       id: 'Events',
       label: 'Events',
       emoji: '🎟️',
-      desc: 'Live & tickets',
+      desc: 'Shows & vibes',
       textColor: 'text-purple-600',
+      bgColor: 'bg-purple-500',
+      subcategories: [
+        { id: 'all', label: 'All Events', emoji: '🎟️' },
+        { id: 'music', label: 'Music & Concerts', emoji: '🎵' },
+        { id: 'sports', label: 'Sports & Matches', emoji: '⚽' },
+        { id: 'arts', label: 'Arts & Culture', emoji: '🎨' },
+        { id: 'community', label: 'Community & Meetups', emoji: '🤝' },
+        { id: 'food', label: 'Food & Markets', emoji: '🍔' },
+        { id: 'outdoors', label: 'Outdoors & Safari', emoji: '⛺' }
+      ]
     },
+    {
+      id: 'Selling',
+      label: 'Marketplace',
+      emoji: '🏷️',
+      desc: 'Buy & sell',
+      textColor: 'text-teal-600',
+      bgColor: 'bg-teal-500',
+      subcategories: [
+        { id: 'all', label: 'All Items', emoji: '🏷️' },
+        { id: 'furniture', label: 'Furniture', emoji: '🛋️' },
+        { id: 'electronics', label: 'Electronics', emoji: '💻' },
+        { id: 'clothes', label: 'Clothes', emoji: '👕' },
+        { id: 'universities', label: 'Universities', emoji: '🎓' },
+        { id: 'books', label: 'Books', emoji: '📚' }
+      ]
+    },
+    {
+      id: 'Lunch',
+      label: 'Lunch',
+      emoji: '🍱',
+      desc: 'Food & eats',
+      textColor: 'text-orange-600',
+      bgColor: 'bg-orange-500',
+      route: '/lunch'
+    },
+    {
+      id: 'Matchmaker',
+      label: 'Matchmaker',
+      emoji: '🎯',
+      desc: 'AI matching',
+      textColor: 'text-fuchsia-600',
+      bgColor: 'bg-fuchsia-500',
+      route: '/matchmaker'
+    },
+    {
+      id: 'LookingFor',
+      label: 'Needs',
+      emoji: '📢',
+      desc: 'Live requests',
+      textColor: 'text-rose-600',
+      bgColor: 'bg-rose-500',
+      route: '/looking-for'
+    }
   ];
 
-  const getFilteredItems = () => {
-    switch (activeTab) {
-      case 'Guest House':
-      case 'Guest Houses':
-      case 'guesthouse':
-      case 'guesthouses':
-        return (featuredProperties || []).filter(p =>
-          p.type === 'over' ||
-          p.type === 'guesthouse' ||
-          p.type === 'hotel' ||
-          p.type === 'resort' ||
-          p.kind === 'guest_house' ||
-          p.kind === 'hotel' ||
-          p.kind === 'resort' ||
-          (p.name && /guest\s*house|guesthouse|b&b|lodge|hotel|resort/i.test(p.name)) ||
-          (p.description && /guest\s*house|guesthouse|b&b|lodge|hotel|resort/i.test(p.description))
-        );
-      case 'Properties':
-      case 'Property':
-        return featuredProperties;
-      case 'Services':
-        return featuredServices;
-      case 'Helper':
-      case 'Helpers':
-        return featuredHelpers;
-      case 'Events':
-        return featuredEvents;
-      default: {
-        // Explore all / Universe: Prioritize AI recommendations if available
-        if (aiRecommendations && aiRecommendations.recommendations?.length > 0) {
-          return aiRecommendations.recommendations;
-        }
-        
-        // Fallback: Smartly combine all types for a diverse discovery feed
-        const universeItems = [
-          ...featuredProperties.slice(0, 10),
-          ...featuredServices.slice(0, 8),
-          ...featuredHelpers.slice(0, 8),
-          ...featuredEvents.slice(0, 6)
-        ];
-        
-        // Shuffle or sort by something meaningful (e.g. rating)
-        return universeItems.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  const matchItemToSubcategory = (item, tab, subId) => {
+    if (!item) return false;
+    if (subId === 'all') {
+      if (tab === 'Property') {
+        return true;
+      }
+      return true;
+    }
+
+    const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+
+    if (tab === 'Property') {
+      switch (subId) {
+        case 'rooms':
+          return item.type === 'rent' || item.type === 'room' || item.kind === 'room' || item.kind === 'house' || item.kind === 'studio' || item.kind === 'cottage' || item.kind === 'townhouse' || item.kind === 'villa' || /room|house to rent|home to rent|cottage|flat|studio|townhouse|villa/i.test(text);
+        case 'guesthouse':
+          return item.type === 'over' || item.type === 'guesthouse' || item.type === 'guest_house' || item.kind === 'guest_house' || item.kind === 'guesthouse' || /guest\s*house|guesthouse|b&b|bed and breakfast/i.test(text);
+        case 'hotel':
+          return item.type === 'hotel' || item.kind === 'hotel' || /hotel|motel/i.test(text);
+        case 'lodge':
+          return item.type === 'lodge' || item.kind === 'lodge' || /lodge/i.test(text);
+        case 'apartment':
+          return item.type === 'apartment' || item.kind === 'apartment' || item.kind === 'complex' || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+        case 'self_catering':
+          return item.type === 'land' || item.type === 'self_catering' || item.kind === 'Self Catering' || item.kind === 'self_catering' || item.kind === 'chalet' || /self[-\s]?catering|chalet/i.test(text);
+        case 'resort':
+          return item.type === 'resort' || item.kind === 'resort' || /resort|holiday park/i.test(text);
+        case 'hourly_room':
+          return item.type === 'office' || item.type === 'hourly_room' || item.kind === 'office' || item.kind === 'hourly_room' || /hourly|day room|short stay|workspace/i.test(text);
+        case 'sale':
+          return item.type === 'sale' || item.offer === true || /sale|for sale|buying|buy/i.test(text);
+        default:
+          return true;
       }
     }
+
+    if (tab === 'Services') {
+      switch (subId) {
+        case 'transport':
+          return item.type === 'transport' || item.type === 'schoolTransport' || /transport|shuttle|taxi|driver|ride/i.test(text);
+        case 'carwash':
+          return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
+        case 'catering':
+          return item.type === 'baker' || item.type === 'catering' || /cater|baker|bakery|cake|food|buffet/i.test(text);
+        case 'landscaping':
+          return item.type === 'landscaping' || /landscap|garden|lawn|yard|grass/i.test(text);
+        case 'moving':
+          return item.type === 'moving' || /moving|logistics|hauling|bakkie|freight|delivery/i.test(text);
+        case 'storage':
+          return item.type === 'storage' || /storage|self storage|vault|container/i.test(text);
+        case 'handyman':
+          return item.type === 'handyman' || item.type === 'electrician' || item.type === 'plumber' || /handyman|electric|plumb|pipe|repair|install/i.test(text);
+        case 'others':
+          return item.type === 'other' || item.type === 'others' || item.type === 'daily' || item.type === 'daycare' || (!['transport', 'schoolTransport', 'carwash', 'baker', 'catering', 'landscaping', 'moving', 'storage', 'electrician', 'handyman', 'plumber'].includes(item.type));
+        default:
+          return true;
+      }
+    }
+
+    if (tab === 'Helper') {
+      switch (subId) {
+        case 'domestic':
+          return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
+        case 'tutor':
+          return item.type === 'tutor' || /tutor|teach|math|science|english|lesson|academy/i.test(text);
+        case 'chef':
+          return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
+        case 'beauty':
+          return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
+        case 'tattoo':
+          return item.type === 'tattoo' || /tattoo|ink|piercing|body art/i.test(text);
+        case 'barber':
+          return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
+        case 'photography':
+          return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
+        case 'sneakers':
+        case 'sneaker':
+          return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
+        case 'animals':
+        case 'animal':
+          return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
+        default:
+          return true;
+      }
+    }
+
+    if (tab === 'Events') {
+      switch (subId) {
+        case 'music':
+          return item.category === 'music' || item.type === 'music' || /music|concert|dj|festival|live band|party/i.test(text);
+        case 'sports':
+          return item.category === 'sports' || item.category === 'sport' || item.type === 'sports' || item.type === 'sport' || /sport|tournament|match|soccer|football|rugby|marathon/i.test(text);
+        case 'arts':
+        case 'art':
+          return item.category === 'arts' || item.category === 'art' || item.type === 'arts' || item.type === 'art' || /art|theatre|theater|gallery|exhibition|expo/i.test(text);
+        case 'community':
+          return item.category === 'community' || item.type === 'community' || /community|networking|workshop|meetup|church/i.test(text);
+        case 'food':
+          return item.category === 'food' || item.type === 'food' || /food|wine|tasting|braai|market|cookout/i.test(text);
+        case 'outdoors':
+        case 'hiking':
+          return item.category === 'outdoors' || item.category === 'hiking' || item.type === 'hiking' || item.type === 'outdoors' || /hike|hiking|outdoor|trail|camping|safari/i.test(text);
+        default:
+          return true;
+      }
+    }
+
+    if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') {
+      switch (subId) {
+        case 'furniture':
+          return item.category === 'furniture' || item.type === 'furniture' || /furniture|sofa|bed|table|couch|chair/i.test(text);
+        case 'electronics':
+          return item.category === 'electronics' || item.type === 'electronics' || /electronic|phone|laptop|tv|computer|gadget/i.test(text);
+        case 'clothes':
+          return item.category === 'clothes' || item.type === 'clothes' || /cloth|shoe|dress|shirt|jacket|wear/i.test(text);
+        case 'universities':
+          return item.category === 'universities' || item.type === 'universities' || /uni|university|student|campus/i.test(text);
+        case 'books':
+          return item.category === 'books' || item.type === 'books' || /book|textbook|novel|study/i.test(text);
+        default:
+          return true;
+      }
+    }
+
+    return true;
   };
+
+  const getFilteredItems = () => {
+    let source = [];
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+      source = recentlyAddedItems || [];
+      if (activeSubcategory === 'all') return source;
+      return source.filter(item => {
+        const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
+        return type === activeSubcategory;
+      });
+    } else if (activeTab === 'Property' || activeTab === 'Properties') {
+      source = featuredProperties || [];
+    } else if (activeTab === 'Services') {
+      source = featuredServices || [];
+    } else if (activeTab === 'Helper' || activeTab === 'Helpers') {
+      source = featuredHelpers || [];
+    } else if (activeTab === 'Events') {
+      source = featuredEvents || [];
+    } else if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') {
+      source = featuredSellItems || [];
+    }
+
+    return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
+  };
+
+  const getSubcategoryCount = (tab, subId) => {
+    let source = [];
+    if (tab === 'RecentAdded' || tab === 'Recent Added') {
+      source = recentlyAddedItems || [];
+      if (subId === 'all') return source.length;
+      return source.filter(item => {
+        const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
+        return type === subId;
+      }).length;
+    } else if (tab === 'Property' || tab === 'Properties') {
+      source = featuredProperties || [];
+    } else if (tab === 'Services') {
+      source = featuredServices || [];
+    } else if (tab === 'Helper' || tab === 'Helpers') {
+      source = featuredHelpers || [];
+    } else if (tab === 'Events') {
+      source = featuredEvents || [];
+    } else if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') {
+      source = featuredSellItems || [];
+    }
+
+    return source.filter(item => matchItemToSubcategory(item, tab, subId)).length;
+  };
+
+  const currentCategoryObj = tabs.find(t => t.id === activeTab) || tabs[0];
 
   const getTabColor = (id) => {
     switch (id) {
-      case 'Guest House': return 'bg-rose-600';
-      case 'Properties': return 'bg-rose-500';
+      case 'RecentAdded':
+      case 'Recent Added': return 'bg-rose-500';
+      case 'Property':
+      case 'Properties': return 'bg-emerald-500';
       case 'Services': return 'bg-amber-500';
-      case 'Helper': return 'bg-blue-500';
+      case 'Helper':
+      case 'Helpers': return 'bg-sky-500';
       case 'Events': return 'bg-purple-500';
-      default: return 'bg-gray-950';
+      case 'Selling':
+      case 'Sell':
+      case 'Marketplace': return 'bg-teal-500';
+      default: return 'bg-gray-900';
     }
   };
-
-
 
   if (isDesktop) {
     return (
@@ -855,6 +1072,10 @@ function MobileAppHomepage({
         tabs={tabs}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        activeSubcategory={activeSubcategory}
+        setActiveSubcategory={setActiveSubcategory}
+        currentCategoryObj={currentCategoryObj}
+        getSubcategoryCount={getSubcategoryCount}
         aiInsights={aiInsights}
         showAIInsights={showAIInsights}
         setShowAIInsights={setShowAIInsights}
@@ -872,8 +1093,8 @@ function MobileAppHomepage({
   return (
     <div className="min-h-screen bg-white pb-32 relative overflow-x-clip w-full">
       <Helmet>
-        <title>LoopOut | Find Homes, Services & Events Near You</title>
-        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with loopOut." />
+        <title>loopOut | Find Homes, Services &amp; Helpers Near You</title>
+        <meta name="description" content="Discover verified helpers, book top services, and explore properties in your area with loopOut." />
       </Helmet>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -884,322 +1105,195 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 pt-2 pb-4 lg:max-w-7xl lg:mx-auto w-full">
-        <DailyLoopHub />
-        <FoodCollectionReadyBanner navigate={navigate} />
-        <ContinueSearchingCard navigate={navigate} />
-        {/* Mobile Elite Slider Banner */}
-          <div className="relative h-[520px] -mx-4 lg:mx-0 rounded-b-[2rem] lg:rounded-[2rem] overflow-hidden mb-12 shadow-2xl">
-          <Swiper
-            modules={[Autoplay, Pagination]}
-            autoplay={{ delay: 6500, disableOnInteraction: false }}
-            pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500 !opacity-100', bulletClass: 'swiper-pagination-bullet !bg-white/50 !opacity-100' }}
-            className="h-full w-full mobile-hero-swiper"
-          >
-            {/* Mobile Slide 1: LoopOut for Everyone */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/explore')}>
-                <img loading="lazy"
-                  src="/loopout_for_everyone.png"
-                  className="absolute inset-0 w-full h-full object-cover scale-105"
-                  alt="LoopOut for Everyone"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                      <Sparkles className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.2em] uppercase">Find local services</span>
-                    </div>
-                  </div>
-                  <h2 className="text-4xl sm:text-5xl font-black text-white leading-[0.9] mb-4 tracking-tighter drop-shadow-lg">
-                    FIND WHAT <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">YOU NEED.</span>
-                  </h2>
-                  <p className="text-white/75 text-[13px] font-medium mb-7 leading-relaxed max-w-[270px]">
-                    Discover places to stay and people who can help, all in one local marketplace.
-                  </p>
-                  <button onClick={(event) => { event.stopPropagation(); navigate('/explore'); }} className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all hover:from-rose-600 hover:to-rose-700">
-                    Start Your Journey →
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
+      {/* Compact Dynamic Hero Showcase (Search removed as requested) */}
+      <div className="relative h-[210px] sm:h-[240px] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950" />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}
+        />
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Mobile Slide 2: LoopOut Maid Celebration */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/search?category=maid&type=helper')}>
-                <img loading="lazy"
-                  src="/loopout_maid_celebration.png"
-                  className="absolute inset-0 w-full h-full object-cover scale-105"
-                  alt="LoopOut Maid"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                      <HeartIcon className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Professional Care</span>
-                    </div>
-                  </div>
-                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
-                    THE PERFECT <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent">WORK.</span>
-                  </h2>
-                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Celebrating the bond between <span className="text-white font-semibold">families</span> and their <span className="text-white font-semibold">trusted helpers</span>.
-                  </p>
-                  <button className="w-full py-4 bg-white text-slate-950 rounded-2xl text-[11px] font-black shadow-2xl uppercase tracking-widest active:scale-95 transition-all hover:bg-slate-50">
-                    Find Your Maid →
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
-            {/* Mobile Slide 3: LoopOut Removal & Delivery */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/search?category=delivery&type=services')}>
-                <img loading="lazy"
-                  src="/loopout_removal_delivery.png"
-                  className="absolute inset-0 w-full h-full object-cover scale-105"
-                  alt="LoopOut Delivery"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                      <TruckIcon className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Elite Logistics</span>
-                    </div>
-                  </div>
-                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
-                    REMOVAL & <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-orange-400 bg-clip-text text-transparent">DELIVERY.</span>
-                  </h2>
-                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Professional removal and delivery services for your home and business.
-                  </p>
-                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-orange-500 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all">
-                    Book Delivery →
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
+        <div className="relative h-full flex flex-col justify-end px-5 pb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[9px] font-black uppercase tracking-[0.25em]">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
+              <span>{bannerLocations[bannerLocationIndex]} &bull; Live Market</span>
+            </span>
+          </div>
 
-            {/* Mobile Slide 4: LoopOut Barber Campaign */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/search?category=barber&type=services')}>
-                <img loading="lazy"
-                  src="/barber_loopout_campaign.png"
-                  className="absolute inset-0 w-full h-full object-cover scale-105"
-                  alt="LoopOut Barber"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                      <ScissorsIcon className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Professional Grooming</span>
-                    </div>
-                  </div>
-                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
-                    LOOPOUT <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-rose-500 bg-clip-text text-transparent">BARBER.</span>
-                  </h2>
-                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Experience luxury from the moment you sit down. <span className="text-white font-semibold">Draped in excellence.</span>
-                  </p>
-                  <button className="w-full py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-rose-500/40 uppercase tracking-widest active:scale-95 transition-all">
-                    Book a Barber →
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
+          <h1 className="text-white text-[28px] sm:text-[34px] font-black tracking-tight leading-[1.1] mb-2">
+            South Africa's <span className="bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300 bg-clip-text text-transparent">Local Hub</span>
+          </h1>
 
-            {/* Mobile Slide 5: LoopOut Soweto Bedroom Campaign */}
-            <SwiperSlide>
-              <div className="relative h-full w-full" onClick={() => navigate('/search?category=guesthouse&type=properties')}>
-                <img loading="lazy"
-                  src="/soweto_bg.png"
-                  className="absolute inset-0 w-full h-full object-cover scale-105"
-                  alt="loopOut Soweto Stay"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-                      <HomeModernIcon className="w-3.5 h-3.5 text-rose-400" />
-                      <span className="text-white/90 text-[9px] font-black tracking-[0.25em] uppercase">Soweto Bedroom</span>
-                    </div>
-                  </div>
-                  <h2 className="text-5xl font-black text-white leading-[0.85] mb-4 tracking-tighter drop-shadow-lg">
-                    loopOut <br />
-                    <span className="bg-gradient-to-r from-rose-400 to-amber-400 bg-clip-text text-transparent">SOWETO.</span>
-                  </h2>
-                  <p className="text-white/60 text-[13px] font-medium mb-7 leading-relaxed max-w-[260px]">
-                    Search available guest houses and stays that suit your trip.
-                  </p>
-                  <button className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white rounded-2xl text-[11px] font-black shadow-2xl shadow-amber-500/30 uppercase tracking-widest active:scale-95 transition-all">
-                    Book Soweto Stay →
-                  </button>
-                </div>
-              </div>
-            </SwiperSlide>
-          </Swiper>
-        </div>
+          <p className="text-white/75 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mb-3">
+            Discover verified helpers, book top services, and find rooms & stays.
+          </p>
 
-        {/* COMPARE RECOMMENDED FOR YOU SECTION */}
-        <div className="mb-10">
-          <CompareRecommendedSection navigate={navigate} />
-        </div>
-
-        {/* NEURAL PICKS SECTION - Alpha Algorithm (Mobile) */}
-        <div className="mb-12">
-          <NeuralPicksSection navigate={navigate} />
-        </div>
-
-
-        {/* UPCOMING BOOKINGS */}
-        <UpcomingBookingsSection navigate={navigate} />
-
-        {/* Mobile Location Status Indicator */}
-        {locationStatus && (
-          <div className="mb-6 flex items-center gap-3 px-4 py-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm">
-            <div className="relative shrink-0">
-              <div className="absolute inset-0 bg-rose-500/20 rounded-full blur-md" />
-              <div className="relative w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white">
-                <MapPinIcon className="w-4.5 h-4.5" />
-              </div>
+          {/* Quick Value Feature Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-1">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
+              <span className="text-xs">✨</span>
+              <span>Verified Profiles</span>
             </div>
-            <div className="min-w-0">
-              <h4 className="font-black text-slate-900 text-sm leading-tight truncate">{locationStatus.title}</h4>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">{locationStatus.description}</p>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
+              <span className="text-xs">⚡</span>
+              <span>Instant Booking</span>
             </div>
-            <div className="ml-auto shrink-0">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
+              <span className="text-xs">🛡️</span>
+              <span>100% Secure</span>
             </div>
           </div>
-        )}
+        </div>
+      </div>
 
+      <main className="px-4 pt-4 pb-4 w-full">
 
+        {/* ── EXPLORE SECTION (listings-first) ── */}
+        <section id="explore-section" className="mb-8">
 
-
-
-        {recentlyAddedItems.length > 0 && (
-          <section className="mb-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                <h2 className="font-black text-sm text-gray-900 uppercase tracking-widest">Recently Added</h2>
-              </div>
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{recentlyAddedItems.length} new</span>
-            </div>
-            <div className="flex overflow-x-auto gap-4 pb-4 -mx-4 px-6 lg:mx-0 lg:px-0 scrollbar-hide snap-x">
-              {recentlyAddedItems.slice(0, 5).map((item) => (
-                <div key={item._id} className="flex-shrink-0 w-44 md:w-52 snap-start">
-                  <RecentlyAddedCard
-                    item={item}
-                    type={item.itemType === 'listing' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : item.itemType}
-                    onClick={() => onItemClick(item, item.itemType)}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-
-
-        {/* MOBILE CONSOLIDATED FEED */}
-        <section id="explore-section" className="mt-10 mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-black text-xl text-gray-950 tracking-tighter leading-none">Explore <span className="text-rose-500">{activeTab === 'Explore all' ? 'All' : activeTab}</span></h2>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
-              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">Live · {getFilteredItems().length}</span>
+          {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
+          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3 mb-4 -mx-4 px-4 border-b border-gray-100/80 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] w-[calc(100%+2rem)]">
+            <div className="flex items-center gap-3.5 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <motion.button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.route) {
+                        navigate(tab.route);
+                        return;
+                      }
+                      setActiveTab(tab.id);
+                      setActiveSubcategory('all');
+                    }}
+                    whileTap={{ scale: 0.92 }}
+                    className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[66px] sm:min-w-[78px] py-1"
+                  >
+                    <motion.div
+                      animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.35, ease: 'easeInOut' }}
+                      className={`w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${
+                        isActive
+                          ? 'bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-2 ring-slate-950'
+                          : 'bg-slate-50 border border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 shadow-2xs'
+                      }`}
+                    >
+                      <span className="text-2xl sm:text-3xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
+                    </motion.div>
+                    <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mt-2 leading-tight truncate w-full ${
+                      isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
+                    }`}>
+                      {tab.label}
+                    </span>
+                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">{tab.desc}</span>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl pt-3 flex overflow-x-auto gap-6 sm:gap-8 pb-3 mb-8 scrollbar-hide snap-x -mx-4 px-6 lg:mx-0 lg:px-0">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  whileTap={{ scale: 0.92 }}
-                  whileHover={{ y: -3 }}
-                  className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative"
-                >
-                  {/* Colorful Gradient Icon Container */}
-                  <motion.div
-                    animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      isActive
-                        ? 'bg-slate-900 shadow-md ring-2 ring-slate-900'
-                        : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
+
+          {/* Subcategory Pills */}
+          {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2.5 mb-5 -mx-4 px-4 snap-x">
+              {currentCategoryObj.subcategories.map((sub) => {
+                const isSubActive = activeSubcategory === sub.id;
+                const count = getSubcategoryCount(activeTab, sub.id);
+                return (
+                  <motion.button
+                    key={sub.id}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveSubcategory(sub.id)}
+                    className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${
+                      isSubActive
+                        ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
+                        : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
                     }`}
                   >
-                    <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
-                      {tab.emoji}
+                    <span className="text-sm">{sub.emoji}</span>
+                    <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
+                      isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                    }`}>
+                      {count}
                     </span>
-                  </motion.div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          )}
 
-                  {/* Bold Colorful Label */}
-                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${
-                    isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-700')
-                  }`}>
-                    {tab.label || tab.id}
-                  </span>
-
-                  {/* Small description */}
-                  <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
-                    {tab.desc}
-                  </span>
-                </motion.button>
-              );
-            })}
+          {/* Section label + live count */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-black text-base text-gray-950 tracking-tight">
+              Explore <span className="text-rose-500">{activeTab}</span>
+            </h2>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
+              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
+                Live · {getFilteredItems().length}
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+          {/* Listing Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {getFilteredItems().slice(0, visibleCount).map((item, idx) => (
               <motion.div
                 key={item._id || idx}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
+                transition={{ delay: idx * 0.04 }}
               >
                 <AirbnbCard
                   item={item}
                   type={
-                    (activeTab === 'Explore all' || activeTab === 'Universe')
-                      ? (item.itemType || 'property')
-                      : activeTab === 'Helper'
+                    activeTab === 'Helper' || activeTab === 'Helpers'
                       ? 'helper'
-                      : (activeTab === 'Properties' || activeTab === 'Property')
-                      ? 'property'
                       : activeTab === 'Services'
                       ? 'service'
                       : activeTab === 'Events'
                       ? 'event'
-                      : 'property'
+                      : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
                   }
                   onClick={(path) => navigate(path)}
                 />
               </motion.div>
-            ))} 
+            ))}
           </div>
 
+          {/* Empty State */}
+          {getFilteredItems().length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 my-4">
+              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
+              <h3 className="text-base font-black text-slate-800 mb-1">
+                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xs mb-4">Be the first to list in this category.</p>
+              {activeSubcategory !== 'all' && (
+                <button
+                  onClick={() => setActiveSubcategory('all')}
+                  className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider"
+                >
+                  Show All {activeTab}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Load More / Search */}
           {visibleCount < getFilteredItems().length ? (
-            <button 
-              onClick={() => setVisibleCount(prev => prev + 6)}
-              className="w-full mt-12 py-5 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+            <button
+              onClick={() => setVisibleCount(prev => prev + 8)}
+              className="w-full mt-10 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
             >
-              Load More {activeTab === 'Explore all' ? 'Listings' : activeTab}
+              Load More {activeTab}
             </button>
-          ) : (
-            <div className="flex justify-center mt-16 mb-12">
+          ) : getFilteredItems().length > 0 && (
+            <div className="flex justify-center mt-12 mb-4">
               <motion.button
                 whileHover={{ scale: 1.2, rotate: 5 }}
                 whileTap={{ scale: 0.9 }}
@@ -1212,37 +1306,31 @@ function MobileAppHomepage({
           )}
         </section>
 
-        {/* Mobile Community Highlights */}
+        {/* Community Pulse */}
         <div className="mb-10 -mx-4 lg:mx-0">
           <LoopOutPulse />
         </div>
 
-
-
-        {/* Sell Items Section - moved to bottom of mobile feed */}
+        {/* Sell Items */}
         <SellItemsSection navigate={navigate} />
 
-        {/* Catchy & Modern End of Feed — CaughtUpHub */}
+        {/* End of Feed */}
         <CaughtUpHub stats={stats} navigate={navigate} />
 
       </main>
 
-      {/* Floating Track Requests Button - Mobile */}
+      {/* Track Requests FAB */}
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsBookingsOpen(true)}
-        className=" fixed bottom-24 right-4 z-[100] cursor-pointer "
+        className="fixed bottom-24 right-4 z-[100] cursor-pointer"
       >
-        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 group-hover:opacity-75 transition-opacity duration-300 shadow-xl" />
+        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 transition-opacity duration-300 shadow-xl" />
         <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
           <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
-          {/* Tooltip moved above the button to avoid side-overlapping on mobile */}
-          <div className="absolute bottom-full right-0 mb-4 bg-gray-900 text-white px-4 py-2 rounded-2xl shadow-xl text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
-            Track your requests <span>🚚</span>
-          </div>
         </div>
         {requestCount > 0 && (
           <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm z-10">
@@ -1257,14 +1345,16 @@ function MobileAppHomepage({
   );
 }
 
+
 // --- Airbnb-Style Desktop Homepage ---
 function DesktopHomepage({
   tabs,
   activeTab,
   setActiveTab,
-  aiInsights,
-  showAIInsights,
-  setShowAIInsights,
+  activeSubcategory,
+  setActiveSubcategory,
+  currentCategoryObj,
+  getSubcategoryCount,
   getFilteredItems,
   navigate,
   isBookingsOpen,
@@ -1275,8 +1365,8 @@ function DesktopHomepage({
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>LoopOut | Premium Marketplace for Properties, Services, and Events</title>
-        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties and events in your area with loopOut." />
+        <title>loopOut | Premium Marketplace for Properties, Services &amp; Helpers</title>
+        <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties in your area with loopOut." />
       </Helmet>
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -1288,45 +1378,50 @@ function DesktopHomepage({
       `}</style>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3 border-b border-gray-100 shadow-xs">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 border-b border-gray-100 shadow-xs">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide py-1">
+          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide py-1">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    if (tab.route) {
+                      navigate(tab.route);
+                      return;
+                    }
+                    setActiveTab(tab.id);
+                    setActiveSubcategory('all');
+                  }}
                   whileTap={{ scale: 0.92 }}
-                  whileHover={{ y: -3 }}
-                  className="snap-start shrink-0 flex flex-col items-center text-center cursor-pointer focus:outline-none relative"
+                  whileHover={{ y: -2 }}
+                  className="shrink-0 flex items-center gap-3.5 px-3.5 py-2 rounded-2xl cursor-pointer focus:outline-none transition-all duration-200"
                 >
-                  {/* Colorful Gradient Icon Container */}
                   <motion.div
-                    animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
+                    animate={isActive ? { scale: [1, 0.94, 1.06, 1] } : { scale: 1 }}
                     transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className={`w-14 h-14 md:w-[72px] md:h-[72px] rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
                       isActive
-                        ? 'bg-slate-900 shadow-md ring-2 ring-slate-900'
+                        ? 'bg-slate-900 shadow-md ring-2 ring-slate-900 text-white'
                         : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
                     }`}
                   >
-                    <span className="text-3xl md:text-[34px] leading-none select-none filter drop-shadow-md">
+                    <span className="text-2xl leading-none select-none">
                       {tab.emoji}
                     </span>
                   </motion.div>
 
-                  {/* Bold Colorful Label */}
-                  <span className={`text-[10px] md:text-[11px] font-black uppercase tracking-wider mt-2 leading-tight ${
-                    isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-700')
-                  }`}>
-                    {tab.label || tab.id}
-                  </span>
-
-                  {/* Small description */}
-                  <span className="text-[8px] text-gray-500 font-bold mt-0.5 leading-tight">
-                    {tab.desc}
-                  </span>
+                  <div className="text-left">
+                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${
+                      isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800')
+                    }`}>
+                      {tab.label || tab.id}
+                    </span>
+                    <span className="block text-[10px] text-gray-400 font-semibold mt-0.5 leading-tight">
+                      {tab.desc}
+                    </span>
+                  </div>
                 </motion.button>
               );
             })}
@@ -1335,7 +1430,7 @@ function DesktopHomepage({
           {/* Premium Filter Button */}
           <button
             onClick={() => navigate('/search')}
-            className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 ml-4"
+            className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 ml-4 cursor-pointer"
           >
             <FunnelIcon className="w-3.5 h-3.5" />
             <span>Filters</span>
@@ -1344,49 +1439,54 @@ function DesktopHomepage({
       </div>
 
       {/* Main Clean Feed Grid */}
-      <main className="max-w-7xl mx-auto px-8 py-10">
-        <DailyLoopHub />
-        <FoodCollectionReadyBanner navigate={navigate} />
-        <ContinueSearchingCard navigate={navigate} />
-        {/* AI Insights & Recommendations (Subtle & elegant, not busy) */}
-        {showAIInsights && aiInsights && aiInsights.length > 0 && (
-          <div className="mb-10 bg-gradient-to-r from-rose-50 to-amber-50 p-5 rounded-2xl border border-rose-100 flex items-center justify-between shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-rose-200/20 rounded-full blur-2xl" />
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-md">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 text-sm">AI Pulse Insights</h4>
-                <p className="text-xs text-gray-600 mt-0.5">
-                  {aiInsights[0]?.icon || '✨'} {aiInsights[0]?.text || aiInsights[0]}
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowAIInsights(false)} 
-              className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 border border-gray-200 rounded-lg bg-white/50 backdrop-blur-md relative z-10 transition-colors"
-            >
-              Dismiss
-            </button>
+      <main className="max-w-7xl mx-auto px-8 py-8">
+        {/* Subcategories Horizontal Bar */}
+        {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+          <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
+            {currentCategoryObj.subcategories.map((sub) => {
+              const isSubActive = activeSubcategory === sub.id;
+              const count = getSubcategoryCount(activeTab, sub.id);
+              return (
+                <motion.button
+                  key={sub.id}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveSubcategory(sub.id)}
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${
+                    isSubActive
+                      ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
+                  }`}
+                >
+                  <span className="text-sm">{sub.emoji}</span>
+                  <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${
+                      isSubActive
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
         )}
-
-        {/* Removed Discovery Hub as per User Request */}
 
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-black tracking-tighter leading-none">
+            <h1 className="text-2xl font-black tracking-tighter leading-none">
               <span className="text-slate-900">Explore </span>
-              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'Explore all' ? 'Top Discoveries' : activeTab}</span>
+              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab}</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated &middot; South Africa &amp; Beyond</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
-              Live &middot; {getFilteredItems().length}
+              Live · {getFilteredItems().length}
             </span>
           </div>
         </div>
@@ -1404,17 +1504,13 @@ function DesktopHomepage({
                 <AirbnbCard
                   item={item}
                   type={
-                    (activeTab === 'Explore all' || activeTab === 'Universe')
-                      ? (item.itemType || 'property')
-                      : activeTab === 'Helper'
+                    activeTab === 'Helper' || activeTab === 'Helpers'
                       ? 'helper'
-                      : (activeTab === 'Properties' || activeTab === 'Property')
-                      ? 'property'
                       : activeTab === 'Services'
                       ? 'service'
                       : activeTab === 'Events'
                       ? 'event'
-                      : 'property'
+                      : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
                   }
                   onClick={(path) => navigate(path)}
                 />
@@ -1422,34 +1518,43 @@ function DesktopHomepage({
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-36 text-center">
+          <div className="flex flex-col items-center justify-center py-28 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 my-4">
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-rose-100 rounded-full blur-2xl opacity-60" />
               <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl flex items-center justify-center border border-slate-200 shadow-sm">
-                <Sparkles className="w-8 h-8 text-slate-400" />
+                <span className="text-3xl">{currentCategoryObj?.emoji || '🔍'}</span>
               </div>
             </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2 tracking-tight">Nothing here yet</h3>
-            <p className="text-sm text-slate-400 max-w-xs leading-relaxed">Try switching categories or expanding your search to find what you're looking for.</p>
-            <button
-              onClick={() => navigate('/search')}
-              className="mt-8 px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95"
-            >Browse All Listings</button>
+            <h3 className="text-xl font-black text-slate-800 mb-2 tracking-tight">
+              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} available
+            </h3>
+            <p className="text-sm text-slate-400 max-w-xs leading-relaxed mb-6">
+              {activeSubcategory !== 'all'
+                ? `No listings found in ${activeSubcategory.replace('_', ' ')} yet. Try viewing all ${activeTab}.`
+                : `Try exploring other categories or expanding your search.`}
+            </p>
+            {activeSubcategory !== 'all' ? (
+              <button
+                onClick={() => setActiveSubcategory('all')}
+                className="px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+              >
+                Show All {activeTab}
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/search')}
+                className="px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+              >
+                Browse All Listings
+              </button>
+            )}
           </div>
         )}
 
-        {/* Compare Recommended For You */}
-        <div className="mt-14">
-          <CompareRecommendedSection navigate={navigate} />
-        </div>
-
-        {/* Neural Picks */}
-        <div className="mt-16">
-          <NeuralPicksSection navigate={navigate} />
-        </div>
-
         {/* Sell Items Section (Desktop) */}
-        <SellItemsSection navigate={navigate} />
+        <div className="mt-16">
+          <SellItemsSection navigate={navigate} />
+        </div>
 
         {/* Caught Up Hub - End of Feed Showcase */}
         <div className="mt-20">
@@ -1486,7 +1591,7 @@ function DesktopHomepage({
         <div className="relative bg-white text-slate-950 p-4 rounded-full shadow-xl flex items-center justify-center border border-slate-200 hover:border-slate-400 hover:shadow-2xl transition-all">
           <CalendarDaysIcon className="w-6 h-6 text-slate-700" />
           {requestCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
+            <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
               {requestCount}
             </span>
           )}
@@ -1510,11 +1615,13 @@ const Home = () => {
   const [featuredServices, setFeaturedServices] = useState([]);
   const [featuredHelpers, setFeaturedHelpers] = useState([]);
   const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [featuredSellItems, setFeaturedSellItems] = useState([]);
 
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHelpers, setLoadingHelpers] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingSellItems, setLoadingSellItems] = useState(true);
 
   const [stats] = useState({});
   const [aiRecommendations, setAiRecommendations] = useState([]);
@@ -1628,7 +1735,8 @@ const Home = () => {
       properties: new AbortController(),
       services: new AbortController(),
       helpers: new AbortController(),
-      events: new AbortController()
+      events: new AbortController(),
+      sell: new AbortController()
     };
     const timeoutId = setTimeout(() => {
       Object.values(controllers).forEach(controller => controller.abort());
@@ -1684,18 +1792,20 @@ const Home = () => {
                     setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                     setLocationStatus({
                       title: "Properties in South Africa",
-                      description: "No local matches found, showing trending properties nationwide."
+                      description: "Showing trending properties nationwide."
                     });
                   } else {
-                    setFeaturedProperties([]);
+                    setFeaturedProperties(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                   }
                 }
               }
+            } else {
+              setFeaturedProperties([]);
             }
           })
-          .catch(() => { }).finally(() => setLoadingProperties(false)),
+          .catch(() => { setFeaturedProperties([]); }).finally(() => setLoadingProperties(false)),
 
-        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
+        fetch(`/api/service/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -1704,15 +1814,15 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
               } else {
-                setFeaturedServices([]);
+                setFeaturedServices(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
               }
             } else {
               setFeaturedServices([]);
             }
           })
-          .catch(() => { }).finally(() => setLoadingServices(false)),
+          .catch(() => { setFeaturedServices([]); }).finally(() => setLoadingServices(false)),
 
-        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
+        fetch(`/api/helper/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -1721,15 +1831,15 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
               } else {
-                setFeaturedHelpers([]);
+                setFeaturedHelpers(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
               }
             } else {
               setFeaturedHelpers([]);
             }
           })
-          .catch(() => { }).finally(() => setLoadingHelpers(false)),
+          .catch(() => { setFeaturedHelpers([]); }).finally(() => setLoadingHelpers(false)),
 
-        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
+        fetch(`/api/event/get?limit=50&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -1738,13 +1848,31 @@ const Home = () => {
               if (sorted.length > 0) {
                 setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
               } else {
-                setFeaturedEvents([]);
+                setFeaturedEvents(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
               }
             } else {
               setFeaturedEvents([]);
             }
           })
-          .catch(() => { }).finally(() => setLoadingEvents(false))
+          .catch(() => { setFeaturedEvents([]); }).finally(() => setLoadingEvents(false)),
+
+        fetch(`/api/sell?limit=50`, {
+          signal: controllers.sell.signal
+        }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
+          .then(data => {
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            if (list?.length > 0) {
+              setFeaturedSellItems(list.slice(0, DATA_FETCH_LIMIT).map(i => ({
+                ...i,
+                itemType: 'selling',
+                name: i.title || i.name,
+                regularPrice: i.price || i.regularPrice
+              })));
+            } else {
+              setFeaturedSellItems([]);
+            }
+          })
+          .catch(() => { setFeaturedSellItems([]); }).finally(() => setLoadingSellItems(false))
       ];
 
       try {
@@ -1770,13 +1898,18 @@ const Home = () => {
       ...(featuredProperties || []).map(p => ({ ...p, itemType: 'listing' })),
       ...(featuredServices || []).map(s => ({ ...s, itemType: 'service' })),
       ...(featuredHelpers || []).map(h => ({ ...h, itemType: 'helper' })),
-      ...(featuredEvents || []).map(e => ({ ...e, itemType: 'event' }))
+      ...(featuredEvents || []).map(e => ({ ...e, itemType: 'event' })),
+      ...(featuredSellItems || []).map(item => ({
+        ...item,
+        itemType: 'selling',
+        name: item.title || item.name,
+        regularPrice: item.price || item.regularPrice
+      }))
     ];
     return combined
-      .filter(item => item.createdAt)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 12);
-  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents]);
+      .filter(item => item && (item.createdAt || item._id))
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
 
   useEffect(() => {
     if (featuredProperties && featuredServices && featuredHelpers && featuredEvents) {
@@ -1792,10 +1925,12 @@ const Home = () => {
       featuredServices={featuredServices}
       featuredHelpers={featuredHelpers}
       featuredEvents={featuredEvents}
+      featuredSellItems={featuredSellItems}
       loadingProperties={loadingProperties}
       loadingServices={loadingServices}
       loadingHelpers={loadingHelpers}
       loadingEvents={loadingEvents}
+      loadingSellItems={loadingSellItems}
       stats={stats}
       onItemClick={addToRecentlyViewed}
       recentlyViewedItems={recentlyViewedItems}
