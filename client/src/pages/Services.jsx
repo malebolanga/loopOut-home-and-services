@@ -2237,13 +2237,24 @@ const ServicePage = () => {
 
         {/* Location Map */}
         <div className="mt-12 pt-8 border-t border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Location</h2>
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
+          <p className="text-gray-700 mb-4 text-sm lg:text-base">{service.address}</p>
           <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
-            <GoogleMapComponent 
-              address={service.address || 'Available in your area'} 
-              title={`${service.name}'s Service Area`} 
+            <GoogleMapComponent
+              address={service.address || 'Available in your area'}
+              title={`${service.name}'s Service Area`}
             />
           </div>
+          {service.near && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
+              <div className="text-gray-700 text-xs lg:text-sm space-y-1">
+                {(service.near || '').split('\n').slice(0, 4).map((item, i) => (
+                  <p key={i}>{item}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Things to Know */}

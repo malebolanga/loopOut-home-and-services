@@ -13,9 +13,10 @@ export default function Booking({ listing = {} }) {
   const [endDate, setEndDate] = useState(null);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState("");
   const { awardPoints, lastEarned, clearLastEarned } = useLoopPoints();
 
-  const sendBookingInformation = async (userId, startDate, endDate, name, contact) => {
+  const sendBookingInformation = async (userId, startDate, endDate, name, contact, unit) => {
     try {
       // Format the contact number of the host for WhatsApp
       // Uses listing contact/phone if available, otherwise falls back to a default number.
@@ -35,8 +36,9 @@ export default function Booking({ listing = {} }) {
       const checkOutDate = new Date(endDate).toLocaleDateString("en-US", { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 
       // Action Messages
-      const acceptMessage = `Accept the booking for ${name}, I accept your request for ${listing?.name || "the property"} on ${checkInDate}. See you then!`;
-      const declineMessage = `Decline the booking for ${name}, I'm unable to accept the request for ${checkInDate}. Can we try another time?`;
+      const unitTag = unit ? ` (${unit})` : "";
+      const acceptMessage = `Accept the booking for ${name}, I accept your request for ${listing?.name || "the property"}${unitTag} on ${checkInDate}. See you then!`;
+      const declineMessage = `Decline the booking for ${name}, I'm unable to accept the request for ${listing?.name || "the property"}${unitTag} on ${checkInDate}. Can we try another time?`;
 
       const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
@@ -48,11 +50,15 @@ export default function Booking({ listing = {} }) {
       message += `📍 *PROPERTY OVERVIEW*\n`;
       message += `*━━━━━━━━━━━━━━━━━━━━*\n`;
       message += `🏠 *Property:* ${listing?.name || "loopOut Listing"}\n`;
+      if (unit) {
+        message += `🚪 *Apartment / Room:* ${unit}\n`;
+      }
       if (listing?.address) {
         message += `📍 *Location:* ${listing.address}\n`;
         message += `🗺️ *View Map:* ${mapLink}\n`;
       }
-      message += `💰 *Listed Price:* R${listing?.regularPrice?.toLocaleString() || "0"}\n`;
+      const selectedRoomObj = listing?.roomTypes?.find(r => r.name === unit);
+      message += `💰 *Listed Price:* R${(selectedRoomObj?.price || listing?.regularPrice)?.toLocaleString() || "0"}\n`;
       message += `📋 *Offering:* ${listing?.type === 'rent' ? 'For Rent' : listing?.type === 'sale' ? 'For Sale' : 'Stay'}\n\n`;
 
       message += `*👤 INQUIRER DETAILS*\n`;
@@ -168,6 +174,33 @@ export default function Booking({ listing = {} }) {
 
                 <div className="w-full h-px bg-gray-100 mt-2" />
 
+                {/* Apartment or Room Unit Selection */}
+                <div className="space-y-2">
+                  <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Select Apartment / Room (Optional)</h3>
+                  {listing?.roomTypes && listing.roomTypes.length > 0 ? (
+                    <select
+                      value={selectedUnit}
+                      onChange={(e) => setSelectedUnit(e.target.value)}
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold text-sm text-gray-900 appearance-none cursor-pointer"
+                    >
+                      <option value="">✨ Any Available Unit</option>
+                      {listing.roomTypes.map((r, i) => (
+                        <option key={i} value={r.name}>
+                          🚪 {r.name} {r.price ? `(R${Number(r.price).toLocaleString()})` : ''} {r.capacity ? `· Max ${r.capacity} Guests` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      placeholder="e.g. Room 101, Apartment 2B"
+                      value={selectedUnit}
+                      onChange={(e) => setSelectedUnit(e.target.value)}
+                    />
+                  )}
+                </div>
+
                 <div className="space-y-4">
                   <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">Your Details</h3>
                   <div>
@@ -215,7 +248,8 @@ export default function Booking({ listing = {} }) {
                           startDate.toISOString(),
                           endDate.toISOString(),
                           name,
-                          contact
+                          contact,
+                          selectedUnit
                         );
                         // 🌟 Award LoopOut points
                         awardPoints('Property Booking');

@@ -2,50 +2,17 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  HomeIcon,
-  MapIcon,
-  XMarkIcon,
   MagnifyingGlassIcon,
   HeartIcon,
   StarIcon,
   FunnelIcon,
   CalendarDaysIcon,
-  UserGroupIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  GlobeAltIcon,
-  UserIcon,
-  LightBulbIcon,
-  ChartBarIcon,
-  ArrowTrendingUpIcon,
-  BoltIcon,
-  Cog6ToothIcon,
-  ViewColumnsIcon,
-  Bars3Icon,
-  ScissorsIcon,
-  TruckIcon,
-  AcademicCapIcon,
-  WrenchIcon,
-  FireIcon,
-  MapPinIcon,
-  CheckCircleIcon,
-  HomeModernIcon,
-  IdentificationIcon,
-  KeyIcon,
-  PencilIcon,
-  TicketIcon,
-  InboxIcon,
-  BellIcon,
-  ShoppingBagIcon,
   HandThumbUpIcon,
   HandThumbDownIcon,
   ChatBubbleOvalLeftEllipsisIcon,
-  ChatBubbleLeftEllipsisIcon,
-  PhoneIcon,
-  ArrowRightIcon,
-  TagIcon
+  PhoneIcon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -62,7 +29,12 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import {
   FaApple,
-  FaGooglePlay
+  FaGooglePlay,
+  FaWhatsapp,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaCalendarCheck,
+  FaTimes
 } from 'react-icons/fa';
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
@@ -685,8 +657,447 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
 const CommunityNeedsSection = () => null;
 
+// ─── Upcoming Bookings Strip ──────────────────────────────────────────────────
+const UpcomingBookingStrip = ({ navigate }) => {
+  const { currentUser } = useSelector((state) => state.user);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser?._id) { setLoading(false); return; }
+    const controller = new AbortController();
+    const fetch_ = async () => {
+      try {
+        const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`, { signal: controller.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const active = data
+          .filter(b => {
+            const d = new Date(b.startDate);
+            d.setHours(0, 0, 0, 0);
+            return d >= now && !['cancelled', 'completed', 'declined'].includes(b.status);
+          })
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 8)
+          .map(b => {
+            const due = new Date(b.startDate);
+            const diffMs = due - new Date();
+            const diffDays = Math.floor(diffMs / 86400000);
+            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            const isToday = diffDays === 0;
+            const isTomorrow = diffDays === 1;
+            const urgency = isToday ? 'today' : isTomorrow ? 'tomorrow' : diffDays <= 3 ? 'soon' : 'upcoming';
+            return {
+              id: b._id,
+              title: b.listing?.name || b.helper?.name || b.service?.name || b.event?.name || 'Booking Request',
+              image: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || null,
+              status: b.status || 'pending',
+              dateStr: due.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }),
+              timeStr: due.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              diffDays, diffHrs, urgency, isToday, isTomorrow,
+              type: b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service',
+              itemId: b.listing?._id || b.helper?._id || b.service?._id || b.event?._id,
+              emoji: b.listing ? '🏡' : b.helper ? '🧹' : b.event ? '🎟️' : '🛠️',
+              proName: b.listing ? (b.listing.userRef?.username || b.listing.name || 'Host') : (b.helper?.name || b.service?.name || b.event?.name || 'Professional'),
+              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proWhatsapp: b.phone || b.helper?.phone || b.service?.phone || '',
+              proPhone: b.phone || b.helper?.phone || b.service?.phone || '',
+              selectedPerformer: b.selectedPerformer || null,
+              performerExperience: b.performerExperience || null,
+              performerImage: b.performerImage || null,
+              address: b.address || b.listing?.address || b.service?.address || b.event?.address || b.location || '',
+              price: b.totalPrice || b.totalAmount || b.price || b.listing?.price || b.service?.price || b.helper?.price || null,
+              notes: b.notes || b.specialInstructions || ''
+            };
+          });
+        setBookings(active);
+      } catch (e) { if (e.name !== 'AbortError') console.error(e); }
+      finally { setLoading(false); }
+    };
+    fetch_();
+    return () => controller.abort();
+  }, [currentUser]);
+
+  if (!currentUser || (!loading && bookings.length === 0)) return null;
+
+  const urgencyStyles = {
+    today: { pill: 'bg-rose-500 text-white', bar: 'bg-rose-500', label: 'TODAY' },
+    tomorrow: { pill: 'bg-amber-500 text-white', bar: 'bg-amber-500', label: 'TOMORROW' },
+    soon: { pill: 'bg-blue-500 text-white', bar: 'bg-blue-500', label: 'SOON' },
+    upcoming: { pill: 'bg-slate-700 text-white', bar: 'bg-slate-400', label: 'UPCOMING' },
+  };
+
+  const statusColors = {
+    pending: 'text-amber-500',
+    confirmed: 'text-emerald-500',
+    approved: 'text-emerald-500',
+    assigned: 'text-blue-500',
+    enroute: 'text-indigo-500',
+    ongoing: 'text-rose-500',
+  };
+
+  return (
+    <section className="mb-6 -mx-4">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 mb-3">
+        <div className="flex items-center gap-2">
+          <CalendarDaysIcon className="w-4 h-4 text-rose-500" />
+          <span className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Your Upcoming</span>
+          {bookings.length > 0 && (
+            <span className="text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-full">{bookings.length}</span>
+          )}
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/profile?tab=bookings')}
+          className="text-[10px] font-black text-rose-500 uppercase tracking-wider"
+        >
+          See All
+        </motion.button>
+      </div>
+
+      {/* Scroll strip */}
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1 snap-x snap-mandatory">
+        {loading
+          ? Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="snap-start shrink-0 w-[160px] h-[170px] bg-gray-100 rounded-3xl animate-pulse" />
+          ))
+          : bookings.map((b, i) => {
+            const u = urgencyStyles[b.urgency];
+            const sc = statusColors[b.status] || 'text-gray-400';
+            return (
+              <motion.div
+                key={b.id}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.06 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setSelectedBooking(b)}
+                className="snap-start shrink-0 w-[160px] cursor-pointer relative overflow-hidden rounded-3xl shadow-md border border-gray-100 bg-white group hover:shadow-lg transition-shadow"
+              >
+                {/* Thumbnail */}
+                <div className="relative h-[80px] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                  {b.image ? (
+                    <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl">{b.emoji}</div>
+                  )}
+                  {/* Due date pill */}
+                  <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${u.pill}`}>
+                    {b.isToday ? 'Today' : b.isTomorrow ? 'Tomorrow' : `${b.diffDays}d`}
+                  </div>
+                  {/* urgency bar at bottom of image */}
+                  <div className={`absolute bottom-0 left-0 right-0 h-1 ${u.bar}`} />
+                </div>
+
+                {/* Info */}
+                <div className="p-3">
+                  <p className="text-[12px] font-black text-gray-900 leading-tight line-clamp-1 mb-1">{b.title}</p>
+                  <div className="flex items-center gap-1 mb-1.5">
+                    <span className="text-[9px] text-gray-400 font-bold">{b.dateStr.replace(/, \d{4}/, '')}</span>
+                    <span className="text-[9px] text-gray-300">·</span>
+                    <span className="text-[9px] text-gray-400 font-bold">{b.timeStr}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[8px] font-black uppercase tracking-wider ${sc}`}>
+                      {b.status}
+                    </span>
+                    <span className="text-[9px]">{b.emoji}</span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })
+        }
+      </div>
+
+      {/* Interactive Booking Details Modal Popup */}
+      <AnimatePresence>
+        {selectedBooking && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedBooking(null)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
+            />
+
+            {/* Modal Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden z-10 border border-slate-100 max-h-[88vh] flex flex-col"
+            >
+              {/* Header Image / Pattern Area */}
+              <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 flex-shrink-0">
+                {selectedBooking.image ? (
+                  <img
+                    src={selectedBooking.image}
+                    alt={selectedBooking.title}
+                    className="w-full h-full object-cover opacity-85"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-6xl">
+                    {selectedBooking.emoji}
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+                {/* Top Controls: Urgency Badge & Close button */}
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md ${urgencyStyles[selectedBooking.urgency]?.pill || 'bg-rose-500 text-white'}`}>
+                      {selectedBooking.isToday ? '⚡ Due Today' : selectedBooking.isTomorrow ? '⏰ Due Tomorrow' : `🗓️ Due in ${selectedBooking.diffDays} days`}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-white text-[9px] font-black uppercase tracking-widest">
+                      {selectedBooking.type}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedBooking(null)}
+                    className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <FaTimes className="text-xs" />
+                  </button>
+                </div>
+
+                {/* Title inside Header */}
+                <div className="absolute bottom-3.5 left-4 right-4 text-white">
+                  <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-0.5">Booking Details</p>
+                  <h3 className="text-lg font-black tracking-tight leading-tight line-clamp-1">
+                    {selectedBooking.title}
+                  </h3>
+                </div>
+              </div>
+
+              {/* Scrollable Content Body */}
+              <div className="p-5 overflow-y-auto space-y-4 flex-1 scrollbar-hide text-left">
+                {/* Date & Time Widget */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg">
+                      <FaCalendarCheck />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scheduled Due Date</p>
+                      <p className="text-sm font-black text-slate-900">{selectedBooking.dateStr} &bull; {selectedBooking.timeStr}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${selectedBooking.status === 'confirmed' || selectedBooking.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                      selectedBooking.status === 'assigned' ? 'bg-blue-100 text-blue-700' :
+                        selectedBooking.status === 'enroute' ? 'bg-indigo-100 text-indigo-700' :
+                          selectedBooking.status === 'ongoing' ? 'bg-rose-100 text-rose-700' :
+                            'bg-amber-100 text-amber-700'
+                    }`}>
+                    {selectedBooking.status}
+                  </span>
+                </div>
+
+                {/* Assigned Performer / Pro Contact Card */}
+                <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src={selectedBooking.selectedPerformer ? (selectedBooking.performerImage || selectedBooking.proAvatar) : selectedBooking.proAvatar}
+                          alt={selectedBooking.proName}
+                          className="w-11 h-11 rounded-full object-cover border-2 border-slate-100"
+                          onError={(e) => { e.target.src = 'https://i.pravatar.cc/150?u=pro'; }}
+                        />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          {selectedBooking.selectedPerformer ? 'Assigned Pro' : 'Provider / Host'}
+                        </p>
+                        <h4 className="text-sm font-black text-slate-900 leading-tight">
+                          {selectedBooking.selectedPerformer || selectedBooking.proName}
+                        </h4>
+                        {selectedBooking.performerExperience && (
+                          <span className="text-[9px] text-rose-500 font-bold uppercase">{selectedBooking.performerExperience} Exp</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contact Buttons */}
+                    <div className="flex items-center gap-2">
+                      {selectedBooking.proWhatsapp && (
+                        <a
+                          href={`https://wa.me/${selectedBooking.proWhatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 shadow-md shadow-emerald-200 active:scale-95 transition-all"
+                          title="Chat on WhatsApp"
+                        >
+                          <FaWhatsapp className="text-base" />
+                        </a>
+                      )}
+                      {selectedBooking.proPhone && (
+                        <a
+                          href={`tel:${selectedBooking.proPhone}`}
+                          className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center hover:bg-slate-200 active:scale-95 transition-all"
+                          title="Call"
+                        >
+                          <FaPhone className="text-xs" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedBooking.address && (
+                    <div className="flex items-start gap-2 pt-2 border-t border-slate-100 text-slate-600 text-xs">
+                      <FaMapMarkerAlt className="text-rose-500 text-xs mt-0.5 shrink-0" />
+                      <span className="line-clamp-1">{selectedBooking.address}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes or Price Info */}
+                {(selectedBooking.price || selectedBooking.notes) && (
+                  <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl text-xs">
+                    {selectedBooking.price && (
+                      <div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Total Price</span>
+                        <span className="font-black text-slate-900 text-sm">R{selectedBooking.price}</span>
+                      </div>
+                    )}
+                    {selectedBooking.notes && (
+                      <p className="text-[11px] text-slate-500 italic max-w-[200px] truncate">{selectedBooking.notes}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons in Footer */}
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2.5 flex-shrink-0">
+                <button
+                  onClick={() => {
+                    const itemRoute = `/${selectedBooking.type === 'listing' ? 'listing' : selectedBooking.type}/${selectedBooking.itemId}`;
+                    setSelectedBooking(null);
+                    navigate(itemRoute);
+                  }}
+                  className="flex-1 py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-200 active:scale-98 transition-all cursor-pointer"
+                >
+                  <span>View Item Details</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedBooking(null);
+                    navigate('/profile?tab=bookings');
+                  }}
+                  className="py-3 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-wider active:scale-98 transition-all cursor-pointer"
+                >
+                  <span>All Bookings</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+};
+
+// --- Pure subcategory matcher (module-scope so both Mobile and Desktop can use it) ---
+const matchItemToSubcategory = (item, tab, subId) => {
+  if (!item) return false;
+  if (subId === 'all') return true;
+
+  const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+
+  if (tab === 'Property') {
+    switch (subId) {
+      case 'rooms':
+        return item.type === 'rent' || item.type === 'room' || item.kind === 'room' || item.kind === 'house' || item.kind === 'studio' || item.kind === 'cottage' || item.kind === 'townhouse' || item.kind === 'villa' || /room|house to rent|home to rent|cottage|flat|studio|townhouse|villa/i.test(text);
+      case 'guesthouse':
+        return item.type === 'over' || item.type === 'guesthouse' || item.type === 'guest_house' || item.kind === 'guest_house' || item.kind === 'guesthouse' || /guest\s*house|guesthouse|b&b|bed and breakfast/i.test(text);
+      case 'hotel':
+        return item.type === 'hotel' || item.kind === 'hotel' || /hotel|motel/i.test(text);
+      case 'lodge':
+        return item.type === 'lodge' || item.kind === 'lodge' || /lodge/i.test(text);
+      case 'apartment':
+        return item.type === 'apartment' || item.kind === 'apartment' || item.kind === 'complex' || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+      case 'self_catering':
+        return item.type === 'land' || item.type === 'self_catering' || item.kind === 'Self Catering' || item.kind === 'self_catering' || item.kind === 'chalet' || /self[-\s]?catering|chalet/i.test(text);
+      case 'resort':
+        return item.type === 'resort' || item.kind === 'resort' || /resort|holiday park/i.test(text);
+      case 'hourly_room':
+        return item.type === 'office' || item.type === 'hourly_room' || item.kind === 'office' || item.kind === 'hourly_room' || /hourly|day room|short stay|workspace/i.test(text);
+      case 'sale':
+        return item.type === 'sale' || item.offer === true || /sale|for sale|buying|buy/i.test(text);
+      default: return true;
+    }
+  }
+
+  if (tab === 'Services') {
+    switch (subId) {
+      case 'transport': return item.type === 'transport' || item.type === 'schoolTransport' || /transport|shuttle|taxi|driver|ride/i.test(text);
+      case 'carwash': return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
+      case 'catering': return item.type === 'baker' || item.type === 'catering' || /cater|baker|bakery|cake|food|buffet/i.test(text);
+      case 'landscaping': return item.type === 'landscaping' || /landscap|garden|lawn|yard|grass/i.test(text);
+      case 'moving': return item.type === 'moving' || /moving|logistics|hauling|bakkie|freight|delivery/i.test(text);
+      case 'storage': return item.type === 'storage' || /storage|self storage|vault|container/i.test(text);
+      case 'handyman': return item.type === 'handyman' || item.type === 'electrician' || item.type === 'plumber' || /handyman|electric|plumb|pipe|repair|install/i.test(text);
+      case 'others': return item.type === 'other' || item.type === 'others' || item.type === 'daily' || item.type === 'daycare' || (!['transport', 'schoolTransport', 'carwash', 'baker', 'catering', 'landscaping', 'moving', 'storage', 'electrician', 'handyman', 'plumber'].includes(item.type));
+      default: return true;
+    }
+  }
+
+  if (tab === 'Helper') {
+    switch (subId) {
+      case 'domestic': return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
+      case 'tutor': return item.type === 'tutor' || /tutor|teach|math|science|english|lesson|academy/i.test(text);
+      case 'chef': return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
+      case 'beauty': return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
+      case 'tattoo': return item.type === 'tattoo' || /tattoo|ink|piercing|body art/i.test(text);
+      case 'barber': return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
+      case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
+      case 'sneakers':
+      case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
+      case 'animals':
+      case 'animal': return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
+      default: return true;
+    }
+  }
+
+  if (tab === 'Events') {
+    switch (subId) {
+      case 'music': return item.category === 'music' || item.type === 'music' || /music|concert|dj|festival|live band|party/i.test(text);
+      case 'sports': return item.category === 'sports' || item.category === 'sport' || item.type === 'sports' || item.type === 'sport' || /sport|tournament|match|soccer|football|rugby|marathon/i.test(text);
+      case 'arts':
+      case 'art': return item.category === 'arts' || item.category === 'art' || item.type === 'arts' || item.type === 'art' || /art|theatre|theater|gallery|exhibition|expo/i.test(text);
+      case 'community': return item.category === 'community' || item.type === 'community' || /community|networking|workshop|meetup|church/i.test(text);
+      case 'food': return item.category === 'food' || item.type === 'food' || /food|wine|tasting|braai|market|cookout/i.test(text);
+      case 'outdoors':
+      case 'hiking': return item.category === 'outdoors' || item.category === 'hiking' || item.type === 'hiking' || item.type === 'outdoors' || /hike|hiking|outdoor|trail|camping|safari/i.test(text);
+      default: return true;
+    }
+  }
+
+  if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') {
+    switch (subId) {
+      case 'furniture': return item.category === 'furniture' || item.type === 'furniture' || /furniture|sofa|bed|table|couch|chair/i.test(text);
+      case 'electronics': return item.category === 'electronics' || item.type === 'electronics' || /electronic|phone|laptop|tv|computer|gadget/i.test(text);
+      case 'clothes': return item.category === 'clothes' || item.type === 'clothes' || /cloth|shoe|dress|shirt|jacket|wear/i.test(text);
+      case 'universities': return item.category === 'universities' || item.type === 'universities' || /uni|university|student|campus/i.test(text);
+      case 'books': return item.category === 'books' || item.type === 'books' || /book|textbook|novel|study/i.test(text);
+      default: return true;
+    }
+  }
+
+  return true;
+};
+
 function MobileAppHomepage({
-  featuredProperties, featuredServices, featuredHelpers, featuredEvents,
+  featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
@@ -872,182 +1283,43 @@ function MobileAppHomepage({
     }
   ];
 
-  const matchItemToSubcategory = (item, tab, subId) => {
-    if (!item) return false;
-    if (subId === 'all') {
-      if (tab === 'Property') {
-        return true;
-      }
-      return true;
-    }
 
-    const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
 
-    if (tab === 'Property') {
-      switch (subId) {
-        case 'rooms':
-          return item.type === 'rent' || item.type === 'room' || item.kind === 'room' || item.kind === 'house' || item.kind === 'studio' || item.kind === 'cottage' || item.kind === 'townhouse' || item.kind === 'villa' || /room|house to rent|home to rent|cottage|flat|studio|townhouse|villa/i.test(text);
-        case 'guesthouse':
-          return item.type === 'over' || item.type === 'guesthouse' || item.type === 'guest_house' || item.kind === 'guest_house' || item.kind === 'guesthouse' || /guest\s*house|guesthouse|b&b|bed and breakfast/i.test(text);
-        case 'hotel':
-          return item.type === 'hotel' || item.kind === 'hotel' || /hotel|motel/i.test(text);
-        case 'lodge':
-          return item.type === 'lodge' || item.kind === 'lodge' || /lodge/i.test(text);
-        case 'apartment':
-          return item.type === 'apartment' || item.kind === 'apartment' || item.kind === 'complex' || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
-        case 'self_catering':
-          return item.type === 'land' || item.type === 'self_catering' || item.kind === 'Self Catering' || item.kind === 'self_catering' || item.kind === 'chalet' || /self[-\s]?catering|chalet/i.test(text);
-        case 'resort':
-          return item.type === 'resort' || item.kind === 'resort' || /resort|holiday park/i.test(text);
-        case 'hourly_room':
-          return item.type === 'office' || item.type === 'hourly_room' || item.kind === 'office' || item.kind === 'hourly_room' || /hourly|day room|short stay|workspace/i.test(text);
-        case 'sale':
-          return item.type === 'sale' || item.offer === true || /sale|for sale|buying|buy/i.test(text);
-        default:
-          return true;
-      }
-    }
+  const getSourceForTab = useCallback((tab) => {
+    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
+    if (tab === 'Services') return featuredServices || [];
+    if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
+    if (tab === 'Events') return featuredEvents || [];
+    if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
+    return [];
+  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
 
-    if (tab === 'Services') {
-      switch (subId) {
-        case 'transport':
-          return item.type === 'transport' || item.type === 'schoolTransport' || /transport|shuttle|taxi|driver|ride/i.test(text);
-        case 'carwash':
-          return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
-        case 'catering':
-          return item.type === 'baker' || item.type === 'catering' || /cater|baker|bakery|cake|food|buffet/i.test(text);
-        case 'landscaping':
-          return item.type === 'landscaping' || /landscap|garden|lawn|yard|grass/i.test(text);
-        case 'moving':
-          return item.type === 'moving' || /moving|logistics|hauling|bakkie|freight|delivery/i.test(text);
-        case 'storage':
-          return item.type === 'storage' || /storage|self storage|vault|container/i.test(text);
-        case 'handyman':
-          return item.type === 'handyman' || item.type === 'electrician' || item.type === 'plumber' || /handyman|electric|plumb|pipe|repair|install/i.test(text);
-        case 'others':
-          return item.type === 'other' || item.type === 'others' || item.type === 'daily' || item.type === 'daycare' || (!['transport', 'schoolTransport', 'carwash', 'baker', 'catering', 'landscaping', 'moving', 'storage', 'electrician', 'handyman', 'plumber'].includes(item.type));
-        default:
-          return true;
-      }
-    }
-
-    if (tab === 'Helper') {
-      switch (subId) {
-        case 'domestic':
-          return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
-        case 'tutor':
-          return item.type === 'tutor' || /tutor|teach|math|science|english|lesson|academy/i.test(text);
-        case 'chef':
-          return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
-        case 'beauty':
-          return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
-        case 'tattoo':
-          return item.type === 'tattoo' || /tattoo|ink|piercing|body art/i.test(text);
-        case 'barber':
-          return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
-        case 'photography':
-          return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
-        case 'sneakers':
-        case 'sneaker':
-          return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
-        case 'animals':
-        case 'animal':
-          return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
-        default:
-          return true;
-      }
-    }
-
-    if (tab === 'Events') {
-      switch (subId) {
-        case 'music':
-          return item.category === 'music' || item.type === 'music' || /music|concert|dj|festival|live band|party/i.test(text);
-        case 'sports':
-          return item.category === 'sports' || item.category === 'sport' || item.type === 'sports' || item.type === 'sport' || /sport|tournament|match|soccer|football|rugby|marathon/i.test(text);
-        case 'arts':
-        case 'art':
-          return item.category === 'arts' || item.category === 'art' || item.type === 'arts' || item.type === 'art' || /art|theatre|theater|gallery|exhibition|expo/i.test(text);
-        case 'community':
-          return item.category === 'community' || item.type === 'community' || /community|networking|workshop|meetup|church/i.test(text);
-        case 'food':
-          return item.category === 'food' || item.type === 'food' || /food|wine|tasting|braai|market|cookout/i.test(text);
-        case 'outdoors':
-        case 'hiking':
-          return item.category === 'outdoors' || item.category === 'hiking' || item.type === 'hiking' || item.type === 'outdoors' || /hike|hiking|outdoor|trail|camping|safari/i.test(text);
-        default:
-          return true;
-      }
-    }
-
-    if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') {
-      switch (subId) {
-        case 'furniture':
-          return item.category === 'furniture' || item.type === 'furniture' || /furniture|sofa|bed|table|couch|chair/i.test(text);
-        case 'electronics':
-          return item.category === 'electronics' || item.type === 'electronics' || /electronic|phone|laptop|tv|computer|gadget/i.test(text);
-        case 'clothes':
-          return item.category === 'clothes' || item.type === 'clothes' || /cloth|shoe|dress|shirt|jacket|wear/i.test(text);
-        case 'universities':
-          return item.category === 'universities' || item.type === 'universities' || /uni|university|student|campus/i.test(text);
-        case 'books':
-          return item.category === 'books' || item.type === 'books' || /book|textbook|novel|study/i.test(text);
-        default:
-          return true;
-      }
-    }
-
-    return true;
-  };
-
-  const getFilteredItems = () => {
-    let source = [];
+  const filteredItems = useMemo(() => {
+    const source = getSourceForTab(activeTab);
     if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
-      source = recentlyAddedItems || [];
       if (activeSubcategory === 'all') return source;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
         return type === activeSubcategory;
       });
-    } else if (activeTab === 'Property' || activeTab === 'Properties') {
-      source = featuredProperties || [];
-    } else if (activeTab === 'Services') {
-      source = featuredServices || [];
-    } else if (activeTab === 'Helper' || activeTab === 'Helpers') {
-      source = featuredHelpers || [];
-    } else if (activeTab === 'Events') {
-      source = featuredEvents || [];
-    } else if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') {
-      source = featuredSellItems || [];
     }
-
     return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
-  };
+  }, [activeTab, activeSubcategory, getSourceForTab]);
 
-  const getSubcategoryCount = (tab, subId) => {
-    let source = [];
+  const getSubcategoryCount = useCallback((tab, subId) => {
+    const source = getSourceForTab(tab);
     if (tab === 'RecentAdded' || tab === 'Recent Added') {
-      source = recentlyAddedItems || [];
       if (subId === 'all') return source.length;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
         return type === subId;
       }).length;
-    } else if (tab === 'Property' || tab === 'Properties') {
-      source = featuredProperties || [];
-    } else if (tab === 'Services') {
-      source = featuredServices || [];
-    } else if (tab === 'Helper' || tab === 'Helpers') {
-      source = featuredHelpers || [];
-    } else if (tab === 'Events') {
-      source = featuredEvents || [];
-    } else if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') {
-      source = featuredSellItems || [];
     }
-
     return source.filter(item => matchItemToSubcategory(item, tab, subId)).length;
-  };
+  }, [getSourceForTab]);
 
-  const currentCategoryObj = tabs.find(t => t.id === activeTab) || tabs[0];
+  const currentCategoryObj = useMemo(() => tabs.find(t => t.id === activeTab) || tabs[0], [activeTab, tabs]);
 
   const getTabColor = (id) => {
     switch (id) {
@@ -1076,11 +1348,14 @@ function MobileAppHomepage({
         setActiveSubcategory={setActiveSubcategory}
         currentCategoryObj={currentCategoryObj}
         getSubcategoryCount={getSubcategoryCount}
-        aiInsights={aiInsights}
-        showAIInsights={showAIInsights}
-        setShowAIInsights={setShowAIInsights}
-        getFilteredItems={getFilteredItems}
+        featuredProperties={featuredProperties}
+        featuredServices={featuredServices}
+        featuredHelpers={featuredHelpers}
+        featuredEvents={featuredEvents}
+        featuredSellItems={featuredSellItems}
+        recentlyAddedItems={recentlyAddedItems}
         navigate={navigate}
+        currentUser={currentUser}
         isBookingsOpen={isBookingsOpen}
         setIsBookingsOpen={setIsBookingsOpen}
         requestCount={requestCount}
@@ -1105,44 +1380,44 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Compact Dynamic Hero Showcase (Search removed as requested) */}
-      <div className="relative h-[210px] sm:h-[240px] overflow-hidden">
+      {/* Medium-Small Dynamic Hero Showcase */}
+      <div className="relative h-[125px] sm:h-[145px] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950" />
         <div
           className="absolute inset-0 opacity-[0.07]"
-          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}
+          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}
         />
-        <div className="absolute -top-24 -right-24 w-72 h-72 bg-rose-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-16 -right-16 w-48 h-48 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative h-full flex flex-col justify-end px-5 pb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[9px] font-black uppercase tracking-[0.25em]">
+        <div className="relative h-full flex flex-col justify-end px-4 pb-3 sm:pb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[8px] font-black uppercase tracking-[0.2em]">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
               <span>{bannerLocations[bannerLocationIndex]} &bull; Live Market</span>
             </span>
           </div>
 
-          <h1 className="text-white text-[28px] sm:text-[34px] font-black tracking-tight leading-[1.1] mb-2">
+          <h1 className="text-white text-base sm:text-xl font-black tracking-tight leading-tight mb-0.5">
             South Africa's <span className="bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300 bg-clip-text text-transparent">Local Hub</span>
           </h1>
 
-          <p className="text-white/75 text-xs sm:text-sm font-medium leading-relaxed max-w-sm mb-3">
+          <p className="text-white/75 text-[11px] sm:text-xs font-medium leading-tight max-w-sm line-clamp-1 mb-2">
             Discover verified helpers, book top services, and find rooms & stays.
           </p>
 
           {/* Quick Value Feature Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pt-1">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
-              <span className="text-xs">✨</span>
-              <span>Verified Profiles</span>
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
+              <span className="text-[10px]">✨</span>
+              <span>Verified</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
-              <span className="text-xs">⚡</span>
-              <span>Instant Booking</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
+              <span className="text-[10px]">⚡</span>
+              <span>Instant</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[10px] font-bold shrink-0">
-              <span className="text-xs">🛡️</span>
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
+              <span className="text-[10px]">🛡️</span>
               <span>100% Secure</span>
             </div>
           </div>
@@ -1150,6 +1425,9 @@ function MobileAppHomepage({
       </div>
 
       <main className="px-4 pt-4 pb-4 w-full">
+
+        {/* ── UPCOMING BOOKINGS STRIP ── */}
+        <UpcomingBookingStrip navigate={navigate} />
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
@@ -1176,17 +1454,15 @@ function MobileAppHomepage({
                     <motion.div
                       animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
                       transition={{ duration: 0.35, ease: 'easeInOut' }}
-                      className={`w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${
-                        isActive
+                      className={`w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${isActive
                           ? 'bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-2 ring-slate-950'
                           : 'bg-slate-50 border border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 shadow-2xs'
-                      }`}
+                        }`}
                     >
                       <span className="text-2xl sm:text-3xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
                     </motion.div>
-                    <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mt-2 leading-tight truncate w-full ${
-                      isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
-                    }`}>
+                    <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mt-2 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
+                      }`}>
                       {tab.label}
                     </span>
                     <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">{tab.desc}</span>
@@ -1207,17 +1483,15 @@ function MobileAppHomepage({
                     key={sub.id}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setActiveSubcategory(sub.id)}
-                    className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${
-                      isSubActive
+                    className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${isSubActive
                         ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
                         : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                    }`}
+                      }`}
                   >
                     <span className="text-sm">{sub.emoji}</span>
                     <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${
-                      isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                    }`}>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                      }`}>
                       {count}
                     </span>
                   </motion.button>
@@ -1234,14 +1508,14 @@ function MobileAppHomepage({
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                Live · {getFilteredItems().length}
+                Live · {filteredItems.length}
               </span>
             </div>
           </div>
 
           {/* Listing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {getFilteredItems().slice(0, visibleCount).map((item, idx) => (
+            {filteredItems.slice(0, visibleCount).map((item, idx) => (
               <motion.div
                 key={item._id || idx}
                 initial={{ opacity: 0, y: 10 }}
@@ -1254,10 +1528,12 @@ function MobileAppHomepage({
                     activeTab === 'Helper' || activeTab === 'Helpers'
                       ? 'helper'
                       : activeTab === 'Services'
-                      ? 'service'
-                      : activeTab === 'Events'
-                      ? 'event'
-                      : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
+                        ? 'service'
+                        : activeTab === 'Events'
+                          ? 'event'
+                          : activeTab === 'Selling' || activeTab === 'Marketplace'
+                            ? 'selling'
+                            : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
                   }
                   onClick={(path) => navigate(path)}
                 />
@@ -1266,7 +1542,7 @@ function MobileAppHomepage({
           </div>
 
           {/* Empty State */}
-          {getFilteredItems().length === 0 && (
+          {filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 mb-1">
@@ -1285,14 +1561,14 @@ function MobileAppHomepage({
           )}
 
           {/* Load More / Search */}
-          {visibleCount < getFilteredItems().length ? (
+          {visibleCount < filteredItems.length ? (
             <button
               onClick={() => setVisibleCount(prev => prev + 8)}
               className="w-full mt-10 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
             >
               Load More {activeTab}
             </button>
-          ) : getFilteredItems().length > 0 && (
+          ) : filteredItems.length > 0 && (
             <div className="flex justify-center mt-12 mb-4">
               <motion.button
                 whileHover={{ scale: 1.2, rotate: 5 }}
@@ -1355,13 +1631,39 @@ function DesktopHomepage({
   setActiveSubcategory,
   currentCategoryObj,
   getSubcategoryCount,
-  getFilteredItems,
+  featuredProperties,
+  featuredServices,
+  featuredHelpers,
+  featuredEvents,
+  featuredSellItems,
+  recentlyAddedItems,
   navigate,
   isBookingsOpen,
   setIsBookingsOpen,
   requestCount,
   stats
 }) {
+  const getSourceForTabDesktop = useCallback((tab) => {
+    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
+    if (tab === 'Services') return featuredServices || [];
+    if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
+    if (tab === 'Events') return featuredEvents || [];
+    if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
+    return [];
+  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
+
+  const getFilteredItems = useCallback(() => {
+    const source = getSourceForTabDesktop(activeTab);
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+      if (activeSubcategory === 'all') return source;
+      return source.filter(item => {
+        const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
+        return type === activeSubcategory;
+      });
+    }
+    return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
+  }, [activeTab, activeSubcategory, getSourceForTabDesktop]);
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
@@ -1401,11 +1703,10 @@ function DesktopHomepage({
                   <motion.div
                     animate={isActive ? { scale: [1, 0.94, 1.06, 1] } : { scale: 1 }}
                     transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                      isActive
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${isActive
                         ? 'bg-slate-900 shadow-md ring-2 ring-slate-900 text-white'
                         : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
-                    }`}
+                      }`}
                   >
                     <span className="text-2xl leading-none select-none">
                       {tab.emoji}
@@ -1413,9 +1714,8 @@ function DesktopHomepage({
                   </motion.div>
 
                   <div className="text-left">
-                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${
-                      isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800')
-                    }`}>
+                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800')
+                      }`}>
                       {tab.label || tab.id}
                     </span>
                     <span className="block text-[10px] text-gray-400 font-semibold mt-0.5 leading-tight">
@@ -1451,20 +1751,18 @@ function DesktopHomepage({
                   key={sub.id}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setActiveSubcategory(sub.id)}
-                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${
-                    isSubActive
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${isSubActive
                       ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
-                  }`}
+                    }`}
                 >
                   <span className="text-sm">{sub.emoji}</span>
                   <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${
-                      isSubActive
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
                         ? 'bg-rose-500 text-white'
                         : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
-                    }`}
+                      }`}
                   >
                     {count}
                   </span>
@@ -1473,6 +1771,11 @@ function DesktopHomepage({
             })}
           </div>
         )}
+
+        {/* Upcoming Bookings Strip — Desktop */}
+        <div className="mb-8">
+          <UpcomingBookingStrip navigate={navigate} />
+        </div>
 
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
@@ -1507,10 +1810,10 @@ function DesktopHomepage({
                     activeTab === 'Helper' || activeTab === 'Helpers'
                       ? 'helper'
                       : activeTab === 'Services'
-                      ? 'service'
-                      : activeTab === 'Events'
-                      ? 'event'
-                      : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
+                        ? 'service'
+                        : activeTab === 'Events'
+                          ? 'event'
+                          : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
                   }
                   onClick={(path) => navigate(path)}
                 />

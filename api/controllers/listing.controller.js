@@ -59,6 +59,7 @@ export const createListing = async (req, res, next) => {
       environmentallyFriendly,
       numberOfApartments,
       numberOfRooms,
+      numberOfGuests,
       totalUnits,
       roomTypes,
     } = req.body;
@@ -109,6 +110,7 @@ export const createListing = async (req, res, next) => {
       environmentallyFriendly,
       numberOfApartments: Number(numberOfApartments) || 0,
       numberOfRooms: Number(numberOfRooms) || (Number(bedrooms) || 1),
+      numberOfGuests: Number(numberOfGuests) || 1,
       totalUnits: Number(totalUnits) || 1,
       roomTypes: Array.isArray(roomTypes) ? roomTypes : [],
     });
@@ -178,7 +180,7 @@ export const updateListing = async (req, res, next) => {
       hot, pets, prepaid, fridge, share, breakfast, party,
       instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
       operatingHours,
-      numberOfApartments, numberOfRooms, totalUnits, roomTypes
+      numberOfApartments, numberOfRooms, numberOfGuests, totalUnits, roomTypes
     } = req.body;
 
     const allowedUpdate = {
@@ -188,7 +190,7 @@ export const updateListing = async (req, res, next) => {
       hot, pets, prepaid, fridge, share, breakfast, party,
       instantConfirmation, kidFriendly, wheelchairAccessible, parkingAvailable, environmentallyFriendly,
       operatingHours,
-      numberOfApartments, numberOfRooms, totalUnits, roomTypes
+      numberOfApartments, numberOfRooms, numberOfGuests, totalUnits, roomTypes
     };
 
     // Strip undefined values to avoid clearing existing fields unintentionally

@@ -134,6 +134,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     checkOut: '',
     guests: 2,
     rooms: 1,
+    selectedUnit: '',
     breakfast: false,
     specialRequests: '',
     pets: false,
@@ -156,7 +157,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         checkOut: initialDates.checkOut || prev.checkOut,
         selectedDate: initialDates.selectedDate || prev.selectedDate,
         startTime: initialDates.startTime || prev.startTime,
-        endTime: initialDates.endTime || prev.endTime
+        endTime: initialDates.endTime || prev.endTime,
+        selectedUnit: initialDates.selectedUnit || prev.selectedUnit || ''
       }));
     }
   }, [isOpen, initialDates]);
@@ -196,25 +198,26 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
   const nights = calculateNights();
   const hours = calculateHours();
 
-  // Calculate total price based on property type
+  // Calculate total price based on property type and selected unit
   const calculateTotalPrice = () => {
-    if (!listing?.regularPrice) return 0;
+    const selectedRoomObj = listing?.roomTypes?.find(r => r.name === bookingDetails.selectedUnit);
+    const unitPrice = selectedRoomObj?.price ? Number(selectedRoomObj.price) : (listing?.regularPrice || 0);
 
     if (isOvernight) {
       if (nights === 0) return 0;
-      const basePrice = listing.regularPrice * nights * bookingDetails.rooms;
-      const breakfastPrice = bookingDetails.breakfast ? 150 * nights * bookingDetails.guests : 0;
-      const extraGuestFee = bookingDetails.guests > 2 ? (bookingDetails.guests - 2) * 200 * nights : 0;
+      const basePrice = unitPrice * nights * (Number(bookingDetails.rooms) || 1);
+      const breakfastPrice = bookingDetails.breakfast ? 150 * nights * (Number(bookingDetails.guests) || 1) : 0;
+      const extraGuestFee = (Number(bookingDetails.guests) || 1) > 2 ? ((Number(bookingDetails.guests) || 1) - 2) * 200 * nights : 0;
       return basePrice + breakfastPrice + extraGuestFee;
     }
 
     if (isOffice) {
       if (hours === 0) return 0;
-      return listing.regularPrice * hours;
+      return unitPrice * hours;
     }
 
     // For sale and rent - just show the price (no calculation needed)
-    return listing.regularPrice;
+    return unitPrice;
   };
 
   const totalPrice = calculateTotalPrice();
@@ -381,8 +384,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     const clientPhone = bookingDetails.phone ? formatPhoneNumberForWhatsApp(bookingDetails.phone) : '';
 
     // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. See you then!`;
-    const declineMessage = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. Can we try another time?`;
+    const unitTag = bookingDetails.selectedUnit ? ` (${bookingDetails.selectedUnit})` : '';
+    const acceptMessage = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name}${unitTag} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. See you then!`;
+    const declineMessage = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listing.name}${unitTag} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
@@ -397,10 +401,14 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `*🏨 PROPERTY INFORMATION*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `🏠 *Property:* ${listing?.name}\n`;
+      if (bookingDetails.selectedUnit) {
+        message += `🚪 *Apartment / Room:* ${bookingDetails.selectedUnit}\n`;
+      }
       message += `📌 *Address:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
-      message += `💰 *Base Rate:* R${listing?.regularPrice?.toLocaleString()} / night\n\n`;
+      const selectedRoomObj = listing?.roomTypes?.find(r => r.name === bookingDetails.selectedUnit);
+      message += `💰 *Base Rate:* R${(selectedRoomObj?.price || listing?.regularPrice)?.toLocaleString()} / night\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*👤 GUEST DETAILS*\n`;
@@ -420,7 +428,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*💳 FINANCIAL SUMMARY*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `• Room Fee: R${listing.regularPrice.toLocaleString()} × ${nights}N\n`;
+      message += `• Room Fee: R${(selectedRoomObj?.price || listing.regularPrice).toLocaleString()} × ${nights}N\n`;
       if (bookingDetails.breakfast) message += `• Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N\n`;
       if (bookingDetails.guests > 2) message += `• Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N\n`;
       message += `💵 *TOTAL: R${totalPrice.toLocaleString()}*\n\n`;
@@ -447,6 +455,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `*📍 RESORT DETAILS*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `🏢 *Space:* ${listing?.name}\n`;
+      if (bookingDetails.selectedUnit) {
+        message += `🚪 *Suite / Unit:* ${bookingDetails.selectedUnit}\n`;
+      }
       message += `📍 *Location:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
@@ -488,6 +499,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `*📍 PROPERTY OVERVIEW*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `🏠 *Property:* ${listing?.name}\n`;
+      if (bookingDetails.selectedUnit) {
+        message += `🚪 *Apartment / Room Number:* ${bookingDetails.selectedUnit}\n`;
+      }
       message += `📍 *Location:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
@@ -547,7 +561,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         startDate: startDateStr,
         endDate: endDateStr,
         phone: bookingDetails.phone,
-        message: bookingDetails.specialRequests || '',
+        message: `${bookingDetails.selectedUnit ? `[Unit: ${bookingDetails.selectedUnit}] ` : ''}${bookingDetails.specialRequests || ''}`.trim(),
+        subtype: bookingDetails.selectedUnit || undefined,
+        numberOfGuests: Number(bookingDetails.guests) || 1
       };
 
       const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
@@ -810,8 +826,93 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               <div className="space-y-6 pt-6 border-t border-gray-100">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
                   <HomeModernIcon className="w-6 h-6 text-rose-500" />
-                  Accommodations
+                  Accommodations &amp; Unit Selection
                 </h3>
+
+                {/* Apartment or Room Unit Selection */}
+                <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🚪</span> Select Apartment / Room Number
+                    </label>
+                    {bookingDetails.selectedUnit && (
+                      <span className="text-[10px] font-black text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-md">
+                        Selected: {bookingDetails.selectedUnit}
+                      </span>
+                    )}
+                  </div>
+
+                  {listing?.roomTypes && listing.roomTypes.length > 0 ? (
+                    <div className="space-y-2.5">
+                      <div className="relative">
+                        <select
+                          id="selectedUnit"
+                          name="selectedUnit"
+                          value={bookingDetails.selectedUnit || ''}
+                          onChange={handleChange}
+                          className="peer w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white font-bold text-sm appearance-none shadow-xs cursor-pointer"
+                        >
+                          <option value="">✨ Any Available Apartment / Room (Standard)</option>
+                          {listing.roomTypes.map((room, idx) => (
+                            <option key={idx} value={room.name}>
+                              {room.name} {room.price ? `· R${Number(room.price).toLocaleString()}/night` : ''} {room.capacity ? `· Max ${room.capacity} Guests` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                      </div>
+
+                      {/* Quick Unit Chips */}
+                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                        <button
+                          type="button"
+                          onClick={() => setBookingDetails(prev => ({ ...prev, selectedUnit: '' }))}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
+                            !bookingDetails.selectedUnit
+                              ? 'bg-slate-900 text-white shadow-xs'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                          }`}
+                        >
+                          Any Unit
+                        </button>
+                        {listing.roomTypes.map((room, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setBookingDetails(prev => ({ ...prev, selectedUnit: room.name }))}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                              bookingDetails.selectedUnit === room.name
+                                ? 'bg-rose-500 text-white shadow-xs'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            }`}
+                          >
+                            <span>🚪</span>
+                            <span>{room.name}</span>
+                            {room.price && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${bookingDetails.selectedUnit === room.name ? 'bg-white/20 text-white' : 'bg-gray-100 text-rose-600 font-bold'}`}>
+                                R{Number(room.price).toLocaleString()}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        id="selectedUnit"
+                        name="selectedUnit"
+                        value={bookingDetails.selectedUnit || ''}
+                        onChange={handleChange}
+                        placeholder="e.g. Apartment 1, Room 101, Unit 4B"
+                        className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white font-bold text-sm shadow-xs"
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="relative">
@@ -1576,6 +1677,7 @@ export default function Listing() {
 
   // Modal states
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState('');
   const [showContactModal, setShowContactModal] = useState(false);
   const [showFullGallery, setShowFullGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -2543,12 +2645,13 @@ export default function Listing() {
                         )}
                         <button
                           onClick={() => {
-                            setSpecialRequests(`Inquiring about ${room.name} (R${room.price || listing.regularPrice})`);
-                            handleContactHost();
+                            setSelectedUnit(room.name);
+                            setShowBookingModal(true);
                           }}
-                          className="w-full py-2 px-3 bg-slate-900 hover:bg-rose-600 active:scale-95 text-white rounded-xl text-[11px] font-bold transition-all shadow-sm cursor-pointer mt-auto"
+                          className="w-full py-2.5 px-3 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 active:scale-95 text-white rounded-xl text-[11px] font-black uppercase tracking-wider transition-all shadow-md shadow-rose-500/20 cursor-pointer mt-auto flex items-center justify-center gap-1.5"
                         >
-                          Inquire
+                          <span>Reserve Unit</span>
+                          <span>👉</span>
                         </button>
                       </div>
                     </motion.div>
@@ -3322,14 +3425,18 @@ export default function Listing() {
       <WhatsAppBookingModal
         listing={listing}
         isOpen={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
+        onClose={() => {
+          setShowBookingModal(false);
+          setSelectedUnit('');
+        }}
         bookedDates={bookedDates}
         initialDates={{
           checkIn: dateRange && dateRange[0] ? new Date(dateRange[0].getTime() - dateRange[0].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
           checkOut: dateRange && dateRange[1] ? new Date(dateRange[1].getTime() - dateRange[1].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
           selectedDate: selectedDate ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
           startTime,
-          endTime
+          endTime,
+          selectedUnit
         }}
       />
 

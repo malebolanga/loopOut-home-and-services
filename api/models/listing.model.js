@@ -59,13 +59,14 @@ const listingSchema = new mongoose.Schema(
     checkOutTime: { type: String, required: false, default: '11:00' },
     numberOfApartments: { type: Number, default: 0 },
     numberOfRooms: { type: Number, default: 1 },
+    numberOfGuests: { type: Number, default: 1 },
     totalUnits: { type: Number, default: 1 },
     roomTypes: [
       {
         name: { type: String },
         count: { type: Number, default: 1 },
         price: { type: Number },
-        capacity: { type: Number },
+        capacity: { type: Number, default: 1 },
         description: { type: String },
         image: { type: String },
         imageUrls: { type: [String], default: [] }

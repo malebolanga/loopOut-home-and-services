@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { uploadFiles } from "../services/upload.service";
 import {
@@ -482,6 +482,7 @@ export default function CreateListing() {
     cancel: "Flexible - Free cancellation 48 hours before check-in",
     bedrooms: 1,
     bathrooms: 1,
+    numberOfGuests: 2,
     numberOfApartments: 0,
     numberOfRooms: 1,
     totalUnits: 1,
@@ -1479,6 +1480,7 @@ export default function CreateListing() {
         checkOutTime: listingForm.checkOutTime || '11:00',
         numberOfApartments: Number(listingForm.numberOfApartments) || 0,
         numberOfRooms: Number(listingForm.numberOfRooms) || Number(listingForm.bedrooms) || 1,
+        numberOfGuests: Number(listingForm.numberOfGuests) || 1,
         totalUnits: Number(listingForm.totalUnits) || (Number(listingForm.numberOfApartments) || 0) + (Number(listingForm.numberOfRooms) || Number(listingForm.bedrooms) || 1),
         roomTypes: Array.isArray(listingForm.roomTypes) ? listingForm.roomTypes : [],
         serviceList: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.serviceList : [],
@@ -2169,7 +2171,16 @@ export default function CreateListing() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <FormInput
+                            label="Max Guests / Capacity"
+                            id="numberOfGuests"
+                            type="number"
+                            value={listingForm.numberOfGuests || 2}
+                            onChange={handleFormChange}
+                            placeholder="e.g., 2 Guests"
+                            required
+                          />
                           <FormInput
                             label="Available From"
                             id="period"
@@ -2196,7 +2207,7 @@ export default function CreateListing() {
                                 <span>🏢</span> Specific Units, Rooms &amp; Apartments
                               </h3>
                               <p className="text-xs text-gray-500 font-medium mt-0.5">
-                                Add apartment numbers, room names, suites or motel rooms with individual prices, photos &amp; descriptions.
+                                Add apartment numbers, room names, suites or motel rooms with individual prices, photos, descriptions &amp; guest capacities.
                               </p>
                             </div>
                             {listingForm.roomTypes && listingForm.roomTypes.length > 0 && (
@@ -2239,8 +2250,8 @@ export default function CreateListing() {
 
                           {/* Add New Unit Card */}
                           <div className="p-5 bg-gradient-to-br from-slate-50 to-gray-50 rounded-3xl border-2 border-dashed border-gray-200 space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div className="sm:col-span-1">
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
                                   Unit / Room Name or Number *
                                 </label>
@@ -2248,8 +2259,8 @@ export default function CreateListing() {
                                   type="text"
                                   value={newRoom.name}
                                   onChange={(e) => setNewRoom(prev => ({ ...prev, name: e.target.value }))}
-                                  placeholder="e.g., Apartment 1, Room 101, Suite A"
-                                  className="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                  placeholder="e.g., Apartment 1, Room 101"
+                                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
                                 />
                               </div>
 
@@ -2264,10 +2275,47 @@ export default function CreateListing() {
                                     value={newRoom.price}
                                     onChange={(e) => setNewRoom(prev => ({ ...prev, price: e.target.value }))}
                                     placeholder={listingForm.regularPrice ? `${listingForm.regularPrice}` : "e.g., 650"}
-                                    className="w-full pl-9 pr-5 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                    className="w-full pl-9 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
                                   />
                                 </div>
                               </div>
+
+                              <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
+                                  Number of Guests (Capacity)
+                                </label>
+                                <div className="relative">
+                                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm">👥</span>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="50"
+                                    value={newRoom.capacity || 1}
+                                    onChange={(e) => setNewRoom(prev => ({ ...prev, capacity: Math.max(1, parseInt(e.target.value) || 1) }))}
+                                    placeholder="2 Guests"
+                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Guest Presets Chips */}
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider shrink-0 mr-1">Guests:</span>
+                              {[1, 2, 3, 4, 6, 8].map((g) => (
+                                <button
+                                  key={g}
+                                  type="button"
+                                  onClick={() => setNewRoom(prev => ({ ...prev, capacity: g }))}
+                                  className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                    (newRoom.capacity || 1) === g
+                                      ? 'bg-rose-500 text-white shadow-xs'
+                                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  {g} {g === 1 ? 'Guest' : 'Guests'}
+                                </button>
+                              ))}
                             </div>
 
                             <div>
@@ -2292,7 +2340,7 @@ export default function CreateListing() {
                                     <button
                                       type="button"
                                       onClick={() => setNewRoom(prev => ({ ...prev, image: '' }))}
-                                      className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-0.5 hover:bg-rose-500 transition-colors"
+                                      className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-0.5 hover:bg-rose-500 transition-colors cursor-pointer"
                                     >
                                       <XMarkIcon className="w-3.5 h-3.5" />
                                     </button>
@@ -2348,15 +2396,21 @@ export default function CreateListing() {
                                         <button
                                           type="button"
                                           onClick={() => handleRemoveRoom(idx)}
-                                          className="text-gray-300 hover:text-rose-500 p-1 transition-colors"
+                                          className="text-gray-300 hover:text-rose-500 p-1 transition-colors cursor-pointer"
                                           title="Remove this unit"
                                         >
                                           <XMarkIcon className="w-4 h-4" />
                                         </button>
                                       </div>
-                                      <p className="text-xs font-black text-rose-600 mt-0.5">
-                                        R{room.price?.toLocaleString()}
-                                      </p>
+                                      <div className="flex items-center gap-2 mt-0.5">
+                                        <p className="text-xs font-black text-rose-600">
+                                          R{room.price?.toLocaleString()}
+                                        </p>
+                                        <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                          <span>👥</span>
+                                          <span>{room.capacity || 1} {(room.capacity || 1) === 1 ? 'Guest' : 'Guests'}</span>
+                                        </span>
+                                      </div>
                                       {room.description && (
                                         <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mt-1">
                                           {room.description}

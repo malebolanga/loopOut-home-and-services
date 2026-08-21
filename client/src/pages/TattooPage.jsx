@@ -2624,14 +2624,25 @@ export default function TattooPage() {
             </div>
 
             {/* Location */}
-            <div className="pb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
+            <div className="py-6 border-t border-gray-200">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
+              <p className="text-gray-700 mb-4 text-sm lg:text-base">{helper.address}</p>
               <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
-                <GoogleMapComponent 
-                  address={helper.address || 'Johannesburg, South Africa'} 
-                  title={`${helper.name}'s Location`} 
+                <GoogleMapComponent
+                  address={helper.address || 'Johannesburg, South Africa'}
+                  title={`${helper.name}'s Location`}
                 />
               </div>
+              {helper.near && (
+                <div className="mt-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
+                  <div className="text-gray-700 text-xs lg:text-sm space-y-1">
+                    {(helper.near || '').split('\n').slice(0, 4).map((item, i) => (
+                      <p key={i}>{item}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>

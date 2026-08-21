@@ -34,6 +34,7 @@ export default function UpdateListing() {
     type: "rent",
     bedrooms: 1,
     bathrooms: 1,
+    numberOfGuests: 1,
     regularPrice: 50,
     discountPrice: 0,
     parking: false,
@@ -446,17 +447,30 @@ export default function UpdateListing() {
                    </div>
    
    
-                   <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Cancellation Policy</label>
-                     <input
-                       type="text"
-                       id="cancel"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
-                       placeholder="Cancellation Policy"
-                       onChange={handleChange}
-                       value={formData.cancel}
-                     />
-                   </div>
+                    <div className="space-y-1">
+                      <label className="font-medium text-gray-700">Cancellation Policy</label>
+                      <input
+                        type="text"
+                        id="cancel"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                        placeholder="Cancellation Policy"
+                        onChange={handleChange}
+                        value={formData.cancel}
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-medium text-gray-700">Max Guests / Capacity</label>
+                      <input
+                        type="number"
+                        id="numberOfGuests"
+                        min="1"
+                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                        placeholder="e.g. 2 Guests"
+                        onChange={handleChange}
+                        value={formData.numberOfGuests || 1}
+                      />
+                    </div>
    
    
    
