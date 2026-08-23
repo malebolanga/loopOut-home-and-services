@@ -100,11 +100,13 @@ const HOST_RATING_CATEGORIES = [
 ];
 
 const LISTING_TYPES = {
-  rent: { label: 'For Rent', color: 'bg-black text-white', icon: FaHome, period: '/month' },
-  sale: { label: 'Hotel', color: 'bg-rose-600 text-white', icon: FaHotel, period: '/night' },
-  over: { label: 'Vacation Rental', color: 'bg-rose-600 text-white', icon: FaUmbrellaBeach, period: '/night' },
-  land: { label: 'Self Catering', color: 'bg-emerald-700 text-white', icon: FaHome, period: '/night' },
-  office: { label: 'Resort', color: 'bg-blue-600 text-white', icon: FaUmbrellaBeach, period: '/day' }
+  rent: { label: 'Room / Home to Rent', color: 'bg-slate-900 text-white', icon: FaHome, period: '/month' },
+  apartment: { label: 'Apartment / Complex', color: 'bg-indigo-600 text-white', icon: FaHome, period: '/month' },
+  over: { label: 'Guest House / B&B', color: 'bg-rose-600 text-white', icon: FaBed, period: '/day' },
+  hotel: { label: 'Hotel / Lodge', color: 'bg-blue-600 text-white', icon: FaHotel, period: '/day' },
+  land: { label: 'Self Catering', color: 'bg-emerald-700 text-white', icon: FaHome, period: '/day' },
+  resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-600 text-white', icon: FaUmbrellaBeach, period: '/day' },
+  office: { label: 'Room Per Hour', color: 'bg-amber-600 text-white', icon: FaClock, period: '/hour' }
 };
 
 const SOCIAL_PLATFORMS = [
@@ -166,27 +168,26 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get property type
+  // Get property type - Daily Stays (Guest House, B&B, Hotel, Lodge, Self Catering, Resort) vs Hourly Room vs Rent
   const propertyType = listing?.type || 'over';
-  const isOvernight = propertyType === 'over' || propertyType === 'sale' || propertyType === 'land';
-  const isOffice = propertyType === 'office';
-  const isSale = propertyType === 'sale';
-  const isRent = propertyType === 'rent';
+  const isDailyStay = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(propertyType);
+  const isHourlyRoom = propertyType === 'office' || propertyType === 'hourly_room' || propertyType === 'room_hourly';
+  const isRent = propertyType === 'rent' || propertyType === 'apartment';
 
-  // Calculate nights for overnight stays
-  const calculateNights = () => {
-    if (!isOvernight) return 0;
+  // Calculate days for daily stays
+  const calculateDays = () => {
+    if (!isDailyStay) return 0;
     if (!bookingDetails.checkIn || !bookingDetails.checkOut) return 0;
     const checkIn = new Date(bookingDetails.checkIn);
     const checkOut = new Date(bookingDetails.checkOut);
     const diffTime = Math.abs(checkOut - checkIn);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.max(1, diffDays);
   };
 
-  // Calculate hours for office space
+  // Calculate hours for room per hour
   const calculateHours = () => {
-    if (!isOffice) return 0;
+    if (!isHourlyRoom) return 0;
     const [startHour, startMinute] = bookingDetails.startTime.split(':').map(Number);
     const [endHour, endMinute] = bookingDetails.endTime.split(':').map(Number);
     const startInMinutes = startHour * 60 + startMinute;
@@ -195,7 +196,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     return (endInMinutes - startInMinutes) / 60;
   };
 
-  const nights = calculateNights();
+  const days = calculateDays();
   const hours = calculateHours();
 
   // Calculate total price based on property type and selected unit
@@ -203,20 +204,20 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
     const selectedRoomObj = listing?.roomTypes?.find(r => r.name === bookingDetails.selectedUnit);
     const unitPrice = selectedRoomObj?.price ? Number(selectedRoomObj.price) : (listing?.regularPrice || 0);
 
-    if (isOvernight) {
-      if (nights === 0) return 0;
-      const basePrice = unitPrice * nights * (Number(bookingDetails.rooms) || 1);
-      const breakfastPrice = bookingDetails.breakfast ? 150 * nights * (Number(bookingDetails.guests) || 1) : 0;
-      const extraGuestFee = (Number(bookingDetails.guests) || 1) > 2 ? ((Number(bookingDetails.guests) || 1) - 2) * 200 * nights : 0;
+    if (isDailyStay) {
+      if (days === 0) return 0;
+      const basePrice = unitPrice * days * (Number(bookingDetails.rooms) || 1);
+      const breakfastPrice = bookingDetails.breakfast ? 150 * days * (Number(bookingDetails.guests) || 1) : 0;
+      const extraGuestFee = (Number(bookingDetails.guests) || 1) > 2 ? ((Number(bookingDetails.guests) || 1) - 2) * 200 * days : 0;
       return basePrice + breakfastPrice + extraGuestFee;
     }
 
-    if (isOffice) {
+    if (isHourlyRoom) {
       if (hours === 0) return 0;
       return unitPrice * hours;
     }
 
-    // For sale and rent - just show the price (no calculation needed)
+    // For rent - monthly rate
     return unitPrice;
   };
 
@@ -243,7 +244,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         
         const isBooked = bookedDates.some(range => {
-          if (!isOffice) return false;
+          if (!isHourlyRoom) return false;
           const start = new Date(range.start);
           const end = new Date(range.end);
           const currentCheck = new Date(bookingDetails.selectedDate);
@@ -277,7 +278,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       newErrors.phone = 'Please enter a valid phone number';
     }
 
-    if (isOvernight) {
+    if (isDailyStay) {
       if (!bookingDetails.checkIn) {
         newErrors.checkIn = 'Check-in date is required';
       }
@@ -314,7 +315,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       }
     }
 
-    if (isOffice) {
+    if (isHourlyRoom) {
       if (!bookingDetails.selectedDate) {
         newErrors.selectedDate = 'Date is required';
       } else if (bookingDetails.startTime && bookingDetails.endTime) {
@@ -385,18 +386,26 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
     // Define the accept and decline messages and their corresponding links
     const unitTag = bookingDetails.selectedUnit ? ` (${bookingDetails.selectedUnit})` : '';
-    const acceptMessage = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name}${unitTag} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. See you then!`;
-    const declineMessage = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listing.name}${unitTag} on ${isOvernight ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. Can we try another time?`;
+    const acceptMessage = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name}${unitTag} on ${isDailyStay ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. See you then!`;
+    const declineMessage = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listing.name}${unitTag} on ${isDailyStay ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate)}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMessage)}` : '';
 
-    // Create different messages based on property type — using standard newlines \n to avoid double-encoding corruption
+    // Create different messages based on property type
     let message = '';
 
-    if (isOvernight) {
-      // Overnight stay message - Professional Formatting
-      message = `*✨ NEW RESERVATION REQUEST ✨*\n\n`;
+    if (isDailyStay) {
+      // Daily stay message (Guest House, B&B, Hotel, Lodge, Self Catering, Resort)
+      const stayCategoryTitle = propertyType === 'resort'
+        ? '🏖️ RESORT & HOLIDAY PARK BOOKING'
+        : propertyType === 'hotel'
+        ? '🏨 HOTEL & LODGE BOOKING'
+        : propertyType === 'land'
+        ? '🍳 SELF-CATERING RESERVATION'
+        : '🛌 GUEST HOUSE & B&B BOOKING';
+
+      message = `*${stayCategoryTitle} ✨*\n\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*🏨 PROPERTY INFORMATION*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
@@ -408,7 +417,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
       const selectedRoomObj = listing?.roomTypes?.find(r => r.name === bookingDetails.selectedUnit);
-      message += `💰 *Base Rate:* R${(selectedRoomObj?.price || listing?.regularPrice)?.toLocaleString()} / night\n\n`;
+      message += `💰 *Daily Rate:* R${(selectedRoomObj?.price || listing?.regularPrice)?.toLocaleString()} / day\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*👤 GUEST DETAILS*\n`;
@@ -419,18 +428,18 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `🛏️ *Rooms:* ${bookingDetails.rooms} Room(s)\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📅 STAY DETAILS*\n`;
+      message += `*📅 STAY DETAILS (PER DAY)*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `➡️ *Check-in:* ${formatDate(bookingDetails.checkIn)}\n`;
       message += `⬅️ *Check-out:* ${formatDate(bookingDetails.checkOut)}\n`;
-      message += `🌙 *Duration:* ${nights} Night(s)\n\n`;
+      message += `☀️ *Duration:* ${days} Day(s)\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*💳 FINANCIAL SUMMARY*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `• Room Fee: R${(selectedRoomObj?.price || listing.regularPrice).toLocaleString()} × ${nights}N\n`;
-      if (bookingDetails.breakfast) message += `• Breakfast: R150 × ${bookingDetails.guests}G × ${nights}N\n`;
-      if (bookingDetails.guests > 2) message += `• Extra Guest: R200 × ${bookingDetails.guests - 2}G × ${nights}N\n`;
+      message += `• Room Fee: R${(selectedRoomObj?.price || listing.regularPrice).toLocaleString()} × ${days} Day(s)\n`;
+      if (bookingDetails.breakfast) message += `• Breakfast: R150 × ${bookingDetails.guests} Guest(s) × ${days} Day(s)\n`;
+      if (bookingDetails.guests > 2) message += `• Extra Guest: R200 × ${bookingDetails.guests - 2} Guest(s) × ${days} Day(s)\n`;
       message += `💵 *TOTAL: R${totalPrice.toLocaleString()}*\n\n`;
 
       if (bookingDetails.specialRequests) {
@@ -448,20 +457,66 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
       message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
       message += `_Sent via loopOut_`;
-    } else if (isOffice) {
-      // Office space message - Professional Formatting
-      message = `*🏢 RESORT BOOKING 🏖️*\n\n`;
+    } else if (isHourlyRoom) {
+      // Room per hour message
+      message = `*🚪 ROOM PER HOUR BOOKING ⏰*\n\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📍 RESORT DETAILS*\n`;
+      message += `*📍 PROPERTY DETAILS*\n`;
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `🏢 *Space:* ${listing?.name}\n`;
+      message += `🚪 *Space:* ${listing?.name}\n`;
       if (bookingDetails.selectedUnit) {
-        message += `🚪 *Suite / Unit:* ${bookingDetails.selectedUnit}\n`;
+        message += `🚪 *Room / Suite:* ${bookingDetails.selectedUnit}\n`;
       }
       message += `📍 *Location:* ${listing?.address}\n`;
       const mapLink = generateMapLink(listing?.address);
       if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / day\n\n`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()} / hour\n\n`;
+
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*👤 CLIENT DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `👤 *Name:* ${bookingDetails.fullName}\n`;
+      message += `📞 *Phone:* ${bookingDetails.phone}\n`;
+      if (bookingDetails.email) message += `✉️ *Email:* ${bookingDetails.email}\n\n`;
+
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📅 SESSION DETAILS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}\n`;
+      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}\n`;
+      message += `⏳ *Duration:* ${hours.toFixed(1)} Hour(s)\n`;
+      message += `💵 *TOTAL: R${totalPrice.toLocaleString()}*\n\n`;
+
+      if (bookingDetails.specialRequests) {
+        message += `━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `*📝 SPECIAL REQUESTS*\n`;
+        message += `━━━━━━━━━━━━━━━━━━━━\n`;
+        message += `_"${bookingDetails.specialRequests}"_\n\n`;
+      }
+
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*⚡ QUICK ACTIONS*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
+      if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
+
+      message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
+      message += `_Sent via loopOut_`;
+    } else if (isRent) {
+      // Rent inquiry message
+      message = `*🏠 PROPERTY RENTAL INQUIRY 🏠*\n\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `*📍 PROPERTY OVERVIEW*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🏠 *Property:* ${listing?.name}\n`;
+      if (bookingDetails.selectedUnit) {
+        message += `🚪 *Apartment / Room Number:* ${bookingDetails.selectedUnit}\n`;
+      }
+      message += `📍 *Location:* ${listing?.address}\n`;
+      const mapLink = generateMapLink(listing?.address);
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}/month\n`;
+      message += `📋 *Type:* For Rent\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*👤 CLIENT DETAILS*\n`;
@@ -475,44 +530,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       if (bookingDetails.inquiryType) message += `📌 *Purpose:* ${bookingDetails.inquiryType}\n`;
       if (bookingDetails.viewingDate) message += `📅 *Preferred Viewing Date:* ${formatDate(bookingDetails.viewingDate)} at ${bookingDetails.viewingTime || '10:00'}\n`;
-      if (isRent && bookingDetails.leaseDuration) message += `⏳ *Preferred Lease Term:* ${bookingDetails.leaseDuration}\n`;
+      if (bookingDetails.leaseDuration) message += `⏳ *Preferred Lease Term:* ${bookingDetails.leaseDuration}\n`;
       if (bookingDetails.occupantsCount) message += `👥 *Number of Occupants:* ${bookingDetails.occupantsCount}\n\n`;
-
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📅 SESSION DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `📅 *Date:* ${formatDate(bookingDetails.selectedDate)}\n`;
-      message += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime}\n\n`;
-
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*⚡ QUICK ACTIONS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
-      if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
-
-      message += `🔐 *Verification Code:* \`${verificationCode}\`\n`;
-      message += `_Sent via loopOut_`;
-    } else if (isSale || isRent) {
-      // Sale or Rent inquiry message - Professional Formatting
-      message = `*🏠 PROPERTY INQUIRY 🏠*\n\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📍 PROPERTY OVERVIEW*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `🏠 *Property:* ${listing?.name}\n`;
-      if (bookingDetails.selectedUnit) {
-        message += `🚪 *Apartment / Room Number:* ${bookingDetails.selectedUnit}\n`;
-      }
-      message += `📍 *Location:* ${listing?.address}\n`;
-      const mapLink = generateMapLink(listing?.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
-      message += `💰 *Rate:* R${listing?.regularPrice?.toLocaleString()}${isRent ? '/month' : ''}\n`;
-      message += `📋 *Type:* ${isSale ? 'For Sale' : 'For Rent'}\n\n`;
-
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*👤 CLIENT DETAILS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `👤 *Name:* ${bookingDetails.fullName}\n`;
-      message += `📞 *Phone:* ${bookingDetails.phone}\n\n`;
 
       message += `━━━━━━━━━━━━━━━━━━━━\n`;
       message += `*📝 MESSAGE*\n`;
@@ -542,10 +561,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
       let startDateStr = '';
       let endDateStr = '';
 
-      if (isOvernight) {
+      if (isDailyStay) {
         startDateStr = bookingDetails.checkIn;
         endDateStr = bookingDetails.checkOut;
-      } else if (isOffice) {
+      } else if (isHourlyRoom) {
         startDateStr = bookingDetails.selectedDate + 'T' + bookingDetails.startTime;
         endDateStr = bookingDetails.selectedDate + 'T' + bookingDetails.endTime;
       } else {
@@ -627,6 +646,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
         checkOut: '',
         guests: 2,
         rooms: 1,
+        selectedUnit: '',
         breakfast: false,
         specialRequests: '',
         pets: false,
@@ -673,14 +693,14 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
              </div>
              <div>
                <h2 className="text-2xl font-black text-gray-900 tracking-tight">
-                 {isOvernight && 'Reservation Unit'}
-                 {isOffice && 'Resort Suite'}
-                 {(isSale || isRent) && 'Property Portfolio'}
+                 {isDailyStay && (propertyType === 'resort' ? 'Resort & Holiday Park' : propertyType === 'hotel' ? 'Hotel & Lodge' : propertyType === 'land' ? 'Self-Catering' : 'Guest House & B&B')}
+                 {isHourlyRoom && 'Room Per Hour'}
+                 {isRent && 'Room / Home Rental'}
                </h2>
                <p className="text-gray-400 text-xs mt-1 uppercase font-black tracking-widest opacity-60">
-                 {isOvernight && 'Secure your overnight luxury stay'}
-                 {isOffice && 'Secure your resort vacation experience'}
-                 {(isSale || isRent) && 'Direct inquiry to listing proprietor'}
+                 {isDailyStay && 'Book your stay per day with instant host confirmation'}
+                 {isHourlyRoom && 'Book your room session per hour'}
+                 {isRent && 'Direct inquiry to listing proprietor'}
                </p>
              </div>
           </div>
@@ -762,14 +782,14 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               </div>
             </div>
 
-          {/* Overnight Stay Fields */}
-          {isOvernight && (
+          {/* Daily Stay Fields (Guest House, B&B, Hotel, Lodge, Self Catering, Resort) */}
+          {isDailyStay && (
             <>
               {/* Booking Dates */}
               <div className="space-y-6 pt-6 border-t border-gray-100">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
                   <CalendarIcon className="w-6 h-6 text-rose-500" />
-                  Reservation Dates
+                  Reservation Dates (Per Day)
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -810,13 +830,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                   </div>
                 </div>
 
-                {nights > 0 && (
+                {days > 0 && (
                   <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-500">
                       <CalendarIcon className="w-4 h-4" />
                     </div>
                     <p className="text-sm text-rose-900 font-medium">
-                      You are booking for <span className="font-bold">{nights} night{nights > 1 ? 's' : ''}</span>
+                      You are booking for <span className="font-bold">{days} day{days > 1 ? 's' : ''}</span>
                     </p>
                   </div>
                 )}
@@ -855,7 +875,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                           <option value="">✨ Any Available Apartment / Room (Standard)</option>
                           {listing.roomTypes.map((room, idx) => (
                             <option key={idx} value={room.name}>
-                              {room.name} {room.price ? `· R${Number(room.price).toLocaleString()}/night` : ''} {room.capacity ? `· Max ${room.capacity} Guests` : ''}
+                              {room.name} {room.price ? `· R${Number(room.price).toLocaleString()}/day` : ''} {room.capacity ? `· Max ${room.capacity} Guests` : ''}
                             </option>
                           ))}
                         </select>
@@ -994,7 +1014,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       <label htmlFor="breakfast" className="text-sm font-semibold text-gray-900 block cursor-pointer group-hover:text-rose-600 transition-colors">
                         Add Breakfast
                       </label>
-                      <p className="text-xs text-gray-500 mt-0.5">R150/person per night</p>
+                      <p className="text-xs text-gray-500 mt-0.5">R150/person per day</p>
                     </div>
                   </div>
 
@@ -1023,13 +1043,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             </>
           )}
 
-          {/* Resort Fields */}
-          {isOffice && (
+          {/* Room Per Hour Fields */}
+          {isHourlyRoom && (
             <>
               <div className="space-y-6 pt-6 border-t border-gray-100">
                 <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
                   <ClockIcon className="w-6 h-6 text-rose-500" />
-                  Session Schedule
+                  Room Session Schedule
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -1107,7 +1127,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           )}
 
           {/* Property Inquiry & Viewing Schedule */}
-          {(isSale || isRent) && (
+          {isRent && (
             <div className="space-y-6 pt-6 border-t border-gray-100">
               <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
                 <HomeIcon className="w-6 h-6 text-rose-500" />
@@ -1182,25 +1202,23 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
               {/* Lease Duration & Occupants */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {isRent && (
-                  <div className="relative">
-                    <select
-                      id="leaseDuration"
-                      name="leaseDuration"
-                      value={bookingDetails.leaseDuration || '12 Months'}
-                      onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
-                    >
-                      <option value="Month-to-Month">Month-to-Month</option>
-                      <option value="6 Months">6 Months</option>
-                      <option value="12 Months">12 Months (Standard)</option>
-                      <option value="24+ Months Long Term">24+ Months (Long-term)</option>
-                    </select>
-                    <label htmlFor="leaseDuration" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
-                      Target Lease Duration
-                    </label>
-                  </div>
-                )}
+                <div className="relative">
+                  <select
+                    id="leaseDuration"
+                    name="leaseDuration"
+                    value={bookingDetails.leaseDuration || '12 Months'}
+                    onChange={handleChange}
+                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                  >
+                    <option value="Month-to-Month">Month-to-Month</option>
+                    <option value="6 Months">6 Months</option>
+                    <option value="12 Months">12 Months (Standard)</option>
+                    <option value="24+ Months Long Term">24+ Months (Long-term)</option>
+                  </select>
+                  <label htmlFor="leaseDuration" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    Target Lease Duration
+                  </label>
+                </div>
 
                 <div className="relative">
                   <select
@@ -1232,10 +1250,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                 onChange={handleChange}
                 rows="3"
                 className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white resize-none placeholder-transparent"
-                placeholder={isSale || isRent ? "I'm interested in this property..." : "Any special requirements..."}
+                placeholder={isRent ? "I'm interested in this property..." : "Any special requirements..."}
               />
               <label htmlFor="specialRequests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
-                {isSale || isRent ? 'Message / Questions' : 'Special Requests'}
+                {isRent ? 'Message / Questions' : 'Special Requests'}
               </label>
             </div>
           </div>
@@ -1246,8 +1264,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           <div className="lg:col-span-5 relative">
             <div className="sticky top-0 space-y-6">
               
-              {/* Price Summary - Only for overnight and office */}
-              {((isOvernight && nights > 0) || (isOffice && hours > 0)) && (
+              {/* Price Summary - Only for daily stays and room per hour */}
+              {((isDailyStay && days > 0) || (isHourlyRoom && hours > 0)) && (
                 <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
                 <TicketIcon className="w-4 h-4 text-gray-400" />
@@ -1255,7 +1273,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               </div>
 
               <div className="space-y-3 text-sm">
-                {isOvernight && (
+                {isDailyStay && (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                       <div className="flex items-center gap-3">
@@ -1263,11 +1281,11 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                             <FaHome size={14} />
                          </div>
                          <div>
-                            <p className="font-bold text-gray-900">Room Rate</p>
-                            <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()} × {nights} Nights</p>
+                            <p className="font-bold text-gray-900">Daily Stay Rate</p>
+                            <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()} × {days} Day(s)</p>
                          </div>
                       </div>
-                      <span className="font-black text-gray-900">R{(listing.regularPrice * nights * bookingDetails.rooms).toLocaleString()}</span>
+                      <span className="font-black text-gray-900">R{(listing.regularPrice * days * (Number(bookingDetails.rooms) || 1)).toLocaleString()}</span>
                     </div>
 
                     {bookingDetails.breakfast && (
@@ -1278,10 +1296,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                            </div>
                            <div>
                               <p className="font-bold text-gray-900">Breakfast Plan</p>
-                              <p className="text-[10px] text-gray-500 uppercase font-black">R150 × {bookingDetails.guests} Guests</p>
+                              <p className="text-[10px] text-gray-500 uppercase font-black">R150 × {bookingDetails.guests} Guests × {days}D</p>
                            </div>
                         </div>
-                        <span className="font-black text-gray-900">R{(150 * bookingDetails.guests * nights).toLocaleString()}</span>
+                        <span className="font-black text-gray-900">R{(150 * bookingDetails.guests * days).toLocaleString()}</span>
                       </div>
                     )}
 
@@ -1293,23 +1311,23 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                            </div>
                            <div>
                               <p className="font-bold text-gray-900">Extra Guest Fee</p>
-                              <p className="text-[10px] text-gray-500 uppercase font-black">R200 × {bookingDetails.guests - 2} Guests</p>
+                              <p className="text-[10px] text-gray-500 uppercase font-black">R200 × {bookingDetails.guests - 2} Guests × {days}D</p>
                            </div>
                         </div>
-                        <span className="font-black text-gray-900">R{(200 * (bookingDetails.guests - 2) * nights).toLocaleString()}</span>
+                        <span className="font-black text-gray-900">R{(200 * (bookingDetails.guests - 2) * days).toLocaleString()}</span>
                       </div>
                     )}
                   </div>
                 )}
 
-                {isOffice && (
+                {isHourlyRoom && (
                   <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex items-center gap-3">
-                       <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
+                       <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
                           <FaClock size={14} />
                        </div>
                        <div>
-                          <p className="font-bold text-gray-900">Office Usage</p>
+                          <p className="font-bold text-gray-900">Room Usage</p>
                           <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)}H</p>
                        </div>
                     </div>
@@ -1328,8 +1346,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             </div>
           )}
 
-          {/* Sale/Rent Price Display */}
-          {(isSale || isRent) && (
+          {/* Rent Price Display */}
+          {isRent && (
             <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -1338,11 +1356,11 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                    </div>
                    <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Listing Value</p>
-                      <p className="text-sm font-bold text-gray-900">{isSale ? 'Full Property Price' : 'Monthly Rental'}</p>
+                      <p className="text-sm font-bold text-gray-900">Monthly Rental</p>
                    </div>
                 </div>
                 <span className="text-3xl font-black text-rose-600">
-                  R{listing.regularPrice.toLocaleString()}{isRent ? '/mo' : ''}
+                  R{listing.regularPrice.toLocaleString()}/month
                 </span>
               </div>
             </div>
@@ -1363,7 +1381,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               ) : (
                 <>
                   <FaWhatsapp className="text-2xl" />
-                  {isSale || isRent ? 'Request Info via WhatsApp' : 'Reserve via WhatsApp'}
+                  {isRent ? 'Request Info via WhatsApp' : 'Reserve via WhatsApp'}
                 </>
               )}
             </button>
@@ -1835,8 +1853,8 @@ export default function Listing() {
 
   const breakfastPrice = 250;
 
-  const nights = dateRange[0] && dateRange[1]
-    ? Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24))
+  const days = dateRange[0] && dateRange[1]
+    ? Math.max(1, Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24)))
     : 0;
 
   const calculateTotalHours = (start, end) => {
@@ -1849,7 +1867,8 @@ export default function Listing() {
   };
 
   const totalHours = calculateTotalHours(startTime, endTime);
-  const totalPrice = listing?.type === 'office'
+  const isHourlyType = listing?.type === 'office' || listing?.type === 'hourly_room' || listing?.type === 'room_hourly';
+  const totalPrice = isHourlyType
     ? (listing.regularPrice * totalHours).toFixed(2)
     : 0;
 
@@ -1927,7 +1946,8 @@ export default function Listing() {
       return;
     }
 
-    if (isOvernight && dateRange && dateRange[0] && dateRange[1]) {
+    const isDailyStayType = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing?.type);
+    if (isDailyStayType && dateRange && dateRange[0] && dateRange[1]) {
       const checkIn = new Date(dateRange[0]);
       const checkOut = new Date(dateRange[1]);
       checkIn.setHours(0, 0, 0, 0);
@@ -2348,16 +2368,15 @@ export default function Listing() {
   const displayEmail = listing?.email || listing?.userRef?.email || '';
 
   // Determine property type for UI
-  const isOvernight = ['over', 'sale', 'land'].includes(listing.type);
-  const isOffice = listing.type === 'office';
-  const isSale = false;
-  const isRent = listing.type === 'rent';
-  const showCalendar = isOvernight || isOffice;
+  const isDailyStay = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing.type);
+  const isHourlyRoom = listing.type === 'office' || listing.type === 'hourly_room' || listing.type === 'room_hourly';
+  const isRent = listing.type === 'rent' || listing.type === 'apartment';
+  const showCalendar = isDailyStay || isHourlyRoom;
   const isSaleOrRent = isRent;
 
   // Calculate prices
-  const roomTotal = listing.regularPrice * nights;
-  const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * nights : 0;
+  const roomTotal = listing.regularPrice * (days || 1);
+  const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * (days || 1) : 0;
   const grandTotal = roomTotal + breakfastTotal;
   return (
     <main className="min-h-screen overflow-x-hidden p-0">
@@ -2799,8 +2818,8 @@ export default function Listing() {
               </div>
             )}
 
-            {/* Check-in & Check-out timings — hidden for rent, shown for overnight/hotel/resort/office */}
-            {(isOvernight || isSale || isOffice || listing.type === 'land') && !isRent && (
+            {/* Check-in & Check-out timings — hidden for rent, shown for daily stays/hourly rooms */}
+            {(isDailyStay || isHourlyRoom) && !isRent && (
               <div className="py-6 border-b border-gray-200">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2.5 bg-rose-50 rounded-2xl">
@@ -2898,15 +2917,15 @@ export default function Listing() {
               </div>
             )}
 
-            {/* Calendar - Only for overnight and office */}
+            {/* Calendar - Only for daily stays and room per hour */}
             {showCalendar && (
               <div className="py-6 border-b border-gray-200" id="calendar-section">
                 <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">
-                  {isOffice ? 'Select date & time' : 'Select your dates'}
+                  {isHourlyRoom ? 'Select date & time' : 'Select your dates (per day)'}
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  {isOvernight && (
+                  {isDailyStay && (
                     <div>
                       <Calendar
                         onChange={setDateRange}
@@ -2950,7 +2969,7 @@ export default function Listing() {
                     </div>
                   )}
 
-                  {isOffice && (
+                  {isHourlyRoom && (
                     <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
@@ -3459,18 +3478,17 @@ export default function Listing() {
       )}
 
       {/* Mobile Bottom Bar */}
-      {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xl font-bold text-gray-900">
-              R{isOvernight ? (nights > 0 ? grandTotal.toLocaleString() : '0.00') :
-                isOffice && totalHours > 0 ? totalPrice :
+              R{isDailyStay ? (days > 0 ? grandTotal.toLocaleString() : listing.regularPrice.toLocaleString()) :
+                isHourlyRoom && totalHours > 0 ? totalPrice :
                   listing.regularPrice.toLocaleString()}
             </span>
             <span className="text-gray-600 text-sm">
-              {isOvernight ? (nights > 0 ? ' / total' : '') : 
-               isOffice ? ' / booking' : 
+              {isDailyStay ? (days > 0 ? ` (${days} day${days > 1 ? 's' : ''})` : ' / day') : 
+               isHourlyRoom ? (totalHours > 0 ? ` (${totalHours} hr)` : ' / hour') : 
                isRent ? ' / month' : ''}
             </span>
           </div>
@@ -3478,7 +3496,7 @@ export default function Listing() {
             onClick={handleQuickBooking}
             className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
           >
-            Book Now
+            {isRent ? 'Inquire Now' : 'Book Now'}
           </button>
         </div>
       </div>

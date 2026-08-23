@@ -93,10 +93,12 @@ const CITY_COORDS = {
 // Enhanced Categories Configuration with all user requested categories
 const ALL_CATEGORIES = [
   // Properties & Accommodation
-  { id: 'guest_house', label: 'Guest House', type: 'properties', icon: HomeIcon, color: 'bg-purple-100 text-purple-800', description: 'Guest houses & B&Bs' },
-  { id: 'rent', label: 'For Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties' },
-  { id: 'sale', label: 'Hotel', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Hotel rentals' },
-  { id: 'over', label: 'Vacation Rental', type: 'properties', icon: Sparkles, color: 'bg-pink-100 text-pink-800', description: 'Short-term stays' },
+  { id: 'over', label: 'Guest House & B&B', type: 'properties', icon: HomeIcon, color: 'bg-rose-100 text-rose-800', description: 'Guest houses & B&Bs (per day)' },
+  { id: 'hotel', label: 'Hotel & Lodge', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Hotels & lodges (per day)' },
+  { id: 'land', label: 'Self Catering', type: 'properties', icon: HomeIcon, color: 'bg-amber-100 text-amber-800', description: 'Self catering chalets (per day)' },
+  { id: 'resort', label: 'Resort & Holiday Park', type: 'properties', icon: Sparkles, color: 'bg-cyan-100 text-cyan-800', description: 'Holiday resorts & parks (per day)' },
+  { id: 'office', label: 'Room Per Hour', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-purple-100 text-purple-800', description: 'Hourly rooms & short stays' },
+  { id: 'rent', label: 'Room / Home to Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties (monthly)' },
 
   // Services
   { id: 'photography', label: 'Photography', type: 'helper', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
@@ -134,12 +136,13 @@ const ALL_CATEGORIES = [
 
 // Property Types Configuration
 const PROPERTY_TYPE_CONFIG = {
-  rent: { label: 'For Rent', color: 'bg-blue-100 text-blue-800', icon: '🏠', endpoint: 'listing' },
-  sale: { label: 'Hotel', color: 'bg-emerald-100 text-emerald-800', icon: '🏨', endpoint: 'listing' },
-  over: { label: 'Vacation Rental', color: 'bg-purple-100 text-purple-800', icon: '🌙', endpoint: 'listing' },
+  rent: { label: 'Room / Home to Rent', color: 'bg-blue-100 text-blue-800', icon: '🏠', endpoint: 'listing' },
+  over: { label: 'Guest House / B&B', color: 'bg-rose-100 text-rose-800', icon: '🛌', endpoint: 'listing' },
+  hotel: { label: 'Hotel / Lodge', color: 'bg-emerald-100 text-emerald-800', icon: '🏨', endpoint: 'listing' },
   land: { label: 'Self Catering', color: 'bg-amber-100 text-amber-800', icon: '🍳', endpoint: 'listing' },
-  resort: { label: 'Resort', color: 'bg-amber-100 text-amber-800', icon: '🏖️', endpoint: 'listing' },
-  guest_house: { label: 'Guest House', color: 'bg-pink-100 text-pink-800', icon: '🏨', endpoint: 'listing' }
+  resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-100 text-cyan-800', icon: '🏖️', endpoint: 'listing' },
+  office: { label: 'Room Per Hour', color: 'bg-purple-100 text-purple-800', icon: '🚪', endpoint: 'listing' },
+  apartment: { label: 'Apartment / Complex', color: 'bg-indigo-100 text-indigo-800', icon: '🏢', endpoint: 'listing' }
 };
 
 // Helper Categories Configuration

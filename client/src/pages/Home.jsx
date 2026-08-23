@@ -1030,9 +1030,7 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'resort':
         return item.type === 'resort' || item.kind === 'resort' || /resort|holiday park/i.test(text);
       case 'hourly_room':
-        return item.type === 'office' || item.type === 'hourly_room' || item.kind === 'office' || item.kind === 'hourly_room' || /hourly|day room|short stay|workspace/i.test(text);
-      case 'sale':
-        return item.type === 'sale' || item.offer === true || /sale|for sale|buying|buy/i.test(text);
+        return item.type === 'office' || item.type === 'hourly_room' || item.type === 'room_hourly' || item.kind === 'office' || item.kind === 'hourly_room' || /hourly|room per hour|day room|short stay|workspace/i.test(text);
       default: return true;
     }
   }
@@ -1178,8 +1176,7 @@ function MobileAppHomepage({
         { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
         { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
         { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
-        { id: 'hourly_room', label: 'Hourly Rooms', emoji: '🚪' },
-        { id: 'sale', label: 'Properties for Sale', emoji: '🏷️' }
+        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪' }
       ]
     },
     {

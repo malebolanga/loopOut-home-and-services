@@ -405,12 +405,12 @@ export default function CreateListing() {
               <h2 className="text-xl font-semibold mb-6">Property Type</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {[
-                  { id: "rent", label: "Room/Home Rent", emoji: "🏠" },
-                  { id: "over", label: "Guest House", emoji: "🛌" },
-                  { id: "office", label: "Office", emoji: "🏢" },
-                  { id: "land", label: "Land", emoji: "🌳" },
-                  { id: "sale", label: "For Sale", emoji: "💰" },
-                  
+                  { id: "rent", label: "Room / Home Rent", emoji: "🏠" },
+                  { id: "over", label: "Guest House / B&B", emoji: "🛌" },
+                  { id: "hotel", label: "Hotel / Lodge", emoji: "🏨" },
+                  { id: "land", label: "Self Catering", emoji: "🍳" },
+                  { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️" },
+                  { id: "office", label: "Room Per Hour", emoji: "🚪" },
                 ].map((type) => (
                   <button
                     key={type.id}

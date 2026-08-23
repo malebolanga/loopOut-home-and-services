@@ -181,15 +181,12 @@ export default function Radar() {
               <option value="Usedbooks" className="text-gray-900 font-normal">Used Books</option>
             </optgroup>
             <optgroup label="Properties" className="text-gray-900 font-bold">
-              <option value="Rental" className="text-gray-900 font-normal">Rentals</option>
-              <option value="Guest house" className="text-gray-900 font-normal">Guest Houses</option>
-              <option value="Sale" className="text-gray-900 font-normal">For Sale</option>
-              <option value="Overnight" className="text-gray-900 font-normal">Overnight Stays</option>
-              <option value="Vacation" className="text-gray-900 font-normal">Vacation Rentals</option>
-              <option value="Office" className="text-gray-900 font-normal">Office Space</option>
-              <option value="Land" className="text-gray-900 font-normal">Land</option>
-              <option value="Hotels" className="text-gray-900 font-normal">Hotels</option>
-              <option value="Rooms" className="text-gray-900 font-normal">Rooms</option>
+              <option value="Rental" className="text-gray-900 font-normal">Room / Home to Rent</option>
+              <option value="Guest house" className="text-gray-900 font-normal">Guest House & B&B (Per Day)</option>
+              <option value="Hotels" className="text-gray-900 font-normal">Hotel & Lodge (Per Day)</option>
+              <option value="Land" className="text-gray-900 font-normal">Self Catering (Per Day)</option>
+              <option value="Resort" className="text-gray-900 font-normal">Resort & Holiday Park (Per Day)</option>
+              <option value="Office" className="text-gray-900 font-normal">Room Per Hour</option>
             </optgroup>
           </select>
         </div>

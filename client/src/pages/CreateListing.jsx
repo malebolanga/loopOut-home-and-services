@@ -633,8 +633,7 @@ export default function CreateListing() {
       case 'hotel': return 'hotel';
       case 'apartment': return 'apartment';
       case 'office': return 'hourly_room';
-      case 'land': return 'Self Catering';
-      case 'sale': return 'house';
+      case 'land': return 'self_catering';
       case 'resort': return 'resort';
       default: return 'apartment';
     }
@@ -1644,8 +1643,8 @@ export default function CreateListing() {
 
   const getPricingLabel = () => {
     if (selectedCategory === 'property') {
-      if (['over', 'sale', 'resort'].includes(selectedType)) return "Regular Price (per night)";
-      if (['rent', 'rent-long', 'rent-short'].includes(selectedType)) return "Regular Price (per month)";
+      if (['over', 'hotel', 'land', 'resort'].includes(selectedType)) return "Regular Price (per day)";
+      if (['rent', 'rent-long', 'rent-short', 'apartment'].includes(selectedType)) return "Regular Price (per month)";
       if (selectedType === 'office') return "Regular Price (per hour)";
       return "Regular Price";
     }
@@ -1669,13 +1668,12 @@ export default function CreateListing() {
       case 'property':
         return [
           { id: "rent", label: "Room / Home to Rent", emoji: "🏠", description: "Monthly & short/long-term rental" },
-          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "Nightly guest house stays" },
-          { id: "sale", label: "Property / Hotel for Sale", emoji: "🏷️", description: "Houses, hotels, guest houses for sale" },
-          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "Hotels, multi-room suites & lodging" },
+          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "Per-day guest house & BnB stays" },
+          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "Hotels, lodges & multi-room suites (per day)" },
           { id: "apartment", label: "Apartment / Complex", emoji: "🏢", description: "Single or multi-unit apartment complexes" },
-          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering chalets & houses" },
-          { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️", description: "Holiday resorts & vacation chalets" },
-          { id: "office", label: "Hourly Room / Office", emoji: "🚪", description: "Hourly rooms, day rooms & workspaces" },
+          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering chalets & houses (per day)" },
+          { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️", description: "Holiday resorts & vacation chalets (per day)" },
+          { id: "office", label: "Room Per Hour", emoji: "🚪", description: "Hourly rooms & private spaces (per hour)" },
         ];
       case 'experiences':
         return [
@@ -2858,8 +2856,8 @@ export default function CreateListing() {
             {/* Step 4: Schedule — Check-in/out for stays, operating hours for services */}
             {currentStep === 4 && (
               <>
-              {/* Guest house / Hotel / Resort → Check-in & Check-out */}
-              {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'sale' || selectedType === 'resort' || selectedType === 'land') && (
+              {/* Guest house / Hotel / Resort / Self-Catering → Check-in & Check-out */}
+              {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'hotel' || selectedType === 'resort' || selectedType === 'land') && (
                 <SectionCard title="Check-in & Check-out">
                   <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">

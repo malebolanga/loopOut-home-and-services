@@ -36,11 +36,12 @@ const SEARCH_TYPE_CONFIG = {
     icon: Home,
     subtypes: [
       { value: 'all', label: 'All Types', icon: Home },
-      { value: 'rent', label: 'For Rent', icon: DollarSign },
-      { value: 'sale', label: 'For Sale', icon: DollarSign },
-      { value: 'office', label: 'Office', icon: Home },
-      { value: 'land', label: 'Land', icon: Home },
-      { value: 'guesthouse', label: 'Guest House', icon: Home }
+      { value: 'rent', label: 'Room / Home to Rent', icon: Home },
+      { value: 'guesthouse', label: 'Guest House & B&B', icon: Home },
+      { value: 'hotel', label: 'Hotel & Lodge', icon: Home },
+      { value: 'land', label: 'Self Catering', icon: Home },
+      { value: 'resort', label: 'Resort & Holiday Park', icon: Home },
+      { value: 'office', label: 'Room Per Hour', icon: Home }
     ]
   },
   services: {

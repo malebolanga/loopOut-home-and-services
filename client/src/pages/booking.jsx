@@ -59,7 +59,7 @@ export default function Booking({ listing = {} }) {
       }
       const selectedRoomObj = listing?.roomTypes?.find(r => r.name === unit);
       message += `💰 *Listed Price:* R${(selectedRoomObj?.price || listing?.regularPrice)?.toLocaleString() || "0"}\n`;
-      message += `📋 *Offering:* ${listing?.type === 'rent' ? 'For Rent' : listing?.type === 'sale' ? 'For Sale' : 'Stay'}\n\n`;
+      message += `📋 *Offering:* ${listing?.type === 'rent' ? 'For Rent (Monthly)' : listing?.type === 'office' ? 'Room Per Hour' : 'Daily Stay'}\n\n`;
 
       message += `*👤 INQUIRER DETAILS*\n`;
       message += `• *Name:* ${name}\n`;
