@@ -126,8 +126,6 @@ const ALL_CATEGORIES = [
   // Transport
   { id: 'transport', label: 'Transport', type: 'services', icon: TruckIcon, color: 'bg-blue-100 text-blue-800', description: 'Transportation services' },
   
-  // Specific requested categories
-  { id: 'resort', label: 'Resort', type: 'properties', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Luxury resort stays' },
   { id: 'maid', label: 'Maid Services', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Cleaning & maid help' },
 
   // Daily Essentials (for Homepage consistency)
