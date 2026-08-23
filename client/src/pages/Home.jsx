@@ -1377,49 +1377,85 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Medium-Small Dynamic Hero Showcase */}
-      <div className="relative h-[125px] sm:h-[145px] overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950" />
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}
-        />
-        <div className="absolute -top-16 -right-16 w-48 h-48 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
+      {/* ── Premium Hero Banner ── */}
+      <div className="relative h-[185px] sm:h-[215px] overflow-hidden">
+        {/* Deep layered background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a14] via-[#0f0f1f] to-[#1a0a14]" />
 
-        <div className="relative h-full flex flex-col justify-end px-4 pb-3 sm:pb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[8px] font-black uppercase tracking-[0.2em]">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-ping" />
-              <span>{bannerLocations[bannerLocationIndex]} &bull; Live Market</span>
+        {/* Dot grid texture */}
+        <div
+          className="absolute inset-0 opacity-[0.045]"
+          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0)', backgroundSize: '18px 18px' }}
+        />
+
+        {/* Animated aurora orbs */}
+        <div className="absolute -top-10 right-4 w-56 h-56 bg-rose-600/25 rounded-full blur-3xl pointer-events-none" style={{ animation: 'pulse 5s ease-in-out infinite' }} />
+        <div className="absolute top-6 -left-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" style={{ animation: 'pulse 7s ease-in-out infinite 1.5s' }} />
+        <div className="absolute bottom-0 right-1/3 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" style={{ animation: 'pulse 6s ease-in-out infinite 3s' }} />
+
+        <div className="relative h-full flex flex-col justify-between px-4 pt-4 pb-4 sm:pt-5 sm:pb-5">
+          {/* Top row: live location pill + badge */}
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-white text-[9px] font-black uppercase tracking-[0.18em]"
+              style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-400" />
+              </span>
+              <span key={bannerLocationIndex} style={{ animation: 'fadeSlideIn 0.4s ease forwards' }}>
+                {bannerLocations[bannerLocationIndex]}
+              </span>
+              <span className="text-white/40 mx-0.5">·</span>
+              <span className="text-white/60 normal-case font-semibold tracking-normal">Live Market</span>
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold text-rose-300"
+              style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)' }}>
+              <span className="text-[11px]">🇿🇦</span>
+              SA's #1
             </span>
           </div>
 
-          <h1 className="text-white text-base sm:text-xl font-black tracking-tight leading-tight mb-0.5">
-            South Africa's <span className="bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300 bg-clip-text text-transparent">Local Hub</span>
-          </h1>
+          {/* Headline */}
+          <div>
+            <h1 className="text-white font-black leading-[1.1] tracking-tight mb-1.5" style={{ fontSize: 'clamp(1.15rem, 5vw, 1.5rem)' }}>
+              Find a{' '}
+              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #fb7185, #fb923c, #fbbf24)' }}>
+                Helper, Room
+              </span>
+              <br />or Service — Near You
+            </h1>
+            <p className="text-white/55 font-medium leading-snug" style={{ fontSize: '11px', maxWidth: '280px' }}>
+              Verified locals · Instant booking · 100% secure
+            </p>
+          </div>
 
-          <p className="text-white/75 text-[11px] sm:text-xs font-medium leading-tight max-w-sm line-clamp-1 mb-2">
-            Discover verified helpers, book top services, and find rooms & stays.
-          </p>
-
-          {/* Quick Value Feature Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
-              <span className="text-[10px]">✨</span>
-              <span>Verified</span>
-            </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
-              <span className="text-[10px]">⚡</span>
-              <span>Instant</span>
-            </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 text-white/90 text-[9px] font-bold shrink-0">
-              <span className="text-[10px]">🛡️</span>
-              <span>100% Secure</span>
-            </div>
+          {/* Bottom CTA chips */}
+          <div className="flex items-center gap-2">
+            {[
+              { label: '🏠 Rooms', tab: 'Property' },
+              { label: '🛠️ Services', tab: 'Services' },
+              { label: '👤 Helpers', tab: 'Helper' },
+            ].map(({ label, tab }) => (
+              <button
+                key={tab}
+                onClick={() => { setActiveTab(tab); setActiveSubcategory('all'); }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-white font-bold shrink-0 active:scale-95 transition-all duration-200"
+                style={{ fontSize: '10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)' }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
+
+        <style>{`
+          @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
       </div>
+
 
       <main className="px-4 pt-4 pb-4 w-full">
 
