@@ -1099,7 +1099,7 @@ function MobileAppHomepage({
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation
+  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation, currentUser
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -2270,6 +2270,7 @@ const Home = () => {
       geoLoading={geoLoading}
       geoError={geoError}
       onRequestLocation={requestLocation}
+      currentUser={currentUser}
     />
   );
 };
