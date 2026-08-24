@@ -44,10 +44,28 @@ import path from 'path';
 dotenv.config();
 dotenv.config({ path: new URL('./.env', import.meta.url) });
 
-const requiredProductionVariables = ['MONGO', 'JWT_SECRET', 'CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS'];
+// Variables the app CANNOT function without — startup fails hard if these are missing.
+const criticalProductionVariables = ['MONGO', 'JWT_SECRET'];
+
+// Variables that power specific features (CORS origin, outbound email, absolute link
+// building) but shouldn't take down the whole server if they're absent. We warn loudly
+// instead so the affected features fail gracefully rather than crashing the deploy.
+const recommendedProductionVariables = ['CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS'];
+
 if (process.env.NODE_ENV === 'production') {
-    const missing = requiredProductionVariables.filter((name) => !process.env[name]);
-    if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+    const missingCritical = criticalProductionVariables.filter((name) => !process.env[name]);
+    if (missingCritical.length) {
+        throw new Error(`Missing required production environment variables: ${missingCritical.join(', ')}`);
+    }
+
+    const missingRecommended = recommendedProductionVariables.filter((name) => !process.env[name]);
+    if (missingRecommended.length) {
+        console.warn(
+            `[WARNING] Missing recommended production environment variables: ${missingRecommended.join(', ')}. ` +
+            `Related features (CORS origin matching, outbound email, absolute URL building) may not work correctly ` +
+            `until these are set in your hosting provider's environment settings.`
+        );
+    }
 }
 
 if (process.env.MONGO && process.env.NODE_ENV !== 'test') {
@@ -87,7 +105,7 @@ app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps, native Postman, or server-to-server)
         if (!origin) return callback(null, true);
-        
+
         // Allow configured origins, subdomains/hosts on render, or same-domain origins
         if (
             allowedOrigins.includes(origin) ||
@@ -96,7 +114,7 @@ app.use(cors({
         ) {
             return callback(null, true);
         }
-        
+
         // Safely disallow CORS without throwing an internal server error
         return callback(null, false);
     },
