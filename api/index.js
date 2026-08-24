@@ -244,6 +244,7 @@ app.use('/api/explore', exploreRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/looking-for', lookingForRouter);
 app.use('/api/ai-help', aiHelpRouter);
+app.use('/api/loopbot', aiHelpRouter);
 app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
 app.use('/api/ai', aiRouter);

@@ -168,19 +168,19 @@ export default function HelpCenter() {
                
                <div className="relative z-10 space-y-10">
                   <div className="w-14 h-14 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-2xl flex items-center justify-center text-rose-500 shadow-xl">
-                    <Cpu className="w-7 h-7" />
+                    <Sparkles className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black italic tracking-tighter mb-4 leading-none text-white">NEURAL <br/>SUPPORT AI</h3>
+                    <h3 className="text-3xl font-black italic tracking-tighter mb-4 leading-none text-white">LOOPBOT AI <br/>COPILOT</h3>
                     <p className="text-gray-400 text-sm font-medium leading-relaxed">
-                      Launch our advanced LLM assistant to resolve complex operational signals in real-time.
+                      Launch LoopBot, our intelligent marketplace concierge, to find rooms, book verified helpers, and answer escrow questions in real-time.
                     </p>
                   </div>
                   <button 
-                    onClick={() => navigate('/ai-help-center')}
-                    className="w-full py-6 bg-white text-gray-950 text-[11px] font-black uppercase tracking-[0.25em] rounded-2xl hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl"
+                    onClick={() => navigate('/loopbot')}
+                    className="w-full py-6 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white text-[11px] font-black uppercase tracking-[0.25em] rounded-2xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl"
                   >
-                    Deploy Assistant
+                    Chat With LoopBot
                     <Zap className="w-4 h-4 fill-current" />
                   </button>
                </div>

@@ -1,139 +1,319 @@
 import { errorHandler } from '../utils/error.js';
 import Listing from '../models/listing.model.js';
+import Helper from '../models/helper.model.js';
+import Service from '../models/service.model.js';
+import Event from '../models/event.model.js';
+import Sell from '../models/sell.model.js';
+
+/**
+ * LoopBot - loopOut's Official Market Concierge & AI Assistant
+ */
 export const getAiResponse = async (req, res, next) => {
   try {
     const { prompt } = req.body;
     
-    if (!prompt) {
+    if (!prompt || typeof prompt !== 'string') {
       return next(errorHandler(400, 'Prompt is required'));
     }
 
-    // Simulate AI thinking delay
-    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1500));
-    
+    const lowerPrompt = prompt.toLowerCase().trim();
     let answer = "";
-    const lowerPrompt = prompt.toLowerCase();
+    let actionItems = [];
+    let suggestedFollowUps = [
+      "Find rooms in Polokwane",
+      "Hire a verified cleaner",
+      "How does Escrow work?",
+      "Book a barber session"
+    ];
 
-    // Check if the user is asking for news or searching a specific city, unless they are asking for a budget planner
-    const wantsBudget = lowerPrompt.includes('budget') || lowerPrompt.includes('afford') || lowerPrompt.includes('rent') || lowerPrompt.includes('buy');
-    let searchQuery = null;
-    
-    if (!wantsBudget) {
-      const explicitSearch = lowerPrompt.match(/(?:news|search|what's happening)(?: about| around| for| in)?\s+([a-z\s]+)/i);
-      const cityMatch = lowerPrompt.match(/(polokwane|johannesburg|cape town|durban|pretoria|tzaneen|mankweng|seshego|soweto)/i);
-      
-      if (explicitSearch && explicitSearch[1].trim().length > 2) {
-        // Exclude general chat keywords from being searched
-        const term = explicitSearch[1].trim();
-        if (!['hello', 'hi', 'book', 'verify', 'payment', 'cancel'].includes(term)) {
-           searchQuery = term;
-        }
-      } else if (cityMatch) {
-        searchQuery = cityMatch[1];
+    // 1. Budget extraction
+    const budgetMatch = prompt.match(/(?:budget(?:\s+of)?\s+|under\s+|around\s+|r\s*|r)(\d[\d,\s]*)/i);
+    let extractedBudget = null;
+    if (budgetMatch && budgetMatch[1]) {
+      const parsed = parseInt(budgetMatch[1].replace(/[\s,]/g, ''), 10);
+      if (!isNaN(parsed) && parsed > 50 && parsed < 20000000) {
+        extractedBudget = parsed;
       }
     }
 
-    if (searchQuery) {
+    // 2. City / Location extraction
+    const cities = [
+      'polokwane', 'johannesburg', 'cape town', 'durban', 'pretoria', 
+      'tzaneen', 'mankweng', 'seshego', 'soweto', 'centurion', 'sandton', 
+      'midrand', 'stellenbosch', 'gqeberha', 'bloemfontein', 'rustenburg',
+      'nelspruit', 'mbombela', 'pietermaritzburg'
+    ];
+    let detectedCity = null;
+    for (const c of cities) {
+      if (lowerPrompt.includes(c)) {
+        detectedCity = c.charAt(0).toUpperCase() + c.slice(1);
+        break;
+      }
+    }
+
+    // 3. Helper intent detection
+    const helperKeywords = {
+      barber: ['barber', 'haircut', 'fade', 'beard', 'trim', 'salon', 'stylist'],
+      beauty: ['beauty', 'nails', 'makeup', 'lashes', 'manicure', 'pedicure', 'skincare'],
+      domestic: ['cleaner', 'cleaning', 'maid', 'domestic', 'housekeeper', 'laundry'],
+      tutor: ['tutor', 'maths', 'science', 'tutoring', 'exam', 'teacher', 'homework'],
+      chef: ['chef', 'cook', 'catering', 'private chef', 'meal prep', 'baker', 'cake'],
+      photography: ['photo', 'photographer', 'photoshoot', 'studio', 'portrait', 'camera'],
+      tattoo: ['tattoo', 'ink', 'piercing', 'tattooist', 'body art']
+    };
+
+    let matchedHelperType = null;
+    for (const [type, words] of Object.entries(helperKeywords)) {
+      if (words.some(w => lowerPrompt.includes(w))) {
+        matchedHelperType = type;
+        break;
+      }
+    }
+
+    // 4. Service intent detection
+    const serviceKeywords = {
+      carwash: ['car wash', 'carwash', 'auto detailing', 'valet', 'car cleaning'],
+      storage: ['storage', 'storage unit', 'store goods', 'warehouse'],
+      moving: ['moving', 'movers', 'relocation', 'logistics', 'transport furniture'],
+      transport: ['transport', 'shuttle', 'ride', 'delivery', 'courier', 'cab'],
+      landscaping: ['gardening', 'garden', 'lawn', 'landscaping', 'tree felling'],
+      handyman: ['plumber', 'plumbing', 'electrician', 'electrical', 'handyman', 'appliance repair', 'fix roof', 'painter']
+    };
+
+    let matchedServiceType = null;
+    for (const [type, words] of Object.entries(serviceKeywords)) {
+      if (words.some(w => lowerPrompt.includes(w))) {
+        matchedServiceType = type;
+        break;
+      }
+    }
+
+    // ── DATABASE QUERY EXECUTION & INTENT DISPATCH ──
+
+    // Case A: User searching for Helpers (barber, tutor, domestic cleaner, chef, etc.)
+    if (matchedHelperType || lowerPrompt.includes('helper') || lowerPrompt.includes('hire a') || lowerPrompt.includes('freelancer')) {
+      const helperFilter = {};
+      if (matchedHelperType) helperFilter.type = matchedHelperType;
+      if (detectedCity) helperFilter.address = { $regex: detectedCity, $options: 'i' };
+      if (extractedBudget) helperFilter.regularPrice = { $lte: extractedBudget };
+
       try {
-        const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=en-ZA&gl=ZA&ceid=ZA:en`;
-        const response = await fetch(rssUrl);
-        const text = await response.text();
-        
-        const items = [];
-        const itemRegex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>/g;
-        let match;
-        while ((match = itemRegex.exec(text)) !== null && items.length < 5) {
-            let title = match[1].replace(/&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-            title = title.split(' - ').slice(0, -1).join(' - ') || title;
-            items.push(`📰 **${title}**`);
+        let helpers = await Helper.find(helperFilter).limit(4).lean();
+        if (helpers.length === 0 && matchedHelperType) {
+          helpers = await Helper.find({ type: matchedHelperType }).limit(4).lean();
         }
-        
-        if (items.length > 0) {
-            const capQuery = searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1);
-            answer = `Here is the latest news and information around **${capQuery}** from Google:\n\n` + 
-                     items.join('\n\n') + 
-                     `\n\nIs there anything else you would like to explore in ${capQuery}?`;
-            
-            return res.status(200).json({
-              success: true,
-              answer,
-              timestamp: new Date().toISOString()
-            });
-        }
-      } catch (e) {
-        console.error("Google RSS Fetch Error:", e);
-      }
-    }
 
-    // Very basic mock responses based on keywords
-    if (lowerPrompt.includes('budget') || lowerPrompt.includes('afford') || lowerPrompt.includes('services') || lowerPrompt.includes('events')) {
-      if (lowerPrompt.includes('rent')) {
-        answer = "With a budget of " + (prompt.match(/R\d+/)?.join('') || "that amount") + " for renting, you can look into our modern apartments in the city center or spacious suburban homes. Make sure you check the utility costs, parking availability, and lease terms before deciding. To find the best fit, try using our filter for 'For Rent' and set your budget range!";
-      } else if (lowerPrompt.includes('buy')) {
-        answer = "Buying a property with a budget of " + (prompt.match(/R\d+/)?.join('') || "that amount") + " requires careful planning. You should consider getting pre-approved for a bond, checking the neighborhood's growth rate, and accounting for transfer costs and taxes. We recommend checking our 'For Sale' section to see the latest properties that fit your range.";
-      } else if (lowerPrompt.includes('vacation') || lowerPrompt.includes('trip') || lowerPrompt.includes('hotel')) {
-        let budgetMatch = prompt.match(/(?:budget(?:\s+of)?\s+|R)\s*(\d+)/i);
-        let budget = budgetMatch ? parseInt(budgetMatch[1], 10) : null;
-        let cityLookup = prompt.match(/(?:to|in|at|around)\s([a-zA-Z\s]+)/i);
-        let city = cityLookup ? cityLookup[1].trim() : "your destination";
+        if (helpers.length > 0) {
+          const typeLabel = matchedHelperType ? matchedHelperType.toUpperCase() : 'VERIFIED HELPERS';
+          answer = `I found **${helpers.length} verified ${typeLabel} specialists** on loopOut ready to book! All providers are identity-verified and backed by our Escrow Buyer Guarantee.`;
+          
+          actionItems = helpers.map(h => ({
+            id: h._id,
+            title: h.name,
+            price: `R${h.regularPrice}`,
+            location: h.address || h.near || 'South Africa',
+            type: 'helper',
+            category: h.type || 'Helper',
+            imageUrl: (h.imageUrls && h.imageUrls[0]) || '/images/default-avatar.png',
+            link: `/${h.type || 'helper'}/${h._id}`,
+            rating: h.rating || 4.9
+          }));
 
-        if (budget && city !== "your destination") {
-          try {
-             const results = await Listing.find({ 
-               type: 'over',
-               regularPrice: { $lte: budget },
-               address: { $regex: city, $options: 'i' }
-             }).limit(3);
-
-             if(results.length > 0) {
-               const properties = results.map(r => `• **${r.name}** in ${r.address} for R${r.regularPrice}/night`).join('\n');
-               answer = `I found some hotels in ${city} that strictly fit your budget of under R${budget}:\n\n${properties}\n\nTo view them or book, head over to the Search tab!`;
-             } else {
-               answer = `Planning a trip to ${city} with a budget of R${budget}? I searched and couldn't find exact matches under that budget right now, but you can explore more options in our Vacation Rental section!`;
-             }
-          } catch(e) {
-             console.log("DB lookup error", e);
-             answer = `Planning a trip to ${city} with R${budget}? You can explore amazing hotels in that area using our advanced filtering system!`;
-          }
+          suggestedFollowUps = [
+            `Book ${helpers[0].name}`,
+            "How does escrow protect my booking?",
+            "View more helpers nearby"
+          ];
         } else {
-           answer = "Planning a vacation with " + (budget || "that amount") + "? You can afford a great stay! Consider booking our premium seaside villas or a cozy mountain retreat. Browse our 'Vacation Rental' listings today.";
+          answer = `I searched our helper network for ${matchedHelperType || 'helpers'}${detectedCity ? ` in ${detectedCity}` : ''}. We are continuously onboarding top local talent! You can explore all active profiles in the Helper Hub or submit a specific request in Needs.`;
+          suggestedFollowUps = ["Explore all helpers", "Post a Need in Looking For", "Find other services"];
         }
-      } else if (lowerPrompt.includes('services')) {
-        answer = "Looking to hire a service professional with a budget of " + (prompt.match(/R\d+/)?.join('') || "that amount") + "? Whether you need a plumber, private tutor, or photographer, we connect you with verified experts. Always check reviews, their portfolio, and the scope of work before finalizing any service agreement.";
-      } else if (lowerPrompt.includes('events')) {
-        answer = "Booking an event with a budget of " + (prompt.match(/R\d+/)?.join('') || "that amount") + " is exciting! You can explore incredible VIP experiences, masterclasses, or corporate retreats. We advise verifying whether the event is catered, its duration, and any cancellation policies before you secure your tickets!";
-      } else {
-        answer = "Your budget is a great starting point! Depending on what you're looking for, we have multiple options. Let me know if you want to rent, buy, go on vacation, hire a service, or book an event.";
+      } catch (err) {
+        console.error("LoopBot Helper DB Error:", err);
       }
-    } else if (lowerPrompt.includes('how do i book a reliable service')) {
-      answer = "To book a reliable service professional, navigate to the Services tab. Filter by ratings, past reviews, and portfolio images. Once you find someone who fits your needs, request a booking directly from their profile page. Escrow holds your payment securely until the service is done!";
-    } else if (lowerPrompt.includes('kind of events')) {
-      answer = "On the platform, you can discover a massive variety of events! From elite tech conferences and real estate seminars to exclusive yoga retreats and private jet tours. You can explore it all by selecting the 'Explore Events' tab.";
-    } else if (lowerPrompt.includes('what should i do if i want to buy')) {
-      answer = "When looking to buy a property, you should first fix a clear budget and get a bond pre-approval. Next, make a list of your non-negotiable features (like bedrooms, area, garage). Finally, view multiple properties and don't hesitate to ask for the property's condition report before making an offer.";
-    } else if (lowerPrompt.includes('sign') || lowerPrompt.includes('lease')) {
-      answer = "Before signing a lease, always verify the property's condition, clearly understand the deposit requirements, check if utilities (water/lights) are prepaid or billed, and read any clauses regarding maintenance responsibilities. Don't be afraid to ask the landlord for clarifications.";
-    } else if (lowerPrompt.includes('book') || lowerPrompt.includes('reserve')) {
-      answer = "To book a service or property, simply navigate to the listing page, select your preferred dates or service type, and click the 'Book Now' or 'Check availability' button. Ensure you've completed your identity verification to enable seamless instant bookings!";
-    } else if (lowerPrompt.includes('verify') || lowerPrompt.includes('identity')) {
-      answer = "Verification is a key part of our trusted community! You can verify your profile from the 'Mission Control' dashboard. It only takes two minutes and unlocks all premium features, letting hosts and service providers know you're fully verified.";
-    } else if (lowerPrompt.includes('payment') || lowerPrompt.includes('pay')) {
-      answer = "Payments are completely secure and are held in escrow until the service or stay is successfully completed. We support Visa, MasterCard, and direct EFT. If you experience any issues at checkout, let me know!";
-    } else if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi ')) {
-      answer = "Hello there! I'm your AI Planner and Assistant for the Masterpiece platform. I can help you with budgeting for rentals or purchases, figuring out where to vacation, and resolving any issues. What do you need help with today?";
-    } else if (lowerPrompt.includes('cancel') || lowerPrompt.includes('refund')) {
-      answer = "Cancellations depend on the specific host's or professional's policy. Generally, cancelling 24 hours prior to the experience guarantees a full refund. You can manage your bookings directly from the Trips tab in your dashboard.";
-    } else {
-      answer = "I understand. To give you the best advice, could you clarify whether you're looking for a rental, buying a property, or planning a vacation? Knowing your budget helps too!";
     }
 
-    res.status(200).json({
+    // Case B: User searching for Services (car wash, storage, plumbing, electricians, movers)
+    else if (matchedServiceType || lowerPrompt.includes('service') || lowerPrompt.includes('repair') || lowerPrompt.includes('install')) {
+      const serviceFilter = {};
+      if (matchedServiceType) serviceFilter.type = matchedServiceType;
+      if (detectedCity) serviceFilter.address = { $regex: detectedCity, $options: 'i' };
+      if (extractedBudget) serviceFilter.regularPrice = { $lte: extractedBudget };
+
+      try {
+        let services = await Service.find(serviceFilter).limit(4).lean();
+        if (services.length === 0 && matchedServiceType) {
+          services = await Service.find({ type: matchedServiceType }).limit(4).lean();
+        }
+
+        if (services.length > 0) {
+          answer = `Here are top-rated **${matchedServiceType ? matchedServiceType.toUpperCase() : 'SERVICES'}** matching your inquiry on loopOut:`;
+          actionItems = services.map(s => ({
+            id: s._id,
+            title: s.name,
+            price: `R${s.regularPrice}`,
+            location: s.address || 'South Africa',
+            type: 'service',
+            category: s.type || 'Service',
+            imageUrl: (s.imageUrls && s.imageUrls[0]) || '/images/default-service.png',
+            link: `/service/${s._id}`,
+            rating: s.rating || 4.8
+          }));
+
+          suggestedFollowUps = [
+            "How do I book this service?",
+            "What if the service is incomplete?",
+            "Browse all services"
+          ];
+        } else {
+          answer = `I searched for ${matchedServiceType || 'service'} providers${detectedCity ? ` in ${detectedCity}` : ''}. Check out our Services page for nationwide offerings or request a custom quote.`;
+          suggestedFollowUps = ["View Services Hub", "Ask about Car Wash", "Ask about Storage"];
+        }
+      } catch (err) {
+        console.error("LoopBot Service DB Error:", err);
+      }
+    }
+
+    // Case C: Property / Stay / Room / Rental / Hotel search
+    else if (
+      lowerPrompt.includes('room') || lowerPrompt.includes('stay') || lowerPrompt.includes('hotel') ||
+      lowerPrompt.includes('house') || lowerPrompt.includes('apartment') || lowerPrompt.includes('rent') ||
+      lowerPrompt.includes('property') || lowerPrompt.includes('accommodation') || lowerPrompt.includes('lodge') ||
+      lowerPrompt.includes('student') || lowerPrompt.includes('guesthouse') || lowerPrompt.includes('buy')
+    ) {
+      const propertyFilter = {};
+      if (lowerPrompt.includes('rent') || lowerPrompt.includes('room') || lowerPrompt.includes('student')) {
+        propertyFilter.type = { $in: ['rent', 'room', 'rooms', 'complex'] };
+      } else if (lowerPrompt.includes('hotel') || lowerPrompt.includes('vacation') || lowerPrompt.includes('holiday') || lowerPrompt.includes('night')) {
+        propertyFilter.type = { $in: ['over', 'resort', 'sale'] };
+      }
+      if (detectedCity) {
+        propertyFilter.address = { $regex: detectedCity, $options: 'i' };
+      }
+      if (extractedBudget) {
+        propertyFilter.regularPrice = { $lte: extractedBudget };
+      }
+
+      try {
+        let properties = await Listing.find(propertyFilter).limit(4).lean();
+        if (properties.length === 0 && detectedCity) {
+          properties = await Listing.find({ address: { $regex: detectedCity, $options: 'i' } }).limit(4).lean();
+        }
+        if (properties.length === 0) {
+          properties = await Listing.find().sort({ createdAt: -1 }).limit(4).lean();
+        }
+
+        if (properties.length > 0) {
+          const locationText = detectedCity ? `in **${detectedCity}**` : 'across South Africa';
+          const budgetText = extractedBudget ? ` under **R${extractedBudget.toLocaleString()}**` : '';
+          answer = `I found verified properties ${locationText}${budgetText} on loopOut. Every stay includes verified host credentials and instant booking protection:`;
+          
+          actionItems = properties.map(p => ({
+            id: p._id,
+            title: p.name,
+            price: `R${p.regularPrice ? p.regularPrice.toLocaleString() : 'N/A'}${p.type === 'over' ? '/night' : '/pm'}`,
+            location: p.address || 'South Africa',
+            type: 'listing',
+            category: p.type === 'over' ? 'Vacation Stay' : p.type === 'rent' ? 'Rental' : 'Property',
+            imageUrl: (p.imageUrls && p.imageUrls[0]) || '/images/default-home.png',
+            link: `/listing/${p._id}`,
+            rating: p.rating || 4.9
+          }));
+
+          suggestedFollowUps = [
+            `Book ${properties[0].name}`,
+            "Can I pay monthly via loopOut?",
+            "Show me student rooms"
+          ];
+        }
+      } catch (err) {
+        console.error("LoopBot Property DB Error:", err);
+      }
+    }
+
+    // Case D: Escrow / Payments / Trust & Safety questions
+    else if (
+      lowerPrompt.includes('escrow') || lowerPrompt.includes('payment') || lowerPrompt.includes('pay') ||
+      lowerPrompt.includes('safe') || lowerPrompt.includes('scam') || lowerPrompt.includes('security') ||
+      lowerPrompt.includes('refund') || lowerPrompt.includes('cancel')
+    ) {
+      answer = `### 🛡️ **loopOut Escrow & Buyer Protection**\n\n` +
+        `Your safety and funds are 100% protected under our **Smart Escrow System**:\n\n` +
+        `1. **Secure Vault Holding**: When you book a room, helper, or service, your payment is held securely in escrow — the provider does **not** receive funds upfront.\n` +
+        `2. **Service Completion Verification**: Funds are only released once the stay or service is delivered and confirmed.\n` +
+        `3. **24-Hour Free Cancellation**: You can cancel eligible bookings 24 hours prior for a full refund.\n` +
+        `4. **Dispute Resolution**: If a provider fails to show up or if the property doesn't match the listing, our 24/7 Security Lab intervenes to issue an immediate refund.\n\n` +
+        `We support Visa, MasterCard, Ozow Instant EFT, and LoopPoints.`;
+
+      suggestedFollowUps = [
+        "How do I verify my identity?",
+        "Find verified stays",
+        "How do hosts get paid?"
+      ];
+    }
+
+    // Case E: Verification & Becoming a Host/Helper
+    else if (
+      lowerPrompt.includes('verify') || lowerPrompt.includes('host') || lowerPrompt.includes('list') ||
+      lowerPrompt.includes('become a helper') || lowerPrompt.includes('earn') || lowerPrompt.includes('partner')
+    ) {
+      answer = `### 🚀 **Grow Your Business on loopOut**\n\n` +
+        `Joining loopOut as a Host or Service Provider gives you access to thousands of clients daily:\n\n` +
+        `• **Identity Verification**: Verify your ID in under 2 minutes to earn the verified badge and build instant trust.\n` +
+        `• **Zero Upfront Fees**: List your room, salon, cleaning service, or car wash for free.\n` +
+        `• **Guaranteed Payouts**: Escrow ensures you get paid promptly into your South African bank account upon job completion.\n` +
+        `• **Host Dashboard**: Track earnings, bookings, reviews, and client inquiries from one central hub.`;
+
+      suggestedFollowUps = [
+        "Go to Create Listing",
+        "Check Host Earnings",
+        "Verify my ID"
+      ];
+    }
+
+    // Case F: General Greetings / Platform Copilot
+    else if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('hey') || lowerPrompt.includes('loopbot') || lowerPrompt.includes('who are you')) {
+      answer = `👋 **Hello! I'm LoopBot**, your intelligent loopOut Marketplace Copilot.\n\n` +
+        `I'm connected live to South Africa's leading platform for **properties, verified helpers, top-rated services, and events**.\n\n` +
+        `Here is what I can do for you right now:\n` +
+        `• 🏡 **Find stays, student rooms, & apartments** in any SA city\n` +
+        `• 💇 **Book verified helpers** (barbers, cleaners, chefs, tutors, photographers)\n` +
+        `• 🚗 **Schedule home services** (car wash, storage, plumbing, electricians)\n` +
+        `• 🛡️ **Answer safety, verification, & escrow questions**\n` +
+        `• 💰 **Calculate budget & plan trips**\n\n` +
+        `What would you like to discover today?`;
+
+      suggestedFollowUps = [
+        "Find rooms in Polokwane",
+        "Book a barber session",
+        "Find car wash services",
+        "How does Escrow work?"
+      ];
+    }
+
+    // Default Fallback: Smart AI Assistant Response with Live Suggestions
+    if (!answer) {
+      answer = `I'm on it! To give you the most accurate options, let me know if you're looking for a **room/stay**, **hiring a verified helper**, or **booking a service** (e.g. car wash, storage, tutor). You can also specify your city (e.g. Polokwane, JHB, Cape Town) or target budget.`;
+      
+      suggestedFollowUps = [
+        "Show properties under R5,000",
+        "Find domestic cleaners",
+        "Explore upcoming events",
+        "Safety & Escrow info"
+      ];
+    }
+
+    return res.status(200).json({
       success: true,
+      botName: "LoopBot",
       answer,
+      actionItems,
+      suggestedFollowUps,
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
+    console.error("LoopBot Controller Error:", error);
     next(error);
   }
 };

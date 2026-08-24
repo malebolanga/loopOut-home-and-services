@@ -1366,80 +1366,51 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── Premium Hero Banner ── */}
-      <div className="relative h-[185px] sm:h-[215px] overflow-hidden">
+      {/* ── Sleek Hero Banner (Clean, Minimal & Spacious) ── */}
+      <div className="relative h-[220px] sm:h-[250px] overflow-hidden rounded-b-3xl shadow-lg">
         {/* Deep layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a14] via-[#0f0f1f] to-[#1a0a14]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#080812] via-[#0f0f24] to-[#180a1c]" />
 
-        {/* Dot grid texture */}
+        {/* Subtle dot grid */}
         <div
-          className="absolute inset-0 opacity-[0.045]"
-          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0)', backgroundSize: '18px 18px' }}
+          className="absolute inset-0 opacity-[0.04]"
+          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}
         />
 
-        {/* Animated aurora orbs */}
-        <div className="absolute -top-10 right-4 w-56 h-56 bg-rose-600/25 rounded-full blur-3xl pointer-events-none" style={{ animation: 'pulse 5s ease-in-out infinite' }} />
-        <div className="absolute top-6 -left-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" style={{ animation: 'pulse 7s ease-in-out infinite 1.5s' }} />
-        <div className="absolute bottom-0 right-1/3 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" style={{ animation: 'pulse 6s ease-in-out infinite 3s' }} />
+        {/* Soft background glows */}
+        <div className="absolute -top-10 right-4 w-48 h-48 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 -left-6 w-44 h-44 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative h-full flex flex-col justify-between px-4 pt-4 pb-4 sm:pt-5 sm:pb-5">
-          {/* Top row: GPS location + trust badge */}
-          <div className="flex items-center justify-between">
+        <div className="relative h-full flex flex-col justify-between px-4 pt-3.5 pb-4">
+          {/* Top row: GPS location */}
+          <div className="flex items-center">
             <button
               type="button"
               onClick={onRequestLocation}
               aria-label="Update your location"
-              className="inline-flex max-w-[72%] items-center gap-1.5 px-3 py-1 rounded-full border text-left text-white text-[9px] font-black uppercase tracking-[0.18em] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-rose-300"
-              style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
-              <FaMapMarkerAlt className={`shrink-0 ${geoLoading ? 'animate-bounce text-amber-300' : 'text-rose-300'}`} />
-              <span className="truncate normal-case tracking-normal">
-                {geoLoading ? 'Finding your location…' : geoError ? 'Use my location' : `Near ${locationLabel}`}
+              className="inline-flex max-w-[75%] items-center gap-1.5 px-3 py-1 rounded-full border text-left text-white text-[10px] font-bold transition hover:bg-white/10 focus:outline-none"
+              style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}>
+              <FaMapMarkerAlt className={`shrink-0 text-xs ${geoLoading ? 'animate-bounce text-amber-300' : 'text-rose-400'}`} />
+              <span className="truncate">
+                {geoLoading ? 'Locating…' : geoError ? 'Location' : `Near ${locationLabel}`}
               </span>
-              <span className="text-white/40 mx-0.5">·</span>
-              <span className="shrink-0 text-white/60 normal-case font-semibold tracking-normal">GPS</span>
             </button>
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold text-rose-300"
-              style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)' }}>
-              <span className="text-[11px]">🇿🇦</span>
-              SA's #1
-            </span>
           </div>
 
-          {/* Headline */}
-          <div>
-            <h1 className="text-white font-black leading-[1.1] tracking-tight mb-1.5" style={{ fontSize: 'clamp(1.15rem, 5vw, 1.5rem)' }}>
+          {/* Clean Prominent Headline */}
+          <div className="my-auto py-1">
+            <h1 className="text-white font-black leading-[1.12] tracking-tight text-[1.4rem] sm:text-[1.7rem]">
               Find a{' '}
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, #fb7185, #fb923c, #fbbf24)' }}>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300">
                 Helper, Room
               </span>
               <br />or Service — Near You
             </h1>
-            <p className="text-white/55 font-medium leading-snug" style={{ fontSize: '11px', maxWidth: '280px' }}>
-              Verified locals · Instant booking · 100% secure
+            <p className="text-white/60 font-medium text-[11px] mt-1 tracking-wide">
+              Verified local talent · Escrow protected · Instant booking
             </p>
           </div>
-
-          {/* Bottom CTA chips */}
-          <div className="flex items-center gap-2">
-            {[
-              { label: '🏠 Rooms', tab: 'Property' },
-              { label: '🛠️ Services', tab: 'Services' },
-              { label: '👤 Helpers', tab: 'Helper' },
-            ].map(({ label, tab }) => (
-              <button
-                key={tab}
-                onClick={() => { setActiveTab(tab); setActiveSubcategory('all'); }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-white font-bold shrink-0 active:scale-95 transition-all duration-200"
-                style={{ fontSize: '10px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)' }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
         </div>
-
-        <style>{`
-        `}</style>
       </div>
 
 
@@ -1698,6 +1669,50 @@ function DesktopHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
+      {/* ── Desktop Hero Banner (Clean, Spacious & Refined) ── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#070712] via-[#0d0d22] to-[#160718] text-white py-10 px-8 border-b border-slate-800/80 shadow-xl">
+        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+        <div className="absolute top-0 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-[90px] pointer-events-none" />
+        <div className="absolute bottom-0 left-10 w-72 h-72 bg-indigo-600/15 rounded-full blur-[90px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-3 text-xs font-bold text-rose-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>South Africa's #1 Marketplace</span>
+              <span className="text-white/30">·</span>
+              <span className="text-white/80">Escrow Protected</span>
+            </div>
+
+            <h1 className="text-3xl lg:text-4xl font-black text-white leading-[1.1] tracking-tight mb-3">
+              Where Every Stay &amp; Service{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300">
+                Feels Seamless.
+              </span>
+            </h1>
+
+            <p className="text-slate-300 text-sm font-medium leading-relaxed mb-6 max-w-xl">
+              Discover verified student rooms, luxury guest stays, elite barbers, maids, and automotive pros across South Africa.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/search')}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 cursor-pointer"
+              >
+                <span>Browse Listings</span>
+              </button>
+              <button
+                onClick={() => navigate(`/${currentUser?._id}/create-listing`)}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest border border-white/15 backdrop-blur-md transition-all active:scale-95 cursor-pointer"
+              >
+                <span>List a Space</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sticky Elite Categories Bar */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
@@ -1855,21 +1870,30 @@ function DesktopHomepage({
                 ? `No listings found in ${activeSubcategory.replace('_', ' ')} yet. Try viewing all ${activeTab}.`
                 : `Try exploring other categories or expanding your search.`}
             </p>
-            {activeSubcategory !== 'all' ? (
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
-                onClick={() => setActiveSubcategory('all')}
-                className="px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot', { detail: { initialPrompt: `Find available ${activeSubcategory !== 'all' ? activeSubcategory : activeTab} near me` } }))}
+                className="px-6 py-3.5 bg-gradient-to-r from-rose-600 to-orange-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer flex items-center gap-2"
               >
-                Show All {activeTab}
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Find with LoopBot</span>
               </button>
-            ) : (
-              <button
-                onClick={() => navigate('/search')}
-                className="px-7 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
-              >
-                Browse All Listings
-              </button>
-            )}
+              {activeSubcategory !== 'all' ? (
+                <button
+                  onClick={() => setActiveSubcategory('all')}
+                  className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                >
+                  Show All {activeTab}
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/search')}
+                  className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                >
+                  Browse All Listings
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -1883,22 +1907,6 @@ function DesktopHomepage({
           <CaughtUpHub stats={stats} navigate={navigate} />
         </div>
       </main>
-
-      {/* Floating AI Agent */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1, type: 'spring', stiffness: 200 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => navigate('/ai-help-center')}
-        className="fixed bottom-6 right-6 z-50 cursor-pointer"
-      >
-        <div className="absolute inset-0 bg-rose-500 rounded-full blur-lg opacity-40 animate-pulse" />
-        <div className="relative bg-gradient-to-br from-rose-500 to-rose-600 text-white p-4 rounded-full shadow-2xl flex items-center justify-center border border-rose-400">
-          <Sparkles className="w-6 h-6" />
-        </div>
-      </motion.div>
 
       {/* Floating Bookings Tracker */}
       <motion.div

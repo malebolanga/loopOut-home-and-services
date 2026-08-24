@@ -17,6 +17,7 @@ import { AnimatePresence } from 'framer-motion';
 import PageTransition from './components/PageTransition';
 import NeuralLoader from "./components/NeuralLoader";
 import CompareWidget from "./components/CompareWidget";
+import AIAssistantWidget from "./components/AIAssistantWidget";
 import BottomNav from "./components/BottomNav";
 import PhoneNotificationManager from "./components/PhoneNotificationManager";
 
@@ -249,6 +250,7 @@ const AnimatedRoutes = () => {
         <Route path="/content" element={<PageTransition><Content /></PageTransition>} />
         <Route path="/first-time-buyers" element={<PageTransition><ArticlePages /></PageTransition>} />
         <Route path="/ai-help-center" element={<PageTransition><AIHelpCenter /></PageTransition>} />
+        <Route path="/loopbot" element={<PageTransition><AIHelpCenter /></PageTransition>} />
         <Route path="/help-center" element={<PageTransition><HelpCenter /></PageTransition>} />
         <Route path="/planner" element={<PageTransition><Planner /></PageTransition>} />
 
@@ -345,6 +347,7 @@ function AppContent() {
     '/become',
     '/help-center',
     '/ai-help-center',
+    '/loopbot',
     '/cookies',
     '/privacy',
     '/trust',
@@ -384,6 +387,7 @@ function AppContent() {
     <>
       <OnboardingGuide />
       <EmergencySOS />
+      <AIAssistantWidget />
       <NeuralSplash />
       <CompareWidget />
 

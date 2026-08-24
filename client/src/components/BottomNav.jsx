@@ -30,6 +30,7 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
+import { Sparkles } from 'lucide-react';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -157,8 +158,9 @@ const BottomNav = () => {
                 </div>
 
                 {/* Grid of master commands (compact version) */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {[
+                    { label: 'LoopBot AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
                     { label: 'Profile', route: '/profile', icon: <UserIcon className="w-5 h-5" />, color: 'bg-rose-500' },
                     { label: 'Dashboard', route: '/dashboard', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
                     { label: 'Create', route: `/${currentUser._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },

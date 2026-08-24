@@ -442,6 +442,7 @@ export default function Header() {
 
   // Command Center Navigation
   const MASTER_COMMANDS = [
+    { label: 'LOOPBOT AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
     { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'ELITE REWARDS', route: '/rewards', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
@@ -810,6 +811,16 @@ export default function Header() {
                 >
                   <span>{getCurrencySymbol()}</span>
                   <span>{selectedCurrency}</span>
+                </button>
+
+                {/* LoopBot AI Header Pill */}
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot'))}
+                  aria-label="Open LoopBot AI"
+                  className="relative px-3 h-9 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white rounded-full flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg hover:scale-105 transition-all text-[11px] font-black uppercase tracking-wider"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">LoopBot</span>
                 </button>
 
                 {/* Home Icon - Desktop */}
