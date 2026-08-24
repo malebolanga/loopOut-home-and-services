@@ -1,10 +1,14 @@
 import request from 'supertest';
 import app from '../index.js';
-import mongoose from 'mongoose';
+import { connectTestDatabase, disconnectTestDatabase } from './testDatabase.js';
 
 describe('Listings API', () => {
+  beforeAll(async () => {
+    await connectTestDatabase();
+  });
+
   afterAll(async () => {
-    await mongoose.disconnect();
+    await disconnectTestDatabase();
   });
 
   it('should get listings with default parameters', async () => {

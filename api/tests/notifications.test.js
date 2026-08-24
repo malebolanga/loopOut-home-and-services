@@ -3,7 +3,7 @@ import app from '../index.js';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import Notification from '../models/notification.model.js';
-import User from '../models/user.model.js';
+import { connectTestDatabase, disconnectTestDatabase } from './testDatabase.js';
 
 describe('Notifications API', () => {
   let token;
@@ -11,6 +11,7 @@ describe('Notifications API', () => {
   let mockNotification;
 
   beforeAll(async () => {
+    await connectTestDatabase();
     // Generate a temporary user and token
     userId = new mongoose.Types.ObjectId().toString();
     token = jwt.sign({ id: userId }, process.env.JWT_SECRET || 'secret');
@@ -30,7 +31,7 @@ describe('Notifications API', () => {
     if (userId) {
       await Notification.deleteMany({ userId });
     }
-    await mongoose.disconnect();
+    await disconnectTestDatabase();
   });
 
   it('should get user notifications', async () => {

@@ -47,7 +47,6 @@ export const checkBookingsAndActions = async () => {
         minute: '2-digit' 
       });
       
-      const phoneNum = booking.phone || booking.user.phone || 'N/A';
       const username = booking.user.username || 'User';
 
       // 1. Create a local system notification
@@ -60,16 +59,8 @@ export const checkBookingsAndActions = async () => {
       });
       await localNotification.save();
 
-      // 2. Simulate WhatsApp Reminder
-      console.log('\n' + '💚'.repeat(30));
-      console.log('✨  LOOP-OUT WHATSAPP GATEWAY (REMINDER SIMULATED)');
-      console.log('💚'.repeat(30));
-      console.log(`TO:       ${phoneNum} (${username})`);
-      console.log(`SUBJECT:  Upcoming Booking Reminder`);
-      console.log(`MESSAGE:  Hi ${username},\n          This is a friendly reminder that your booking for "${itemName}" is scheduled for:\n          📅 ${formattedDate}\n          ⏰ ${formattedTime}\n          We look forward to seeing you!`);
-      console.log('💚'.repeat(30) + '\n');
-
-      // 3. Mark reminder as sent
+      // Mark the in-app reminder as sent. External WhatsApp delivery is not
+      // advertised until a real provider has been configured.
       booking.reminderSent = true;
       await booking.save();
     }
@@ -101,9 +92,6 @@ export const checkBookingsAndActions = async () => {
       booking.status = 'cancelled';
       await booking.save();
 
-      const username = booking.user ? booking.user.username : 'User';
-      const phoneNum = booking.phone || (booking.user ? booking.user.phone : 'N/A');
-
       // 1. Create a local system notification for cancellation
       if (booking.user) {
         const cancelNotification = new Notification({
@@ -116,14 +104,6 @@ export const checkBookingsAndActions = async () => {
         await cancelNotification.save();
       }
 
-      // 2. Simulate WhatsApp Cancellation Notification
-      console.log('\n' + '❤️'.repeat(30));
-      console.log('✨  LOOP-OUT WHATSAPP GATEWAY (AUTO-CANCEL SIMULATED)');
-      console.log('❤️'.repeat(30));
-      console.log(`TO:       ${phoneNum} (${username})`);
-      console.log(`SUBJECT:  Booking Automatically Cancelled`);
-      console.log(`MESSAGE:  Hi ${username},\n          Your booking for "${itemName}" on ${formattedDate} has been automatically cancelled because the date has passed without it being marked as completed. It has been removed from the active calendar.`);
-      console.log('❤️'.repeat(30) + '\n');
     }
 
   } catch (error) {

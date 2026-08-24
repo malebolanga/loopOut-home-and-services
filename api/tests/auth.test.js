@@ -1,11 +1,14 @@
 import request from 'supertest';
 import app from '../index.js';
-import mongoose from 'mongoose';
+import { connectTestDatabase, disconnectTestDatabase } from './testDatabase.js';
 
 describe('Auth API', () => {
-  // Disconnect from DB after tests
+  beforeAll(async () => {
+    await connectTestDatabase();
+  });
+
   afterAll(async () => {
-    await mongoose.disconnect();
+    await disconnectTestDatabase();
   });
 
   it('should return 401 for non-existent user signin', async () => {
@@ -55,6 +58,7 @@ describe('Auth API', () => {
 
   it('should return 409 when email is already verified', async () => {
     // Manually mark the user as verified in DB for this test
+    const { default: mongoose } = await import('mongoose');
     await mongoose.model('User').updateOne({ email: testUser.email }, { isVerified: true });
 
     const res = await request(app)
@@ -78,4 +82,3 @@ describe('Auth API', () => {
     expect(res.headers['set-cookie']).toBeDefined();
   });
 });
-

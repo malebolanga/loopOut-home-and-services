@@ -14,29 +14,13 @@ dotenv.config();
  * Send an email using SMTP (e.g. Gmail, SendGrid, etc.)
  */
 export const sendEmail = async (to, subject, text, html) => {
-  // Cinematic Development Log Fallback
-  // This ensures that even if SMTP isn't configured, developers can see the OTP.
-  const isOtpEmail = subject.toLowerCase().includes('verification code');
-  
-  if (isOtpEmail) {
-    const otpMatch = text.match(/\d{6}/);
-    const otp = otpMatch ? otpMatch[0] : 'UNKNOWN';
-    
-    console.log('\n' + '═'.repeat(50));
-    console.log('📬  MASTERPIECE VERIFICATION SYSTEM');
-    console.log('═'.repeat(50));
-    console.log(`TO:      ${to}`);
-    console.log(`CODE:    ${otp}`);
-    console.log(`SUBJECT: ${subject}`);
-    console.log('═'.repeat(50) + '\n');
-  }
-
   try {
-    if (process.env.NODE_ENV === 'test' || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.warn('⚠️  SMTP credentials missing in .env. Email not sent, but logged above.');
-      }
+    if (process.env.NODE_ENV === 'test') {
       return { success: true, simulated: true };
+    }
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error('Email delivery is unavailable because SMTP credentials are not configured.');
+      return { success: false, error: 'Email delivery is not configured.' };
     }
 
     const transportConfig = process.env.EMAIL_HOST && process.env.EMAIL_HOST !== 'smtp.gmail.com'
@@ -48,9 +32,7 @@ export const sendEmail = async (to, subject, text, html) => {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
-          tls: {
-            rejectUnauthorized: false
-          }
+          tls: { rejectUnauthorized: true }
         }
       : {
           service: 'gmail',
@@ -58,9 +40,7 @@ export const sendEmail = async (to, subject, text, html) => {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
-          tls: {
-            rejectUnauthorized: false
-          }
+          tls: { rejectUnauthorized: true }
         };
 
     const transporter = nodemailer.createTransport(transportConfig);

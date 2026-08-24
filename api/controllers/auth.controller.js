@@ -46,15 +46,11 @@ const sendVerificationCode = async (user, subject = 'Your LoopOut verification c
   
   try {
     const emailResult = await sendEmail(user.email, subject, text, html);
-    if (!emailResult.success) {
-      console.warn(`\n⚠️ [VERIFICATION CODE] Email delivery to ${user.email} failed: ${emailResult.error}`);
-      console.warn(`👉 VERIFICATION CODE FOR ${user.email}: [ ${otp} ]\n`);
-    }
+    if (!emailResult.success) console.warn(`Verification email delivery to ${user.email} failed: ${emailResult.error}`);
     if (user.phone) await sendSMS(user.phone, text);
     return { success: emailResult.success, otp };
   } catch (error) {
     console.error('Verification code delivery failed:', error.message);
-    console.warn(`👉 FALLBACK VERIFICATION CODE FOR ${user.email}: [ ${otp} ]\n`);
     return { success: false, otp };
   }
 };
@@ -124,7 +120,7 @@ export const signup = async (req, res, next) => {
       message: delivery.success
         ? `A verification code has been sent to ${email}.`
         : `A verification code has been generated for ${email}.`,
-      ...(isDev || delivery.simulated || !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
+      ...(isDev ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
     });
   } catch (error) { return next(error); }
 };
@@ -256,7 +252,7 @@ export const resendOtp = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: 'If an unverified account exists, a code has been sent.',
-      ...(isDev || delivery.simulated || !delivery.success ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
+      ...(isDev ? { devCode: delivery.otp, emailDeliveryFailed: !delivery.success } : {})
     });
   } catch (error) { return next(error); }
 };

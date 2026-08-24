@@ -44,13 +44,23 @@ import path from 'path';
 dotenv.config();
 dotenv.config({ path: new URL('./.env', import.meta.url) });
 
-mongoose.connect(process.env.MONGO)
-    .then(() => {
-        console.log('Connected to MongoDB');
-        initBookingScheduler();
-    }).catch((err) => {
-        console.log(err);
-    });
+const requiredProductionVariables = ['MONGO', 'JWT_SECRET', 'CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS'];
+if (process.env.NODE_ENV === 'production') {
+    const missing = requiredProductionVariables.filter((name) => !process.env[name]);
+    if (missing.length) throw new Error(`Missing required production environment variables: ${missing.join(', ')}`);
+}
+
+if (process.env.MONGO && process.env.NODE_ENV !== 'test') {
+    mongoose.connect(process.env.MONGO)
+        .then(() => {
+            console.log('Connected to MongoDB');
+            initBookingScheduler();
+        }).catch((err) => {
+            console.error('MongoDB connection failed:', err.message);
+        });
+} else if (process.env.NODE_ENV !== 'test') {
+    console.error('MongoDB is not configured; API data routes will be unavailable.');
+}
 
 import { fileURLToPath } from 'url';
 

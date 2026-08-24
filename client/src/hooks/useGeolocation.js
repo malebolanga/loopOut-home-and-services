@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const useLocationCoords = () => {
   const [coords, setCoords] = useState(null);
@@ -6,7 +6,9 @@ const useLocationCoords = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const requestLocation = useCallback(() => {
+    setLoading(true);
+    setError(null);
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser");
       setLoading(false);
@@ -18,10 +20,7 @@ const useLocationCoords = () => {
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
           {
-            headers: {
-              'Accept-Language': 'en',
-              'User-Agent': 'LoopOut-App'
-            }
+          headers: { 'Accept-Language': 'en' }
           }
         );
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -49,12 +48,16 @@ const useLocationCoords = () => {
 
     navigator.geolocation.getCurrentPosition(onSuccess, onError, {
       enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0,
+      timeout: 10000,
+      maximumAge: 300000,
     });
   }, []);
 
-  return { coords, city, error, loading };
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
+  return { coords, city, error, loading, requestLocation };
 };
 
 export default useLocationCoords;

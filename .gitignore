@@ -10,8 +10,17 @@ client/dist */
 # Environment variables (contain secrets)
 .env
 client/.env
+api/.env
+mobile/.env
+.env.*
 *.env.local
 *.env.production
+!.env.example
+!api/.env.example
+!client/.env.example
+
+# Local diagnostics (may contain credentials)
+api/tmp/
 
 # Firebase cache
 .firebase/

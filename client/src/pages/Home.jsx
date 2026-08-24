@@ -1099,7 +1099,7 @@ function MobileAppHomepage({
   loadingProperties, loadingServices, loadingHelpers, loadingEvents,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0
+  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1107,18 +1107,7 @@ function MobileAppHomepage({
   const [showAIInsights, setShowAIInsights] = useState(true);
   const [isBookingsOpen, setIsBookingsOpen] = useState(false);
   const [activeFeaturedTab, setActiveFeaturedTab] = useState('Properties');
-  const [bannerLocationIndex, setBannerLocationIndex] = useState(0);
-
-  const bannerLocations = [
-    "SOWETO", "ALEXANDRA", "GAUTENG", "CAPE TOWN", "PRETORIA", "DURBAN", "KZN", "LIMPOPO", "POLOKWANE"
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBannerLocationIndex((prev) => (prev + 1) % bannerLocations.length);
-    }, 30000);
-    return () => clearInterval(interval);
-  }, []);
+  const locationLabel = geoCity || currentLocation || 'your area';
 
   useEffect(() => {
     const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
@@ -1394,20 +1383,21 @@ function MobileAppHomepage({
         <div className="absolute bottom-0 right-1/3 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" style={{ animation: 'pulse 6s ease-in-out infinite 3s' }} />
 
         <div className="relative h-full flex flex-col justify-between px-4 pt-4 pb-4 sm:pt-5 sm:pb-5">
-          {/* Top row: live location pill + badge */}
+          {/* Top row: GPS location + trust badge */}
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-white text-[9px] font-black uppercase tracking-[0.18em]"
+            <button
+              type="button"
+              onClick={onRequestLocation}
+              aria-label="Update your location"
+              className="inline-flex max-w-[72%] items-center gap-1.5 px-3 py-1 rounded-full border text-left text-white text-[9px] font-black uppercase tracking-[0.18em] transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-rose-300"
               style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)' }}>
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-400" />
-              </span>
-              <span key={bannerLocationIndex} style={{ animation: 'fadeSlideIn 0.4s ease forwards' }}>
-                {bannerLocations[bannerLocationIndex]}
+              <FaMapMarkerAlt className={`shrink-0 ${geoLoading ? 'animate-bounce text-amber-300' : 'text-rose-300'}`} />
+              <span className="truncate normal-case tracking-normal">
+                {geoLoading ? 'Finding your location…' : geoError ? 'Use my location' : `Near ${locationLabel}`}
               </span>
               <span className="text-white/40 mx-0.5">·</span>
-              <span className="text-white/60 normal-case font-semibold tracking-normal">Live Market</span>
-            </span>
+              <span className="shrink-0 text-white/60 normal-case font-semibold tracking-normal">GPS</span>
+            </button>
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold text-rose-300"
               style={{ background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.25)' }}>
               <span className="text-[11px]">🇿🇦</span>
@@ -1449,10 +1439,6 @@ function MobileAppHomepage({
         </div>
 
         <style>{`
-          @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
         `}</style>
       </div>
 
@@ -2063,7 +2049,7 @@ const Home = () => {
     });
   };
 
-  const { coords, city, error: geoError, loading: geoLoading } = useLocationCoords();
+  const { coords, city, error: geoError, loading: geoLoading, requestLocation } = useLocationCoords();
   const [locationStatus, setLocationStatus] = useState(null);
 
   useEffect(() => {
@@ -2280,6 +2266,10 @@ const Home = () => {
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
       locationStatus={locationStatus}
       requestCount={requestCount}
+      geoCity={city}
+      geoLoading={geoLoading}
+      geoError={geoError}
+      onRequestLocation={requestLocation}
     />
   );
 };
