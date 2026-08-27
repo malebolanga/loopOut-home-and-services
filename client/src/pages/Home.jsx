@@ -20,7 +20,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -1366,55 +1366,20 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── Sleek Hero Banner (Clean, Minimal & Spacious) ── */}
-      <div className="relative h-[220px] sm:h-[250px] overflow-hidden rounded-b-3xl shadow-lg">
-        {/* Deep layered background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#080812] via-[#0f0f24] to-[#180a1c]" />
-
-        {/* Subtle dot grid */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}
-        />
-
-        {/* Soft background glows */}
-        <div className="absolute -top-10 right-4 w-48 h-48 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 -left-6 w-44 h-44 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative h-full flex flex-col justify-between px-4 pt-3.5 pb-4">
-          {/* Top row: GPS location */}
-          <div className="flex items-center">
-            <button
-              type="button"
-              onClick={onRequestLocation}
-              aria-label="Update your location"
-              className="inline-flex max-w-[75%] items-center gap-1.5 px-3 py-1 rounded-full border text-left text-white text-[10px] font-bold transition hover:bg-white/10 focus:outline-none"
-              style={{ background: 'rgba(255,255,255,0.07)', borderColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(10px)' }}>
-              <FaMapMarkerAlt className={`shrink-0 text-xs ${geoLoading ? 'animate-bounce text-amber-300' : 'text-rose-400'}`} />
-              <span className="truncate">
-                {geoLoading ? 'Locating…' : geoError ? 'Location' : `Near ${locationLabel}`}
-              </span>
-            </button>
-          </div>
-
-          {/* Clean Prominent Headline */}
-          <div className="my-auto py-1">
-            <h1 className="text-white font-black leading-[1.12] tracking-tight text-[1.4rem] sm:text-[1.7rem]">
-              Find a{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300">
-                Helper, Room
-              </span>
-              <br />or Service — Near You
-            </h1>
-            <p className="text-white/60 font-medium text-[11px] mt-1 tracking-wide">
-              Verified local talent · Escrow protected · Instant booking
-            </p>
-          </div>
+      <main className="px-4 pt-2 pb-4 w-full">
+        {/* Top row: GPS location badge */}
+        <div className="flex items-center justify-between pb-2 pt-1">
+          <button
+            type="button"
+            onClick={onRequestLocation}
+            aria-label="Update your location"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-left text-slate-800 text-[11px] font-bold transition hover:bg-slate-100 focus:outline-none bg-slate-50 border-slate-200 shadow-2xs">
+            <FaMapMarkerAlt className={`shrink-0 text-xs ${geoLoading ? 'animate-bounce text-amber-500' : 'text-rose-500'}`} />
+            <span className="truncate">
+              {geoLoading ? 'Locating…' : geoError ? 'Location' : `Near ${locationLabel}`}
+            </span>
+          </button>
         </div>
-      </div>
-
-
-      <main className="px-4 pt-4 pb-4 w-full">
 
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
@@ -1668,50 +1633,6 @@ function DesktopHomepage({
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
-
-      {/* ── Desktop Hero Banner (Clean, Spacious & Refined) ── */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[#070712] via-[#0d0d22] to-[#160718] text-white py-10 px-8 border-b border-slate-800/80 shadow-xl">
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-        <div className="absolute top-0 right-1/4 w-80 h-80 bg-rose-600/15 rounded-full blur-[90px] pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-72 h-72 bg-indigo-600/15 rounded-full blur-[90px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-3 text-xs font-bold text-rose-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>South Africa's #1 Marketplace</span>
-              <span className="text-white/30">·</span>
-              <span className="text-white/80">Escrow Protected</span>
-            </div>
-
-            <h1 className="text-3xl lg:text-4xl font-black text-white leading-[1.1] tracking-tight mb-3">
-              Where Every Stay &amp; Service{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300">
-                Feels Seamless.
-              </span>
-            </h1>
-
-            <p className="text-slate-300 text-sm font-medium leading-relaxed mb-6 max-w-xl">
-              Discover verified student rooms, luxury guest stays, elite barbers, maids, and automotive pros across South Africa.
-            </p>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate('/search')}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 cursor-pointer"
-              >
-                <span>Browse Listings</span>
-              </button>
-              <button
-                onClick={() => navigate(`/${currentUser?._id}/create-listing`)}
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-black text-xs uppercase tracking-widest border border-white/15 backdrop-blur-md transition-all active:scale-95 cursor-pointer"
-              >
-                <span>List a Space</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Sticky Elite Categories Bar */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">

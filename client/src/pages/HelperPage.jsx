@@ -229,14 +229,23 @@ export default function HelperPage() {
     ];
 
     const chefOptions = [
-      { id: 'mealPrep', name: 'Meal Prep', icon: <FaUtensils className="text-orange-500" /> },
-      { id: 'privateDining', name: 'Private Dining', icon: <FaUtensils className="text-red-500" /> },
-      { id: 'cookingClasses', name: 'Classes', icon: <FaGraduationCap className="text-green-500" /> },
-      { id: 'eventCatering', name: 'Catering', icon: <FaGlassCheers className="text-purple-500" /> },
-      { id: 'dietMeals', name: 'Diet Plans', icon: <FaCookie className="text-blue-500" /> },
-      { id: 'baking', name: 'Baking', icon: <FaCookie className="text-yellow-500" /> },
-      { id: 'groceryShopping', name: 'Shopping', icon: <FaShoppingBasket className="text-teal-500" /> },
-      { id: 'menuPlanning', name: 'Planning', icon: <FaUtensils className="text-indigo-500" /> }
+      { id: 'breakfast', name: 'Breakfast & Brunch Menu', icon: <FaUtensils className="text-amber-500" />, description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices', price: 180 },
+      { id: 'desserts', name: 'Desserts & High Tea', icon: <FaCookie className="text-pink-500" />, description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies', price: 160 },
+      { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: <FaUtensils className="text-purple-600" />, description: 'Complete multi-course gourmet dining experience: welcome amuse-bouche, starter, signature main & dessert', price: 450 },
+      { id: 'privateDining', name: 'Private Dinner Experience', icon: <FaUtensils className="text-red-500" />, description: 'Intimate fine-dining dinner experience crafted with exquisite seasonal ingredients', price: 380 },
+      { id: 'lunch', name: 'Lunch Feast Banquet', icon: <FaUtensils className="text-blue-500" />, description: 'Plated 2-course hearty lunch or corporate banquet prepared and plated fresh on-site', price: 280 },
+      { id: 'braaiService', name: 'Braai / BBQ Master', icon: <FaFire className="text-orange-600" />, description: 'Professional braai master service with full setup, gourmet grilled cuts & fresh sides', price: 300 },
+      { id: 'eventCatering', name: 'Event & Function Catering', icon: <FaGlassCheers className="text-purple-500" />, description: 'Full-service catering buffet or plated service for milestone parties, functions & celebrations', price: 350 },
+      { id: 'functionParty', name: 'Function Party Spread', icon: <FaGlassCheers className="text-pink-500" />, description: 'Catering for large function parties, celebrations and social events', price: 320 },
+      { id: 'babyShower', name: 'Baby / Bridal Shower Spread', icon: <FaBaby className="text-blue-400" />, description: 'Delightful finger foods, savory platters, mini sliders, macarons & mocktails', price: 260 },
+      { id: 'mealPrep', name: 'Weekly Meal Prep', icon: <FaUtensils className="text-emerald-500" />, description: 'Weekly nutrition-focused meal preparation, portioned & stored for effortless healthy eating', price: 250 },
+      { id: 'veganVeg', name: 'Vegan / Plant-Based Feast', icon: <FaLeaf className="text-emerald-500" />, description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition', price: 300 },
+      { id: 'baking', name: 'Baking & Celebration Cakes', icon: <FaCookie className="text-yellow-500" />, description: 'Bespoke custom cakes, artisan sourdough, tarts & baked confectioneries for any celebration', price: 220 },
+      { id: 'kidsMeals', name: "Kids' Party Menu", icon: <FaSmile className="text-yellow-500" />, description: 'Tasty, nutritious and fun kid-approved meals, sliders, mini pizzas and dessert treats', price: 150 },
+      { id: 'cookingClasses', name: 'Private Cooking Masterclass', icon: <FaGraduationCap className="text-green-500" />, description: 'Interactive hands-on cooking masterclass tailored to your cuisine of choice', price: 500 },
+      { id: 'menuPlanning', name: 'Menu Planning & Consulting', icon: <FaUtensils className="text-indigo-500" />, description: 'Personalised weekly or monthly menu design for households', price: 200 },
+      { id: 'dietMeals', name: 'Diet & Health Meal Plan', icon: <FaLeaf className="text-green-400" />, description: 'Nutritious, balanced meals tailored to dietary goals and health needs', price: 280 },
+      { id: 'weddingCatering', name: 'Wedding Catering Banquet', icon: <FaRing className="text-rose-500" />, description: 'Luxury culinary experience for weddings, plated multi-course or grand buffet banquet', price: 650 },
     ];
 
     const tattooOptions = [
@@ -607,14 +616,16 @@ export default function HelperPage() {
 
   // Chef-specific options
   const mealTypes = [
-    { id: 'breakfast', name: 'Breakfast' },
-    { id: 'brunch', name: 'Brunch' },
-    { id: 'lunch', name: 'Lunch' },
-    { id: 'dinner', name: 'Dinner' },
-    { id: 'appetizers', name: 'Appetizers & Canapés' },
-    { id: 'desserts', name: 'Desserts' },
-    { id: 'full-course', name: 'Full Course Meal' },
-    { id: 'buffet', name: 'Buffet Style' }
+    { id: 'breakfast', name: 'Breakfast & Brunch', icon: '🥞', description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices' },
+    { id: 'desserts', name: 'Desserts & High Tea', icon: '🍰', description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies' },
+    { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: '👑', description: 'Multi-course fine dining: starter, palate cleanser, gourmet main & decadent dessert' },
+    { id: 'lunch', name: 'Lunch Feast Banquet', icon: '🍱', description: 'Plated 2-course hearty lunch or corporate feast with fresh salads and sides' },
+    { id: 'dinner', name: 'Private Dinner Experience', icon: '🍷', description: 'Intimate evening fine-dining experience cooked and plated fresh at your table' },
+    { id: 'braai', name: 'Braai / BBQ Smokehouse', icon: '🥩', description: 'Braai master experience with premium meats, gourmet marinades and fresh sides' },
+    { id: 'buffet', name: 'Buffet Spread', icon: '🍲', description: 'Generous hot and cold buffet spread for gatherings, functions and parties' },
+    { id: 'appetizers', name: 'Canapés & Finger Food', icon: '🍢', description: 'Cocktail finger foods, gourmet skewers, sliders & elegant bite-sized platters' },
+    { id: 'meal-prep', name: 'Meal Prep / Batch Cooking', icon: '🥗', description: 'Weekly portioned and packaged meal prep designed for healthy home dining' },
+    { id: 'vegan', name: 'Vegan / Plant-Based Feast', icon: '🥑', description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition' }
   ];
 
   const cuisineTypes = [
@@ -884,16 +895,20 @@ export default function HelperPage() {
     return selectedTime < openTime || selectedTime >= closeTime;
   };
 
-  // Calculate total price
+  // Calculate total price with per-guest multiplier for chef/catering
   useEffect(() => {
     if (helper) {
-      const basePrice = parseInt(helper.regularPrice) || 0;
+      const isChef = helper.type === 'chef' || helper.type === 'cooking';
+      const rawGuests = parseInt(bookingData.numberOfGuests);
+      const guestCount = isChef ? (Number.isInteger(rawGuests) && rawGuests > 0 ? rawGuests : 1) : 1;
+      
+      const basePrice = parseInt(helper.regularPrice) || (isChef ? 250 : 0);
       const travelFee = parseInt(helper.travelFee) || 0;
       
       // Calculate selected services price
       let selectedServicesPrice = 0;
       bookingData.selectedServices.forEach(serviceId => {
-        const option = serviceOptions.find(opt => opt.id === serviceId);
+        const option = serviceOptions.find(opt => String(opt.id) === String(serviceId));
         if (option && option.price) {
           // Handle "R450" or "450" format
           const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
@@ -901,11 +916,20 @@ export default function HelperPage() {
         }
       });
 
-      const totalBase = selectedServicesPrice > 0 ? selectedServicesPrice : basePrice;
+      let totalBase = 0;
+      if (isChef) {
+        const perGuestRate = selectedServicesPrice > 0 
+          ? selectedServicesPrice 
+          : basePrice;
+        totalBase = perGuestRate * guestCount;
+      } else {
+        totalBase = selectedServicesPrice > 0 ? selectedServicesPrice : basePrice;
+      }
+
       const serviceFee = Math.round(totalBase * 0.1);
       setTotalPrice(totalBase + travelFee + serviceFee);
     }
-  }, [helper, bookingData.selectedServices, serviceOptions]);
+  }, [helper, bookingData.selectedServices, bookingData.numberOfGuests, bookingData.mealType, serviceOptions]);
 
 
 
@@ -3667,17 +3691,15 @@ export default function HelperPage() {
                             <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
                               👥 How Many Guests Are Attending? <span className="text-rose-500">*</span>
                             </label>
-                            {bookingData.numberOfGuests && (
-                              <span className="text-xs font-black text-orange-700 bg-orange-100 px-2 py-0.5 rounded-md">
-                                {bookingData.numberOfGuests} Guests
-                              </span>
-                            )}
+                            <span className="text-xs font-black text-orange-700 bg-orange-100 px-2 py-0.5 rounded-md">
+                              {bookingData.numberOfGuests || '1'} {parseInt(bookingData.numberOfGuests) === 1 ? 'Guest' : 'Guests'}
+                            </span>
                           </div>
                           
                           {/* Quick selection chips */}
                           <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 mb-3">
                             {[1, 2, 5, 10, 15, 20, 30, 50, 75, 100].map(n => {
-                              const isSelected = String(bookingData.numberOfGuests) === String(n);
+                              const isSelected = String(bookingData.numberOfGuests || '1') === String(n);
                               return (
                                 <button
                                   key={n}
@@ -3698,7 +3720,7 @@ export default function HelperPage() {
                           </div>
                           
                           {/* Custom input */}
-                          <div className="relative">
+                          <div className="relative mb-2">
                             <input
                               type="number"
                               name="numberOfGuests"
@@ -3710,13 +3732,70 @@ export default function HelperPage() {
                             />
                             <span className="absolute left-3 top-3.5 text-base text-gray-400">👥</span>
                           </div>
+
+                          {/* Live guest calculation info banner */}
+                          {(() => {
+                            const guests = Math.max(1, parseInt(bookingData.numberOfGuests) || 1);
+                            let selSum = 0;
+                            bookingData.selectedServices?.forEach(sId => {
+                              const opt = serviceOptions?.find(o => String(o.id) === String(sId));
+                              if (opt && opt.price) selSum += parseInt(String(opt.price).replace(/[^\d]/g, '')) || 0;
+                            });
+                            const rate = selSum > 0 ? selSum : (parseInt(helper.regularPrice) || 250);
+                            return (
+                              <div className="p-2.5 bg-orange-50/80 border border-orange-200 rounded-xl flex items-center justify-between text-xs text-orange-900 font-bold">
+                                <span>⚡ Rate per Guest: <span className="font-black text-orange-600">R{rate}</span></span>
+                                <span>Total: R{rate} × {guests} = <span className="font-black text-orange-700">R{rate * guests}</span></span>
+                              </div>
+                            );
+                          })()}
                         </div>
 
-                        {/* Meal Type */}
+                        {/* Meal Type / Menu Selection */}
                         <div>
-                          <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-1.5">
-                            🍽️ Meal Type / Service Format
-                          </label>
+                          <div className="flex items-center justify-between mb-2">
+                            <label className="block text-xs font-black text-gray-800 uppercase tracking-wider">
+                              🍽️ Select Meal Type / Menu Package
+                            </label>
+                            {bookingData.mealType && (
+                              <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md uppercase">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Interactive Meal Type Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 mb-3">
+                            {mealTypes?.map(meal => {
+                              const isSelected = bookingData.mealType === meal.id;
+                              return (
+                                <button
+                                  key={meal.id}
+                                  type="button"
+                                  onClick={() => setBookingData(prev => ({ ...prev, mealType: isSelected ? '' : meal.id }))}
+                                  className={`p-3 rounded-xl text-left border-2 transition-all relative ${
+                                    isSelected
+                                      ? 'border-orange-500 bg-orange-50/80 shadow-sm shadow-orange-100'
+                                      : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/20'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xl">{meal.icon}</span>
+                                    {isSelected && (
+                                      <span className="text-[10px] font-black text-orange-600 bg-orange-100/80 px-2 py-0.5 rounded-lg uppercase">
+                                        Selected
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="font-bold text-xs text-gray-900 leading-tight">{meal.name}</p>
+                                  {meal.description && (
+                                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-1 leading-snug">{meal.description}</p>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
                           <select
                             name="mealType"
                             value={bookingData.mealType}
@@ -4189,25 +4268,57 @@ export default function HelperPage() {
 
               {/* Total Estimate Summary in Form */}
               <div className="bg-slate-900 rounded-[2rem] p-6 mb-8 text-white space-y-3">
-                 <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    <span>Base Deployment</span>
-                    <span>R{helper.regularPrice}</span>
-                 </div>
-                 {bookingData.selectedServices.length > 0 && (
-                   <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                      <span>Services Selection</span>
-                      <span>+ R{totalPrice - helper.regularPrice - (helper.travelFee || 0) - Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                   </div>
-                 )}
-                 <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
-                    <span>Service Protocol Fee (10%)</span>
-                    <span>R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                 </div>
-                 <div className="h-px bg-white/10 my-2" />
-                 <div className="flex justify-between items-center">
-                    <span className="text-xs font-black uppercase tracking-[0.2em]">Total Estimation</span>
-                    <span className="text-xl font-black text-rose-500 italic">R{totalPrice}</span>
-                 </div>
+                 {(() => {
+                   const isChef = helper.type === 'chef' || helper.type === 'cooking';
+                   const guestCount = isChef ? (parseInt(bookingData.numberOfGuests) || 1) : 1;
+                   let selectedServicesSum = 0;
+                   bookingData.selectedServices.forEach(sId => {
+                     const opt = serviceOptions.find(o => String(o.id) === String(sId));
+                     if (opt && opt.price) selectedServicesSum += parseInt(String(opt.price).replace(/[^\d]/g, '')) || 0;
+                   });
+                   const perGuestRate = selectedServicesSum > 0 
+                      ? selectedServicesSum 
+                      : (parseInt(helper.regularPrice) || 250);
+                   const subtotalBase = isChef ? perGuestRate * guestCount : (selectedServicesSum > 0 ? selectedServicesSum : (parseInt(helper.regularPrice) || 0));
+                   const protocolFee = Math.round(subtotalBase * 0.1);
+
+                   return (
+                     <>
+                       <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          <span>{isChef ? `Rate (R${perGuestRate} × ${guestCount} ${guestCount === 1 ? 'Guest' : 'Guests'})` : 'Base Deployment'}</span>
+                          <span className="text-white font-bold">R{subtotalBase}</span>
+                       </div>
+                       {bookingData.selectedServices.length > 0 && (
+                         <div className="space-y-1 pl-2 border-l border-white/20 my-1">
+                            {bookingData.selectedServices.map((id, index) => {
+                              const s = serviceOptions.find(opt => String(opt.id) === String(id));
+                              return s ? (
+                                <div key={`${id}-${index}`} className="flex justify-between items-center text-[10px] text-slate-300">
+                                  <span>{s.name}</span>
+                                  <span>{isChef ? `R${s.price} × ${guestCount} = R${s.price * guestCount}` : `R${s.price}`}</span>
+                                </div>
+                              ) : null;
+                            })}
+                         </div>
+                       )}
+                       {helper.travelFee > 0 && (
+                         <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                            <span>Travel / Deployment Fee</span>
+                            <span>R{helper.travelFee}</span>
+                         </div>
+                       )}
+                       <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                          <span>Service Protocol Fee (10%)</span>
+                          <span>R{protocolFee}</span>
+                       </div>
+                       <div className="h-px bg-white/10 my-2" />
+                       <div className="flex justify-between items-center">
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">Total Estimation</span>
+                          <span className="text-xl font-black text-rose-500 italic">R{totalPrice}</span>
+                       </div>
+                     </>
+                   );
+                 })()}
               </div>
 
               

@@ -338,13 +338,25 @@ export default function AIAssistantWidget() {
                                     <img
                                       src={item.imageUrl}
                                       alt={item.title}
-                                      className="w-10 h-10 rounded-lg object-cover bg-slate-200 shrink-0 border border-slate-200"
+                                      className="w-11 h-11 rounded-lg object-cover bg-slate-200 shrink-0 border border-slate-200"
                                       onError={(e) => {
                                         e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&auto=format&fit=crop';
                                       }}
                                     />
-                                    <div className="truncate">
-                                      <p className="font-bold text-xs text-slate-900 group-hover:text-rose-600 transition-colors truncate">
+                                    <div className="truncate min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        {item.category && (
+                                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 font-extrabold uppercase truncate max-w-[120px]">
+                                            {item.category}
+                                          </span>
+                                        )}
+                                        {item.badge && (
+                                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 font-bold truncate">
+                                            {item.badge}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="font-bold text-xs text-slate-900 group-hover:text-rose-600 transition-colors truncate mt-0.5">
                                         {item.title}
                                       </p>
                                       <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
