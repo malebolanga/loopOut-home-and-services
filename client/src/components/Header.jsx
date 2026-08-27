@@ -73,6 +73,7 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
+import useLocationCoords from '../hooks/useGeolocation';
 import { Sparkles } from 'lucide-react';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
 
@@ -176,6 +177,7 @@ export default function Header() {
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
+  const { city: geoCity, loading: geoLoading, requestLocation } = useLocationCoords();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -813,14 +815,17 @@ export default function Header() {
                   <span>{selectedCurrency}</span>
                 </button>
 
-                {/* LoopBot AI Header Pill */}
+                {/* Location Badge / Button */}
                 <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot'))}
-                  aria-label="Open LoopBot AI"
-                  className="relative px-3 h-9 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white rounded-full flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg hover:scale-105 transition-all text-[11px] font-black uppercase tracking-wider"
+                  onClick={requestLocation}
+                  title={geoLoading ? 'Detecting location…' : geoCity ? `Location: ${geoCity}` : 'Find location'}
+                  aria-label="Location"
+                  className="relative px-2.5 sm:px-3 h-9 border border-slate-200 rounded-full flex items-center gap-1.5 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all text-slate-700 hover:text-rose-600 bg-white shadow-2xs"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">LoopBot</span>
+                  <MapPinIcon className={`w-3.5 h-3.5 stroke-[2.2px] shrink-0 ${geoLoading ? 'animate-bounce text-amber-500' : 'text-rose-500'}`} />
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 tracking-tight truncate max-w-[80px] sm:max-w-[120px]">
+                    {geoLoading ? 'Locating…' : geoCity || currentLocation || 'Location'}
+                  </span>
                 </button>
 
                 {/* Home Icon - Desktop */}

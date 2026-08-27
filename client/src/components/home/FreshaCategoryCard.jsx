@@ -63,42 +63,38 @@ export const FreshaCategoryCard = ({ category, onClick, index }) => {
         {/* Floating 3D Icon Section */}
         <motion.div
           animate={{
-            y: [0, -15, 0],
-            rotate: [0, 5, -5, 0]
+            y: [0, -10, 0],
+            rotate: [0, 4, -4, 0]
           }}
           transition={{
             repeat: Infinity,
             duration: 5,
             ease: "easeInOut"
           }}
-          className="relative z-10 w-40 h-40 flex items-center justify-center"
+          className="relative z-10 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center"
           style={{ transform: "translateZ(100px)" }}
         >
           {/* 3D Glass Sphere Backing with Emotional Glow */}
-          <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_20px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
+          <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_15px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
 
-          <div className="relative z-20 text-7xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.25)] group-hover:scale-125 group-hover:rotate-6 transition-transform duration-700">
-            {category.emoji || '✨'}
-          </div>
-
-          {/* Isometric Overlay Image IF EXISTS */}
-          {category.image && category.image.startsWith('/') && (
+          {/* Category Image */}
+          {category.image && (
             <img loading="lazy"
               src={category.image}
               alt={category.name}
-              className="absolute inset-0 w-full h-full object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30"
+              className="absolute inset-0 w-full h-full object-cover rounded-full transition-opacity duration-300 z-30"
             />
           )}
         </motion.div>
 
         {/* Info Section */}
-        <div className="absolute inset-x-0 bottom-0 p-8 text-center bg-gradient-to-t from-white via-white/90 to-transparent z-40">
-          <h3 className="text-gray-900 font-black text-xl mb-1 tracking-tight uppercase group-hover:text-rose-600 transition-colors">
+        <div className="absolute inset-x-0 bottom-0 p-5 text-center bg-gradient-to-t from-white via-white/90 to-transparent z-40">
+          <h3 className="text-gray-900 font-black text-sm sm:text-base mb-0.5 tracking-tight uppercase group-hover:text-rose-600 transition-colors">
             {category.name}
           </h3>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">
+          <div className="flex items-center justify-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider">
               {category.count} active
             </span>
           </div>

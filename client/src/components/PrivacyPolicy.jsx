@@ -82,7 +82,7 @@ const PrivacyPolicy = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
                 viewport={{ once: true }}
-                className="p-10 bg-white rounded-[3rem] border border-gray-100 shadow-2xl shadow-gray-200 group hover:border-rose-200 transition-colors"
+                className="p-10 bg-white rounded-[3rem] border border-gray-100 shadow-2xl shadow-gray-200 hover:border-rose-200 transition-colors"
               >
                  <div className="w-16 h-16 bg-gray-950 text-white rounded-[1.5rem] flex items-center justify-center mb-8 group-hover:bg-rose-600 transition-colors shadow-xl">
                     {p.icon}
@@ -106,7 +106,7 @@ const PrivacyPolicy = () => {
                </h2>
                <div className="space-y-8">
                   {dataCollection.map((item, i) => (
-                    <div key={i} className="flex gap-6 group">
+                    <div key={i} className="flex gap-6">
                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-rose-500 group-hover:bg-rose-50 transition-all font-black text-xs">
                           0{i+1}
                        </div>

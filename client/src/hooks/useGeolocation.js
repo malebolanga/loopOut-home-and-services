@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { calculateDistance, POLOKWANE_COORDS } from '../utils/locationUtils';
 
 const useLocationCoords = () => {
   const [coords, setCoords] = useState(null);
@@ -18,20 +19,27 @@ const useLocationCoords = () => {
     const fetchCityName = async (lat, lon) => {
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
-          {
-          headers: { 'Accept-Language': 'en' }
-          }
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+          { headers: { 'Accept': 'application/json' } }
         );
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        if (data && data.address) {
-          const detectedCity = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.municipality || data.address.state;
-          setCity(detectedCity);
+        if (response.ok) {
+          const data = await response.json();
+          const detectedCity = data.city || data.locality || data.principalSubdivision || data.localityInfo?.administrative?.[2]?.name;
+          if (detectedCity) {
+            setCity(detectedCity);
+            return;
+          }
         }
-      } catch (err) {
-        console.warn("Reverse geocoding unavailable:", err.message);
-        // Fallback or leave as null - don't let it break the flow
+      } catch {
+        // Silently proceed to proximity fallback
+      }
+
+      // Proximity fallback: check if coordinates are within Limpopo / Polokwane area
+      const distToPolokwane = calculateDistance(lat, lon, POLOKWANE_COORDS.latitude, POLOKWANE_COORDS.longitude);
+      if (distToPolokwane <= 60) {
+        setCity('Polokwane');
+      } else {
+        setCity('Current Area');
       }
     };
 

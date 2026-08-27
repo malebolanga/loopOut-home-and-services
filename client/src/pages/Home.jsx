@@ -752,18 +752,22 @@ const UpcomingBookingStrip = ({ navigate }) => {
         </div>
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/profile?tab=bookings')}
-          className="text-[10px] font-black text-rose-500 uppercase tracking-wider"
+          onClick={() => navigate('/upcoming-bookings')}
+          className="text-[10px] font-black text-rose-500 uppercase tracking-wider cursor-pointer hover:underline"
         >
           See All
         </motion.button>
       </div>
 
       {/* Scroll strip */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1 snap-x snap-mandatory">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
         {loading
           ? Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="snap-start shrink-0 w-[160px] h-[170px] bg-gray-100 rounded-3xl animate-pulse" />
+            <div key={i} className="snap-start shrink-0 w-[140px] sm:w-[160px] animate-pulse">
+              <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-1.5" />
+              <div className="h-3.5 bg-gray-200 rounded w-3/4 mb-1" />
+              <div className="h-2.5 bg-gray-200 rounded w-1/2" />
+            </div>
           ))
           : bookings.map((b, i) => {
             const u = urgencyStyles[b.urgency];
@@ -771,41 +775,64 @@ const UpcomingBookingStrip = ({ navigate }) => {
             return (
               <motion.div
                 key={b.id}
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.06 }}
+                transition={{ delay: i * 0.05 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedBooking(b)}
-                className="snap-start shrink-0 w-[160px] cursor-pointer relative overflow-hidden rounded-3xl shadow-md border border-gray-100 bg-white group hover:shadow-lg transition-shadow"
+                className="snap-start shrink-0 w-[140px] sm:w-[160px] cursor-pointer flex flex-col bg-transparent border-0 shadow-none rounded-none"
               >
-                {/* Thumbnail */}
-                <div className="relative h-[80px] w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200">
+                {/* Compact Aspect-[4/3] Image Section */}
+                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100 mb-1.5">
                   {b.image ? (
-                    <img src={b.image} alt={b.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+                    <img
+                      src={b.image}
+                      alt={b.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl">{b.emoji}</div>
+                    <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-slate-100 to-slate-200">
+                      {b.emoji}
+                    </div>
                   )}
-                  {/* Due date pill */}
-                  <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${u.pill}`}>
-                    {b.isToday ? 'Today' : b.isTomorrow ? 'Tomorrow' : `${b.diffDays}d`}
+
+                  {/* Due date pill (Top-Right) */}
+                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider shadow-sm backdrop-blur-md ${u.pill}`}>
+                    {b.isToday ? 'Today' : b.isTomorrow ? 'Tomorrow' : `${b.diffDays}d left`}
                   </div>
-                  {/* urgency bar at bottom of image */}
-                  <div className={`absolute bottom-0 left-0 right-0 h-1 ${u.bar}`} />
+
+                  {/* Category Type Pill (Top-Left) */}
+                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-md text-white rounded-md text-[8px] font-bold flex items-center gap-0.5 shadow-sm">
+                    <span className="text-[9px]">{b.emoji}</span>
+                    <span className="text-[7.5px] font-black uppercase tracking-wider capitalize hidden xs:inline">{b.type}</span>
+                  </div>
+
+                  {/* Urgency accent bar */}
+                  <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${u.bar}`} />
                 </div>
 
-                {/* Info */}
-                <div className="p-3">
-                  <p className="text-[12px] font-black text-gray-900 leading-tight line-clamp-1 mb-1">{b.title}</p>
-                  <div className="flex items-center gap-1 mb-1.5">
-                    <span className="text-[9px] text-gray-400 font-bold">{b.dateStr.replace(/, \d{4}/, '')}</span>
-                    <span className="text-[9px] text-gray-300">·</span>
-                    <span className="text-[9px] text-gray-400 font-bold">{b.timeStr}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[8px] font-black uppercase tracking-wider ${sc}`}>
+                {/* Info section - Clean Compact Typography */}
+                <div className="flex flex-col">
+                  <p className="font-bold text-gray-900 truncate text-[12px] sm:text-[13px] leading-tight mb-0.5">
+                    {b.title}
+                  </p>
+                  
+                  <p className="text-gray-500 text-[10.5px] sm:text-[11px] truncate leading-tight">
+                    {b.dateStr.replace(/, \d{4}/, '')} · {b.timeStr}
+                  </p>
+                  
+                  <p className="text-gray-400 text-[9.5px] sm:text-[10px] truncate leading-tight mt-0.5">
+                    {b.address?.split(',')[0] || b.proName || 'Location'}
+                  </p>
+
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-bold text-gray-900 text-[11.5px] sm:text-[12px]">
+                      {b.price ? (typeof b.price === 'number' ? `R${b.price.toLocaleString()}` : `R${b.price}`) : 'Booked'}
+                    </span>
+                    <span className={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-50 ${sc}`}>
                       {b.status}
                     </span>
-                    <span className="text-[9px]">{b.emoji}</span>
                   </div>
                 </div>
               </motion.div>
@@ -1127,6 +1154,7 @@ function MobileAppHomepage({
   const [activeTab, setActiveTab] = useState('RecentAdded');
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [visibleCount, setVisibleCount] = useState(12);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
     setVisibleCount(12);
@@ -1332,6 +1360,8 @@ function MobileAppHomepage({
         setActiveTab={setActiveTab}
         activeSubcategory={activeSubcategory}
         setActiveSubcategory={setActiveSubcategory}
+        showAllCategories={showAllCategories}
+        setShowAllCategories={setShowAllCategories}
         currentCategoryObj={currentCategoryObj}
         getSubcategoryCount={getSubcategoryCount}
         featuredProperties={featuredProperties}
@@ -1367,20 +1397,6 @@ function MobileAppHomepage({
       `}</style>
 
       <main className="px-4 pt-2 pb-4 w-full">
-        {/* Top row: GPS location badge */}
-        <div className="flex items-center justify-between pb-2 pt-1">
-          <button
-            type="button"
-            onClick={onRequestLocation}
-            aria-label="Update your location"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-left text-slate-800 text-[11px] font-bold transition hover:bg-slate-100 focus:outline-none bg-slate-50 border-slate-200 shadow-2xs">
-            <FaMapMarkerAlt className={`shrink-0 text-xs ${geoLoading ? 'animate-bounce text-amber-500' : 'text-rose-500'}`} />
-            <span className="truncate">
-              {geoLoading ? 'Locating…' : geoError ? 'Location' : `Near ${locationLabel}`}
-            </span>
-          </button>
-        </div>
-
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
 
@@ -1389,11 +1405,12 @@ function MobileAppHomepage({
 
           {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
           <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3 mb-4 -mx-4 px-4 border-b border-gray-100/80 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] w-[calc(100%+2rem)]">
-            <div className="flex items-center gap-3.5 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
-              {tabs.map((tab) => {
+            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
+              {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
                   <motion.button
+                    layout
                     key={tab.id}
                     onClick={() => {
                       if (tab.route) {
@@ -1404,26 +1421,54 @@ function MobileAppHomepage({
                       setActiveSubcategory('all');
                     }}
                     whileTap={{ scale: 0.92 }}
-                    className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[66px] sm:min-w-[78px] py-1"
+                    className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[54px] sm:min-w-[62px] py-0.5"
                   >
                     <motion.div
-                      animate={isActive ? { scale: [1, 0.92, 1.08, 1] } : { scale: 1 }}
+                      animate={isActive ? { scale: [1, 0.92, 1.06, 1] } : { scale: 1 }}
                       transition={{ duration: 0.35, ease: 'easeInOut' }}
-                      className={`w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${isActive
-                          ? 'bg-slate-950 text-white shadow-xl shadow-slate-950/20 ring-2 ring-slate-950'
+                      className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${isActive
+                          ? 'bg-slate-950 text-white shadow-lg shadow-slate-950/20 ring-2 ring-slate-950'
                           : 'bg-slate-50 border border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 shadow-2xs'
                         }`}
                     >
-                      <span className="text-2xl sm:text-3xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
+                      <span className="text-xl sm:text-2xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
                     </motion.div>
-                    <span className={`text-[11px] sm:text-xs font-black uppercase tracking-wider mt-2 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
+                    <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
                       }`}>
                       {tab.label}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">{tab.desc}</span>
+                    <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">{tab.desc}</span>
                   </motion.button>
                 );
               })}
+
+              {/* Toggle 'See more categories' button */}
+              <motion.button
+                layout
+                onClick={() => setShowAllCategories(prev => !prev)}
+                whileTap={{ scale: 0.92 }}
+                className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[64px] sm:min-w-[72px] py-0.5"
+              >
+                <div className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 shadow-2xs ${
+                  showAllCategories
+                    ? 'bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200'
+                    : 'bg-rose-50 border border-rose-200/90 text-rose-600 hover:bg-rose-100'
+                }`}>
+                  {showAllCategories ? (
+                    <ChevronUp className="w-5 h-5 stroke-[2.5]" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 stroke-[2.5]" />
+                  )}
+                </div>
+                <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${
+                  showAllCategories ? 'text-slate-700' : 'text-rose-600'
+                }`}>
+                  {showAllCategories ? 'Hide icons' : 'See more'}
+                </span>
+                <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">
+                  {showAllCategories ? 'Collapse' : 'Categories'}
+                </span>
+              </motion.button>
             </div>
           </div>
 
@@ -1550,24 +1595,24 @@ function MobileAppHomepage({
 
       </main>
 
-      {/* Track Requests FAB */}
+      {/* loopOut Schedule FAB - Mobile */}
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsBookingsOpen(true)}
-        className="fixed bottom-24 right-4 z-[100] cursor-pointer"
+        className="fixed bottom-52 right-4 z-[100] cursor-pointer"
       >
-        <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-lg opacity-40 transition-opacity duration-300 shadow-xl" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full blur-md opacity-40" />
         <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
-          <CalendarDaysIcon className="w-8 h-8 text-blue-600" />
+          <CalendarDaysIcon className="w-5 h-5 text-blue-600" />
+          {requestCount > 0 && (
+            <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm z-10">
+              {requestCount}
+            </div>
+          )}
         </div>
-        {requestCount > 0 && (
-          <div className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm z-10">
-            {requestCount}
-          </div>
-        )}
       </motion.div>
 
       {/* Bookings Modal */}
@@ -1584,6 +1629,8 @@ function DesktopHomepage({
   setActiveTab,
   activeSubcategory,
   setActiveSubcategory,
+  showAllCategories,
+  setShowAllCategories,
   currentCategoryObj,
   getSubcategoryCount,
   featuredProperties,
@@ -1637,11 +1684,12 @@ function DesktopHomepage({
       {/* Sticky Elite Categories Bar */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide py-1">
-            {tabs.map((tab) => {
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
+            {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <motion.button
+                  layout
                   key={tab.id}
                   onClick={() => {
                     if (tab.route) {
@@ -1653,17 +1701,17 @@ function DesktopHomepage({
                   }}
                   whileTap={{ scale: 0.92 }}
                   whileHover={{ y: -2 }}
-                  className="shrink-0 flex items-center gap-3.5 px-3.5 py-2 rounded-2xl cursor-pointer focus:outline-none transition-all duration-200"
+                  className="shrink-0 flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200"
                 >
                   <motion.div
                     animate={isActive ? { scale: [1, 0.94, 1.06, 1] } : { scale: 1 }}
                     transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${isActive
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isActive
                         ? 'bg-slate-900 shadow-md ring-2 ring-slate-900 text-white'
                         : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
                       }`}
                   >
-                    <span className="text-2xl leading-none select-none">
+                    <span className="text-xl leading-none select-none">
                       {tab.emoji}
                     </span>
                   </motion.div>
@@ -1673,13 +1721,44 @@ function DesktopHomepage({
                       }`}>
                       {tab.label || tab.id}
                     </span>
-                    <span className="block text-[10px] text-gray-400 font-semibold mt-0.5 leading-tight">
+                    <span className="block text-[9.5px] text-gray-400 font-semibold mt-0.5 leading-tight">
                       {tab.desc}
                     </span>
                   </div>
                 </motion.button>
               );
             })}
+
+            {/* Toggle See more categories button */}
+            <motion.button
+              layout
+              onClick={() => setShowAllCategories(prev => !prev)}
+              whileTap={{ scale: 0.92 }}
+              whileHover={{ y: -2 }}
+              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200 border ${
+                showAllCategories
+                  ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
+                  : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-2xs'
+              }`}
+            >
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                showAllCategories ? 'bg-white text-slate-700' : 'bg-white text-rose-600'
+              } shadow-2xs`}>
+                {showAllCategories ? (
+                  <ChevronUp className="w-3.5 h-3.5" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5" />
+                )}
+              </div>
+              <div className="text-left">
+                <span className="block text-xs font-black uppercase tracking-wider leading-tight">
+                  {showAllCategories ? 'Hide categories' : 'See more categories'}
+                </span>
+                <span className="block text-[8.5px] opacity-70 font-semibold leading-tight">
+                  {showAllCategories ? 'Collapse' : `${tabs.length - 1} more`}
+                </span>
+              </div>
+            </motion.button>
           </div>
 
           {/* Premium Filter Button */}
@@ -1829,20 +1908,21 @@ function DesktopHomepage({
         </div>
       </main>
 
-      {/* Floating Bookings Tracker */}
+      {/* loopOut Schedule FAB - Desktop */}
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsBookingsOpen(true)}
-        className="fixed bottom-20 right-6 z-50 cursor-pointer"
+        className="fixed bottom-44 right-6 z-50 cursor-pointer"
       >
-        <div className="relative bg-white text-slate-950 p-4 rounded-full shadow-xl flex items-center justify-center border border-slate-200 hover:border-slate-400 hover:shadow-2xl transition-all">
-          <CalendarDaysIcon className="w-6 h-6 text-slate-700" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full blur-md opacity-30" />
+        <div className="relative bg-white text-slate-950 p-4 rounded-full shadow-xl flex items-center justify-center border border-slate-200 hover:border-blue-300 hover:shadow-2xl transition-all">
+          <CalendarDaysIcon className="w-5 h-5 text-blue-600" />
           {requestCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
+            <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
               {requestCount}
             </span>
           )}
