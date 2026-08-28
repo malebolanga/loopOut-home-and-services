@@ -38,37 +38,19 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules')) {
             const normalizedId = id.replace(/\\/g, '/');
-            if (
-              normalizedId.includes('/react/') ||
-              normalizedId.includes('/react-dom/') ||
-              normalizedId.includes('/scheduler/') ||
-              normalizedId.includes('/react-router/') ||
-              normalizedId.includes('/react-router-dom/') ||
-              normalizedId.includes('/@remix-run/') ||
-              normalizedId.includes('/react-redux/') ||
-              normalizedId.includes('/@reduxjs/') ||
-              normalizedId.includes('/redux/') ||
-              normalizedId.includes('/redux-persist/') ||
-              normalizedId.includes('/react-helmet-async/') ||
-              normalizedId.includes('/@headlessui/') ||
-              normalizedId.includes('/prop-types/')
-            ) {
-              return 'vendor-react';
-            }
-            if (
-              normalizedId.includes('swiper') ||
-              normalizedId.includes('framer-motion') ||
-              normalizedId.includes('leaflet')
-            ) {
-              return 'vendor-visuals';
-            }
-            if (normalizedId.includes('firebase') || normalizedId.includes('@firebase')) {
+            if (normalizedId.includes('/firebase/') || normalizedId.includes('/@firebase/')) {
               return 'vendor-firebase';
             }
+            if (normalizedId.includes('/jspdf/') || normalizedId.includes('/jspdf-autotable/')) {
+              return 'vendor-pdf';
+            }
+            if (normalizedId.includes('/leaflet/')) {
+              return 'vendor-leaflet';
+            }
             if (
-              normalizedId.includes('@heroicons') ||
-              normalizedId.includes('lucide-react') ||
-              normalizedId.includes('react-icons')
+              normalizedId.includes('/@heroicons/') ||
+              normalizedId.includes('/lucide-react/') ||
+              normalizedId.includes('/react-icons/')
             ) {
               return 'vendor-icons';
             }
