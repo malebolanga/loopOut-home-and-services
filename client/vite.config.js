@@ -37,20 +37,40 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('swiper') || id.includes('framer-motion') || id.includes('leaflet')) {
+            const normalizedId = id.replace(/\\/g, '/');
+            if (
+              normalizedId.includes('/react/') ||
+              normalizedId.includes('/react-dom/') ||
+              normalizedId.includes('/scheduler/') ||
+              normalizedId.includes('/react-router/') ||
+              normalizedId.includes('/react-router-dom/') ||
+              normalizedId.includes('/@remix-run/') ||
+              normalizedId.includes('/react-redux/') ||
+              normalizedId.includes('/@reduxjs/') ||
+              normalizedId.includes('/redux/') ||
+              normalizedId.includes('/redux-persist/') ||
+              normalizedId.includes('/react-helmet-async/') ||
+              normalizedId.includes('/@headlessui/') ||
+              normalizedId.includes('/prop-types/')
+            ) {
+              return 'vendor-react';
+            }
+            if (
+              normalizedId.includes('swiper') ||
+              normalizedId.includes('framer-motion') ||
+              normalizedId.includes('leaflet')
+            ) {
               return 'vendor-visuals';
             }
-            if (id.includes('firebase') || id.includes('@firebase')) {
+            if (normalizedId.includes('firebase') || normalizedId.includes('@firebase')) {
               return 'vendor-firebase';
             }
-            if (id.includes('@heroicons') || id.includes('lucide-react') || id.includes('react-icons')) {
+            if (
+              normalizedId.includes('@heroicons') ||
+              normalizedId.includes('lucide-react') ||
+              normalizedId.includes('react-icons')
+            ) {
               return 'vendor-icons';
-            }
-            if (id.includes('react-router-dom') || id.includes('@reduxjs/toolkit') || id.includes('react-redux') || id.includes('redux-persist')) {
-              return 'vendor-state';
-            }
-            if (id.includes('react-dom') || (id.includes('/react/') && !id.includes('react-'))) {
-              return 'vendor-react';
             }
             return 'vendor-core';
           }
