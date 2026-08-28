@@ -9,7 +9,7 @@ export const TOP_CATEGORIES = [
   {
     id: 'maid',
     name: 'Maid',
-    image: '/loopout_maid_celebration_banner_1778961389258.png',
+    image: '/loopout_maid_celebration.png',
     count: '1,890',
     color: 'from-purple-500 to-indigo-500'
   },

@@ -28,15 +28,15 @@ import {
   FaCheckCircle,
   FaBuilding
 } from "react-icons/fa";
-import { 
-  Phone,
-  ArrowBack,
-  LocationOn,
-  Favorite,
-  FavoriteBorder,
-  Share,
-  Report
-} from "@mui/icons-material";
+import {
+  MdPhone as Phone,
+  MdArrowBack as ArrowBack,
+  MdLocationOn as LocationOn,
+  MdFavorite as Favorite,
+  MdFavoriteBorder as FavoriteBorder,
+  MdShare as Share,
+  MdReport as Report
+} from "react-icons/md";
 import {
   BuildingOfficeIcon,
   ClockIcon,

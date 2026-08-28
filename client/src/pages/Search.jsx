@@ -447,7 +447,12 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md overflow-hidden border border-white/20 p-1">
-              <img src={item.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} className="w-full h-full object-cover rounded-[0.9rem]" alt="user" />
+              <ImageWithFallback
+                src={item.userRef?.avatar}
+                alt="user"
+                type="avatar"
+                className="w-full h-full rounded-[0.9rem]"
+              />
             </div>
             <div>
               <h4 className="text-[15px] font-black text-white leading-tight truncate max-w-[150px] drop-shadow-sm">{item.userRef?.username || "Neighbor"}</h4>

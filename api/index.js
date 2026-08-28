@@ -38,6 +38,7 @@ import sosRouter from './routes/sos.route.js';
 import aiRouter from './routes/ai.route.js';
 import lunchRouter from './routes/lunch.route.js';
 import uploadRouter from './routes/upload.route.js';
+import statsRouter from './routes/stats.route.js';
 import { initBookingScheduler } from './utils/bookingScheduler.js';
 
 import path from 'path';
@@ -249,6 +250,7 @@ app.use('/api/verification', verificationRouter);
 app.use('/api/sos', sosRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/sell', sellRouter);
+app.use('/api/stats', statsRouter);
 app.use('/api/lunch', lunchRouter);
 app.use('/api/uploads', uploadRouter);
 

@@ -37,14 +37,20 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('@mui') || id.includes('@emotion')) {
-              return 'vendor-mui';
-            }
             if (id.includes('swiper') || id.includes('framer-motion') || id.includes('leaflet')) {
               return 'vendor-visuals';
             }
             if (id.includes('firebase') || id.includes('@firebase')) {
               return 'vendor-firebase';
+            }
+            if (id.includes('@heroicons') || id.includes('lucide-react') || id.includes('react-icons')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('react-router-dom') || id.includes('@reduxjs/toolkit') || id.includes('react-redux') || id.includes('redux-persist')) {
+              return 'vendor-state';
+            }
+            if (id.includes('react-dom') || (id.includes('/react/') && !id.includes('react-'))) {
+              return 'vendor-react';
             }
             return 'vendor-core';
           }

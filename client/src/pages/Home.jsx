@@ -1397,6 +1397,8 @@ function MobileAppHomepage({
       `}</style>
 
       <main className="px-4 pt-2 pb-4 w-full">
+        {/* Hero banner intentionally hidden on mobile/small screens */}
+
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
 
@@ -1514,7 +1516,7 @@ function MobileAppHomepage({
           </div>
 
           {/* Listing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
             {filteredItems.slice(0, visibleCount).map((item, idx) => (
               <motion.div
                 key={item._id || idx}
@@ -1680,6 +1682,11 @@ function DesktopHomepage({
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
+
+      {/* ── HERO: brand intro, rotating campaigns ── */}
+      <div className="max-w-7xl mx-auto px-8 pt-6">
+        <HomeHero navigate={navigate} />
+      </div>
 
       {/* Sticky Elite Categories Bar */}
       <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">
