@@ -326,7 +326,7 @@ export default function HostDashboard() {
       fetchHostData();
     }, 60000); 
     return () => clearInterval(interval);
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const totalRevenue = bookings.reduce((sum, b) => (b.status === 'completed' || b.status === 'confirmed') ? sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0) : sum, 0);
   const totalHelperBookings = bookings.filter(b => b.helper).length;

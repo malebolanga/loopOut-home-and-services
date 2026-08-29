@@ -69,7 +69,7 @@ const UserProfile = () => {
     if (userData && currentUser) {
       setIsFollowing(userData.followers?.includes(currentUser._id));
     }
-  }, [userData, currentUser]);
+  }, [userData, currentUser?._id]);
 
   const handleFollow = async () => {
     if (!currentUser) {

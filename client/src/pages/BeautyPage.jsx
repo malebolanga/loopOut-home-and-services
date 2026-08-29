@@ -1224,7 +1224,7 @@ export default function BeautyPage() {
     if (helper && currentUser) {
       fetchStatuses();
     }
-  }, [helper, currentUser, id]);
+  }, [helper, currentUser?._id, id]);
 
   // Scroll detection for booking belt
   useEffect(() => {

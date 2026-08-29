@@ -919,7 +919,7 @@ export const UpcomingBookingsSection = ({ navigate }) => {
       }
     };
     load();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   if (!currentUser) return null;
   if (loading && bookings.length === 0) {

@@ -12,7 +12,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   LayoutGrid,
-  Search,
+  List,
   User,
   Calendar,
   Layers,
@@ -237,7 +237,7 @@ const WishList = () => {
     loadWishlist();
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const handleStorageChange = () => {
     loadWishlistFromLocal();
@@ -421,7 +421,7 @@ const WishList = () => {
               aria-label="List view"
               className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
             >
-              <Search className="w-5 h-5" />
+              <List className="w-5 h-5" />
             </button>
           </div>
         </div>

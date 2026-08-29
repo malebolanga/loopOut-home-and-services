@@ -132,6 +132,13 @@ const ProDashboard = () => {
         <div className="w-10" /> {/* Spacer for centering */}
       </div>
 
+      {/* Honesty banner — this view currently shows simulated demand data, not live bookings */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30">
+        <span className="text-[9px] font-black uppercase tracking-widest text-amber-300 bg-amber-950/60 border border-amber-500/30 px-3 py-1 rounded-full backdrop-blur-md">
+          Preview · Simulated Demand Data
+        </span>
+      </div>
+
       {/* Bottom Insights Dashboard */}
       <div className="absolute bottom-0 left-0 right-0 z-30 p-4 pb-8 bg-gradient-to-t from-gray-950 via-gray-950/90 to-transparent">
         <div className="max-w-md mx-auto">
@@ -160,7 +167,11 @@ const ProDashboard = () => {
             </div>
             
             <div className="mt-4 flex gap-3">
-              <button className="flex-1 py-3 bg-white text-gray-950 rounded-xl text-xs font-black uppercase tracking-widest active:scale-95 transition-all">
+              <button
+                disabled
+                title="Live navigation isn't available yet — this is a preview"
+                className="flex-1 py-3 bg-white/40 text-gray-500 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed"
+              >
                 Navigate to Zone
               </button>
               <button 

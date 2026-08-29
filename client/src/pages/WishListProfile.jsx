@@ -4,7 +4,7 @@ import ListingItem from "../components/ListingItem";
 import ServiceItem from "../components/ServiceItem";
 import HelperItem from "../components/HelperItem";
 import EventItem from "../components/EventItem";
-import { FaHeart, FaSpinner, FaTrashAlt } from 'react-icons/fa';
+import { Heart, Loader2, Trash2 } from 'lucide-react';
 import { getWishlistBackend, toggleWishlistBackend, clearWishlistBackend } from '../services/wishlist.service';
 import { setWishlistCount } from '../redux/frontendSlice';
 import "../styles/breakpoints.scss";
@@ -79,7 +79,7 @@ export default function WishList() {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const removeFromWishlist = async (itemId, itemType) => {
     try {
@@ -112,62 +112,32 @@ export default function WishList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center">
-          <div className="relative inline-block mb-6">
-            <div className="w-24 h-24 rounded-full bg-rose-50 flex items-center justify-center mx-auto">
-              <FaHeart className="text-rose-400 text-3xl animate-pulse" />
-            </div>
-            <div className="absolute -inset-2 border-4 border-rose-100 rounded-full animate-spin-slow opacity-70"></div>
-          </div>
-          
-          <h1 className="text-3xl font-bold text-gray-800 mb-3 font-sans">
-            Curating Your Wishlist
-          </h1>
-          
-          <div className="flex justify-center mb-6">
-            <FaSpinner className="animate-spin text-2xl text-rose-500" />
-          </div>
-          
-          <p className="text-gray-500 text-lg">
-            Gathering your favorite properties, services, and helpers...
-          </p>
-          
-          <div className="mt-8 w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="bg-rose-500 h-1.5 rounded-full animate-progress" 
-              style={{ width: '70%' }}
-            ></div>
-          </div>
+      <div className="py-16 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 text-rose-500 animate-spin mx-auto mb-3" />
+          <p className="text-gray-400 text-sm font-medium">Loading your wishlist…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Your Wishlist</h1>
-          <p className="text-gray-500 mt-1">
-            {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'}
-          </p>
-        </div>
-        {wishlist.length > 0 && (
+    <div>
+      {wishlist.length > 0 && (
+        <div className="mb-6 flex justify-end">
           <button
             onClick={handleClearAll}
             className="flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-semibold text-sm transition-all border border-rose-100"
           >
-            <FaTrashAlt className="text-xs" />
+            <Trash2 className="w-3.5 h-3.5" />
             Clear All
           </button>
-        )}
-      </div>
-      
+        </div>
+      )}
       {wishlist.length === 0 ? (
         <div className="text-center py-16 rounded-xl bg-white border border-gray-200">
           <div className="w-10 h-10 mx-auto mb-4 rounded-2xl flex items-center justify-center">
-            <FaHeart className="text-rose-300 text-4xl" />
+            <Heart className="w-10 h-10 text-rose-300" />
           </div>
           <h2 className="text-xl font-medium text-gray-700">No favorites yet</h2>
           <p className="text-gray-500 mt-2 max-w-md mx-auto">
@@ -200,9 +170,9 @@ export default function WishList() {
                 aria-label={`Remove ${item.type === 'listing' ? 'property' : item.type} from wishlist`}
               >
                 {removingId === item._id ? (
-                  <FaSpinner className="w-4 h-4 text-rose-500 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-rose-500 animate-spin" />
                 ) : (
-                  <FaHeart className="w-4 h-4 text-rose-600 group-hover:scale-110 transition-transform" />
+                  <Heart className="w-4 h-4 text-rose-600 fill-rose-600 group-hover:scale-110 transition-transform" />
                 )}
               </button>
             </div>

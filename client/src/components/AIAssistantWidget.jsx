@@ -79,7 +79,7 @@ export default function AIAssistantWidget() {
 
     window.addEventListener('open-loopbot', handleOpenLoopBot);
     return () => window.removeEventListener('open-loopbot', handleOpenLoopBot);
-  }, [currentUser]);
+  }, []);
 
   // Hide widget on full-screen AI page to avoid duplication
   if (location.pathname === '/ai-help-center' || location.pathname === '/loopbot') {

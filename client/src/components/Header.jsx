@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo, { BrandIcon } from './BrandLogo';
+import ImageWithFallback from './ImageWithFallback';
 import { motion, AnimatePresence } from 'framer-motion';
 import { authenticatedFetch, clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
@@ -73,7 +74,6 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
-import useLocationCoords from '../hooks/useGeolocation';
 import { Sparkles } from 'lucide-react';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
 
@@ -177,7 +177,6 @@ export default function Header() {
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
-  const { city: geoCity, loading: geoLoading, requestLocation } = useLocationCoords();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
 
@@ -301,7 +300,7 @@ export default function Header() {
       if (error.name === 'AbortError') return;
       console.error('Error fetching notifications:', error);
     }
-  }, [currentUser, playNotificationChime]);
+  }, [currentUser?._id, playNotificationChime]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -584,10 +583,11 @@ export default function Header() {
             onClick={() => handleNavigate('/profile')}
           >
             <div className="relative flex-shrink-0">
-               <img
+               <ImageWithFallback
                  src={currentUser.avatar}
-                 className="w-14 h-14 rounded-full object-cover border-2 border-rose-500 p-0.5"
+                 type="avatar"
                  alt="Profile"
+                 className="w-14 h-14 rounded-full border-2 border-rose-500 p-0.5"
                />
                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-black rounded-full" />
             </div>
@@ -631,13 +631,13 @@ export default function Header() {
   </button>
 </div>
 <div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
-  <a href="/terms" className="hover:text-rose-500 transition-colors">Terms</a>
+  <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
+  <Link to="/privacy" className="hover:text-rose-500 transition-colors">Privacy</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/contact" className="hover:text-rose-500 transition-colors">Contact</a>
+  <Link to="/contact" className="hover:text-rose-500 transition-colors">Contact</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <span>&copy; 2026</span>
+  <span>&copy; {new Date().getFullYear()}</span>
 </div>
         </>
       ) : (
@@ -651,13 +651,13 @@ export default function Header() {
             className="w-full py-4 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >Create Account</button>
           <div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
-  <a href="/terms" className="hover:text-rose-500 transition-colors">Terms</a>
+  <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/privacy" className="hover:text-rose-500 transition-colors">Privacy</a>
+  <Link to="/privacy" className="hover:text-rose-500 transition-colors">Privacy</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <a href="/contact" className="hover:text-rose-500 transition-colors">Contact</a>
+  <Link to="/contact" className="hover:text-rose-500 transition-colors">Contact</Link>
   <span className="mx-1.5 text-slate-300">&middot;</span>
-  <span>&copy; 2026</span>
+  <span>&copy; {new Date().getFullYear()}</span>
 </div>
         </div>
       )}
@@ -815,17 +815,14 @@ export default function Header() {
                   <span>{selectedCurrency}</span>
                 </button>
 
-                {/* Location Badge / Button */}
+                {/* LoopBot AI Header Pill */}
                 <button
-                  onClick={requestLocation}
-                  title={geoLoading ? 'Detecting location…' : geoCity ? `Location: ${geoCity}` : 'Find location'}
-                  aria-label="Location"
-                  className="relative px-2.5 sm:px-3 h-9 border border-slate-200 rounded-full flex items-center gap-1.5 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all text-slate-700 hover:text-rose-600 bg-white shadow-2xs"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot'))}
+                  aria-label="Open LoopBot AI"
+                  className="relative px-3 h-9 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white rounded-full flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg hover:scale-105 transition-all text-[11px] font-black uppercase tracking-wider"
                 >
-                  <MapPinIcon className={`w-3.5 h-3.5 stroke-[2.2px] shrink-0 ${geoLoading ? 'animate-bounce text-amber-500' : 'text-rose-500'}`} />
-                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-800 tracking-tight truncate max-w-[80px] sm:max-w-[120px]">
-                    {geoLoading ? 'Locating…' : geoCity || currentLocation || 'Location'}
-                  </span>
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">LoopBot</span>
                 </button>
 
                 {/* Home Icon - Desktop */}

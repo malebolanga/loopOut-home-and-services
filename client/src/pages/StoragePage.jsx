@@ -79,7 +79,7 @@ export default function StoragePage() {
 
   useEffect(() => {
     if (currentUser) { setName(currentUser.username || ''); setPhone(currentUser.phone || ''); }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   useEffect(() => {
     (async () => {

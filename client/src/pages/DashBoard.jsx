@@ -34,93 +34,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { FaWhatsapp } from 'react-icons/fa';
 import PropTypes from 'prop-types';
-
-// Mock data for demo
-const mockBookings = [
-  {
-    _id: '1',
-    type: 'listing',
-    itemId: 'prop1',
-    clientName: 'John Smith',
-    clientPhone: '0712345678',
-    date: '2024-12-20',
-    time: '14:00',
-    location: '123 Main St, Johannesburg',
-    specialRequirements: 'Need parking space',
-    totalAmount: 2500,
-    status: 'pending',
-    createdAt: '2024-01-15T10:30:00Z',
-    listingDetails: {
-      name: 'Modern Apartment in Sandton',
-      address: '123 Main St, Johannesburg',
-      type: 'rent',
-      regularPrice: 2500
-    }
-  },
-  {
-    _id: '2',
-    type: 'helper',
-    itemId: 'helper1',
-    clientName: 'Sarah Johnson',
-    clientPhone: '0823456789',
-    selectedServices: ['haircut', 'beardTrim'],
-    date: '2024-12-18',
-    time: '10:00',
-    location: 'Come to Client - 456 Oak Ave, Pretoria',
-    specialRequirements: 'Skin sensitivity to certain products',
-    totalAmount: 180,
-    status: 'confirmed',
-    createdAt: '2024-01-14T15:45:00Z',
-    helperDetails: {
-      name: 'Mike the Barber',
-      type: 'barber',
-      regularPrice: 150,
-      travelFee: 30,
-      address: '789 Barber St, Pretoria'
-    }
-  },
-  {
-    _id: '3',
-    type: 'helper',
-    itemId: 'helper2',
-    clientName: 'David Wilson',
-    clientPhone: '0834567890',
-    selectedServices: ['mealPrep'],
-    date: '2024-12-22',
-    time: '18:00',
-    location: "Chef's Kitchen",
-    specialRequirements: 'Vegetarian meals only',
-    totalAmount: 400,
-    status: 'pending',
-    createdAt: '2024-01-16T09:15:00Z',
-    helperDetails: {
-      name: 'Chef Maria',
-      type: 'chef',
-      regularPrice: 400,
-      address: '55 Food Court, Cape Town'
-    }
-  },
-  {
-    _id: '4',
-    type: 'listing',
-    itemId: 'prop2',
-    clientName: 'Emma Davis',
-    clientPhone: '0745678901',
-    date: '2024-12-25',
-    time: '16:00',
-    location: '78 Beach Road, Durban',
-    specialRequirements: 'Late check-in at 8 PM',
-    totalAmount: 1800,
-    status: 'completed',
-    createdAt: '2024-01-10T14:20:00Z',
-    listingDetails: {
-      name: 'Beachfront Villa',
-      address: '78 Beach Road, Durban',
-      type: 'over',
-      regularPrice: 1800
-    }
-  }
-];
+import ImageWithFallback from '../components/ImageWithFallback';
 
 const statusConfig = {
   pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending Approval' },
@@ -269,7 +183,7 @@ export default function DashBoard() {
     };
 
     if (currentUser?._id) fetchStats();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return { date: 'N/A', time: 'N/A' };
@@ -336,7 +250,7 @@ export default function DashBoard() {
             const itemTitle = itemObj?.name || b.listingDetails?.name || b.helperDetails?.name || b.serviceDetails?.name || b.eventDetails?.name || 'Booking Item';
             const reqName = requesterObj?.username || b.clientName || 'Guest User';
             const reqPhone = b.phone || requesterObj?.phone || b.clientPhone || 'N/A';
-            const reqAvatar = requesterObj?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+            const reqAvatar = requesterObj?.avatar || null;
 
             const hostName = typeof hostObj === 'object' ? (hostObj.username || hostObj.name) : 'Host Provider';
             const hostAvatar = typeof hostObj === 'object' ? hostObj.avatar : null;
@@ -379,7 +293,7 @@ export default function DashBoard() {
     };
 
     fetchBookings();
-  }, [currentUser, dashboardMode]);
+  }, [currentUser?._id, dashboardMode]);
 
   const fetchNotifications = async () => {
     if (!currentUser?._id) return;
@@ -401,7 +315,7 @@ export default function DashBoard() {
     return () => clearInterval(interval);
     // fetchNotifications uses the current user from this render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const markAllAsRead = async () => {
     try {
@@ -535,11 +449,11 @@ export default function DashBoard() {
   };
 
   const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
-      (booking.clientName?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (booking.clientPhone?.includes(searchTerm)) ||
-      (booking.listingDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (booking.helperDetails?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = !term ||
+      booking.requesterName?.toLowerCase().includes(term) ||
+      booking.requesterPhone?.includes(searchTerm) ||
+      booking.itemName?.toLowerCase().includes(term);
     
     const matchesFilter = filter === 'all' || booking.status === filter;
     
@@ -867,7 +781,7 @@ export default function DashBoard() {
                     {/* Requester Info */}
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl overflow-hidden border border-rose-200 shadow-sm flex-shrink-0 bg-white">
-                        <img src={booking.requesterAvatar} alt={booking.requesterName} className="w-full h-full object-cover" />
+                        <ImageWithFallback src={booking.requesterAvatar} alt={booking.requesterName} type="avatar" className="w-full h-full" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <span className="text-[8px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 inline-block mb-1">
@@ -882,7 +796,7 @@ export default function DashBoard() {
                     <div className="flex items-center gap-3 md:border-l md:border-slate-200 md:pl-4">
                       <div className="w-11 h-11 rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex-shrink-0 bg-slate-900 text-white flex items-center justify-center font-black text-sm">
                         {booking.ownerAvatar ? (
-                          <img src={booking.ownerAvatar} alt={booking.ownerName} className="w-full h-full object-cover" />
+                          <ImageWithFallback src={booking.ownerAvatar} alt={booking.ownerName} type="avatar" className="w-full h-full" />
                         ) : (
                           booking.ownerName?.charAt(0)?.toUpperCase() || 'H'
                         )}

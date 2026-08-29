@@ -1,5 +1,5 @@
-@import "./variables.scss";
-@import "./breakpoints.scss";
+@use "./variables" as *;
+@use "./breakpoints" as *;
 
 .navbar {
   padding: 10px 60px;

@@ -17,7 +17,7 @@ export default function Notifications() {
 
     const getToken = useCallback(() => {
         return localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.access_token || currentUser?.token || '';
-    }, [currentUser]);
+    }, [currentUser?._id]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -25,7 +25,7 @@ export default function Notifications() {
             return;
         }
         fetchNotifications();
-    }, [currentUser, navigate]);
+    }, [currentUser?._id, navigate]);
 
     useEffect(() => {
         const fetchBookingDetails = async () => {

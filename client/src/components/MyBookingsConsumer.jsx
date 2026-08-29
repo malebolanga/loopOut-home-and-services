@@ -304,7 +304,7 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
       }
     };
     fetchMyBookings();
-  }, [currentUser, isOpen]);
+  }, [currentUser?._id, isOpen]);
 
   const handleCancel = async (id) => {
     try {

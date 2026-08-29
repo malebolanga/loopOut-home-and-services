@@ -68,7 +68,7 @@ export default function HostEarnings() {
       }
     };
     if (currentUser?._id) fetchGlobalStats();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   useEffect(() => {
     const fetchEarningsData = async () => {
@@ -88,7 +88,7 @@ export default function HostEarnings() {
       }
     };
     fetchEarningsData();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const handleWithdrawal = async () => {
      const totalYield = bookings.reduce((sum, b) => b.status === 'completed' ? sum + (Number(b.totalAmount) || Number(b.totalPrice) || 0) : sum, 0);

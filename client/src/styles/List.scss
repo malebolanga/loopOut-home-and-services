@@ -1,5 +1,5 @@
-@import "./breakpoints.scss";
-@import "./variables.scss";
+@use "./breakpoints" as *;
+@use "./variables" as *;
 
 
 .title-list {

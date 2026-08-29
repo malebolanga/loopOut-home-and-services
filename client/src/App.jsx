@@ -151,7 +151,6 @@ const TripSearch = lazy(() => import('./pages/TripSearch'));
 const TripDetail = lazy(() => import('./pages/TripDetail'));
 const Trips = lazy(() => import('./pages/Trips'));
 const Trip = lazy(() => import('./pages/Trip'));
-const UpcomingBookings = lazy(() => import('./pages/UpcomingBookings'));
 
 const SmartSearchPage = lazy(() => import('./pages/SmartSearchPage'));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
@@ -190,10 +189,6 @@ const AnimatedRoutes = () => {
         {/* User Profile - Specific before dynamic */}
         <Route path="/user/:id" element={<PageTransition><UserProfile /></PageTransition>} />
         <Route path="/user-profile/:id" element={<PageTransition><UserProfile /></PageTransition>} />
-
-        {/* Upcoming Bookings Page */}
-        <Route path="/upcoming-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
-        <Route path="/upcoming" element={<PageTransition><UpcomingBookings /></PageTransition>} />
 
         {/* Specific Listing Routes */}
         <Route path="/list" element={<PageTransition><List /></PageTransition>} />
@@ -337,7 +332,6 @@ const ListingRedirect = () => {
   return null;
 };
 
-
 import OnboardingGuide from './components/OnboardingGuide';
 
 
@@ -375,9 +369,7 @@ function AppContent() {
     '/listing-home-page',
     '/helper-home-page',
     '/event-home-page',
-    '/service-home-page',
-    '/upcoming-bookings',
-    '/upcoming'
+    '/service-home-page'
   ];
 
   const specializedHelperPaths = [
@@ -388,12 +380,13 @@ function AppContent() {
   const isStoragePage = location.pathname.startsWith('/storage/');
   const isCreateListingPage = location.pathname.endsWith('/create-listing');
   const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage;
-  const hideFooter = hideFooterPaths.includes(location.pathname) || isSpecializedPage || isStoragePage;
+  // Footer carries required legal links (Privacy, Terms) — keep it reachable
+  // even on specialized detail pages, which only suppress the top Header.
+  const hideFooter = hideFooterPaths.includes(location.pathname) || isStoragePage;
   
   return (
     <>
       <OnboardingGuide />
-
       <AIAssistantWidget />
       <NeuralSplash />
       <CompareWidget />

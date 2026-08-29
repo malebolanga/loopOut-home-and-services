@@ -74,7 +74,7 @@ export default function Splitter() {
       }
     };
     fetchUserBookings();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Adjust splits when guests count, splitMethod, or price changes
   useEffect(() => {

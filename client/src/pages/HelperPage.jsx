@@ -1347,7 +1347,7 @@ export default function HelperPage() {
       }
     };
     fetchUserBookings();
-  }, [currentUser, helper]);
+  }, [currentUser?._id, helper]);
 
   const handleRatePerformerSubmit = async (e) => {
     e.preventDefault();
@@ -1436,7 +1436,7 @@ export default function HelperPage() {
     if (helper && currentUser) {
       fetchStatuses();
     }
-  }, [helper, currentUser, id]);
+  }, [helper, currentUser?._id, id]);
 
   // Scroll detection for booking belt
   useEffect(() => {

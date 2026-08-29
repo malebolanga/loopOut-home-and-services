@@ -1721,7 +1721,7 @@ export default function Listing() {
       fetchBookingSummary();
       saveToHistory(listing);
     }
-  }, [listing, currentUser]);
+  }, [listing, currentUser?._id]);
 
   const fetchBookingSummary = async () => {
     if (!currentUser) {

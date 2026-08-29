@@ -127,7 +127,7 @@ export default function List() {
       if (currentUser?._id) fetchListings();
     }, 800);
     return () => clearTimeout(timer);
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -723,7 +723,7 @@ export default function CreateListing() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Animation effect
   useEffect(() => {
@@ -789,7 +789,7 @@ export default function CreateListing() {
       setFoundHost(null);
       setMutualConnections([]);
     }
-  }, [listingForm.contact, currentUser]);
+  }, [listingForm.contact, currentUser?._id]);
 
   const handleNextStep = () => {
     setDirection('next');
@@ -1503,9 +1503,6 @@ export default function CreateListing() {
         storagePolicyDocUrl: selectedType === 'storage' ? listingForm.storagePolicyDocUrl : undefined,
       };
 
-      console.log("Submitting to:", endpoint);
-      console.log("Request body:", JSON.stringify(requestBody, null, 2));
-
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -1519,11 +1516,8 @@ export default function CreateListing() {
       let data;
       try {
         data = await res.json();
-        console.log("Response from server:", data);
       } catch (jsonError) {
-        console.error("Failed to parse JSON response:", jsonError);
-        const text = await res.text();
-        console.error("Raw response:", text);
+        console.error("Failed to parse listing creation response:", jsonError);
         throw new Error(`Server error: ${res.status} ${res.statusText}`);
       }
 
@@ -3609,7 +3603,7 @@ export default function CreateListing() {
         {/* Help Text */}
         <div className="mt-12 text-center">
           <p className="text-sm text-gray-500">
-            Having trouble? <button className="underline font-medium text-gray-900">Get help</button>
+            Having trouble? <button type="button" onClick={() => navigate('/help-center')} className="underline font-medium text-gray-900 hover:text-rose-600 transition-colors">Get help</button>
           </p>
         </div>
       </main>

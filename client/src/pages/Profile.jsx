@@ -109,8 +109,7 @@ import {
   ChartBarIcon, 
   GiftIcon, 
   WalletIcon,
-  CheckBadgeIcon,
-  ExclamationTriangleIcon
+  CheckBadgeIcon
 } from '@heroicons/react/24/outline';
 
 // Masterpiece Elite Color Palette
@@ -342,7 +341,7 @@ export default function Profile() {
       fetchUserEvents();
       fetchPostCount();
     }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const fetchUserEvents = async () => {
     try {
@@ -1132,12 +1131,6 @@ export default function Profile() {
                       onClick={() => navigate('/rewards')}
                       badge="NEW"
                     />
-                    <MenuItem
-                      icon={ExclamationTriangleIcon}
-                      label="Emergency Protocol"
-                      active={activeSection === "emergency"}
-                      onClick={() => setActiveSection("emergency")}
-                    />
                   </div>
                 </div>
 
@@ -1886,106 +1879,6 @@ export default function Profile() {
                 )}
               </SectionCard>
             )}
-
-            {/* Emergency Protocol Section */}
-            {activeSection === "emergency" && (
-              <SectionCard title="Emergency Protocol" icon={ExclamationTriangleIcon}>
-                <div className="max-w-2xl space-y-6">
-                  {/* SOS Banner */}
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 p-6 text-white shadow-xl shadow-red-200">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -z-10" />
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-white/20 rounded-xl shrink-0">
-                        <ExclamationTriangleIcon className="w-7 h-7" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-black text-lg uppercase tracking-widest mb-1">SOS Emergency</h4>
-                        <p className="text-white/80 text-sm mb-4">In immediate danger? Trigger a silent alert to your trusted contacts and local authorities.</p>
-                        <button
-                          onClick={() => alert('SOS alert sent to your trusted contacts!')}
-                          className="px-6 py-3 bg-white text-red-600 font-black uppercase text-xs tracking-widest rounded-xl hover:bg-red-50 transition-all active:scale-95 shadow-lg"
-                        >
-                          🚨 Trigger SOS Alert
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Emergency Contacts */}
-                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
-                    <h4 className="font-black text-sm uppercase tracking-widest text-gray-900 mb-4">Emergency Contacts</h4>
-                    <div className="space-y-3">
-                      {[
-                        { label: 'Police', number: '10111', icon: '🚔', color: 'text-blue-600 bg-blue-50' },
-                        { label: 'Ambulance', number: '10177', icon: '🚑', color: 'text-emerald-600 bg-emerald-50' },
-                        { label: 'Fire Brigade', number: '101', icon: '🚒', color: 'text-orange-600 bg-orange-50' },
-                        { label: 'LoopOut Support', number: '+27 (0) 800 100 200', icon: '🛡️', color: 'text-rose-600 bg-rose-50' },
-                      ].map((contact) => (
-                        <div key={contact.label} className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${contact.color}`}>
-                              {contact.icon}
-                            </div>
-                            <div>
-                              <p className="font-black text-xs uppercase tracking-widest text-gray-900">{contact.label}</p>
-                              <p className="text-xs text-gray-400 font-bold">{contact.number}</p>
-                            </div>
-                          </div>
-                          <a
-                            href={`tel:${contact.number.replace(/\s/g, '')}`}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-rose-50 hover:text-rose-600 rounded-lg text-xs font-black uppercase tracking-widest text-gray-600 transition-colors"
-                          >
-                            <PhoneIcon className="w-3.5 h-3.5" />
-                            Call
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Trusted Contacts */}
-                  <div className="p-6 bg-gray-50 rounded-2xl border border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-black text-sm uppercase tracking-widest text-gray-900">Trusted Contacts</h4>
-                      <button className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-rose-700 transition-colors">
-                        <PlusIcon className="w-3.5 h-3.5" />
-                        Add
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-4">
-                      People who will be notified in case of an SOS alert
-                    </p>
-                    <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-xl">
-                      <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                        <UserIcon className="w-6 h-6 text-gray-300" />
-                      </div>
-                      <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No trusted contacts yet</p>
-                      <p className="text-xs text-gray-300 mt-1">Add people you trust to notify in an emergency</p>
-                    </div>
-                  </div>
-
-                  {/* Safety Tips */}
-                  <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
-                    <h4 className="font-black text-sm uppercase tracking-widest text-gray-900 mb-4">🛡️ Safety Tips</h4>
-                    <ul className="space-y-2">
-                      {[
-                        'Always share your booking details with a trusted contact before meetups.',
-                        'Meet in public, well-lit areas for first-time interactions.',
-                        'Trust your instincts — if something feels off, leave immediately.',
-                        'Keep your phone charged and location services on during bookings.',
-                        'Never share your personal address before establishing trust.',
-                      ].map((tip, i) => (
-                        <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
-                          <span className="mt-0.5 text-rose-500 font-black shrink-0">✓</span>
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </SectionCard>
-            )}
-
           </div>
         </div>
       </div>

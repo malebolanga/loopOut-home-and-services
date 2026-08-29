@@ -120,7 +120,7 @@ export default function PropertyListings() {
       if (currentUser?._id) fetchListings();
     }, 800);
     return () => clearTimeout(timer);
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Sort listings based on selected option
   const sortedListings = [...userListings].sort((a, b) => {

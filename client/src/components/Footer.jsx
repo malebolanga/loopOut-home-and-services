@@ -19,7 +19,7 @@ const Footer = () => {
       const favorites = JSON.parse(localStorage.getItem(`favorites-${currentUser._id}`)) || [];
       setIsFavorite(favorites.length > 0);
     }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const handleProtectedClick = (e, path) => {
     if (!currentUser) {
@@ -67,15 +67,12 @@ const Footer = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Hide footer on specific detail pages
+  // Hide footer only on full-bleed profile layouts. Listing/helper/service/
+  // event detail pages keep the footer so Privacy/Terms links stay reachable.
   if (
     location.pathname === '/profile' ||
     location.pathname.startsWith('/user/') ||
-    location.pathname.startsWith('/user-profile/') ||
-    location.pathname.startsWith('/listing/') ||
-    location.pathname.startsWith('/helper/') ||
-    location.pathname.startsWith('/service/') ||
-    location.pathname.startsWith('/event/')
+    location.pathname.startsWith('/user-profile/')
   ) {
     return null;
   }

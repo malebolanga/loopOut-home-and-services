@@ -338,7 +338,7 @@ const ServicePage = () => {
       }
     };
     fetchUserBookings();
-  }, [currentUser, service]);
+  }, [currentUser?._id, service]);
 
   const handleRatePerformerSubmit = async (e) => {
     e.preventDefault();

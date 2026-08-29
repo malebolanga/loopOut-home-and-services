@@ -24,7 +24,7 @@ export default function SignIn() {
     }
     // Clear any previous sign in errors when mounting
     dispatch(signInFailure(null));
-  }, [currentUser, navigate, dispatch]);
+  }, [currentUser?._id, navigate, dispatch]);
 
   const handleChange = (e) => {
     if (error) dispatch(signInFailure(null));

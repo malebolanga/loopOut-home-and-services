@@ -94,7 +94,7 @@ export default function Planner() {
       }
     };
     fetchBookings();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   const handleAddTask = async (e) => {
     if (e) e.preventDefault();

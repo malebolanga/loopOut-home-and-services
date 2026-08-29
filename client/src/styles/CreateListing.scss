@@ -1,5 +1,5 @@
-@import "../styles/variables.scss";
-@import "../styles/breakpoints.scss";
+@use "../styles/variables" as *;
+@use "../styles/breakpoints" as *;
 
 .create-listing {
   background-color: $lightgrey;

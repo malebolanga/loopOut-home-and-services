@@ -40,7 +40,7 @@ export default function Trips() {
     if (currentUser) {
       fetchTrips();
     }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Format date nicely
   const formatDate = (dateString) => {

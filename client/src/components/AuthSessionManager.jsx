@@ -41,7 +41,7 @@ export default function AuthSessionManager() {
     }, 1000 * 60 * 60 * 4); // 4 hours
 
     return () => clearInterval(interval);
-  }, [currentUser, dispatch]);
+  }, [currentUser?._id, dispatch]);
 
   return null;
 }

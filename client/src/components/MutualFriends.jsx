@@ -25,7 +25,7 @@ export default function MutualFriends({ targetUserId, dark = false, detailed = f
             }
         };
         fetchMutuals();
-    }, [targetUserId, currentUser]);
+    }, [targetUserId, currentUser?._id]);
 
     if (!currentUser || mutuals.length === 0 || currentUser._id === targetUserId) return null;
 

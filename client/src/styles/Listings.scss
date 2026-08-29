@@ -1,5 +1,5 @@
-@import "./variables.scss";
-@import "./breakpoints.scss";
+@use "./variables" as *;
+@use "./breakpoints" as *;
 
 .category-list {
   padding: 50px 80px;

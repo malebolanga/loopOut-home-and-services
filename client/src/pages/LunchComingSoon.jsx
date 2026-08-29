@@ -347,7 +347,7 @@ export default function LunchComingSoon() {
       unsubscribeShops();
       unsubscribeOrders();
     };
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Sync default user details when available
   useEffect(() => {
@@ -362,7 +362,7 @@ export default function LunchComingSoon() {
         name: prev.name || currentUser.username || currentUser.name || ''
       }));
     }
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   // Selected active shop
   const currentShop = useMemo(() => {
@@ -397,7 +397,7 @@ export default function LunchComingSoon() {
     if (!currentUser) return [];
     const uid = currentUser._id || currentUser.id || 'guest';
     return shops.filter((s) => s.ownerId === uid);
-  }, [shops, currentUser]);
+  }, [shops, currentUser?._id]);
 
   // Whether the current user owns at least one shop
   const isShopOwner = myShops.length > 0;
@@ -411,13 +411,13 @@ export default function LunchComingSoon() {
   const myCustomerOrders = useMemo(() => {
     const uid = currentUser?._id || currentUser?.id;
     return orders.filter((o) => o.customerId === uid && o.status !== 'Completed');
-  }, [orders, currentUser]);
+  }, [orders, currentUser?._id]);
 
   // Completed orders for customer past history
   const myCompletedCustomerOrders = useMemo(() => {
     const uid = currentUser?._id || currentUser?.id;
     return orders.filter((o) => o.customerId === uid && o.status === 'Completed');
-  }, [orders, currentUser]);
+  }, [orders, currentUser?._id]);
 
   // All orders for the current dashboard shop (only owner's shop)
   const activeShopOrders = useMemo(() => {

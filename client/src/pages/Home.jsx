@@ -20,7 +20,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2 } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -719,7 +719,7 @@ const UpcomingBookingStrip = ({ navigate }) => {
     };
     fetch_();
     return () => controller.abort();
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   if (!currentUser || (!loading && bookings.length === 0)) return null;
 
@@ -1136,6 +1136,18 @@ function MobileAppHomepage({
   const [activeFeaturedTab, setActiveFeaturedTab] = useState('Properties');
   const locationLabel = geoCity || currentLocation || 'your area';
 
+  // Location toast: shown while resolving, then a few seconds after it
+  // resolves (success or error) before auto-dismissing.
+  const [showLocationToast, setShowLocationToast] = useState(true);
+  useEffect(() => {
+    if (geoLoading) {
+      setShowLocationToast(true);
+      return;
+    }
+    const timer = setTimeout(() => setShowLocationToast(false), 4000);
+    return () => clearTimeout(timer);
+  }, [geoLoading, geoCity, geoError]);
+
   useEffect(() => {
     const checkScreenSize = () => { setIsDesktop(window.innerWidth >= 1024); };
     checkScreenSize();
@@ -1399,6 +1411,37 @@ function MobileAppHomepage({
       <main className="px-4 pt-2 pb-4 w-full">
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
+        {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
+        <AnimatePresence>
+          {showLocationToast && (
+            <motion.button
+              initial={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto', marginBottom: 12 }}
+              exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={onRequestLocation}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden"
+            >
+              {geoLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />
+                  <span>Finding your location…</span>
+                </>
+              ) : geoCity ? (
+                <>
+                  <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span>Showing results near <span className="text-gray-900">{geoCity}</span></span>
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                  <span>{geoError ? 'Enable location for results near you' : 'Set your location'}</span>
+                </>
+              )}
+            </motion.button>
+          )}
+        </AnimatePresence>
+
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
 
@@ -1439,7 +1482,6 @@ function MobileAppHomepage({
                       }`}>
                       {tab.label}
                     </span>
-                    <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">{tab.desc}</span>
                   </motion.button>
                 );
               })}
@@ -1466,9 +1508,6 @@ function MobileAppHomepage({
                   showAllCategories ? 'text-slate-700' : 'text-rose-600'
                 }`}>
                   {showAllCategories ? 'Hide icons' : 'See more'}
-                </span>
-                <span className="text-[8.5px] sm:text-[9.5px] text-slate-400 font-semibold mt-0.5 leading-tight truncate w-full">
-                  {showAllCategories ? 'Collapse' : 'Categories'}
                 </span>
               </motion.button>
             </div>
@@ -1994,7 +2033,7 @@ const Home = () => {
       controller.abort();
       clearInterval(interval);
     };
-  }, [currentUser]);
+  }, [currentUser?._id]);
 
   useEffect(() => {
     const loadRecentlyViewed = () => {

@@ -61,7 +61,7 @@ export default function UserListings() {
     if (!currentUser) {
       navigate('/sign-in');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser?._id, navigate]);
 
   const fetchListings = async () => {
     setLoading(true);
@@ -142,7 +142,7 @@ export default function UserListings() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [currentUser]);
+  }, []);
 
   const filteredListings = selectedTypes.length > 0
     ? userListings.filter((l) => selectedTypes.includes(l.type) || selectedTypes.includes(l.category))
