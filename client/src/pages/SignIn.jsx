@@ -74,7 +74,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8">
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center p-4 sm:p-8">
       {/* Absolute Full-screen Video Background */}
       <div className="absolute inset-0 z-0 overflow-hidden bg-black">
         <video

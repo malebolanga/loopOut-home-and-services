@@ -337,6 +337,16 @@ import OnboardingGuide from './components/OnboardingGuide';
 
 function AppContent() {
   const location = useLocation();
+
+  // Safety net: some pages lock body scroll for galleries/overlays via a
+  // plain function call (not tied to a cleanup effect). If the user
+  // navigates away without explicitly closing that overlay, the lock never
+  // gets released and the whole app becomes stuck unscrollable. Resetting
+  // it on every route change guarantees it can never persist across pages.
+  useEffect(() => {
+    document.body.style.overflow = '';
+  }, [location.pathname]);
+
   const hideFooterPaths = [
     '/host-dashboard',
     '/pro',

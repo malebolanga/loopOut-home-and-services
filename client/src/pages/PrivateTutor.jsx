@@ -2653,11 +2653,11 @@ export default function PrivateTutor() {
                         modules={[FreeMode]}
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
-                        {topComments.map(comment => {
+                        {topComments.map((comment, commentIdx) => {
                           const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
                           
                           return (
-                          <SwiperSlide key={comment._id} className="h-auto">
+                          <SwiperSlide key={`${comment._id}-${commentIdx}`} className="h-auto">
                             <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
                               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                               <div className="relative z-10">
@@ -2849,10 +2849,10 @@ export default function PrivateTutor() {
                     </>
                   ) : (
                     bookingData.selectedServices.length > 0 ? (
-                      bookingData.selectedServices.map(id => {
+                      bookingData.selectedServices.map((id, serviceIdx) => {
                         const s = serviceOptions.find(opt => opt.id === id);
                         return s ? (
-                          <div key={id} className="flex justify-between items-center">
+                          <div key={`${id}-${serviceIdx}`} className="flex justify-between items-center">
                             <span className="text-xs font-bold text-gray-500">{s.name}</span>
                             <span className="text-xs font-black text-gray-950 dark:text-white">R{s.price}</span>
                           </div>
@@ -2916,8 +2916,8 @@ export default function PrivateTutor() {
                 Other professionals in the matrix
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {similarHelpers.map((item) => (
-                  <HelperItem key={item._id} helper={item} />
+                {similarHelpers.map((item, similarIdx) => (
+                  <HelperItem key={`${item._id}-${similarIdx}`} helper={item} />
                 ))}
               </div>
             </div>

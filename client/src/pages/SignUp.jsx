@@ -72,7 +72,7 @@ export default function SignUp() {
       }
     } catch (requestError) { setError(requestError.message); } finally { setResending(false); }
   };
-  return <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950">
+  return <div className="relative min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950">
     <div className="w-full max-w-[450px] bg-white/10 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20 text-white">
       <div className="mb-6 flex justify-center"><BrandLogo className="h-12 w-auto" showText textColor="text-white" /></div>
       {step === 1 && <><h1 className="text-2xl font-semibold text-center mb-2">Create your account</h1><p className="text-center text-gray-200 mb-6">Step 1 of 3 · Your sign-in details</p>
