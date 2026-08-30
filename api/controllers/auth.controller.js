@@ -17,7 +17,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
 const hashOtp = (otp) => crypto.createHash('sha256').update(String(otp)).digest('hex');
 const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
-const isStrongPassword = (password) => typeof password === 'string' && password.length >= 6;
+const isStrongPassword = (password) => typeof password === 'string' && password.length >= 8;
 
 const cookieOptions = () => ({
   httpOnly: true,
@@ -43,7 +43,6 @@ const sendVerificationCode = async (user, subject = 'Your LoopOut verification c
   await user.save();
   const text = `Your LoopOut verification code is: ${otp}. It expires in 10 minutes.`;
   const html = `<p>Use this code to verify your LoopOut account. It expires in <strong>10 minutes</strong>.</p><p style="font-size:28px;letter-spacing:6px"><strong>${otp}</strong></p>`;
-  
   try {
     const emailResult = await sendEmail(user.email, subject, text, html);
     if (!emailResult.success) console.warn(`Verification email delivery to ${user.email} failed: ${emailResult.error}`);
@@ -67,11 +66,10 @@ const firebaseAuth = async () => {
   return getAuth();
 };
 
-
 const validateSignup = ({ username, email, password, phone, location, acceptedTerms }) => {
   if (!/^[a-zA-Z0-9_]{3,30}$/.test(String(username || '').trim())) return 'Choose a username with 3–30 letters, numbers, or underscores.';
   if (!emailPattern.test(normalizeEmail(email))) return 'Enter a valid email address.';
-  if (!isStrongPassword(password)) return 'Use a password of at least 6 characters.';
+  if (!isStrongPassword(password)) return 'Use a password of at least 8 characters.';
   if (!String(phone || '').trim() || !String(location || '').trim()) return 'Phone number and location are required.';
   if (acceptedTerms !== true) return 'You must accept the Terms of Service and Privacy Policy.';
   return null;
@@ -101,7 +99,7 @@ export const signup = async (req, res, next) => {
       termsAcceptedAt: new Date(),
       privacyAcceptedAt: new Date(),
     };
-    
+
     let user;
     if (existingEmail) {
       Object.assign(existingEmail, updates);
@@ -164,36 +162,21 @@ export const google = async (req, res, next) => {
 };
 
 export const signOut = async (req, res) => {
-  res.clearCookie('access_token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/'
-  });
+  res.clearCookie('access_token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' });
   return res.status(200).json({ success: true, message: 'Signed out successfully' });
 };
 
 export const validateToken = async (req, res, next) => {
   try {
     let token = req.cookies.access_token;
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-    if (!token || token === 'null' || token === 'undefined') {
-      return res.status(200).json({ valid: false });
-    }
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) token = req.headers.authorization.split(' ')[1];
+    if (!token || token === 'null' || token === 'undefined') return res.status(200).json({ valid: false });
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password -otp');
     if (!user || !user.isVerified) return res.status(200).json({ valid: false });
-    // Renew both the cookie and bearer token while the session is valid.
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
     const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
-    return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({
-      valid: true,
-      user: safeUser,
-      token: refreshedToken,
-      access_token: refreshedToken,
-    });
+    return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({ valid: true, user: safeUser, token: refreshedToken, access_token: refreshedToken });
   } catch (error) { return res.status(200).json({ valid: false }); }
 };
 
@@ -229,7 +212,7 @@ export const resetPassword = async (req, res, next) => {
     const email = normalizeEmail(req.body.email);
     const otp = String(req.body.otp || '').trim();
     const password = req.body.password;
-    if (!emailPattern.test(email) || !/^\d{6}$/.test(otp) || !isStrongPassword(password)) return next(errorHandler(400, 'Enter a valid email, six-digit code, and a strong password.'));
+    if (!emailPattern.test(email) || !/^\d{6}$/.test(otp) || !isStrongPassword(password)) return next(errorHandler(400, 'Enter a valid email, six-digit code, and a password of at least 8 characters.'));
     const user = await User.findOne({ email });
     if (!user || user.otpPurpose !== 'reset' || !user.otp || !user.otpExpiry || Date.now() > user.otpExpiry.getTime() || (user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS || hashOtp(otp) !== user.otp) {
       if (user?.otp && user.otpPurpose === 'reset') { user.otpAttempts = (user.otpAttempts || 0) + 1; await user.save(); }
@@ -244,17 +227,12 @@ export const resendOtp = async (req, res, next) => {
   try {
     const email = normalizeEmail(req.body.email);
     const user = emailPattern.test(email) ? await User.findOne({ email }) : null;
-    // The response stays generic so this endpoint cannot reveal registered accounts.
     if (!user || user.isVerified) return res.status(200).json({ success: true, message: 'If an unverified account exists, a code has been sent.' });
     const createdAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
     if (Date.now() - createdAt < OTP_RESEND_COOLDOWN_MS) return next(errorHandler(429, 'Please wait a minute before requesting another code.'));
     const delivery = await sendVerificationCode(user, 'Your new LoopOut verification code');
     if (!delivery.success) console.error(`Resend verification email to ${email} failed to send.`);
     const isDev = process.env.NODE_ENV !== 'production';
-    return res.status(200).json({
-      success: true,
-      message: 'If an unverified account exists, a code has been sent.',
-      ...(isDev ? { devCode: delivery.otp } : {})
-    });
+    return res.status(200).json({ success: true, message: 'If an unverified account exists, a code has been sent.', ...(isDev ? { devCode: delivery.otp } : {}) });
   } catch (error) { return next(error); }
 };
