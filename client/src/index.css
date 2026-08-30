@@ -5,29 +5,117 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    @apply bg-slate-50 text-[#222222] transition-colors duration-300;
-}
-
-html {
-    @apply bg-slate-50;
-}
-
-.dark body,
-html.dark body {
-    @apply bg-gray-950 text-gray-100;
+:root {
+    color-scheme: light;
+    --app-bg: #f8fafc;
+    --app-surface: #ffffff;
+    --app-surface-muted: #f8fafc;
+    --app-surface-hover: #f1f5f9;
+    --app-text: #222222;
+    --app-text-muted: #64748b;
+    --app-border: #e5e7eb;
+    --app-input: #f8fafc;
 }
 
 html.dark {
-    @apply bg-gray-950;
+    color-scheme: dark;
+    --app-bg: #030712;
+    --app-surface: #111827;
+    --app-surface-muted: #1f2937;
+    --app-surface-hover: #374151;
+    --app-text: #f9fafb;
+    --app-text-muted: #9ca3af;
+    --app-border: #374151;
+    --app-input: #111827;
+}
+
+html,
+body,
+#root {
+    min-height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--app-bg);
+    color: var(--app-text);
+    transition: background-color 300ms ease, color 300ms ease;
+}
+
+html {
+    background-color: var(--app-bg);
+    transition: background-color 300ms ease, color 300ms ease;
+}
+
+/* Global dark-mode compatibility layer.
+   Many pages use Tailwind's light-only utility classes. These overrides make
+   the existing application theme-aware without requiring every page to be
+   rewritten individually. Explicit dark:* classes still take precedence in
+   the browser where they are more specific. */
+html.dark .bg-white { background-color: var(--app-surface); }
+html.dark .bg-gray-50,
+html.dark .bg-slate-50,
+html.dark .bg-gray-50\/50 { background-color: var(--app-surface-muted); }
+html.dark .bg-gray-100 { background-color: #1f2937; }
+html.dark .bg-gray-200 { background-color: #374151; }
+html.dark .bg-gray-300 { background-color: #4b5563; }
+html.dark .bg-gray-900 { background-color: #111827; }
+html.dark .bg-gray-950 { background-color: #030712; }
+html.dark .bg-black { background-color: #000000; }
+
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-gray-700 { color: var(--app-text); }
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-gray-400 { color: var(--app-text-muted); }
+html.dark .text-black { color: #ffffff; }
+
+html.dark .border-gray-50,
+html.dark .border-gray-100,
+html.dark .border-gray-150,
+html.dark .border-gray-200,
+html.dark .border-gray-300 { border-color: var(--app-border); }
+
+html.dark input:not([type='checkbox']):not([type='radio']),
+html.dark textarea,
+html.dark select {
+    background-color: var(--app-input);
+    color: var(--app-text);
+    border-color: var(--app-border);
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #6b7280; }
+
+html.dark option {
+    background-color: var(--app-surface);
+    color: var(--app-text);
+}
+
+html.dark .hover\:bg-gray-50:hover { background-color: var(--app-surface-hover); }
+html.dark .hover\:bg-gray-100:hover { background-color: #374151; }
+html.dark .hover\:bg-white:hover { background-color: #1f2937; }
+
+/* Common card/shadow treatment */
+html.dark .shadow-sm,
+html.dark .shadow,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+    --tw-shadow-color: rgba(0, 0, 0, 0.35);
 }
 
 /* Glassmorphism */
 .glass {
-    @apply bg-white/70 backdrop-blur-xl border border-white/40;
+    background: color-mix(in srgb, var(--app-surface) 78%, transparent);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid color-mix(in srgb, var(--app-border) 70%, transparent);
 }
 
 .glass-dark {
@@ -56,18 +144,14 @@ html.dark {
     100% { transform: translateY(0px) rotate(0deg); }
 }
 
-.animate-float {
-    animation: float 6s ease-in-out infinite;
-}
+.animate-float { animation: float 6s ease-in-out infinite; }
 
 @keyframes pulse-slow {
     0%, 100% { opacity: 0.3; transform: scale(1); }
     50% { opacity: 0.6; transform: scale(1.1); }
 }
 
-.animate-pulse-slow {
-    animation: pulse-slow 10s ease-in-out infinite;
-}
+.animate-pulse-slow { animation: pulse-slow 10s ease-in-out infinite; }
 
 @keyframes blob {
     0% { transform: translate(0px, 0px) scale(1); }
@@ -76,89 +160,38 @@ html.dark {
     100% { transform: translate(0px, 0px) scale(1); }
 }
 
-.animate-blob {
-    animation: blob 7s infinite;
-}
+.animate-blob { animation: blob 7s infinite; }
 
 @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
 }
 
-.animate-shimmer {
-    animation: shimmer 2s infinite;
-}
+.animate-shimmer { animation: shimmer 2s infinite; }
+.animation-delay-2000 { animation-delay: 2s; }
+.animation-delay-4000 { animation-delay: 4s; }
 
-.animation-delay-2000 {
-    animation-delay: 2s;
-}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.side-panel-transition { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
+.perspective-1000 { perspective: 1000px; }
+.backface-hidden { backface-visibility: hidden; }
 
-.animation-delay-4000 {
-    animation-delay: 4s;
-}
-
-/* Custom Utilities */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-.side-panel-transition {
-    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-}
-
-.perspective-1000 {
-    perspective: 1000px;
-}
-
-.backface-hidden {
-    backface-visibility: hidden;
-}
-
-/* Premium Button Effect */
-.btn-premium {
-    @apply relative overflow-hidden transition-all duration-300 active:scale-95;
-}
-
+.btn-premium { @apply relative overflow-hidden transition-all duration-300 active:scale-95; }
 .btn-premium::before {
     content: '';
     @apply absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full;
     transition: transform 0.6s ease-in-out;
 }
+.btn-premium:hover::before { @apply translate-x-full; }
 
-.btn-premium:hover::before {
-    @apply translate-x-full;
-}
+.elite-image-container { @apply relative overflow-hidden rounded-[2.5rem] transition-all duration-700 ease-out; }
+.elite-image-container:hover { @apply shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] -translate-y-2; }
+.elite-image { @apply w-full h-full object-cover transition-all duration-[800ms] ease-out; filter: brightness(1) contrast(1) saturate(1); }
+.elite-image:hover { @apply scale-110 shadow-2xl; filter: brightness(1.05) contrast(1.1) saturate(1.1); }
+.elite-image-container:hover .elite-image { @apply scale-110; filter: brightness(1.05) contrast(1.1) saturate(1.1); }
 
-/* Elite 3D Image Protocol */
-.elite-image-container {
-    @apply relative overflow-hidden rounded-[2.5rem] transition-all duration-700 ease-out;
-}
+.text-gradient { @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500; }
 
-.elite-image-container:hover {
-    @apply shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] -translate-y-2;
-}
-
-.elite-image {
-    @apply w-full h-full object-cover transition-all duration-[800ms] ease-out;
-    filter: brightness(1) contrast(1) saturate(1);
-}
-
-.elite-image:hover {
-    @apply scale-110 shadow-2xl;
-    filter: brightness(1.05) contrast(1.1) saturate(1.1);
-}
-
-.elite-image-container:hover .elite-image {
-    @apply scale-110;
-    filter: brightness(1.05) contrast(1.1) saturate(1.1);
-}
-
-/* Gradient Text */
-.text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500;
-}
+/* Prevent the browser from flashing a white page while the theme is loading. */
+::selection { background: rgba(244, 63, 94, 0.25); }
