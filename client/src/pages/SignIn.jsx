@@ -2,11 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaSpinner } from 'react-icons/fa';
-import {
-  signInStart,
-  signInSuccess,
-  signInFailure
-} from '../redux/user/userSlice';
+import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice';
 import OAuth from '../components/OAuth';
 import BrandLogo from '../components/BrandLogo';
 import { persistSessionToken } from '../utils/authenticatedFetch';
@@ -17,21 +13,14 @@ export default function SignIn() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // If already signed in, redirect to home
   useEffect(() => {
-    if (currentUser) {
-      navigate('/', { replace: true });
-    }
-    // Clear any previous sign in errors when mounting
+    if (currentUser) navigate('/', { replace: true });
     dispatch(signInFailure(null));
   }, [currentUser?._id, navigate, dispatch]);
 
   const handleChange = (e) => {
     if (error) dispatch(signInFailure(null));
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
+    setFormData((previous) => ({ ...previous, [e.target.id]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
@@ -40,15 +29,11 @@ export default function SignIn() {
       dispatch(signInStart());
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         if (data.requiresVerification) {
           navigate('/sign-up', { state: { email: formData.email, verify: true } });
@@ -56,16 +41,11 @@ export default function SignIn() {
         }
         throw new Error(data.message || 'Failed to sign in. Please check your email and password.');
       }
-
       if (data.success === false) {
         dispatch(signInFailure(data.message));
         return;
       }
-
-      if (data.token || data.access_token) {
-        persistSessionToken(data);
-      }
-
+      if (data.token || data.access_token) persistSessionToken(data);
       dispatch(signInSuccess(data));
       navigate('/');
     } catch (err) {
@@ -74,28 +54,20 @@ export default function SignIn() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center p-4 sm:p-8">
-      {/* Absolute Full-screen Video Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden bg-black">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-90"
-        >
+    <div className="signin-page">
+      <div className="signin-background" aria-hidden="true">
+        <video autoPlay loop muted playsInline preload="metadata">
           <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       </div>
 
-      <div className="w-full max-w-[420px] relative z-10 bg-white/10 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 text-white animate-fade-in">
-        {/* Brand Logo */}
-        <div className="mb-8 flex flex-col items-center">
+      <div className="signin-card bg-white/10 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] border border-white/20 text-white animate-fade-in">
+        <div className="signin-logo mb-8 flex flex-col items-center">
           <BrandLogo className="h-16 w-auto" showText={true} textColor="text-white" />
         </div>
 
-        <h2 className="text-[22px] font-semibold text-white mb-8 text-center border-t border-white/10 pt-8 drop-shadow-sm">
+        <h2 className="signin-heading text-[22px] font-semibold text-white mb-8 text-center border-t border-white/10 pt-8 drop-shadow-sm">
           Welcome back
         </h2>
 
@@ -105,7 +77,7 @@ export default function SignIn() {
             <input
               type="email"
               placeholder="Email address"
-              className="w-full px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[16px] text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-white/20 focus:ring-1 focus:ring-white transition-all duration-200"
+              className="w-full min-w-0 px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[16px] text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-white/20 focus:ring-1 focus:ring-white transition-all duration-200"
               id="email"
               onChange={handleChange}
               value={formData.email}
@@ -114,13 +86,12 @@ export default function SignIn() {
             />
           </div>
 
-          {/* Password Input */}
           <div className="relative">
             <label htmlFor="password" className="sr-only">Password</label>
             <input
               type="password"
               placeholder="Password"
-              className="w-full px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[16px] text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-white/20 focus:ring-1 focus:ring-white transition-all duration-200"
+              className="w-full min-w-0 px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-[16px] text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-white/20 focus:ring-1 focus:ring-white transition-all duration-200"
               id="password"
               onChange={handleChange}
               value={formData.password}
@@ -128,9 +99,10 @@ export default function SignIn() {
               required
             />
           </div>
-          <p className="text-right text-sm"><Link to="/forgot-password" className="text-white underline">Forgot password?</Link></p>
+          <p className="text-right text-sm">
+            <Link to="/forgot-password" className="text-white underline">Forgot password?</Link>
+          </p>
 
-          {/* Sign In Button */}
           <button
             type="submit"
             disabled={loading}
@@ -151,16 +123,17 @@ export default function SignIn() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-gray-200" style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '12px' }}>or</span>
+              <span className="px-4 text-gray-200" style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '12px' }}>
+                or
+              </span>
             </div>
           </div>
 
           <div className="[&>button]:rounded-xl [&>button]:py-3.5">
-              <OAuth />
+            <OAuth />
           </div>
         </form>
 
-        {/* Sign Up Link */}
         <div className="mt-8 text-center drop-shadow-sm">
           <p className="text-gray-200 text-[15px]">
             Don't have an account?{' '}
@@ -170,7 +143,6 @@ export default function SignIn() {
           </p>
         </div>
 
-        {/* Error Message */}
         <div className="mt-6">
           {error && (
             <div className="p-4 bg-red-500/20 backdrop-blur-md border border-red-500/50 rounded-xl animate-fade-in shadow-lg">

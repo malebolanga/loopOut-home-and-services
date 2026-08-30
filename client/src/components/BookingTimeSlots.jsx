@@ -10,7 +10,7 @@ const DEFAULT_SLOTS = [
 /**
  * BookingTimeSlots Component
  * Displays available and booked/occupied time slots for a given date.
- * Booked slots are grayed out, crossed out, and disabled to prevent duplicate bookings.
+ * Designed to remain compact and usable on small mobile screens.
  */
 export default function BookingTimeSlots({
   selectedDate,
@@ -35,35 +35,32 @@ export default function BookingTimeSlots({
   const isSelectedTimeTaken = selectedTime && isTimeSlotBooked ? isTimeSlotBooked(selectedDate, selectedTime) : false;
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <div className="flex items-center justify-between">
-        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-rose-500" />
-          {label}
+    <div className={`space-y-3 min-w-0 ${className}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2 min-w-0">
+        <label className="text-[10px] font-black text-gray-900 uppercase tracking-widest flex items-center gap-1.5 min-w-0">
+          <Clock className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+          <span className="truncate">{label}</span>
         </label>
-        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider shrink-0">
           {selectedDate}
         </span>
       </div>
 
-      {/* Date Fully Booked Alert */}
       {isFull && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-center gap-2.5 text-rose-700 text-xs font-bold animate-fadeIn">
-          <Ban className="w-4 h-4 shrink-0 text-rose-600" />
-          <span>⚠️ This date is not available (fully booked). Please select another date.</span>
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-700 text-xs font-bold animate-fadeIn">
+          <Ban className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+          <span className="min-w-0 break-words">This date is not available (fully booked). Please select another date.</span>
         </div>
       )}
 
-      {/* Selected Time Taken Alert */}
       {isSelectedTimeTaken && !isFull && (
-        <div className="p-3 bg-amber-50 border border-amber-300 rounded-2xl flex items-center gap-2.5 text-amber-800 text-xs font-bold animate-fadeIn">
-          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-          <span>⚠️ This time is not available (already booked). Please choose an open slot below.</span>
+        <div className="p-3 bg-amber-50 border border-amber-300 rounded-2xl flex items-start gap-2.5 text-amber-800 text-xs font-bold animate-fadeIn">
+          <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+          <span className="min-w-0 break-words">This time is not available. Please choose an open slot below.</span>
         </div>
       )}
 
-      {/* Time Slots Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 min-[390px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 min-w-0">
         {customSlots.map((slot) => {
           const booked = isTimeSlotBooked ? isTimeSlotBooked(selectedDate, slot) : false;
           const isSelected = selectedTime === slot;
@@ -73,7 +70,7 @@ export default function BookingTimeSlots({
               <div
                 key={slot}
                 title="This time slot is already booked and occupied"
-                className="relative py-2.5 px-2 rounded-xl bg-gray-100/90 border border-dashed border-gray-300 text-gray-400 opacity-50 cursor-not-allowed select-none text-center flex flex-col items-center justify-center transition-all"
+                className="relative min-w-0 min-h-12 py-2 px-1.5 rounded-xl bg-gray-100/90 border border-dashed border-gray-300 text-gray-400 opacity-60 cursor-not-allowed select-none text-center flex flex-col items-center justify-center transition-all"
               >
                 <span className="text-xs font-black line-through tracking-tight">{slot}</span>
                 <span className="text-[8px] font-bold uppercase tracking-wider text-rose-500 mt-0.5">Booked</span>
@@ -86,7 +83,8 @@ export default function BookingTimeSlots({
               key={slot}
               type="button"
               onClick={() => onSelectTime && onSelectTime(slot)}
-              className={`py-2.5 px-2 rounded-xl text-center font-bold text-xs transition-all duration-200 flex flex-col items-center justify-center border active:scale-95 ${
+              aria-pressed={isSelected}
+              className={`min-w-0 min-h-12 py-2 px-1.5 rounded-xl text-center font-bold text-xs transition-all duration-200 flex flex-col items-center justify-center border active:scale-95 ${
                 isSelected
                   ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/20 font-black'
                   : 'bg-white text-gray-800 border-gray-200 hover:border-gray-900 hover:bg-gray-50 shadow-sm'
@@ -101,20 +99,19 @@ export default function BookingTimeSlots({
         })}
       </div>
 
-      {/* Legend & Summary */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-[9px] font-bold text-gray-400 uppercase tracking-wider">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-[9px] font-bold text-gray-400 uppercase tracking-wider min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             <span>Available</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-gray-300" />
-            <span>Booked / Occupied</span>
+            <span>Booked</span>
           </div>
         </div>
         {selectedTime && (
-          <div className="text-gray-700 font-black">
+          <div className="text-gray-700 font-black ml-auto">
             Selected: <span className={isSelectedTimeTaken ? 'text-rose-600 line-through' : 'text-emerald-600'}>{selectedTime}</span>
           </div>
         )}

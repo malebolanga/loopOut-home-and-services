@@ -71,6 +71,19 @@ const OnboardingGuide = () => {
     setIsVisible(false);
   };
 
+  // Let users escape the tour intuitively — clicking the backdrop or
+  // pressing Escape are both standard, expected ways to dismiss a modal.
+  // Without these, a user who doesn't spot the small X button could
+  // reasonably think the whole app had frozen.
+  useEffect(() => {
+    if (!isVisible) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isVisible]);
+
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
@@ -92,12 +105,14 @@ const OnboardingGuide = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={handleClose}
           className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-xl"
         >
           <motion.div 
             initial={{ scale: 0.9, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, y: 20, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-4xl bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[80vh] md:h-[600px]"
           >
             {/* Image Side */}
