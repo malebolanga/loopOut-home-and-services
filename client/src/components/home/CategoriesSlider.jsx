@@ -1,34 +1,32 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { FreshaCategoryCard } from './FreshaCategoryCard';
 
-export const CategoriesSlider = ({ navigate, TOP_CATEGORIES }) => {
+export const CategoriesSlider = ({ navigate, TOP_CATEGORIES = [] }) => {
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   const checkScroll = () => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-    }
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
   };
 
   useEffect(() => {
-    const scrollEl = scrollRef.current;
-    if (scrollEl) {
-      scrollEl.addEventListener('scroll', checkScroll);
-      checkScroll();
-      return () => scrollEl.removeEventListener('scroll', checkScroll);
-    }
-  }, []);
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [TOP_CATEGORIES.length]);
 
   const scroll = (direction) => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -400 : 400;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
+    scrollRef.current?.scrollBy({ left: direction === 'left' ? -320 : 320, behavior: 'smooth' });
   };
 
   const handleCategoryClick = (category) => {
@@ -36,60 +34,32 @@ export const CategoriesSlider = ({ navigate, TOP_CATEGORIES }) => {
     const services = ['baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare', 'storage'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
-
-    if (needs.includes(category.id)) {
-      navigate('/looking-for');
-    } else if (helpers.includes(category.id)) {
-      navigate(`/search?category=${category.id}&type=helpers`);
-    } else if (services.includes(category.id)) {
-      navigate(`/search?category=${category.id}&type=services`);
-    } else if (properties.includes(category.id)) {
-      navigate(`/search?category=${category.id}&type=properties`);
-    } else {
-      navigate(`/search?category=${category.id}`);
-    }
+    if (needs.includes(category.id)) navigate('/looking-for');
+    else if (helpers.includes(category.id)) navigate(`/search?category=${category.id}&type=helpers`);
+    else if (services.includes(category.id)) navigate(`/search?category=${category.id}&type=services`);
+    else if (properties.includes(category.id)) navigate(`/search?category=${category.id}&type=properties`);
+    else navigate(`/search?category=${category.id}`);
   };
 
   return (
-    <section className="mb-12 relative">
-      <div className="flex justify-between items-end mb-6">
+    <section aria-label="Popular LoopOut categories" className="mb-10">
+      <div className="flex items-end justify-between gap-4 mb-5">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Top categories</h2>
-          <p className="text-gray-500 mt-1 text-sm">Discover professionals near you</p>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Popular categories</h2>
+          <p className="text-gray-500 mt-1 text-sm">Quick ways to find what you need.</p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => scroll('left')}
-            className={`p-2 rounded-full border transition-all ${canScrollLeft ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
-              }`}
-            disabled={!canScrollLeft}
-          >
-            <ChevronLeftIcon className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => scroll('right')}
-            className={`p-2 rounded-full border transition-all ${canScrollRight ? 'border-gray-300 hover:bg-gray-50 text-gray-900' : 'border-gray-200 text-gray-300 cursor-not-allowed'
-              }`}
-            disabled={!canScrollRight}
-          >
-            <ChevronRightIcon className="w-5 h-5" />
-          </button>
+        <div className="hidden sm:flex gap-2">
+          <button type="button" onClick={() => scroll('left')} disabled={!canScrollLeft} aria-label="Previous categories" className="p-2.5 rounded-full border border-gray-200 bg-white disabled:opacity-30 hover:bg-gray-50 transition"><ChevronLeftIcon className="w-5 h-5" /></button>
+          <button type="button" onClick={() => scroll('right')} disabled={!canScrollRight} aria-label="Next categories" className="p-2.5 rounded-full border border-gray-200 bg-white disabled:opacity-30 hover:bg-gray-50 transition"><ChevronRightIcon className="w-5 h-5" /></button>
         </div>
       </div>
-
-      <div
-        ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {TOP_CATEGORIES.map((category, index) => (
-          <div key={category.id} className="snap-start shrink-0 w-[160px] sm:w-[180px]">
-            <FreshaCategoryCard
-              category={category}
-              onClick={handleCategoryClick}
-              index={index}
-            />
-          </div>
+      <div ref={scrollRef} className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {TOP_CATEGORIES.map((category) => (
+          <button type="button" key={category.id} onClick={() => handleCategoryClick(category)} className="group snap-start shrink-0 w-[132px] sm:w-[150px] text-left rounded-2xl border border-gray-200 bg-white p-4 hover:border-rose-200 hover:shadow-md active:scale-[.98] transition-all">
+            <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-2xl mb-3 group-hover:bg-rose-50 transition-colors">{category.emoji || '✨'}</div>
+            <span className="block font-bold text-gray-900 text-sm truncate">{category.name}</span>
+            <span className="block mt-1 text-xs text-gray-500">Explore →</span>
+          </button>
         ))}
       </div>
     </section>
