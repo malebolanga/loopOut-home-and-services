@@ -823,7 +823,12 @@ const UpcomingBookingStrip = ({ navigate }) => {
                   </p>
                   
                   <p className="text-gray-400 text-[9.5px] sm:text-[10px] truncate leading-tight mt-0.5">
-                    {b.address?.split(',')[0] || b.proName || 'Location'}
+                    {b.address?.split(',')[0] || 'Location TBC'}
+                  </p>
+
+                  <p className="text-gray-500 text-[9.5px] sm:text-[10px] truncate leading-tight mt-0.5 flex items-center gap-1">
+                    <img src={b.proAvatar} alt="" className="w-3 h-3 rounded-full object-cover flex-shrink-0" />
+                    <span className="truncate">{b.proName}</span>
                   </p>
 
                   <div className="flex items-center justify-between mt-1">
