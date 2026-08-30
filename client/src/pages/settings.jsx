@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
-    document.documentElement.className = theme;
+    document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('theme', theme);
   }, [theme]);
 

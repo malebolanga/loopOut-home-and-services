@@ -684,15 +684,15 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 mx-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-4xl w-full my-8 mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-slate-50 border-b border-gray-100 p-8 rounded-t-2xl flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-slate-50 border-b border-gray-100 dark:border-gray-800 p-8 rounded-t-2xl flex justify-between items-center z-10">
           <div className="flex items-center gap-4">
              <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-100">
                 <FaHome size={20} />
              </div>
              <div>
-               <h2 className="text-2xl font-black text-gray-900 tracking-tight">
+               <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                  {isDailyStay && (propertyType === 'resort' ? 'Resort & Holiday Park' : propertyType === 'hotel' ? 'Hotel & Lodge' : propertyType === 'land' ? 'Self-Catering' : 'Guest House & B&B')}
                  {isHourlyRoom && 'Room Per Hour'}
                  {isRent && 'Room / Home Rental'}
@@ -706,7 +706,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center transition-all active:scale-90"
+            className="w-10 h-10 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full flex items-center justify-center transition-all active:scale-90"
           >
             <XMarkIcon className="w-6 h-6 text-gray-400" />
           </button>
@@ -720,7 +720,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
             
             {/* Guest Information - Always shown */}
             <div className="space-y-6">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+              <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
                 <UserGroupIcon className="w-6 h-6 text-rose-500" />
                 Guest Details
               </h3>
@@ -734,10 +734,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="fullName"
                       value={bookingDetails.fullName}
                       onChange={handleChange}
-                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.fullName ? 'border-rose-500' : 'border-gray-300'}`}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.fullName ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       placeholder="John Doe"
                     />
-                    <label htmlFor="fullName" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.fullName ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                    <label htmlFor="fullName" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.fullName ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                       Full Name <span className="text-rose-500">*</span>
                     </label>
                   </div>
@@ -752,10 +752,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="email"
                       value={bookingDetails.email}
                       onChange={handleChange}
-                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.email ? 'border-rose-500' : 'border-gray-300'}`}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.email ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       placeholder="john@example.com"
                     />
-                    <label htmlFor="email" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.email ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                    <label htmlFor="email" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.email ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                       Email Address <span className="text-rose-500">*</span>
                     </label>
                   </div>
@@ -770,10 +770,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="phone"
                       value={bookingDetails.phone}
                       onChange={handleChange}
-                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.phone ? 'border-rose-500' : 'border-gray-300'}`}
+                      className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 placeholder-transparent bg-white transition-colors ${errors.phone ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       placeholder="082 123 4567"
                     />
-                    <label htmlFor="phone" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.phone ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                    <label htmlFor="phone" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold ${errors.phone ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                       Phone Number <span className="text-rose-500">*</span>
                     </label>
                   </div>
@@ -786,8 +786,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           {isDailyStay && (
             <>
               {/* Booking Dates */}
-              <div className="space-y-6 pt-6 border-t border-gray-100">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+              <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
                   <CalendarIcon className="w-6 h-6 text-rose-500" />
                   Reservation Dates (Per Day)
                 </h3>
@@ -802,9 +802,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                         value={bookingDetails.checkIn}
                         onChange={handleChange}
                         min={today}
-                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkIn ? 'border-rose-500' : 'border-gray-300'}`}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkIn ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       />
-                      <label htmlFor="checkIn" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkIn ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      <label htmlFor="checkIn" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkIn ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                         Check-in Date <span className="text-rose-500">*</span>
                       </label>
                     </div>
@@ -820,9 +820,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                         value={bookingDetails.checkOut}
                         onChange={handleChange}
                         min={bookingDetails.checkIn || today}
-                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkOut ? 'border-rose-500' : 'border-gray-300'}`}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.checkOut ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       />
-                      <label htmlFor="checkOut" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkOut ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      <label htmlFor="checkOut" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.checkOut ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                         Check-out Date <span className="text-rose-500">*</span>
                       </label>
                     </div>
@@ -843,8 +843,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               </div>
 
               {/* Room & Guest Details */}
-              <div className="space-y-6 pt-6 border-t border-gray-100">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+              <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
                   <HomeModernIcon className="w-6 h-6 text-rose-500" />
                   Accommodations &amp; Unit Selection
                 </h3>
@@ -870,7 +870,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                           name="selectedUnit"
                           value={bookingDetails.selectedUnit || ''}
                           onChange={handleChange}
-                          className="peer w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white font-bold text-sm appearance-none shadow-xs cursor-pointer"
+                          className="peer w-full px-4 py-3.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white font-bold text-sm appearance-none shadow-xs cursor-pointer"
                         >
                           <option value="">✨ Any Available Apartment / Room (Standard)</option>
                           {listing.roomTypes.map((room, idx) => (
@@ -892,7 +892,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                           className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 cursor-pointer ${
                             !bookingDetails.selectedUnit
                               ? 'bg-slate-900 text-white shadow-xs'
-                              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                              : 'bg-white text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'
                           }`}
                         >
                           Any Unit
@@ -905,13 +905,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5 cursor-pointer ${
                               bookingDetails.selectedUnit === room.name
                                 ? 'bg-rose-500 text-white shadow-xs'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                                : 'bg-white text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800'
                             }`}
                           >
                             <span>🚪</span>
                             <span>{room.name}</span>
                             {room.price && (
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${bookingDetails.selectedUnit === room.name ? 'bg-white/20 text-white' : 'bg-gray-100 text-rose-600 font-bold'}`}>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${bookingDetails.selectedUnit === room.name ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-800 text-rose-600 font-bold'}`}>
                                 R{Number(room.price).toLocaleString()}
                               </span>
                             )}
@@ -928,7 +928,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                         value={bookingDetails.selectedUnit || ''}
                         onChange={handleChange}
                         placeholder="e.g. Apartment 1, Room 101, Unit 4B"
-                        className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white font-bold text-sm shadow-xs"
+                        className="w-full px-4 py-3.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white font-bold text-sm shadow-xs"
                       />
                     </div>
                   )}
@@ -941,13 +941,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="rooms"
                       value={bookingDetails.rooms}
                       onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                      className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                     >
                       {[1, 2, 3, 4, 5].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Room' : 'Rooms'}</option>
                       ))}
                     </select>
-                    <label htmlFor="rooms" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    <label htmlFor="rooms" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                       Rooms
                     </label>
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
@@ -961,13 +961,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="guests"
                       value={bookingDetails.guests}
                       onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                      className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
                       ))}
                     </select>
-                    <label htmlFor="guests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    <label htmlFor="guests" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                       Guests
                     </label>
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
@@ -981,13 +981,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="childGuests"
                       value={bookingDetails.childGuests}
                       onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                      className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                     >
                       {[0, 1, 2, 3, 4].map(num => (
                         <option key={num} value={num}>{num} {num === 1 ? 'Child' : 'Children'}</option>
                       ))}
                     </select>
-                    <label htmlFor="childGuests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    <label htmlFor="childGuests" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                       Children
                     </label>
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
@@ -998,7 +998,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div 
-                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group"
                     onClick={() => document.getElementById('breakfast').click()}
                   >
                     <input
@@ -1008,18 +1008,18 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       checked={bookingDetails.breakfast}
                       onChange={handleChange}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-5 h-5 text-rose-500 border-gray-300 rounded focus:ring-rose-500 cursor-pointer"
+                      className="w-5 h-5 text-rose-500 border-gray-300 dark:border-gray-700 rounded focus:ring-rose-500 cursor-pointer"
                     />
                     <div>
-                      <label htmlFor="breakfast" className="text-sm font-semibold text-gray-900 block cursor-pointer group-hover:text-rose-600 transition-colors">
+                      <label htmlFor="breakfast" className="text-sm font-semibold text-gray-900 dark:text-white block cursor-pointer group-hover:text-rose-600 transition-colors">
                         Add Breakfast
                       </label>
-                      <p className="text-xs text-gray-500 mt-0.5">R150/person per day</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">R150/person per day</p>
                     </div>
                   </div>
 
                   <div 
-                    className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group"
                     onClick={() => document.getElementById('pets').click()}
                   >
                     <input
@@ -1029,13 +1029,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       checked={bookingDetails.pets}
                       onChange={handleChange}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-5 h-5 text-rose-500 border-gray-300 rounded focus:ring-rose-500 cursor-pointer"
+                      className="w-5 h-5 text-rose-500 border-gray-300 dark:border-gray-700 rounded focus:ring-rose-500 cursor-pointer"
                     />
                     <div>
-                      <label htmlFor="pets" className="text-sm font-semibold text-gray-900 block cursor-pointer group-hover:text-rose-600 transition-colors">
+                      <label htmlFor="pets" className="text-sm font-semibold text-gray-900 dark:text-white block cursor-pointer group-hover:text-rose-600 transition-colors">
                         Bringing Pets
                       </label>
-                      <p className="text-xs text-gray-500 mt-0.5">Subject to host approval</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Subject to host approval</p>
                     </div>
                   </div>
                 </div>
@@ -1046,8 +1046,8 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           {/* Room Per Hour Fields */}
           {isHourlyRoom && (
             <>
-              <div className="space-y-6 pt-6 border-t border-gray-100">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+              <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
                   <ClockIcon className="w-6 h-6 text-rose-500" />
                   Room Session Schedule
                 </h3>
@@ -1062,9 +1062,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                         value={bookingDetails.selectedDate}
                         onChange={handleChange}
                         min={today}
-                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.selectedDate ? 'border-rose-500' : 'border-gray-300'}`}
+                        className={`peer w-full px-4 py-4 border rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white transition-colors ${errors.selectedDate ? 'border-rose-500' : 'border-gray-300 dark:border-gray-700'}`}
                       />
-                      <label htmlFor="selectedDate" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.selectedDate ? 'text-rose-500' : 'text-gray-500 peer-focus:text-rose-500'}`}>
+                      <label htmlFor="selectedDate" className={`absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold ${errors.selectedDate ? 'text-rose-500' : 'text-gray-500 dark:text-gray-400 peer-focus:text-rose-500'}`}>
                         Select Date <span className="text-rose-500">*</span>
                       </label>
                     </div>
@@ -1077,13 +1077,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="startTime"
                       value={bookingDetails.startTime}
                       onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                      className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                     >
                       {generateTimeOptions().map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
-                    <label htmlFor="startTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    <label htmlFor="startTime" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                       Start Time
                     </label>
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
@@ -1097,13 +1097,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                       name="endTime"
                       value={bookingDetails.endTime}
                       onChange={handleChange}
-                      className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                      className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                     >
                       {generateTimeOptions(true).map(time => (
                         <option key={time} value={time}>{time}</option>
                       ))}
                     </select>
-                    <label htmlFor="endTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                    <label htmlFor="endTime" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                       End Time
                     </label>
                     <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
@@ -1128,15 +1128,15 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
           {/* Property Inquiry & Viewing Schedule */}
           {isRent && (
-            <div className="space-y-6 pt-6 border-t border-gray-100">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2 text-lg">
+            <div className="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+              <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-lg">
                 <HomeIcon className="w-6 h-6 text-rose-500" />
                 Property Viewing & Details
               </h3>
 
               {/* Inquiry Reason */}
               <div>
-                <label className="block text-xs font-black text-gray-800 uppercase tracking-wider mb-2">
+                <label className="block text-xs font-black text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-2">
                   📌 Reason for Inquiry
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -1155,7 +1155,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                         className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center ${
                           isSelected
                             ? 'bg-rose-500 border-rose-500 text-white shadow-md shadow-rose-200'
-                            : 'bg-white border-gray-200 text-gray-700 hover:border-rose-300'
+                            : 'bg-white border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-rose-300'
                         }`}
                       >
                         {reason}
@@ -1175,9 +1175,9 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                     value={bookingDetails.viewingDate || ''}
                     onChange={handleChange}
                     min={today}
-                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white"
+                    className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white"
                   />
-                  <label htmlFor="viewingDate" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                  <label htmlFor="viewingDate" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                     Preferred Viewing Date (Optional)
                   </label>
                 </div>
@@ -1188,13 +1188,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                     name="viewingTime"
                     value={bookingDetails.viewingTime || '10:00'}
                     onChange={handleChange}
-                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                    className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                   >
                     {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
-                  <label htmlFor="viewingTime" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                  <label htmlFor="viewingTime" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                     Viewing Time Slot
                   </label>
                 </div>
@@ -1208,14 +1208,14 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                     name="leaseDuration"
                     value={bookingDetails.leaseDuration || '12 Months'}
                     onChange={handleChange}
-                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                    className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                   >
                     <option value="Month-to-Month">Month-to-Month</option>
                     <option value="6 Months">6 Months</option>
                     <option value="12 Months">12 Months (Standard)</option>
                     <option value="24+ Months Long Term">24+ Months (Long-term)</option>
                   </select>
-                  <label htmlFor="leaseDuration" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                  <label htmlFor="leaseDuration" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                     Target Lease Duration
                   </label>
                 </div>
@@ -1226,13 +1226,13 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                     name="occupantsCount"
                     value={bookingDetails.occupantsCount || '1'}
                     onChange={handleChange}
-                    className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white appearance-none"
+                    className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white appearance-none"
                   >
                     {[1, 2, 3, 4, 5, 6].map(n => (
                       <option key={n} value={n}>{n} {n === 1 ? 'Occupant / Tenant' : 'Occupants / Family'}</option>
                     ))}
                   </select>
-                  <label htmlFor="occupantsCount" className="absolute left-4 -top-2.5 bg-white px-1 text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+                  <label htmlFor="occupantsCount" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                     Total Occupants
                   </label>
                 </div>
@@ -1241,7 +1241,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           )}
 
           {/* Special Requests */}
-          <div className="space-y-4 pt-6 border-t border-gray-100">
+          <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-gray-800">
             <div className="relative">
               <textarea
                 id="specialRequests"
@@ -1249,10 +1249,10 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                 value={bookingDetails.specialRequests}
                 onChange={handleChange}
                 rows="3"
-                className="peer w-full px-4 py-4 border border-gray-300 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white resize-none placeholder-transparent"
+                className="peer w-full px-4 py-4 border border-gray-300 dark:border-gray-700 rounded-xl focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 bg-white dark:bg-gray-800 dark:text-white resize-none placeholder-transparent"
                 placeholder={isRent ? "I'm interested in this property..." : "Any special requirements..."}
               />
-              <label htmlFor="specialRequests" className="absolute left-4 -top-2.5 bg-white px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold text-gray-500 peer-focus:text-rose-500">
+              <label htmlFor="specialRequests" className="absolute left-4 -top-2.5 bg-white dark:bg-gray-800 px-1 text-xs transition-all pointer-events-none peer-placeholder-shown:text-base peer-placeholder-shown:top-4 peer-focus:-top-2.5 peer-focus:text-xs font-semibold text-gray-500 dark:text-gray-400 peer-focus:text-rose-500">
                 {isRent ? 'Message / Questions' : 'Special Requests'}
               </label>
             </div>
@@ -1266,79 +1266,79 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
               
               {/* Price Summary - Only for daily stays and room per hour */}
               {((isDailyStay && days > 0) || (isHourlyRoom && hours > 0)) && (
-                <div className="bg-white border border-gray-200 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b border-gray-200">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-4">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-800">
                 <TicketIcon className="w-4 h-4 text-gray-400" />
-                <h4 className="font-bold text-gray-900 uppercase text-xs tracking-widest">Pricing Breakdown</h4>
+                <h4 className="font-bold text-gray-900 dark:text-white uppercase text-xs tracking-widest">Pricing Breakdown</h4>
               </div>
 
               <div className="space-y-3 text-sm">
                 {isDailyStay && (
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                    <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                       <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
                             <FaHome size={14} />
                          </div>
                          <div>
-                            <p className="font-bold text-gray-900">Daily Stay Rate</p>
-                            <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()} × {days} Day(s)</p>
+                            <p className="font-bold text-gray-900 dark:text-white">Daily Stay Rate</p>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black">R{listing.regularPrice.toLocaleString()} × {days} Day(s)</p>
                          </div>
                       </div>
-                      <span className="font-black text-gray-900">R{(listing.regularPrice * days * (Number(bookingDetails.rooms) || 1)).toLocaleString()}</span>
+                      <span className="font-black text-gray-900 dark:text-white">R{(listing.regularPrice * days * (Number(bookingDetails.rooms) || 1)).toLocaleString()}</span>
                     </div>
 
                     {bookingDetails.breakfast && (
-                      <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-500">
                               <FaCoffee size={14} />
                            </div>
                            <div>
-                              <p className="font-bold text-gray-900">Breakfast Plan</p>
-                              <p className="text-[10px] text-gray-500 uppercase font-black">R150 × {bookingDetails.guests} Guests × {days}D</p>
+                              <p className="font-bold text-gray-900 dark:text-white">Breakfast Plan</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black">R150 × {bookingDetails.guests} Guests × {days}D</p>
                            </div>
                         </div>
-                        <span className="font-black text-gray-900">R{(150 * bookingDetails.guests * days).toLocaleString()}</span>
+                        <span className="font-black text-gray-900 dark:text-white">R{(150 * bookingDetails.guests * days).toLocaleString()}</span>
                       </div>
                     )}
 
                     {bookingDetails.guests > 2 && (
-                      <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center gap-3">
                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
                               <FaUsers size={14} />
                            </div>
                            <div>
-                              <p className="font-bold text-gray-900">Extra Guest Fee</p>
-                              <p className="text-[10px] text-gray-500 uppercase font-black">R200 × {bookingDetails.guests - 2} Guests × {days}D</p>
+                              <p className="font-bold text-gray-900 dark:text-white">Extra Guest Fee</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black">R200 × {bookingDetails.guests - 2} Guests × {days}D</p>
                            </div>
                         </div>
-                        <span className="font-black text-gray-900">R{(200 * (bookingDetails.guests - 2) * days).toLocaleString()}</span>
+                        <span className="font-black text-gray-900 dark:text-white">R{(200 * (bookingDetails.guests - 2) * days).toLocaleString()}</span>
                       </div>
                     )}
                   </div>
                 )}
 
                 {isHourlyRoom && (
-                  <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-3">
                        <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
                           <FaClock size={14} />
                        </div>
                        <div>
-                          <p className="font-bold text-gray-900">Room Usage</p>
-                          <p className="text-[10px] text-gray-500 uppercase font-black">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)}H</p>
+                          <p className="font-bold text-gray-900 dark:text-white">Room Usage</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-black">R{listing.regularPrice.toLocaleString()}/hour × {hours.toFixed(1)}H</p>
                        </div>
                     </div>
-                    <span className="font-black text-gray-900">R{totalPrice.toLocaleString()}</span>
+                    <span className="font-black text-gray-900 dark:text-white">R{totalPrice.toLocaleString()}</span>
                   </div>
                 )}
 
-                <div className="pt-4 mt-2 border-t border-dashed border-gray-300 flex justify-between items-center">
+                <div className="pt-4 mt-2 border-t border-dashed border-gray-300 dark:border-gray-700 flex justify-between items-center">
                   <div>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Valuation</p>
-                    <p className="text-2xl font-black text-gray-900">Calculated Pay</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white">Calculated Pay</p>
                   </div>
                   <span className="text-3xl font-black text-rose-600">R{totalPrice.toLocaleString()}</span>
                 </div>
@@ -1348,7 +1348,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
           {/* Rent Price Display */}
           {isRent && (
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-2xl p-6">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-500">
@@ -1356,7 +1356,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                    </div>
                    <div>
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Listing Value</p>
-                      <p className="text-sm font-bold text-gray-900">Monthly Rental</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">Monthly Rental</p>
                    </div>
                 </div>
                 <span className="text-3xl font-black text-rose-600">
@@ -1367,7 +1367,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
           )}
 
           {/* Action Buttons */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-800">
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1385,7 +1385,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
                 </>
               )}
             </button>
-            <p className="text-center text-xs font-medium text-gray-500 mt-4">You won't be charged yet</p>
+            <p className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 mt-4">You won't be charged yet</p>
           </div>
             </div>
           </div>
@@ -1514,64 +1514,64 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-xl font-bold text-gray-900">Contact Host</h3>
-              <p className="text-gray-500 text-sm mt-1">Get in touch with the property owner</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Contact Host</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Get in touch with the property owner</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <FaTimes className="text-gray-500 text-lg" />
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+              <FaTimes className="text-gray-500 dark:text-gray-400 text-lg" />
             </button>
           </div>
         </div>
 
         <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Name</label>
             <input type="text" value={user?.name || ''} readOnly={!!user?.name}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
           </div>
 
           <div>
             <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-3">Choice of Connection</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <button onClick={() => setContactMethod('internal')}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'internal' ? 'border-rose-500 bg-rose-50/50 shadow-lg shadow-rose-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
-                  <div className={`p-2 rounded-xl ${contactMethod === 'internal' ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'internal' ? 'border-rose-500 bg-rose-50/50 shadow-lg shadow-rose-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'internal' ? 'bg-rose-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
                     <FaRegCommentDots className="text-xl" />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'internal' ? 'text-rose-600' : 'text-gray-500'}`}>Direct</span>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'internal' ? 'text-rose-600' : 'text-gray-500 dark:text-gray-400'}`}>Direct</span>
                 </button>
 
               {availableMethods.includes('whatsapp') && (
                 <button onClick={() => setContactMethod('whatsapp')}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'whatsapp' ? 'border-emerald-500 bg-emerald-50/50 shadow-lg shadow-emerald-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
-                  <div className={`p-2 rounded-xl ${contactMethod === 'whatsapp' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'whatsapp' ? 'border-emerald-500 bg-emerald-50/50 shadow-lg shadow-emerald-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'whatsapp' ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
                     <FaWhatsapp className="text-xl" />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'whatsapp' ? 'text-emerald-600' : 'text-gray-500'}`}>WhatsApp</span>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'whatsapp' ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400'}`}>WhatsApp</span>
                 </button>
               )}
 
               {availableMethods.includes('email') && (
                 <button onClick={() => setContactMethod('email')}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'email' ? 'border-blue-500 bg-blue-50/50 shadow-lg shadow-blue-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
-                  <div className={`p-2 rounded-xl ${contactMethod === 'email' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'email' ? 'border-blue-500 bg-blue-50/50 shadow-lg shadow-blue-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'email' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
                     <FaEnvelope className="text-xl" />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'email' ? 'text-blue-600' : 'text-gray-500'}`}>Email</span>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'email' ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400'}`}>Email</span>
                 </button>
               )}
 
               {availableMethods.includes('call') && (
                 <button onClick={() => setContactMethod('call')}
-                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'call' ? 'border-orange-500 bg-orange-50/50 shadow-lg shadow-orange-100 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
-                  <div className={`p-2 rounded-xl ${contactMethod === 'call' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all duration-300 ${contactMethod === 'call' ? 'border-orange-500 bg-orange-50/50 shadow-lg shadow-orange-100 scale-[1.02]' : 'border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}`}>
+                  <div className={`p-2 rounded-xl ${contactMethod === 'call' ? 'bg-orange-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-400'}`}>
                     <FaPhone className="text-xl" />
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'call' ? 'text-orange-600' : 'text-gray-500'}`}>Call Host</span>
+                  <span className={`text-[10px] font-black uppercase tracking-tight ${contactMethod === 'call' ? 'text-orange-600' : 'text-gray-500 dark:text-gray-400'}`}>Call Host</span>
                 </button>
               )}
             </div>
@@ -1581,18 +1581,18 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
               <div className="space-y-2">
                 {formattedDisplayNumber && (
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm border border-slate-200/50">
+                      <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-rose-500 shadow-sm border border-slate-200/50 dark:border-gray-700">
                          <PhoneIcon className="w-4 h-4" />
                       </div>
-                      <p className="text-sm font-bold text-gray-900">{formattedDisplayNumber}</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{formattedDisplayNumber}</p>
                    </div>
                 )}
                 {listing?.email && (
                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-slate-200/50">
+                      <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center text-blue-500 shadow-sm border border-slate-200/50 dark:border-gray-700">
                          <EnvelopeIcon className="w-4 h-4" />
                       </div>
-                      <p className="text-sm font-bold text-gray-900">{listing.email}</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">{listing.email}</p>
                    </div>
                 )}
               </div>
@@ -1600,15 +1600,15 @@ const ContactHostModal = ({ listing, user, isOpen, onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Your Message</label>
             <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={defaultMessage} rows="4"
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black resize-none" />
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-black resize-none" />
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-100">
+        <div className="p-6 border-t border-gray-100 dark:border-gray-800">
           <div className="flex gap-3">
-            <button onClick={onClose} className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors">Cancel</button>
+            <button onClick={onClose} className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors">Cancel</button>
             <button onClick={handleSubmit} disabled={availableMethods.length === 0}
               className="flex-1 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-medium transition-all">Send Message</button>
           </div>
@@ -2352,7 +2352,7 @@ export default function Listing() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">Listing not found</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Listing not found</h2>
           <button onClick={() => navigate('/listing-home-page')} className="mt-4 px-6 py-2 bg-rose-500 text-white rounded-lg">
             Browse Listings
           </button>
@@ -2501,23 +2501,23 @@ export default function Listing() {
       />
 
       {/* Main Content - Optimized for large screens */}
-      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 py-8 lg:py-12 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 py-8 lg:py-12 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8 lg:space-y-10">
             {/* Header */}
             <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 mb-2">{listing.name}</h1>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-white mb-2">{listing.name}</h1>
               {listing.kind && (
                 <div className="text-sm font-semibold text-rose-500 mb-2.5 capitalize tracking-wide flex items-center gap-1.5">
                   <HomeModernIcon className="w-4 h-4" />
                   {listing.kind.replace(/_/g, " ")}
                 </div>
               )}
-              <div className="flex flex-wrap items-center gap-2 text-gray-600 text-sm lg:text-base">
+              <div className="flex flex-wrap items-center gap-2 text-gray-600 dark:text-gray-400 text-sm lg:text-base">
                 <span className="flex items-center gap-1">
                   <StarIconSolid className="text-[#FFB400] w-4 h-4" />
-                  <span className="font-semibold text-gray-900">{(ratings?.overall || listing?.rating || 0).toFixed(1)}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{(ratings?.overall || listing?.rating || 0).toFixed(1)}</span>
                   <span className="underline">{commentCount} reviews</span>
                 </span>
                 <span>·</span>
@@ -2547,7 +2547,7 @@ export default function Listing() {
               </div>
               <div className="flex-1">
                 <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-0.5">Guest Favourite</p>
-                <p className="text-sm font-semibold text-gray-900 leading-snug">One of the most loved homes, according to guests</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white leading-snug">One of the most loved homes, according to guests</p>
                 <div className="flex items-center gap-1.5 mt-1">
                   {/* Stars — filled proportionally to the real rating */}
                   <div className="flex">
@@ -2562,20 +2562,20 @@ export default function Listing() {
                     })}
                   </div>
                   {/* Rating number — same expression as reviews section */}
-                  <span className="text-xs font-bold text-gray-900">
+                  <span className="text-xs font-bold text-gray-900 dark:text-white">
                     {ratings?.overall > 0 ? ratings.overall.toFixed(1) : Number(aiRating.average).toFixed(1)}
                   </span>
                   {/* Review count — same variable as reviews section */}
-                  <span className="text-xs text-gray-500">· {commentCount} reviews</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">· {commentCount} reviews</span>
                 </div>
               </div>
             </div>
 
             {/* Property Highlights */}
-            <div className="border-y border-gray-200 py-6">
+            <div className="border-y border-gray-200 dark:border-gray-800 py-6">
                <div className="flex flex-wrap gap-3 mt-6">
               {listing.bedrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
                   <FaBed className="text-rose-400" /> {listing.bedrooms} {listing.bedrooms > 1 ? "rooms/beds" : "bed"}
                 </div>
               )}
@@ -2590,12 +2590,12 @@ export default function Listing() {
                 </div>
               )}
               {listing.bathrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
                   <FaBath className="text-rose-400" /> {listing.bathrooms} bath{listing.bathrooms > 1 ? "s" : ""}
                 </div>
               )}
               {listing.kind && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700 capitalize">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300 capitalize">
                   <HomeModernIcon className="w-4 h-4 text-rose-400" /> {listing.kind.replace(/_/g, " ")}
                 </div>
               )}
@@ -2609,14 +2609,14 @@ export default function Listing() {
 
             {/* Available Units & Rooms — horizontal scroll carousel */}
             {listing.roomTypes && listing.roomTypes.length > 0 && (
-              <div className="py-6 border-b border-gray-200">
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-lg lg:text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                    <h2 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
                       <span>🏢</span> Available Units &amp; Rooms
                     </h2>
-                    <p className="text-xs text-gray-500 font-medium mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
                       {listing.roomTypes.length} {listing.roomTypes.length === 1 ? 'unit' : 'units'} at this property
                     </p>
                   </div>
@@ -2633,10 +2633,10 @@ export default function Listing() {
                       initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.07, duration: 0.35 }}
-                      className="flex-none w-64 snap-start bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden group flex flex-col"
+                      className="flex-none w-64 snap-start bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden group flex flex-col"
                     >
                       {/* Image */}
-                      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 flex-shrink-0">
+                      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
                         {room.image ? (
                           <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : listing.imageUrls && listing.imageUrls[0] ? (
@@ -2652,15 +2652,15 @@ export default function Listing() {
                       {/* Details */}
                       <div className="p-3.5 flex flex-col flex-1">
                         <div className="flex items-start justify-between gap-1 mb-1">
-                          <h3 className="font-black text-gray-900 text-sm leading-snug">{room.name}</h3>
+                          <h3 className="font-black text-gray-900 dark:text-white text-sm leading-snug">{room.name}</h3>
                           {room.capacity && (
-                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded-md flex-shrink-0">
+                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 px-1.5 py-0.5 rounded-md flex-shrink-0">
                               👥 {room.capacity}
                             </span>
                           )}
                         </div>
                         {room.description && (
-                          <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2 mb-3 flex-1">{room.description}</p>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2 mb-3 flex-1">{room.description}</p>
                         )}
                         <button
                           onClick={() => {
@@ -2680,8 +2680,8 @@ export default function Listing() {
             )}
 
             {/* Listing Highlights */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-5">What makes this place special</h2>
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-5">What makes this place special</h2>
               <div className="space-y-5">
                 {/* Exceptional check-in */}
                 <div className="flex items-start gap-4">
@@ -2689,8 +2689,8 @@ export default function Listing() {
                     <MdLogin className="text-rose-500 text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Exceptional check-in experience</h3>
-                    <p className="text-gray-500 text-xs lg:text-sm mt-0.5">Recent guests gave the check-in process a 5-star rating.</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Exceptional check-in experience</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">Recent guests gave the check-in process a 5-star rating.</p>
                   </div>
                 </div>
                 {/* Free parking */}
@@ -2700,8 +2700,8 @@ export default function Listing() {
                       <FaParking className="text-green-600 text-lg" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Park for free</h3>
-                      <p className="text-gray-500 text-xs lg:text-sm mt-0.5">This is one of the few places in the area with free parking.</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Park for free</h3>
+                      <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">This is one of the few places in the area with free parking.</p>
                     </div>
                   </div>
                 )}
@@ -2711,15 +2711,15 @@ export default function Listing() {
                     <MdChat className="text-blue-500 text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Great host communication</h3>
-                    <p className="text-gray-500 text-xs lg:text-sm mt-0.5">Recent guests loved {listing.userRef?.username || 'the host'}'s communication.</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Great host communication</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">Recent guests loved {listing.userRef?.username || 'the host'}'s communication.</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Host Info */}
-            <div className="py-6 border-b border-gray-200">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
               <Link
                 to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
                 className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
@@ -2728,16 +2728,16 @@ export default function Listing() {
                   <img
                     src={listing.userRef.avatar}
                     alt={listing.userRef.username}
-                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 shadow-sm"
+                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
                   />
                 ) : (
-                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 flex items-center justify-center border border-gray-100 shadow-sm text-gray-400">
+                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 shadow-sm text-gray-400">
                     <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
                   </div>
                 )}
                 <div>
-                  <h2 className="text-base lg:text-lg font-semibold text-gray-900">Hosted by {listing.userRef?.username || 'Host'}</h2>
-                  <p className="text-gray-600 text-xs lg:text-sm">
+                  <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
                     {listing.userRef?.isSuperhost ? 'Superhost · ' : 'Verified Host · '}
                     {listing.userRef?.createdAt ? (() => {
                       const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
@@ -2752,9 +2752,9 @@ export default function Listing() {
             </div>
 
             {/* Description */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">About this place</h2>
-              <div className="text-gray-700 leading-relaxed text-sm lg:text-base">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">About this place</h2>
+              <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm lg:text-base">
                 {isExpanded ? listing.description : truncateDescription(listing.description, 60)}
               </div>
               {listing.description?.split(' ').length > 60 && (
@@ -2766,9 +2766,9 @@ export default function Listing() {
 
             {/* Property Portfolio - Show All Photos */}
             {listing.imageUrls && listing.imageUrls.length > 0 && (
-              <div className="py-6 border-b border-gray-200">
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Property Portfolio</h2>
+                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">Property Portfolio</h2>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
                     {listing.imageUrls.length} Photos
                   </span>
@@ -2797,21 +2797,21 @@ export default function Listing() {
 
             {/* Amenities */}
             {activeAmenities.length > 0 && (
-              <div className="py-6 border-b border-gray-200">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">What this place offers</h2>
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">What this place offers</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {activeAmenities.slice(0, 10).map((amenity, index) => {
                     const Icon = amenity.icon;
                     return (
                       <div key={index} className="flex items-center gap-3 py-2">
-                        <Icon className="text-gray-700 text-base lg:text-lg" />
-                        <span className="text-gray-700 text-sm lg:text-base">{amenity.label}</span>
+                        <Icon className="text-gray-700 dark:text-gray-300 text-base lg:text-lg" />
+                        <span className="text-gray-700 dark:text-gray-300 text-sm lg:text-base">{amenity.label}</span>
                       </div>
                     );
                   })}
                 </div>
                 {activeAmenities.length > 10 && (
-                  <button className="mt-4 px-4 lg:px-6 py-2 lg:py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm lg:text-base">
+                  <button className="mt-4 px-4 lg:px-6 py-2 lg:py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm lg:text-base">
                     Show all {activeAmenities.length} amenities
                   </button>
                 )}
@@ -2820,42 +2820,42 @@ export default function Listing() {
 
             {/* Check-in & Check-out timings — hidden for rent, shown for daily stays/hourly rooms */}
             {(isDailyStay || isHourlyRoom) && !isRent && (
-              <div className="py-6 border-b border-gray-200">
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2.5 bg-rose-50 rounded-2xl">
                     <ClockIcon className="w-6 h-6 text-rose-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Check-in &amp; Check-out</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Check-in &amp; Check-out</h3>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Standard timing windows</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
                         🛬
                       </div>
                       <div>
                         <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-in Time</span>
-                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{listing.checkInTime || '14:00'}</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 dark:text-white mt-0.5 block">{listing.checkInTime || '14:00'}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">After</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full">After</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 bg-white shadow-sm">
+                  <div className="flex items-center justify-between p-5 rounded-3xl border border-gray-150/60 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl font-bold">
                         🛫
                       </div>
                       <div>
                         <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Check-out Time</span>
-                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">{listing.checkOutTime || '11:00'}</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 dark:text-white mt-0.5 block">{listing.checkOutTime || '11:00'}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 px-3 py-1 rounded-full">Before</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide bg-gray-50 dark:bg-gray-800 px-3 py-1 rounded-full">Before</span>
                   </div>
                 </div>
               </div>
@@ -2863,13 +2863,13 @@ export default function Listing() {
 
             {/* Monthly Payment Schedule — rent listings only */}
             {isRent && (
-              <div className="py-6 border-b border-gray-200">
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2.5 bg-green-50 rounded-2xl">
                     <BanknotesIcon className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">Monthly Payment Schedule</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Monthly Payment Schedule</h3>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Accepted payment windows</p>
                   </div>
                 </div>
@@ -2883,8 +2883,8 @@ export default function Listing() {
                       </div>
                       <div>
                         <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Window 1</span>
-                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">15th – 17th</span>
-                        <span className="text-xs text-gray-500">of every month</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 dark:text-white mt-0.5 block">15th – 17th</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">of every month</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -2900,8 +2900,8 @@ export default function Listing() {
                       </div>
                       <div>
                         <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Payment Window 2</span>
-                        <span className="text-base lg:text-lg font-black text-gray-900 mt-0.5 block">30th – 5th</span>
-                        <span className="text-xs text-gray-500">end of month to 5th</span>
+                        <span className="text-base lg:text-lg font-black text-gray-900 dark:text-white mt-0.5 block">30th – 5th</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">end of month to 5th</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -2910,17 +2910,17 @@ export default function Listing() {
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-500 mt-4 flex items-center gap-1.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5">
                   <BanknotesIcon className="w-3.5 h-3.5" />
-                  Monthly rent: <span className="font-semibold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                  Monthly rent: <span className="font-semibold text-gray-900 dark:text-white">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
                 </p>
               </div>
             )}
 
             {/* Calendar - Only for daily stays and room per hour */}
             {showCalendar && (
-              <div className="py-6 border-b border-gray-200" id="calendar-section">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800" id="calendar-section">
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   {isHourlyRoom ? 'Select date & time' : 'Select your dates (per day)'}
                 </h2>
 
@@ -2947,7 +2947,7 @@ export default function Listing() {
                           }
                           return false;
                         }}
-                        className="rounded-xl border border-gray-200 shadow-sm w-full"
+                        className="rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm w-full"
                       />
 
                       {dateRange && dateRange[0] && dateRange[1] && bookedDates.some(range => {
@@ -2972,26 +2972,26 @@ export default function Listing() {
                   {isHourlyRoom && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Date</label>
                         <input
                           type="date"
                           value={selectedDate.toISOString().split('T')[0]}
                           onChange={(e) => setSelectedDate(new Date(e.target.value))}
                           min={new Date().toISOString().split('T')[0]}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Time</label>
                         <select value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm">
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm">
                           {generateTimeOptions().map(time => <option key={time} value={time}>{time}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Time</label>
                         <select value={endTime} onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm">
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm">
                           {generateTimeOptions(true).map(time => <option key={time} value={time}>{time}</option>)}
                         </select>
                       </div>
@@ -3002,10 +3002,10 @@ export default function Listing() {
             )}
 
             {/* Reviews */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-7 h-7" />
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : Number(aiRating.average).toFixed(1)} · {commentCount} reviews
                 </h2>
               </div>
@@ -3014,8 +3014,8 @@ export default function Listing() {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
                     {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                         <MdCleanHands className="text-xl" />
                         <span>Cleanliness</span>
                       </div>
@@ -3027,8 +3027,8 @@ export default function Listing() {
                       </div>
                     </div>
                     {/* Accuracy */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                         <MdOutlineGppGood className="text-xl" />
                         <span>Accuracy</span>
                       </div>
@@ -3067,7 +3067,7 @@ export default function Listing() {
                                       <img
                                         src={comment.userAvatar || '/default-avatar.jpg'}
                                         alt={comment.userName}
-                                        className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
                                         onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                       />
                                       <div>
@@ -3092,7 +3092,7 @@ export default function Listing() {
                                       </div>
                                     )}
                                   </div>
-                                  <p className="text-gray-700 line-clamp-4 leading-relaxed whitespace-pre-line">
+                                  <p className="text-gray-700 dark:text-gray-300 line-clamp-4 leading-relaxed whitespace-pre-line">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -3105,12 +3105,12 @@ export default function Listing() {
                   )}
                 </>
               ) : (
-                <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
               <button
                 onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
               >
                 Show all {commentCount} reviews
               </button>
@@ -3120,9 +3120,9 @@ export default function Listing() {
             <BookingHistory bookingSummary={bookingSummary} providerName={listing?.name} providerType={listing?.type || 'property'} />
 
             {/* Location */}
-            <div className="py-6 border-t border-gray-200">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
-              <p className="text-gray-700 mb-4 text-sm lg:text-base">{listing.address}</p>
+            <div className="py-6 border-t border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">Where you'll be</h2>
+              <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm lg:text-base">{listing.address}</p>
               <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
                 <GoogleMapComponent 
                   latitude={listing.latitude} 
@@ -3134,8 +3134,8 @@ export default function Listing() {
 
               {listing.near && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
-                  <div className="text-gray-700 text-xs lg:text-sm space-y-1">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">What's nearby</h3>
+                  <div className="text-gray-700 dark:text-gray-300 text-xs lg:text-sm space-y-1">
                     {listing.near.split('\n').slice(0, isNearExpanded ? undefined : 4).map((item, i) => (
                       <p key={i}>{item}</p>
                     ))}
@@ -3150,14 +3150,14 @@ export default function Listing() {
             </div>
 
             {/* Things to Know */}
-            <div className="py-8 border-t border-gray-200">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
+            <div className="py-8 border-t border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-6">Things to know</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
 
                 {/* Cancellation Policy */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">Cancellation policy</h3>
-                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm lg:text-base">Cancellation policy</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
                     {listing.cancel ? (
                       listing.cancel.split('\n').map((policy, i) => (
                         <p key={i} className="leading-relaxed">{policy}</p>
@@ -3167,7 +3167,7 @@ export default function Listing() {
                         <p className="leading-relaxed">Free cancellation before check-in. Cancel before arrival for a partial refund.</p>
                       </>
                     )}
-                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                    <button className="text-gray-900 dark:text-white font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
                       Review host's full policy
                     </button>
                   </div>
@@ -3175,8 +3175,8 @@ export default function Listing() {
 
                 {/* House Rules */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">House rules</h3>
-                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm lg:text-base">House rules</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
                     {isRent ? (
                       /* Rent: show payment windows instead of check-in/out times */
                       <>
@@ -3230,7 +3230,7 @@ export default function Listing() {
                         )}
                       </>
                     )}
-                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                    <button className="text-gray-900 dark:text-white font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
                       Learn more
                     </button>
                   </div>
@@ -3238,8 +3238,8 @@ export default function Listing() {
 
                 {/* Safety & Property */}
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">Safety &amp; property</h3>
-                  <div className="space-y-2 text-gray-600 text-xs lg:text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm lg:text-base">Safety &amp; property</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
                     {listing.security ? (
                       <p className="flex items-center gap-2">
                         <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -3255,7 +3255,7 @@ export default function Listing() {
                       <XMarkIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       Smoke alarm not reported
                     </p>
-                    <button className="text-gray-900 font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
+                    <button className="text-gray-900 dark:text-white font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
                       Learn more
                     </button>
                   </div>
@@ -3272,8 +3272,8 @@ export default function Listing() {
                 {/* Price Header */}
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
-                    <span className="text-xl lg:text-2xl font-semibold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}</span>
-                    <span className="text-gray-600 text-sm lg:text-base">{listingType.period}</span>
+                    <span className="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white">R{listing.regularPrice.toLocaleString('en-ZA')}</span>
+                    <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">{listingType.period}</span>
                   </div>
                   {listing.discountPrice && (
                     <span className="text-gray-400 line-through text-sm lg:text-base">R{listing.discountPrice}</span>
@@ -3281,28 +3281,28 @@ export default function Listing() {
                 </div>
 
                 {/* Listing Type Info / Rent Payment Info */}
-                <div className="mb-4 p-4 bg-gray-50 rounded-2xl space-y-2 text-xs lg:text-sm">
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl space-y-2 text-xs lg:text-sm">
                   {isRent ? (
                     /* Rent: show monthly rate + payment windows */
                     <>
-                      <p className="text-gray-700 flex justify-between gap-2">
-                        <span className="font-semibold text-gray-600">Monthly Rent:</span>
-                        <span className="font-bold text-gray-900">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                      <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">Monthly Rent:</span>
+                        <span className="font-bold text-gray-900 dark:text-white">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
                       </p>
                       {listing.discountPrice && (
-                        <p className="text-gray-700 flex justify-between gap-2">
-                          <span className="font-semibold text-gray-600">Deposit:</span>
+                        <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600 dark:text-gray-400">Deposit:</span>
                           <span>R{Number(listing.discountPrice).toLocaleString('en-ZA')}</span>
                         </p>
                       )}
                       {listing.period && (
-                        <p className="text-gray-700 flex justify-between gap-2">
-                          <span className="font-semibold text-gray-600">Available From:</span>
+                        <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600 dark:text-gray-400">Available From:</span>
                           <span>{listing.period}</span>
                         </p>
                       )}
-                      <div className="pt-2 border-t border-gray-200/70 space-y-1.5">
-                        <p className="font-semibold text-gray-600 text-[11px] uppercase tracking-wide">Payment Windows</p>
+                      <div className="pt-2 border-t border-gray-200 dark:border-gray-800/70 space-y-1.5">
+                        <p className="font-semibold text-gray-600 dark:text-gray-400 text-[11px] uppercase tracking-wide">Payment Windows</p>
                         <p className="flex items-center gap-2 text-green-700 font-semibold">
                           <BanknotesIcon className="w-3.5 h-3.5" />
                           15th – 17th of every month
@@ -3316,26 +3316,26 @@ export default function Listing() {
                   ) : (
                     /* Non-rent: existing listing type info */
                     <>
-                      <p className="text-gray-700 flex justify-between gap-2">
-                        <span className="font-semibold text-gray-600">Listing Type:</span>
+                      <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">Listing Type:</span>
                         <span>{listingType.label}</span>
                       </p>
                       {listing.kind && (
-                        <p className="text-gray-700 flex justify-between gap-2">
-                          <span className="font-semibold text-gray-600">Property Type:</span>
+                        <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600 dark:text-gray-400">Property Type:</span>
                           <span className="capitalize">{listing.kind.replace(/_/g, " ")}</span>
                         </p>
                       )}
                       {listing.period && (
-                        <p className="text-gray-700 flex justify-between gap-2">
-                          <span className="font-semibold text-gray-600">Available From:</span>
+                        <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                          <span className="font-semibold text-gray-600 dark:text-gray-400">Available From:</span>
                           <span>{listing.period}</span>
                         </p>
                       )}
                       {listing.cancel && (
-                        <p className="text-gray-700 flex flex-col gap-0.5 pt-1 border-t border-gray-200/50">
-                          <span className="font-semibold text-gray-600">Cancellation Policy:</span>
-                          <span className="text-gray-500 text-[11px] leading-snug">{listing.cancel}</span>
+                        <p className="text-gray-700 dark:text-gray-300 flex flex-col gap-0.5 pt-1 border-t border-gray-200 dark:border-gray-800/50">
+                          <span className="font-semibold text-gray-600 dark:text-gray-400">Cancellation Policy:</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-[11px] leading-snug">{listing.cancel}</span>
                         </p>
                       )}
                     </>
@@ -3361,14 +3361,14 @@ export default function Listing() {
                 </button>
 
 
-                <p className="text-center text-gray-500 text-xs lg:text-sm mt-2">
+                <p className="text-center text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-2">
                   {isSaleOrRent ? 'Ask questions about this listing' : 'A pending request will be saved and the host notified via WhatsApp'}
                 </p>
 
                 {/* Quick Contact Button */}
                 <button
                   onClick={handleContactHost}
-                  className="w-full mt-2 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-lg transition-colors text-sm lg:text-base"
+                  className="w-full mt-2 py-2 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors text-sm lg:text-base"
                 >
                   Quick Contact
                 </button>
@@ -3376,7 +3376,7 @@ export default function Listing() {
 
               {/* Contact Info Card */}
               <div className="border border-slate-200/50 rounded-3xl p-6 lg:p-8 bg-transparent">
-                <h3 className="font-semibold text-gray-900 mb-3 lg:mb-4">Contact Information</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3 lg:mb-4">Contact Information</h3>
                 {currentUser ? (
                   <div className="space-y-2 lg:space-y-3">
                     {formattedDisplayNumber && (
@@ -3386,7 +3386,7 @@ export default function Listing() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Phone</p>
-                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{formattedDisplayNumber}</p>
+                          <p className="font-bold text-gray-900 dark:text-white text-sm lg:text-base tracking-tight">{formattedDisplayNumber}</p>
                         </div>
                       </a>
                     )}
@@ -3397,7 +3397,7 @@ export default function Listing() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Email</p>
-                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">{displayEmail}</p>
+                          <p className="font-bold text-gray-900 dark:text-white text-sm lg:text-base tracking-tight">{displayEmail}</p>
                         </div>
                       </a>
                     )}
@@ -3409,17 +3409,17 @@ export default function Listing() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">WhatsApp</p>
-                          <p className="font-bold text-gray-900 text-sm lg:text-base tracking-tight">Message host</p>
+                          <p className="font-bold text-gray-900 dark:text-white text-sm lg:text-base tracking-tight">Message host</p>
                         </div>
                       </a>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-4">
-                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                       <UserIcon className="w-5 h-5 text-gray-400" />
                     </div>
-                    <p className="text-sm text-gray-500 text-center">Sign in to view host contact details</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Sign in to view host contact details</p>
                     <Link
                       to="/sign-in"
                       className="px-5 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-lg transition-colors"
@@ -3478,15 +3478,15 @@ export default function Listing() {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xl font-bold text-gray-900">
+            <span className="text-xl font-bold text-gray-900 dark:text-white">
               R{isDailyStay ? (days > 0 ? grandTotal.toLocaleString() : listing.regularPrice.toLocaleString()) :
                 isHourlyRoom && totalHours > 0 ? totalPrice :
                   listing.regularPrice.toLocaleString()}
             </span>
-            <span className="text-gray-600 text-sm">
+            <span className="text-gray-600 dark:text-gray-400 text-sm">
               {isDailyStay ? (days > 0 ? ` (${days} day${days > 1 ? 's' : ''})` : ' / day') : 
                isHourlyRoom ? (totalHours > 0 ? ` (${totalHours} hr)` : ' / hour') : 
                isRent ? ' / month' : ''}

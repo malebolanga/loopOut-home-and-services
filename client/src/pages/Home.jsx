@@ -1394,7 +1394,7 @@ function MobileAppHomepage({
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white pb-32 relative overflow-x-clip w-full">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pb-32 relative overflow-x-clip w-full">
       <Helmet>
         <title>loopOut | Find Homes, Services &amp; Helpers Near You</title>
         <meta name="description" content="Discover verified helpers, book top services, and explore properties in your area with loopOut." />
@@ -1449,7 +1449,7 @@ function MobileAppHomepage({
         <section id="explore-section" className="mb-8">
 
           {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
-          <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3 mb-4 -mx-4 px-4 border-b border-gray-100/80 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] w-[calc(100%+2rem)]">
+          <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-3 mb-4 -mx-4 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] w-[calc(100%+2rem)]">
             <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
               {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -1472,13 +1472,13 @@ function MobileAppHomepage({
                       animate={isActive ? { scale: [1, 0.92, 1.06, 1] } : { scale: 1 }}
                       transition={{ duration: 0.35, ease: 'easeInOut' }}
                       className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${isActive
-                          ? 'bg-slate-950 text-white shadow-lg shadow-slate-950/20 ring-2 ring-slate-950'
-                          : 'bg-slate-50 border border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 shadow-2xs'
+                          ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-lg shadow-slate-950/20 ring-2 ring-slate-950 dark:ring-white'
+                          : 'bg-slate-50 dark:bg-gray-800 border border-slate-200/90 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700 hover:border-slate-300 shadow-2xs'
                         }`}
                     >
                       <span className="text-xl sm:text-2xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
                     </motion.div>
-                    <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800')
+                    <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800 dark:text-gray-300')
                       }`}>
                       {tab.label}
                     </span>
@@ -1495,8 +1495,8 @@ function MobileAppHomepage({
               >
                 <div className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 shadow-2xs ${
                   showAllCategories
-                    ? 'bg-slate-100 border border-slate-300 text-slate-700 hover:bg-slate-200'
-                    : 'bg-rose-50 border border-rose-200/90 text-rose-600 hover:bg-rose-100'
+                    ? 'bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-700'
+                    : 'bg-rose-50 dark:bg-rose-500/10 border border-rose-200/90 dark:border-rose-500/30 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-500/20'
                 }`}>
                   {showAllCategories ? (
                     <ChevronUp className="w-5 h-5 stroke-[2.5]" />
@@ -1584,16 +1584,16 @@ function MobileAppHomepage({
 
           {/* Empty State */}
           {filteredItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 my-4">
+            <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
-              <h3 className="text-base font-black text-slate-800 mb-1">
+              <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
                 No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
               </h3>
-              <p className="text-xs text-slate-400 max-w-xs mb-4">Be the first to list in this category.</p>
+              <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">Be the first to list in this category.</p>
               {activeSubcategory !== 'all' && (
                 <button
                   onClick={() => setActiveSubcategory('all')}
-                  className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider"
+                  className="px-4 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider"
                 >
                   Show All {activeTab}
                 </button>
@@ -1708,7 +1708,7 @@ function DesktopHomepage({
     return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
   }, [activeTab, activeSubcategory, getSourceForTabDesktop]);
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <Helmet>
         <title>loopOut | Premium Marketplace for Properties, Services &amp; Helpers</title>
         <meta name="description" content="Discover verified helpers, book top services, and explore exclusive properties in your area with loopOut." />
@@ -1728,7 +1728,7 @@ function DesktopHomepage({
       </div>
 
       {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-2xl py-3.5 shadow-xs">
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-3.5 shadow-xs">
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
           <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
             {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
@@ -1753,8 +1753,8 @@ function DesktopHomepage({
                     animate={isActive ? { scale: [1, 0.94, 1.06, 1] } : { scale: 1 }}
                     transition={{ duration: 0.35, ease: 'easeInOut' }}
                     className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isActive
-                        ? 'bg-slate-900 shadow-md ring-2 ring-slate-900 text-white'
-                        : 'bg-gray-50 border border-gray-100 hover:bg-gray-100/80 shadow-xs'
+                        ? 'bg-slate-900 dark:bg-white shadow-md ring-2 ring-slate-900 dark:ring-white text-white dark:text-slate-900'
+                        : 'bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:bg-gray-100/80 dark:hover:bg-gray-700 shadow-xs'
                       }`}
                   >
                     <span className="text-xl leading-none select-none">
@@ -1763,11 +1763,11 @@ function DesktopHomepage({
                   </motion.div>
 
                   <div className="text-left">
-                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800')
+                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800 dark:text-gray-300')
                       }`}>
                       {tab.label || tab.id}
                     </span>
-                    <span className="block text-[9.5px] text-gray-400 font-semibold mt-0.5 leading-tight">
+                    <span className="block text-[9.5px] text-gray-400 dark:text-gray-500 font-semibold mt-0.5 leading-tight">
                       {tab.desc}
                     </span>
                   </div>
@@ -1904,14 +1904,14 @@ function DesktopHomepage({
           <div className="flex flex-col items-center justify-center py-28 text-center bg-slate-50/50 rounded-3xl border border-dashed border-slate-200 p-8 my-4">
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-rose-100 rounded-full blur-2xl opacity-60" />
-              <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 rounded-3xl flex items-center justify-center border border-slate-200 shadow-sm">
+              <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 rounded-3xl flex items-center justify-center border border-slate-200 dark:border-gray-700 shadow-sm">
                 <span className="text-3xl">{currentCategoryObj?.emoji || '🔍'}</span>
               </div>
             </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2 tracking-tight">
+            <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">
               No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} available
             </h3>
-            <p className="text-sm text-slate-400 max-w-xs leading-relaxed mb-6">
+            <p className="text-sm text-slate-400 dark:text-gray-500 max-w-xs leading-relaxed mb-6">
               {activeSubcategory !== 'all'
                 ? `No listings found in ${activeSubcategory.replace('_', ' ')} yet. Try viewing all ${activeTab}.`
                 : `Try exploring other categories or expanding your search.`}

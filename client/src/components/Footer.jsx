@@ -82,7 +82,7 @@ const Footer = () => {
   
 
       {/* Main Footer - Hidden on mobile, visible on desktop */}
-      <footer className="hidden md:block bg-gray-50 text-gray-600 pt-20 pb-12 mt-20 border-t border-gray-100">
+      <footer className="hidden md:block bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-20 pb-12 mt-20 border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-16">
             
@@ -90,60 +90,60 @@ const Footer = () => {
             <div className="col-span-2 md:col-span-5 space-y-6 md:space-y-8">
               <div className="flex items-center gap-3">
                      <BrandIcon className="w-8 h-8" />
-                 <h3 className="text-2xl font-black tracking-tighter text-gray-900">loopOut</h3>
+                 <h3 className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white">loopOut</h3>
               </div>
-              <p className="text-sm text-gray-500 leading-relaxed font-medium max-w-sm">
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium max-w-sm">
                 The ultimate neural ecosystem for high-fidelity stays, vetted local professionals, and premium lifestyle services.
               </p>
             </div>
 
             {/* Links Columns */}
             <div className="md:col-span-2 space-y-6">
-              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Company</h5>
+              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Company</h5>
               <ul className="space-y-4">
-                <li><Link to="/about" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">About</Link></li>
-                <li><Link to="/pricing" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Pricing</Link></li>
-                <li><Link to="/become" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">List with loopOut</Link></li>
+                <li><Link to="/about" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">About</Link></li>
+                <li><Link to="/pricing" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Pricing</Link></li>
+                <li><Link to="/become" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">List with loopOut</Link></li>
               </ul>
             </div>
 
             <div className="md:col-span-2 space-y-6">
-              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Support</h5>
+              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Support</h5>
               <ul className="space-y-4">
-                <li><Link to="/help-center" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Help Center</Link></li>
-                <li><Link to="/trust" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Trust & Safety</Link></li>
-                <li><Link to="/contact" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Contact us</Link></li>
+                <li><Link to="/help-center" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Help Center</Link></li>
+                <li><Link to="/trust" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Trust & Safety</Link></li>
+                <li><Link to="/contact" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Contact us</Link></li>
               </ul>
             </div>
 
             <div className="col-span-2 md:col-span-3 space-y-6">
-              <h5 className="text-gray-950 font-black text-[10px] uppercase tracking-[0.2em]">Protocols</h5>
+              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Protocols</h5>
               <ul className="space-y-4">
-                <li><Link to="/terms" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="text-sm font-bold text-gray-400 hover:text-rose-500 transition-all">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Privacy Policy</Link></li>
               </ul>
             </div>
 
           </div>
 
-          <div className="border-t border-gray-100 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <span className="text-xs font-bold text-gray-400">© {new Date().getFullYear()} loopOut Neural Hub. All rights reserved.</span>
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
+            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} loopOut Neural Hub. All rights reserved.</span>
             <div className="flex items-center gap-10">
-               <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ENGLISH (SA)</span>
-               <span className="text-xs font-black text-gray-900 border-b border-rose-500/30">ZAR (R)</span>
+               <span className="text-xs font-black text-gray-900 dark:text-white border-b border-rose-500/30">ENGLISH (SA)</span>
+               <span className="text-xs font-black text-gray-900 dark:text-white border-b border-rose-500/30">ZAR (R)</span>
             </div>
           </div>
         </div>
       </footer>      
-      <footer className="md:hidden mt-12 border-t border-gray-100 bg-gray-50 px-6 py-8 text-center">
-        <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 text-xs font-bold text-gray-500">
+      <footer className="md:hidden mt-12 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 py-8 text-center">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 text-xs font-bold text-gray-500 dark:text-gray-400">
           <Link to="/help-center">Help</Link>
           <Link to="/contact">Contact</Link>
           <Link to="/trust">Trust &amp; Safety</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/privacy">Privacy</Link>
         </div>
-        <p className="mt-5 text-[11px] font-medium text-gray-400">&copy; {new Date().getFullYear()} loopOut. All rights reserved.</p>
+        <p className="mt-5 text-[11px] font-medium text-gray-400 dark:text-gray-500">&copy; {new Date().getFullYear()} loopOut. All rights reserved.</p>
       </footer>
     </>
   );

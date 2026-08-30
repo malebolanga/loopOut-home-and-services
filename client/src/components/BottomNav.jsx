@@ -114,7 +114,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <div ref={navRef} className="app-safe-bottom bg-white fixed bottom-0 left-0 right-0 z-[100] md:hidden">
+    <div ref={navRef} className="app-safe-bottom bg-white dark:bg-gray-950 fixed bottom-0 left-0 right-0 z-[100] md:hidden">
       {/* Profile Dropup Menu */}
       <AnimatePresence>
         {showProfileDropup && (
@@ -123,7 +123,7 @@ const BottomNav = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="absolute bottom-16 right-4 left-4 bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_-15px_40px_rgba(0,0,0,0.12),0_10px_20px_rgba(0,0,0,0.05)] border border-slate-100 p-4 z-[101] max-h-[80vh] overflow-y-auto scrollbar-hide"
+            className="absolute bottom-16 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_-15px_40px_rgba(0,0,0,0.12),0_10px_20px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800 p-4 z-[101] max-h-[80vh] overflow-y-auto scrollbar-hide"
           >
             {currentUser ? (
               <div className="flex flex-col gap-3">
@@ -176,12 +176,12 @@ const BottomNav = () => {
                         navigate(cmd.route);
                         setShowProfileDropup(false);
                       }}
-                      className="flex flex-col items-center justify-center gap-1 p-2 bg-gray-50 active:scale-95 rounded-2xl border border-slate-100 transition-all min-h-[68px]"
+                      className="flex flex-col items-center justify-center gap-1 p-2 bg-gray-50 dark:bg-gray-800/60 active:scale-95 rounded-2xl border border-slate-100 dark:border-gray-800 transition-all min-h-[68px]"
                     >
                       <div className={`p-1.5 ${cmd.color} text-white rounded-lg shadow-sm`}>
                         {cmd.icon}
                       </div>
-                      <span className="text-[8px] font-black text-gray-800 uppercase tracking-widest text-center leading-none">
+                      <span className="text-[8px] font-black text-gray-800 dark:text-gray-300 uppercase tracking-widest text-center leading-none">
                         {cmd.label}
                       </span>
                     </button>
@@ -189,10 +189,10 @@ const BottomNav = () => {
                 </div>
 
                 {/* Sign Out Button */}
-                <div className="border-t border-slate-100 pt-3 mt-1">
+                <div className="border-t border-slate-100 dark:border-gray-800 pt-3 mt-1">
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center justify-center gap-2 w-full py-3 text-xs font-black uppercase text-slate-600 active:scale-95 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 rounded-2xl border border-slate-100 transition-all tracking-[0.2em]"
+                    className="flex items-center justify-center gap-2 w-full py-3 text-xs font-black uppercase text-slate-600 dark:text-gray-400 active:scale-95 bg-slate-50 dark:bg-gray-800/60 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 rounded-2xl border border-slate-100 dark:border-gray-800 transition-all tracking-[0.2em]"
                   >
                     <ArrowRightOnRectangleIcon className="w-4 h-4" />
                     Sign out
@@ -201,7 +201,7 @@ const BottomNav = () => {
               </div>
             ) : (
               <div className="p-2 space-y-3">
-                <p className="text-center font-black text-sm text-slate-800 uppercase tracking-wider mb-2">Welcome to loopOut</p>
+                <p className="text-center font-black text-sm text-slate-800 dark:text-gray-200 uppercase tracking-wider mb-2">Welcome to loopOut</p>
                 <button
                   onClick={() => {
                     navigate('/sign-in');
@@ -216,7 +216,7 @@ const BottomNav = () => {
                     navigate('/sign-up');
                     setShowProfileDropup(false);
                   }}
-                  className="w-full py-3.5 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
+                  className="w-full py-3.5 border-2 border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-all"
                 >
                   Create Account
                 </button>
@@ -267,10 +267,10 @@ const BottomNav = () => {
                     }}
                   />
                 ) : (
-                  <Icon className={`w-7 h-7 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`} />
+                  <Icon className={`w-7 h-7 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`} />
                 )}
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600'}`}>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`}>
                 {item.label}
               </span>
               {isActive && (

@@ -168,7 +168,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none "
     >
       {/* Image section */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2">
+      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 mb-2">
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
           alt={item.name}
@@ -205,15 +205,15 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <p className={`font-semibold text-gray-900 truncate ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>
+            <p className={`font-semibold text-gray-900 dark:text-white truncate ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
               {item.address?.split(',')[0] || item.name || 'South Africa'}
             </p>
             
-            <p className="text-gray-500 text-[13px] truncate leading-tight mt-0.5">
+            <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate leading-tight mt-0.5">
               {item.name}
             </p>
             
-            <p className="text-gray-500 text-[13px] truncate leading-tight">
+            <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate leading-tight">
               {getCategoryLabel()}
             </p>
           </div>
@@ -222,13 +222,13 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
             <div className="flex items-center gap-0.5">
               {item.rating > 0 ? (
                 <>
-                  <StarIconSolid className="w-3 h-3 text-gray-900 shrink-0" />
-                  <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
+                  <StarIconSolid className="w-3 h-3 text-gray-900 dark:text-white shrink-0" />
+                  <span className={`font-semibold text-gray-900 dark:text-white ${reducedSize ? 'text-[10px]' : 'text-[11px]'}`}>
                     {item.rating.toFixed(1)}
                   </span>
                 </>
               ) : (
-                <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[10px]' : 'text-[11px]'}`}>New</span>
+                <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[9px]' : 'text-[10px]'}`}>New</span>
               )}
             </div>
             {showOwner && owner && owner.avatar && (
@@ -245,14 +245,14 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         </div>
 
         {item._distance && item._distance !== Infinity && !hideDistance && (
-          <p className="text-gray-500 text-[14px] leading-tight">
+          <p className="text-gray-500 dark:text-gray-400 text-[12px] leading-tight">
             {item._distance < 1 ? 'Near you' : `${Math.round(item._distance)} km away`}
           </p>
         )}
 
         <div className="flex items-baseline gap-1 mt-1">
-          <span className={`font-semibold text-gray-900 ${reducedSize ? 'text-[14px]' : 'text-[15px]'}`}>{formatPrice()}</span>
-          <span className={`text-gray-500 font-normal ${reducedSize ? 'text-[12px]' : 'text-[14px]'}`}>{getPriceSuffix()}</span>
+          <span className={`font-semibold text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>{formatPrice()}</span>
+          <span className={`text-gray-500 dark:text-gray-400 font-normal ${reducedSize ? 'text-[10px]' : 'text-[12px]'}`}>{getPriceSuffix()}</span>
         </div>
       </div>
     </div>

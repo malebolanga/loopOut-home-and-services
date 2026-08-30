@@ -153,7 +153,7 @@ export default function DashBoard() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [hostStats, setHostStats] = useState({ listings: 0, rating: 5.0, earnings: 0 });
+  const [hostStats, setHostStats] = useState({ listings: 0, rating: null, ratingCount: 0, earnings: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -169,12 +169,14 @@ export default function DashBoard() {
           
           const likes = userData.likeCount || 0;
           const dislikes = userData.dislikeCount || 0;
-          const totalRating = (likes + dislikes) > 0 ? (likes / (likes + dislikes) * 5).toFixed(1) : '5.0';
+          const totalRatingCount = likes + dislikes;
+          const totalRating = totalRatingCount > 0 ? (likes / totalRatingCount * 5).toFixed(1) : null;
           
           setHostStats(prev => ({
             ...prev,
             listings: postData.count || 0,
-            rating: totalRating
+            rating: totalRating,
+            ratingCount: totalRatingCount
           }));
         }
       } catch (err) {
@@ -559,11 +561,13 @@ export default function DashBoard() {
 
               <div className="flex items-center gap-4 bg-white/80 backdrop-blur-sm px-6 py-4 rounded-[2rem] border border-gray-100 shadow-sm">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-rose-500 p-0.5 shadow-md">
-                   <img src={currentUser?.avatar || 'https://via.placeholder.com/150'} alt="Host" className="w-full h-full object-cover rounded-full" />
+                   <ImageWithFallback src={currentUser?.avatar} alt="Host" type="avatar" className="w-full h-full rounded-full" />
                 </div>
                 <div className="hidden sm:block">
                   <p className="text-sm font-black text-gray-900 leading-none mb-1">{currentUser?.username}</p>
-                  <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Premium Host</p>
+                  <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">
+                    {currentUser?.isVerified ? 'Verified Host' : 'Host'}
+                  </p>
                 </div>
               </div>
            </div>
@@ -574,7 +578,7 @@ export default function DashBoard() {
           {[
             { label: 'Total Listings', value: stats.listings, icon: HomeIcon, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: 'Total Earnings', value: `R${stats.earnings.toLocaleString()}`, icon: BanknotesIcon, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Host Rating', value: `${stats.rating}★`, icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
+            { label: 'Host Rating', value: stats.rating ? `${stats.rating}★` : 'New', icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Pending Approval', value: stats.pending, icon: ClockIcon, color: 'text-rose-600', bg: 'bg-rose-50' }
           ].map((stat, i) => (
             <motion.div
@@ -727,7 +731,7 @@ export default function DashBoard() {
           ) : filteredBookings.length === 0 ? (
             <div className="text-center py-20 bg-white/50 rounded-[3rem] border-2 border-dashed border-slate-200/50">
               <CalendarIcon className="mx-auto h-12 w-12 text-gray-200" />
-              <h3 className="mt-4 text-xl font-black text-gray-900 italic tracking-tight">No protocol found</h3>
+              <h3 className="mt-4 text-xl font-black text-gray-900 tracking-tight">Nothing here yet</h3>
               <p className="mt-2 text-gray-500 text-sm font-medium">
                 {searchTerm || filter !== 'all' 
                   ? 'Try adjusting your search or filter criteria'
@@ -735,153 +739,105 @@ export default function DashBoard() {
                 }
               </p>
             </div>
-          ) :            filteredBookings.map((booking, idx) => (
+          ) :            filteredBookings.map((booking, idx) => {
+              const isHostView = dashboardMode === 'hosting';
+              const contactName = isHostView ? booking.requesterName : booking.ownerName;
+              const contactAvatar = isHostView ? booking.requesterAvatar : booking.ownerAvatar;
+              const contactPhone = isHostView ? booking.requesterPhone : booking.ownerPhone;
+              const contactRole = isHostView ? 'Client' : 'Provider';
+              const statusDot =
+                booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-500' :
+                booking.status === 'pending' ? 'bg-amber-500' :
+                booking.status === 'completed' ? 'bg-blue-500' :
+                booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-500' :
+                'bg-gray-400';
+
+              return (
               <motion.div
                 key={booking._id}
                 id={`booking-${booking._id}`}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                className="group relative bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] transition-all duration-500"
+                className="group relative bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-300"
               >
-                {/* ── 1. Top Type Header Banner ── */}
-                <div className="px-6 py-3.5 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 text-white flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-rose-400 font-black text-sm flex-shrink-0">
-                      {getServiceIcon(booking)}
+                <div className={`flex border-l-4 ${
+                  booking.status === 'confirmed' || booking.status === 'approved' ? 'border-emerald-400' :
+                  booking.status === 'pending' ? 'border-amber-400' :
+                  booking.status === 'completed' ? 'border-blue-400' :
+                  booking.status === 'cancelled' || booking.status === 'declined' ? 'border-rose-400' :
+                  'border-gray-300'
+                }`}>
+                <div className="flex-1 p-5 sm:p-6 flex flex-col gap-4 min-w-0">
+
+                  {/* ── Header: item + status ── */}
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-rose-500 font-black text-sm flex-shrink-0">
+                        {getServiceIcon(booking)}
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 block leading-none mb-1">
+                          {getCategoryBadge(booking)}
+                        </span>
+                        <h4 className="text-base font-black text-gray-900 truncate leading-tight">
+                          {booking.itemName}
+                        </h4>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-400 block leading-none mb-1">
-                        {getCategoryBadge(booking)}
-                      </span>
-                      <h4 className="text-sm font-black text-white truncate leading-tight">
-                        {booking.itemName}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-700 border-gray-100'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        booking.status === 'confirmed' || booking.status === 'approved' ? 'bg-emerald-500' :
-                        booking.status === 'pending' ? 'bg-amber-500' :
-                        booking.status === 'completed' ? 'bg-blue-500' :
-                        booking.status === 'cancelled' || booking.status === 'declined' ? 'bg-rose-500' :
-                        'bg-gray-400'
-                      } animate-pulse`} />
+                    <span className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${statusConfig[booking.status]?.color || 'bg-gray-100 text-gray-700 border-gray-100'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusDot}`} />
                       {statusConfig[booking.status]?.label || booking.status}
                     </span>
                   </div>
-                </div>
 
-                <div className="p-6 flex flex-col gap-5">
-
-                  {/* ── 2. Requester (Client) & Host (Owner) Row ── */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-slate-50/80 rounded-2xl border border-slate-100">
-                    
-                    {/* Requester Info */}
-                    <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl overflow-hidden border border-rose-200 shadow-sm flex-shrink-0 bg-white">
-                        <ImageWithFallback src={booking.requesterAvatar} alt={booking.requesterName} type="avatar" className="w-full h-full" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 inline-block mb-1">
-                          Requester / Client
-                        </span>
-                        <h5 className="text-sm font-black text-gray-900 truncate leading-none mb-1">{booking.requesterName}</h5>
-                        <p className="text-[11px] font-bold text-gray-500 truncate">{booking.requesterPhone}</p>
-                      </div>
+                  {/* ── Primary contact: whoever the viewer needs to reach ── */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 flex-shrink-0 bg-gray-50">
+                      <ImageWithFallback src={contactAvatar} alt={contactName} type="avatar" className="w-full h-full" />
                     </div>
-
-                    {/* Host / Owner Info */}
-                    <div className="flex items-center gap-3 md:border-l md:border-slate-200 md:pl-4">
-                      <div className="w-11 h-11 rounded-2xl overflow-hidden border border-slate-200 shadow-sm flex-shrink-0 bg-slate-900 text-white flex items-center justify-center font-black text-sm">
-                        {booking.ownerAvatar ? (
-                          <ImageWithFallback src={booking.ownerAvatar} alt={booking.ownerName} type="avatar" className="w-full h-full" />
-                        ) : (
-                          booking.ownerName?.charAt(0)?.toUpperCase() || 'H'
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-600 bg-slate-200/60 px-2 py-0.5 rounded-full border border-slate-300/40 inline-block mb-1">
-                          Host / Owner
-                        </span>
-                        <h5 className="text-sm font-black text-gray-900 truncate leading-none mb-1">{booking.ownerName}</h5>
-                        <p className="text-[11px] font-bold text-gray-400 truncate">Card Owner</p>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* ── 3. Start ➔ End Schedule Timeline ── */}
-                  <div className="bg-gradient-to-r from-blue-50/60 via-slate-50 to-rose-50/60 p-4 rounded-2xl border border-slate-200/60">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4 text-blue-600" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Booking Timeline</span>
-                      </div>
-                      {booking.durationLabel && (
-                        <span className="px-3 py-1 bg-white text-gray-900 border border-slate-200 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm">
-                          {booking.durationLabel}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Start Box */}
-                      <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Start Date & Time</span>
-                        </div>
-                        <p className="text-xs font-black text-gray-900">{booking.startFormatted.date}</p>
-                        <p className="text-[11px] font-bold text-blue-600 mt-0.5">{booking.startFormatted.time}</p>
-                      </div>
-
-                      {/* End Box */}
-                      <div className="bg-white p-3 rounded-xl border border-rose-100 shadow-sm">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="w-2 h-2 rounded-full bg-rose-500" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">End Date & Time</span>
-                        </div>
-                        <p className="text-xs font-black text-gray-900">{booking.endFormatted.date}</p>
-                        <p className="text-[11px] font-bold text-rose-600 mt-0.5">{booking.endFormatted.time}</p>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-gray-900 truncate leading-tight">{contactName}</p>
+                      <p className="text-[11px] font-semibold text-gray-400 truncate">{contactRole} · {contactPhone || 'No phone on file'}</p>
                     </div>
                   </div>
 
-                  {/* ── 4. Location & Price Grid ── */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    
-                    {/* Location */}
-                    <div className="md:col-span-2 flex items-center gap-3 bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
-                      <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
-                        <MapPinIcon className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 block mb-0.5">Location / Place</span>
-                        <a 
-                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-bold text-rose-600 hover:underline block truncate"
-                        >
-                          {booking.location}
-                        </a>
-                      </div>
+                  {/* ── Timeline + price, compact single row ── */}
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 text-gray-600 min-w-0">
+                      <CalendarIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      <span className="font-bold whitespace-nowrap">{booking.startFormatted.date}, {booking.startFormatted.time}</span>
+                      <span className="text-gray-300">→</span>
+                      <span className="font-bold whitespace-nowrap">{booking.endFormatted.date}, {booking.endFormatted.time}</span>
                     </div>
-
-                    {/* Price */}
-                    <div className="bg-gray-900 text-white rounded-2xl p-3.5 border border-gray-800 flex flex-col justify-center items-end">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-gray-400 mb-0.5">Total Price</span>
-                      <span className="text-xl font-black text-emerald-400 leading-none">R{Number(booking.totalAmount).toLocaleString()}</span>
-                    </div>
+                    {booking.durationLabel && (
+                      <span className="px-2 py-0.5 bg-gray-50 border border-gray-100 rounded-full text-[9px] font-black uppercase tracking-widest text-gray-500 flex-shrink-0">
+                        {booking.durationLabel}
+                      </span>
+                    )}
                   </div>
 
-                  {/* ── 5. Special Notes / Performer ── */}
+                  {/* ── Location + price ── */}
+                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-50">
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(booking.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-rose-500 transition-colors min-w-0 truncate"
+                    >
+                      <MapPinIcon className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{booking.location}</span>
+                    </a>
+                    <span className="flex-shrink-0 text-lg font-black text-gray-900">
+                      R{Number(booking.totalAmount).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* ── Special Notes / Performer ── */}
                   {booking.selectedPerformer && (
                     <div className="flex items-center gap-3 bg-rose-50 border border-rose-100 rounded-xl p-3">
                       {booking.performerImage && (
-                        <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-8 h-8 rounded-full object-cover border border-rose-200" />
+                        <ImageWithFallback src={booking.performerImage} alt={booking.selectedPerformer} type="avatar" className="w-8 h-8 rounded-full border border-rose-200" />
                       )}
                       <div>
                         <span className="text-[8px] font-black uppercase tracking-widest text-rose-400 block">Assigned Pro</span>
@@ -894,22 +850,24 @@ export default function DashBoard() {
                     <ClientRequestNote message={booking.specialRequirements} />
                   )}
 
-                  {/* ── 6. Actions Bar ── */}
+                  {/* ── Actions Bar ── */}
                   <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
                     
-                    {/* Contact buttons */}
+                    {/* Contact buttons — always reach the OTHER party, not yourself */}
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => window.open(`tel:${booking.requesterPhone.replace(/\s/g, '')}`, '_self')}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
-                        title="Call Requester"
+                        onClick={() => contactPhone && window.open(`tel:${contactPhone.replace(/\s/g, '')}`, '_self')}
+                        disabled={!contactPhone}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-500 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={`Call ${contactRole}`}
                       >
                         <PhoneIcon className="w-4 h-4" />
                       </button>
 
                       <button
-                        onClick={() => window.open(`https://wa.me/${booking.requesterPhone.replace(/\s/g, '')}`, '_blank')}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-100"
+                        onClick={() => contactPhone && window.open(`https://wa.me/${contactPhone.replace(/\s/g, '')}`, '_blank')}
+                        disabled={!contactPhone}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <FaWhatsapp size={14} />
                         WhatsApp
@@ -985,39 +943,13 @@ export default function DashBoard() {
                   </div>
 
                 </div>
+                </div>
               </motion.div>
-            ))
+              );
+            })
           }
         </div>
 
-        {/* Demo Info */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-14">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Demo Information</h3>
-          <p className="text-blue-700">
-            This is a demo dashboard showing how WhatsApp bookings would appear. In a real application, 
-            these bookings would be automatically saved when clients book through your WhatsApp integration.
-          </p>
-          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-600">
-            <div>
-              <strong>Features demonstrated:</strong>
-              <ul className="list-disc list-inside mt-1">
-                <li>Booking management for properties and services</li>
-                <li>Status tracking (pending, confirmed, completed)</li>
-                <li>Client communication via WhatsApp</li>
-                <li>Search and filter functionality</li>
-              </ul>
-            </div>
-            <div>
-              <strong>Try these actions:</strong>
-              <ul className="list-disc list-inside mt-1">
-                <li>Filter by status using the buttons above</li>
-                <li>Search for client names or phone numbers</li>
-                <li>Update booking status (Confirm/Decline)</li>
-                <li>Click WhatsApp buttons to message clients</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

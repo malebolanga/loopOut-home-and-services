@@ -2183,7 +2183,7 @@ export default function BeautyPage() {
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
       {/* Navigation - Transparent on top of image */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -2243,7 +2243,7 @@ export default function BeautyPage() {
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 pb-60 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 pb-60 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
@@ -2788,12 +2788,12 @@ export default function BeautyPage() {
           <div className="lg:col-span-1">
             <div className="top-24 py-12">
               {/* Masterpiece Booking Card */}
-              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 mb-12 lg:mb-0">
+              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
                 <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
                   <div>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-gray-950 tracking-tighter">R{helper.regularPrice}</span>
+                      <span className="text-3xl font-black text-gray-950 dark:text-white tracking-tighter">R{helper.regularPrice}</span>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/ service</span>
                     </div>
                   </div>
@@ -2909,25 +2909,25 @@ export default function BeautyPage() {
                       return s ? (
                         <div key={id} className="flex justify-between items-center">
                           <span className="text-xs font-bold text-gray-500">{s.name}</span>
-                          <span className="text-xs font-black text-gray-950">R{s.price}</span>
+                          <span className="text-xs font-black text-gray-950 dark:text-white">R{s.price}</span>
                         </div>
                       ) : null;
                     })
                   ) : (
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
-                      <span className="text-xs font-black text-gray-950">R{helper.regularPrice}</span>
+                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.regularPrice}</span>
                     </div>
                   )}
                   {helper.travelFee > 0 && (
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-gray-500 italic">Deployment Fee</span>
-                      <span className="text-xs font-black text-gray-950">R{helper.travelFee}</span>
+                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.travelFee}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
-                    <span className="text-xs font-black text-gray-950">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
+                    <span className="text-xs font-black text-gray-950 dark:text-white">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
                   </div>
                   <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
                     <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
@@ -2952,7 +2952,7 @@ export default function BeautyPage() {
             <UserGroupIcon className="text-rose-500 w-6 h-6" />
             Mutual Connections
           </h2>
-          <div className="bg-white rounded-[2rem] p-8 border border-slate-200/60 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-200/60 dark:border-gray-800 shadow-sm">
             <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
           </div>
 
@@ -3681,7 +3681,7 @@ export default function BeautyPage() {
 
 
       {/* Mobile Bottom Bar - 100% Width & Flush to Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom">
         <div className="flex items-center justify-between">
           <div className="flex-1 mr-4">
             <div className="flex items-baseline gap-2">

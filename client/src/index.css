@@ -9,7 +9,20 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply bg-slate-50 text-[#222222];
+    @apply bg-slate-50 text-[#222222] transition-colors duration-300;
+}
+
+html {
+    @apply bg-slate-50;
+}
+
+.dark body,
+html.dark body {
+    @apply bg-gray-950 text-gray-100;
+}
+
+html.dark {
+    @apply bg-gray-950;
 }
 
 /* Glassmorphism */
@@ -28,6 +41,12 @@ body {
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-bottom-nav {
+    background: rgba(9, 9, 11, 0.92);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* Premium Animations */

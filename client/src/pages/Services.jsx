@@ -1338,7 +1338,7 @@ const ServicePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-gray-950">
         {/* Skeleton Hero */}
         <div className="h-[420px] md:h-[520px] bg-gradient-to-br from-slate-100 to-slate-200 animate-pulse" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1377,8 +1377,8 @@ const ServicePage = () => {
           <div className="w-20 h-20 rounded-3xl bg-rose-100 flex items-center justify-center mx-auto mb-6">
             <XMarkIcon className="w-10 h-10 text-rose-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-500 mb-6">{error}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Something went wrong</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:shadow-rose-200 active:scale-95"
@@ -1397,8 +1397,8 @@ const ServicePage = () => {
           <div className="w-20 h-20 rounded-3xl bg-slate-100 flex items-center justify-center mx-auto mb-6">
             <InformationCircleIcon className="w-10 h-10 text-slate-400" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Service not found</h2>
-          <p className="text-gray-500 mb-6">This service may have been removed or doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Service not found</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">This service may have been removed or doesn't exist.</p>
           <button
             onClick={() => navigate('/service-home-page')}
             className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all active:scale-95"
@@ -1429,7 +1429,7 @@ const ServicePage = () => {
   const serviceHighlights = currentServiceConfig?.highlights || [];
 
   return (
-    <div className="min-h-screen pb-20 lg:pb-0 bg-white">
+    <div className="min-h-screen pb-20 lg:pb-0 bg-white dark:bg-gray-900">
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
         <div className="max-w-screen-xl mx-auto px-4 md:px-6">
@@ -1517,7 +1517,7 @@ const ServicePage = () => {
 
             <button
               onClick={() => openFullScreenGallery(0)}
-              className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-xl px-5 py-2.5 rounded-2xl font-semibold text-sm text-slate-900 flex items-center gap-2.5 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl border border-slate-200/60"
+              className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-xl px-5 py-2.5 rounded-2xl font-semibold text-sm text-slate-900 flex items-center gap-2.5 hover:bg-white dark:hover:bg-gray-900 hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl border border-slate-200/60"
             >
               <Squares2X2Icon className="w-4 h-4" />
               <span>Show all {service.imageUrls.length} photos</span>
@@ -1532,14 +1532,14 @@ const ServicePage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 py-8 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-8 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Header Info */}
-            <div className="border-b border-gray-100 pb-6">
+            <div className="border-b border-gray-100 dark:border-gray-800 pb-6">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-3">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight leading-tight">{service.name}</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">{service.name}</h1>
                 {operatingStatus.isClosed ? (
                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-100 rounded-2xl shrink-0">
                     <span className="relative flex h-2 w-2">
@@ -1558,10 +1558,10 @@ const ServicePage = () => {
                   </div>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-3 text-gray-500 text-sm">
+              <div className="flex flex-wrap items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
                 <span className="flex items-center gap-1.5">
                   <StarIconSolid className="w-4 h-4 text-amber-400" />
-                  <span className="font-semibold text-gray-900">{service.rating || '4.5'}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{service.rating || '4.5'}</span>
                   <span className="text-gray-400">({service.reviewCount || commentCount || '0'} reviews)</span>
                 </span>
                 <span className="text-gray-300">·</span>
@@ -1579,12 +1579,12 @@ const ServicePage = () => {
 
 
             {/* Provider Info */}
-            <div className="py-6 border-b border-gray-200">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
               <Link 
                 to={`/user-profile/${service.userRef?._id || service.userRef || service.creator}`}
                 className="flex items-start gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm border border-gray-100">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 shadow-sm border border-gray-100 dark:border-gray-800">
                   <img
                     src={service.userRef?.avatar || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                     alt={service.userRef?.username || service.name}
@@ -1593,25 +1593,25 @@ const ServicePage = () => {
                   />
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900">Provided by {service.userRef?.username || service.name}</h2>
-                  <p className="text-gray-600 font-medium">{getProfessionalTitle(service.type)}</p>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Provided by {service.userRef?.username || service.name}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 font-medium">{getProfessionalTitle(service.type)}</p>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {service.providerType === 'company' && (
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                         <FaBriefcase className="text-gray-400" /> Company
                       </span>
                     )}
                     {service.providerType === 'individual' && service.citizenship && (
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                         <FaUser className="text-gray-400" /> Citizenship: {service.citizenship}
                       </span>
                     )}
                     {service.security && (
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                         <FaCheckCircle className="text-emerald-500" /> Verified
                       </span>
                     )}
-                    <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                    <span className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                       <FaBriefcase className="text-gray-400" /> {enhancedServiceData.yearsExperience}+ years exp
                     </span>
                   </div>
@@ -1621,21 +1621,21 @@ const ServicePage = () => {
 
 
             {/* Highlights */}
-            <div className="py-6 border-b border-gray-200 space-y-4">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800 space-y-4">
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <HomeIcon className="w-5 h-5 text-gray-700" />
+                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <HomeIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Provided at your location</h3>
-                  <p className="text-gray-600 text-sm">Service provider travels to you</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Provided at your location</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Service provider travels to you</p>
                 </div>
               </div>
 
               <div className="py-4 space-y-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <ClockIcon className="w-5 h-5 text-gray-900" />
-                  <h3 className="font-bold text-gray-900">Weekly Schedule</h3>
+                  <ClockIcon className="w-5 h-5 text-gray-900 dark:text-white" />
+                  <h3 className="font-bold text-gray-900 dark:text-white">Weekly Schedule</h3>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => {
@@ -1645,16 +1645,16 @@ const ServicePage = () => {
                     return (
                       <div 
                         key={day} 
-                        className={`flex flex-col p-3 rounded-xl border ${isToday ? 'border-rose-500 bg-rose-50/20' : 'border-gray-100 bg-gray-50/50'}`}
+                        className={`flex flex-col p-3 rounded-xl border ${isToday ? 'border-rose-500 bg-rose-50/20' : 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50'}`}
                       >
                         <span className={`text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-rose-600' : 'text-gray-400'}`}>
                           {day.slice(0, 3)}
                         </span>
                         {schedule.closed ? (
-                          <span className="text-[10px] font-bold text-gray-500 mt-1">Closed</span>
+                          <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-1">Closed</span>
                         ) : (
                           <div className="flex flex-col">
-                            <span className={`text-[10px] font-black mt-1 ${isToday && operatingStatus.isClosed ? 'text-rose-500' : 'text-gray-900'}`}>
+                            <span className={`text-[10px] font-black mt-1 ${isToday && operatingStatus.isClosed ? 'text-rose-500' : 'text-gray-900 dark:text-white'}`}>
                               {schedule.open} - {schedule.close}
                             </span>
                             {isToday && operatingStatus.isClosed && (
@@ -1669,32 +1669,32 @@ const ServicePage = () => {
               </div>
 
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-gray-100 rounded-lg">
-                  <BoltIcon className="w-5 h-5 text-gray-700" />
+                <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                  <BoltIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">{enhancedServiceData.responseTime}</h3>
-                  <p className="text-gray-600 text-sm">Average response time</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{enhancedServiceData.responseTime}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">Average response time</p>
                 </div>
               </div>
 
               {serviceHighlights.map((highlight, idx) => (
                 <div key={idx} className="flex items-start gap-4">
-                  <div className="p-2 bg-gray-100 rounded-lg">
+                  <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
                     {highlight.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{highlight.title}</h3>
-                    <p className="text-gray-600 text-sm">{highlight.desc}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{highlight.title}</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm">{highlight.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Description */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About this service</h2>
-              <div className="text-gray-700 leading-relaxed space-y-4">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About this service</h2>
+              <div className="text-gray-700 dark:text-gray-300 leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
                 ))}
@@ -1702,7 +1702,7 @@ const ServicePage = () => {
               {fullDescription.length > 300 && (
                 <button
                   onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="mt-4 font-semibold text-gray-900 underline underline-offset-4 hover:text-gray-600 flex items-center gap-2"
+                  className="mt-4 font-semibold text-gray-900 dark:text-white underline underline-offset-4 hover:text-gray-600 dark:hover:text-gray-400 flex items-center gap-2"
                 >
                   {showFullDescription ? 'Show less' : 'Show more'}
                   {showFullDescription ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
@@ -1712,10 +1712,10 @@ const ServicePage = () => {
 
             {/* Storage configuration and policies */}
             {service.type === 'storage' && (service.storageSize || service.storagePriceDay || service.storagePriceMonth || service.storageFailurePolicy || service.storageTerms || service.storagePolicyDocUrl) && (
-              <section className="py-6 border-b border-gray-200 space-y-4">
+              <section className="py-6 border-b border-gray-200 dark:border-gray-800 space-y-4">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Storage details</h2>
-                  <p className="text-sm text-gray-600 mt-1">Review the unit configuration and provider policies before booking.</p>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Storage details</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Review the unit configuration and provider policies before booking.</p>
                 </div>
 
                 {(service.storageSize || service.storagePriceDay || service.storagePriceMonth) && (
@@ -1733,9 +1733,9 @@ const ServicePage = () => {
                   </div>
                 )}
                 {service.storageTerms && (
-                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                    <h3 className="font-semibold text-gray-900 mb-1">Terms &amp; Conditions</h3>
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{service.storageTerms}</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Terms &amp; Conditions</h3>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{service.storageTerms}</p>
                   </div>
                 )}
                 {service.storagePolicyDocUrl && (
@@ -1747,8 +1747,8 @@ const ServicePage = () => {
             )}
 
             {/* Service Options */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Service options</h2>
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Service options</h2>
               <div className="space-y-4">
                 {displayedServices.map((option, idx) => {
                   const isSelected = selectedService?.id === option.id;
@@ -1758,37 +1758,37 @@ const ServicePage = () => {
                       className={`flex items-start justify-between p-4 border-2 rounded-xl transition-all cursor-pointer ${
                         isSelected 
                           ? 'border-rose-500 bg-rose-50 shadow-sm' 
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                       onClick={() => setSelectedService(option)}
                     >
                       <div className="flex-1 pr-4">
                         <div className="flex items-start gap-3 mb-1">
                           {option.image && (
-                            <img src={option.image} alt={option.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
+                            <img src={option.image} alt={option.name} className="w-12 h-12 object-cover rounded-lg border bg-white dark:bg-gray-900 shrink-0 mt-0.5" />
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>{option.icon}</span>
-                              <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>{option.name}</h3>
+                              <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900 dark:text-white'}`}>{option.name}</h3>
                               {option.popular && (
                                 <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
                                   Popular
                                 </span>
                               )}
                               {option.type && (
-                                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs font-medium rounded">
                                   {option.type}
                                 </span>
                               )}
                             </div>
-                            <p className="text-gray-600 text-sm mt-1">{option.description}</p>
-                            <p className="text-gray-500 text-xs mt-0.5">{option.duration}</p>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{option.description}</p>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{option.duration}</p>
                           </div>
                         </div>
                       </div>
                       <div className="text-right flex flex-col items-end">
-                        <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900'}`}>
+                        <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900 dark:text-white'}`}>
                           {typeof option.price === 'number' || (option.price && !String(option.price).startsWith('R')) ? `R${option.price}` : option.price}
                         </p>
                         <button 
@@ -1813,7 +1813,7 @@ const ServicePage = () => {
               {serviceOptions.length > 4 && (
                 <button
                   onClick={() => setShowAllServices(!showAllServices)}
-                  className="mt-4 font-semibold text-gray-900 underline underline-offset-4 hover:text-gray-600 flex items-center gap-2"
+                  className="mt-4 font-semibold text-gray-900 dark:text-white underline underline-offset-4 hover:text-gray-600 dark:hover:text-gray-400 flex items-center gap-2"
                 >
                   {showAllServices ? 'Show less' : `Show all ${serviceOptions.length} options`}
                   {showAllServices ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
@@ -1822,38 +1822,38 @@ const ServicePage = () => {
             </div>
 
             {/* Qualifications */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Qualifications</h2>
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Qualifications</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start gap-3">
                   <BriefcaseIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">{enhancedServiceData.yearsExperience} years of experience</h3>
-                    <p className="text-gray-600 text-sm mt-1">Professional experience in {getProfessionalTitle(service.type).toLowerCase()}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{enhancedServiceData.yearsExperience} years of experience</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Professional experience in {getProfessionalTitle(service.type).toLowerCase()}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <TrophyIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">Certified Professional</h3>
-                    <p className="text-gray-600 text-sm mt-1">Licensed and insured service provider</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Certified Professional</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Licensed and insured service provider</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <UserGroupIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">Notable Clientele</h3>
-                    <p className="text-gray-600 text-sm mt-1">Trusted by repeat customers</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Notable Clientele</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Trusted by repeat customers</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <AcademicCapIcon className="w-6 h-6 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-gray-900">Trained & Certified</h3>
-                    <p className="text-gray-600 text-sm mt-1">Professional training completed</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Trained & Certified</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Professional training completed</p>
                   </div>
                 </div>
               </div>
@@ -1861,8 +1861,8 @@ const ServicePage = () => {
 
             {/* Service Performers Section */}
             {service.performers && service.performers.length > 0 && (
-              <div className="py-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Service Performers</h2>
+              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Service Performers</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {service.performers.map((performer, idx) => {
                     const hasBookedPerformer = userBookings.some(b => b.selectedPerformer === performer.name);
@@ -1870,7 +1870,7 @@ const ServicePage = () => {
                     const perfRatingsCount = performer.ratingsCount || 0;
 
                     return (
-                      <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-gray-900 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-4">
                           <div 
                             onClick={() => performer.image && setZoomedImage(performer.image)}
@@ -1929,10 +1929,10 @@ const ServicePage = () => {
             )}
 
             {/* Reviews */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] w-7 h-7 drop-shadow-sm" />
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
                   {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (service.rating || '4.5')} · {commentCount} reviews
                 </h2>
               </div>
@@ -1941,8 +1941,8 @@ const ServicePage = () => {
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
                     {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                         <FaBroom className="text-xl" />
                         <span>Cleanliness</span>
                       </div>
@@ -1954,8 +1954,8 @@ const ServicePage = () => {
                       </div>
                     </div>
                     {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
+                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
                         <FaCommentDots className="text-xl" />
                         <span>Communication</span>
                       </div>
@@ -1994,7 +1994,7 @@ const ServicePage = () => {
                                       <img
                                         src={comment.userAvatar || '/default-avatar.jpg'}
                                         alt={comment.userName}
-                                        className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
+                                        className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
                                         onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                       />
                                       <div>
@@ -2019,7 +2019,7 @@ const ServicePage = () => {
                                       </div>
                                     )}
                                   </div>
-                                  <p className="text-gray-700 line-clamp-4 leading-relaxed whitespace-pre-line">
+                                  <p className="text-gray-700 dark:text-gray-300 line-clamp-4 leading-relaxed whitespace-pre-line">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -2032,7 +2032,7 @@ const ServicePage = () => {
                   )}
                 </>
               ) : (
-                <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
               <button
@@ -2048,7 +2048,7 @@ const ServicePage = () => {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-4">
               {/* Premium Booking Card */}
-              <div className="rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.10)] border border-slate-100 overflow-hidden bg-white">
+              <div className="rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.10)] border border-slate-100 overflow-hidden bg-white dark:bg-gray-900">
                 {/* Card Header */}
                 <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white">
                   <div className="flex items-end justify-between">
@@ -2193,7 +2193,7 @@ const ServicePage = () => {
               </div>
 
               {/* Contact Provider Card */}
-              <div className="rounded-3xl border border-slate-100 p-5 bg-white shadow-sm">
+              <div className="rounded-3xl border border-slate-100 p-5 bg-white dark:bg-gray-900 shadow-sm">
                 <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wide">Contact provider directly</h3>
                 <div className="space-y-2.5">
                   {whatsappNumber && (
@@ -2221,7 +2221,7 @@ const ServicePage = () => {
 
               {/* Trust badge */}
               <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-100">
-                <div className="p-2 bg-white rounded-xl shadow-sm">
+                <div className="p-2 bg-white dark:bg-gray-900 rounded-xl shadow-sm">
                   <FaShieldAlt className="text-slate-500 text-lg" />
                 </div>
                 <p className="text-xs text-slate-500 leading-snug">To protect your payment, always communicate and pay through our platform.</p>
@@ -2236,9 +2236,9 @@ const ServicePage = () => {
 
 
         {/* Location Map */}
-        <div className="mt-12 pt-8 border-t border-gray-200">
-          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
-          <p className="text-gray-700 mb-4 text-sm lg:text-base">{service.address}</p>
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">Where you'll be</h2>
+          <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm lg:text-base">{service.address}</p>
           <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
             <GoogleMapComponent
               address={service.address || 'Available in your area'}
@@ -2247,8 +2247,8 @@ const ServicePage = () => {
           </div>
           {service.near && (
             <div className="mt-6">
-              <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
-              <div className="text-gray-700 text-xs lg:text-sm space-y-1">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">What's nearby</h3>
+              <div className="text-gray-700 dark:text-gray-300 text-xs lg:text-sm space-y-1">
                 {(service.near || '').split('\n').slice(0, 4).map((item, i) => (
                   <p key={i}>{item}</p>
                 ))}
@@ -2258,8 +2258,8 @@ const ServicePage = () => {
         </div>
 
         {/* Things to Know */}
-        <div className="mt-12 pt-12 border-t border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Things to know</h2>
+        <div className="mt-12 pt-12 border-t border-gray-100 dark:border-gray-800">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Things to know</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
@@ -2279,12 +2279,12 @@ const ServicePage = () => {
               }
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors">
-                <div className="p-2.5 rounded-xl bg-white shadow-sm text-slate-600 shrink-0">
+                <div className="p-2.5 rounded-xl bg-white dark:bg-gray-900 shadow-sm text-slate-600 shrink-0">
                   {item.icon}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1.5">{item.title}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{item.body}</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1.5">{item.title}</h3>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{item.body}</p>
                 </div>
               </div>
             ))}
@@ -2330,7 +2330,7 @@ const ServicePage = () => {
       {/* Booking Modal - Full Page Form */}
       {showBookingModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
               <div>
                 <h2 className="text-lg font-black text-slate-900">Complete your booking</h2>
@@ -2346,10 +2346,10 @@ const ServicePage = () => {
                 <div className="bg-rose-50 p-4 rounded-lg border border-rose-200">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{selectedService.name}</h3>
-                      <p className="text-gray-600 text-sm">{selectedService.duration}</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{selectedService.name}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">{selectedService.duration}</p>
                     </div>
-                    <span className="font-semibold text-gray-900">{selectedService.price}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{selectedService.price}</span>
                   </div>
                 </div>
               )}
@@ -2359,27 +2359,27 @@ const ServicePage = () => {
                 <h3 className="text-lg font-semibold mb-4">Your information</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full name *</label>
                     <input
                       type="text"
                       name="name"
                       value={bookingData.name}
                       onChange={handleBookingChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="John Doe"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone number *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone number *</label>
                     <input
                       type="tel"
                       name="phone"
                       value={bookingData.phone}
                       onChange={handleBookingChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="071 234 5678"
                     />
                   </div>
@@ -2409,7 +2409,7 @@ const ServicePage = () => {
                           className={`p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-3 relative ${
                             isSelected
                               ? 'border-rose-500 bg-rose-50 shadow-sm shadow-rose-100'
-                              : 'border-gray-100 hover:border-rose-200 hover:bg-rose-50/30'
+                              : 'border-gray-100 dark:border-gray-800 hover:border-rose-200 hover:bg-rose-50/30'
                           }`}
                         >
                           <div className="relative shrink-0">
@@ -2426,7 +2426,7 @@ const ServicePage = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 text-sm truncate">{p.name}</div>
+                            <div className="font-bold text-gray-900 dark:text-white text-sm truncate">{p.name}</div>
                             {p.experience && <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wide">{p.experience} exp</p>}
                             {p.rating > 0 && (
                               <div className="flex items-center gap-1 mt-0.5">
@@ -2456,7 +2456,7 @@ const ServicePage = () => {
                 <h3 className="text-lg font-semibold mb-4">Date & time</h3>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date *</label>
                     <input
                       type="date"
                       name="date"
@@ -2464,18 +2464,18 @@ const ServicePage = () => {
                       onChange={handleBookingChange}
                       required
                       min={new Date().toISOString().split('T')[0]}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Time *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time *</label>
                     <input
                       type="time"
                       name="time"
                       value={bookingData.time}
                       onChange={handleBookingChange}
                       required
-                      className={`w-full px-4 py-2 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
+                      className={`w-full px-4 py-2 border ${isSelectedTimeClosed() ? 'border-rose-500 bg-rose-50' : 'border-gray-300 dark:border-gray-700'} rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent`}
                     />
                     {isSelectedTimeClosed() && (
                       <p className="text-[10px] font-bold text-rose-500 mt-1 uppercase tracking-widest flex items-center gap-1">
@@ -2493,7 +2493,7 @@ const ServicePage = () => {
                   <h3 className="text-lg font-semibold mb-4">Vehicle details</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle type *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vehicle type *</label>
                       <div className="grid grid-cols-3 gap-2">
                         {VEHICLE_TYPES.map((vehicle) => (
                           <button
@@ -2502,7 +2502,7 @@ const ServicePage = () => {
                             onClick={() => handleVehicleTypeSelect(vehicle.id)}
                             className={`p-3 border rounded-lg text-center transition-colors ${bookingData.vehicleType === vehicle.id
                               ? 'border-rose-500 bg-rose-50 text-rose-700'
-                              : 'border-gray-300 hover:border-gray-400'
+                              : 'border-gray-300 dark:border-gray-700 hover:border-gray-400'
                               }`}
                           >
                             <div className="text-2xl mb-1">{vehicle.icon}</div>
@@ -2514,44 +2514,44 @@ const ServicePage = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Make (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Make (optional)</label>
                         <input
                           type="text"
                           name="vehicleMake"
                           value={bookingData.vehicleMake}
                           onChange={handleBookingChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                           placeholder="e.g. Toyota"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Model (optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model (optional)</label>
                         <input
                           type="text"
                           name="vehicleModel"
                           value={bookingData.vehicleModel}
                           onChange={handleBookingChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                           placeholder="e.g. Corolla"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">License plate (optional)</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">License plate (optional)</label>
                       <input
                         type="text"
                         name="licensePlate"
                         value={bookingData.licensePlate}
                         onChange={handleBookingChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                         placeholder="e.g. ABC 123 GP"
                       />
                     </div>
 
                     {/* Car Wash Detailing Selection */}
-                    <div className="pt-4 border-t border-gray-100">
-                      <label className="block text-sm font-bold text-gray-900 mb-3">🛠️ Select Wash Type</label>
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                      <label className="block text-sm font-bold text-gray-900 dark:text-white mb-3">🛠️ Select Wash Type</label>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                         {[
                           { id: 'full', label: 'Full Car Wash' },
@@ -2562,14 +2562,14 @@ const ServicePage = () => {
                             key={mode.id}
                             type="button"
                             onClick={() => setBookingData(prev => ({ ...prev, carWashType: mode.id }))}
-                            className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all ${bookingData.carWashType === mode.id ? 'bg-rose-500 text-white border-rose-500 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-rose-200'}`}
+                            className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all ${bookingData.carWashType === mode.id ? 'bg-rose-500 text-white border-rose-500 shadow-md transform scale-105' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-rose-200'}`}
                           >
                             {mode.label}
                           </button>
                         ))}
                       </div>
 
-                      <label className="block text-sm font-bold text-gray-900 mt-6 mb-3">🧹 Add Extra Cleaning</label>
+                      <label className="block text-sm font-bold text-gray-900 dark:text-white mt-6 mb-3">🧹 Add Extra Cleaning</label>
                       <div className="grid grid-cols-2 gap-3">
                         {[
                           { id: 'thoroughHoover', label: 'Thorough Hoover' },
@@ -2577,19 +2577,19 @@ const ServicePage = () => {
                           { id: 'matCleaning', label: 'Mat Cleaning' },
                           { id: 'carSeatCleaning', label: 'Car Seat Cleaning' }
                         ].map(opt => (
-                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-800">
                             <input
                               type="checkbox"
                               checked={bookingData[opt.id]}
                               onChange={(e) => setBookingData(prev => ({ ...prev, [opt.id]: e.target.checked }))}
                               className="w-4 h-4 accent-rose-500"
                             />
-                            <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{opt.label}</span>
                           </label>
                         ))}
                       </div>
 
-                      <label className="block text-sm font-bold text-gray-900 mt-6 mb-3">✨ Add Polish Services</label>
+                      <label className="block text-sm font-bold text-gray-900 dark:text-white mt-6 mb-3">✨ Add Polish Services</label>
                       <div className="grid grid-cols-2 gap-3">
                         {[
                           { id: 'bodyPolish', label: 'Body Polish' },
@@ -2597,14 +2597,14 @@ const ServicePage = () => {
                           { id: 'backPolish', label: 'Back Polish' },
                           { id: 'interiorPolish', label: 'Interior Polish' }
                         ].map(opt => (
-                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
+                          <label key={opt.id} className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-800">
                             <input
                               type="checkbox"
                               checked={bookingData[opt.id]}
                               onChange={(e) => setBookingData(prev => ({ ...prev, [opt.id]: e.target.checked }))}
                               className="w-4 h-4 accent-rose-500"
                             />
-                            <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                            <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{opt.label}</span>
                           </label>
                         ))}
                       </div>
@@ -2618,37 +2618,37 @@ const ServicePage = () => {
                 <div className="space-y-5">
                   <h3 className="text-lg font-semibold flex items-center gap-2">🚛 Move Details</h3>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Moving from (current address) *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Moving from (current address) *</label>
                     <textarea
                       name="moveFromAddress"
                       value={bookingData.moveFromAddress}
                       onChange={handleBookingChange}
                       rows="2"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="Full current address..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Moving to (new address) *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Moving to (new address) *</label>
                     <textarea
                       name="moveToAddress"
                       value={bookingData.moveToAddress}
                       onChange={handleBookingChange}
                       rows="2"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="Full destination address..."
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">No. of rooms / property size</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">No. of rooms / property size</label>
                       <select
                         name="moveRooms"
                         value={bookingData.moveRooms}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select...</option>
                         <option value="Studio">Studio / 1-room</option>
@@ -2660,12 +2660,12 @@ const ServicePage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Packing service needed?</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Packing service needed?</label>
                       <select
                         name="movePackingRequired"
                         value={bookingData.movePackingRequired}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select...</option>
                         <option value="Yes - full packing">Yes – full packing</option>
@@ -2676,34 +2676,34 @@ const ServicePage = () => {
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Floor (from)</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Floor (from)</label>
                       <input
                         type="text"
                         name="moveFloorFrom"
                         value={bookingData.moveFloorFrom}
                         onChange={handleBookingChange}
                         placeholder="e.g. Ground"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Floor (to)</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Floor (to)</label>
                       <input
                         type="text"
                         name="moveFloorTo"
                         value={bookingData.moveFloorTo}
                         onChange={handleBookingChange}
                         placeholder="e.g. 3rd"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Lift/Elevator?</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lift/Elevator?</label>
                       <select
                         name="moveHasLift"
                         value={bookingData.moveHasLift}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select</option>
                         <option value="Yes">Yes</option>
@@ -2713,7 +2713,7 @@ const ServicePage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select items to move (chairs, bed, fridge, TV, microwave, etc.)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select items to move (chairs, bed, fridge, TV, microwave, etc.)</label>
                     <div className="flex flex-wrap gap-1.5 mb-2.5">
                       {STORAGE_ITEM_OPTIONS.map((opt) => {
                         const isSelected = (bookingData.selectedMoveItems || []).includes(opt.label);
@@ -2731,7 +2731,7 @@ const ServicePage = () => {
                             className={`px-2.5 py-1 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 ${
                               isSelected
                                 ? 'bg-rose-500 text-white border-rose-500 shadow-sm ring-2 ring-rose-200'
-                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                                : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-rose-300 hover:bg-rose-50/50'
                             }`}
                           >
                             <span>{opt.emoji}</span>
@@ -2747,13 +2747,13 @@ const ServicePage = () => {
                       value={bookingData.moveHeavyItems}
                       onChange={handleBookingChange}
                       placeholder="Additional items or details (e.g. 1 piano, fridge, washing machine...)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of boxes</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of boxes</label>
                       <input
                         type="number"
                         name="moveBoxesCount"
@@ -2761,11 +2761,11 @@ const ServicePage = () => {
                         value={bookingData.moveBoxesCount || ''}
                         onChange={handleBookingChange}
                         placeholder="e.g. 15"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Weight in Kilos (kg)</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight in Kilos (kg)</label>
                       <input
                         type="number"
                         name="moveKilosCount"
@@ -2773,13 +2773,13 @@ const ServicePage = () => {
                         value={bookingData.moveKilosCount || ''}
                         onChange={handleBookingChange}
                         placeholder="e.g. 120"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Transport Vehicle Option</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transport Vehicle Option</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {[
                         { id: 'none', label: 'No vehicle (packing only)', price: 0 },
@@ -2789,8 +2789,8 @@ const ServicePage = () => {
                         { id: 'otherTruck', label: `Other Truck (R${service.movePriceOtherTruck !== undefined ? service.movePriceOtherTruck : 2000})`, price: service.movePriceOtherTruck || 2000 },
                         { id: 'bigTruckTrailer', label: `Big Truck with Trailer (R${service.movePriceBigTruckTrailer !== undefined ? service.movePriceBigTruckTrailer : 3500})`, price: service.movePriceBigTruckTrailer || 3500 }
                       ].map(opt => (
-                        <label key={opt.id} className={`flex items-center gap-2 p-3 rounded-xl cursor-pointer hover:bg-gray-50 border transition-all ${
-                          bookingData.moveVehicleType === opt.id ? 'border-rose-500 bg-rose-50/50 shadow-sm' : 'border-gray-200'
+                        <label key={opt.id} className={`flex items-center gap-2 p-3 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 border transition-all ${
+                          bookingData.moveVehicleType === opt.id ? 'border-rose-500 bg-rose-50/50 shadow-sm' : 'border-gray-200 dark:border-gray-800'
                         }`}>
                           <input
                             type="radio"
@@ -2800,7 +2800,7 @@ const ServicePage = () => {
                             onChange={handleBookingChange}
                             className="w-4 h-4 accent-rose-500"
                           />
-                          <span className="text-xs font-semibold text-gray-700">{opt.label}</span>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{opt.label}</span>
                         </label>
                       ))}
                     </div>
@@ -2860,7 +2860,7 @@ const ServicePage = () => {
                             className={`relative group flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl border-2 transition-all duration-200 text-center overflow-hidden ${
                               isSelected
                                 ? 'border-transparent shadow-lg scale-[1.03]'
-                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
+                                : 'bg-white dark:bg-gray-900 border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
                             }`}
                             style={isSelected ? { background: `linear-gradient(135deg, var(--tw-gradient-stops))` } : {}}
                           >
@@ -2899,7 +2899,7 @@ const ServicePage = () => {
                       onChange={handleBookingChange}
                       rows="4"
                       required
-                      className="w-full px-4 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none bg-white resize-none"
+                      className="w-full px-4 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none bg-white dark:bg-gray-900 resize-none"
                       placeholder="e.g. My kitchen tap is leaking badly, need it replaced urgently. The pipe under the sink is also dripping..."
                     />
                     <div className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 border-t border-amber-100">
@@ -2920,7 +2920,7 @@ const ServicePage = () => {
                       value={bookingData.handymanMaterialsRequired}
                       onChange={handleBookingChange}
                       placeholder="e.g. Paint, pipes, tiles, cement (leave blank if unsure)"
-                      className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-900 border-2 border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all"
                     />
                     <p className="mt-1.5 text-[10px] text-slate-400 flex items-center gap-1">
                       <span>ℹ️</span> Provider will confirm if materials are included or extra cost
@@ -2947,7 +2947,7 @@ const ServicePage = () => {
                             className={`relative flex flex-col items-center gap-1 py-4 px-2 rounded-2xl border-2 transition-all duration-200 overflow-hidden ${
                               isSelected
                                 ? `border-transparent shadow-xl ${u.glow} scale-[1.04]`
-                                : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
+                                : 'bg-white dark:bg-gray-900 border-slate-200 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5'
                             }`}
                           >
                             {isSelected && <div className={`absolute inset-0 bg-gradient-to-br ${u.bg}`} />}
@@ -2969,7 +2969,7 @@ const ServicePage = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">🌿 Garden & Landscaping Details</h3>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Service type needed *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service type needed *</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {[
                         { id: 'Lawn Mowing', icon: '🌾' },
@@ -2989,7 +2989,7 @@ const ServicePage = () => {
                           className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
                             bookingData.landscapingServiceType === svc.id
                               ? 'bg-rose-500 text-white border-rose-500 shadow-md'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                              : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-rose-300'
                           }`}
                         >
                           <span>{svc.icon}</span>{svc.id}
@@ -2999,12 +2999,12 @@ const ServicePage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Garden/lawn area size</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Garden/lawn area size</label>
                       <select
                         name="landscapeAreaSize"
                         value={bookingData.landscapeAreaSize}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select size...</option>
                         <option value="Small (under 50m²)">Small (under 50m²)</option>
@@ -3014,12 +3014,12 @@ const ServicePage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Service frequency</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service frequency</label>
                       <select
                         name="landscapeFrequency"
                         value={bookingData.landscapeFrequency}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select...</option>
                         <option value="This is a one-time project">This is a one-time project</option>
@@ -3031,12 +3031,12 @@ const ServicePage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Equipment/water available on site?</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Equipment/water available on site?</label>
                     <select
                       name="landscapeEquipmentAvailable"
                       value={bookingData.landscapeEquipmentAvailable}
                       onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       <option value="Yes - water & equipment available">Yes – water &amp; equipment available</option>
@@ -3052,7 +3052,7 @@ const ServicePage = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">🍽️ Catering Details</h3>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Event type *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event type *</label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {[
                         { id: 'Birthday Party', icon: '🎂' },
@@ -3072,7 +3072,7 @@ const ServicePage = () => {
                           className={`px-3 py-2.5 text-xs font-bold rounded-xl border transition-all flex items-center gap-1.5 ${
                             bookingData.cateringEventType === ev.id
                               ? 'bg-rose-500 text-white border-rose-500 shadow-md'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-300'
+                              : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-rose-300'
                           }`}
                         >
                           <span>{ev.icon}</span>{ev.id}
@@ -3082,7 +3082,7 @@ const ServicePage = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of guests *</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of guests *</label>
                       <input
                         type="number"
                         name="cateringGuestCount"
@@ -3090,17 +3090,17 @@ const ServicePage = () => {
                         onChange={handleBookingChange}
                         min="1"
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                         placeholder="e.g. 50"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Event duration</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event duration</label>
                       <select
                         name="cateringEventDuration"
                         value={bookingData.cateringEventDuration}
                         onChange={handleBookingChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       >
                         <option value="">Select...</option>
                         <option value="2-3 hours">2–3 hours</option>
@@ -3112,7 +3112,7 @@ const ServicePage = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Menu preference / cuisine style *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Menu preference / cuisine style *</label>
                     <input
                       type="text"
                       name="cateringMenuPreference"
@@ -3120,27 +3120,27 @@ const ServicePage = () => {
                       onChange={handleBookingChange}
                       required
                       placeholder="e.g. Traditional South African, Braai, Buffet, Finger foods…"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Dietary requirements / allergies</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dietary requirements / allergies</label>
                     <input
                       type="text"
                       name="cateringDietaryReqs"
                       value={bookingData.cateringDietaryReqs}
                       onChange={handleBookingChange}
                       placeholder="e.g. Halal, vegetarian, nut-free, dairy-free…"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Venue type</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Venue type</label>
                     <select
                       name="cateringVenueType"
                       value={bookingData.cateringVenueType}
                       onChange={handleBookingChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     >
                       <option value="">Select...</option>
                       <option value="Home / Residence">Home / Residence</option>
@@ -3186,21 +3186,21 @@ const ServicePage = () => {
                     </section>
                   )}
                   {service.storageTerms && (
-                    <section className="p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                      <h4 className="font-semibold text-gray-900 mb-1">Terms &amp; Conditions</h4>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    <section className="p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Terms &amp; Conditions</h4>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
                         {service.storageTerms}
                       </p>
                     </section>
                   )}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">How long do you need storage? *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">How long do you need storage? *</label>
                     <select
                       name="storageDuration"
                       value={bookingData.storageDuration}
                       onChange={handleBookingChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     >
                       <option value="1 day">1 day</option>
                       <option value="3 days">3 days</option>
@@ -3214,8 +3214,8 @@ const ServicePage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">What will you be storing?</label>
-                    <p className="text-xs text-gray-500 mb-2">Tap items to select them (chairs, bed, fridge, TV, microwave, clothes, etc.):</p>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">What will you be storing?</label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Tap items to select them (chairs, bed, fridge, TV, microwave, clothes, etc.):</p>
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {STORAGE_ITEM_OPTIONS.map((opt) => {
                         const isSelected = (bookingData.selectedStorageItems || []).includes(opt.label);
@@ -3233,7 +3233,7 @@ const ServicePage = () => {
                             className={`px-2.5 py-1 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all active:scale-95 ${
                               isSelected
                                 ? 'bg-rose-500 text-white border-rose-500 shadow-sm ring-2 ring-rose-200'
-                                : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-rose-300 hover:bg-rose-50/50'
+                                : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-rose-300 hover:bg-rose-50/50'
                             }`}
                           >
                             <span>{opt.emoji}</span>
@@ -3249,7 +3249,7 @@ const ServicePage = () => {
                       onChange={handleBookingChange}
                       rows="2"
                       placeholder="Additional items or details (e.g. 4x chairs, king bed, fridge...)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     />
                   </div>
 
@@ -3296,14 +3296,14 @@ const ServicePage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Service location</h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address *</label>
                   <textarea
                     name="address"
                     value={bookingData.address}
                     onChange={handleBookingChange}
                     required
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     placeholder="Enter your full address for service..."
                   />
                   {bookingData.address && bookingData.address.length >= 10 && (
@@ -3325,7 +3325,7 @@ const ServicePage = () => {
                 <h3 className="text-lg font-semibold mb-4">Provisions</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">🍴 Will you provide food for the service provider?</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">🍴 Will you provide food for the service provider?</label>
                     <div className="flex gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -3336,7 +3336,7 @@ const ServicePage = () => {
                           onChange={handleBookingChange}
                           className="accent-rose-500"
                         />
-                        <span className="text-sm text-gray-700">Yes, I'll provide food</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Yes, I'll provide food</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -3347,13 +3347,13 @@ const ServicePage = () => {
                           onChange={handleBookingChange}
                           className="accent-rose-500"
                         />
-                        <span className="text-sm text-gray-700">No</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">No</span>
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">⚡ Is electricity available at the service location?</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">⚡ Is electricity available at the service location?</label>
                     <div className="flex gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -3364,7 +3364,7 @@ const ServicePage = () => {
                           onChange={handleBookingChange}
                           className="accent-rose-500"
                         />
-                        <span className="text-sm text-gray-700">Yes, available</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Yes, available</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -3375,7 +3375,7 @@ const ServicePage = () => {
                           onChange={handleBookingChange}
                           className="accent-rose-500"
                         />
-                        <span className="text-sm text-gray-700">No</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">No</span>
                       </label>
                     </div>
                   </div>
@@ -3391,7 +3391,7 @@ const ServicePage = () => {
                     value={bookingData.specialRequirements}
                     onChange={handleBookingChange}
                     rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     placeholder="Any special requirements or instructions for the service provider..."
                   />
                 </div>
@@ -3410,31 +3410,31 @@ const ServicePage = () => {
                         className="hidden"
                         multiple
                       />
-                      <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
+                      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors">
                         Choose files
                       </div>
                     </label>
-                    <span className="text-sm text-gray-500">Max 2 files (5MB each)</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Max 2 files (5MB each)</span>
                   </div>
 
                   {attachments.length > 0 && (
                     <div className="space-y-2">
                       {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div className="flex items-center gap-2">
                             {file.type.startsWith('image/') ? (
                               <PhotoIcon className="w-5 h-5 text-blue-500" />
                             ) : (
                               <DocumentTextIcon className="w-5 h-5 text-red-500" />
                             )}
-                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                            <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-[200px]">
                               {file.name}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-400"
                           >
                             <XMarkIcon className="w-4 h-4" />
                           </button>
@@ -3446,13 +3446,13 @@ const ServicePage = () => {
               </div>
 
               {/* Price Summary */}
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
                 {(() => {
                   const breakdown = getMovingBreakdown();
                   if (!breakdown || !breakdown.hasOptions) return null;
                   return (
-                    <div className="text-xs text-gray-600 border-b border-gray-200 pb-2 space-y-1">
-                      <p className="font-semibold text-gray-800 mb-1">Price Breakdown:</p>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800 pb-2 space-y-1">
+                      <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1">Price Breakdown:</p>
                       {breakdown.boxesCount > 0 && (
                         <div className="flex justify-between">
                           <span>📦 Boxes ({breakdown.boxesCount} × R{breakdown.costPerBox})</span>
@@ -3471,11 +3471,11 @@ const ServicePage = () => {
                           <span>R{breakdown.vehicleCost}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-gray-500">
+                      <div className="flex justify-between text-gray-500 dark:text-gray-400">
                         <span>🗺️ Travel Fee</span>
                         <span>R{breakdown.travelFee}</span>
                       </div>
-                      <div className="flex justify-between text-gray-500">
+                      <div className="flex justify-between text-gray-500 dark:text-gray-400">
                         <span>🛎️ Service Fee (10%)</span>
                         <span>R{breakdown.serviceFee}</span>
                       </div>
@@ -3483,10 +3483,10 @@ const ServicePage = () => {
                   );
                 })()}
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-gray-600">Total estimate</span>
-                  <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Total estimate</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice}</span>
                 </div>
-                <p className="text-xs text-gray-500">Final price may vary based on specific requirements.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Final price may vary based on specific requirements.</p>
               </div>
 
               {/* Submit Button */}
@@ -3508,7 +3508,7 @@ const ServicePage = () => {
                 )}
               </button>
 
-              <p className="text-xs text-center text-gray-500">
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
                 By submitting this form, you agree to our terms of service and privacy policy.
               </p>
             </form>
@@ -3526,7 +3526,7 @@ const ServicePage = () => {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 px-4 py-3 lg:hidden z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-slate-100 dark:border-gray-800 px-4 py-3 lg:hidden z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
         <div className="flex items-center justify-between gap-4 max-w-xl mx-auto">
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-1.5">

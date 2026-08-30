@@ -608,35 +608,35 @@ export default function Header() {
               <button
                 key={cmd.label}
                 onClick={() => handleNavigate(cmd.route)}
-                className="flex flex-col items-center justify-center gap-2 p-3 bg-gray-50 hover:bg-rose-50/50 rounded-2xl transition-all border border-transparent hover:border-rose-100/50"
+                className="flex flex-col items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/60 hover:bg-rose-50/50 dark:hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-100/50"
               >
                 <div className={`p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
                   {cmd.icon}
                 </div>
-                <span className="text-[8px] font-black text-gray-900 uppercase tracking-widest text-center leading-tight">
+                <span className="text-[8px] font-black text-gray-900 dark:text-gray-300 uppercase tracking-widest text-center leading-tight">
                   {cmd.label}
                 </span>
               </button>
             ))}
           </div>
 
-          <div className="sticky bottom-0 bg-white/95 backdrop-blur-md pt-3 border-t border-slate-100 mt-3 -mx-4 px-4 pb-3">
+          <div className="sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md pt-3 border-t border-slate-100 dark:border-gray-800 mt-3 -mx-4 px-4 pb-3">
   <button
     onClick={handleSignOut}
     aria-label="Sign out"
-    className="flex items-center justify-center gap-2 w-full py-3 text-xs font-black uppercase text-slate-600 hover:text-rose-600 transition-all tracking-[0.2em] bg-slate-50 rounded-2xl hover:bg-rose-50 border border-transparent hover:border-rose-100 active:scale-95"
+    className="flex items-center justify-center gap-2 w-full py-3 text-xs font-black uppercase text-slate-600 dark:text-gray-400 hover:text-rose-600 transition-all tracking-[0.2em] bg-slate-50 dark:bg-gray-800/60 rounded-2xl hover:bg-rose-50 dark:hover:bg-rose-500/10 border border-transparent hover:border-rose-100 active:scale-95"
   >
     <ArrowRightOnRectangleIcon className="w-4 h-4" />
     Sign out
   </button>
 </div>
-<div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
+<div className="text-center text-[9px] text-slate-400 dark:text-gray-500 font-bold mt-3 uppercase tracking-[0.15em]">
   <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <Link to="/privacy" className="hover:text-rose-500 transition-colors">Privacy</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <Link to="/contact" className="hover:text-rose-500 transition-colors">Contact</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <span>&copy; {new Date().getFullYear()}</span>
 </div>
         </>
@@ -644,19 +644,19 @@ export default function Header() {
         <div className="p-4 space-y-3">
           <button
             onClick={() => handleNavigate('/sign-in')}
-            className="w-full py-4 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all active:scale-95"
+            className="w-full py-4 bg-slate-950 dark:bg-white dark:text-slate-950 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black dark:hover:bg-gray-200 transition-all active:scale-95"
           >Sign In</button>
           <button
             onClick={() => handleNavigate('/sign-up')}
             className="w-full py-4 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >Create Account</button>
-          <div className="text-center text-[9px] text-slate-400 font-bold mt-3 uppercase tracking-[0.15em]">
+          <div className="text-center text-[9px] text-slate-400 dark:text-gray-500 font-bold mt-3 uppercase tracking-[0.15em]">
   <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <Link to="/privacy" className="hover:text-rose-500 transition-colors">Privacy</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <Link to="/contact" className="hover:text-rose-500 transition-colors">Contact</Link>
-  <span className="mx-1.5 text-slate-300">&middot;</span>
+  <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
   <span>&copy; {new Date().getFullYear()}</span>
 </div>
         </div>
@@ -678,8 +678,8 @@ export default function Header() {
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120, opacity: { duration: 0.2 } }}
           ref={headerRef}
-        className={`app-safe-top fixed top-0 left-0 right-0 bg-white border-b-0 backdrop-blur-xl transition-all duration-500 ${
-          scrolled ? 'bg-white/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
+        className={`app-safe-top fixed top-0 left-0 right-0 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
+          scrolled ? 'bg-white/90 dark:bg-gray-950/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
         }`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
@@ -721,13 +721,13 @@ export default function Header() {
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
-                className="search-trigger flex items-center gap-0 border border-slate-200 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white overflow-hidden"
+                className="search-trigger flex items-center gap-0 border border-slate-200 dark:border-gray-700 rounded-full shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer bg-white dark:bg-gray-900 overflow-hidden"
               >
-                <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Anywhere</span>
-                <div className="w-[1px] h-5 bg-slate-200" />
-                <span className="text-[11px] font-black text-slate-900 px-5 py-2.5 hover:bg-slate-50 transition-colors">Any type</span>
-                <div className="w-[1px] h-5 bg-slate-200" />
-                <span className="text-[11px] font-medium text-slate-400 px-4 py-2.5">Search loopOut</span>
+                <span className="text-[11px] font-black text-slate-900 dark:text-white px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">Anywhere</span>
+                <div className="w-[1px] h-5 bg-slate-200 dark:bg-gray-700" />
+                <span className="text-[11px] font-black text-slate-900 dark:text-white px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">Any type</span>
+                <div className="w-[1px] h-5 bg-slate-200 dark:bg-gray-700" />
+                <span className="text-[11px] font-medium text-slate-400 dark:text-gray-500 px-4 py-2.5">Search loopOut</span>
                 <div className="w-9 h-9 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center text-white mr-1.5 group-hover:from-rose-600 group-hover:to-rose-700 transition-all shadow-md shadow-rose-200">
                   <MagnifyingGlassIcon className="w-4 h-4 stroke-[2.5px]" />
                 </div>
@@ -754,7 +754,7 @@ export default function Header() {
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full right-0 mt-3 w-72 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 py-5 z-50 overflow-hidden"
+                        className="absolute top-full right-0 mt-3 w-72 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 py-5 z-50 overflow-hidden"
                       >
                         {[
                           { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
@@ -838,7 +838,7 @@ export default function Header() {
                 <button
                   onClick={() => handleNavigate('/wishlist')}
                   aria-label="Wishlist"
-                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900 hover:text-rose-500"
+                  className="relative w-9 h-9 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 dark:text-gray-300 hover:text-slate-900 hover:text-rose-500"
                 >
                   <HeartIcon className="w-4 h-4 stroke-[2px]" />
                 </button>
@@ -847,7 +847,7 @@ export default function Header() {
                 <button
                   onClick={handleNotificationsClick}
                   aria-label={`Notifications. ${unreadCount} unread`}
-                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all flex text-slate-700"
+                  className="relative w-9 h-9 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all flex text-slate-700 dark:text-gray-300"
                 >
                   <BellIcon className="w-4 h-4 stroke-[2px]" />
                   {unreadCount > 0 && (
@@ -863,16 +863,16 @@ export default function Header() {
               {showLanguageDropdown && (
                 <div
                   ref={languageDropdownRef}
-                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white overflow-hidden right-0 top-12 text-sm border border-gray-100 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
+                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white dark:bg-gray-900 overflow-hidden right-0 top-12 text-sm border border-gray-100 dark:border-gray-800 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
                 >
-                  <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
+                  <div className="p-4 border-b border-[#DDDDDD] dark:border-gray-800 font-semibold text-[#222222] dark:text-white">
                     Choose a language
                   </div>
                   {languages.filter((language) => language.code === 'en').map((language) => (
                     <button
                       key={language.code}
                       onClick={() => handleLanguageChange(language.code, language.name)}
-                      className="w-full px-4 py-3 hover:bg-gray-100 transition text-left flex items-center justify-between text-[#222222]"
+                      className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left flex items-center justify-between text-[#222222] dark:text-white"
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-lg">{language.flag}</span>
@@ -890,16 +890,16 @@ export default function Header() {
               {showCurrencyDropdown && (
                 <div
                   ref={currencyDropdownRef}
-                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white overflow-hidden right-12 top-12 text-sm border border-gray-100 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
+                  className="absolute rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] w-[260px] bg-white dark:bg-gray-900 overflow-hidden right-12 top-12 text-sm border border-gray-100 dark:border-gray-800 max-h-[400px] overflow-y-auto hidden md:block z-[60]"
                 >
-                  <div className="p-4 border-b border-[#DDDDDD] font-semibold text-[#222222]">
+                  <div className="p-4 border-b border-[#DDDDDD] dark:border-gray-800 font-semibold text-[#222222] dark:text-white">
                     Choose currency
                   </div>
                   {currencies.filter((currency) => currency.code === 'ZAR').map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencyChange(currency.code)}
-                      className="w-full px-4 py-3 hover:bg-gray-100 transition text-left flex items-center justify-between text-[#222222]"
+                      className="w-full px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left flex items-center justify-between text-[#222222] dark:text-white"
                     >
                       <span className="font-bold text-xs">{currency.code} ({currency.symbol})</span>
                       <span className="text-gray-700 text-xs">{currency.name}</span>
@@ -938,9 +938,9 @@ export default function Header() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'tween', duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="search-container fixed inset-0 bg-gray-50 z-[1001] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
+            className="search-container fixed inset-0 bg-gray-50 dark:bg-gray-950 z-[1001] flex flex-col md:max-w-md md:left-auto md:right-0 md:shadow-2xl overflow-hidden"
           >
-            <div className="app-safe-top flex-shrink-0 bg-white px-4 sm:px-6 pt-4 pb-4 flex items-center justify-between">
+            <div className="app-safe-top flex-shrink-0 bg-white dark:bg-gray-900 px-4 sm:px-6 pt-4 pb-4 flex items-center justify-between">
               <div className="flex gap-8 overflow-x-auto scrollbar-hide py-2">
                 {[
                   { id: 'all', label: 'Universe', icon: Sparkles, color: 'rose' },
@@ -968,14 +968,14 @@ export default function Header() {
                        <motion.div 
                          animate={isActive ? { scale: [1, 1.15, 1], rotate: [0, 5, -5, 0] } : { scale: 1, rotate: 0 }}
                          transition={{ duration: 0.4, ease: "backOut" }}
-                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:-translate-y-1'}`}
+                         className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white hover:-translate-y-1'}`}
                        >
                           <Icon className="w-6 h-6" />
                        </motion.div>
                        
                        <motion.span 
                          animate={{ opacity: isActive ? 1 : 0.4, scale: isActive ? 1.05 : 1 }}
-                         className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900' : 'text-gray-600'}`}
+                         className={`text-[10px] font-black uppercase tracking-widest transition-colors ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
                        >
                          {item.label}
                        </motion.span>
@@ -994,17 +994,17 @@ export default function Header() {
               <button
                 onClick={() => setShowSearch(false)}
                 aria-label="Close search"
-                className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center hover:bg-slate-200 transition-all active:scale-90"
+                className="w-10 h-10 rounded-full bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-gray-700 transition-all active:scale-90"
               >
-                <XMarkIcon className="w-5 h-5 text-slate-900" />
+                <XMarkIcon className="w-5 h-5 text-slate-900 dark:text-white" />
               </button>
             </div>
 
             {/* Scrollable Content Area */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                {/* Section: WHERE? */}
-               <div className="bg-white rounded-[2rem] shadow-xl p-6 border border-gray-100">
-                  <h2 className="text-2xl font-black text-gray-900 mb-6 tracking-tight">Where to?</h2>
+               <div className="bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl p-6 border border-gray-100 dark:border-gray-800">
+                  <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">Where to?</h2>
                   
                   <div className="relative mb-8">
                      <BrandIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 grayscale opacity-40" />
@@ -1015,7 +1015,7 @@ export default function Header() {
                        value={searchTerm}
                        onChange={(e) => setSearchTerm(e.target.value)}
                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-500"
+                       className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl py-4 pl-12 pr-12 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all outline-none font-medium placeholder-gray-500 dark:placeholder-gray-500"
                      />
                      <button 
                        aria-label="Voice search"
@@ -1029,15 +1029,15 @@ export default function Header() {
                      {searchHistory.length > 0 && (
                        <div className="mb-6">
                          <div className="flex justify-between items-center mb-4">
-                           <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Recent searches</p>
-                           <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-600 hover:text-rose-500 uppercase tracking-widest">Clear</button>
+                           <p className="text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-[0.2em]">Recent searches</p>
+                           <button onClick={clearSearchHistory} className="text-[10px] font-bold text-gray-600 dark:text-gray-400 hover:text-rose-500 uppercase tracking-widest">Clear</button>
                          </div>
                          <div className="flex flex-wrap gap-2">
                            {searchHistory.slice(0, 5).map((item, i) => (
                              <button 
                                key={i} 
                                onClick={() => handleSearch({ searchTerm: item.term })}
-                               className="px-4 py-2 bg-gray-100 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-xs font-bold text-gray-700 transition-all"
+                               className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-300 transition-all"
                              >
                                {item.term}
                              </button>
@@ -1046,50 +1046,50 @@ export default function Header() {
                        </div>
                      )}
 
-                     <p className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">Suggested destinations</p>
+                     <p className="text-[10px] font-black text-gray-600 dark:text-gray-400 uppercase tracking-[0.2em]">Suggested destinations</p>
                      
                      <button 
                        onClick={() => handleSearch({ searchTerm: 'Nearby' })}
-                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
                            <MapPinIcon className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                           <p className="text-sm font-bold text-gray-900">Nearby</p>
-                           <p className="text-xs text-gray-700">Find what's around you</p>
+                           <p className="text-sm font-bold text-gray-900 dark:text-white">Nearby</p>
+                           <p className="text-xs text-gray-700 dark:text-gray-400">Find what's around you</p>
                         </div>
                      </button>
 
                      <button 
                        onClick={() => handleSearch({ searchTerm: 'Cape Town, Western Cape', location: 'Cape Town' })}
-                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-500">
                            <BuildingOfficeIcon className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                           <p className="text-sm font-bold text-gray-900">Cape Town, Western Cape</p>
-                           <p className="text-xs text-gray-700">Popular beach destination</p>
+                           <p className="text-sm font-bold text-gray-900 dark:text-white">Cape Town, Western Cape</p>
+                           <p className="text-xs text-gray-700 dark:text-gray-400">Popular beach destination</p>
                         </div>
                      </button>
 
                      <button 
                        onClick={() => handleSearch({ searchTerm: 'Durban, KwaZulu-Natal', location: 'Durban' })}
-                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500">
                            <HomeModernIcon className="w-6 h-6" />
                         </div>
                         <div className="text-left">
-                           <p className="text-sm font-bold text-gray-900">Durban, KwaZulu-Natal</p>
-                           <p className="text-xs text-gray-700">For sights like uShaka Marine World</p>
+                           <p className="text-sm font-bold text-gray-900 dark:text-white">Durban, KwaZulu-Natal</p>
+                           <p className="text-xs text-gray-700 dark:text-gray-400">For sights like uShaka Marine World</p>
                         </div>
                      </button>
 
                      <button 
                        onClick={() => handleSearch({ searchTerm: 'Tembisa, Gauteng', location: 'Tembisa' })}
-                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 transition-all active:scale-98"
+                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-98"
                      >
                         <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
                            <MapPinIcon className="w-6 h-6" />
