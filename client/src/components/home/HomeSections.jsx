@@ -957,8 +957,8 @@ export const UpcomingBookingsSection = ({ navigate }) => {
           </span>
         </div>
         <button
-          onClick={() => navigate('/my-bookings')}
-          className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors"
+          onClick={() => navigate('/upcoming-bookings')}
+          className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors cursor-pointer"
         >
           View all <ArrowRightIcon className="w-3 h-3" />
         </button>

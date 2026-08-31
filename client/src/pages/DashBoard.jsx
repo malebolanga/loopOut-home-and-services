@@ -35,6 +35,7 @@ import {
 import { FaWhatsapp } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import ImageWithFallback from '../components/ImageWithFallback';
+import RatingModal from '../components/RatingModal';
 
 const statusConfig = {
   pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending Approval' },
@@ -43,6 +44,7 @@ const statusConfig = {
   assigned: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Pro Assigned' },
   enroute: { color: 'bg-indigo-100 text-indigo-800 border-indigo-200', label: 'En-route' },
   ongoing: { color: 'bg-rose-100 text-rose-800 border-rose-200', label: 'Ongoing Service' },
+  work_completed: { color: 'bg-purple-100 text-purple-800 border-purple-200', label: 'Work Completed' },
   completed: { color: 'bg-blue-100 text-blue-800 border-blue-200', label: 'Completed' },
   cancelled: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Cancelled' },
   declined: { color: 'bg-red-100 text-red-800 border-red-200', label: 'Declined' }
@@ -154,6 +156,7 @@ export default function DashBoard() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [hostStats, setHostStats] = useState({ listings: 0, rating: null, ratingCount: 0, earnings: 0 });
+  const [ratingBooking, setRatingBooking] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -882,13 +885,13 @@ export default function DashBoard() {
                             <>
                               <button
                                 onClick={() => handleStatusUpdate(booking._id, 'confirmed')}
-                                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md"
+                                className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer"
                               >
                                 Approve Request
                               </button>
                               <button
                                 onClick={() => handleStatusUpdate(booking._id, 'declined')}
-                                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-rose-100"
+                                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border border-rose-100 cursor-pointer"
                               >
                                 Decline
                               </button>
@@ -897,7 +900,7 @@ export default function DashBoard() {
                           {(booking.status === 'confirmed' || booking.status === 'approved') && booking.type !== 'listing' && (
                             <button
                               onClick={() => handleStatusUpdate(booking._id, 'assigned')}
-                              className="px-4 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md"
+                              className="px-4 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-md cursor-pointer"
                             >
                               Assign Pro
                             </button>
@@ -905,7 +908,7 @@ export default function DashBoard() {
                           {booking.status === 'assigned' && (
                             <button
                               onClick={() => handleStatusUpdate(booking._id, 'enroute')}
-                              className="px-4 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md"
+                              className="px-4 py-2.5 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-indigo-700 transition-all shadow-md cursor-pointer"
                             >
                               En-Route
                             </button>
@@ -913,26 +916,67 @@ export default function DashBoard() {
                           {booking.status === 'enroute' && (
                             <button
                               onClick={() => handleStatusUpdate(booking._id, 'ongoing')}
-                              className="px-4 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-md"
+                              className="px-4 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-md cursor-pointer"
                             >
                               Start Service
                             </button>
                           )}
                           {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
                             <button
-                              onClick={() => handleStatusUpdate(booking._id, 'completed')}
-                              className="px-4 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md"
+                              onClick={() => handleStatusUpdate(booking._id, 'work_completed')}
+                              className="px-4 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md cursor-pointer"
                             >
-                              {booking.type === 'listing' ? 'Check Out' : 'Mark Complete'}
+                              {booking.type === 'listing' ? 'Check Out' : 'Signal Work Complete'}
                             </button>
+                          )}
+                          {booking.status === 'work_completed' && (
+                            <span className="text-[10px] font-black text-purple-700 bg-purple-50 border border-purple-200 px-3 py-2 rounded-xl">
+                              Awaiting Client Close &amp; Rating
+                            </span>
                           )}
                         </>
                       ) : (
                         <>
+                          {booking.status === 'work_completed' && (
+                            <button
+                              onClick={async () => {
+                                await handleStatusUpdate(booking._id, 'completed');
+                                setRatingBooking(booking);
+                              }}
+                              className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md shadow-purple-200 flex items-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Confirm &amp; Close (Rate Pro)</span>
+                            </button>
+                          )}
+
+                          {['confirmed', 'approved', 'ongoing', 'assigned', 'enroute'].includes(booking.status) && (
+                            <button
+                              onClick={async () => {
+                                await handleStatusUpdate(booking._id, 'completed');
+                                setRatingBooking(booking);
+                              }}
+                              className="px-4 py-2.5 bg-slate-900 hover:bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Close Work &amp; Rate</span>
+                            </button>
+                          )}
+
+                          {booking.status === 'completed' && (
+                            <button
+                              onClick={() => setRatingBooking(booking)}
+                              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <StarIconSolid className="w-3.5 h-3.5" />
+                              <span>Rate Service</span>
+                            </button>
+                          )}
+
                           {['pending', 'confirmed', 'approved', 'assigned'].includes(booking.status) && (
                             <button
                               onClick={() => handleStatusUpdate(booking._id, 'cancelled')}
-                              className="px-4 py-2.5 bg-white border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 transition-all"
+                              className="px-4 py-2.5 bg-white border border-rose-200 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-50 transition-all cursor-pointer"
                             >
                               Cancel Request
                             </button>
@@ -951,6 +995,18 @@ export default function DashBoard() {
         </div>
 
       </div>
+
+      {/* Rating & Review Pop-up Modal */}
+      <RatingModal
+        isOpen={Boolean(ratingBooking)}
+        onClose={() => setRatingBooking(null)}
+        booking={ratingBooking}
+        onReviewSubmitted={() => {
+          if (ratingBooking) {
+            setBookings(prev => prev.map(b => b._id === ratingBooking._id ? { ...b, status: 'completed' } : b));
+          }
+        }}
+      />
     </div>
   );
 }

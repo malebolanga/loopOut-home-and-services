@@ -13,9 +13,12 @@ import {
   ShieldCheckIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
-  ArrowTopRightOnSquareIcon
+  ArrowTopRightOnSquareIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import RatingModal from '../components/RatingModal';
 
 export default function UpcomingBookings() {
   const navigate = useNavigate();
@@ -25,6 +28,8 @@ export default function UpcomingBookings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [ratingBooking, setRatingBooking] = useState(null);
+  const [closingId, setClosingId] = useState(null);
 
   // Filters & Search
   const [filterType, setFilterType] = useState('all');
@@ -112,6 +117,32 @@ export default function UpcomingBookings() {
     return () => controller.abort();
   }, [currentUser]);
 
+  const handleCloseWork = async (booking) => {
+    if (!booking) return;
+    try {
+      setClosingId(booking.id);
+      const res = await authenticatedFetch(`/api/bookings/update/${booking.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      if (res.ok) {
+        setBookings((prev) =>
+          prev.map((b) => (b.id === booking.id ? { ...b, status: 'completed' } : b))
+        );
+        if (selectedBooking?.id === booking.id) {
+          setSelectedBooking((prev) => ({ ...prev, status: 'completed' }));
+        }
+        // Immediately pop up the Rating Modal for user feedback
+        setRatingBooking(booking);
+      }
+    } catch (err) {
+      console.error('Failed to close work:', err);
+    } finally {
+      setClosingId(null);
+    }
+  };
+
   const urgencyStyles = {
     today: { pill: 'bg-rose-500 text-white', bar: 'bg-rose-500', label: 'TODAY' },
     tomorrow: { pill: 'bg-amber-500 text-white', bar: 'bg-amber-500', label: 'TOMORROW' },
@@ -126,6 +157,7 @@ export default function UpcomingBookings() {
     assigned: 'text-blue-600 bg-blue-50 border-blue-200',
     enroute: 'text-indigo-600 bg-indigo-50 border-indigo-200',
     ongoing: 'text-rose-600 bg-rose-50 border-rose-200',
+    work_completed: 'text-purple-700 bg-purple-50 border-purple-200',
     completed: 'text-slate-600 bg-slate-50 border-slate-200'
   };
 
@@ -532,6 +564,52 @@ export default function UpcomingBookings() {
                   </div>
                 )}
 
+                {/* Work Completion Banner for Client Closure */}
+                {selectedBooking.status === 'work_completed' && (
+                  <div className="p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-rose-50 border-2 border-purple-200 rounded-2xl space-y-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shadow-md">
+                        <SparklesIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-purple-950 uppercase tracking-tight">Work Marked Complete by Pro</p>
+                        <p className="text-[11px] text-purple-700 font-semibold">Please inspect the work, close the job to release payment, and leave a review.</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCloseWork(selectedBooking)}
+                      disabled={closingId === selectedBooking.id}
+                      className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white text-xs font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-purple-200 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                    >
+                      {closingId === selectedBooking.id ? (
+                        <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-4 h-4" />
+                          <span>Close Work &amp; Rate Provider</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* If already completed, give quick access to rate */}
+                {selectedBooking.status === 'completed' && (
+                  <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-amber-800 uppercase tracking-wider">Service Closed</p>
+                      <p className="text-xs font-bold text-amber-900">Share your rating and feedback</p>
+                    </div>
+                    <button
+                      onClick={() => setRatingBooking(selectedBooking)}
+                      className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase tracking-wider rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    >
+                      <StarIcon className="w-3.5 h-3.5" />
+                      <span>Rate Pro</span>
+                    </button>
+                  </div>
+                )}
+
                 {/* Notes if present */}
                 {selectedBooking.notes && (
                   <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
@@ -543,6 +621,16 @@ export default function UpcomingBookings() {
 
               {/* Modal Footer Actions */}
               <div className="p-4 border-t border-slate-100 bg-white flex items-center gap-2">
+                {selectedBooking.status !== 'completed' && selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'work_completed' && (
+                  <button
+                    onClick={() => handleCloseWork(selectedBooking)}
+                    disabled={closingId === selectedBooking.id}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    <SparklesIcon className="w-3.5 h-3.5" />
+                    <span>Close Work &amp; Rate</span>
+                  </button>
+                )}
                 {selectedBooking.itemId && (
                   <button
                     onClick={() => {
@@ -551,7 +639,7 @@ export default function UpcomingBookings() {
                     }}
                     className="flex-1 py-3 bg-slate-900 hover:bg-black text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
                   >
-                    <span>View Listing Details</span>
+                    <span>View Details</span>
                     <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -566,6 +654,21 @@ export default function UpcomingBookings() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Rating & Review Pop-up Modal */}
+      <RatingModal
+        isOpen={Boolean(ratingBooking)}
+        onClose={() => setRatingBooking(null)}
+        booking={ratingBooking}
+        onReviewSubmitted={() => {
+          // Refresh list or update status
+          if (ratingBooking) {
+            setBookings((prev) =>
+              prev.map((b) => (b.id === ratingBooking.id ? { ...b, status: 'completed' } : b))
+            );
+          }
+        }}
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiBell, FiCheck, FiTrash2, FiClock, FiChevronLeft } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 
@@ -338,18 +338,27 @@ export default function Notifications() {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
             <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        Notifications
-                        {unreadCount > 0 && (
-                            <span className="bg-rose-500 text-white text-sm py-0.5 px-2.5 rounded-full font-medium">
-                                {unreadCount} new
-                            </span>
-                        )}
-                    </h1>
-                    <p className="text-gray-500 mt-1">Stay updated with your latest bookings, requests, and reviews.</p>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 rounded-full hover:bg-slate-100 transition-all text-slate-700 active:scale-95 cursor-pointer"
+                        aria-label="Go Back"
+                    >
+                        <FiChevronLeft className="w-6 h-6" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
+                            Notifications
+                            {unreadCount > 0 && (
+                                <span className="bg-rose-500 text-white text-xs py-0.5 px-2.5 rounded-full font-black">
+                                    {unreadCount} new
+                                </span>
+                            )}
+                        </h1>
+                        <p className="text-gray-500 text-xs sm:text-sm mt-0.5 font-medium">Stay updated with your latest bookings, requests, and reviews.</p>
+                    </div>
                 </div>
 
                 {notifications.length > 0 && (

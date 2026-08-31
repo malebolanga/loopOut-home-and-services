@@ -5,6 +5,7 @@ import Service from '../models/service.model.js';
 import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
+import Escrow from '../models/escrow.model.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
@@ -369,8 +370,8 @@ export const updateBookingStatus = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const allowedByGuest = ['cancelled'];
-    const allowedByHost = ['confirmed', 'approved', 'declined', 'cancelled', 'completed', 'assigned', 'enroute', 'ongoing'];
+    const allowedByGuest = ['cancelled', 'completed'];
+    const allowedByHost = ['confirmed', 'approved', 'declined', 'cancelled', 'completed', 'assigned', 'enroute', 'ongoing', 'work_completed'];
     if (!req.user.isAdmin) {
       const allowedStatuses = callerId === bookingUserId ? allowedByGuest : allowedByHost;
       if (!allowedStatuses.includes(status)) {
@@ -381,6 +382,18 @@ export const updateBookingStatus = async (req, res) => {
     const previousStatus = booking.status;
     booking.status = status;
     await booking.save();
+
+    // If client closes and completes work, automatically release any held escrow to the provider
+    if (status === 'completed') {
+      try {
+        await Escrow.updateMany(
+          { bookingId: booking._id, status: 'held' },
+          { status: 'released', releasedAt: new Date() }
+        );
+      } catch (escrowErr) {
+        console.error('[updateBookingStatus] Failed to release escrow:', escrowErr);
+      }
+    }
 
     const itemName = item?.name || item?.title || 'Service';
 
@@ -411,7 +424,23 @@ export const updateBookingStatus = async (req, res) => {
           title = 'Booking Declined';
           recipientId = bookingUserId;
           messageText = `Your booking request for "${itemName}" was declined by the host.`;
+        } else if (status === 'work_completed') {
+          title = 'Work Completed by Provider';
+          recipientId = bookingUserId;
+          messageText = `The service provider has finished the work for "${itemName}". Please review and close the work to finalize payment and rate your pro!`;
         } else if (status === 'completed') {
+          // If guest closed it, notify host of payment/completion
+          if (callerId === bookingUserId) {
+            if (hostId) {
+              await new Notification({
+                userId: hostId,
+                type: 'booking',
+                title: 'Work Closed & Payment Released',
+                message: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released the payment!`,
+                data: { bookingId: booking._id, itemType, itemId, status: 'completed' }
+              }).save();
+            }
+          }
           title = 'Booking Completed - Rate & Review';
           recipientId = bookingUserId;
           messageText = `Your booking for "${itemName}" is completed! Please leave a review to share your experience.`;

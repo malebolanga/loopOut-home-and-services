@@ -22,6 +22,7 @@ import {
   FaUser
 } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
+import RatingModal from './RatingModal';
 
 const ScheduleCalendar = ({ bookings }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2024, 11, 1));
@@ -111,6 +112,7 @@ const BookingStatus = ({ status }) => {
     assigned: { color: 'text-blue-500', bg: 'bg-blue-50', label: 'Pro Assigned', progress: 60 },
     enroute: { color: 'text-indigo-500', bg: 'bg-indigo-50', label: 'En-route', progress: 75 },
     ongoing: { color: 'text-rose-500', bg: 'bg-rose-50', label: 'Service Ongoing', progress: 90 },
+    work_completed: { color: 'text-purple-600', bg: 'bg-purple-50', label: 'Work Completed by Pro', progress: 95 },
     completed: { color: 'text-green-500', bg: 'bg-green-50', label: 'Completed', progress: 100 },
     cancelled: { color: 'text-red-500', bg: 'bg-red-50', label: 'Cancelled', progress: 0 },
     declined: { color: 'text-red-500', bg: 'bg-red-50', label: 'Declined', progress: 0 }
@@ -135,7 +137,7 @@ const BookingStatus = ({ status }) => {
   );
 };
 
-const BookingCard = ({ booking, onCancel }) => {
+const BookingCard = ({ booking, onCancel, onCloseWork, onRate }) => {
   return (
     <motion.div
       layout
@@ -159,7 +161,7 @@ const BookingCard = ({ booking, onCancel }) => {
         </div>
         <button 
           onClick={() => onCancel(booking.id)} 
-          className="text-gray-300 hover:text-red-500 transition-colors p-2"
+          className="text-gray-300 hover:text-red-500 transition-colors p-2 cursor-pointer"
           disabled={booking.status === 'cancelled'}
         >
           <FaTimes />
@@ -170,10 +172,7 @@ const BookingCard = ({ booking, onCancel }) => {
         <div 
           onClick={(e) => {
             e.stopPropagation();
-            // We need the type and itemId. Let's make sure they are in the booking object.
             const route = booking.type === 'listing' ? `/listing/${booking.itemId}` : (booking.type === 'helper' ? `/helper/${booking.itemId}` : `/service/${booking.itemId}`);
-            // Use window.location.href or navigate if available. 
-            // In MyBookingsConsumer, navigate is not currently imported or used, let's use window.location.href for simplicity or add navigate.
             window.location.href = route;
           }}
           className="mb-4 px-4 py-2 bg-rose-50 border border-rose-100 rounded-xl flex items-center justify-between cursor-pointer hover:bg-rose-100 transition-all active:scale-95 shadow-sm"
@@ -198,6 +197,34 @@ const BookingCard = ({ booking, onCancel }) => {
 
       <div className="space-y-4">
         <BookingStatus status={booking.status} />
+
+        {/* Work Completed Action Prompt */}
+        {booking.status === 'work_completed' && (
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-2xl">
+            <p className="text-[10px] font-black text-purple-900 uppercase tracking-wider mb-1">
+              Work Completed by Pro
+            </p>
+            <p className="text-xs text-purple-700 font-semibold mb-2">
+              Please inspect and close the work to finalize payment &amp; rate.
+            </p>
+            <button
+              onClick={() => onCloseWork(booking)}
+              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              Confirm &amp; Close Work
+            </button>
+          </div>
+        )}
+
+        {/* Action if active and ready to close */}
+        {['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(booking.status) && (
+          <button
+            onClick={() => onCloseWork(booking)}
+            className="w-full py-2 bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
+          >
+            Mark Job Complete &amp; Rate
+          </button>
+        )}
         
         {/* Premium WhatsApp Contact Card */}
         <div className="relative group/card">
@@ -256,6 +283,7 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [activeBookings, setActiveBookings] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [ratingBooking, setRatingBooking] = useState(null);
 
   useEffect(() => {
     const fetchMyBookings = async () => {
@@ -306,6 +334,22 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
     fetchMyBookings();
   }, [currentUser?._id, isOpen]);
 
+  const handleCloseWork = async (booking) => {
+    try {
+      const res = await fetch(`/api/bookings/update/${booking.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      if (res.ok) {
+        setActiveBookings(prev => prev.filter(b => b.id !== booking.id));
+        setRatingBooking(booking);
+      }
+    } catch (error) {
+      console.error('Failed to close work:', error);
+    }
+  };
+
   const handleCancel = async (id) => {
     try {
       // Optimistically remove from UI
@@ -328,17 +372,23 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="consumer-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[110]"
           />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="consumer-panel"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -390,7 +440,13 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
                       className="space-y-6 px-1"
                     >
                       {activeBookings.map(booking => (
-                        <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} />
+                        <BookingCard 
+                          key={booking.id} 
+                          booking={booking} 
+                          onCancel={handleCancel} 
+                          onCloseWork={handleCloseWork}
+                          onRate={(b) => setRatingBooking(b)}
+                        />
                       ))}
                     </motion.div>
                   ) : (
@@ -425,16 +481,30 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
                   <FaStar className="absolute top-4 right-4 text-rose-500 text-4xl opacity-20 rotate-12" />
                   <h3 className="text-lg font-bold mb-2 relative z-10">Rate your last service</h3>
                   <p className="text-gray-400 text-sm mb-4 relative z-10">Help the loopOut community find the best professionals.</p>
-                  <button className="w-full py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-colors relative z-10">
+                  <button 
+                    onClick={() => {
+                      if (activeBookings[0]) {
+                        setRatingBooking(activeBookings[0]);
+                      }
+                    }}
+                    className="w-full py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-colors relative z-10 cursor-pointer"
+                  >
                     Give Feedback
                   </button>
                 </div>
               )}
             </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+
+      {/* Rating & Review Pop-up Modal */}
+      <RatingModal
+        isOpen={Boolean(ratingBooking)}
+        onClose={() => setRatingBooking(null)}
+        booking={ratingBooking}
+      />
+    </>
   );
 };
 

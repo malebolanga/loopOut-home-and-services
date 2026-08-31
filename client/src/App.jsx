@@ -160,6 +160,7 @@ const CreateRequest = lazy(() => import('./pages/CreateRequest'));
 
 // Categories page
 const Categories = lazy(() => import('./pages/Categories'));
+const UpcomingBookings = lazy(() => import('./pages/UpcomingBookings'));
 
 import 'leaflet/dist/leaflet.css';
 
@@ -234,6 +235,9 @@ const AnimatedRoutes = () => {
         <Route path="/update-service/:serviceId" element={<PageTransition><UpdateService /></PageTransition>} />
 
         {/* User Routes */}
+        <Route path="/upcoming-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
+        <Route path="/my-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
+        <Route path="/upcoming" element={<PageTransition><UpcomingBookings /></PageTransition>} />
         <Route path="/users" element={<PageTransition><Users /></PageTransition>} />
         <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
         <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
@@ -379,7 +383,12 @@ function AppContent() {
     '/listing-home-page',
     '/helper-home-page',
     '/event-home-page',
-    '/service-home-page'
+    '/service-home-page',
+    '/upcoming-bookings',
+    '/my-bookings',
+    '/upcoming',
+    '/notifications',
+    '/settings'
   ];
 
   const specializedHelperPaths = [
@@ -389,7 +398,9 @@ function AppContent() {
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));
   const isStoragePage = location.pathname.startsWith('/storage/');
   const isCreateListingPage = location.pathname.endsWith('/create-listing');
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage;
+  // Hide header on /:userId/listings and /:userId/list (dynamic user listing pages)
+  const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
   const hideFooter = hideFooterPaths.includes(location.pathname) || isStoragePage;
