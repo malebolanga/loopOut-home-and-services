@@ -209,11 +209,11 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
               {item.address?.split(',')[0] || item.name || 'South Africa'}
             </p>
             
-            <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate leading-tight mt-0.5">
+            <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight mt-0.5">
               {item.name}
             </p>
             
-            <p className="text-gray-500 dark:text-gray-400 text-[11px] truncate leading-tight">
+            <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight">
               {getCategoryLabel()}
             </p>
           </div>
@@ -245,14 +245,14 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         </div>
 
         {item._distance && item._distance !== Infinity && !hideDistance && (
-          <p className="text-gray-500 dark:text-gray-400 text-[12px] leading-tight">
+          <p className="text-gray-500 dark:text-white text-[12px] leading-tight">
             {item._distance < 1 ? 'Near you' : `${Math.round(item._distance)} km away`}
           </p>
         )}
 
         <div className="flex items-baseline gap-1 mt-1">
           <span className={`font-semibold text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>{formatPrice()}</span>
-          <span className={`text-gray-500 dark:text-gray-400 font-normal ${reducedSize ? 'text-[10px]' : 'text-[12px]'}`}>{getPriceSuffix()}</span>
+          <span className={`text-gray-500 dark:text-white font-normal ${reducedSize ? 'text-[10px]' : 'text-[12px]'}`}>{getPriceSuffix()}</span>
         </div>
       </div>
     </div>

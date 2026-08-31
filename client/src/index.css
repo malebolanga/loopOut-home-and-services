@@ -37,6 +37,16 @@ html, body, #root {
   padding: 0;
 }
 
+html {
+  background-color: var(--app-bg);
+  scroll-behavior: smooth;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
+}
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
@@ -44,16 +54,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--app-bg);
   color: var(--app-text);
-  overflow-x: hidden;
-  max-width: 100vw;
-  transition: background-color 300ms ease, color 300ms ease;
-}
-
-html {
-  background-color: var(--app-bg);
-  scroll-behavior: smooth;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 *, *::before, *::after {
@@ -74,15 +80,28 @@ html.dark body {
   color: var(--app-text);
 }
 
-/* Global overflow/scroll safety: one page scroll, no accidental horizontal page scroll. */
+/* Global overflow/scroll safety: one unified viewport scroll, no stuck horizontal contexts */
 #root {
   overflow-x: clip;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
 }
 
 .scroll-container {
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
   max-width: 100%;
+}
+
+/* Horizontal scrolling strips - allow both horizontal slide and vertical page scroll simultaneously */
+.overflow-x-auto,
+[class*="overflow-x-"] {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
 }
 
 /* Sign-in page: responsive at every viewport size and browser zoom level. */

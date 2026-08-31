@@ -63,7 +63,7 @@ const PageTransition = ({ children }) => {
           duration: 0.4, 
           ease: [0.22, 1, 0.36, 1] // Custom cubic-bezier for a premium feel
         }}
-        className="w-full h-full"
+        className="w-full min-h-full"
       >
         {children}
       </motion.div>

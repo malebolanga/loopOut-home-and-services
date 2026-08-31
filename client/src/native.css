@@ -1,10 +1,11 @@
 /* Mobile Native App Enhancements */
 html, body {
   min-height: 100%;
-  overscroll-behavior-y: none; /* Prevents pull-to-refresh glow on Android */
+  overscroll-behavior-y: auto;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 #root {
@@ -22,8 +23,9 @@ html, body {
 }
 
 .native-scroll {
-  overflow-y: scroll;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y pinch-zoom;
 }
 
 .touch-target {
@@ -40,6 +42,9 @@ html, body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
 }
 
 /* Apple-like soft shadows */
