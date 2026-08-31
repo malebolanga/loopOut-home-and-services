@@ -151,8 +151,8 @@ export default function List() {
           <div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] flex items-center justify-center mx-auto mb-4 animate-pulse">
             <FaHome className="text-white text-xl" />
           </div>
-          <h2 className="text-lg font-semibold text-[#222222]">Loading your listings</h2>
-          <p className="text-[#717171] text-sm mt-1">Please wait...</p>
+          <h2 className="text-lg font-semibold text-[#222222] dark:text-white">Loading your listings</h2>
+          <p className="text-[#717171] dark:text-white text-sm mt-1">Please wait...</p>
         </div>
       </div>
     );
@@ -161,12 +161,12 @@ export default function List() {
   return (
     <div className="min-h-screen">
       {/* Airbnb-style Header */}
-      <div className="sticky top-0 z-50 bg-white border-b border-[#DDDDDD]">
+      <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-[#DDDDDD]">
         <div className="max-w-[1280px] mx-auto px-0 lg:px-10">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              <h1 className="text-[22px] font-semibold text-[#222222]">Listings</h1>
-              <span className="px-3 py-1 bg-[#F7F7F7] rounded-full text-sm font-medium text-[#717171]">
+              <h1 className="text-[22px] font-semibold text-[#222222] dark:text-white">Listings</h1>
+              <span className="px-3 py-1 bg-[#F7F7F7] dark:bg-gray-800 rounded-full text-sm font-medium text-[#717171] dark:text-white">
                 {userListings.length}
               </span>
             </div>
@@ -176,8 +176,8 @@ export default function List() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg transition-all text-sm font-medium
                   ${showFilters 
-                    ? 'border-[#222222] bg-[#F7F7F7] text-[#222222]' 
-                    : 'border-[#DDDDDD] hover:border-[#222222] text-[#222222]'
+                    ? 'border-[#222222] bg-[#F7F7F7] dark:bg-gray-800 text-[#222222] dark:text-white' 
+                    : 'border-[#DDDDDD] hover:border-[#222222] text-[#222222] dark:text-white'
                   }`}
               >
                 <MdFilterList className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function List() {
                 disabled={refreshing}
                 aria-label="Refresh listings"
               >
-                <MdRefresh className={`w-5 h-5 text-[#222222] ${refreshing ? 'animate-spin' : ''}`} />
+                <MdRefresh className={`w-5 h-5 text-[#222222] dark:text-white ${refreshing ? 'animate-spin' : ''}`} />
               </button>
               
             
@@ -206,14 +206,14 @@ export default function List() {
 
       {/* Filter Bar */}
       {showFilters && (
-        <div className="border-b border-[#DDDDDD] bg-white">
+        <div className="border-b border-[#DDDDDD] bg-white dark:bg-gray-900">
           <div className="max-w-[1280px] mx-auto px-6 lg:px-10 py-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-[#222222]">Property type</h3>
+              <h3 className="text-sm font-semibold text-[#222222] dark:text-white">Property type</h3>
               {selectedTypes.length > 0 && (
                 <button
                   onClick={() => setSelectedTypes([])}
-                  className="text-sm font-medium text-[#222222] underline hover:text-[#000000]"
+                  className="text-sm font-medium text-[#222222] dark:text-white underline hover:text-[#000000]"
                 >
                   Clear all
                 </button>
@@ -228,7 +228,7 @@ export default function List() {
                     inline-flex items-center gap-2 px-4 py-2.5 rounded-full border transition-all duration-200 text-sm font-medium
                     ${selectedTypes.includes(type)
                       ? 'border-[#222222] bg-[#222222] text-white'
-                      : 'border-[#DDDDDD] hover:border-[#222222] text-[#222222] bg-white'
+                      : 'border-[#DDDDDD] hover:border-[#222222] text-[#222222] dark:text-white bg-white dark:bg-gray-900'
                     }
                   `}
                 >
@@ -247,7 +247,7 @@ export default function List() {
           {filteredListings.map((listing) => (
             <div
               key={listing._id}
-              className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+              className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
               <div className="absolute inset-0 z-0">
                 <img
@@ -262,7 +262,7 @@ export default function List() {
               <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
                 <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-rose-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{listing.type}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{listing.type}</span>
                 </div>
               </div>
 
@@ -312,7 +312,7 @@ export default function List() {
                   </div>
                   <Link
                     to={`/listing/${listing._id}`} 
-                    className="block w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                    className="block w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                   >
                     Inspect Original Masterpiece
                   </Link>
@@ -325,13 +325,13 @@ export default function List() {
         {/* Empty State */}
         {filteredListings.length === 0 && (
           <div className="text-center py-16 max-w-md mx-auto">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#F7F7F7] flex items-center justify-center">
-              <FaHome className="text-[#717171] text-2xl" />
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-[#F7F7F7] dark:bg-gray-800 flex items-center justify-center">
+              <FaHome className="text-[#717171] dark:text-white text-2xl" />
             </div>
-            <h2 className="text-xl font-semibold text-[#222222] mb-2">
+            <h2 className="text-xl font-semibold text-[#222222] dark:text-white mb-2">
               {userListings.length === 0 ? 'No listings yet' : 'No matching listings'}
             </h2>
-            <p className="text-[#717171] text-sm mb-6">
+            <p className="text-[#717171] dark:text-white text-sm mb-6">
               {userListings.length === 0
                 ? 'Start by creating your first property listing to showcase it to potential guests or buyers.'
                 : 'Try adjusting your filters to see more results.'}

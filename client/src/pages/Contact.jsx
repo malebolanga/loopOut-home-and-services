@@ -35,7 +35,7 @@ export default function ContactPage() {
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Contact Details */}
-        <div className="flex-1 p-4 bg-gray-100 rounded-lg shadow-md">
+        <div className="flex-1 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md">
           <h2 className="text-2xl font-semibold mb-4">Our Contact Details</h2>
           <p className="text-lg mb-2">
             <strong>Business:</strong> LoupeOut Home
@@ -58,7 +58,7 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Form */}
-        <div className="flex-1 p-4 bg-white rounded-lg shadow-md">
+        <div className="flex-1 p-4 bg-white dark:bg-gray-900 rounded-lg shadow-md">
           {submitted ? (
             <div className="text-center">
               <h2 className="text-2xl font-semibold text-green-500 mb-4">

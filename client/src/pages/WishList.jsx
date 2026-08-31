@@ -62,7 +62,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
          exit="exit"
          layout
          onClick={() => onNavigate(getItemPath(item))}
-         className="relative bg-white rounded-3xl border border-gray-100 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
+         className="relative bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 overflow-hidden flex items-center p-4 gap-6 hover:shadow-xl transition-all duration-500 cursor-pointer"
       >
         <div className="w-40 h-40 rounded-2xl overflow-hidden flex-shrink-0">
            <ImageWithFallback src={getImage()} alt={getTitle()} className="w-full h-full object-cover hover:scale-110 transition-transform duration-700" />
@@ -75,17 +75,17 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
                  <span className="text-xs font-black">{getRating()}</span>
               </div>
            </div>
-           <h3 className="text-lg font-black text-gray-900 truncate mb-1 hover:text-rose-500 transition-colors uppercase tracking-tight">{getTitle()}</h3>
+           <h3 className="text-lg font-black text-gray-900 dark:text-white truncate mb-1 hover:text-rose-500 transition-colors uppercase tracking-tight">{getTitle()}</h3>
            <p className="text-gray-400 text-xs flex items-center gap-1.5 mb-4">
               <MapPin className="w-3.5 h-3.5 text-rose-400" />
               {getLocation()}
            </p>
            <div className="flex items-center justify-between">
-              <span className="text-xl font-black text-gray-900">{getPrice()}</span>
+              <span className="text-xl font-black text-gray-900 dark:text-white">{getPrice()}</span>
                <button 
                  onClick={(e) => { e.stopPropagation(); onRemove(item._id, item.type); }}
                  aria-label={`Remove ${getTitle()} from wishlist`}
-                 className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100"
+                 className="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all border border-gray-100 dark:border-gray-800"
                >
                  <Trash2 className="w-4 h-4" />
                </button>
@@ -103,7 +103,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
       layout
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+      className="relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
       onClick={() => onNavigate(getItemPath(item))}
     >
       <div className="absolute inset-0 z-0">
@@ -118,7 +118,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
       <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
         <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-rose-500" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{item.type}</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{item.type}</span>
         </div>
 
         <button
@@ -128,9 +128,9 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
           }}
           disabled={isRemoving}
           aria-label={`Remove ${getTitle()} from wishlist`}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
+          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 dark:text-white hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
         >
-          {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          {isRemoving ? <Sparkles className="w-3.5 h-3.5 text-gray-900 dark:text-white animate-spin" /> : <Trash2 className="w-4 h-4" />}
         </button>
       </div>
 
@@ -171,7 +171,7 @@ const AirbnbCard = React.forwardRef(({ item, viewMode, isRemoving, onRemove, onN
               {item.votes?.down || 0}
             </div>
           </div>
-          <div className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl">
+          <div className="w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl">
             Inspect Original Masterpiece
           </div>
         </div>
@@ -340,14 +340,14 @@ const WishList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-6">
        <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       {/* Animated Header Section */}
-      <div className="relative pt-8 pb-8 px-6 overflow-hidden bg-gray-50/50 border-b border-gray-100">
+      <div className="relative pt-8 pb-8 px-6 overflow-hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-50/20 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto relative">
           <motion.div
@@ -363,7 +363,7 @@ const WishList = () => {
                 <div className="h-px w-12 bg-gray-200" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Masterpiece Elite</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter mb-2">
+              <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white tracking-tighter mb-2">
                 Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Wishlist</span>
               </h1>
               <p className="text-gray-400 font-medium text-sm">
@@ -394,12 +394,12 @@ const WishList = () => {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex flex-col items-center gap-3 min-w-[80px]  transition-all ${activeCategory === cat.id ? 'text-gray-900' : 'text-gray-400'}`}
+                className={`flex flex-col items-center gap-3 min-w-[80px]  transition-all ${activeCategory === cat.id ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}
               >
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 hover:bg-gray-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${activeCategory === cat.id ? 'bg-gray-900 text-white shadow-2xl scale-110' : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'}`}>
                   {cat.icon}
                 </div>
-                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900' : 'hover:text-gray-600'}`}>
+                <span className={`text-[11px] font-black uppercase tracking-widest transition-colors ${activeCategory === cat.id ? 'text-gray-900 dark:text-white' : 'hover:text-gray-600 dark:hover:text-white'}`}>
                   {cat.label}
                 </span>
                 <div className={`h-1 bg-gray-900 rounded-full transition-all duration-500 ${activeCategory === cat.id ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
@@ -408,18 +408,18 @@ const WishList = () => {
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center shrink-0 gap-4 bg-white p-2 rounded-2xl shadow-xl shadow-gray-100 border border-gray-50 max-w-fit">
+          <div className="flex items-center shrink-0 gap-4 bg-white dark:bg-gray-900 p-2 rounded-2xl shadow-xl shadow-gray-100 border border-gray-50 max-w-fit">
             <button 
               onClick={() => setViewMode('grid')}
               aria-label="Grid view"
-              className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
+              className={`p-3 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             >
               <Layers className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setViewMode('list')}
               aria-label="List view"
-              className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50'}`}
+              className={`p-3 rounded-xl transition-all ${viewMode === 'list' ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
             >
               <List className="w-5 h-5" />
             </button>
@@ -435,7 +435,7 @@ const WishList = () => {
         <div className="py-16">
           {loading ? (
              <div className="py-24 text-center">
-               <div className="w-12 h-12 border-4 border-gray-100 border-t-rose-500 rounded-full animate-spin mx-auto mb-4" />
+               <div className="w-12 h-12 border-4 border-gray-100 dark:border-gray-800 border-t-rose-500 rounded-full animate-spin mx-auto mb-4" />
                <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Curating your collection...</p>
              </div>
           ) : filteredWishlist.length === 0 ? (
@@ -447,7 +447,7 @@ const WishList = () => {
               <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mb-8 text-rose-500">
                  <Heart className="w-10 h-10" />
               </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">Your collection is empty</h3>
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">Your collection is empty</h3>
               <p className="text-gray-400 font-medium leading-relaxed mb-10">
                 You haven't saved any masterpieces yet. Explore our listings and hit the heart icon to start your collection.
               </p>

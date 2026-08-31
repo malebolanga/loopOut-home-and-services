@@ -54,7 +54,7 @@ const Become = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800/50">
       {/* Cinematic Hero */}
       <section className="relative h-[60vh] flex items-center justify-center overflow-hidden bg-gray-950">
          <div className="absolute inset-0">
@@ -98,7 +98,7 @@ const Become = () => {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + (idx * 0.1) }}
-                className="bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 flex flex-col gap-8 group hover:border-gray-950 transition-all duration-500"
+                className="bg-white dark:bg-gray-900 p-10 rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800 flex flex-col gap-8 group hover:border-gray-950 transition-all duration-500"
               >
                  <div className="flex justify-between items-start">
                     <div className={`${step.color} w-16 h-16 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -108,7 +108,7 @@ const Become = () => {
                  </div>
                  <div>
                     <h3 className="text-2xl font-black text-gray-950 tracking-tighter mb-4">{step.title}</h3>
-                    <p className="text-gray-500 font-medium leading-relaxed">{step.desc}</p>
+                    <p className="text-gray-500 dark:text-white font-medium leading-relaxed">{step.desc}</p>
                  </div>
               </motion.div>
             ))}
@@ -124,7 +124,7 @@ const Become = () => {
                <div>
                   <h2 className="text-4xl lg:text-5xl font-black text-white tracking-tighter mb-8 leading-tight">
                      WHAT ARE YOU <br />
-                     <span className="text-gray-500 italic">DOMINATING TODAY?</span>
+                     <span className="text-gray-500 dark:text-white italic">DOMINATING TODAY?</span>
                   </h2>
                   <p className="text-gray-400 mb-12 text-lg font-medium">Choose your sector and begin your listing journey. Our AI will guide you through every optimization.</p>
                   
@@ -160,7 +160,7 @@ const Become = () => {
                           { label: 'Community Trust', status: 'Elite Tier' }
                         ].map((item, i) => (
                           <div key={i} className="flex justify-between items-center py-4 border-b border-white/5 text-sm">
-                             <span className="text-gray-500 font-bold uppercase tracking-widest text-[10px]">{item.label}</span>
+                             <span className="text-gray-500 dark:text-white font-bold uppercase tracking-widest text-[10px]">{item.label}</span>
                              <span className="text-white font-black">{item.status}</span>
                           </div>
                         ))}
@@ -190,18 +190,18 @@ const Become = () => {
              icon: <Heart className="w-10 h-10 text-pink-600 shadow-xl" />
            }
          ].map((item, i) => (
-           <div key={i} className="flex flex-col gap-6 p-8 bg-white rounded-3xl border border-gray-100 hover:shadow-xl transition-shadow">
-              <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center shadow-inner">
+           <div key={i} className="flex flex-col gap-6 p-8 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-shadow">
+              <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center shadow-inner">
                  {item.icon}
               </div>
               <h4 className="text-xl font-black text-gray-950 tracking-tighter">{item.title}</h4>
-              <p className="text-gray-500 font-medium leading-relaxed">{item.desc}</p>
+              <p className="text-gray-500 dark:text-white font-medium leading-relaxed">{item.desc}</p>
            </div>
          ))}
       </section>
 
       {/* Global CTA */}
-      <section className="py-24 px-6 bg-white text-center border-t border-gray-100">
+      <section className="py-24 px-6 bg-white dark:bg-gray-900 text-center border-t border-gray-100 dark:border-gray-800">
          <div className="max-w-3xl mx-auto">
             <Zap className="w-12 h-12 text-rose-500 mx-auto mb-8 animate-bounce" />
             <h2 className="text-4xl md:text-6xl font-black text-gray-950 tracking-tighter mb-8 leading-none">
@@ -218,7 +218,7 @@ const Become = () => {
                </button>
                <button 
                  onClick={() => navigate('/contact')}
-                 className="w-full md:w-auto px-12 py-6 border-2 border-gray-200 text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all"
+                 className="w-full md:w-auto px-12 py-6 border-2 border-gray-200 dark:border-gray-800 text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
                >
                  Talk to a Growth Expert
                </button>
@@ -229,7 +229,7 @@ const Become = () => {
       </section>
       
       {/* Mini Footer Area */}
-      <footer className="py-12 bg-white border-t border-gray-100 px-6">
+      <footer className="py-12 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6">
          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="flex items-center gap-3">
                <div className="w-8 h-8 bg-gray-950 rounded-lg flex items-center justify-center">
@@ -237,7 +237,7 @@ const Become = () => {
                </div>
                <span className="text-gray-950 font-black tracking-tighter text-lg uppercase">loopOut <span className="text-rose-600">Protocol</span></span>
             </div>
-            <div className="flex gap-8 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+            <div className="flex gap-8 text-[10px] font-black text-gray-500 dark:text-white uppercase tracking-widest">
                <button onClick={() => navigate('/privacy')} className="hover:text-rose-600 transition-colors">Privacy</button>
                <button onClick={() => navigate('/terms')} className="hover:text-rose-600 transition-colors">Terms</button>
                <button onClick={() => navigate('/help-center')} className="hover:text-rose-600 transition-colors">Help Center</button>

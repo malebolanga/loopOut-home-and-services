@@ -87,7 +87,7 @@ export default function Booking({ listing = {} }) {
   };
 
   if (!listing.type) {
-    return <p className="text-gray-500 italic text-sm mt-4">Booking is unavailable for this listing.</p>;
+    return <p className="text-gray-500 dark:text-white italic text-sm mt-4">Booking is unavailable for this listing.</p>;
   }
 
   // Only show for relevant listing types
@@ -125,7 +125,7 @@ export default function Booking({ listing = {} }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed inset-0 m-auto w-[90%] max-w-md h-fit max-h-[90vh] bg-white rounded-[2.5rem] shadow-2xl z-[9999] overflow-y-auto scrollbar-hide flex flex-col"
+              className="fixed inset-0 m-auto w-[90%] max-w-md h-fit max-h-[90vh] bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl z-[9999] overflow-y-auto scrollbar-hide flex flex-col"
             >
               {/* Decorative Header Background */}
               <div className="relative h-24 bg-gradient-to-br from-rose-500 to-indigo-600 flex items-center justify-center rounded-t-[2.5rem] shrink-0">
@@ -140,7 +140,7 @@ export default function Booking({ listing = {} }) {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Check-in Date</h3>
-                    <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                    <div className="border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                       <Calendar
                         onChange={(date) => {
                           setStartDate(date);
@@ -160,7 +160,7 @@ export default function Booking({ listing = {} }) {
                       className="origin-top"
                     >
                       <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1 mt-4">Check-out Date</h3>
-                      <div className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                      <div className="border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-sm">
                         <Calendar
                           onChange={(date) => setEndDate(date)}
                           value={endDate}
@@ -172,7 +172,7 @@ export default function Booking({ listing = {} }) {
                   )}
                 </div>
 
-                <div className="w-full h-px bg-gray-100 mt-2" />
+                <div className="w-full h-px bg-gray-100 dark:bg-gray-800 mt-2" />
 
                 {/* Apartment or Room Unit Selection */}
                 <div className="space-y-2">
@@ -181,7 +181,7 @@ export default function Booking({ listing = {} }) {
                     <select
                       value={selectedUnit}
                       onChange={(e) => setSelectedUnit(e.target.value)}
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold text-sm text-gray-900 appearance-none cursor-pointer"
+                      className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-bold text-sm text-gray-900 dark:text-white appearance-none cursor-pointer"
                     >
                       <option value="">✨ Any Available Unit</option>
                       {listing.roomTypes.map((r, i) => (
@@ -193,7 +193,7 @@ export default function Booking({ listing = {} }) {
                   ) : (
                     <input
                       type="text"
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 dark:text-white placeholder-gray-400 transition-all"
                       placeholder="e.g. Room 101, Apartment 2B"
                       value={selectedUnit}
                       onChange={(e) => setSelectedUnit(e.target.value)}
@@ -206,7 +206,7 @@ export default function Booking({ listing = {} }) {
                   <div>
                     <input
                       type="text"
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 dark:text-white placeholder-gray-400 transition-all"
                       placeholder="Full Name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -216,7 +216,7 @@ export default function Booking({ listing = {} }) {
                   <div>
                     <input
                       type="text"
-                      className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 placeholder-gray-400 transition-all"
+                      className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 font-medium text-gray-900 dark:text-white placeholder-gray-400 transition-all"
                       placeholder="Phone or WhatsApp Number"
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
@@ -230,7 +230,7 @@ export default function Booking({ listing = {} }) {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowCalendar(false)}
-                    className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all"
+                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-white rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all"
                   >
                     Cancel
                   </motion.button>

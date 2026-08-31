@@ -94,7 +94,7 @@ const ForBusiness = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
       <section className="relative h-[85vh] flex items-center overflow-hidden bg-gray-950">
         <div className="absolute inset-0 z-0">
@@ -147,7 +147,7 @@ const ForBusiness = () => {
             >
               <button 
                 onClick={() => navigate('/become')}
-                className="px-10 py-5 bg-white text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group"
+                className="px-10 py-5 bg-white dark:bg-gray-900 text-gray-950 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-2xl flex items-center gap-3 group"
               >
                 Start for Free
                 <RocketLaunchIcon className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
@@ -174,7 +174,7 @@ const ForBusiness = () => {
                className="bg-white/5 backdrop-blur-xl border border-white/10 p-4 rounded-2xl min-w-[200px]"
              >
                <div className="text-2xl font-black text-white">{stat.value}</div>
-               <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{stat.label}</div>
+               <div className="text-[10px] text-gray-500 dark:text-white font-bold uppercase tracking-widest">{stat.label}</div>
              </motion.div>
            ))}
         </div>
@@ -184,7 +184,7 @@ const ForBusiness = () => {
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl font-black text-gray-950 tracking-tighter mb-4">Choose Your Path</h2>
-          <p className="text-gray-500 max-w-lg mx-auto">Tailored professional experiences for every business model on the loopOut ecosystem.</p>
+          <p className="text-gray-500 dark:text-white max-w-lg mx-auto">Tailored professional experiences for every business model on the loopOut ecosystem.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -199,20 +199,20 @@ const ForBusiness = () => {
                 visible: { opacity: 1, y: 0, transition: { delay: idx * 0.1 } }
               }}
               whileHover={{ y: -10 }}
-              className="bg-gray-50 rounded-[2.5rem] overflow-hidden group border border-gray-100/50 hover:shadow-2xl transition-all"
+              className="bg-gray-50 dark:bg-gray-800 rounded-[2.5rem] overflow-hidden group border border-gray-100 dark:border-gray-800/50 hover:shadow-2xl transition-all"
             >
               <div className="relative h-48">
                 <img src={cat.image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={cat.title} />
                 <div className="absolute top-4 left-4">
-                   <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-gray-900 uppercase tracking-widest">{cat.tag}</span>
+                   <span className="px-3 py-1 bg-white/90 backdrop-blur rounded-full text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-widest">{cat.tag}</span>
                 </div>
               </div>
               <div className="p-8">
-                <div className="mb-6 bg-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <div className="mb-6 bg-white dark:bg-gray-900 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                   {cat.icon}
                 </div>
                 <h3 className="text-2xl font-black text-gray-950 tracking-tighter mb-4 leading-none">{cat.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed mb-8">
+                <p className="text-sm text-gray-500 dark:text-white leading-relaxed mb-8">
                   {cat.description}
                 </p>
                 <button 
@@ -229,7 +229,7 @@ const ForBusiness = () => {
       </section>
 
       {/* Feature Showcase */}
-      <section className="bg-gray-50 py-24 px-6 ">
+      <section className="bg-gray-50 dark:bg-gray-800 py-24 px-6 ">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
            <motion.div
              initial={{ opacity: 0, x: -30 }}
@@ -242,17 +242,17 @@ const ForBusiness = () => {
                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950/60 to-transparent" />
               </div>
               {/* Overlay UI elements */}
-              <div className="absolute -bottom-8 -right-8 bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 hidden md:block">
+              <div className="absolute -bottom-8 -right-8 bg-white dark:bg-gray-900 p-8 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 hidden md:block">
                  <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
                        <CurrencyDollarIcon className="w-6 h-6" />
                     </div>
                     <div>
                        <div className="text-2xl font-black text-gray-950">R42,500</div>
-                       <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Yield This Week</div>
+                       <div className="text-[10px] text-gray-500 dark:text-white font-bold uppercase tracking-widest">Yield This Week</div>
                     </div>
                  </div>
-                 <div className="w-48 h-2 bg-gray-100 rounded-full overflow-hidden">
+                 <div className="w-48 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       whileInView={{ width: '75%' }}
@@ -276,23 +276,23 @@ const ForBusiness = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
                  {features.map((feature, i) => (
                    <div key={i} className="flex flex-col gap-4">
-                      <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-gray-100 flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white dark:bg-gray-900 rounded-2xl shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center">
                          {feature.icon}
                       </div>
                       <h4 className="text-lg font-black text-gray-950 tracking-tight">{feature.title}</h4>
-                      <p className="text-sm text-gray-500 leading-relaxed font-medium">{feature.description}</p>
+                      <p className="text-sm text-gray-500 dark:text-white leading-relaxed font-medium">{feature.description}</p>
                    </div>
                  ))}
               </div>
 
-              <div className="mt-12 pt-12 border-t border-gray-200">
+              <div className="mt-12 pt-12 border-t border-gray-200 dark:border-gray-800">
                  <div className="flex items-center gap-6">
                     <div className="flex -space-x-4">
                        {[1,2,3,4].map(i => (
                          <img key={i} src={`https://i.pravatar.cc/100?img=${i+10}`} className="w-12 h-12 rounded-full border-4 border-white object-cover" alt="Partner" />
                        ))}
                     </div>
-                    <p className="text-sm text-gray-500 font-medium italic">"The transition to loopOut helped us increase our booking rate by 40% in just two months."</p>
+                    <p className="text-sm text-gray-500 dark:text-white font-medium italic">"The transition to loopOut helped us increase our booking rate by 40% in just two months."</p>
                  </div>
               </div>
            </div>
@@ -319,7 +319,7 @@ const ForBusiness = () => {
               </button>
            </div>
 
-           <div className="mt-12 flex items-center justify-center gap-12 text-gray-500 grayscale opacity-50">
+           <div className="mt-12 flex items-center justify-center gap-12 text-gray-500 dark:text-white grayscale opacity-50">
               <div className="font-black text-xl italic tracking-tighter">ELITE PARTNERS</div>
               <div className="font-black text-xl italic tracking-tighter">GLOBAL REACH</div>
               <div className="font-black text-xl italic tracking-tighter">AI POWERED</div>
@@ -336,13 +336,13 @@ const ForBusiness = () => {
                </div>
                <span className="text-white font-black tracking-tighter text-xl uppercase">loopOut <span className="text-rose-600">Business</span></span>
             </div>
-            <div className="flex gap-8 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+            <div className="flex gap-8 text-[10px] font-black text-gray-500 dark:text-white uppercase tracking-widest">
                <button onClick={() => navigate('/privacy')} className="hover:text-white transition-colors">Privacy</button>
                <button onClick={() => navigate('/terms')} className="hover:text-white transition-colors">Terms</button>
                <button onClick={() => navigate('/help-center')} className="hover:text-white transition-colors">Help Center</button>
                <button onClick={() => navigate('/trust')} className="hover:text-white transition-colors">Safety</button>
             </div>
-            <p className="text-gray-600 text-[10px] font-medium tracking-tight">© 2026 loopOut South Africa. All rights reserved.</p>
+            <p className="text-gray-600 dark:text-white text-[10px] font-medium tracking-tight">© 2026 loopOut South Africa. All rights reserved.</p>
          </div>
       </footer>
     </div>

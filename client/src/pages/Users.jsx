@@ -137,7 +137,7 @@ export default function Users() {
       <div className="min-h-screen from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <FaSpinner className="animate-spin text-6xl text-blue-600 mb-4" />
-          <p className="text-lg text-gray-700 font-medium">Loading community members. Please wait...</p>
+          <p className="text-lg text-gray-700 dark:text-white font-medium">Loading community members. Please wait...</p>
         </div>
       </div>
     );
@@ -176,10 +176,10 @@ export default function Users() {
 
   return (
     <div className="min-h-screen from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8 relative">
-      <div className="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-2xl">
+      <div className="max-w-7xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-2xl">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-4 md:mb-0">Discover Our Community</h1>
+          <h1 className="text-4xl font-extrabold text-gray-800 dark:text-white mb-4 md:mb-0">Discover Our Community</h1>
           <Link
             to="/sign-up"
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white font-semibold rounded-full shadow-lg hover:from-blue-700 hover:to-purple-800 transition-all duration-300 transform hover:scale-105"
@@ -209,7 +209,7 @@ export default function Users() {
 
                 <div className="text-center">
                   <Link to={`/user/${user._id}`} className="no-underline">
-                    <h2 className={`font-bold text-xl text-gray-800 hover:text-blue-600 transition-colors`}>
+                    <h2 className={`font-bold text-xl text-gray-800 dark:text-white hover:text-blue-600 transition-colors`}>
                       {user.username}
                     </h2>
                   </Link>
@@ -219,14 +219,14 @@ export default function Users() {
                 </div>
 
                 {user.bio && (
-                  <p className="text-gray-600 text-sm text-center line-clamp-3">
+                  <p className="text-gray-600 dark:text-white text-sm text-center line-clamp-3">
                     {user.bio}
                   </p>
                 )}
 
                 <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center justify-center text-sm text-gray-700 bg-gray-50 rounded-lg py-2 px-3">
-                    <FiMail className="mr-2 text-gray-500 flex-shrink-0" />
+                  <div className="flex items-center justify-center text-sm text-gray-700 dark:text-white bg-gray-50 dark:bg-gray-800 rounded-lg py-2 px-3">
+                    <FiMail className="mr-2 text-gray-500 dark:text-white flex-shrink-0" />
                     <span className="truncate">{user.email}</span>
                   </div>
                 </div>
@@ -256,8 +256,8 @@ export default function Users() {
 
         {/* Call to Action at Bottom */}
         <div className="mt-12 text-center p-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-inner">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Ready to Connect?</h2>
-          <p className="text-lg text-gray-700 mb-6 max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">Ready to Connect?</h2>
+          <p className="text-lg text-gray-700 dark:text-white mb-6 max-w-2xl mx-auto">
             Join our growing community of property enthusiasts, agents, and families. Create your profile today and start exploring real opportunities!
           </p>
           <Link
@@ -324,7 +324,7 @@ export default function Users() {
                 return (
                   <div key={index} className={`flex flex-col ${msg.sender === 'you' ? 'items-end' : 'items-start'}`}>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] text-gray-500 uppercase">[{msg.time}]</span>
+                      <span className="text-[10px] text-gray-500 dark:text-white uppercase">[{msg.time}]</span>
                       {msg.badge && (
                         <span className={`text-[9px] px-2 py-0.5 border rounded uppercase font-bold tracking-widest ${badgeColor} animate-pulse`}>
                           AI: {msg.badge}

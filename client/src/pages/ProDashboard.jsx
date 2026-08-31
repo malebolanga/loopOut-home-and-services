@@ -170,7 +170,7 @@ const ProDashboard = () => {
               <button
                 disabled
                 title="Live navigation isn't available yet — this is a preview"
-                className="flex-1 py-3 bg-white/40 text-gray-500 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed"
+                className="flex-1 py-3 bg-white/40 text-gray-500 dark:text-white rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed"
               >
                 Navigate to Zone
               </button>
@@ -199,7 +199,7 @@ const ProDashboard = () => {
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Active Requests</span>
               </div>
               <p className="text-2xl font-black text-white">24</p>
-              <p className="text-[10px] text-gray-500 font-bold mt-1">In your 10km radius</p>
+              <p className="text-[10px] text-gray-500 dark:text-white font-bold mt-1">In your 10km radius</p>
             </div>
           </div>
 

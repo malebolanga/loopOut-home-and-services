@@ -25,7 +25,7 @@ const Card = ({ card, removeCard, active }) => {
       drag={active ? "x" : false}
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       onDragEnd={handleDragEnd}
-      className="absolute inset-0 w-full h-full rounded-[2.5rem] shadow-2xl overflow-hidden bg-white border border-gray-100 cursor-grab active:cursor-grabbing origin-bottom"
+      className="absolute inset-0 w-full h-full rounded-[2.5rem] shadow-2xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 cursor-grab active:cursor-grabbing origin-bottom"
     >
       {active && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 pointer-events-none" />
@@ -281,51 +281,51 @@ export default function Matchmaker() {
             onChange={(e) => setSelectedType(e.target.value)}
             className="bg-white/10 text-white text-[10px] font-black uppercase tracking-widest border border-white/20 rounded-full px-3 py-2 outline-none appearance-none cursor-pointer backdrop-blur-md"
           >
-            <option value="All" className="text-gray-900">All Types</option>
-            <optgroup label="General" className="text-gray-900 font-bold">
-              <option value="Helpers" className="text-gray-900 font-normal">Helpers</option>
-              <option value="Properties" className="text-gray-900 font-normal">Properties</option>
-              <option value="Services" className="text-gray-900 font-normal">Services</option>
+            <option value="All" className="text-gray-900 dark:text-white">All Types</option>
+            <optgroup label="General" className="text-gray-900 dark:text-white font-bold">
+              <option value="Helpers" className="text-gray-900 dark:text-white font-normal">Helpers</option>
+              <option value="Properties" className="text-gray-900 dark:text-white font-normal">Properties</option>
+              <option value="Services" className="text-gray-900 dark:text-white font-normal">Services</option>
             </optgroup>
-            <optgroup label="Helpers" className="text-gray-900 font-bold">
-              <option value="Sneaker" className="text-gray-900 font-normal">Sneaker Cleaning</option>
-              <option value="Washingmat" className="text-gray-900 font-normal">Washingmat</option>
-              <option value="Animals" className="text-gray-900 font-normal">Pet Care</option>
-              <option value="Domestic" className="text-gray-900 font-normal">Domestic</option>
-              <option value="Tutor" className="text-gray-900 font-normal">Tutors</option>
-              <option value="Maid" className="text-gray-900 font-normal">Maids</option>
-              <option value="Beauty" className="text-gray-900 font-normal">Beauty</option>
-              <option value="Cleaner" className="text-gray-900 font-normal">Cleaners</option>
-              <option value="Barber" className="text-gray-900 font-normal">Barbers</option>
-              <option value="Hair" className="text-gray-900 font-normal">Hair</option>
-              <option value="Nails" className="text-gray-900 font-normal">Nails</option>
-              <option value="Massage" className="text-gray-900 font-normal">Massage</option>
-              <option value="Chef" className="text-gray-900 font-normal">Chefs</option>
-              <option value="Tattoo" className="text-gray-900 font-normal">Tattoo Artists</option>
-              <option value="Nanny" className="text-gray-900 font-normal">Nannies</option>
+            <optgroup label="Helpers" className="text-gray-900 dark:text-white font-bold">
+              <option value="Sneaker" className="text-gray-900 dark:text-white font-normal">Sneaker Cleaning</option>
+              <option value="Washingmat" className="text-gray-900 dark:text-white font-normal">Washingmat</option>
+              <option value="Animals" className="text-gray-900 dark:text-white font-normal">Pet Care</option>
+              <option value="Domestic" className="text-gray-900 dark:text-white font-normal">Domestic</option>
+              <option value="Tutor" className="text-gray-900 dark:text-white font-normal">Tutors</option>
+              <option value="Maid" className="text-gray-900 dark:text-white font-normal">Maids</option>
+              <option value="Beauty" className="text-gray-900 dark:text-white font-normal">Beauty</option>
+              <option value="Cleaner" className="text-gray-900 dark:text-white font-normal">Cleaners</option>
+              <option value="Barber" className="text-gray-900 dark:text-white font-normal">Barbers</option>
+              <option value="Hair" className="text-gray-900 dark:text-white font-normal">Hair</option>
+              <option value="Nails" className="text-gray-900 dark:text-white font-normal">Nails</option>
+              <option value="Massage" className="text-gray-900 dark:text-white font-normal">Massage</option>
+              <option value="Chef" className="text-gray-900 dark:text-white font-normal">Chefs</option>
+              <option value="Tattoo" className="text-gray-900 dark:text-white font-normal">Tattoo Artists</option>
+              <option value="Nanny" className="text-gray-900 dark:text-white font-normal">Nannies</option>
             </optgroup>
-            <optgroup label="Services" className="text-gray-900 font-bold">
-              <option value="Baker" className="text-gray-900 font-normal">Bakers</option>
-              <option value="Carwash" className="text-gray-900 font-normal">Carwash</option>
-              <option value="Photograph" className="text-gray-900 font-normal">Photography</option>
-              <option value="Transport" className="text-gray-900 font-normal">Transport</option>
-              <option value="Landscaping" className="text-gray-900 font-normal">Landscaping</option>
-              <option value="Electrician" className="text-gray-900 font-normal">Electricians</option>
-              <option value="Handyman" className="text-gray-900 font-normal">Handyman</option>
-              <option value="Catering" className="text-gray-900 font-normal">Catering</option>
-              <option value="SchoolTransport" className="text-gray-900 font-normal">School Transport</option>
-              <option value="Daycare" className="text-gray-900 font-normal">Daycare</option>
-              <option value="Daily" className="text-gray-900 font-normal">Daily Services</option>
-              <option value="Delivery" className="text-gray-900 font-normal">Delivery</option>
-              <option value="Usedbooks" className="text-gray-900 font-normal">Used Books</option>
+            <optgroup label="Services" className="text-gray-900 dark:text-white font-bold">
+              <option value="Baker" className="text-gray-900 dark:text-white font-normal">Bakers</option>
+              <option value="Carwash" className="text-gray-900 dark:text-white font-normal">Carwash</option>
+              <option value="Photograph" className="text-gray-900 dark:text-white font-normal">Photography</option>
+              <option value="Transport" className="text-gray-900 dark:text-white font-normal">Transport</option>
+              <option value="Landscaping" className="text-gray-900 dark:text-white font-normal">Landscaping</option>
+              <option value="Electrician" className="text-gray-900 dark:text-white font-normal">Electricians</option>
+              <option value="Handyman" className="text-gray-900 dark:text-white font-normal">Handyman</option>
+              <option value="Catering" className="text-gray-900 dark:text-white font-normal">Catering</option>
+              <option value="SchoolTransport" className="text-gray-900 dark:text-white font-normal">School Transport</option>
+              <option value="Daycare" className="text-gray-900 dark:text-white font-normal">Daycare</option>
+              <option value="Daily" className="text-gray-900 dark:text-white font-normal">Daily Services</option>
+              <option value="Delivery" className="text-gray-900 dark:text-white font-normal">Delivery</option>
+              <option value="Usedbooks" className="text-gray-900 dark:text-white font-normal">Used Books</option>
             </optgroup>
-            <optgroup label="Properties" className="text-gray-900 font-bold">
-              <option value="Rental" className="text-gray-900 font-normal">Room / Home to Rent</option>
-              <option value="Guest house" className="text-gray-900 font-normal">Guest House & B&B (Per Day)</option>
-              <option value="Hotels" className="text-gray-900 font-normal">Hotel & Lodge (Per Day)</option>
-              <option value="Land" className="text-gray-900 font-normal">Self Catering (Per Day)</option>
-              <option value="Resort" className="text-gray-900 font-normal">Resort & Holiday Park (Per Day)</option>
-              <option value="Office" className="text-gray-900 font-normal">Room Per Hour</option>
+            <optgroup label="Properties" className="text-gray-900 dark:text-white font-bold">
+              <option value="Rental" className="text-gray-900 dark:text-white font-normal">Room / Home to Rent</option>
+              <option value="Guest house" className="text-gray-900 dark:text-white font-normal">Guest House & B&B (Per Day)</option>
+              <option value="Hotels" className="text-gray-900 dark:text-white font-normal">Hotel & Lodge (Per Day)</option>
+              <option value="Land" className="text-gray-900 dark:text-white font-normal">Self Catering (Per Day)</option>
+              <option value="Resort" className="text-gray-900 dark:text-white font-normal">Resort & Holiday Park (Per Day)</option>
+              <option value="Office" className="text-gray-900 dark:text-white font-normal">Room Per Hour</option>
             </optgroup>
           </select>
         </div>
@@ -365,7 +365,7 @@ export default function Matchmaker() {
               <p className="text-gray-400 text-sm">We're finding more personalized matches for you.</p>
               <button 
                 onClick={fetchDatabaseCards}
-                className="mt-8 px-6 py-3 bg-white text-gray-950 font-black uppercase tracking-widest rounded-full text-xs hover:bg-gray-200 transition-colors"
+                className="mt-8 px-6 py-3 bg-white dark:bg-gray-900 text-gray-950 font-black uppercase tracking-widest rounded-full text-xs hover:bg-gray-200 transition-colors"
               >
                 Refresh Matches
               </button>
@@ -461,7 +461,7 @@ export default function Matchmaker() {
                         value={bookingForm.name} 
                         onChange={handleFormChange}
                         placeholder="Enter your full name" 
-                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600"
+                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600 dark:text-white"
                       />
                     </div>
 
@@ -474,7 +474,7 @@ export default function Matchmaker() {
                         value={bookingForm.phone} 
                         onChange={handleFormChange}
                         placeholder="Enter your phone number" 
-                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600"
+                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600 dark:text-white"
                       />
                     </div>
 
@@ -487,7 +487,7 @@ export default function Matchmaker() {
                         value={bookingForm.request} 
                         onChange={handleFormChange}
                         placeholder="What are you looking for or expecting from this request?" 
-                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600 resize-none"
+                        className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-sm font-medium focus:border-emerald-500 outline-none transition-colors placeholder:text-gray-600 dark:text-white resize-none"
                       />
                     </div>
                   </div>

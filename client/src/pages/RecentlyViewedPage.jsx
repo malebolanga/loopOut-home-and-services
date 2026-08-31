@@ -117,7 +117,7 @@ const RecentlyViewedPage = () => {
               e.stopPropagation();
               removeItem(item._id, item.viewedAt);
             }}
-            className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md text-gray-500 hover:text-rose-600 hover:bg-white transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
+            className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md text-gray-500 dark:text-white hover:text-rose-600 hover:bg-white dark:hover:bg-gray-900 transition-all transform hover:scale-110 opacity-0 group-hover:opacity-100"
             title="Remove from history"
           >
             <X className="w-4 h-4" />
@@ -175,8 +175,8 @@ const RecentlyViewedPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gray-100 border-t-rose-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-500 font-medium">Recalling your discoveries...</p>
+          <div className="w-12 h-12 border-4 border-gray-100 dark:border-gray-800 border-t-rose-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 dark:text-white font-medium">Recalling your discoveries...</p>
         </div>
       </div>
     );
@@ -198,21 +198,21 @@ const RecentlyViewedPage = () => {
       `}</style>
 
       {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => navigate(-1)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors order-first"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors order-first"
               >
-                <ChevronLeft className="w-6 h-6 text-gray-700" />
+                <ChevronLeft className="w-6 h-6 text-gray-700 dark:text-white" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Recently Viewed
                 </h1>
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                <p className="text-xs text-gray-500 dark:text-white font-medium uppercase tracking-wider">
                   {viewedItems.length} Stories you've explored
                 </p>
               </div>
@@ -227,19 +227,19 @@ const RecentlyViewedPage = () => {
                   placeholder="Search history..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
+                  className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-sm"
                 />
               </div>
 
               {/* Sort */}
-              <div className="flex items-center border border-gray-200 rounded-full px-1 py-1 pr-3 hover:shadow-sm transition-shadow bg-gray-50">
-                <div className="bg-white p-1.5 rounded-full mr-2 shadow-sm">
-                  <SlidersHorizontal className="h-3.5 w-3.5 text-gray-600" />
+              <div className="flex items-center border border-gray-200 dark:border-gray-800 rounded-full px-1 py-1 pr-3 hover:shadow-sm transition-shadow bg-gray-50 dark:bg-gray-800">
+                <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full mr-2 shadow-sm">
+                  <SlidersHorizontal className="h-3.5 w-3.5 text-gray-600 dark:text-white" />
                 </div>
                 <select 
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-gray-700 focus:outline-none cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-gray-700 dark:text-white focus:outline-none cursor-pointer"
                 >
                   <option value="recent">Recent</option>
                   <option value="oldest">Oldest</option>
@@ -271,14 +271,14 @@ const RecentlyViewedPage = () => {
                 onClick={() => setActiveTab(category.id)}
                 className={`flex flex-col items-center gap-2 min-w-[70px] pb-3 border-b-2 transition-all duration-300  ${
                   activeTab === category.id 
-                    ? 'border-gray-900 text-gray-900' 
-                    : 'border-transparent text-gray-400 hover:text-gray-900 hover:border-gray-200'
+                    ? 'border-gray-900 text-gray-900 dark:text-white' 
+                    : 'border-transparent text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-200 dark:hover:border-gray-800'
                 }`}
               >
                 <div className={`transition-transform duration-300 ${activeTab === category.id ? 'scale-110' : 'group-hover:scale-105 opacity-60'}`}>
                   {category.icon}
                 </div>
-                <span className={`text-[11px] font-bold whitespace-nowrap tracking-wide uppercase ${activeTab === category.id ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`text-[11px] font-bold whitespace-nowrap tracking-wide uppercase ${activeTab === category.id ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
                   {category.label}
                 </span>
               </button>
@@ -291,13 +291,13 @@ const RecentlyViewedPage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
               <History className="w-10 h-10 text-gray-300" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
               {searchQuery ? 'No history matches your search' : 'Your history is clear'}
             </h2>
-            <p className="text-gray-500 max-w-sm mb-8 leading-relaxed">
+            <p className="text-gray-500 dark:text-white max-w-sm mb-8 leading-relaxed">
               {searchQuery 
                 ? 'Try searching for something else or browse all categories.' 
                 : 'Items you view will show up here so you can easily find them again.'}
@@ -319,18 +319,18 @@ const RecentlyViewedPage = () => {
       {/* Clear History Confirmation Modal */}
       {showClearConfirm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-sm p-8 shadow-2xl border border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm p-8 shadow-2xl border border-gray-100 dark:border-gray-800">
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-6 mx-auto text-rose-500">
               <Trash2 className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Clear entire history?</h3>
-            <p className="text-gray-500 text-center text-sm mb-8 leading-relaxed">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-2">Clear entire history?</h3>
+            <p className="text-gray-500 dark:text-white text-center text-sm mb-8 leading-relaxed">
               This will remove all items from your recently viewed list. This action cannot be undone.
             </p>
             <div className="grid grid-cols-2 gap-4">
               <button 
                 onClick={() => setShowClearConfirm(false)}
-                className="py-3 px-4 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-colors text-sm"
+                className="py-3 px-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-white font-bold rounded-2xl transition-colors text-sm"
               >
                 Cancel
               </button>

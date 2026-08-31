@@ -207,13 +207,13 @@ const Trip = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-24 pb-32 overflow-x-hidden font-inter text-gray-950 selection:bg-rose-100">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pt-24 pb-32 overflow-x-hidden font-inter text-gray-950 selection:bg-rose-100">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         
         {/* Progress Tracker - Clean & Minimalist */}
         {!showResults && !isSearching && (
            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mb-20">
-             <div className="flex items-center gap-1.5 p-1.5 bg-gray-50 rounded-full border border-gray-100 shadow-sm">
+             <div className="flex items-center gap-1.5 p-1.5 bg-gray-50 dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-800 shadow-sm">
                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                  <div key={i} className={`h-2 rounded-full transition-all duration-500 ${step === i ? 'w-10 bg-rose-500' : step > i ? 'w-2 bg-gray-950' : 'w-2 bg-gray-200'}`} />
                ))}
@@ -223,7 +223,7 @@ const Trip = () => {
 
         {/* Searching Interface */}
         {isSearching && (
-           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
+           <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white dark:bg-gray-900">
              {/* Neural Data Stream Animation */}
              <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
                 {[...Array(20)].map((_, i) => (
@@ -287,7 +287,7 @@ const Trip = () => {
                   value={destination}
                   onChange={(e) => setDestination(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && destination && setStep(2)}
-                  className="w-full px-10 py-8 bg-gray-50 border border-gray-100 rounded-[2rem] text-2xl font-black placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 transition-all text-center"
+                  className="w-full px-10 py-8 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-[2rem] text-2xl font-black placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 transition-all text-center"
                 />
                 
                 <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -295,7 +295,7 @@ const Trip = () => {
                     <button
                       key={target.name}
                       onClick={() => { setDestination(target.name); setStep(2); }}
-                      className="px-6 py-3 bg-white border border-gray-100 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-rose-500 hover:text-rose-600 transition-all shadow-sm flex items-center gap-2 group"
+                      className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-rose-500 hover:text-rose-600 transition-all shadow-sm flex items-center gap-2 group"
                     >
                       <span className="group-hover:scale-125 transition-transform">{target.icon}</span>
                       {target.name}
@@ -315,13 +315,13 @@ const Trip = () => {
           {step === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-xl mx-auto">
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Expedition Squad</h2>
-              <div className="flex items-center justify-between p-10 bg-gray-50 rounded-[3rem] border border-gray-100">
-                 <button onClick={() => setGuests(Math.max(1, guests - 1))} className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center text-2xl font-black hover:bg-white transition-all">-</button>
+              <div className="flex items-center justify-between p-10 bg-gray-50 dark:bg-gray-800 rounded-[3rem] border border-gray-100 dark:border-gray-800">
+                 <button onClick={() => setGuests(Math.max(1, guests - 1))} className="w-14 h-14 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-2xl font-black hover:bg-white dark:hover:bg-gray-900 transition-all">-</button>
                  <div className="text-center">
                     <span className="text-8xl font-black text-gradient leading-none">{guests}</span>
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2">Personnel</p>
                  </div>
-                 <button onClick={() => setGuests(guests + 1)} className="w-14 h-14 rounded-full border border-gray-200 flex items-center justify-center text-2xl font-black hover:bg-white transition-all">+</button>
+                 <button onClick={() => setGuests(guests + 1)} className="w-14 h-14 rounded-full border border-gray-200 dark:border-gray-800 flex items-center justify-center text-2xl font-black hover:bg-white dark:hover:bg-gray-900 transition-all">+</button>
               </div>
               <div className="mt-16 flex items-center justify-center gap-10">
                  <button onClick={() => setStep(1)} className="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-950 transition-colors">Back</button>
@@ -334,7 +334,7 @@ const Trip = () => {
           {step === 3 && (
             <motion.div key="step3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center max-w-2xl mx-auto">
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Strategic Budget</h2>
-              <div className="bg-gray-50 p-12 rounded-[4rem] border border-gray-100 shadow-sm relative overflow-hidden">
+              <div className="bg-gray-50 dark:bg-gray-800 p-12 rounded-[4rem] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
                 <div className="relative z-10">
                    <div className="text-7xl font-black text-center mb-8 tracking-tighter text-rose-500">
                      R {budget.toLocaleString()}
@@ -367,12 +367,12 @@ const Trip = () => {
             <motion.div key="step4" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-center">
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Masterpiece Architecture</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
-                <button onClick={() => { setRentalDurationType('short'); setStep(5); }} className={`p-16 rounded-[3rem] border-2 transition-all group ${rentalDurationType === 'short' ? 'bg-gray-950 border-gray-950 text-white shadow-2xl scale-105' : 'bg-gray-50 border-transparent hover:border-gray-200'}`}>
+                <button onClick={() => { setRentalDurationType('short'); setStep(5); }} className={`p-16 rounded-[3rem] border-2 transition-all group ${rentalDurationType === 'short' ? 'bg-gray-950 border-gray-950 text-white shadow-2xl scale-105' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-gray-200 dark:hover:border-gray-800'}`}>
                    <ClockIcon className={`w-12 h-12 mx-auto mb-6 ${rentalDurationType === 'short' ? 'text-rose-500' : 'text-gray-300'}`} />
                    <h3 className="text-2xl font-black italic tracking-tighter">Short-Stay</h3>
                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mt-2">Verified Stays</p>
                 </button>
-                <button onClick={() => { setRentalDurationType('long'); setStep(5); }} className={`p-16 rounded-[3rem] border-2 transition-all group ${rentalDurationType === 'long' ? 'bg-gray-950 border-gray-950 text-white shadow-2xl scale-105' : 'bg-gray-50 border-transparent hover:border-gray-200'}`}>
+                <button onClick={() => { setRentalDurationType('long'); setStep(5); }} className={`p-16 rounded-[3rem] border-2 transition-all group ${rentalDurationType === 'long' ? 'bg-gray-950 border-gray-950 text-white shadow-2xl scale-105' : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:border-gray-200 dark:hover:border-gray-800'}`}>
                    <HomeModernIcon className={`w-12 h-12 mx-auto mb-6 ${rentalDurationType === 'long' ? 'text-rose-500' : 'text-gray-300'}`} />
                    <h3 className="text-2xl font-black italic tracking-tighter">Long-Rental</h3>
                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mt-2">Elite Protocols</p>
@@ -387,7 +387,7 @@ const Trip = () => {
               <h2 className="text-5xl font-black mb-16 tracking-tighter">Specific Node</h2>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-4xl mx-auto">
                 {(rentalDurationType === 'short' ? shortTermOptions : longTermOptions).map((opt) => (
-                  <button key={opt.id} onClick={() => handleToggle(setAccommodationType, opt.id)} className={`p-8 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-4 ${accommodationType.includes(opt.id) ? 'bg-gray-950 border-gray-950 text-white shadow-xl' : 'bg-gray-50 border-gray-100 hover:border-gray-300 text-gray-400'}`}>
+                  <button key={opt.id} onClick={() => handleToggle(setAccommodationType, opt.id)} className={`p-8 rounded-[2rem] border transition-all flex flex-col items-center justify-center gap-4 ${accommodationType.includes(opt.id) ? 'bg-gray-950 border-gray-950 text-white shadow-xl' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 text-gray-400'}`}>
                     <div className={accommodationType.includes(opt.id) ? 'text-rose-500' : 'text-gray-300'}>{opt.icon}</div>
                     <span className="font-black text-[9px] uppercase tracking-widest">{opt.label}</span>
                   </button>
@@ -407,8 +407,8 @@ const Trip = () => {
               <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-16 italic underline decoration-rose-200">Personnel assignment required</p>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-6 max-w-5xl mx-auto">
                  {serviceOptions.map((opt) => (
-                   <button key={opt.id} onClick={() => handleToggle(setSelectedServices, opt.id)} className={`p-8 rounded-[2rem] border transition-all flex flex-col items-center gap-4 ${selectedServices.includes(opt.id) ? 'bg-white border-rose-500 shadow-xl' : 'bg-gray-50 border-transparent text-gray-300'}`}>
-                      <div className={`p-4 rounded-2xl transition-all ${selectedServices.includes(opt.id) ? 'bg-rose-500 text-white scale-110' : 'bg-white text-gray-200'}`}>{opt.icon}</div>
+                   <button key={opt.id} onClick={() => handleToggle(setSelectedServices, opt.id)} className={`p-8 rounded-[2rem] border transition-all flex flex-col items-center gap-4 ${selectedServices.includes(opt.id) ? 'bg-white dark:bg-gray-900 border-rose-500 shadow-xl' : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-300'}`}>
+                      <div className={`p-4 rounded-2xl transition-all ${selectedServices.includes(opt.id) ? 'bg-rose-500 text-white scale-110' : 'bg-white dark:bg-gray-900 text-gray-200'}`}>{opt.icon}</div>
                       <span className="font-black text-[9px] uppercase tracking-widest">{opt.label}</span>
                    </button>
                  ))}
@@ -423,7 +423,7 @@ const Trip = () => {
               <h2 className="text-5xl font-black mb-16 tracking-tighter italic">Social Vibe</h2>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 max-w-2xl mx-auto">
                  {lifestyleOptions.map((opt) => (
-                   <button key={opt.id} onClick={() => handleToggle(setSelectedEntertainment, opt.id)} className={`p-12 rounded-[2.5rem] border transition-all flex flex-col items-center gap-6 ${selectedEntertainment.includes(opt.id) ? 'bg-gray-950 border-gray-950 text-white shadow-2xl' : 'bg-gray-50 border-transparent text-gray-300'}`}>
+                   <button key={opt.id} onClick={() => handleToggle(setSelectedEntertainment, opt.id)} className={`p-12 rounded-[2.5rem] border transition-all flex flex-col items-center gap-6 ${selectedEntertainment.includes(opt.id) ? 'bg-gray-950 border-gray-950 text-white shadow-2xl' : 'bg-gray-50 dark:bg-gray-800 border-transparent text-gray-300'}`}>
                       <div className="scale-125">{opt.icon}</div>
                       <span className="font-black text-[10px] uppercase tracking-widest">{opt.label}</span>
                    </button>
@@ -438,7 +438,7 @@ const Trip = () => {
             <motion.div key="step8" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
               <h2 className="text-6xl font-black mb-16 tracking-tighter">Temporal Scope</h2>
               <div className="flex flex-col items-center">
-                <div className="bg-gray-50 p-16 rounded-[4rem] border border-gray-100 flex items-center gap-16 px-24">
+                <div className="bg-gray-50 dark:bg-gray-800 p-16 rounded-[4rem] border border-gray-100 dark:border-gray-800 flex items-center gap-16 px-24">
                   <button onClick={() => setDuration(Math.max(1, duration - 1))} className="text-7xl font-black text-gray-200 hover:text-rose-500 transition-all">-</button>
                   <div className="text-center">
                      <span className="text-9xl font-black text-gradient leading-none">{duration}</span>
@@ -458,7 +458,7 @@ const Trip = () => {
           {step === 9 && showResults && (
             <motion.div key="results" initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className="space-y-24 pb-40">
                {/* Result Header - cinematic & clean */}
-                <div className="bg-gray-50 rounded-[3.5rem] p-10 sm:p-20 shadow-sm relative overflow-hidden border border-gray-100/50">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-[3.5rem] p-10 sm:p-20 shadow-sm relative overflow-hidden border border-gray-100 dark:border-gray-800/50">
                   <div className="relative flex flex-col lg:flex-row items-center justify-between gap-12 text-center lg:text-left">
                     <div className="flex flex-col lg:flex-row items-center gap-12">
                        <div className="w-32 h-32 bg-rose-500 rounded-[2.5rem] flex items-center justify-center shadow-xl rotate-3">
@@ -468,7 +468,7 @@ const Trip = () => {
                           <span className="text-[10px] font-black uppercase tracking-[0.5em] text-rose-500 italic mb-2 block">Verified Masterplan</span>
                           <h1 className="text-6xl sm:text-7xl font-black text-gray-950 tracking-tighter italic leading-none">{destination} <br/> Protocol</h1>
                            <div className="flex flex-wrap justify-center lg:justify-start gap-4 mt-8">
-                              <button onClick={handleSaveTrip} disabled={isSaving} className="px-6 py-3 bg-white border border-gray-100 rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:shadow-md transition-all">
+                              <button onClick={handleSaveTrip} disabled={isSaving} className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:shadow-md transition-all">
                                  <BookmarkIcon className="w-4 h-4 text-rose-500" /> Save Intel
                               </button>
                               <button onClick={() => window.print()} className="px-6 py-3 bg-gray-950 text-white rounded-2xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all">
@@ -477,7 +477,7 @@ const Trip = () => {
                            </div>
                        </div>
                     </div>
-                     <div className="lg:text-right p-10 bg-white rounded-[2.5rem] border border-gray-100 shadow-xl min-w-[300px]">
+                     <div className="lg:text-right p-10 bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-xl min-w-[300px]">
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Financial Estimate</span>
                         <div className="text-5xl font-black text-gray-950 tracking-tighter">R {calculateEstimation().toLocaleString()}</div>
                         <div className={`mt-3 inline-block px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${calculateEstimation() <= budget ? 'bg-green-50 text-green-600' : 'bg-rose-50 text-rose-600'}`}>
@@ -495,7 +495,7 @@ const Trip = () => {
                     { label: 'Nodes Selected', value: accommodationType.join(', ') || 'General', icon: <MapPinIcon className="w-5 h-5" />, color: 'bg-rose-50 text-rose-600' },
                     { label: 'Price Index', value: `R${(calculateEstimation() / (duration || 1)).toFixed(0)} / Unit`, icon: <CurrencyDollarIcon className="w-5 h-5" />, color: 'bg-amber-50 text-amber-600' }
                   ].map((stat, i) => (
-                    <motion.div key={i} whileHover={{ y: -10 }} className="p-8 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
+                    <motion.div key={i} whileHover={{ y: -10 }} className="p-8 bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                       <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center mb-6`}>{stat.icon}</div>
                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
                       <h4 className="text-lg font-black text-gray-950 tracking-tight italic truncate">{stat.value}</h4>
@@ -515,14 +515,14 @@ const Trip = () => {
                 {/* Accommodations - strictly filtered by destination */}
                <section>
                   <div className="flex items-center justify-between mb-8 px-6">
-                     <h2 className="text-3xl font-black text-gray-900 tracking-tighter italic uppercase border-b-2 border-rose-500 pb-1">Protocol Stays</h2>
+                     <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter italic uppercase border-b-2 border-rose-500 pb-1">Protocol Stays</h2>
                      <span className="text-[9px] font-black text-gray-400 tracking-widest uppercase italic">{destination} Verified</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-2">
                     {dbResults.accommodation.length > 0 ? dbResults.accommodation.map((item) => (
                       <ListingItem key={item._id} listing={item} />
                     )) : (
-                      <div className="col-span-full py-20 text-center text-gray-300 text-xl font-black italic tracking-widest uppercase border-2 border-dashed border-gray-100 rounded-[3rem]">No Nodes found in {destination}</div>
+                      <div className="col-span-full py-20 text-center text-gray-300 text-xl font-black italic tracking-widest uppercase border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem]">No Nodes found in {destination}</div>
                     )}
                   </div>
                </section>
@@ -535,13 +535,13 @@ const Trip = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-2">
                      {dbResults.news.map((item, idx) => (
-                       <div key={idx} className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 hover:shadow-xl transition-all cursor-pointer group">
+                       <div key={idx} className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all cursor-pointer group">
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">{item.tag}</span>
+                            <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-white dark:bg-gray-900 px-3 py-1 rounded-full shadow-sm">{item.tag}</span>
                             <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" /><span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">LIVE</span></div>
                           </div>
-                          <h4 className="text-lg font-black text-gray-900 leading-tight group-hover:text-rose-600 transition-colors">{item.title}</h4>
-                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-6 block border-t border-gray-200 pt-4">Source: {item.source} • {item.date}</span>
+                          <h4 className="text-lg font-black text-gray-900 dark:text-white leading-tight group-hover:text-rose-600 transition-colors">{item.title}</h4>
+                          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-6 block border-t border-gray-200 dark:border-gray-800 pt-4">Source: {item.source} • {item.date}</span>
                        </div>
                      ))}
                   </div>
@@ -565,7 +565,7 @@ const Trip = () => {
                     <div>
                       <div className="flex items-center justify-between mb-8">
                          <h2 className="text-xl font-black italic uppercase tracking-tighter border-b-2 border-gray-900 pb-1">Community Pulse</h2>
-                         <MusicalNoteIcon className="w-6 h-6 text-gray-900" />
+                         <MusicalNoteIcon className="w-6 h-6 text-gray-900 dark:text-white" />
                       </div>
                       <div className="grid grid-cols-1 gap-4">
                          {dbResults.entertainment.map((item, idx) => (
@@ -585,7 +585,7 @@ const Trip = () => {
                           <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-3 block italic">Neural Selection</span>
                           <h3 className="text-3xl font-black text-white italic tracking-tighter mb-4">{dbResults.aiPick.name}</h3>
                           <p className="text-gray-400 text-xs italic leading-relaxed border-l border-rose-500 pl-4">"{dbResults.aiPick.description}"</p>
-                          <button className="w-full mt-10 py-4 bg-white text-gray-950 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Engage Deployment</button>
+                          <button className="w-full mt-10 py-4 bg-white dark:bg-gray-900 text-gray-950 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">Engage Deployment</button>
                         </div>
                       </motion.div>
                     )}
@@ -594,7 +594,7 @@ const Trip = () => {
 
                {/* Reset Hook */}
                <div className="flex justify-center pt-20">
-                   <button onClick={() => { setStep(1); setShowResults(false); }} className="px-10 py-5 bg-gray-50 border border-gray-100 rounded-full font-black text-[9px] uppercase tracking-[0.4em] text-gray-400 hover:text-rose-500 transition-all shadow-sm">
+                   <button onClick={() => { setStep(1); setShowResults(false); }} className="px-10 py-5 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-full font-black text-[9px] uppercase tracking-[0.4em] text-gray-400 hover:text-rose-500 transition-all shadow-sm">
                     Re-Initialize Masterpiece
                   </button>
                </div>

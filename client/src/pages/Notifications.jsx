@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { FiBell, FiCheck, FiTrash2, FiClock, FiChevronLeft } from 'react-icons/fi';
+import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 
@@ -321,7 +321,7 @@ export default function Notifications() {
                 <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
                 <div className="space-y-4">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4 h-24">
+                        <div key={i} className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 h-24">
                             <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0"></div>
                             <div className="flex-1 space-y-2">
                                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -338,27 +338,18 @@ export default function Notifications() {
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 min-h-screen">
             <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 rounded-full hover:bg-slate-100 transition-all text-slate-700 active:scale-95 cursor-pointer"
-                        aria-label="Go Back"
-                    >
-                        <FiChevronLeft className="w-6 h-6" />
-                    </button>
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 flex items-center gap-3">
-                            Notifications
-                            {unreadCount > 0 && (
-                                <span className="bg-rose-500 text-white text-xs py-0.5 px-2.5 rounded-full font-black">
-                                    {unreadCount} new
-                                </span>
-                            )}
-                        </h1>
-                        <p className="text-gray-500 text-xs sm:text-sm mt-0.5 font-medium">Stay updated with your latest bookings, requests, and reviews.</p>
-                    </div>
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        Notifications
+                        {unreadCount > 0 && (
+                            <span className="bg-rose-500 text-white text-sm py-0.5 px-2.5 rounded-full font-medium">
+                                {unreadCount} new
+                            </span>
+                        )}
+                    </h1>
+                    <p className="text-gray-500 dark:text-white mt-1">Stay updated with your latest bookings, requests, and reviews.</p>
                 </div>
 
                 {notifications.length > 0 && (
@@ -394,12 +385,12 @@ export default function Notifications() {
             )}
 
             {notifications.length === 0 && !error ? (
-                <div className="bg-white rounded-2xl p-12 text-center border border-gray-100 shadow-sm">
-                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100 dark:border-gray-800">
                         <FiBell className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">You're all caught up!</h2>
-                    <p className="text-gray-500 max-w-sm mx-auto">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">You're all caught up!</h2>
+                    <p className="text-gray-500 dark:text-white max-w-sm mx-auto">
                         When you have new bookings, requests to accept, or reviews, they'll appear here.
                     </p>
                     <button
@@ -420,8 +411,8 @@ export default function Notifications() {
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 onClick={() => handleNotificationClick(notification)}
                                 className={`relative flex gap-4 p-5 rounded-2xl border transition-all cursor-pointer ${notification.read
-                                    ? 'bg-white border-gray-200 text-gray-600 shadow-sm hover:shadow-md'
-                                    : 'bg-blue-50/50 border-blue-200 text-gray-900 shadow-md ring-1 ring-blue-100 shadow-blue-50'
+                                    ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white shadow-sm hover:shadow-md'
+                                    : 'bg-blue-50/50 border-blue-200 text-gray-900 dark:text-white shadow-md ring-1 ring-blue-100 shadow-blue-50'
                                     }`}
                             >
                                 {!notification.read && (
@@ -434,7 +425,7 @@ export default function Notifications() {
 
                                 <div className="flex-1 min-w-0 pr-2 sm:pr-8">
                                     <div className="flex items-center gap-2 mb-1">
-                                        <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.read ? 'text-gray-800' : 'text-gray-900'}`}>
+                                        <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.read ? 'text-gray-800 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
                                             {notification.title}
                                         </h3>
                                         {notification.type === 'review' && (
@@ -448,7 +439,7 @@ export default function Notifications() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className={`text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500' : 'text-gray-700'}`}>
+                                    <p className={`text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
                                         {notification.message}
                                     </p>
 
@@ -479,35 +470,35 @@ export default function Notifications() {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative"
+                            className="bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative"
                         >
                             <button
                                 onClick={() => setSelectedNotification(null)}
-                                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors z-10"
+                                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors z-10"
                             >
                                 ✕
                             </button>
 
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pr-8 sm:pr-0">
-                                <div className="p-3 sm:p-4 rounded-2xl bg-gray-50 border border-gray-100 scale-100 sm:scale-125 flex-shrink-0">
+                                <div className="p-3 sm:p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 scale-100 sm:scale-125 flex-shrink-0">
                                     {getNotificationIcon(selectedNotification.type)}
                                 </div>
                                 <div>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedNotification.title}</h2>
-                                    <p className="text-gray-500 flex items-center gap-2 mt-1 text-sm sm:text-base">
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{selectedNotification.title}</h2>
+                                    <p className="text-gray-500 dark:text-white flex items-center gap-2 mt-1 text-sm sm:text-base">
                                         <FiClock className="w-4 h-4" />
                                         {formattedDates[selectedNotification._id] ?? formatDate(selectedNotification.createdAt || new Date())}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-100 mb-4 sm:mb-8 flex-1 overflow-y-auto">
-                                <p className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+                            <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-gray-800 mb-4 sm:mb-8 flex-1 overflow-y-auto">
+                                <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
                                     {selectedNotification.message}
                                 </p>
 
                                 {loadingBooking && (
-                                    <div className="mt-6 pt-6 border-t border-gray-200 animate-pulse space-y-3">
+                                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 animate-pulse space-y-3">
                                         <div className="h-4 bg-gray-200 rounded w-1/3"></div>
                                         <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                                         <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -515,44 +506,44 @@ export default function Notifications() {
                                 )}
 
                                 {bookingDetails && !loadingBooking && (
-                                    <div className="mt-6 pt-6 border-t border-gray-200">
-                                        <h3 className="font-semibold text-gray-900 mb-4">Booking Request Details</h3>
+                                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Booking Request Details</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-sm text-gray-500">Service / Listing</p>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="text-sm text-gray-500 dark:text-white">Service / Listing</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Client Name</p>
-                                                <p className="font-medium text-gray-900">{bookingDetails.user?.username || 'Client'}</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">Client Name</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.user?.username || 'Client'}</p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Total Price</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">ZAR {Number(bookingDetails.totalPrice || 0).toLocaleString()}</p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500">Dates</p>
-                                                <p className="font-medium text-gray-900">
+                                                <p className="text-sm text-gray-500 dark:text-white">Dates</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.startDate ? new Date(bookingDetails.startDate).toLocaleDateString() : 'N/A'} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `- ${new Date(bookingDetails.endDate).toLocaleDateString()}` : ''}
                                                 </p>
                                             </div>
                                             {bookingDetails.phone && (
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Contact Number</p>
-                                                    <p className="font-medium text-gray-900">{bookingDetails.phone}</p>
+                                                    <p className="text-sm text-gray-500 dark:text-white">Contact Number</p>
+                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.phone}</p>
                                                 </div>
                                             )}
                                             {bookingDetails.requestLocation && (
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Location</p>
-                                                    <p className="font-medium text-gray-900">{bookingDetails.requestLocation}</p>
+                                                    <p className="text-sm text-gray-500 dark:text-white">Location</p>
+                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.requestLocation}</p>
                                                 </div>
                                             )}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
-                                                    <p className="text-sm text-gray-500 mb-2">Status</p>
+                                                    <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
                                                             isConfirmed ? 'bg-green-100 text-green-800 border border-green-200' :
@@ -560,7 +551,7 @@ export default function Notifications() {
                                                             isCompleted ? 'bg-purple-100 text-purple-800 border border-purple-200' :
                                                             bookingDetails.status === 'declined' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
                                                             bookingDetails.status === 'cancelled' ? 'bg-red-100 text-red-800 border border-red-200' :
-                                                            'bg-gray-100 text-gray-800 border border-gray-200'
+                                                            'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-800'
                                                         }`}>
                                                             {bookingDetails.status}
                                                         </span>
@@ -700,7 +691,7 @@ export default function Notifications() {
                                 )}
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100 flex-shrink-0">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
                                 <button
                                     onClick={() => {
                                         deleteNotification(selectedNotification._id);

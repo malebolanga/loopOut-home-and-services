@@ -232,11 +232,11 @@ export default function Splitter() {
               </h3>
               
               {loadingBookings ? (
-                <div className="flex items-center gap-2.5 py-4 text-slate-500 text-xs">
+                <div className="flex items-center gap-2.5 py-4 text-slate-500 dark:text-white text-xs">
                   <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" /> Loading active reservations...
                 </div>
               ) : bookings.length === 0 ? (
-                <p className="text-xs text-slate-500 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-white leading-relaxed">
                   No active stays or service bookings found in your history. You can use manual entry below to calculate any split!
                 </p>
               ) : (
@@ -255,7 +255,7 @@ export default function Splitter() {
                         <span className="text-xs font-black block text-white">
                           {b.listing?.name || b.helper?.name || b.service?.name || b.event?.name}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-500 block mt-0.5">
+                        <span className="text-[10px] font-medium text-slate-500 dark:text-white block mt-0.5">
                           Status: <span className="uppercase font-black text-emerald-400">{b.status}</span>
                         </span>
                       </div>
@@ -284,7 +284,7 @@ export default function Splitter() {
               </h3>
               
               <div>
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1.5">Booking/Service Item Name</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white block mb-1.5">Booking/Service Item Name</label>
                 <input
                   type="text"
                   value={itemName}
@@ -294,9 +294,9 @@ export default function Splitter() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1.5">Total Subtotal Price (ZAR)</label>
+                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white block mb-1.5">Total Subtotal Price (ZAR)</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-bold">R</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-white text-xs font-bold">R</span>
                   <input
                     type="number"
                     value={itemPrice}
@@ -314,7 +314,7 @@ export default function Splitter() {
               <h3 className="text-sm font-black text-white tracking-wider uppercase flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-400" /> Split Partners
               </h3>
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{guests.length} People</span>
+              <span className="text-[10px] font-black text-slate-500 dark:text-white uppercase tracking-widest">{guests.length} People</span>
             </div>
 
             <div className="flex gap-2">
@@ -356,7 +356,7 @@ export default function Splitter() {
                       </span>
                     ) : splitMethod === "exact" ? (
                       <div className="relative w-28 flex items-center">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-bold">R</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-white text-[10px] font-bold">R</span>
                         <input
                           type="number"
                           value={g.amount}
@@ -372,14 +372,14 @@ export default function Splitter() {
                           onChange={(e) => handlePercentChange(index, e.target.value)}
                           className="w-full bg-slate-900 border border-slate-800/80 rounded-lg pl-2 pr-6 py-1 text-xs text-white text-right focus:outline-none focus:border-emerald-500 transition-colors"
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 text-[10px] font-bold">%</span>
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 dark:text-white text-[10px] font-bold">%</span>
                       </div>
                     )}
 
                     {index > 0 && (
                       <button
                         onClick={() => handleRemoveGuest(index)}
-                        className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors"
+                        className="p-1.5 text-slate-500 dark:text-white hover:text-rose-500 transition-colors"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
@@ -433,11 +433,11 @@ export default function Splitter() {
                 <span className="font-bold text-white">R{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center text-xs text-slate-400">
-                <span className="flex items-center gap-1">LoopOut Service Fee (5%) <Info className="w-3 h-3 text-slate-500" /></span>
+                <span className="flex items-center gap-1">LoopOut Service Fee (5%) <Info className="w-3 h-3 text-slate-500 dark:text-white" /></span>
                 <span className="font-bold text-white">R{serviceFee.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center text-xs text-slate-400">
-                <span className="flex items-center gap-1">Tourism Levy Tax (2%) <Info className="w-3 h-3 text-slate-500" /></span>
+                <span className="flex items-center gap-1">Tourism Levy Tax (2%) <Info className="w-3 h-3 text-slate-500 dark:text-white" /></span>
                 <span className="font-bold text-white">R{tourismLevy.toFixed(2)}</span>
               </div>
               <div className="h-px bg-slate-800 my-2" />

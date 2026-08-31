@@ -105,10 +105,10 @@ export default function SellListing() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-xl border border-gray-100"
+          className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-xl border border-gray-100 dark:border-gray-800"
         >
           <div className="text-6xl mb-6">😕</div>
-          <h2 className="text-2xl font-black text-gray-900 mb-3">Listing not found</h2>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-3">Listing not found</h2>
           <p className="text-gray-400 text-sm mb-8">{error || 'This item may have been removed.'}</p>
           <button onClick={() => navigate('/')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-rose-500 transition-all active:scale-95">
             Back to Home
@@ -118,20 +118,20 @@ export default function SellListing() {
     );
   }
 
-  const meta = CATEGORY_META[listing.category] || { emoji: '🏷️', label: listing.category, gradient: 'from-gray-600 to-gray-800', bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' };
+  const meta = CATEGORY_META[listing.category] || { emoji: '🏷️', label: listing.category, gradient: 'from-gray-600 to-gray-800', bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-700 dark:text-white', border: 'border-gray-200 dark:border-gray-800' };
 
   return (
     <div className="min-h-screen bg-[#F8F8F8]" style={{ fontFamily: "'Inter', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
       {/* ── TOP NAV ── */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-gray-100" style={{ paddingTop: 0 }}>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-2xl border-b border-gray-100 dark:border-gray-800" style={{ paddingTop: 0 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <div className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+            <div className="w-9 h-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
               <ArrowLeftIcon className="w-4 h-4" />
             </div>
             <span className="text-sm font-semibold hidden sm:inline">Back</span>
@@ -144,8 +144,8 @@ export default function SellListing() {
 
           <div className="flex items-center gap-2">
             {/* Share */}
-            <button onClick={handleShare} className="relative w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-              <ShareIcon className="w-4 h-4 text-gray-600" />
+            <button onClick={handleShare} className="relative w-9 h-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+              <ShareIcon className="w-4 h-4 text-gray-600 dark:text-white" />
               <AnimatePresence>
                 {copied && (
                   <motion.div
@@ -160,10 +160,10 @@ export default function SellListing() {
               </AnimatePresence>
             </button>
             {/* Favourite */}
-            <button onClick={() => setLiked((l) => !l)} className="w-9 h-9 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+            <button onClick={() => setLiked((l) => !l)} className="w-9 h-9 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
               {liked
                 ? <HeartIconSolid className="w-4 h-4 text-rose-500" />
-                : <HeartIcon className="w-4 h-4 text-gray-600" />}
+                : <HeartIcon className="w-4 h-4 text-gray-600 dark:text-white" />}
             </button>
           </div>
         </div>
@@ -198,11 +198,11 @@ export default function SellListing() {
                 {/* Prev / Next arrows */}
                 {listing.imageUrls.length > 1 && (
                   <>
-                    <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
-                      <ChevronLeftIcon className="w-5 h-5 text-gray-800" />
+                    <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all">
+                      <ChevronLeftIcon className="w-5 h-5 text-gray-800 dark:text-white" />
                     </button>
-                    <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all">
-                      <ChevronRightIcon className="w-5 h-5 text-gray-800" />
+                    <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center shadow-lg hover:bg-white dark:hover:bg-gray-900 transition-all">
+                      <ChevronRightIcon className="w-5 h-5 text-gray-800 dark:text-white" />
                     </button>
                   </>
                 )}
@@ -232,12 +232,12 @@ export default function SellListing() {
             </motion.div>
 
             {/* Description Card */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm">
               <div className="flex items-center gap-2 mb-5">
                 <ClipboardDocumentListIcon className="w-5 h-5 text-gray-400" />
-                <h2 className="text-base font-black text-gray-900 uppercase tracking-widest">Description</h2>
+                <h2 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-widest">Description</h2>
               </div>
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-[15px]">{listing.description}</p>
+              <p className="text-gray-600 dark:text-white leading-relaxed whitespace-pre-wrap text-[15px]">{listing.description}</p>
             </motion.div>
 
             {/* Book Details (only for books) */}
@@ -249,36 +249,36 @@ export default function SellListing() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Book Info</p>
-                    <h3 className="text-lg font-black text-gray-900">Details</h3>
+                    <h3 className="text-lg font-black text-gray-900 dark:text-white">Details</h3>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {listing.bookAuthor && (
-                    <div className="bg-white rounded-2xl p-5 border border-emerald-100">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-emerald-100">
                       <div className="flex items-center gap-3 mb-2">
                         <UserIcon className="w-4 h-4 text-emerald-500" />
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Author</span>
                       </div>
-                      <p className="font-bold text-gray-900">{listing.bookAuthor}</p>
+                      <p className="font-bold text-gray-900 dark:text-white">{listing.bookAuthor}</p>
                     </div>
                   )}
                   {listing.bookYear && (
-                    <div className="bg-white rounded-2xl p-5 border border-emerald-100">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-emerald-100">
                       <div className="flex items-center gap-3 mb-2">
                         <CalendarDaysIcon className="w-4 h-4 text-emerald-500" />
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Year Published</span>
                       </div>
-                      <p className="font-bold text-gray-900">{listing.bookYear}</p>
+                      <p className="font-bold text-gray-900 dark:text-white">{listing.bookYear}</p>
                     </div>
                   )}
                   {listing.bookUsageHistory && (
-                    <div className="bg-white rounded-2xl p-5 border border-emerald-100 sm:col-span-2">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl p-5 border border-emerald-100 sm:col-span-2">
                       <div className="flex items-center gap-3 mb-2">
                         <ClockIcon className="w-4 h-4 text-emerald-500" />
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">History of Usage</span>
                       </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">{listing.bookUsageHistory}</p>
+                      <p className="text-gray-600 dark:text-white text-sm leading-relaxed">{listing.bookUsageHistory}</p>
                     </div>
                   )}
                 </div>
@@ -290,13 +290,13 @@ export default function SellListing() {
           <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="space-y-5 lg:sticky lg:top-24 self-start">
 
             {/* Price + Title Card */}
-            <div className="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-md">
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-md">
               <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl ${meta.bg} ${meta.text} border ${meta.border} mb-5 text-[11px] font-black uppercase tracking-widest`}>
                 <span>{meta.emoji}</span>
                 <span>{meta.label}</span>
               </div>
 
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-tight mb-4">{listing.title}</h1>
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-tight mb-4">{listing.title}</h1>
 
               <div className="flex items-end gap-3 mb-2">
                 <span className="text-5xl font-black text-rose-500 leading-none">R{listing.price?.toLocaleString()}</span>
@@ -305,13 +305,13 @@ export default function SellListing() {
               {listing.condition && (
                 <div className="mt-4 flex items-center gap-2">
                   <ShieldCheckIcon className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-500 font-semibold">Condition: <span className="text-gray-900 font-bold">{listing.condition}</span></span>
+                  <span className="text-sm text-gray-500 dark:text-white font-semibold">Condition: <span className="text-gray-900 dark:text-white font-bold">{listing.condition}</span></span>
                 </div>
               )}
             </div>
 
             {/* Seller Card */}
-            <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm flex items-center gap-5">
+            <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-6 border border-gray-100 dark:border-gray-800 shadow-sm flex items-center gap-5">
               <div className="relative">
                 <img
                   src={listing.creator?.avatar || `https://ui-avatars.com/api/?name=${listing.creator?.username || 'U'}&background=f3f4f6&color=374151&size=128`}
@@ -323,7 +323,7 @@ export default function SellListing() {
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Listed by</p>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-gray-900 truncate">{listing.creator?.username || 'Anonymous'}</h3>
+                  <h3 className="font-black text-gray-900 dark:text-white truncate">{listing.creator?.username || 'Anonymous'}</h3>
                   <CheckBadgeIcon className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 </div>
                 <p className="text-xs text-gray-400 mt-1">Member of LoopOut</p>
@@ -344,7 +344,7 @@ export default function SellListing() {
                     <PhoneIcon className="w-5 h-5 text-rose-400" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Phone</p>
+                    <p className="text-[10px] font-black text-gray-500 dark:text-white uppercase tracking-widest">Phone</p>
                     <p className="font-bold text-lg truncate">{listing.contact}</p>
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function SellListing() {
                       <MapPinIcon className="w-5 h-5 text-blue-400" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Location</p>
+                      <p className="text-[10px] font-black text-gray-500 dark:text-white uppercase tracking-widest">Location</p>
                       <p className="font-semibold text-sm truncate">{listing.address}</p>
                     </div>
                   </div>
@@ -366,7 +366,7 @@ export default function SellListing() {
               <div className="space-y-3 relative z-10">
                 <a
                   href={`tel:${listing.contact}`}
-                  className="flex items-center justify-center gap-3 w-full py-4 bg-white text-gray-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all duration-300 active:scale-95 shadow-lg"
+                  className="flex items-center justify-center gap-3 w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all duration-300 active:scale-95 shadow-lg"
                 >
                   <PhoneIcon className="w-4 h-4" />
                   Call Seller

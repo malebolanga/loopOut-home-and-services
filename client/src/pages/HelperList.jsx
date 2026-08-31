@@ -125,11 +125,11 @@ export default function HelperDetails() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-32">
       {/* Header */}
       <div className="mb-10 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           {getTypeIcon()}
           {typeLabels[type]}
         </h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
+        <p className="text-gray-600 dark:text-white max-w-2xl mx-auto">
           Discover top-rated professionals ready to assist you with your needs
         </p>
       </div>
@@ -140,7 +140,7 @@ export default function HelperDetails() {
           <div
             key={helper._id}
             onClick={() => navigate(`/helper/${helper._id}`)}
-            className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+            className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
           >
             <div className="absolute inset-0 z-0">
                <Swiper
@@ -166,7 +166,7 @@ export default function HelperDetails() {
             <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
               <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-rose-500" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{typeLabels[type]}</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{typeLabels[type]}</span>
               </div>
 
                <button
@@ -174,7 +174,7 @@ export default function HelperDetails() {
                   e.stopPropagation();
                   toggleFavorite(helper._id);
                 }}
-                className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
+                className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 dark:text-white hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
               >
                 <Heart className={`w-4 h-4 ${favorites[helper._id] ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
               </button>
@@ -219,7 +219,7 @@ export default function HelperDetails() {
                   </div>
                 </div>
                 <div 
-                  className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                  className="w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                 >
                   Inspect Original Masterpiece
                 </div>
@@ -232,11 +232,11 @@ export default function HelperDetails() {
       {/* Empty State */}
       {helpers.length === 0 && (
         <div className="text-center py-20">
-          <div className="bg-gray-100 border-2 border-dashed rounded-xl w-16 h-16 mx-auto flex items-center justify-center">
+          <div className="bg-gray-100 dark:bg-gray-800 border-2 border-dashed rounded-xl w-16 h-16 mx-auto flex items-center justify-center">
             <FaUser className="text-gray-400 text-2xl" />
           </div>
-          <h3 className="mt-4 text-xl font-medium text-gray-900">No helpers found</h3>
-          <p className="mt-1 text-gray-500">
+          <h3 className="mt-4 text-xl font-medium text-gray-900 dark:text-white">No helpers found</h3>
+          <p className="mt-1 text-gray-500 dark:text-white">
             We couldnt find any {typeLabels[type].toLowerCase()} matching your criteria.
           </p>
         </div>

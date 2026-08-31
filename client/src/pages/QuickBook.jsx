@@ -33,7 +33,7 @@ const OrbitNode = ({ candidate, index, total, radius, center, onClick, isActive 
       }`}
       onClick={() => onClick(candidate)}
     >
-      <div className="absolute top-[-10px] right-[-10px] bg-amber-500 text-[10px] font-black text-gray-900 px-2 py-0.5 rounded-full border border-amber-300 shadow-md">
+      <div className="absolute top-[-10px] right-[-10px] bg-amber-500 text-[10px] font-black text-gray-900 dark:text-white px-2 py-0.5 rounded-full border border-amber-300 shadow-md">
         {score}%
       </div>
       <img src={candidate.avatar} alt={candidate.name} className="w-full h-full object-cover rounded-full p-1" />
@@ -328,7 +328,7 @@ export default function QuickBook() {
                           </div>
 
                           <div className="p-4 bg-white/5 border border-white/10 rounded-2xl mb-6">
-                            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Standard Rate</p>
+                            <p className="text-[10px] text-gray-500 dark:text-white font-black uppercase tracking-widest mb-1">Standard Rate</p>
                             <p className="text-2xl font-black text-white">{activeNode.price}</p>
                           </div>
 
@@ -366,7 +366,7 @@ export default function QuickBook() {
                       setBookingStep(0);
                       setSelectedService(null);
                     }}
-                    className="px-8 py-4 bg-white text-gray-950 font-black uppercase tracking-widest text-xs rounded-full hover:bg-gray-200 transition-colors"
+                    className="px-8 py-4 bg-white dark:bg-gray-900 text-gray-950 font-black uppercase tracking-widest text-xs rounded-full hover:bg-gray-200 transition-colors"
                   >
                     Start Over
                   </button>

@@ -58,10 +58,10 @@ const ReservationModal = ({ listing, isOpen, onClose, startDate, endDate }) => {
       <div className="flex items-center justify-center min-h-screen">
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
 
-        <div className="relative bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
+        <div className="relative bg-white dark:bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4 shadow-xl">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            className="absolute top-4 right-4 text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white"
           >
             <FaTimes className="text-xl" />
           </button>

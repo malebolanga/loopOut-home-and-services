@@ -63,7 +63,7 @@ const Sell = () => {
   if (loading && sellListings.length === 0) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <span className="text-gray-600">Loading sell listings...</span>
+        <span className="text-gray-600 dark:text-white">Loading sell listings...</span>
       </div>
     );
   }
@@ -90,11 +90,11 @@ const Sell = () => {
         </div>
         {loading && (
           <div className="flex justify-center mt-6">
-            <span className="text-gray-500">Loading more...</span>
+            <span className="text-gray-500 dark:text-white">Loading more...</span>
           </div>
         )}
         {!hasMore && sellListings.length > 0 && (
-          <div className="text-center py-6 text-gray-500">All sell listings loaded.</div>
+          <div className="text-center py-6 text-gray-500 dark:text-white">All sell listings loaded.</div>
         )}
       </section>
     </PageTransition>

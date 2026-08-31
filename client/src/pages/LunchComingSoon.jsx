@@ -66,7 +66,7 @@ const SHOP_THEMES = [
     badge: 'bg-amber-500 text-white',
     badgeLight: 'bg-amber-100 text-amber-900 border border-amber-300',
     cardActive: 'border-amber-500 bg-gradient-to-br from-amber-50 via-white to-amber-100/40 ring-2 ring-amber-400 shadow-amber-500/20 shadow-md',
-    cardNormal: 'border-gray-200 bg-white hover:border-amber-300',
+    cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-amber-300',
     heroBg: 'from-amber-950 via-amber-900 to-slate-950 border-amber-500/40 text-white',
     heroGlow: 'bg-amber-500/20',
     btnPrimary: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-amber-500/30',
@@ -80,7 +80,7 @@ const SHOP_THEMES = [
     badge: 'bg-emerald-600 text-white',
     badgeLight: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
     cardActive: 'border-emerald-500 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 ring-2 ring-emerald-400 shadow-emerald-500/20 shadow-md',
-    cardNormal: 'border-gray-200 bg-white hover:border-emerald-300',
+    cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-emerald-300',
     heroBg: 'from-emerald-950 via-teal-900 to-slate-950 border-emerald-500/40 text-white',
     heroGlow: 'bg-emerald-500/20',
     btnPrimary: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/30',
@@ -94,7 +94,7 @@ const SHOP_THEMES = [
     badge: 'bg-rose-600 text-white',
     badgeLight: 'bg-rose-100 text-rose-900 border border-rose-300',
     cardActive: 'border-rose-500 bg-gradient-to-br from-rose-50 via-white to-rose-100/40 ring-2 ring-rose-400 shadow-rose-500/20 shadow-md',
-    cardNormal: 'border-gray-200 bg-white hover:border-rose-300',
+    cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-rose-300',
     heroBg: 'from-rose-950 via-pink-900 to-slate-950 border-rose-500/40 text-white',
     heroGlow: 'bg-rose-500/20',
     btnPrimary: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-rose-500/30',
@@ -108,7 +108,7 @@ const SHOP_THEMES = [
     badge: 'bg-purple-600 text-white',
     badgeLight: 'bg-purple-100 text-purple-900 border border-purple-300',
     cardActive: 'border-purple-500 bg-gradient-to-br from-purple-50 via-white to-purple-100/40 ring-2 ring-purple-400 shadow-purple-500/20 shadow-md',
-    cardNormal: 'border-gray-200 bg-white hover:border-purple-300',
+    cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-purple-300',
     heroBg: 'from-purple-950 via-indigo-900 to-slate-950 border-purple-500/40 text-white',
     heroGlow: 'bg-purple-500/20',
     btnPrimary: 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-purple-500/30',
@@ -122,7 +122,7 @@ const SHOP_THEMES = [
     badge: 'bg-cyan-600 text-white',
     badgeLight: 'bg-cyan-100 text-cyan-900 border border-cyan-300',
     cardActive: 'border-cyan-500 bg-gradient-to-br from-cyan-50 via-white to-cyan-100/40 ring-2 ring-cyan-400 shadow-cyan-500/20 shadow-md',
-    cardNormal: 'border-gray-200 bg-white hover:border-cyan-300',
+    cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-cyan-300',
     heroBg: 'from-cyan-950 via-blue-900 to-slate-950 border-cyan-500/40 text-white',
     heroGlow: 'bg-cyan-500/20',
     btnPrimary: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 shadow-cyan-500/30',
@@ -732,16 +732,16 @@ export default function LunchComingSoon() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50 hover:text-amber-600"
+              className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-gray-900 px-4 py-2 text-sm font-bold text-gray-700 dark:text-white shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-amber-600"
             >
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl flex items-center gap-2">
+              <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl flex items-center gap-2">
                 <UtensilsCrossed className="h-7 w-7 text-amber-600" />
                 Lunch & Food Hub
               </h1>
-              <p className="text-xs text-gray-500 font-medium">Order food, book tables & manage store orders</p>
+              <p className="text-xs text-gray-500 dark:text-white font-medium">Order food, book tables & manage store orders</p>
             </div>
           </div>
 
@@ -828,20 +828,20 @@ export default function LunchComingSoon() {
                       ? 'border-emerald-400 bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-100 ring-2 ring-emerald-400'
                       : isPreparing
                       ? 'border-amber-400 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100'
-                      : 'border-slate-200 bg-white'
+                      : 'border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900'
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl rounded-2xl bg-white p-2 shadow-xs border border-amber-100">{ord.shopImage || '🍱'}</span>
+                      <span className="text-4xl rounded-2xl bg-white dark:bg-gray-900 p-2 shadow-xs border border-amber-100">{ord.shopImage || '🍱'}</span>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-black text-gray-900 text-base">{ord.shopName}</span>
+                          <span className="font-black text-gray-900 dark:text-white text-base">{ord.shopName}</span>
                           <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-xs font-black text-amber-950 border border-amber-300">
                             Code: {ord.orderCode}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1 font-medium">
+                        <p className="text-xs text-gray-600 dark:text-white mt-1 font-medium">
                           {ord.items?.length || 0} items · <span className="font-bold text-amber-800">{formatPrice(ord.total)}</span> · {ord.fulfilment === 'pickup' ? 'Store Pickup (Pay at Counter)' : 'Delivery to Door'}
                         </p>
                       </div>
@@ -898,7 +898,7 @@ export default function LunchComingSoon() {
                           ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300 animate-pulse'
                           : isReady || isCompleted
                           ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-gray-100 text-gray-400'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                       }`}>
                         <span>👨‍🍳</span> <span>2. Cooking</span>
                       </div>
@@ -909,7 +909,7 @@ export default function LunchComingSoon() {
                           ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400 animate-bounce'
                           : isCompleted
                           ? 'bg-gray-800 text-white'
-                          : 'bg-gray-100 text-gray-400'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
                       }`}>
                         <span>🎉</span> <span>3. Ready to Collect!</span>
                       </div>
@@ -931,8 +931,8 @@ export default function LunchComingSoon() {
               <div className="mt-4 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900">Find something you’ll enjoy</h3>
-                    <p className="mt-0.5 text-xs text-gray-600">Search this shop’s menu or choose a category.</p>
+                    <h3 className="text-sm font-black text-gray-900 dark:text-white">Find something you’ll enjoy</h3>
+                    <p className="mt-0.5 text-xs text-gray-600 dark:text-white">Search this shop’s menu or choose a category.</p>
                   </div>
                   <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-800">
                     {visibleMeals.length} {visibleMeals.length === 1 ? 'item' : 'items'}
@@ -945,7 +945,7 @@ export default function LunchComingSoon() {
                     value={menuSearch}
                     onChange={(event) => setMenuSearch(event.target.value)}
                     placeholder="Search meals, ingredients or categories"
-                    className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
                   />
                 </label>
                 {menuTags.length > 1 && (
@@ -956,7 +956,7 @@ export default function LunchComingSoon() {
                         type="button"
                         onClick={() => setMenuTagFilter(tag)}
                         className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition ${
-                          menuTagFilter === tag ? 'bg-amber-500 text-white' : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-amber-50'
+                          menuTagFilter === tag ? 'bg-amber-500 text-white' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white ring-1 ring-gray-200 hover:bg-amber-50'
                         }`}
                       >
                         {tag}
@@ -1104,7 +1104,7 @@ export default function LunchComingSoon() {
               {/* Shop List Cards Selector — Horizontal Side-Slide */}
               <div className="mt-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-black uppercase tracking-wider text-gray-700">Select Restaurant / Shop</h2>
+                  <h2 className="text-sm font-black uppercase tracking-wider text-gray-700 dark:text-white">Select Restaurant / Shop</h2>
                   <div className="flex items-center gap-2">
                     {/* Left / Right scroll arrows */}
                     {shops.length > 2 && (
@@ -1174,7 +1174,7 @@ export default function LunchComingSoon() {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                          <span className="block text-sm font-black text-gray-900 tracking-tight leading-snug line-clamp-2">
+                          <span className="block text-sm font-black text-gray-900 dark:text-white tracking-tight leading-snug line-clamp-2">
                             {item.name}
                           </span>
                           <div className="pt-0.5">
@@ -1182,7 +1182,7 @@ export default function LunchComingSoon() {
                               {item.cuisine || 'Local Favorite'}
                             </span>
                           </div>
-                          <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 pt-0.5">
+                          <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-white pt-0.5">
                             <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
                             <span className="truncate">{item.distance || '1.0 km'}</span>
                           </p>
@@ -1227,7 +1227,7 @@ export default function LunchComingSoon() {
 
               {/* Selected Restaurant Hero & Meals Details */}
               {currentShop && (
-                <article className="mt-6 rounded-3xl bg-white shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
+                <article className="mt-6 rounded-3xl bg-white dark:bg-gray-900 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
                   
                   {/* Shop Theme Header Banner */}
                   <div className={`relative overflow-hidden rounded-none sm:rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-4 sm:p-6 text-center shadow-lg border-b sm:border min-w-0 max-w-full`}>
@@ -1263,7 +1263,7 @@ export default function LunchComingSoon() {
                         <button
                           type="button"
                           onClick={() => setShowAddMealModal(true)}
-                          className="rounded-full bg-white px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm shrink-0"
+                          className="rounded-full bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm shrink-0"
                         >
                           + Add Menu Item
                         </button>
@@ -1348,7 +1348,7 @@ export default function LunchComingSoon() {
                   </div>
 
                   {/* Menu vs Reviews View Switcher Tabs */}
-                  <div className="mt-5 px-3.5 sm:px-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 min-w-0 max-w-full">
+                  <div className="mt-5 px-3.5 sm:px-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3 min-w-0 max-w-full">
                     <div className="flex flex-wrap items-center gap-2 max-w-full">
                       <button
                         type="button"
@@ -1356,7 +1356,7 @@ export default function LunchComingSoon() {
                         className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           !showReviewsTab
                             ? activeTheme.tabActive
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                         }`}
                       >
                         <UtensilsCrossed className="h-3.5 w-3.5" /> Food Menu ({currentShop.meals?.length || 0})
@@ -1367,7 +1367,7 @@ export default function LunchComingSoon() {
                         className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
                           showReviewsTab
                             ? activeTheme.tabActive
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                         }`}
                       >
                         <Star className="h-3.5 w-3.5 fill-current text-amber-300" />
@@ -1378,7 +1378,7 @@ export default function LunchComingSoon() {
 
                   {!showReviewsTab && orderMode === 'order' ? (
                     <>
-                      <p className="mt-4 px-3.5 sm:px-0 text-xs font-bold text-gray-600"><Store className="inline h-4 w-4 text-amber-600" /> Pickup only — pay at the counter. Delivery and online payment are not available yet.</p>
+                      <p className="mt-4 px-3.5 sm:px-0 text-xs font-bold text-gray-600 dark:text-white"><Store className="inline h-4 w-4 text-amber-600" /> Pickup only — pay at the counter. Delivery and online payment are not available yet.</p>
 
                       {/* Meals Menu — Horizontal Side-Slide */}
                       <div className="mt-5">
@@ -1388,7 +1388,7 @@ export default function LunchComingSoon() {
                             <button
                               type="button"
                               onClick={() => scrollMenu(-1)}
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
+                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
                               aria-label="Scroll menu left"
                             >
                               <ArrowLeft className="h-3.5 w-3.5" />
@@ -1396,7 +1396,7 @@ export default function LunchComingSoon() {
                             <button
                               type="button"
                               onClick={() => scrollMenu(1)}
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
+                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
                               aria-label="Scroll menu right"
                             >
                               <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
@@ -1424,7 +1424,7 @@ export default function LunchComingSoon() {
                                     <span className="text-4xl leading-none shrink-0 p-1">{meal.image || '🍱'}</span>
                                     <div className="min-w-0 flex-1">
                                       <div className="flex flex-wrap items-center gap-1.5">
-                                        <h3 className="font-black text-gray-900 text-sm leading-snug line-clamp-2">{meal.name}</h3>
+                                        <h3 className="font-black text-gray-900 dark:text-white text-sm leading-snug line-clamp-2">{meal.name}</h3>
                                       </div>
                                       {meal.tag && (
                                         <span className="inline-block mt-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">
@@ -1432,17 +1432,17 @@ export default function LunchComingSoon() {
                                         </span>
                                       )}
                                       {meal.isAvailable === false && (
-                                        <span className="inline-block mt-1 ml-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-black uppercase text-gray-600">
+                                        <span className="inline-block mt-1 ml-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-black uppercase text-gray-600 dark:text-white">
                                           Sold out
                                         </span>
                                       )}
                                     </div>
                                   </div>
 
-                                  <p className="px-4 text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">{meal.description}</p>
+                                  <p className="px-4 text-xs text-gray-500 dark:text-white leading-relaxed line-clamp-2 flex-1">{meal.description}</p>
 
                                   {/* Price + actions footer */}
-                                  <div className="px-4 pb-4 pt-3 flex items-center justify-between border-t border-gray-100 mt-3">
+                                  <div className="px-4 pb-4 pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-3">
                                     <span className="text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</span>
                                     <div className="flex items-center gap-1.5">
                                       {currentShop && currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
@@ -1460,7 +1460,7 @@ export default function LunchComingSoon() {
                                               });
                                               setShowEditMealModal(true);
                                             }}
-                                            className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                                            className="rounded-full bg-slate-100 dark:bg-gray-800 px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-white hover:bg-slate-200 transition cursor-pointer"
                                           >
                                             Edit
                                           </button>
@@ -1477,7 +1477,7 @@ export default function LunchComingSoon() {
                                             className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
                                               meal.isAvailable === false
                                                 ? 'bg-red-600 text-white hover:bg-red-700'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                                             }`}
                                           >
                                             {meal.isAvailable === false ? 'Restock' : 'Sold out'}
@@ -1488,7 +1488,7 @@ export default function LunchComingSoon() {
                                         type="button"
                                         disabled={isCurrentShopClosed || meal.isAvailable === false}
                                         onClick={() => addToCart(meal)}
-                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
+                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white disabled:shadow-none"
                                         aria-label={meal.isAvailable === false ? `${meal.name} is sold out` : `Add ${meal.name}`}
                                       >
                                         <Plus className="h-5 w-5" />
@@ -1498,7 +1498,7 @@ export default function LunchComingSoon() {
                                 </div>
                               ))
                             ) : (
-                              <div className="p-8 text-center text-sm text-gray-500 w-full">
+                              <div className="p-8 text-center text-sm text-gray-500 dark:text-white w-full">
                                 No menu items match your search. Try another word or category.
                               </div>
                             )}
@@ -1527,7 +1527,7 @@ export default function LunchComingSoon() {
                                   />
                                 ))}
                               </div>
-                              <p className="text-xs text-gray-600 font-bold mt-0.5">
+                              <p className="text-xs text-gray-600 dark:text-white font-bold mt-0.5">
                                 Based on {currentShop.reviews?.length || 0} customer reviews
                               </p>
                             </div>
@@ -1542,26 +1542,26 @@ export default function LunchComingSoon() {
                       {currentShop.reviews && currentShop.reviews.length > 0 ? (
                         <div className="space-y-3 mt-4">
                           {currentShop.reviews.map((rev, idx) => (
-                            <div key={rev.id || idx} className="rounded-2xl border border-gray-100 bg-gray-50/60 p-4 space-y-2">
+                            <div key={rev.id || idx} className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 p-4 space-y-2">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-800 font-black text-xs">
                                     {(rev.userName || 'C')[0].toUpperCase()}
                                   </div>
                                   <div>
-                                    <span className="text-xs font-bold text-gray-900 block">{rev.userName || 'Customer'}</span>
+                                    <span className="text-xs font-bold text-gray-900 dark:text-white block">{rev.userName || 'Customer'}</span>
                                     <span className="text-[10px] text-gray-400 block">
                                       {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : 'Recent order'}
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-amber-500 bg-white px-2 py-1 rounded-full border text-xs font-black">
+                                <div className="flex items-center gap-1 text-amber-500 bg-white dark:bg-gray-900 px-2 py-1 rounded-full border text-xs font-black">
                                   <Star className="h-3.5 w-3.5 fill-current" />
                                   {rev.shopRating || 5}/5
                                 </div>
                               </div>
                               {rev.comment && (
-                                <p className="text-xs text-gray-700 leading-relaxed italic bg-white p-3 rounded-xl border border-gray-100">
+                                <p className="text-xs text-gray-700 dark:text-white leading-relaxed italic bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
                                   "{rev.comment}"
                                 </p>
                               )}
@@ -1569,7 +1569,7 @@ export default function LunchComingSoon() {
                           ))}
                         </div>
                       ) : (
-                        <div className="p-8 text-center text-sm text-gray-500 rounded-2xl border border-dashed border-gray-200">
+                        <div className="p-8 text-center text-sm text-gray-500 dark:text-white rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
                           <MessageSquare className="h-8 w-8 mx-auto text-amber-400 mb-2 opacity-60" />
                           No customer reviews submitted yet for this store. Place an order to leave the first review!
                         </div>
@@ -1579,7 +1579,7 @@ export default function LunchComingSoon() {
                     /* Table Booking Form */
                     <form onSubmit={handleTableBooking} className="mt-6 space-y-4">
                       {isCurrentShopClosed && (
-                        <p className="rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-500">
+                        <p className="rounded-2xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-center text-sm font-bold text-gray-500 dark:text-white">
                           This shop is closed. Table bookings are unavailable.
                         </p>
                       )}
@@ -1591,50 +1591,50 @@ export default function LunchComingSoon() {
                       </div>
 
                       <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
                           Your Name
                           <input
                             required
                             value={booking.name}
                             onChange={(e) => setBooking({ ...booking, name: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
                             placeholder="Full name"
                           />
                         </label>
-                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
                           Contact Phone
                           <input
                             required
                             type="tel"
                             value={booking.phone}
                             onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
                             placeholder="+27 82 123 4567"
                           />
                         </label>
-                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
                           Date
                           <input
                             required
                             type="date"
                             value={booking.date}
                             onChange={(e) => setBooking({ ...booking, date: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
                           />
                         </label>
-                        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
                           Time & Guests
                           <div className="flex gap-2 mt-1.5">
                             <input
                               type="time"
                               value={booking.time}
                               onChange={(e) => setBooking({ ...booking, time: e.target.value })}
-                              className="w-1/2 rounded-xl border border-gray-200 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
                             />
                             <select
                               value={booking.guests}
                               onChange={(e) => setBooking({ ...booking, guests: e.target.value })}
-                              className="w-1/2 rounded-xl border border-gray-200 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
                             >
                               {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((num) => (
                                 <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -1646,7 +1646,7 @@ export default function LunchComingSoon() {
 
                       <button
                         type="submit"
-                        className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500"
+                        className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white"
                       >
                         Request Table Booking
                       </button>
@@ -1658,9 +1658,9 @@ export default function LunchComingSoon() {
             </section>
 
             {/* Right Sidebar: Order Cart */}
-            <aside className="h-fit rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 lg:sticky lg:top-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <aside className="h-fit rounded-3xl bg-white dark:bg-gray-900 p-5 shadow-sm ring-1 ring-gray-100 lg:sticky lg:top-6">
+              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                   <ShoppingBag className="h-5 w-5 text-amber-600" /> Order Summary
                 </h2>
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
@@ -1674,15 +1674,15 @@ export default function LunchComingSoon() {
                     {cart.map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 border-b border-gray-50 pb-2">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-black text-gray-900">{item.name}</p>
+                          <p className="truncate text-sm font-black text-gray-900 dark:text-white">{item.name}</p>
                           <p className="text-xs text-amber-700 font-bold">{formatPrice(item.price)}</p>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-gray-100 rounded-full p-1">
+                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
                           <button
                             type="button"
                             disabled={isCurrentShopClosed}
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                            className="rounded-full bg-white dark:bg-gray-900 p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                           >
                             <Minus className="h-3 w-3" />
                           </button>
@@ -1691,7 +1691,7 @@ export default function LunchComingSoon() {
                             type="button"
                             disabled={isCurrentShopClosed}
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="rounded-full bg-white p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                            className="rounded-full bg-white dark:bg-gray-900 p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                           >
                             <Plus className="h-3 w-3" />
                           </button>
@@ -1700,12 +1700,12 @@ export default function LunchComingSoon() {
                     ))}
                   </div>
 
-                  <div className="mt-5 space-y-2 border-t border-gray-100 pt-4 text-sm font-bold text-gray-700">
-                    <div className="flex justify-between text-xs text-gray-500">
+                  <div className="mt-5 space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4 text-sm font-bold text-gray-700 dark:text-white">
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-white">
                       <span>Fulfillment</span>
-                      <span className="capitalize font-bold text-gray-900">{fulfilment}</span>
+                      <span className="capitalize font-bold text-gray-900 dark:text-white">{fulfilment}</span>
                     </div>
-                    <div className="flex justify-between text-base font-black text-gray-900 border-t border-dashed pt-2">
+                    <div className="flex justify-between text-base font-black text-gray-900 dark:text-white border-t border-dashed pt-2">
                       <span>Total Amount</span>
                       <span className="text-amber-600">{formatPrice(totalCartPrice)}</span>
                     </div>
@@ -1715,7 +1715,7 @@ export default function LunchComingSoon() {
                     type="button"
                     disabled={isCurrentShopClosed}
                     onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
-                    className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 disabled:shadow-none"
+                    className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white disabled:shadow-none"
                   >
                     {isCurrentShopClosed ? 'Shop is Closed' : currentUser ? 'Proceed to Checkout' : 'Sign in to order'}
                   </button>
@@ -1723,7 +1723,7 @@ export default function LunchComingSoon() {
               ) : (
                 <div className="py-10 text-center">
                   <UtensilsCrossed className="mx-auto h-8 w-8 text-amber-300" />
-                  <p className="mt-2 text-sm font-bold text-gray-800">Your cart is empty</p>
+                  <p className="mt-2 text-sm font-bold text-gray-800 dark:text-white">Your cart is empty</p>
                   <p className="text-xs text-gray-400 mt-1">Select delicious meals from the menu to build your order.</p>
                 </div>
               )}
@@ -1761,7 +1761,7 @@ export default function LunchComingSoon() {
                     }`}
                     title={dashboardShop.isOpen !== false ? 'Click to CLOSE shop' : 'Click to OPEN shop'}
                   >
-                    <span className={`h-2 w-2 rounded-full ${ dashboardShop.isOpen !== false ? 'bg-white animate-pulse' : 'bg-gray-500'}`} />
+                    <span className={`h-2 w-2 rounded-full ${ dashboardShop.isOpen !== false ? 'bg-white dark:bg-gray-900 animate-pulse' : 'bg-gray-500'}`} />
                     {dashboardShop.isOpen !== false ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
                   </button>
                 )}
@@ -1791,8 +1791,8 @@ export default function LunchComingSoon() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
                   <Store className="h-8 w-8 text-amber-600" />
                 </div>
-                <h3 className="mt-4 text-xl font-black text-gray-900">You haven't registered a food shop yet</h3>
-                <p className="mt-2 text-sm text-gray-600 max-w-sm mx-auto">
+                <h3 className="mt-4 text-xl font-black text-gray-900 dark:text-white">You haven't registered a food shop yet</h3>
+                <p className="mt-2 text-sm text-gray-600 dark:text-white max-w-sm mx-auto">
                   Register your restaurant or food shop to appear on the customer ordering page and start managing live kitchen orders.
                 </p>
                 <button
@@ -1810,7 +1810,7 @@ export default function LunchComingSoon() {
               <>
                 {/* Owner's Shop Selector for Dashboard */}
                 <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 shrink-0">My Shops:</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-white shrink-0">My Shops:</span>
                   {myShops.map((s) => (
                     <button
                       key={s.id}
@@ -1819,7 +1819,7 @@ export default function LunchComingSoon() {
                       className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition cursor-pointer ${
                         dashboardShop?.id === s.id
                           ? 'bg-amber-600 text-white shadow'
-                          : 'bg-white text-gray-700 ring-1 ring-gray-200 hover:bg-amber-50'
+                          : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white ring-1 ring-gray-200 hover:bg-amber-50'
                       }`}
                     >
                       {s.image} {s.name}
@@ -1848,8 +1848,8 @@ export default function LunchComingSoon() {
                         <Lightbulb className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="text-base font-black text-gray-900">Growth advice for {dashboardShop?.name}</h3>
-                        <p className="mt-0.5 text-xs text-gray-600">Based on your menu, completed orders and customer feedback.</p>
+                        <h3 className="text-base font-black text-gray-900 dark:text-white">Growth advice for {dashboardShop?.name}</h3>
+                        <p className="mt-0.5 text-xs text-gray-600 dark:text-white">Based on your menu, completed orders and customer feedback.</p>
                       </div>
                     </div>
                     <button
@@ -1878,10 +1878,10 @@ export default function LunchComingSoon() {
                         }`}
                       >
                         <div className="flex items-start gap-2">
-                          <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-gray-700" />
+                          <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-gray-700 dark:text-white" />
                           <div>
-                            <p className="text-sm font-black text-gray-900">{insight.title}</p>
-                            <p className="mt-1 text-xs leading-relaxed text-gray-600">{insight.detail}</p>
+                            <p className="text-sm font-black text-gray-900 dark:text-white">{insight.title}</p>
+                            <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-white">{insight.detail}</p>
                           </div>
                         </div>
                       </div>
@@ -1892,7 +1892,7 @@ export default function LunchComingSoon() {
                 {/* Incoming Orders Cards (Live Kitchen Queue) */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-700">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-700 dark:text-white">
                       Live Kitchen Queue — {dashboardShop?.name || 'My Shop'} ({liveKitchenQueue.length} Active)
                     </h3>
                   </div>
@@ -1902,14 +1902,14 @@ export default function LunchComingSoon() {
                       {liveKitchenQueue.map((ord) => (
                         <div
                           key={ord.id || ord._id}
-                          className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                          className="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm transition hover:shadow-md"
                         >
-                          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
                             <div className="flex items-center gap-2">
                               <span className="rounded-lg bg-amber-100 p-2 text-xl font-bold">{ord.shopImage || '🍱'}</span>
                               <div>
-                                <p className="text-sm font-black text-gray-900">{ord.customerName}</p>
-                                <p className="text-xs font-semibold text-gray-500 flex items-center gap-1">
+                                <p className="text-sm font-black text-gray-900 dark:text-white">{ord.customerName}</p>
+                                <p className="text-xs font-semibold text-gray-500 dark:text-white flex items-center gap-1">
                                   <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
                                 </p>
                               </div>
@@ -1925,10 +1925,10 @@ export default function LunchComingSoon() {
                           </div>
 
                           {/* Items List */}
-                          <div className="my-3 space-y-1 rounded-xl bg-gray-50 p-3 text-xs">
-                            <div className="font-bold text-gray-600 mb-1">Ordered Items:</div>
+                          <div className="my-3 space-y-1 rounded-xl bg-gray-50 dark:bg-gray-800 p-3 text-xs">
+                            <div className="font-bold text-gray-600 dark:text-white mb-1">Ordered Items:</div>
                             {ord.items?.map((it, idx) => (
-                              <div key={idx} className="flex justify-between font-medium text-gray-800">
+                              <div key={idx} className="flex justify-between font-medium text-gray-800 dark:text-white">
                                 <span>{it.quantity}x {it.name}</span>
                                 <span className="font-bold">{formatPrice(it.price * it.quantity)}</span>
                               </div>
@@ -1936,7 +1936,7 @@ export default function LunchComingSoon() {
                           </div>
 
                           {/* Payment & Delivery Info */}
-                          <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 border-t border-gray-100 pt-3">
+                          <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
                             <div>
                               <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
                               <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
@@ -1947,7 +1947,7 @@ export default function LunchComingSoon() {
                             </div>
                             <div>
                               <span className="text-gray-400 block text-[10px] uppercase">Total</span>
-                              <span className="text-gray-900 font-black">{formatPrice(ord.total)}</span>
+                              <span className="text-gray-900 dark:text-white font-black">{formatPrice(ord.total)}</span>
                             </div>
                           </div>
 
@@ -1965,13 +1965,13 @@ export default function LunchComingSoon() {
                           )}
 
                           {/* Order Action Buttons */}
-                          <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2">
                             <span className={`rounded-full px-3 py-1 text-xs font-black ${
                               ord.status === 'Ready for Collection'
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : ord.status === 'Preparing'
                                 ? 'bg-amber-100 text-amber-800'
-                                : 'bg-gray-100 text-gray-800'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
                             }`}>
                               Current Status: {ord.status}
                             </span>
@@ -2010,16 +2010,16 @@ export default function LunchComingSoon() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-3xl border border-dashed border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+                    <div className="rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-white">
                       No active orders in the kitchen queue for {dashboardShop?.name || 'this shop'}.
                     </div>
                   )}
                 </div>
 
                 {/* Completed Orders History Section on Dashboard */}
-                <div className="mt-8 pt-6 border-t border-gray-200 space-y-4">
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 flex items-center gap-2">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                       Completed & Paid Store Orders ({completedStoreOrders.length})
                     </h3>
@@ -2038,15 +2038,15 @@ export default function LunchComingSoon() {
                           className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 p-4 shadow-xs"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-black text-gray-900">{ord.customerName}</span>
+                            <span className="text-xs font-black text-gray-900 dark:text-white">{ord.customerName}</span>
                             <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
                               ✅ Code: {ord.orderCode}
                             </span>
                           </div>
 
-                          <div className="text-[11px] text-gray-600 space-y-1 my-2">
-                            <div><span className="font-bold text-gray-700">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
-                            <div className="flex justify-between font-extrabold text-gray-900 border-t pt-1 mt-1">
+                          <div className="text-[11px] text-gray-600 dark:text-white space-y-1 my-2">
+                            <div><span className="font-bold text-gray-700 dark:text-white">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+                            <div className="flex justify-between font-extrabold text-gray-900 dark:text-white border-t pt-1 mt-1">
                               <span>Total Paid:</span>
                               <span className="text-emerald-700">{formatPrice(ord.total)}</span>
                             </div>
@@ -2059,7 +2059,7 @@ export default function LunchComingSoon() {
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-gray-100 bg-white p-6 text-center text-xs text-gray-400">
+                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-xs text-gray-400">
                       No completed orders yet. Completed orders will be archived here automatically.
                     </div>
                   )}
@@ -2078,20 +2078,20 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-amber-600" /> Complete Food Order
               </h3>
-              <button type="button" onClick={() => setShowCheckoutModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowCheckoutModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handlePlaceOrder} className={`mt-4 space-y-4 ${isCurrentShopClosed ? 'opacity-60 grayscale' : ''}`}>
               {isCurrentShopClosed && (
-                <p className="rounded-2xl bg-gray-100 px-4 py-3 text-center text-sm font-bold text-gray-500">
+                <p className="rounded-2xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-center text-sm font-bold text-gray-500 dark:text-white">
                   This shop has closed and is not accepting orders.
                 </p>
               )}
@@ -2100,23 +2100,23 @@ export default function LunchComingSoon() {
               {/* Customer Contact Details */}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Your Full Name</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Your Full Name</label>
                   <input
                     required
                     value={checkoutData.customerName}
                     onChange={(e) => setCheckoutData({ ...checkoutData, customerName: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="Customer Name"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Contact Phone Number *</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Contact Phone Number *</label>
                   <input
                     required
                     type="tel"
                     value={checkoutData.customerPhone}
                     onChange={(e) => setCheckoutData({ ...checkoutData, customerPhone: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="+27 82 000 0000"
                   />
                 </div>
@@ -2124,25 +2124,25 @@ export default function LunchComingSoon() {
 
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Order Comments</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Order Comments</label>
                 <textarea
                   value={checkoutData.orderComments}
                   onChange={(e) => setCheckoutData({ ...checkoutData, orderComments: e.target.value })}
                   rows={3}
-                  className="w-full resize-y rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full resize-y rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Add any special requests, allergies, or extra instructions for your food order..."
                 />
                 <p className="mt-1 text-[11px] text-amber-900">Allergy notes are passed to the shop but cannot guarantee an allergen-free meal. Contact the shop directly for severe allergies.</p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Schedule for later (optional)</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Schedule for later (optional)</label>
                 <input
                   type="datetime-local"
                   min={new Date().toISOString().slice(0, 16)}
                   value={checkoutData.scheduledFor}
                   onChange={(e) => setCheckoutData({ ...checkoutData, scheduledFor: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 
@@ -2175,14 +2175,14 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-amber-200 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-amber-200 max-h-[90vh] overflow-y-auto"
           >
             <div className="text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
-              <h3 className="mt-3 text-xl font-black text-gray-900">Order Confirmed!</h3>
-              <p className="text-xs text-gray-500 mt-1">Show this matching verification code at the store counter or driver.</p>
+              <h3 className="mt-3 text-xl font-black text-gray-900 dark:text-white">Order Confirmed!</h3>
+              <p className="text-xs text-gray-500 dark:text-white mt-1">Show this matching verification code at the store counter or driver.</p>
             </div>
 
             {/* Verification Matching Code Card */}
@@ -2198,17 +2198,17 @@ export default function LunchComingSoon() {
               </p>
             </div>
 
-            <div className="space-y-2 text-xs text-gray-700 border-t border-gray-100 pt-3">
+            <div className="space-y-2 text-xs text-gray-700 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-500">Store:</span>
-                <span className="font-bold text-gray-900">{activeReceiptOrder.shopName}</span>
+                <span className="font-semibold text-gray-500 dark:text-white">Store:</span>
+                <span className="font-bold text-gray-900 dark:text-white">{activeReceiptOrder.shopName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-500">Fulfillment:</span>
+                <span className="font-semibold text-gray-500 dark:text-white">Fulfillment:</span>
                 <span className="font-bold capitalize">{activeReceiptOrder.fulfilment}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-semibold text-gray-500">Payment Choice:</span>
+                <span className="font-semibold text-gray-500 dark:text-white">Payment Choice:</span>
                 <span className="font-bold text-amber-800">{activeReceiptOrder.paymentStatus || activeReceiptOrder.paymentMethod}</span>
               </div>
               <div className="flex justify-between text-sm font-black border-t pt-2">
@@ -2218,13 +2218,13 @@ export default function LunchComingSoon() {
             </div>
 
             {/* Rating Trigger inside Receipt */}
-            <div className="mt-4 border-t border-gray-100 pt-3">
+            <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
               {activeReceiptOrder.isRated ? (
                 <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-bold text-amber-900 border border-amber-200">
                   ⭐ Thank you! You rated this order experience.
                 </div>
               ) : activeReceiptOrder.status !== 'Completed' ? (
-                <div className="rounded-xl bg-slate-50 p-2.5 text-center text-xs font-bold text-slate-700 border border-slate-200">
+                <div className="rounded-xl bg-slate-50 dark:bg-gray-950 p-2.5 text-center text-xs font-bold text-slate-700 dark:text-white border border-slate-200 dark:border-gray-800">
                   Ratings unlock after the shop marks your order as completed.
                 </div>
               ) : (
@@ -2265,7 +2265,7 @@ export default function LunchComingSoon() {
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full sm:max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+              className="w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
             >
               {/* Header gradient banner */}
               <div className={`relative bg-gradient-to-br ${activeTheme.heroBg} p-6 text-center overflow-hidden`}>
@@ -2307,14 +2307,14 @@ export default function LunchComingSoon() {
                 {currentShop.phone && (
                   <a
                     href={`tel:${currentShop.phone}`}
-                    className="flex items-center gap-4 rounded-2xl bg-gray-50 hover:bg-amber-50 border border-gray-100 hover:border-amber-200 px-4 py-3.5 transition group cursor-pointer"
+                    className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 hover:bg-amber-50 border border-gray-100 dark:border-gray-800 hover:border-amber-200 px-4 py-3.5 transition group cursor-pointer"
                   >
                     <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 group-hover:bg-amber-200 transition">
                       <Phone className="h-5 w-5 text-amber-700" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Phone · Tap to Call</p>
-                      <p className="text-sm font-black text-gray-900 truncate">{currentShop.phone}</p>
+                      <p className="text-sm font-black text-gray-900 dark:text-white truncate">{currentShop.phone}</p>
                     </div>
                     <ArrowLeft className="h-4 w-4 text-amber-400 rotate-180 ml-auto shrink-0" />
                   </a>
@@ -2343,13 +2343,13 @@ export default function LunchComingSoon() {
 
                 {/* Location */}
                 {(currentShop.address || currentShop.distance) && (
-                  <div className="flex items-center gap-4 rounded-2xl bg-gray-50 border border-gray-100 px-4 py-3.5">
+                  <div className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 px-4 py-3.5">
                     <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
                       <MapPin className="h-5 w-5 text-rose-600" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Location</p>
-                      <p className="text-sm font-black text-gray-900 truncate">
+                      <p className="text-sm font-black text-gray-900 dark:text-white truncate">
                         {currentShop.address || currentShop.distance}
                       </p>
                     </div>
@@ -2379,31 +2379,31 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-amber-600" /> Upload New Shop
               </h3>
-              <button type="button" onClick={() => setShowAddShopModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowAddShopModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleCreateShopSubmit} className="mt-4 space-y-3">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Name *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Name *</label>
                 <input
                   required
                   value={newShopForm.name}
                   onChange={(e) => setNewShopForm({ ...newShopForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="e.g. Mama's Tasty Bites"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Type / Category *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Type / Category *</label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
                     <button
@@ -2413,7 +2413,7 @@ export default function LunchComingSoon() {
                       className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
                         newShopForm.cuisine === cat
                           ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-amber-50'
+                          : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
                       }`}
                     >
                       {cat}
@@ -2422,20 +2422,20 @@ export default function LunchComingSoon() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Custom Type</label>
+                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Custom Type</label>
                     <input
                       value={newShopForm.cuisine}
                       onChange={(e) => setNewShopForm({ ...newShopForm, cuisine: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Selected or custom type"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
+                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Cover Icon (Emoji)</label>
                     <input
                       value={newShopForm.image}
                       onChange={(e) => setNewShopForm({ ...newShopForm, image: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Cover Emoji 🥙, 🍺, 🍔"
                     />
                   </div>
@@ -2444,8 +2444,8 @@ export default function LunchComingSoon() {
 
               {/* Quick Tap Cover Emoji Picker for Shop */}
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-24 overflow-y-auto">
+                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-24 overflow-y-auto">
                   {FOOD_EMOJIS.map((item, i) => (
                     <button
                       key={i}
@@ -2461,31 +2461,31 @@ export default function LunchComingSoon() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Address / Location</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Address / Location</label>
                 <input
                   value={newShopForm.address}
                   onChange={(e) => setNewShopForm({ ...newShopForm, address: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="12 Main Street, Central"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Distance Estimate</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Distance Estimate</label>
                   <input
                     value={newShopForm.distance}
                     onChange={(e) => setNewShopForm({ ...newShopForm, distance: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="1.5 km"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Prep Time</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Prep Time</label>
                   <input
                     value={newShopForm.time}
                     onChange={(e) => setNewShopForm({ ...newShopForm, time: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="20–30 min"
                   />
                 </div>
@@ -2493,7 +2493,7 @@ export default function LunchComingSoon() {
 
               {/* Phone & WhatsApp */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 block">Contact Numbers</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block">Contact Numbers</label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
@@ -2501,7 +2501,7 @@ export default function LunchComingSoon() {
                       type="tel"
                       value={newShopForm.phone}
                       onChange={(e) => setNewShopForm({ ...newShopForm, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Call number"
                     />
                   </div>
@@ -2527,27 +2527,27 @@ export default function LunchComingSoon() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Opening Time</label>
+                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Opening Time</label>
                     <input
                       type="time"
                       value={newShopForm.operatingHours?.openTime || '08:00'}
                       onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Closing Time</label>
+                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Closing Time</label>
                     <input
                       type="time"
                       value={newShopForm.operatingHours?.closeTime || '20:00'}
                       onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-600 block mb-1.5">Open Days</label>
+                  <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1.5">Open Days</label>
                   <div className="flex flex-wrap gap-1.5">
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                       const isSelected = (newShopForm.operatingHours?.days || []).includes(day);
@@ -2561,7 +2561,7 @@ export default function LunchComingSoon() {
                             setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
                           }}
                           className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
-                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
+                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
                           }`}
                         >
                           {day}
@@ -2573,8 +2573,8 @@ export default function LunchComingSoon() {
 
                 <div className="flex items-center justify-between pt-1 border-t border-amber-200">
                   <div>
-                    <span className="text-xs font-black text-gray-800">Shop Status on Launch</span>
-                    <p className="text-[10px] text-gray-500">You can change this anytime in dashboard</p>
+                    <span className="text-xs font-black text-gray-800 dark:text-white">Shop Status on Launch</span>
+                    <p className="text-[10px] text-gray-500 dark:text-white">You can change this anytime in dashboard</p>
                   </div>
                   <button
                     type="button"
@@ -2583,10 +2583,10 @@ export default function LunchComingSoon() {
                       newShopForm.isOpen ? 'bg-emerald-500' : 'bg-gray-300'
                     }`}
                   >
-                    <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                    <span className={`inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-900 shadow-md transition-transform duration-300 ${
                       newShopForm.isOpen ? 'translate-x-8' : 'translate-x-1'
                     }`} />
-                    <span className={`absolute text-[9px] font-black ${ newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500'}`}>
+                    <span className={`absolute text-[9px] font-black ${ newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500 dark:text-white'}`}>
                       {newShopForm.isOpen ? 'ON' : 'OFF'}
                     </span>
                   </button>
@@ -2610,13 +2610,13 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <UtensilsCrossed className="h-5 w-5 text-amber-600" /> Add Meal to {currentShop?.name}
               </h3>
-              <button type="button" onClick={() => setShowAddMealModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowAddMealModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -2638,22 +2638,22 @@ export default function LunchComingSoon() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Meal Name *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Meal Name *</label>
                 <input
                   required
                   value={newMealForm.name}
                   onChange={(e) => setNewMealForm({ ...newMealForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="e.g. Deluxe Kota or BBQ Chicken"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Description</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Description</label>
                 <textarea
                   value={newMealForm.description}
                   onChange={(e) => setNewMealForm({ ...newMealForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Juicy beef patty with fresh lettuce and sauce"
                   rows={2}
                 />
@@ -2661,23 +2661,23 @@ export default function LunchComingSoon() {
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Price (R) *</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Price (R) *</label>
                   <input
                     required
                     type="number"
                     step="0.01"
                     value={newMealForm.price}
                     onChange={(e) => setNewMealForm({ ...newMealForm, price: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="99.00"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Badge Tag</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Badge Tag</label>
                   <select
                     value={newMealForm.tag}
                     onChange={(e) => setNewMealForm({ ...newMealForm, tag: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   >
                     <option>Popular</option>
                     <option>New</option>
@@ -2690,11 +2690,11 @@ export default function LunchComingSoon() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Icon Emoji</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Icon Emoji</label>
                   <input
                     value={newMealForm.image}
                     onChange={(e) => setNewMealForm({ ...newMealForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="🍔, 🌯, 🥗"
                   />
                 </div>
@@ -2702,8 +2702,8 @@ export default function LunchComingSoon() {
 
               {/* Quick Select Emoji Picker */}
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-20 overflow-y-auto">
+                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-20 overflow-y-auto">
                   {FOOD_EMOJIS.map((item, i) => (
                     <button
                       key={i}
@@ -2735,30 +2735,30 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-amber-600" /> Edit Shop Details
               </h3>
-              <button type="button" onClick={() => setShowEditShopModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowEditShopModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleEditShopSubmit} className="mt-4 space-y-3">
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Name *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Name *</label>
                 <input
                   required
                   value={editShopForm.name}
                   onChange={(e) => setEditShopForm({ ...editShopForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Shop Type / Category *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Type / Category *</label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
                     <button
@@ -2768,7 +2768,7 @@ export default function LunchComingSoon() {
                       className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
                         editShopForm.cuisine === cat
                           ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                          : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-amber-50'
+                          : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
                       }`}
                     >
                       {cat}
@@ -2777,20 +2777,20 @@ export default function LunchComingSoon() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Custom Type</label>
+                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Custom Type</label>
                     <input
                       value={editShopForm.cuisine}
                       onChange={(e) => setEditShopForm({ ...editShopForm, cuisine: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Selected or custom type"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Cover Icon (Emoji)</label>
+                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Cover Icon (Emoji)</label>
                     <input
                       value={editShopForm.image}
                       onChange={(e) => setEditShopForm({ ...editShopForm, image: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Cover Emoji"
                     />
                   </div>
@@ -2799,8 +2799,8 @@ export default function LunchComingSoon() {
 
               {/* Quick Tap Cover Emoji Picker for Edit Shop */}
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-24 overflow-y-auto">
+                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-24 overflow-y-auto">
                   {FOOD_EMOJIS.map((item, i) => (
                     <button
                       key={i}
@@ -2816,36 +2816,36 @@ export default function LunchComingSoon() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Address / Location</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Address / Location</label>
                 <input
                   value={editShopForm.address}
                   onChange={(e) => setEditShopForm({ ...editShopForm, address: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Distance Estimate</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Distance Estimate</label>
                   <input
                     value={editShopForm.distance}
                     onChange={(e) => setEditShopForm({ ...editShopForm, distance: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Prep Time</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Prep Time</label>
                   <input
                     value={editShopForm.time}
                     onChange={(e) => setEditShopForm({ ...editShopForm, time: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
               </div>
 
               {/* Phone & WhatsApp */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 block">Contact Numbers</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block">Contact Numbers</label>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
@@ -2853,7 +2853,7 @@ export default function LunchComingSoon() {
                       type="tel"
                       value={editShopForm.phone}
                       onChange={(e) => setEditShopForm({ ...editShopForm, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder="Call number"
                     />
                   </div>
@@ -2879,27 +2879,27 @@ export default function LunchComingSoon() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Opening Time</label>
+                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Opening Time</label>
                     <input
                       type="time"
                       value={editShopForm.operatingHours?.openTime || '08:00'}
                       onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-gray-600 block mb-1">Closing Time</label>
+                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Closing Time</label>
                     <input
                       type="time"
                       value={editShopForm.operatingHours?.closeTime || '20:00'}
                       onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-gray-600 block mb-1.5">Open Days</label>
+                  <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1.5">Open Days</label>
                   <div className="flex flex-wrap gap-1.5">
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                       const isSelected = (editShopForm.operatingHours?.days || []).includes(day);
@@ -2913,7 +2913,7 @@ export default function LunchComingSoon() {
                             setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
                           }}
                           className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
-                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-600 border-gray-200 hover:border-amber-300'
+                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
                           }`}
                         >
                           {day}
@@ -2941,13 +2941,13 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <UtensilsCrossed className="h-5 w-5 text-amber-600" /> Edit Menu Item
               </h3>
-              <button type="button" onClick={() => setShowEditMealModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowEditMealModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -2969,43 +2969,43 @@ export default function LunchComingSoon() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Meal Name *</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Meal Name *</label>
                 <input
                   required
                   value={editMealForm.name}
                   onChange={(e) => setEditMealForm({ ...editMealForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Description</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Description</label>
                 <textarea
                   value={editMealForm.description}
                   onChange={(e) => setEditMealForm({ ...editMealForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   rows={2}
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Price (R) *</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Price (R) *</label>
                   <input
                     required
                     type="number"
                     step="0.01"
                     value={editMealForm.price}
                     onChange={(e) => setEditMealForm({ ...editMealForm, price: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Badge Tag</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Badge Tag</label>
                   <select
                     value={editMealForm.tag}
                     onChange={(e) => setEditMealForm({ ...editMealForm, tag: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   >
                     <option>Popular</option>
                     <option>New</option>
@@ -3018,19 +3018,19 @@ export default function LunchComingSoon() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Icon Emoji</label>
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Icon Emoji</label>
                   <input
                     value={editMealForm.image}
                     onChange={(e) => setEditMealForm({ ...editMealForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   />
                 </div>
               </div>
 
               {/* Quick Select Emoji Picker */}
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 border border-gray-200 max-h-20 overflow-y-auto">
+                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-20 overflow-y-auto">
                   {FOOD_EMOJIS.map((item, i) => (
                     <button
                       key={i}
@@ -3062,13 +3062,13 @@ export default function LunchComingSoon() {
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-gray-900 flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <Star className="h-5 w-5 fill-amber-400 text-amber-500" /> Rate Store & Food Experience
               </h3>
-              <button type="button" onClick={() => setShowRateModal(false)} className="rounded-full p-1 hover:bg-gray-100">
+              <button type="button" onClick={() => setShowRateModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -3081,7 +3081,7 @@ export default function LunchComingSoon() {
 
               {/* Shop Service Rating Stars */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1 text-center">
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1 text-center">
                   Shop Service Rating ({shopRating} / 5 Stars)
                 </label>
                 <div className="flex items-center justify-center gap-2 py-1">
@@ -3104,7 +3104,7 @@ export default function LunchComingSoon() {
 
               {/* Food & Quality Rating Stars */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1 text-center">
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1 text-center">
                   Food & Quality Rating ({foodRating} / 5 Stars)
                 </label>
                 <div className="flex items-center justify-center gap-2 py-1">
@@ -3127,11 +3127,11 @@ export default function LunchComingSoon() {
 
               {/* Optional Comment */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Your Review / Feedback</label>
+                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Your Review / Feedback</label>
                 <textarea
                   value={ratingComment}
                   onChange={(e) => setRatingComment(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                   placeholder="Tell us about the food quality, speed, or service..."
                   rows={3}
                 />

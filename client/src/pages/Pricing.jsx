@@ -71,15 +71,15 @@ const Pricing = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold text-[#222222] tracking-tight mb-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-[#222222] dark:text-white tracking-tight mb-6">
             Simple, Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E61E4D] to-[#D70466]">Pricing</span>
           </h1>
-          <p className="text-lg text-[#717171]">
+          <p className="text-lg text-[#717171] dark:text-white">
             Whether you are a home seeker, a trusted helper, or a real estate agency, we have a plan built precisely for your needs.
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-4">
-            <span className={`text-[15px] font-medium ${!isAnnual ? 'text-[#222222]' : 'text-[#717171]'}`}>Monthly Billing</span>
+            <span className={`text-[15px] font-medium ${!isAnnual ? 'text-[#222222] dark:text-white' : 'text-[#717171] dark:text-white'}`}>Monthly Billing</span>
             <button
               onClick={() => setIsAnnual(!isAnnual)}
               className="relative inline-flex h-8 w-[60px] flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-[#DDDDDD] transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E61E4D] focus-visible:ring-offset-2"
@@ -90,10 +90,10 @@ const Pricing = () => {
                 className={`absolute inset-0 rounded-full transition-colors duration-300 ${isAnnual ? 'bg-[#E61E4D]' : 'bg-[#DDDDDD]'}`}
               />
               <span
-                className={`transform transition duration-300 ease-in-out absolute left-0 inline-block h-7 w-7 rounded-full bg-white shadow ring-0 ${isAnnual ? 'translate-x-[28px]' : 'translate-x-0'}`}
+                className={`transform transition duration-300 ease-in-out absolute left-0 inline-block h-7 w-7 rounded-full bg-white dark:bg-gray-900 shadow ring-0 ${isAnnual ? 'translate-x-[28px]' : 'translate-x-0'}`}
               />
             </button>
-            <span className={`text-[15px] font-medium ${isAnnual ? 'text-[#222222]' : 'text-[#717171]'}`}>
+            <span className={`text-[15px] font-medium ${isAnnual ? 'text-[#222222] dark:text-white' : 'text-[#717171] dark:text-white'}`}>
               Annual Billing <span className="ml-1.5 inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800">Save 20%</span>
             </span>
           </div>
@@ -106,7 +106,7 @@ const Pricing = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.15 }}
-              className={`relative bg-white rounded-3xl p-8 transition-transform duration-300 hover:-translate-y-2 ${plan.isPopular ? 'shadow-[0_20px_40px_-15px_rgba(230,30,77,0.3)] border-2 border-[#E61E4D]' : 'shadow-lg border border-gray-100'}`}
+              className={`relative bg-white dark:bg-gray-900 rounded-3xl p-8 transition-transform duration-300 hover:-translate-y-2 ${plan.isPopular ? 'shadow-[0_20px_40px_-15px_rgba(230,30,77,0.3)] border-2 border-[#E61E4D]' : 'shadow-lg border border-gray-100 dark:border-gray-800'}`}
             >
               {plan.isPopular && (
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -115,20 +115,20 @@ const Pricing = () => {
                   </span>
                 </div>
               )}
-              <h3 className="text-xl font-bold text-[#222222] mb-2">{plan.name}</h3>
-              <p className="text-[#717171] text-sm mb-6 min-h-[40px]">{plan.description}</p>
+              <h3 className="text-xl font-bold text-[#222222] dark:text-white mb-2">{plan.name}</h3>
+              <p className="text-[#717171] dark:text-white text-sm mb-6 min-h-[40px]">{plan.description}</p>
               
               <div className="mb-8">
                 {plan.monthlyPrice === "Free" ? (
-                  <span className="text-4xl font-extrabold text-[#222222]">Free</span>
+                  <span className="text-4xl font-extrabold text-[#222222] dark:text-white">Free</span>
                 ) : (
                   <div className="flex items-baseline">
-                    <span className="text-4xl font-extrabold text-[#222222]">{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
-                    <span className="text-[#717171] ml-2 font-medium">/ month</span>
+                    <span className="text-4xl font-extrabold text-[#222222] dark:text-white">{isAnnual ? plan.annualPrice : plan.monthlyPrice}</span>
+                    <span className="text-[#717171] dark:text-white ml-2 font-medium">/ month</span>
                   </div>
                 )}
                 {isAnnual && plan.monthlyPrice !== "Free" && (
-                  <p className="text-sm text-[#717171] mt-1">Billed annually (${parseInt(plan.annualPrice.slice(1)) * 12}/year)</p>
+                  <p className="text-sm text-[#717171] dark:text-white mt-1">Billed annually (${parseInt(plan.annualPrice.slice(1)) * 12}/year)</p>
                 )}
               </div>
 
@@ -140,7 +140,7 @@ const Pricing = () => {
                     ) : (
                       <FiX className="text-gray-300 text-xl shrink-0 mt-0.5" />
                     )}
-                    <span className={`text-[15px] leading-snug ${feature.included ? 'text-[#222222]' : 'text-gray-400'}`}>
+                    <span className={`text-[15px] leading-snug ${feature.included ? 'text-[#222222] dark:text-white' : 'text-gray-400'}`}>
                       {feature.name}
                     </span>
                   </div>
@@ -152,7 +152,7 @@ const Pricing = () => {
                   className={`w-full py-4 rounded-xl font-semibold text-[15px] transition-all duration-200 ${
                     plan.isPopular
                       ? 'bg-gradient-to-r from-[#E61E4D] to-[#D70466] text-white hover:shadow-lg'
-                      : 'bg-white border-2 border-[#EBEBEB] text-[#222222] hover:border-[#222222] hover:bg-gray-50'
+                      : 'bg-white dark:bg-gray-900 border-2 border-[#EBEBEB] text-[#222222] dark:text-white hover:border-[#222222] hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {plan.buttonText}

@@ -11,7 +11,7 @@ export default function ListingSuccess() {
   const { currentUser } = useSelector((state) => state.user);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative backgrounds */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose-500/10 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
@@ -25,8 +25,8 @@ export default function ListingSuccess() {
           <CheckCircleIcon className="w-12 h-12" />
         </div>
         
-        <h1 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">Item Posted!</h1>
-        <p className="text-lg font-medium text-gray-500 mb-10 leading-relaxed">
+        <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">Item Posted!</h1>
+        <p className="text-lg font-medium text-gray-500 dark:text-white mb-10 leading-relaxed">
           Your listing has been successfully published. It's now live and ready to be discovered by buyers.
         </p>
 
@@ -51,7 +51,7 @@ export default function ListingSuccess() {
             onClick={() => {
               navigate(`/${currentUser?._id}/create-listing`);
             }}
-            className="w-full px-8 py-5 bg-white border-2 border-gray-100 text-gray-900 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:border-gray-200 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-sm"
+            className="w-full px-8 py-5 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-900 dark:text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-800 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-sm"
           >
             <PlusIcon className="w-5 h-5 text-rose-500" />
             <span className="text-[12px]">Create Another Listing</span>

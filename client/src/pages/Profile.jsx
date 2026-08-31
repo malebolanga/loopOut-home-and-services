@@ -129,26 +129,26 @@ const colors = {
 // Reusable InputField Component - Airbnb Style
 const InputField = ({ label, id, type = "text", value, handleChange, helperText, placeholder, icon: Icon, readOnly = false }) => (
   <div className="mb-6">
-    <label htmlFor={id} className="block text-sm font-semibold text-[#484848] mb-2">
+    <label htmlFor={id} className="block text-sm font-semibold text-[#484848] dark:text-white mb-2">
       {label}
     </label>
     <div className="relative">
       {Icon && (
-        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#767676]">
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#767676] dark:text-white">
           <Icon className="w-[18px] h-[18px]" />
         </div>
       )}
       <input
         type={type}
         id={id}
-        className={`w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] placeholder-[#767676] ${Icon ? 'pl-10' : ''}`}
+        className={`w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] dark:text-white placeholder-[#767676] ${Icon ? 'pl-10' : ''}`}
         value={value || ''}
         onChange={handleChange}
         readOnly={readOnly}
         placeholder={placeholder || `Enter your ${label.toLowerCase()}`}
       />
     </div>
-    {helperText && <p className="mt-2 text-sm text-[#767676]">{helperText}</p>}
+    {helperText && <p className="mt-2 text-sm text-[#767676] dark:text-white">{helperText}</p>}
   </div>
 );
 
@@ -172,7 +172,7 @@ const ToggleSwitch = ({ enabled, setEnabled }) => (
 
 // Airbnb Checkbox
 const Checkbox = ({ label, checked, onChange, helperText }) => (
-  <label className="flex items-start gap-3 cursor-pointer p-3 hover:bg-[#F7F7F7] rounded-lg transition-colors">
+  <label className="flex items-start gap-3 cursor-pointer p-3 hover:bg-[#F7F7F7] dark:bg-gray-800 rounded-lg transition-colors">
     <input
       type="checkbox"
       className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded border-[#DDDDDD] focus:ring-[#FF5A5F]"
@@ -180,8 +180,8 @@ const Checkbox = ({ label, checked, onChange, helperText }) => (
       onChange={onChange}
     />
     <div className="flex-1">
-      <span className="text-[#484848] font-medium text-sm">{label}</span>
-      {helperText && <p className="text-sm text-[#767676] mt-1">{helperText}</p>}
+      <span className="text-[#484848] dark:text-white font-medium text-sm">{label}</span>
+      {helperText && <p className="text-sm text-[#767676] dark:text-white mt-1">{helperText}</p>}
     </div>
   </label>
 );
@@ -193,11 +193,11 @@ const SectionCard = ({ children, title, icon: Icon }) => (
     {title && (
       <div className="flex items-center gap-4 mb-8">
         {Icon && (
-          <div className="p-3 bg-white rounded-2xl shadow-sm border border-rose-100 text-rose-500">
+          <div className="p-3 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-rose-100 text-rose-500">
             <Icon className="w-6 h-6" />
           </div>
         )}
-        <h3 className="text-2xl font-black text-gray-900 tracking-tight">{title}</h3>
+        <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{title}</h3>
       </div>
     )}
     {children}
@@ -221,7 +221,7 @@ const MenuItem = ({ icon: Icon, label, active, onClick, badge }) => (
       <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
     </div>
     {badge !== undefined && (
-      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${active ? 'bg-white text-rose-600' : 'bg-rose-100 text-rose-600 shadow-sm'}`}>
+      <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${active ? 'bg-white dark:bg-gray-900 text-rose-600' : 'bg-rose-100 text-rose-600 shadow-sm'}`}>
         {badge}
       </span>
     )}
@@ -233,10 +233,10 @@ const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
   <motion.button
     whileHover={{ scale: 1.02 }}
     onClick={onClick}
-    className={`flex items-center justify-between w-full p-4 hover:bg-gray-50 transition-all rounded-[1.5rem] group`}
+    className={`flex items-center justify-between w-full p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all rounded-[1.5rem] group`}
   >
     <div className="flex items-center gap-4 text-left">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${danger ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-900 group-hover:bg-rose-50 group-hover:text-rose-600'}`}>
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${danger ? 'bg-red-50 text-red-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white group-hover:bg-rose-50 group-hover:text-rose-600'}`}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
@@ -984,7 +984,7 @@ export default function Profile() {
   const profileCompletion = calculateProfileCompletion();
 
   return (
-    <div className="min-h-screen pb-32 bg-slate-50">
+    <div className="min-h-screen pb-32 bg-slate-50 dark:bg-gray-950">
       {/* Masterpiece Elite Account Header */}
       <div className="max-w-7xl mx-auto px-6 pt-32 mb-12">
         <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 p-12 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5">
@@ -1003,7 +1003,7 @@ export default function Profile() {
                 />
                 <button
                   onClick={() => fileRef.current.click()}
-                  className="absolute bottom-2 right-2 p-3 bg-white text-gray-950 rounded-full shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-0 group-hover/avatar:scale-100 duration-300"
+                  className="absolute bottom-2 right-2 p-3 bg-white dark:bg-gray-900 text-gray-950 rounded-full shadow-2xl hover:bg-rose-500 hover:text-white transition-all scale-0 group-hover/avatar:scale-100 duration-300"
                 >
                   <CameraIcon className="w-5 h-5" />
                 </button>
@@ -1061,7 +1061,7 @@ export default function Profile() {
               
               <button 
                 onClick={() => navigate('/')}
-                className="w-full sm:w-auto px-8 py-5 bg-white text-gray-950 hover:bg-rose-50 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
+                className="w-full sm:w-auto px-8 py-5 bg-white dark:bg-gray-900 text-gray-950 hover:bg-rose-50 rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3 active:scale-95 shadow-2xl"
               >
                 <HomeIcon className="w-5 h-5" />
                 Return to Core
@@ -1077,7 +1077,7 @@ export default function Profile() {
           {/* Left Sidebar - Masterpiece Command Menu */}
           <div className="lg:col-span-4">
             <div className="sticky top-32">
-              <div className="bg-white rounded-[3rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden p-4">
+              <div className="bg-white dark:bg-gray-900 rounded-[3rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 overflow-hidden p-4">
                 <div className="p-4 mb-4">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-6 pl-4">System Protocols</h3>
                   <div className="space-y-2">
@@ -1134,7 +1134,7 @@ export default function Profile() {
                   </div>
                 </div>
 
-                <div className="h-[1px] bg-gray-50 mb-4 mx-4" />
+                <div className="h-[1px] bg-gray-50 dark:bg-gray-800 mb-4 mx-4" />
 
                 <div className="p-4 space-y-4">
                   <SettingsRow
@@ -1163,9 +1163,9 @@ export default function Profile() {
                 <SectionCard title="Personal info" icon={UserIcon}>
                   <div className="max-w-2xl">
                     {/* Profile Completion Progress */}
-                    <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200">
+                    <div className="mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200 dark:border-gray-800">
                       <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-bold text-gray-800 text-sm">Profile Completion</h4>
+                        <h4 className="font-bold text-gray-800 dark:text-white text-sm">Profile Completion</h4>
                         <span className="text-sm font-black text-rose-600">{profileCompletion}%</span>
                       </div>
                       <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
@@ -1175,14 +1175,14 @@ export default function Profile() {
                         ></div>
                       </div>
                       {profileCompletion < 100 && (
-                        <p className="text-xs text-gray-500 mt-3 font-medium">
+                        <p className="text-xs text-gray-500 dark:text-white mt-3 font-medium">
                           Complete your profile to increase your trust score and visibility.
                         </p>
                       )}
                     </div>
 
                     {/* Cover Photo Upload */}
-                    <div className="mb-8 p-1 bg-gray-50 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
+                    <div className="mb-8 p-1 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-dashed border-[#DDDDDD] overflow-hidden">
                       <div className="relative h-40 md:h-48 group cursor-pointer" onClick={() => coverFileRef.current.click()}>
                         <img
                           src={formData.coverPhoto || currentUser?.coverPhoto || "https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800"}
@@ -1196,10 +1196,10 @@ export default function Profile() {
                         </div>
                         {coverFilePerc > 0 && coverFilePerc < 100 && (
                           <div className="absolute bottom-4 left-4 right-4 h-1.5 bg-black/30 rounded-full overflow-hidden">
-                            <div className="h-full bg-white transition-all duration-300" style={{ width: `${coverFilePerc}%` }}></div>
+                            <div className="h-full bg-white dark:bg-gray-900 transition-all duration-300" style={{ width: `${coverFilePerc}%` }}></div>
                           </div>
                         )}
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-semibold text-[#484848] shadow-sm flex items-center gap-2">
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-semibold text-[#484848] dark:text-white shadow-sm flex items-center gap-2">
                            <FaCamera size={12} />
                            Change Cover
                         </div>
@@ -1291,11 +1291,11 @@ export default function Profile() {
                       </div>
 
                       <div className="pt-4 border-t border-[#DDDDDD]">
-                        <label className="block text-sm font-semibold text-[#484848] mb-2">About</label>
+                        <label className="block text-sm font-semibold text-[#484848] dark:text-white mb-2">About</label>
                         <textarea
                           id="bio"
                           rows={4}
-                          className="w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] resize-none"
+                          className="w-full px-4 py-3 border border-[#DDDDDD] rounded-lg focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] transition-all outline-none text-[#484848] dark:text-white resize-none"
                           value={formData.bio || currentUser?.bio || ''}
                           onChange={handleChange}
                           placeholder="Tell guests about yourself..."
@@ -1305,16 +1305,16 @@ export default function Profile() {
                       {/* Identity & Account Verification Section */}
                       <div className="pt-6 border-t border-[#DDDDDD] space-y-6">
                         <div>
-                          <h4 className="font-semibold text-[#484848] mb-4 flex items-center gap-2">
+                          <h4 className="font-semibold text-[#484848] dark:text-white mb-4 flex items-center gap-2">
                              <ShieldCheckIcon className="w-5 h-5 text-[#FF5A5F]" />
                              Account Verification
                           </h4>
                           
                           {/* Face Verification Row */}
-                          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-xl">
+                          <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                             <div>
-                              <p className="font-medium text-[#484848]">Face Recognition</p>
-                              <p className="text-sm text-[#767676] mt-1">
+                              <p className="font-medium text-[#484848] dark:text-white">Face Recognition</p>
+                              <p className="text-sm text-[#767676] dark:text-white mt-1">
                                 Complete identity verification through the secure verification flow
                               </p>
                             </div>
@@ -1322,7 +1322,7 @@ export default function Profile() {
                               <button
                                 type="button"
                                 onClick={handleNavigateToVerification}
-                                className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-white transition-colors"
+                                className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] dark:text-white font-medium hover:bg-white dark:hover:bg-gray-900 transition-colors"
                               >
                                 Verify identity
                               </button>
@@ -1335,11 +1335,11 @@ export default function Profile() {
                           </div>
 
                           {/* Phone Verification Row */}
-                          <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-xl">
+                          <div className="flex flex-col gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-[#484848]">Email Verification</p>
-                                <p className="text-sm text-[#767676] mt-1">
+                                <p className="font-medium text-[#484848] dark:text-white">Email Verification</p>
+                                <p className="text-sm text-[#767676] dark:text-white mt-1">
                                   Confirm that you control your account email address
                                 </p>
                               </div>
@@ -1352,7 +1352,7 @@ export default function Profile() {
                                 <button
                                   type="button"
                                   onClick={() => setIsVerifyingPhone(true)}
-                                  className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] font-medium hover:bg-white transition-colors"
+                                  className="px-4 py-2 border border-[#484848] rounded-lg text-[#484848] dark:text-white font-medium hover:bg-white dark:hover:bg-gray-900 transition-colors"
                                 >
                                   {isVerifyingPhone ? 'Cancel' : 'Verify Now'}
                                 </button>
@@ -1360,10 +1360,10 @@ export default function Profile() {
                             </div>
 
                             {isVerifyingPhone && !currentUser?.isVerified && (
-                              <div className="mt-2 space-y-4 animate-fadeIn border-t border-gray-100 pt-4">
+                              <div className="mt-2 space-y-4 animate-fadeIn border-t border-gray-100 dark:border-gray-800 pt-4">
                                 {!otpSent ? (
                                   <div className="flex flex-col gap-3">
-                                    <p className="text-xs text-[#767676]">
+                                    <p className="text-xs text-[#767676] dark:text-white">
                                       We will send a code to <strong>{currentUser?.email}</strong>
                                     </p>
                                     <button
@@ -1399,7 +1399,7 @@ export default function Profile() {
                                     <button 
                                       type="button"
                                       onClick={() => setOtpSent(false)}
-                                      className="text-[10px] text-[#767676] hover:underline"
+                                      className="text-[10px] text-[#767676] dark:text-white hover:underline"
                                     >
                                       Didn't get a code? Resend
                                     </button>
@@ -1414,11 +1414,11 @@ export default function Profile() {
                         </div>
 
                         {/* Contacts Access Row */}
-                        <div className="p-4 bg-gray-50 rounded-xl">
+                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                           <div className="flex items-center justify-between mb-2">
                              <div>
-                                <p className="font-medium text-[#484848]">loopOut Contact Access</p>
-                                <p className="text-sm text-[#767676] mt-1">Allow loopOut to sync your contacts for easy connections</p>
+                                <p className="font-medium text-[#484848] dark:text-white">loopOut Contact Access</p>
+                                <p className="text-sm text-[#767676] dark:text-white mt-1">Allow loopOut to sync your contacts for easy connections</p>
                              </div>
                              <ToggleSwitch enabled={accessContacts} setEnabled={setAccessContacts} />
                           </div>
@@ -1434,15 +1434,15 @@ export default function Profile() {
                       <div className="pt-6 border-t border-[#DDDDDD]">
                         <div className="flex items-center justify-between mb-4">
                           <div>
-                            <h4 className="font-semibold text-[#484848]">WhatsApp</h4>
-                            <p className="text-sm text-[#767676] mt-1">
+                            <h4 className="font-semibold text-[#484848] dark:text-white">WhatsApp</h4>
+                            <p className="text-sm text-[#767676] dark:text-white mt-1">
                               Receive booking updates via WhatsApp
                             </p>
                           </div>
                           <button
                             type="button"
                             onClick={() => setShowWhatsAppModal(true)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${whatsappConnected ? 'text-[#00A699] border border-[#00A699] hover:bg-[#00A699]/10' : 'border border-[#484848] text-[#484848] hover:bg-[#F7F7F7]'}`}
+                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${whatsappConnected ? 'text-[#00A699] border border-[#00A699] hover:bg-[#00A699]/10' : 'border border-[#484848] text-[#484848] dark:text-white hover:bg-[#F7F7F7] dark:bg-gray-800'}`}
                           >
                             {whatsappConnected ? 'Manage' : 'Connect'}
                           </button>
@@ -1493,7 +1493,7 @@ export default function Profile() {
               <SectionCard title="Login & security" icon={ShieldCheckIcon}>
                 <form onSubmit={handleSecuritySubmit} className="max-w-2xl space-y-8">
                   <div>
-                    <h4 className="font-semibold text-[#484848] mb-4">Password</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Password</h4>
                     <div className="space-y-4">
                       <InputField
                         label="Current password"
@@ -1527,7 +1527,7 @@ export default function Profile() {
               <SectionCard title="Notifications" icon={BellIcon}>
                 <div className="max-w-2xl space-y-6">
                   <div>
-                    <h4 className="font-semibold text-[#484848] mb-4">Email notifications</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Email notifications</h4>
                     <div className="space-y-2">
                       <Checkbox
                         label="Booking updates"
@@ -1551,7 +1551,7 @@ export default function Profile() {
                   </div>
 
                   <div className="pt-6 border-t border-[#DDDDDD]">
-                    <h4 className="font-semibold text-[#484848] mb-4">Security alerts</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Security alerts</h4>
                     <div className="space-y-2">
                       <Checkbox
                         label="Login attempts"
@@ -1582,11 +1582,11 @@ export default function Profile() {
               <SectionCard title="Privacy & sharing" icon={GlobeAltIcon}>
                 <div className="max-w-2xl space-y-8">
                   <div>
-                    <h4 className="font-semibold text-[#484848] mb-4">Profile visibility</h4>
-                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-lg">
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Profile visibility</h4>
+                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] dark:bg-gray-800 rounded-lg">
                       <div>
-                        <p className="font-medium text-[#484848]">Make my profile public</p>
-                        <p className="text-sm text-[#767676]">Allow others to see your profile</p>
+                        <p className="font-medium text-[#484848] dark:text-white">Make my profile public</p>
+                        <p className="text-sm text-[#767676] dark:text-white">Allow others to see your profile</p>
                       </div>
                       <ToggleSwitch enabled={profileVisibility} setEnabled={setProfileVisibility} />
                     </div>
@@ -1599,19 +1599,19 @@ export default function Profile() {
                   </div>
 
                   <div className="pt-6 border-t border-[#DDDDDD]">
-                    <h4 className="font-semibold text-[#484848] mb-4">Data management</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Data management</h4>
                     <div className="space-y-3">
-                      <button type="button" onClick={handleDownloadData} className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] transition-colors">
+                      <button type="button" onClick={handleDownloadData} className="flex items-center justify-between w-full p-4 border border-[#DDDDDD] rounded-lg hover:bg-[#F7F7F7] dark:bg-gray-800 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#F7F7F7] flex items-center justify-center">
-                            <ArrowDownTrayIcon className="w-5 h-5 text-[#484848]" />
+                          <div className="w-10 h-10 rounded-full bg-[#F7F7F7] dark:bg-gray-800 flex items-center justify-center">
+                            <ArrowDownTrayIcon className="w-5 h-5 text-[#484848] dark:text-white" />
                           </div>
                           <div className="text-left">
-                            <p className="font-medium text-[#484848]">Download your data</p>
-                            <p className="text-sm text-[#767676]">Get a copy of your personal information</p>
+                            <p className="font-medium text-[#484848] dark:text-white">Download your data</p>
+                            <p className="text-sm text-[#767676] dark:text-white">Get a copy of your personal information</p>
                           </div>
                         </div>
-                        <ChevronRightIcon className="w-5 h-5 text-[#767676]" />
+                        <ChevronRightIcon className="w-5 h-5 text-[#767676] dark:text-white" />
                       </button>
 
                       <button
@@ -1640,18 +1640,18 @@ export default function Profile() {
               <>
                 {/* Stats Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
-                    <p className="text-sm text-[#767676] mb-1">Total listings</p>
-                    <p className="text-3xl font-bold text-[#484848]">{userListings?.length || 0}</p>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] dark:text-white mb-1">Total listings</p>
+                    <p className="text-3xl font-bold text-[#484848] dark:text-white">{userListings?.length || 0}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
-                    <p className="text-sm text-[#767676] mb-1">Total earnings</p>
-                    <p className="text-3xl font-bold text-[#484848]">R0</p>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] dark:text-white mb-1">Total earnings</p>
+                    <p className="text-3xl font-bold text-[#484848] dark:text-white">R0</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-[#DDDDDD] p-6">
-                    <p className="text-sm text-[#767676] mb-1">Rating</p>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-[#DDDDDD] p-6">
+                    <p className="text-sm text-[#767676] dark:text-white mb-1">Rating</p>
                     <div className="flex items-center gap-2">
-                      <p className="text-3xl font-bold text-[#484848]">0.0</p>
+                      <p className="text-3xl font-bold text-[#484848] dark:text-white">0.0</p>
                       <StarIcon className="w-5 h-5 text-[#FF5A5F] fill-[#FF5A5F]" />
                     </div>
                   </div>
@@ -1663,45 +1663,45 @@ export default function Profile() {
                       onClick={handleNavigateToHostDashboard}
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] dark:bg-gray-800 flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
                         <ChartBarIcon className="w-6 h-6 text-[#FF5A5F]" />
                       </div>
-                      <h4 className="font-semibold text-[#484848] mb-1">Dashboard</h4>
-                      <p className="text-sm text-[#767676]">View performance insights</p>
+                      <h4 className="font-semibold text-[#484848] dark:text-white mb-1">Dashboard</h4>
+                      <p className="text-sm text-[#767676] dark:text-white">View performance insights</p>
                     </button>
 
                     <button
                       onClick={handleNavigateToEarnings}
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] dark:bg-gray-800 flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
                         <WalletIcon className="w-6 h-6 text-[#FF5A5F]" />
                       </div>
-                      <h4 className="font-semibold text-[#484848] mb-1">Earnings</h4>
-                      <p className="text-sm text-[#767676]">Track income & payments</p>
+                      <h4 className="font-semibold text-[#484848] dark:text-white mb-1">Earnings</h4>
+                      <p className="text-sm text-[#767676] dark:text-white">Track income & payments</p>
                     </button>
 
                     <button
                       onClick={handleNavigateToHostTools}
                       className="p-6 border border-[#DDDDDD] rounded-xl hover:border-[#FF5A5F] hover:shadow-md transition-all text-left group"
                     >
-                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
+                      <div className="w-12 h-12 rounded-full bg-[#F7F7F7] dark:bg-gray-800 flex items-center justify-center mb-4 group-hover:bg-[#FF5A5F]/10">
                         <FaTools size={24} className="text-[#FF5A5F]" />
                       </div>
-                      <h4 className="font-semibold text-[#484848] mb-1">Tools</h4>
-                      <p className="text-sm text-[#767676]">Manage listings & bookings</p>
+                      <h4 className="font-semibold text-[#484848] dark:text-white mb-1">Tools</h4>
+                      <p className="text-sm text-[#767676] dark:text-white">Manage listings & bookings</p>
                     </button>
                   </div>
 
                   <div className="mt-6 pt-6 border-t border-[#DDDDDD]">
-                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-[#F7F7F7] dark:bg-gray-800 rounded-lg">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-sm">
                           <TrophyIcon className="w-6 h-6 text-[#FF5A5F]" />
                         </div>
                         <div>
-                          <p className="font-semibold text-[#484848]">Become a Superhost</p>
-                          <p className="text-sm text-[#767676]">Complete verification to start hosting</p>
+                          <p className="font-semibold text-[#484848] dark:text-white">Become a Superhost</p>
+                          <p className="text-sm text-[#767676] dark:text-white">Complete verification to start hosting</p>
                         </div>
                       </div>
                       <button
@@ -1719,7 +1719,7 @@ export default function Profile() {
             {/* Wishlist Section */}
             {activeSection === "wishlist" && (
               <SectionCard title="Wishlists" icon={HeartIcon}>
-                <p className="text-[#767676] mb-6">Places you've saved for future trips</p>
+                <p className="text-[#767676] dark:text-white mb-6">Places you've saved for future trips</p>
                 <WishList />
               </SectionCard>
             )}
@@ -1728,7 +1728,7 @@ export default function Profile() {
             {activeSection === "my-listings" && (
               <SectionCard title="My listings" icon={ListBulletIcon}>
                 <div className="flex justify-between items-center mb-6">
-                  <p className="text-[#767676]">Manage your properties</p>
+                  <p className="text-[#767676] dark:text-white">Manage your properties</p>
                   <Link
                     to={`/${currentUser?._id}/create-listing`}
                     className="flex items-center gap-2 bg-[#FF5A5F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#E00B41] transition-colors"
@@ -1751,18 +1751,18 @@ export default function Profile() {
                             alt={listing.name}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-[#484848]">
+                          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-[#484848] dark:text-white">
                             {listing.type === 'rent' ? 'For rent' : 'For sale'}
                           </div>
                         </div>
                         <div className="p-4">
                           <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-semibold text-[#484848] line-clamp-1">{listing.name}</h4>
-                            <span className="font-bold text-[#484848]">
+                            <h4 className="font-semibold text-[#484848] dark:text-white line-clamp-1">{listing.name}</h4>
+                            <span className="font-bold text-[#484848] dark:text-white">
                               R{listing.offer ? listing.discountPrice?.toLocaleString() : listing.regularPrice?.toLocaleString()}
                             </span>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-[#767676] mb-4">
+                          <div className="flex items-center gap-4 text-sm text-[#767676] dark:text-white mb-4">
                             <span className="flex items-center gap-1">
                               <FaBed size={14} /> {listing.bedrooms} bd
                             </span>
@@ -1773,7 +1773,7 @@ export default function Profile() {
                           <div className="flex gap-2">
                             <Link
                               to={`/update-listing/${listing._id}`}
-                              className="flex-1 flex items-center justify-center gap-2 py-2 border border-[#DDDDDD] rounded-lg text-[#484848] hover:bg-[#F7F7F7] transition-colors font-medium"
+                              className="flex-1 flex items-center justify-center gap-2 py-2 border border-[#DDDDDD] rounded-lg text-[#484848] dark:text-white hover:bg-[#F7F7F7] dark:bg-gray-800 transition-colors font-medium"
                             >
                               <PencilSquareIcon className="w-4 h-4" />
                               Edit
@@ -1791,10 +1791,10 @@ export default function Profile() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
+                  <div className="text-center py-12 bg-[#F7F7F7] dark:bg-gray-800 rounded-xl">
                     <HomeIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
-                    <h4 className="text-lg font-semibold text-[#484848] mb-2">No listings yet</h4>
-                    <p className="text-[#767676] mb-6">Start hosting and earn income</p>
+                    <h4 className="text-lg font-semibold text-[#484848] dark:text-white mb-2">No listings yet</h4>
+                    <p className="text-[#767676] dark:text-white mb-6">Start hosting and earn income</p>
                     <Link
                       to={`/${currentUser?._id}/create-listing`}
                       className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
@@ -1811,8 +1811,8 @@ export default function Profile() {
             {activeSection === "events" && (
               <SectionCard title="My events" icon={CalendarIcon}>
                 <div className="flex justify-between items-center mb-6">
-                  <p className="text-[#767676]">Manage your upcoming events</p>
-                  <span className="bg-[#F7F7F7] text-[#484848] px-3 py-1 rounded-full text-sm font-medium">
+                  <p className="text-[#767676] dark:text-white">Manage your upcoming events</p>
+                  <span className="bg-[#F7F7F7] dark:bg-gray-800 text-[#484848] dark:text-white px-3 py-1 rounded-full text-sm font-medium">
                     {postCount} events
                   </span>
                 </div>
@@ -1835,8 +1835,8 @@ export default function Profile() {
                           <div className="flex-1">
                             <div className="flex justify-between items-start">
                               <div>
-                                <h4 className="font-semibold text-[#484848]">{event.name}</h4>
-                                <div className="flex items-center gap-4 text-sm text-[#767676] mt-2">
+                                <h4 className="font-semibold text-[#484848] dark:text-white">{event.name}</h4>
+                                <div className="flex items-center gap-4 text-sm text-[#767676] dark:text-white mt-2">
                                   <span className="flex items-center gap-1">
                                     <CalendarIcon className="w-3.5 h-3.5" /> {event.date}
                                   </span>
@@ -1848,7 +1848,7 @@ export default function Profile() {
                               <div className="flex gap-2">
                                 <Link
                                   to={`/update-event/${event._id}`}
-                                  className="p-2 text-[#484848] hover:bg-[#F7F7F7] rounded-lg transition-colors"
+                                  className="p-2 text-[#484848] dark:text-white hover:bg-[#F7F7F7] dark:bg-gray-800 rounded-lg transition-colors"
                                 >
                                   <PencilSquareIcon className="w-[18px] h-[18px]" />
                                 </Link>
@@ -1860,17 +1860,17 @@ export default function Profile() {
                                 </button>
                               </div>
                             </div>
-                            <p className="text-[#767676] mt-3 line-clamp-2">{event.description}</p>
+                            <p className="text-[#767676] dark:text-white mt-3 line-clamp-2">{event.description}</p>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-[#F7F7F7] rounded-xl">
+                  <div className="text-center py-12 bg-[#F7F7F7] dark:bg-gray-800 rounded-xl">
                     <CalendarIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
-                    <h4 className="text-lg font-semibold text-[#484848] mb-2">No events yet</h4>
-                    <p className="text-[#767676] mb-6">Create events to connect with your community</p>
+                    <h4 className="text-lg font-semibold text-[#484848] dark:text-white mb-2">No events yet</h4>
+                    <p className="text-[#767676] dark:text-white mb-6">Create events to connect with your community</p>
                     <button className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
                       <PlusIcon className="w-[18px] h-[18px]" />
                       Create event
@@ -1886,11 +1886,11 @@ export default function Profile() {
       {/* Camera Modal - Airbnb Style */}
       {cameraActive && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-lg w-full overflow-hidden">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full overflow-hidden">
             <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center">
-              <h3 className="text-xl font-bold text-[#484848]">Verify your identity</h3>
-              <button onClick={stopCamera} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
-                <X size={24} className="text-[#484848]" />
+              <h3 className="text-xl font-bold text-[#484848] dark:text-white">Verify your identity</h3>
+              <button onClick={stopCamera} className="p-2 hover:bg-[#F7F7F7] dark:bg-gray-800 rounded-full transition-colors">
+                <X size={24} className="text-[#484848] dark:text-white" />
               </button>
             </div>
 
@@ -1909,7 +1909,7 @@ export default function Profile() {
                 <canvas ref={canvasRef} className="hidden" width="640" height="480" />
               </div>
 
-              <p className="text-center text-[#767676] mb-6">
+              <p className="text-center text-[#767676] dark:text-white mb-6">
                 Position your face in the circle and ensure good lighting
               </p>
 
@@ -1933,7 +1933,7 @@ export default function Profile() {
                 </button>
                 <button
                   onClick={stopCamera}
-                  className="px-6 py-3 border border-[#484848] text-[#484848] rounded-lg font-medium hover:bg-[#F7F7F7] transition-colors"
+                  className="px-6 py-3 border border-[#484848] text-[#484848] dark:text-white rounded-lg font-medium hover:bg-[#F7F7F7] dark:bg-gray-800 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1946,11 +1946,11 @@ export default function Profile() {
       {/* View Profile Modal - Airbnb Style */}
       {showViewProfile && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center sticky top-0 bg-white">
-              <h3 className="text-xl font-bold text-[#484848]">Profile preview</h3>
-              <button onClick={() => setShowViewProfile(false)} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
-                <X size={24} className="text-[#484848]" />
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center sticky top-0 bg-white dark:bg-gray-900">
+              <h3 className="text-xl font-bold text-[#484848] dark:text-white">Profile preview</h3>
+              <button onClick={() => setShowViewProfile(false)} className="p-2 hover:bg-[#F7F7F7] dark:bg-gray-800 rounded-full transition-colors">
+                <X size={24} className="text-[#484848] dark:text-white" />
               </button>
             </div>
 
@@ -1968,26 +1968,26 @@ export default function Profile() {
                 )}
               </div>
 
-              <h2 className="text-2xl font-bold text-[#484848] mb-1">{currentUser?.username || 'User'}</h2>
-              <div className="flex items-center justify-center gap-2 text-[#767676] mb-4">
+              <h2 className="text-2xl font-bold text-[#484848] dark:text-white mb-1">{currentUser?.username || 'User'}</h2>
+              <div className="flex items-center justify-center gap-2 text-[#767676] dark:text-white mb-4">
                 <MapPinIcon className="w-4 h-4" />
                 {currentUser?.location || 'No location set'}
               </div>
 
               {currentUser?.bio && (
-                <p className="text-[#484848] mb-6 text-left bg-[#F7F7F7] p-4 rounded-lg">
+                <p className="text-[#484848] dark:text-white mb-6 text-left bg-[#F7F7F7] dark:bg-gray-800 p-4 rounded-lg">
                   {currentUser.bio}
                 </p>
               )}
 
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#F7F7F7] p-4 rounded-lg">
-                  <p className="text-2xl font-bold text-[#484848]">{userListings?.length || 0}</p>
-                  <p className="text-sm text-[#767676]">Listings</p>
+                <div className="bg-[#F7F7F7] dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-2xl font-bold text-[#484848] dark:text-white">{userListings?.length || 0}</p>
+                  <p className="text-sm text-[#767676] dark:text-white">Listings</p>
                 </div>
-                <div className="bg-[#F7F7F7] p-4 rounded-lg">
-                  <p className="text-2xl font-bold text-[#484848]">0</p>
-                  <p className="text-sm text-[#767676]">Reviews</p>
+                <div className="bg-[#F7F7F7] dark:bg-gray-800 p-4 rounded-lg">
+                  <p className="text-2xl font-bold text-[#484848] dark:text-white">0</p>
+                  <p className="text-sm text-[#767676] dark:text-white">Reviews</p>
                 </div>
               </div>
 
@@ -2005,21 +2005,21 @@ export default function Profile() {
       {/* WhatsApp Modal - Airbnb Style */}
       {showWhatsAppModal && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full">
             <div className="p-6 border-b border-[#DDDDDD] flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <FaWhatsapp size={24} className="text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-[#484848]">WhatsApp</h3>
+                <h3 className="text-xl font-bold text-[#484848] dark:text-white">WhatsApp</h3>
               </div>
-              <button onClick={() => setShowWhatsAppModal(false)} className="p-2 hover:bg-[#F7F7F7] rounded-full transition-colors">
-                <X size={24} className="text-[#484848]" />
+              <button onClick={() => setShowWhatsAppModal(false)} className="p-2 hover:bg-[#F7F7F7] dark:bg-gray-800 rounded-full transition-colors">
+                <X size={24} className="text-[#484848] dark:text-white" />
               </button>
             </div>
 
             <div className="p-6">
-              <p className="text-[#767676] mb-6">
+              <p className="text-[#767676] dark:text-white mb-6">
                 Connect your WhatsApp to receive instant booking notifications and guest messages.
               </p>
 
@@ -2033,7 +2033,7 @@ export default function Profile() {
                 icon={PhoneIcon}
               />
 
-              <p className="text-xs text-[#767676] mb-4">
+              <p className="text-xs text-[#767676] dark:text-white mb-4">
                 Opening WhatsApp does not verify your account or grant access to your number.
               </p>
               <button

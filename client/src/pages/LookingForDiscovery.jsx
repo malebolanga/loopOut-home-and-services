@@ -93,12 +93,12 @@ const LookingForDiscovery = () => {
       `}</style>
 
       {/* Hero Section */}
-      <div className="bg-white/90 border-b border-gray-100 top-0 z-10 backdrop-blur-md">
+      <div className="bg-white/90 border-b border-gray-100 dark:border-gray-800 top-0 z-10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">Looking For</h1>
-              <p className="text-sm text-gray-500 font-medium mt-1">Tell the community what you need, find what you're looking for.</p>
+              <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Looking For</h1>
+              <p className="text-sm text-gray-500 dark:text-white font-medium mt-1">Tell the community what you need, find what you're looking for.</p>
             </div>
             
             <div className="flex items-center gap-3">
@@ -109,7 +109,7 @@ const LookingForDiscovery = () => {
                   placeholder="Search requests..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-rose-500 transition-all font-medium"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-sm focus:ring-2 focus:ring-rose-500 transition-all font-medium"
                 />
               </div>
               <button 
@@ -131,9 +131,9 @@ const LookingForDiscovery = () => {
                 <button
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id)}
-                  className={`flex flex-col items-center gap-3 min-w-fit pb-4 relative transition-all ${isActive ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex flex-col items-center gap-3 min-w-fit pb-4 relative transition-all ${isActive ? 'text-gray-900 dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-white'}`}
                 >
-                  <div className={`p-3 rounded-2xl transition-all ${isActive ? cat.color + ' shadow-inner scale-110' : 'bg-gray-50'}`}>
+                  <div className={`p-3 rounded-2xl transition-all ${isActive ? cat.color + ' shadow-inner scale-110' : 'bg-gray-50 dark:bg-gray-800'}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <span className={`text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${isActive ? 'opacity-100' : 'opacity-60'}`}>
@@ -160,11 +160,11 @@ const LookingForDiscovery = () => {
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-[2rem] flex items-center justify-center mb-6">
               <MagnifyingGlassIcon className="w-10 h-10 text-gray-300" />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 mb-2">No requests found</h2>
-            <p className="text-gray-500 font-medium max-w-sm">Be the first to post a "Looking for" request in this category!</p>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">No requests found</h2>
+            <p className="text-gray-500 dark:text-white font-medium max-w-sm">Be the first to post a "Looking for" request in this category!</p>
             <button 
               onClick={() => navigate('/create-request')}
               className="mt-8 px-8 py-4 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-xl active:scale-95"
@@ -210,49 +210,49 @@ const LookingForDiscovery = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+              className="relative bg-white dark:bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row"
             >
                <button 
                  onClick={closeDetail}
-                 className="absolute top-6 right-6 z-10 p-3 bg-white/10 hover:bg-white/20 text-white md:text-gray-400 md:hover:bg-gray-100 rounded-full transition-all"
+                 className="absolute top-6 right-6 z-10 p-3 bg-white/10 hover:bg-white/20 text-white md:text-gray-400 md:hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all"
                >
                  <XMarkIcon className="w-6 h-6" />
                </button>
 
                {/* Left: Content */}
-               <div className="w-full md:w-1/2 overflow-y-auto no-scrollbar bg-white">
-                  <div className="p-8 pb-4 border-b border-gray-50 bg-gray-50/30">
+               <div className="w-full md:w-1/2 overflow-y-auto no-scrollbar bg-white dark:bg-gray-900">
+                  <div className="p-8 pb-4 border-b border-gray-50 bg-gray-50 dark:bg-gray-800/30">
                       <div className="flex items-center justify-between mb-8">
                          <div className="px-4 py-1.5 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full">
                             {selectedRequest.category}
                          </div>
                          <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Community Need</div>
                       </div>
-                      <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-tight">{selectedRequest.title}</h2>
+                      <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">{selectedRequest.title}</h2>
                   </div>
 
                   <div className="p-8 space-y-8">
                       <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-100 rounded-2xl overflow-hidden">
+                          <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden">
                              <img src={selectedRequest.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"} className="w-full h-full object-cover" />
                           </div>
                           <div>
-                             <p className="text-sm font-black text-gray-900">{selectedRequest.userRef?.username || "Community Member"}</p>
+                             <p className="text-sm font-black text-gray-900 dark:text-white">{selectedRequest.userRef?.username || "Community Member"}</p>
                              <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Post Author</p>
                           </div>
                       </div>
 
                       <div className="space-y-4">
                          <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Description</h3>
-                         <p className="text-gray-600 leading-relaxed font-medium">{selectedRequest.description}</p>
+                         <p className="text-gray-600 dark:text-white leading-relaxed font-medium">{selectedRequest.description}</p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="p-4 bg-gray-50 rounded-2xl flex items-center gap-3">
+                          <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center gap-3">
                              <MapPinIcon className="w-5 h-5 text-rose-500" />
                              <div>
                                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Location</p>
-                                <p className="text-sm font-bold text-gray-900 truncate">{selectedRequest.location}</p>
+                                <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{selectedRequest.location}</p>
                              </div>
                           </div>
                           <div className="p-4 bg-rose-50 rounded-2xl flex items-center gap-3 border border-rose-100">
@@ -283,11 +283,11 @@ const LookingForDiscovery = () => {
                </div>
 
                {/* Right: Comments */}
-               <div className="w-full md:w-1/2 bg-gray-50 flex flex-col overflow-hidden">
-                  <div className="p-6 md:p-8 border-b border-gray-100 bg-white shrink-0">
+               <div className="w-full md:w-1/2 bg-gray-50 dark:bg-gray-800 flex flex-col overflow-hidden">
+                  <div className="p-6 md:p-8 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0">
                       <div className="flex items-center gap-2">
                          <ChatBubbleBottomCenterTextIcon className="w-5 h-5 text-rose-500" />
-                         <h3 className="font-black text-gray-900 uppercase text-xs tracking-[0.2em]">Community Discussion</h3>
+                         <h3 className="font-black text-gray-900 dark:text-white uppercase text-xs tracking-[0.2em]">Community Discussion</h3>
                       </div>
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 no-scrollbar">

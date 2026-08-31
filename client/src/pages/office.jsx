@@ -250,8 +250,8 @@ export default function OfficeListing() {
           <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
             <FaBuilding className="w-8 h-8 text-rose-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">Resort Not Found</h2>
-          <p className="text-gray-600 mb-6">The resort you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">Resort Not Found</h2>
+          <p className="text-gray-600 dark:text-white mb-6">The resort you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => window.history.back()}
             className="px-6 py-3 bg-[#FF385C] text-white font-medium rounded-lg hover:bg-[#E31C5F] transition-colors"
@@ -266,11 +266,11 @@ export default function OfficeListing() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+      <div className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => window.history.back()}
-            className="flex items-center text-gray-700 hover:text-gray-900"
+            className="flex items-center text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-white"
           >
             <ArrowBack className="mr-2" /> Back
           </button>
@@ -281,14 +281,14 @@ export default function OfficeListing() {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
             >
               <Share />
               {copied && <span className="absolute -top-2 -right-2 text-xs bg-[#FF385C] text-white px-2 py-1 rounded-full">Copied!</span>}
             </button>
             <button
               onClick={toggleWishlist}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
             >
               {isWishlisted ? <Favorite className="text-[#FF385C]" /> : <FavoriteBorder />}
             </button>
@@ -322,8 +322,8 @@ export default function OfficeListing() {
             <div className="mb-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{listing.name}</h1>
-                  <div className="flex items-center gap-4 text-gray-600 mb-4">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{listing.name}</h1>
+                  <div className="flex items-center gap-4 text-gray-600 dark:text-white mb-4">
                     <span className="flex items-center">
                       <MapPinIcon className="w-4 h-4 mr-1" /> {listing.address}
                     </span>
@@ -333,9 +333,9 @@ export default function OfficeListing() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     R{listing.offer ? listing.discountPrice : listing.regularPrice}
-                    <span className="text-base font-normal text-gray-600"> / hour</span>
+                    <span className="text-base font-normal text-gray-600 dark:text-white"> / hour</span>
                   </p>
                   {listing.offer && (
                     <p className="text-sm text-green-600">
@@ -354,43 +354,43 @@ export default function OfficeListing() {
 
             {/* Description */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">About this resort</h2>
-              <p className="text-gray-700 leading-relaxed">{listing.description}</p>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">About this resort</h2>
+              <p className="text-gray-700 dark:text-white leading-relaxed">{listing.description}</p>
             </div>
 
             {/* Features Grid */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">What this resort offers</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">What this resort offers</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <FaBed className="text-gray-700" />
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <FaBed className="text-gray-700 dark:text-white" />
                   <span>{listing.bedrooms} {listing.bedrooms > 1 ? "Units" : "Unit"}</span>
                 </div>
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <FaBath className="text-gray-700" />
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <FaBath className="text-gray-700 dark:text-white" />
                   <span>{listing.bathrooms} {listing.bathrooms > 1 ? "bathrooms" : "bathroom"}</span>
                 </div>
                 {listing.parking && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <FaParking className="text-gray-700" />
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <FaParking className="text-gray-700 dark:text-white" />
                     <span>Parking</span>
                   </div>
                 )}
                 {listing.wifi && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <WifiIcon className="w-5 h-5 text-gray-700" />
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <WifiIcon className="w-5 h-5 text-gray-700 dark:text-white" />
                     <span>WiFi</span>
                   </div>
                 )}
                 {listing.security && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <ShieldCheckIcon className="w-5 h-5 text-gray-700" />
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <ShieldCheckIcon className="w-5 h-5 text-gray-700 dark:text-white" />
                     <span>Security</span>
                   </div>
                 )}
                 {listing.kitchen && (
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <KitchenIcon className="w-5 h-5 text-gray-700" />
+                  <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <KitchenIcon className="w-5 h-5 text-gray-700 dark:text-white" />
                     <span>Kitchen</span>
                   </div>
                 )}
@@ -400,30 +400,30 @@ export default function OfficeListing() {
             {/* Rules */}
             {listing.rules && (
               <div className="mb-8 p-6 bg-amber-50 rounded-xl">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">Resort rules</h2>
-                <p className="text-gray-700">{listing.rules}</p>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Resort rules</h2>
+                <p className="text-gray-700 dark:text-white">{listing.rules}</p>
               </div>
             )}
 
             {/* Reviews */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Reviews</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Reviews</h2>
                 <div className="flex items-center space-x-1">
                   <FaStar className="text-yellow-400" />
                   <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                  <span className="text-gray-500">({reviews.length})</span>
+                  <span className="text-gray-500 dark:text-white">({reviews.length})</span>
                 </div>
               </div>
 
               {/* Review Form */}
               {currentUser && (
-                <div className="mb-6 p-4 bg-white border border-gray-200 rounded-xl">
+                <div className="mb-6 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl">
                   <textarea
                     value={userReview}
                     onChange={(e) => setUserReview(e.target.value)}
                     placeholder="Share your experience with this resort..."
-                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
+                    className="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
                     rows="3"
                   />
                   <button
@@ -438,11 +438,11 @@ export default function OfficeListing() {
               {/* Reviews List */}
               <div className="space-y-4">
                 {reviews.map((review) => (
-                  <div key={review.id} className="p-4 bg-white border border-gray-200 rounded-xl">
+                  <div key={review.id} className="p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <span className="font-medium text-gray-900">{review.user}</span>
-                        <span className="text-sm text-gray-500 ml-2">{review.date}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{review.user}</span>
+                        <span className="text-sm text-gray-500 dark:text-white ml-2">{review.date}</span>
                       </div>
                       {review.user === currentUser?.name && (
                         <button
@@ -453,11 +453,11 @@ export default function OfficeListing() {
                         </button>
                       )}
                     </div>
-                    <p className="text-gray-700">{review.content}</p>
+                    <p className="text-gray-700 dark:text-white">{review.content}</p>
                   </div>
                 ))}
                 {reviews.length === 0 && (
-                  <p className="text-center text-gray-500 py-8">No reviews yet. Be the first to write one!</p>
+                  <p className="text-center text-gray-500 dark:text-white py-8">No reviews yet. Be the first to write one!</p>
                 )}
               </div>
             </div>
@@ -466,10 +466,10 @@ export default function OfficeListing() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             {/* Booking Card */}
-            <div className="sticky top-24 p-6 bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="sticky top-24 p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-sm">
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">Book this resort</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Book this resort</h3>
                   <div className="flex items-center space-x-1">
                     <FaStar className="text-yellow-400" />
                     <span className="font-semibold">{rating.toFixed(1)}</span>
@@ -478,14 +478,14 @@ export default function OfficeListing() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Select dates
                     </label>
                     <button
                       onClick={() => setShowCalendar(true)}
-                      className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 rounded-lg hover:border-gray-400"
+                      className="w-full flex items-center justify-between px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg hover:border-gray-400"
                     >
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-white">
                         {startDate && endDate 
                           ? `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`
                           : "Choose dates"
@@ -496,7 +496,7 @@ export default function OfficeListing() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Your details
                     </label>
                     <input
@@ -504,14 +504,14 @@ export default function OfficeListing() {
                       placeholder="Full name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg mb-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
                     />
                     <input
                       type="text"
                       placeholder="Contact number"
                       value={contact}
                       onChange={(e) => setContact(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
                     />
                   </div>
 
@@ -526,7 +526,7 @@ export default function OfficeListing() {
                   <button
                     onClick={generateVoucher}
                     disabled={!startDate || !endDate || !name || !contact}
-                    className="w-full py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     <FaDownload className="mr-2" /> Download Voucher
                   </button>
@@ -534,7 +534,7 @@ export default function OfficeListing() {
               </div>
 
               {/* Host Info */}
-              <div className="pt-6 border-t border-gray-200">
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
                 <div className="flex items-center space-x-3 mb-4">
                   <img
                     src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
@@ -542,18 +542,18 @@ export default function OfficeListing() {
                     className="w-12 h-12 rounded-full"
                   />
                   <div>
-                    <h4 className="font-medium text-gray-900">Hosted by {listing.host}</h4>
-                    <p className="text-sm text-gray-600">Resort provider</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">Hosted by {listing.host}</h4>
+                    <p className="text-sm text-gray-600 dark:text-white">Resort provider</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center text-gray-700">
-                    <Phone className="text-gray-500 mr-2" />
+                  <div className="flex items-center text-gray-700 dark:text-white">
+                    <Phone className="text-gray-500 dark:text-white mr-2" />
                     <span>+27 {listing.contact}</span>
                   </div>
                   <button
                     onClick={contactOwner}
-                    className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="w-full py-2 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Contact Host
                   </button>
@@ -565,13 +565,13 @@ export default function OfficeListing() {
 
         {/* Location Map */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Location</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Location</h2>
           <div className="bg-gray-200 rounded-xl overflow-hidden aspect-[16/6]">
             {/* Google Map would go here */}
-            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+            <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
               <div className="text-center">
                 <MapPinIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600">{listing.address}</p>
+                <p className="text-gray-600 dark:text-white">{listing.address}</p>
               </div>
             </div>
           </div>
@@ -602,10 +602,10 @@ export default function OfficeListing() {
         </div>
 
         {/* Report Button */}
-        <div className="flex justify-center pt-8 border-t border-gray-200">
+        <div className="flex justify-center pt-8 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={() => setReporting(true)}
-            className="flex items-center text-gray-500 hover:text-rose-600 transition-colors"
+            className="flex items-center text-gray-500 dark:text-white hover:text-rose-600 transition-colors"
           >
             <Report className="mr-2" /> Report this listing
           </button>
@@ -615,13 +615,13 @@ export default function OfficeListing() {
       {/* Calendar Modal */}
       {showCalendar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">Select Dates</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Select Dates</h3>
                 <button
                   onClick={() => setShowCalendar(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
                 >
                   ✕
                 </button>
@@ -669,7 +669,7 @@ export default function OfficeListing() {
               <div className="flex space-x-3 mt-6">
                 <button
                   onClick={() => setShowCalendar(false)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  className="flex-1 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   Cancel
                 </button>
@@ -688,30 +688,30 @@ export default function OfficeListing() {
       {/* Report Modal */}
       {reporting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">Report this listing</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Report this listing</h3>
                 <button
                   onClick={() => setReporting(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
                 >
                   ✕
                 </button>
               </div>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-white mb-6">
                 Please tell us why you're reporting this listing. This information will help us keep our community safe.
               </p>
               <div className="space-y-4">
                 <textarea
                   placeholder="Describe the issue..."
-                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
+                  className="w-full border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:ring-2 focus:ring-[#FF385C] focus:border-transparent"
                   rows="4"
                 />
                 <div className="flex space-x-3">
                   <button
                     onClick={() => setReporting(false)}
-                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    className="flex-1 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     Cancel
                   </button>

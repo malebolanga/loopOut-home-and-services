@@ -78,14 +78,14 @@ function HistoryRow({ entry, idx }) {
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: idx * 0.05 }}
-      className="flex items-center justify-between py-3.5 border-b border-gray-100 last:border-0"
+      className="flex items-center justify-between py-3.5 border-b border-gray-100 dark:border-gray-800 last:border-0"
     >
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-100 to-rose-100 flex items-center justify-center shrink-0">
           <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
         </div>
         <div>
-          <p className="text-sm font-black text-gray-900 leading-tight">{entry.label}</p>
+          <p className="text-sm font-black text-gray-900 dark:text-white leading-tight">{entry.label}</p>
           <p className="text-[10px] text-gray-400 font-bold mt-0.5">{timeAgo}</p>
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function Rewards() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 pb-24">
 
       {/* ── Hero ── */}
       <div className="relative bg-gray-950 pt-28 pb-28 px-6 overflow-hidden">
@@ -186,7 +186,7 @@ export default function Rewards() {
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className={`bg-white rounded-[2rem] p-8 shadow-2xl ${currentTier.glow} border border-gray-100`}
+          className={`bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-2xl ${currentTier.glow} border border-gray-100 dark:border-gray-800`}
         >
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Tier badge */}
@@ -203,7 +203,7 @@ export default function Rewards() {
 
               {/* Points counter */}
               <div className="flex items-end gap-1.5 justify-center md:justify-start mt-3 mb-5">
-                <span className="text-5xl font-black text-gray-900 leading-none tabular-nums">
+                <span className="text-5xl font-black text-gray-900 dark:text-white leading-none tabular-nums">
                   {total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-sm font-black text-gray-400 mb-1 uppercase tracking-widest">pts</span>
@@ -219,7 +219,7 @@ export default function Rewards() {
                     {nextTier.name} {nextTier.emoji}
                   </span>
                 </div>
-                <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(tierProgress, 100)}%` }}
@@ -232,11 +232,11 @@ export default function Rewards() {
           </div>
 
           {/* Free service progress */}
-          <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-100">
+          <div className="mt-8 p-5 rounded-2xl bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Gift className="w-5 h-5 text-rose-500" />
-                <span className="text-sm font-black text-gray-900">Free Service Meter</span>
+                <span className="text-sm font-black text-gray-900 dark:text-white">Free Service Meter</span>
               </div>
               <span className="text-xs font-black text-gray-400">
                 {(total % FREE_SERVICE_THRESHOLD).toLocaleString(undefined, { maximumFractionDigits: 2 })} / {FREE_SERVICE_THRESHOLD.toLocaleString()} pts
@@ -273,7 +273,7 @@ export default function Rewards() {
         </div>
 
         {/* ── Tab Nav ── */}
-        <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm border border-gray-100">
+        <div className="flex gap-2 bg-white dark:bg-gray-900 rounded-2xl p-1.5 shadow-sm border border-gray-100 dark:border-gray-800">
           {tabs.map(t => (
             <button
               key={t.id}
@@ -281,7 +281,7 @@ export default function Rewards() {
               className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 tab === t.id
                   ? 'bg-gray-950 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-gray-700'
+                  : 'text-gray-400 hover:text-gray-700 dark:hover:text-white'
               }`}
             >
               {t.label}
@@ -300,8 +300,8 @@ export default function Rewards() {
               className="grid md:grid-cols-2 gap-6"
             >
               {/* Earning rules */}
-              <div className="bg-white rounded-[2rem] p-7 shadow-xl shadow-gray-200/50 border border-gray-100">
-                <h3 className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2">
+              <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-7 shadow-xl shadow-gray-200/50 border border-gray-100 dark:border-gray-800">
+                <h3 className="text-lg font-black text-gray-900 dark:text-white mb-5 flex items-center gap-2">
                   <TrendingUp className="text-rose-500 w-5 h-5" />
                   How to Earn
                 </h3>
@@ -313,10 +313,10 @@ export default function Rewards() {
                     { label: 'Complete verification', pts: '+500',                 done: !!currentUser?.isVerified, icon: '✅' },
                     { label: 'Add profile photo',  pts: '+100',                    done: !!currentUser?.avatar, icon: '📸' },
                   ].map((item, i) => (
-                    <div key={i} className={`flex items-center justify-between p-4 rounded-2xl border ${item.done ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100'}`}>
+                    <div key={i} className={`flex items-center justify-between p-4 rounded-2xl border ${item.done ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800'}`}>
                       <div className="flex items-center gap-3">
                         <span className="text-xl leading-none">{item.icon}</span>
-                        <span className={`font-bold text-sm ${item.done ? 'text-emerald-700' : 'text-gray-700'}`}>
+                        <span className={`font-bold text-sm ${item.done ? 'text-emerald-700' : 'text-gray-700 dark:text-white'}`}>
                           {item.label}
                         </span>
                       </div>
@@ -339,7 +339,7 @@ export default function Rewards() {
                   <Gift className="text-amber-400 w-5 h-5" />
                   Free Service Milestone
                 </h3>
-                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-6">
+                <p className="text-[10px] text-gray-500 dark:text-white font-bold uppercase tracking-widest mb-6">
                   Redeem at {FREE_SERVICE_THRESHOLD.toLocaleString()} pts
                 </p>
 
@@ -388,16 +388,16 @@ export default function Rewards() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="bg-white rounded-[2rem] p-7 shadow-xl border border-gray-100"
+              className="bg-white dark:bg-gray-900 rounded-[2rem] p-7 shadow-xl border border-gray-100 dark:border-gray-800"
             >
-              <h3 className="text-lg font-black text-gray-900 mb-5 flex items-center gap-2">
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-5 flex items-center gap-2">
                 <Clock className="text-rose-500 w-5 h-5" />
                 Points History
               </h3>
               {history.length === 0 ? (
                 <div className="flex flex-col items-center py-16 text-center">
                   <span className="text-5xl mb-4">🌟</span>
-                  <p className="font-black text-gray-700 text-lg mb-1">No points yet</p>
+                  <p className="font-black text-gray-700 dark:text-white text-lg mb-1">No points yet</p>
                   <p className="text-sm text-gray-400 max-w-xs">
                     Make your first booking to start earning {POINTS_PER_BOOKING} pts!
                   </p>
@@ -440,12 +440,12 @@ export default function Rewards() {
                     className={`flex items-center gap-4 p-5 rounded-2xl border ${
                       isUnlocked
                         ? 'bg-gradient-to-r from-emerald-50 to-white border-emerald-100'
-                        : 'bg-gray-50 border-gray-100'
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800'
                     }`}
                   >
                     <div className="text-2xl leading-none">{perk.emoji}</div>
                     <div className="flex-1">
-                      <p className={`font-black text-sm ${isUnlocked ? 'text-gray-900' : 'text-gray-500'}`}>
+                      <p className={`font-black text-sm ${isUnlocked ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-white'}`}>
                         {perk.title}
                       </p>
                       <p className="text-[10px] text-gray-400 font-bold mt-0.5">{perk.desc}</p>
@@ -456,7 +456,7 @@ export default function Rewards() {
                         <span className="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Active</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 border border-gray-200">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800">
                         <Lock className="w-3 h-3 text-gray-400" />
                         <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">{reqTierObj?.name}</span>
                       </div>

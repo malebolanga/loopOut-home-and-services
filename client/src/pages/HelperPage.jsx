@@ -2936,8 +2936,8 @@ export default function HelperPage() {
                                       onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                     />
                                     <div>
-                                      <h4 className="font-semibold text-[#222222] leading-tight">{comment.userName}</h4>
-                                      <p className="text-sm text-[#717171] mt-0.5">{getRelativeTime(comment.createdAt)}</p>
+                                      <h4 className="font-semibold text-[#222222] dark:text-white leading-tight">{comment.userName}</h4>
+                                      <p className="text-sm text-[#717171] dark:text-white mt-0.5">{getRelativeTime(comment.createdAt)}</p>
                                     </div>
                                   </div>
                                 </div>

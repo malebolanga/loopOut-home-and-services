@@ -165,18 +165,18 @@ export default function Inbox() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100">
+    <div className="max-w-[1400px] mx-auto h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
       
       {/* Sidebar: Conversation List */}
-      <div className={`${showMobileChat ? 'hidden md:flex' : 'flex'} w-full md:w-[400px] flex-col border-r border-gray-100 bg-gray-50/30`}>
-        <div className="p-6 border-b border-gray-100 bg-white">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Messages</h1>
+      <div className={`${showMobileChat ? 'hidden md:flex' : 'flex'} w-full md:w-[400px] flex-col border-r border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30`}>
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Messages</h1>
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text" 
               placeholder="Search conversations..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-100/50 rounded-2xl border-none focus:ring-2 focus:ring-rose-500/20 text-sm transition-all"
+              className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-gray-800/50 rounded-2xl border-none focus:ring-2 focus:ring-rose-500/20 text-sm transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -196,7 +196,7 @@ export default function Inbox() {
                 <div 
                   key={conv._id}
                   onClick={() => selectConversation(conv)}
-                  className={`flex items-center gap-4 p-4 cursor-pointer transition-all border-l-4 ${isSelected ? 'bg-rose-50/50 border-rose-500' : 'hover:bg-gray-100/50 border-transparent'}`}
+                  className={`flex items-center gap-4 p-4 cursor-pointer transition-all border-l-4 ${isSelected ? 'bg-rose-50/50 border-rose-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-transparent'}`}
                 >
                   <div className="relative flex-shrink-0">
                     <img 
@@ -212,10 +212,10 @@ export default function Inbox() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900 truncate">{otherUser?.username}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">{otherUser?.username}</h3>
                       <span className="text-[10px] text-gray-400">{formatFromNow(conv.updatedAt)}</span>
                     </div>
-                    <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900' : 'text-gray-500'}`}>
+                    <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-white'}`}>
                       {conv.lastMessageSender === currentUser._id && 'You: '}{conv.lastMessage || 'Start a conversation'}
                     </p>
                   </div>
@@ -238,13 +238,13 @@ export default function Inbox() {
       </div>
 
       {/* Main Chat Area */}
-      <div className={`${showMobileChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white relative`}>
+      <div className={`${showMobileChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white dark:bg-gray-900 relative`}>
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 md:p-6 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+            <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <button onClick={() => setShowMobileChat(false)} className="md:hidden p-2 hover:bg-gray-100 rounded-full">
+                <button onClick={() => setShowMobileChat(false)} className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
                   <FiArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3">
@@ -254,20 +254,20 @@ export default function Inbox() {
                     className="w-10 h-10 rounded-xl object-cover"
                   />
                   <div>
-                    <h2 className="font-bold text-gray-900">{selectedConversation.participants.find(p => p._id !== currentUser._id)?.username}</h2>
+                    <h2 className="font-bold text-gray-900 dark:text-white">{selectedConversation.participants.find(p => p._id !== currentUser._id)?.username}</h2>
                     <span className="text-xs text-green-500 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Online
                     </span>
                   </div>
                 </div>
               </div>
-              <button className="p-2 hover:bg-gray-100 rounded-full text-gray-400">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full text-gray-400">
                 <FiMoreVertical className="w-5 h-5" />
               </button>
             </div>
 
             {/* Messages Body */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gray-50/30 side-panel-scroll pb-20 md:pb-8">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-800/30 side-panel-scroll pb-20 md:pb-8">
               {messagesLoading && messages.length === 0 ? (
                 <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div></div>
               ) : messages.map((msg, index) => {
@@ -278,7 +278,7 @@ export default function Inbox() {
                       <div className={`px-4 py-3 rounded-2xl shadow-sm ${
                         isOwn 
                           ? 'bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-tr-none' 
-                          : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
+                          : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white rounded-tl-none border border-gray-100 dark:border-gray-800'
                       }`}>
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
@@ -293,8 +293,8 @@ export default function Inbox() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 pb-24 md:pb-6 md:p-6 bg-white border-t border-gray-100">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-100/50 p-2 rounded-2xl border border-transparent focus-within:border-rose-500/20 focus-within:bg-white transition-all">
+            <div className="p-4 pb-24 md:pb-6 md:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-100 dark:bg-gray-800/50 p-2 rounded-2xl border border-transparent focus-within:border-rose-500/20 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                 <input 
                   type="text" 
                   placeholder="Type a message..."
@@ -313,12 +313,12 @@ export default function Inbox() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50/10">
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-12 bg-gray-50 dark:bg-gray-800/10">
             <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mb-6">
               <FiMessageCircle className="w-12 h-12 text-rose-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Select a conversation</h2>
-            <p className="text-gray-500 max-w-xs">Choose a conversation from the list to start chatting with your service providers or helpers.</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Select a conversation</h2>
+            <p className="text-gray-500 dark:text-white max-w-xs">Choose a conversation from the list to start chatting with your service providers or helpers.</p>
           </div>
         )}
       </div>

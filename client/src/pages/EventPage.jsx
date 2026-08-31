@@ -216,7 +216,7 @@ export default function EventPage() {
       art: { icon: <PaintBrushIcon className="w-5 h-5 text-pink-500" />, color: 'pink', text: 'text-pink-500', name: 'Art Event', bg: 'bg-pink-50', border: 'border-pink-100' },
       community: { icon: <UserGroupIcon className="w-5 h-5 text-blue-500" />, color: 'blue', text: 'text-blue-500', name: 'Community Event', bg: 'bg-blue-50', border: 'border-blue-100' },
       food: { icon: <CakeIcon className="w-5 h-5 text-orange-500" />, color: 'orange', text: 'text-orange-500', name: 'Food Event', bg: 'bg-orange-50', border: 'border-orange-100' },
-      others: { icon: <EllipsisHorizontalIcon className="w-5 h-5 text-gray-500" />, color: 'gray', text: 'text-gray-500', name: 'Other Event', bg: 'bg-gray-50', border: 'border-gray-100' }
+      others: { icon: <EllipsisHorizontalIcon className="w-5 h-5 text-gray-500 dark:text-white" />, color: 'gray', text: 'text-gray-500 dark:text-white', name: 'Other Event', bg: 'bg-gray-50 dark:bg-gray-800', border: 'border-gray-100 dark:border-gray-800' }
     };
     return types[type] || types.others;
   };
@@ -376,23 +376,23 @@ export default function EventPage() {
   const whatsappLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in: ${event.name}` : null;
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900">
       <div className="relative w-24 h-24">
         <div className="absolute inset-0 border-4 border-rose-100 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-rose-500 rounded-full border-t-transparent animate-spin"></div>
       </div>
-      <p className="mt-6 text-slate-500 font-medium animate-pulse">Crafting your event experience...</p>
+      <p className="mt-6 text-slate-500 dark:text-white font-medium animate-pulse">Crafting your event experience...</p>
     </div>
   );
 
   if (error || !event) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-slate-200">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-950 p-4">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-[2.5rem] shadow-xl max-w-md w-full text-center border border-slate-200 dark:border-gray-800">
         <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <InformationCircleIcon className="w-10 h-10 text-rose-500" />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">{error ? 'Oops!' : 'Not Found'}</h2>
-        <p className="text-slate-500 mb-8">{error || "This event seems to have vanished into thin air."}</p>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{error ? 'Oops!' : 'Not Found'}</h2>
+        <p className="text-slate-500 dark:text-white mb-8">{error || "This event seems to have vanished into thin air."}</p>
         <button onClick={() => navigate(-1)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all">Go Back</button>
       </div>
     </div>
@@ -406,35 +406,35 @@ export default function EventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden w-full">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden w-full">
       {/* Dynamic Navigation */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
-        isScrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-slate-200 py-3' : 'bg-transparent py-5'
+        isScrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-slate-200 dark:border-gray-800 py-3' : 'bg-transparent py-5'
       }`}>
         <div className="w-full px-4 md:px-12 flex items-center justify-between">
           <button onClick={() => navigate(-1)} className={`group p-3 rounded-2xl transition-all duration-300 ${
-            isScrolled ? 'bg-slate-100 text-slate-900 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+            isScrolled ? 'bg-slate-100 dark:bg-gray-800 text-slate-900 dark:text-white hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
           }`}>
             <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </button>
 
           <div className="flex items-center gap-3">
             <button className={`p-3 rounded-2xl transition-all duration-300 ${
-              isScrolled ? 'bg-slate-100 text-slate-900 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
+              isScrolled ? 'bg-slate-100 dark:bg-gray-800 text-slate-900 dark:text-white hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20'
             }`}>
               <ShareIcon className="w-5 h-5" />
             </button>
             <button onClick={toggleFavorite} className={`p-3 rounded-2xl transition-all duration-300 ${
-              isScrolled ? 'bg-slate-100 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20'
+              isScrolled ? 'bg-slate-100 dark:bg-gray-800 hover:bg-slate-200' : 'bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20'
             }`}>
-              {isFavorite ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className={`w-5 h-5 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
+              {isFavorite ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className={`w-5 h-5 ${isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'}`} />}
             </button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section - Masterpiece Gallery Layout */}
-      <div className="w-full bg-slate-100 overflow-hidden relative">
+      <div className="w-full bg-slate-100 dark:bg-gray-800 overflow-hidden relative">
         {event.imageUrls && event.imageUrls.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 h-[65vh] md:h-[80vh] lg:h-[85vh] w-full bg-slate-900 group">
             {/* Main Image */}
@@ -468,7 +468,7 @@ export default function EventPage() {
             {/* Show All Photos Button */}
             <button
               onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20"
+              className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 hover:bg-white dark:hover:bg-gray-900 hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200 dark:border-gray-800/50 z-20"
             >
               <PhotoIcon className="w-5 h-5" />
               <span>Show all {event.imageUrls.length} photos</span>
@@ -520,7 +520,7 @@ export default function EventPage() {
             <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none z-10"></div>
           </div>
         ) : (
-          <div className="h-[50vh] bg-slate-100 flex items-center justify-center">
+          <div className="h-[50vh] bg-slate-100 dark:bg-gray-800 flex items-center justify-center">
              <Sparkles className="w-20 h-20 text-slate-200 animate-pulse" />
           </div>
         )}
@@ -536,10 +536,10 @@ export default function EventPage() {
         {/* About Section */}
         <section className="relative">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">About Experience</h2>
-            <div className="h-px flex-1 bg-slate-100 mx-8 hidden md:block"></div>
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">About Experience</h2>
+            <div className="h-px flex-1 bg-slate-100 dark:bg-gray-800 mx-8 hidden md:block"></div>
           </div>
-          <div className={`text-lg text-slate-600 leading-relaxed space-y-4 ${!showFullDescription && 'line-clamp-6'}`}>
+          <div className={`text-lg text-slate-600 dark:text-white leading-relaxed space-y-4 ${!showFullDescription && 'line-clamp-6'}`}>
             {event.description?.split('\n').map((p, i) => <p key={i}>{p}</p>)}
           </div>
           {event.description?.length > 400 && (
@@ -554,8 +554,8 @@ export default function EventPage() {
         {event.imageUrls && event.imageUrls.length > 0 && (
           <section className="relative pt-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Experience Portfolio</h2>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Experience Portfolio</h2>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-gray-800 px-3 py-1 rounded-full">
                 {event.imageUrls.length} Photos
               </span>
             </div>
@@ -595,15 +595,15 @@ export default function EventPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Description</div>
-                    <div className="text-3xl font-black text-white">{aiAssessment.descriptionQuality || '...'}<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                    <div className="text-3xl font-black text-white">{aiAssessment.descriptionQuality || '...'}<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
                   </div>
                   <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Content</div>
-                    <div className="text-3xl font-black text-white">{aiAssessment.imageQuality || '...'}<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                    <div className="text-3xl font-black text-white">{aiAssessment.imageQuality || '...'}<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
                   </div>
                   <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Safety</div>
-                    <div className="text-3xl font-black text-white">4.8<span className="text-sm font-normal text-slate-500 ml-1">/5</span></div>
+                    <div className="text-3xl font-black text-white">4.8<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
                   </div>
                 </div>
 
@@ -616,7 +616,7 @@ export default function EventPage() {
                       <ArrowDownIcon className="w-4 h-4" /> Flag
                     </button>
                   </div>
-                  <div className="text-slate-500 text-xs font-medium flex items-center gap-2">
+                  <div className="text-slate-500 dark:text-white text-xs font-medium flex items-center gap-2">
                     <Sparkles className="w-4 h-4" /> Verified by Experience AI 
                   </div>
                 </div>
@@ -624,9 +624,9 @@ export default function EventPage() {
             </section>
 
             {/* Profiles & Verification */}
-            <section className="p-10 bg-slate-50 rounded-[3rem] border border-slate-100">
+            <section className="p-10 bg-slate-50 dark:bg-gray-950 rounded-[3rem] border border-slate-100 dark:border-gray-800">
                <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Digital Footprint</h3>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Digital Footprint</h3>
                 <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20 animate-pulse">Scanning Live</span>
               </div>
 
@@ -648,12 +648,12 @@ export default function EventPage() {
                     };
 
                     return (
-                      <div key={platform} className={`p-6 rounded-[2rem] border transition-all duration-300 ${data.exists ? 'bg-white border-slate-200 shadow-sm hover:shadow-xl' : 'bg-slate-100/50 border-transparent opacity-50 grayscale'}`}>
+                      <div key={platform} className={`p-6 rounded-[2rem] border transition-all duration-300 ${data.exists ? 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 shadow-sm hover:shadow-xl' : 'bg-slate-100 dark:bg-gray-800/50 border-transparent opacity-50 grayscale'}`}>
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colors[platform]}`}>
                           <Icon className="text-2xl" />
                         </div>
                         <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{platform}</div>
-                        <div className="text-sm font-bold text-slate-900 truncate">
+                        <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
                           {data.exists ? `@${data.username}` : 'Not Found'}
                         </div>
                         {data.verified && <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter"><CheckBadgeIcon className="w-3 h-3"/> Verified</div>}
@@ -679,7 +679,7 @@ export default function EventPage() {
             <div className="sticky top-28 space-y-6">
               
               {/* Primary Booking Card */}
-              <div className="bg-white rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-slate-100 p-8 overflow-hidden group">
+              <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-slate-100 dark:border-gray-800 p-8 overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-50 rounded-full translate-x-1/2 -translate-y-1/2 transition-transform duration-700 group-hover:scale-150"></div>
                 
                 <div className="relative z-10">
@@ -687,7 +687,7 @@ export default function EventPage() {
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Entry</div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                        <span className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">
                           {event.regularPrice ? `R${event.regularPrice}` : 'Free'}
                         </span>
                         {event.regularPrice && <span className="text-slate-400 text-sm font-medium">/person</span>}
@@ -710,7 +710,7 @@ export default function EventPage() {
                     </button>
                     <a 
                       href={whatsappLink}
-                      className="flex items-center justify-center gap-3 w-full py-4 bg-white border border-slate-100 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all shadow-sm"
+                      className="flex items-center justify-center gap-3 w-full py-4 bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 text-slate-900 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all shadow-sm"
                     >
                       <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Inquire Privately
                     </a>
@@ -726,7 +726,7 @@ export default function EventPage() {
               <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,rgba(244,63,94,0.1),transparent)]"></div>
                 <div className="relative z-10">
-                   <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6">Host Experience</h4>
+                   <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white mb-6">Host Experience</h4>
                    <Link to={`/user-profile/${event.userRef?._id || event.userRef}`} className="flex items-center gap-4 mb-8 group">
                       <div className="relative">
                         <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/10 group-hover:border-rose-500/50 transition-all duration-500">
@@ -762,7 +762,7 @@ export default function EventPage() {
                 </div>
               </div>
 
-               <div className="bg-white rounded-[2rem] p-8 border border-slate-100 flex flex-col items-center gap-4">
+               <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-100 dark:border-gray-800 flex flex-col items-center gap-4">
                   <InformationCircleIcon className="w-10 h-10 text-slate-200" />
                   <p className="text-center text-slate-400 text-xs font-medium leading-relaxed italic">
                     By registering you agree to the community guidelines. You will be redirected to WhatsApp to finalize your booking with the host.
@@ -774,10 +774,10 @@ export default function EventPage() {
 
         {/* Similar Events */}
         {similarEvents.length > 0 && (
-          <section className="pt-24 border-t border-slate-100">
+          <section className="pt-24 border-t border-slate-100 dark:border-gray-800">
             <div className="flex items-center justify-between mb-12">
                <div>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">More Experiences</h2>
+                  <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">More Experiences</h2>
                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Recommended for you</p>
                </div>
                <Link to="/events" className="flex items-center gap-2 text-rose-500 font-bold text-sm bg-rose-50 px-6 py-3 rounded-2xl hover:bg-rose-100 transition-all">
@@ -794,10 +794,10 @@ export default function EventPage() {
       {/* Floating Mobile Booking Belt */}
       {showBookingBelt && (
         <div className="fixed bottom-0 left-0 right-0 z-[90] md:hidden">
-          <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-200 p-4 flex items-center justify-between gap-4 safe-area-bottom">
+          <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-200 dark:border-gray-800 p-4 flex items-center justify-between gap-4 safe-area-bottom">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entry</div>
-              <div className="text-xl font-black text-slate-900">{event.regularPrice ? `R${event.regularPrice}` : 'Free'}</div>
+              <div className="text-xl font-black text-slate-900 dark:text-white">{event.regularPrice ? `R${event.regularPrice}` : 'Free'}</div>
             </div>
             <button 
                onClick={() => setShowRegistrationOverlay(true)}
@@ -812,13 +812,13 @@ export default function EventPage() {
       {/* Full Page Registration Overlay - Masterpiece Style */}
       {showRegistrationOverlay && (
         <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
+          <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col relative">
             <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
             
             <div className="p-6 border-b border-slate-50 flex items-center justify-between relative z-10">
               <button 
                 onClick={() => setShowRegistrationOverlay(false)}
-                className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-900 transition-all"
+                className="p-3 bg-slate-50 dark:bg-gray-950 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-2xl text-slate-900 dark:text-white transition-all"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
@@ -830,7 +830,7 @@ export default function EventPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 relative z-10">
-              <div className="bg-slate-50 rounded-[2rem] p-6 mb-8 border border-slate-100 shadow-inner">
+              <div className="bg-slate-50 dark:bg-gray-950 rounded-[2rem] p-6 mb-8 border border-slate-100 dark:border-gray-800 shadow-inner">
                 <div className="flex items-start gap-4">
                   <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-xl border-4 border-white">
                     <ImageWithFallback src={event?.imageUrls?.[0]} alt={event?.name} className="w-full h-full object-cover" />
@@ -846,7 +846,7 @@ export default function EventPage() {
 
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                  <div className="p-5 bg-slate-50 dark:bg-gray-950 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 dark:focus-within:border-gray-800 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Full Name</label>
                     <input 
                       type="text" 
@@ -857,7 +857,7 @@ export default function EventPage() {
                       placeholder="Your designation"
                     />
                   </div>
-                  <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                  <div className="p-5 bg-slate-50 dark:bg-gray-950 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 dark:focus-within:border-gray-800 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Contact Number</label>
                     <input 
                       type="tel" 
@@ -870,19 +870,19 @@ export default function EventPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                <div className="p-5 bg-slate-50 dark:bg-gray-950 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 dark:focus-within:border-gray-800 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ticket Quantity</label>
                   <div className="flex items-center gap-4">
                     <button 
                       onClick={() => setRegistrationData(d => ({...d, quantity: Math.max(1, d.quantity - 1)}))}
-                      className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all"
+                      className="w-10 h-10 bg-white dark:bg-gray-900 shadow-sm border border-slate-100 dark:border-gray-800 rounded-xl flex items-center justify-center text-slate-900 dark:text-white active:scale-90 transition-all"
                     >
                       <ArrowDownIcon className="w-4 h-4" />
                     </button>
                     <span className="text-lg font-black text-slate-950 min-w-[30px] text-center">{registrationData.quantity}</span>
                     <button 
                       onClick={() => setRegistrationData(d => ({...d, quantity: d.quantity + 1}))}
-                      className="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 active:scale-90 transition-all"
+                      className="w-10 h-10 bg-white dark:bg-gray-900 shadow-sm border border-slate-100 dark:border-gray-800 rounded-xl flex items-center justify-center text-slate-900 dark:text-white active:scale-90 transition-all"
                     >
                       <ArrowUpIcon className="w-4 h-4" />
                     </button>
@@ -892,20 +892,20 @@ export default function EventPage() {
                   </div>
                 </div>
 
-                <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 focus-within:bg-white transition-all">
+                <div className="p-5 bg-slate-50 dark:bg-gray-950 rounded-[1.5rem] border border-transparent focus-within:border-slate-200 dark:focus-within:border-gray-800 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Special Requests or Personal Note</label>
                   <textarea 
                     name="note"
                     value={registrationData.note}
                     onChange={handleRegistrationChange}
-                    className="w-full bg-transparent text-sm font-bold text-slate-900 outline-none resize-none h-24" 
+                    className="w-full bg-transparent text-sm font-bold text-slate-900 dark:text-white outline-none resize-none h-24" 
                     placeholder="Tell us anything specific for this experience..."
                   ></textarea>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 border-t border-slate-50 bg-slate-50/50 relative z-10">
+            <div className="p-8 border-t border-slate-50 bg-slate-50 dark:bg-gray-950/50 relative z-10">
               
               <button 
                 onClick={handleEscrowCheckout}

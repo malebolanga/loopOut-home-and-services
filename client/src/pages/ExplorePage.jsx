@@ -229,11 +229,11 @@ const ExplorePage = () => {
   const SkeletonGrid = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="animate-pulse bg-white rounded-[2.5rem] shadow-sm overflow-hidden h-72">
+        <div key={i} className="animate-pulse bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-sm overflow-hidden h-72">
           <div className="h-48 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100"></div>
           <div className="p-6 space-y-3">
-            <div className="h-5 bg-gray-100 rounded-full w-3/4"></div>
-            <div className="h-4 bg-gray-100 rounded-full w-1/2"></div>
+            <div className="h-5 bg-gray-100 dark:bg-gray-800 rounded-full w-3/4"></div>
+            <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded-full w-1/2"></div>
           </div>
         </div>
       ))}
@@ -300,14 +300,14 @@ const ExplorePage = () => {
               <div className="mb-12">
                 <div className="flex items-center gap-2 mb-4">
                   <FiClock className="w-5 h-5 text-gray-400" />
-                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-500">Recent Explorations</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-white">Recent Explorations</h3>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {searchHistory.slice(0, 5).map((term, i) => (
                     <button
                       key={i}
                       onClick={() => navigate(`/search?searchTerm=${encodeURIComponent(term)}`)}
-                      className="px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-black text-gray-900 shadow-sm hover:shadow-md hover:border-rose-200 transition-all flex items-center gap-2"
+                      className="px-6 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-sm font-black text-gray-900 dark:text-white shadow-sm hover:shadow-md hover:border-rose-200 transition-all flex items-center gap-2"
                     >
                       <FiSearch className="w-3 h-3 text-rose-500" />
                       {term}
@@ -325,9 +325,9 @@ const ExplorePage = () => {
                   <button
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
-                    className={`relative flex flex-col items-center justify-center gap-4 p-6 rounded-[2.5rem] transition-all duration-500 ${activeCategory === category.id ? `${category.color} text-white shadow-2xl scale-105` : 'bg-white text-gray-950 border border-gray-100 hover:shadow-xl hover:-translate-y-1'}`}
+                    className={`relative flex flex-col items-center justify-center gap-4 p-6 rounded-[2.5rem] transition-all duration-500 ${activeCategory === category.id ? `${category.color} text-white shadow-2xl scale-105` : 'bg-white dark:bg-gray-900 text-gray-950 border border-gray-100 dark:border-gray-800 hover:shadow-xl hover:-translate-y-1'}`}
                   >
-                    <div className={`p-4 rounded-2xl ${activeCategory === category.id ? 'bg-white/20' : 'bg-gray-50'}`}>
+                    <div className={`p-4 rounded-2xl ${activeCategory === category.id ? 'bg-white/20' : 'bg-gray-50 dark:bg-gray-800'}`}>
                       {category.icon}
                     </div>
                     <span className="text-xs font-black uppercase tracking-widest">{category.label}</span>
@@ -344,7 +344,7 @@ const ExplorePage = () => {
               <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                 <div>
                   <h2 className="text-3xl font-black text-gray-950 tracking-tight">Neural Recommendations</h2>
-                  <p className="text-gray-500 font-medium mt-1">Curated masterpieces based on your behavior</p>
+                  <p className="text-gray-500 dark:text-white font-medium mt-1">Curated masterpieces based on your behavior</p>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-2xl border border-rose-100">
                    <FiCpu className="w-4 h-4 text-rose-500" />
@@ -415,7 +415,7 @@ const ExplorePage = () => {
               <div className="flex items-end justify-between mb-8">
                 <div>
                   <h2 className="text-3xl font-black text-gray-950 tracking-tight">Global Hotspots</h2>
-                  <p className="text-gray-500 font-medium mt-1">Where the world is booking right now</p>
+                  <p className="text-gray-500 dark:text-white font-medium mt-1">Where the world is booking right now</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -447,7 +447,7 @@ const ExplorePage = () => {
                     <FiMapPin className="text-rose-500" />
                     {userCity ? `Local Treasures: ${userCity}` : 'Local Treasures'}
                   </h2>
-                  <p className="text-gray-500 font-medium mt-1">Discover what's around your immediate coordinates</p>
+                  <p className="text-gray-500 dark:text-white font-medium mt-1">Discover what's around your immediate coordinates</p>
                 </div>
                 <button
                   onClick={handleRefreshLocation}
@@ -472,7 +472,7 @@ const ExplorePage = () => {
               {isLoading || isLocationLoading ? <SkeletonGrid /> : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {(Array.isArray(nearbyItems) && nearbyItems.length > 0) ? nearbyItems.map(renderItem) : (
-                    <div className="col-span-full py-20 bg-gray-50 rounded-[4rem] text-center">
+                    <div className="col-span-full py-20 bg-gray-50 dark:bg-gray-800 rounded-[4rem] text-center">
                        <FiMapPin className="w-16 h-16 text-gray-200 mx-auto mb-6" />
                        <h3 className="text-xl font-black text-gray-400 uppercase tracking-widest">No local signals detected</h3>
                        <p className="text-gray-400 mt-2">Try searching a different quadrant</p>

@@ -66,16 +66,16 @@ export default function MyListing() {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-gray-50 dark:bg-gray-800 min-h-screen">
       {/* Header */}
       <div className="flex flex-col gap-4 p-6 max-w-6xl mx-auto">
-        <h1 className="text-gray-800 font-extrabold text-3xl md:text-5xl">
+        <h1 className="text-gray-800 dark:text-white font-extrabold text-3xl md:text-5xl">
           Find Your <span className="text-indigo-600">Listings</span>
         </h1>
-        <p className="text-gray-600 text-sm md:text-base">
+        <p className="text-gray-600 dark:text-white text-sm md:text-base">
           Thank you for choosing LoupeOut Home as your trusted platform! Whether you’re listing properties, exploring new homes, or managing rentals, we’re here to make the process seamless and rewarding. Happy exploring!
         </p>
-        <p className="text-gray-600 text-sm md:text-base">
+        <p className="text-gray-600 dark:text-white text-sm md:text-base">
           Welcome, <span className="text-indigo-600 font-semibold">{currentUser.username}</span>! Manage your listings or create new ones below.
         </p>
       </div>
@@ -86,7 +86,7 @@ export default function MyListing() {
           activeListings[type].length > 0 && (
             <div key={type} className="mb-10">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold capitalize text-gray-800">
+                <h2 className="text-xl font-semibold capitalize text-gray-800 dark:text-white">
                   {type} Listings
                 </h2>
                 <Link
@@ -111,7 +111,7 @@ export default function MyListing() {
 
         {/* No Listings Found */}
         {Object.values(activeListings).every((list) => list.length === 0) && (
-          <p className="text-center text-gray-500 text-lg">
+          <p className="text-center text-gray-500 dark:text-white text-lg">
             No listings found. Add a new listing to get started!
           </p>
         )}

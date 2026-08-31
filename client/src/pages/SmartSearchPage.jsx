@@ -228,7 +228,7 @@ const SmartSearchPage = () => {
       {/* Sticky Search Header */}
       <div className={`sticky top-0 z-50 transition-all duration-300 ${isSearchSticky ? 'shadow-lg' : ''}`}>
         {/* Main Search Bar */}
-        <div className={`bg-white transition-all duration-300 ${isSearchSticky ? 'py-3' : 'py-6'}`}>
+        <div className={`bg-white dark:bg-gray-900 transition-all duration-300 ${isSearchSticky ? 'py-3' : 'py-6'}`}>
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <div className="flex flex-col md:flex-row gap-4">
@@ -239,14 +239,14 @@ const SmartSearchPage = () => {
                     <input
                       type="text"
                       placeholder="Search by location, property type, or keyword..."
-                      className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white"
                       >
                         <FaTimes />
                       </button>
@@ -257,7 +257,7 @@ const SmartSearchPage = () => {
                 {/* Filter Toggle Button */}
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${showFilters ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${showFilters ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'}`}
                 >
                   <FaSlidersH />
                   Filters
@@ -272,7 +272,7 @@ const SmartSearchPage = () => {
                 {(searchQuery || Object.values(filters).some(val => val !== "" && val !== "all" && val !== "newest")) && (
                   <button
                     onClick={clearFilters}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-all"
+                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-medium text-gray-600 dark:text-white hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                   >
                     <FaTimes />
                     Clear All
@@ -288,7 +288,7 @@ const SmartSearchPage = () => {
                     onClick={() => setFilters(prev => ({ ...prev, type: type.value }))}
                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${filters.type === type.value
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                       }`}
                   >
                     <span className="text-lg">{type.icon}</span>
@@ -302,13 +302,13 @@ const SmartSearchPage = () => {
 
         {/* Advanced Filters Panel */}
         {showFilters && (
-          <div className="bg-white border-t border-gray-200 shadow-sm animate-slideDown">
+          <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-sm animate-slideDown">
             <div className="container mx-auto px-4 py-6">
               <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {/* Price Range */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Price Range
                     </label>
                     <div className="flex gap-2">
@@ -316,7 +316,7 @@ const SmartSearchPage = () => {
                         type="number"
                         name="minPrice"
                         placeholder="Min"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={filters.minPrice}
                         onChange={handleFilterChange}
                       />
@@ -324,7 +324,7 @@ const SmartSearchPage = () => {
                         type="number"
                         name="maxPrice"
                         placeholder="Max"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         value={filters.maxPrice}
                         onChange={handleFilterChange}
                       />
@@ -333,12 +333,12 @@ const SmartSearchPage = () => {
 
                   {/* Bedrooms */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Bedrooms
                     </label>
                     <select
                       name="bedrooms"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={filters.bedrooms}
                       onChange={handleFilterChange}
                     >
@@ -353,12 +353,12 @@ const SmartSearchPage = () => {
 
                   {/* Bathrooms */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Bathrooms
                     </label>
                     <select
                       name="bathrooms"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={filters.bathrooms}
                       onChange={handleFilterChange}
                     >
@@ -372,12 +372,12 @@ const SmartSearchPage = () => {
 
                   {/* Sort By */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                       Sort By
                     </label>
                     <select
                       name="sortBy"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       value={filters.sortBy}
                       onChange={handleFilterChange}
                     >
@@ -399,10 +399,10 @@ const SmartSearchPage = () => {
         <div className="max-w-6xl mx-auto">
           {/* Results Summary */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {searchQuery ? `Search Results for "${searchQuery}"` : "All Properties"}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-white mt-1">
               Found {filteredListings.length} {filteredListings.length === 1 ? "property" : "properties"}
               {searchQuery && ` matching "${searchQuery}"`}
             </p>
@@ -414,10 +414,10 @@ const SmartSearchPage = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
                 <FaTimes className="text-3xl text-red-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                 Error loading properties
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-white mb-6">
                 {error}
               </p>
               <button
@@ -448,13 +448,13 @@ const SmartSearchPage = () => {
               {/* No Results State */}
               {!loading && filteredListings.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
                     <FaSearch className="text-3xl text-gray-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     No properties found
                   </h3>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-gray-600 dark:text-white mb-6">
                     Try adjusting your search or filter criteria
                   </p>
                   <button

@@ -298,10 +298,10 @@ export default function UpdateService() {
             value={formData.host}
           />
           {/* Operating Schedule Section */}
-          <div className="col-span-full pt-8 border-t border-gray-100">
+          <div className="col-span-full pt-8 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">Operating Schedule</h3>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Operating Schedule</h3>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Define your weekly availability</p>
               </div>
               <div className="p-3 bg-rose-50 rounded-2xl">
@@ -311,12 +311,12 @@ export default function UpdateService() {
 
             <div className="space-y-4">
               {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm'}`}>
+                <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-50 shadow-sm'}`}>
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-tighter ${formData.operatingHours[day].closed ? 'bg-gray-200 text-gray-400' : 'bg-rose-500 text-white'}`}>
                       {day.slice(0, 3)}
                     </div>
-                    <span className="font-black text-gray-900 capitalize">{day}</span>
+                    <span className="font-black text-gray-900 dark:text-white capitalize">{day}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -335,7 +335,7 @@ export default function UpdateService() {
                           }))}
                         />
                         <div className={`w-12 h-6 rounded-full transition-colors ${formData.operatingHours[day].closed ? 'bg-rose-500' : 'bg-gray-200'}`} />
-                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
+                        <div className={`absolute top-1 left-1 bg-white dark:bg-gray-900 w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
                       </div>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-rose-500 transition-colors">Closed</span>
                     </label>
@@ -355,7 +355,7 @@ export default function UpdateService() {
                               [day]: { ...prev.operatingHours[day], open: e.target.value }
                             }
                           }))}
-                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                         />
                       </div>
                       <div className="flex flex-col gap-2">
@@ -370,7 +370,7 @@ export default function UpdateService() {
                               [day]: { ...prev.operatingHours[day], close: e.target.value }
                             }
                           }))}
-                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                         />
                       </div>
                     </>
@@ -429,7 +429,7 @@ export default function UpdateService() {
                   type='number'
                   id='regularPrice'
                   min='50'
-                  className='p-3 border border-gray-300 rounded-lg w-32'
+                  className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg w-32'
                   onChange={handleChange}
                   value={formData.regularPrice}
                 />
@@ -439,9 +439,9 @@ export default function UpdateService() {
           </div>
 
           {formData.type === 'storage' && (
-            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
               <div className='flex items-center gap-2 mb-1'>
-                <span className='font-semibold text-gray-800 text-lg'>📦 Storage Space Configuration</span>
+                <span className='font-semibold text-gray-800 dark:text-white text-lg'>📦 Storage Space Configuration</span>
               </div>
               
               <div className='flex flex-col gap-1'>
@@ -450,7 +450,7 @@ export default function UpdateService() {
                   type='text'
                   id='storageSize'
                   placeholder='e.g., 3m x 3m x 2.5m'
-                  className='p-3 border border-gray-300 rounded-lg'
+                  className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                   onChange={handleChange}
                   value={formData.storageSize || ''}
                 />
@@ -462,7 +462,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='storagePriceDay'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.storagePriceDay || 0}
                   />
@@ -472,7 +472,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='storagePriceMonth'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.storagePriceMonth || 0}
                   />
@@ -485,7 +485,7 @@ export default function UpdateService() {
                   id='storageFailurePolicy'
                   rows='3'
                   placeholder='Explain what happens if payment is missed...'
-                  className='p-3 border border-gray-300 rounded-lg'
+                  className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                   onChange={handleChange}
                   value={formData.storageFailurePolicy || ''}
                 />
@@ -497,7 +497,7 @@ export default function UpdateService() {
                   id='storageTerms'
                   rows='3'
                   placeholder='Specify any storage terms...'
-                  className='p-3 border border-gray-300 rounded-lg'
+                  className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                   onChange={handleChange}
                   value={formData.storageTerms || ''}
                 />
@@ -506,15 +506,15 @@ export default function UpdateService() {
               {/* PDF Policy Document */}
               <div className='flex flex-col gap-1'>
                 <label className='text-sm font-semibold'>📄 Policy Document (PDF)</label>
-                <p className='text-xs text-gray-500'>Upload a rental agreement or terms PDF that customers must read before booking.</p>
+                <p className='text-xs text-gray-500 dark:text-white'>Upload a rental agreement or terms PDF that customers must read before booking.</p>
 
                 {!formData.storagePolicyDocUrl ? (
-                  <label className='flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-blue-50 hover:border-blue-400 transition-all group mt-1'>
+                  <label className='flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-blue-50 hover:border-blue-400 transition-all group mt-1'>
                     <div className='flex flex-col items-center gap-1'>
                       <svg className='w-7 h-7 text-gray-400 group-hover:text-blue-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={1.5} d='M12 16v-8m0 0-3 3m3-3 3 3M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1' />
                       </svg>
-                      <span className='text-sm text-gray-500 group-hover:text-blue-500'>Click to upload PDF</span>
+                      <span className='text-sm text-gray-500 dark:text-white group-hover:text-blue-500'>Click to upload PDF</span>
                       <span className='text-xs text-gray-400'>Max 10 MB</span>
                     </div>
                     <input
@@ -570,7 +570,7 @@ export default function UpdateService() {
                     <div className='h-1.5 w-full bg-gray-200 rounded-full'>
                       <div className='h-1.5 bg-blue-500 rounded-full transition-all' style={{ width: `${uploadProgress}%` }} />
                     </div>
-                    <p className='text-xs text-gray-500 mt-1'>Uploading… {Math.round(uploadProgress)}%</p>
+                    <p className='text-xs text-gray-500 dark:text-white mt-1'>Uploading… {Math.round(uploadProgress)}%</p>
                   </div>
                 )}
               </div>
@@ -578,11 +578,11 @@ export default function UpdateService() {
           )}
 
           {formData.type === 'moving' && (
-            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+            <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
               <div className='flex items-center gap-2 mb-1'>
-                <span className='font-semibold text-gray-800 text-lg'>🚛 Moving Rates Configuration</span>
+                <span className='font-semibold text-gray-800 dark:text-white text-lg'>🚛 Moving Rates Configuration</span>
               </div>
-              <p className='text-xs text-gray-500 mb-2'>Configure rates for calculations during booking.</p>
+              <p className='text-xs text-gray-500 dark:text-white mb-2'>Configure rates for calculations during booking.</p>
               
               <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                 <div className='flex flex-col gap-1'>
@@ -590,7 +590,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='moveCostPerBox'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.moveCostPerBox || 50}
                   />
@@ -600,7 +600,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='moveCostPerKilo'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.moveCostPerKilo || 10}
                   />
@@ -613,7 +613,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='movePriceVan'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.movePriceVan || 800}
                   />
@@ -623,7 +623,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='movePriceVanTrailer'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.movePriceVanTrailer || 1200}
                   />
@@ -636,7 +636,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='movePriceMiniTruck'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.movePriceMiniTruck || 1500}
                   />
@@ -646,7 +646,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='movePriceOtherTruck'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.movePriceOtherTruck || 2000}
                   />
@@ -656,7 +656,7 @@ export default function UpdateService() {
                   <input
                     type='number'
                     id='movePriceBigTruckTrailer'
-                    className='p-3 border border-gray-300 rounded-lg'
+                    className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg'
                     onChange={handleChange}
                     value={formData.movePriceBigTruckTrailer || 3500}
                   />
@@ -666,14 +666,14 @@ export default function UpdateService() {
           )}
 
           {/* Check-in / Check-out Times */}
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
             <div className='flex items-center gap-2 mb-1'>
               <ClockIcon className='w-5 h-5 text-rose-500' />
-              <span className='font-semibold text-gray-800'>Check-in & Check-out Times</span>
+              <span className='font-semibold text-gray-800 dark:text-white'>Check-in & Check-out Times</span>
             </div>
             <div className='flex flex-wrap gap-6'>
               <div className='flex flex-col gap-2'>
-                <label className='text-sm font-medium text-gray-600'>🛬 Check-in Time</label>
+                <label className='text-sm font-medium text-gray-600 dark:text-white'>🛬 Check-in Time</label>
                 <input
                   type='time'
                   id='checkInTime'
@@ -683,7 +683,7 @@ export default function UpdateService() {
                 />
               </div>
               <div className='flex flex-col gap-2'>
-                <label className='text-sm font-medium text-gray-600'>🛫 Check-out Time</label>
+                <label className='text-sm font-medium text-gray-600 dark:text-white'>🛫 Check-out Time</label>
                 <input
                   type='time'
                   id='checkOutTime'
@@ -695,7 +695,7 @@ export default function UpdateService() {
             </div>
           </div>
 
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
             <div className='flex justify-between items-center'>
               <h3 className='font-semibold text-lg'>Experience Packages & Prices</h3>
               <button
@@ -709,7 +709,7 @@ export default function UpdateService() {
             {formData.serviceList && formData.serviceList.length > 0 ? (
               <div className='flex flex-col gap-3 mt-2'>
                 {formData.serviceList.map((service, index) => (
-                  <div key={index} className='flex flex-col gap-2 bg-white p-3 rounded-md shadow-sm border border-gray-100'>
+                  <div key={index} className='flex flex-col gap-2 bg-white dark:bg-gray-900 p-3 rounded-md shadow-sm border border-gray-100 dark:border-gray-800'>
                     <div className='flex items-center gap-2'>
                       <input
                         type='text'
@@ -727,7 +727,7 @@ export default function UpdateService() {
                         required
                       />
                       <div className='flex items-center gap-1'>
-                        <span className='text-gray-500'>R</span>
+                        <span className='text-gray-500 dark:text-white'>R</span>
                         <input
                           type='number'
                           placeholder='Price'
@@ -755,12 +755,12 @@ export default function UpdateService() {
                     />
                     <div className='flex items-center gap-4 mt-2'>
                       <div className='flex-1 flex flex-col gap-1'>
-                        <span className='text-xs font-semibold text-gray-500'>Package Photo</span>
+                        <span className='text-xs font-semibold text-gray-500 dark:text-white'>Package Photo</span>
                         <input
                           type='file'
                           accept='image/*'
                           onChange={(e) => handleServiceImageUpload(index, e.target.files[0])}
-                          className='border p-1 rounded-lg text-sm w-full bg-gray-50'
+                          className='border p-1 rounded-lg text-sm w-full bg-gray-50 dark:bg-gray-800'
                         />
                       </div>
                       {serviceImageUploading[index] && (
@@ -774,13 +774,13 @@ export default function UpdateService() {
                 ))}
               </div>
             ) : (
-              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
+              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg'>
                 No additional packages added yet
               </div>
             )}
           </div>
 
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 mt-4'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800 mt-4'>
             <div className='flex justify-between items-center'>
               <h3 className='font-semibold text-lg'>Service Performers</h3>
               <button
@@ -794,7 +794,7 @@ export default function UpdateService() {
             {formData.performers && formData.performers.length > 0 ? (
               <div className='flex flex-col gap-4 mt-2'>
                 {formData.performers.map((performer, index) => (
-                  <div key={index} className='bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3'>
+                  <div key={index} className='bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-3'>
                     <div className='flex justify-between items-start'>
                       <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Performer {index + 1}</span>
                       <button
@@ -859,7 +859,7 @@ export default function UpdateService() {
                           />
                           <label
                             htmlFor={`perf-img-${index}`}
-                            className='px-3 py-1 border border-gray-300 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50'
+                            className='px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'
                           >
                             Upload Photo
                           </label>
@@ -870,7 +870,7 @@ export default function UpdateService() {
                 ))}
               </div>
             ) : (
-              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
+              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg'>
                 No performers added yet
               </div>
             )}
@@ -887,7 +887,7 @@ export default function UpdateService() {
         <div className='flex flex-col flex-1 gap-4'>
           <p className='font-semibold'>
             Images:
-            <span className='font-normal text-gray-600 ml-2'>
+            <span className='font-normal text-gray-600 dark:text-white ml-2'>
               The first image will be the cover (max 10)
             </span>
           </p>
@@ -898,7 +898,7 @@ export default function UpdateService() {
               accept='image/*'
               multiple
               onChange={handleFileChange}
-              className='p-3 border border-gray-300 rounded w-full'
+              className='p-3 border border-gray-300 dark:border-gray-700 rounded w-full'
             />
             <button
               type='button'

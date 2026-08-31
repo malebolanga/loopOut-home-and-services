@@ -32,20 +32,20 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 // eslint-disable-next-line react/prop-types
 const UserMessage = ({ type, message, onAction, actionText }) => (
   <div className="flex flex-col items-center justify-center min-h-[50vh] px-4 text-center">
-    <div className={`p-6 rounded-full ${type === 'error' ? 'bg-rose-50' : 'bg-gray-50'} mb-6`}>
+    <div className={`p-6 rounded-full ${type === 'error' ? 'bg-rose-50' : 'bg-gray-50 dark:bg-gray-800'} mb-6`}>
       {type === 'error' ? (
         <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center">
           <XMarkIcon className="w-8 h-8 text-rose-600" />
         </div>
       ) : (
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-          <MagnifyingGlassIcon className="w-8 h-8 text-gray-600" />
+        <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+          <MagnifyingGlassIcon className="w-8 h-8 text-gray-600 dark:text-white" />
         </div>
       )}
     </div>
-    <h3 className="text-2xl font-semibold text-gray-800 mb-3">{message}</h3>
+    <h3 className="text-2xl font-semibold text-gray-800 dark:text-white mb-3">{message}</h3>
     {type === 'info' && (
-      <p className="text-gray-500 mb-6 max-w-md">
+      <p className="text-gray-500 dark:text-white mb-6 max-w-md">
         Try adjusting your filters or search radius to find more properties.
       </p>
     )}
@@ -66,7 +66,7 @@ const PropertyTypeButton = ({ type, label, isSelected, onClick }) => (
     onClick={() => onClick(type)}
     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap ${isSelected
       ? 'bg-gray-800 text-white shadow-sm'
-      : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:shadow-sm'
+      : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm'
       }`}
   >
     {label}
@@ -362,7 +362,7 @@ export default function ForRent() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col space-y-4">
             <div className="flex items-center justify-between">
@@ -376,7 +376,7 @@ export default function ForRent() {
               <div className="flex items-center space-x-3">
                 {/* Location Status */}
                 {userLocation ? (
-                  <div className="hidden md:flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full">
+                  <div className="hidden md:flex items-center text-sm text-gray-600 dark:text-white bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-full">
                     <GlobeAmericasIcon className="w-4 h-4 mr-2" />
                     <span>Location active</span>
                   </div>
@@ -392,14 +392,14 @@ export default function ForRent() {
 
 
                   {showPriceFilter && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 py-2 z-50">
                       {priceOptions.map((option, index) => (
                         <button
                           key={index}
                           onClick={() => handlePriceSelect(option.min, option.max)}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${priceRange.min === option.min && priceRange.max === option.max
+                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${priceRange.min === option.min && priceRange.max === option.max
                             ? 'text-[#FF385C] font-medium'
-                            : 'text-gray-700'
+                            : 'text-gray-700 dark:text-white'
                             }`}
                         >
                           {option.label}
@@ -414,7 +414,7 @@ export default function ForRent() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={`flex items-center px-4 py-2 rounded-lg border transition-all duration-200 ${showFilters
                     ? 'bg-gray-800 text-white border-gray-800'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                    : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white border-gray-300 dark:border-gray-700 hover:border-gray-400'
                     }`}
                 >
                   <FunnelIcon className="w-4 h-4 mr-2" />
@@ -441,7 +441,7 @@ export default function ForRent() {
               <div className="relative hidden sm:block" ref={radiusMenuRef}>
                 <button
                   onClick={() => setRadiusMenuOpen(!radiusMenuOpen)}
-                  className="flex items-center text-sm text-gray-700 hover:text-gray-900 px-3 py-2 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
+                  className="flex items-center text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-white px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg hover:border-gray-400 transition-colors"
                 >
                   <span className="mr-2">Within {searchRadius}km</span>
                   {radiusMenuOpen ? (
@@ -452,7 +452,7 @@ export default function ForRent() {
                 </button>
 
                 {radiusMenuOpen && (
-                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 py-2 z-50">
                     {radiusOptions.map((radius) => (
                       <button
                         key={radius}
@@ -460,7 +460,7 @@ export default function ForRent() {
                           setSearchRadius(radius);
                           setRadiusMenuOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${searchRadius === radius ? 'text-[#FF385C] font-medium' : 'text-gray-700'
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${searchRadius === radius ? 'text-[#FF385C] font-medium' : 'text-gray-700 dark:text-white'
                           }`}
                       >
                         Within {radius}km
@@ -481,15 +481,15 @@ export default function ForRent() {
           <section className="mb-12">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <ClockIcon className="w-5 h-5 text-gray-700 mr-2" />
-                <h2 className="text-xl font-semibold text-gray-900">Recently viewed rentals</h2>
+                <ClockIcon className="w-5 h-5 text-gray-700 dark:text-white mr-2" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Recently viewed rentals</h2>
               </div>
               <button
                 onClick={() => {
                   sessionStorage.removeItem("recentlyViewedRentals");
                   setRecentlyViewed([]);
                 }}
-                className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-3 py-1 rounded-lg hover:bg-gray-50"
+                className="text-sm text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white transition-colors px-3 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Clear all
               </button>
@@ -529,11 +529,11 @@ export default function ForRent() {
         {/* All Properties Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               {selectedKind === 'all' ? 'All rentals' : `${propertyTypeLabels[selectedKind]} for rent`}
               {priceRange.min > 0 || priceRange.max < 10000 ? ' • Price filtered' : ''}
             </h2>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 dark:text-white">
               {rentalListings.length} {rentalListings.length === 1 ? 'rental' : 'rentals'} found
             </div>
           </div>
@@ -579,14 +579,14 @@ export default function ForRent() {
                 <div className="flex justify-center py-12">
                   <div className="flex items-center space-x-3">
                     <ArrowPathIcon className="w-5 h-5 animate-spin text-[#FF385C]" />
-                    <span className="text-gray-600">Loading more rentals...</span>
+                    <span className="text-gray-600 dark:text-white">Loading more rentals...</span>
                   </div>
                 </div>
               )}
 
               {!hasMore && rentalListings.length > 0 && (
-                <div className="text-center py-12 border-t border-gray-100">
-                  <p className="text-gray-500">
+                <div className="text-center py-12 border-t border-gray-100 dark:border-gray-800">
+                  <p className="text-gray-500 dark:text-white">
                     You've seen all available rentals! Try different filters or adjust your search radius.
                   </p>
                 </div>
@@ -610,14 +610,14 @@ export default function ForRent() {
       {/* Error Message */}
       {error && (
         <div className="fixed bottom-4 right-4 z-50 max-w-md">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 flex items-start space-x-3">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg p-4 flex items-start space-x-3">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
                 <XMarkIcon className="w-4 h-4 text-rose-600" />
               </div>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-700">{error}</p>
+              <p className="text-sm text-gray-700 dark:text-white">{error}</p>
               <button
                 onClick={() => fetchListings(true)}
                 className="mt-2 text-sm font-medium text-[#FF385C] hover:text-[#E31C5F]"
@@ -627,7 +627,7 @@ export default function ForRent() {
             </div>
             <button
               onClick={() => setError(null)}
-              className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+              className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-white"
             >
               <XMarkIcon className="w-4 h-4" />
             </button>

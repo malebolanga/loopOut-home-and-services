@@ -103,7 +103,7 @@ const SectionCard = ({ title, children, className = "" }) => (
     transition={{ duration: 0.8, ease: "easeOut" }}
     className={`bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white/40 p-8 md:p-14 shadow-[0_30px_100px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_120px_rgba(0,0,0,0.06)] transition-all duration-700 ${className}`}
   >
-    <h2 className="text-4xl font-black text-gray-900 mb-10 tracking-tight leading-tight">{title}</h2>
+    <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-10 tracking-tight leading-tight">{title}</h2>
     {children}
   </motion.div>
 );
@@ -122,7 +122,7 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 resize-none hover:border-gray-100 shadow-sm"
+          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 resize-none hover:border-gray-100 dark:hover:border-gray-800 shadow-sm"
           rows={rows}
         />
       ) : type === "number" ? (
@@ -134,7 +134,7 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+            className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
           />
           <div className="absolute left-7 top-1/2 -translate-y-1/2 text-rose-500 font-black text-xl group-focus-within/num:scale-110 transition-transform">R</div>
         </div>
@@ -144,7 +144,7 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
           value={value}
           onChange={onChange}
           required={required}
-          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm appearance-none"
+          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm appearance-none"
         >
           {placeholder && <option value="">{placeholder}</option>}
           {children}
@@ -159,7 +159,7 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className={`w-full ${Icon ? 'pl-16' : 'px-8'} pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm`}
+            className={`w-full ${Icon ? 'pl-16' : 'px-8'} pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm`}
           />
         </div>
       )}
@@ -177,19 +177,19 @@ const CategoryCard = ({ id, icon: Icon, label, description, selected, onSelect }
       relative group cursor-pointer p-8 rounded-[2.5rem] border-4 transition-all duration-500 overflow-hidden
       ${selected 
         ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
-        : 'border-gray-50 bg-gray-50/50 hover:bg-white hover:border-gray-200 hover:shadow-xl'}
+        : 'border-gray-50 bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'}
     `}
   >
     <div className={`
       w-20 h-20 rounded-[1.7rem] flex items-center justify-center mb-10 transition-all duration-500 transform group-hover:rotate-12
-      ${selected ? 'bg-rose-500 text-white' : 'bg-white text-gray-400 group-hover:text-rose-500 shadow-lg'}
+      ${selected ? 'bg-rose-500 text-white' : 'bg-white dark:bg-gray-900 text-gray-400 group-hover:text-rose-500 shadow-lg'}
     `}>
       <Icon className="w-10 h-10" />
     </div>
     
     <div className="relative z-10">
-      <h3 className={`text-2xl font-black mb-3 tracking-tight ${selected ? 'text-white' : 'text-gray-900'}`}>{label}</h3>
-      <p className={`text-sm font-medium leading-relaxed ${selected ? 'text-gray-400' : 'text-gray-500 group-hover:text-gray-700'}`}>{description}</p>
+      <h3 className={`text-2xl font-black mb-3 tracking-tight ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</h3>
+      <p className={`text-sm font-medium leading-relaxed ${selected ? 'text-gray-400' : 'text-gray-500 dark:text-white group-hover:text-gray-700 dark:group-hover:text-white'}`}>{description}</p>
     </div>
 
     {selected && (
@@ -207,17 +207,17 @@ const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect }) => (
       p-8 rounded-[2.5rem] border-4 transition-all duration-700 cursor-pointer flex flex-col items-center justify-center text-center group relative overflow-hidden
       ${selected 
         ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.05]' 
-        : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white hover:border-gray-200 hover:shadow-xl'}
+        : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'}
     `}
   >
     <div className={`
       w-16 h-16 rounded-[1.2rem] flex items-center justify-center mb-6 transition-all duration-500 transform group-hover:-rotate-12
-      ${selected ? 'bg-rose-500 text-white' : 'bg-gray-50 text-gray-400 group-hover:text-rose-500 shadow-sm'}
+      ${selected ? 'bg-rose-500 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 group-hover:text-rose-500 shadow-sm'}
     `}>
        {emoji ? <span className="text-3xl">{emoji}</span> : <Icon className="w-8 h-8" />}
     </div>
     <span className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${selected ? 'text-rose-400' : 'text-gray-400'}`}>Selection</span>
-    <span className={`text-sm font-black uppercase tracking-[0.1em] ${selected ? 'text-white' : 'text-gray-900'}`}>{label}</span>
+    <span className={`text-sm font-black uppercase tracking-[0.1em] ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
   </div>
 );
 
@@ -226,7 +226,7 @@ const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
     flex items-center gap-4 p-6 border-4 rounded-[2rem] cursor-pointer transition-all duration-500 group
     ${checked 
       ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
-      : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white hover:border-gray-200 hover:shadow-xl'
+      : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'
     }
   `}>
     <input
@@ -238,11 +238,11 @@ const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
     />
     <div className={`
       w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500
-      ${checked ? 'bg-rose-500 text-white' : 'bg-gray-50 text-gray-400 group-hover:text-rose-500'}
+      ${checked ? 'bg-rose-500 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 group-hover:text-rose-500'}
     `}>
        <span className="text-2xl">{emoji}</span>
     </div>
-    <span className={`text-sm font-bold tracking-tight ${checked ? 'text-white' : 'text-gray-900'}`}>{label}</span>
+    <span className={`text-sm font-bold tracking-tight ${checked ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
     {checked && <CheckCircleIcon className="w-5 h-5 text-rose-500 ml-auto" />}
   </label>
 );
@@ -264,7 +264,7 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
         className={`
           relative group p-12 md:p-20 border-4 border-dashed rounded-[3rem] flex flex-col items-center justify-center 
           cursor-pointer transition-all duration-500 min-h-[300px] overflow-hidden
-          ${uploading ? 'border-gray-100 bg-gray-50' : 'border-gray-100 hover:border-rose-500 hover:bg-rose-50/30'}
+          ${uploading ? 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800' : 'border-gray-100 dark:border-gray-800 hover:border-rose-500 hover:bg-rose-50/30'}
         `}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -274,9 +274,9 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
             <div className="w-20 h-20 bg-rose-500 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-rose-200 group-hover:rotate-12 transition-transform duration-500">
               <CameraIcon className="w-10 h-10" />
             </div>
-            <span className="text-gray-900 font-black text-2xl mb-2 tracking-tight">{label || "Captivate with Photos"}</span>
+            <span className="text-gray-900 dark:text-white font-black text-2xl mb-2 tracking-tight">{label || "Captivate with Photos"}</span>
             <span className="text-gray-400 font-bold text-sm tracking-wide">Drag and drop or tap to browse your gallery</span>
-            <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-white rounded-full shadow-sm border border-gray-50">
+            <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-gray-900 rounded-full shadow-sm border border-gray-50">
                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Recommended: 16:9 Aspect Ratio</span>
             </div>
@@ -286,7 +286,7 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
             <div className="w-20 h-20 bg-gray-900 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-gray-200 group-hover:-rotate-12 transition-transform duration-500">
               <VideoCameraIcon className="w-10 h-10" />
             </div>
-            <span className="text-gray-900 font-black text-2xl mb-2 tracking-tight">{label || "Cinematic Showcase"}</span>
+            <span className="text-gray-900 dark:text-white font-black text-2xl mb-2 tracking-tight">{label || "Cinematic Showcase"}</span>
             <span className="text-gray-400 font-bold text-sm tracking-wide">Bring your listing to life with high-quality video</span>
           </>
         )}
@@ -303,9 +303,9 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
         >
           {uploading ? (
              <div className="flex items-center justify-center gap-3">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-.3s]" />
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce [animation-delay:-.5s]" />
+                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce [animation-delay:-.3s]" />
+                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce [animation-delay:-.5s]" />
                 <span>Processing {Math.round(uploadProgress)}%</span>
              </div>
           ) : `Deploy ${filesCount} Masterpiece${filesCount > 1 ? 's' : ''}`}
@@ -366,7 +366,7 @@ const StepProgress = ({ currentStep, category, type }) => {
             <div key={step.id} className="flex flex-col items-center flex-1 relative">
               {/* Connector Line */}
               {index < visibleSteps.length - 1 && (
-                <div className={`absolute top-6 left-1/2 w-full h-[3px] transition-all duration-700 ${isCompleted ? 'bg-rose-500' : 'bg-gray-100'}`} />
+                <div className={`absolute top-6 left-1/2 w-full h-[3px] transition-all duration-700 ${isCompleted ? 'bg-rose-500' : 'bg-gray-100 dark:bg-gray-800'}`} />
               )}
 
               {/* Step Circle */}
@@ -374,14 +374,14 @@ const StepProgress = ({ currentStep, category, type }) => {
                 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10 shadow-lg
                 ${isCompleted ? 'bg-rose-500 text-white' : 
                   isActive ? 'bg-gray-900 text-white scale-125 ring-8 ring-gray-50 shadow-gray-200' : 
-                  'bg-white border-2 border-gray-100 text-gray-300'}
+                  'bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-300'}
               `}>
                 {isCompleted ? <CheckCircleIcon className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
               </div>
 
               {/* Label */}
               <div className="mt-4 text-center">
-                <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${isActive || isCompleted ? 'text-gray-900' : 'text-gray-400'}`}>
+                <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${isActive || isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
                   {step.label}
                 </span>
                 {isActive && (
@@ -1787,7 +1787,7 @@ export default function CreateListing() {
 
   if (loading && !showPromotionPopup) {
     return (
-      <main className="min-h-screen bg-gray-50/50 pb-20 overflow-x-hidden relative">
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-800/50 pb-20 overflow-x-hidden relative">
       {/* Cinematic Mesh Background */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-500/10 rounded-full blur-[150px] animate-pulse" />
@@ -1796,7 +1796,7 @@ export default function CreateListing() {
 
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 dark:text-white">Loading...</p>
         </div>
       </main>
     );
@@ -1804,7 +1804,7 @@ export default function CreateListing() {
 
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-gray-50">
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-gray-800">
       {/* Cinematic Animated Background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose-500/5 rounded-full blur-[120px] animate-pulse" />
@@ -1820,11 +1820,11 @@ export default function CreateListing() {
               <button 
                 onClick={() => navigate(-1)}
                 className={`p-2 rounded-full transition-colors ${
-                  isScrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+                  isScrolled ? 'hover:bg-gray-100 dark:hover:bg-gray-800' : 'hover:bg-white/20'
                 }`}
               >
                 <ArrowLeftIcon className={`w-6 h-6 ${
-                  isScrolled ? 'text-gray-900' : 'text-black'
+                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black'
                 }`} />
               </button>
               
@@ -1836,7 +1836,7 @@ export default function CreateListing() {
                 </span>
                 <span className={`${isScrolled ? 'text-gray-400' : 'text-white/60'}`}>|</span>
                 <span className={`font-medium ${
-                  isScrolled ? 'text-gray-900' : 'text-black'
+                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black'
                 }`}>
                   Create listing
                 </span>
@@ -1860,7 +1860,7 @@ export default function CreateListing() {
              <h3 className="text-xl font-bold flex items-center gap-2 tracking-tight"><Sparkles className="w-6 h-6"/> AI Auto-Fill</h3>
              <p className="text-sm font-medium text-white/90">Describe what you're listing and let AI do the rest.</p>
           </div>
-          <button type="button" onClick={() => setShowAIModal(true)} className="bg-white text-rose-500 px-6 py-3 rounded-2xl font-black hover:bg-gray-100 transition whitespace-nowrap shadow-md">Try AI Assistant</button>
+          <button type="button" onClick={() => setShowAIModal(true)} className="bg-white dark:bg-gray-900 text-rose-500 px-6 py-3 rounded-2xl font-black hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap shadow-md">Try AI Assistant</button>
         </div>
 
         {/* Step Progress */}
@@ -2020,12 +2020,12 @@ export default function CreateListing() {
                                   </div>
                                   <div className="flex-1">
                                      <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Mutual Connection Identified</p>
-                                     <h4 className="text-lg font-black text-gray-900 tracking-tight">{foundHost.username}</h4>
+                                     <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">{foundHost.username}</h4>
                                   </div>
                                   <button 
                                     type="button"
                                     onClick={() => setListingForm(prev => ({ ...prev, host: foundHost.username }))}
-                                    className="px-4 py-2 bg-white rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm hover:shadow-md transition-all active:scale-95"
+                                    className="px-4 py-2 bg-white dark:bg-gray-900 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white shadow-sm hover:shadow-md transition-all active:scale-95"
                                   >
                                     Use as Host
                                   </button>
@@ -2044,12 +2044,12 @@ export default function CreateListing() {
                                          />
                                        ))}
                                        {mutualConnections.length > 5 && (
-                                         <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-black text-gray-500">
+                                         <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-black text-gray-500 dark:text-white">
                                             +{mutualConnections.length - 5}
                                          </div>
                                        )}
                                     </div>
-                                    <p className="text-xs font-bold text-gray-500 mt-2">
+                                    <p className="text-xs font-bold text-gray-500 dark:text-white mt-2">
                                        You and {foundHost.username} share {mutualConnections.length} mutual connections.
                                     </p>
                                  </div>
@@ -2119,9 +2119,9 @@ export default function CreateListing() {
                     />
 
                     {selectedCategory === 'property' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
-                          <label className="block text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
+                          <label className="block text-xs font-black text-gray-500 dark:text-white uppercase tracking-wider mb-3">
                             Property Classification / Kind *
                           </label>
                           <div className="flex flex-wrap gap-2 mb-4">
@@ -2146,7 +2146,7 @@ export default function CreateListing() {
                                 className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
                                   listingForm.kind === k.id
                                     ? 'bg-rose-500 text-white shadow-md shadow-rose-200 scale-105'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                                 }`}
                               >
                                 {k.label}
@@ -2192,13 +2192,13 @@ export default function CreateListing() {
                         </div>
 
                         {/* Individual Units / Rooms / Apartments Builder */}
-                        <div className="pt-6 border-t border-gray-200">
+                        <div className="pt-6 border-t border-gray-200 dark:border-gray-800">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                             <div>
-                              <h3 className="text-base font-black text-gray-900 tracking-tight flex items-center gap-2">
+                              <h3 className="text-base font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
                                 <span>🏢</span> Specific Units, Rooms &amp; Apartments
                               </h3>
-                              <p className="text-xs text-gray-500 font-medium mt-0.5">
+                              <p className="text-xs text-gray-500 dark:text-white font-medium mt-0.5">
                                 Add apartment numbers, room names, suites or motel rooms with individual prices, photos, descriptions &amp; guest capacities.
                               </p>
                             </div>
@@ -2230,7 +2230,7 @@ export default function CreateListing() {
                                     key={idx}
                                     type="button"
                                     onClick={() => setNewRoom(prev => ({ ...prev, name: `${p.prefix}${nextNum}` }))}
-                                    className="px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-gray-200 text-xs font-bold text-gray-700 transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                                    className="px-3 py-1.5 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-700 dark:text-white transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
                                   >
                                     <span>{p.icon}</span>
                                     <span>+ {p.prefix}{nextNum}</span>
@@ -2241,7 +2241,7 @@ export default function CreateListing() {
                           </div>
 
                           {/* Add New Unit Card */}
-                          <div className="p-5 bg-gradient-to-br from-slate-50 to-gray-50 rounded-3xl border-2 border-dashed border-gray-200 space-y-4">
+                          <div className="p-5 bg-gradient-to-br from-slate-50 to-gray-50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-800 space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <div className="sm:col-span-1">
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">
@@ -2252,7 +2252,7 @@ export default function CreateListing() {
                                   value={newRoom.name}
                                   onChange={(e) => setNewRoom(prev => ({ ...prev, name: e.target.value }))}
                                   placeholder="e.g., Apartment 1, Room 101"
-                                  className="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                  className="w-full px-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
                                 />
                               </div>
 
@@ -2267,7 +2267,7 @@ export default function CreateListing() {
                                     value={newRoom.price}
                                     onChange={(e) => setNewRoom(prev => ({ ...prev, price: e.target.value }))}
                                     placeholder={listingForm.regularPrice ? `${listingForm.regularPrice}` : "e.g., 650"}
-                                    className="w-full pl-9 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                    className="w-full pl-9 pr-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
                                   />
                                 </div>
                               </div>
@@ -2285,7 +2285,7 @@ export default function CreateListing() {
                                     value={newRoom.capacity || 1}
                                     onChange={(e) => setNewRoom(prev => ({ ...prev, capacity: Math.max(1, parseInt(e.target.value) || 1) }))}
                                     placeholder="2 Guests"
-                                    className="w-full pl-10 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                                    className="w-full pl-10 pr-4 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl font-bold text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
                                   />
                                 </div>
                               </div>
@@ -2302,7 +2302,7 @@ export default function CreateListing() {
                                   className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                                     (newRoom.capacity || 1) === g
                                       ? 'bg-rose-500 text-white shadow-xs'
-                                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                                      : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800'
                                   }`}
                                 >
                                   {g} {g === 1 ? 'Guest' : 'Guests'}
@@ -2319,7 +2319,7 @@ export default function CreateListing() {
                                 onChange={(e) => setNewRoom(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="e.g., 1 Bedroom with ensuite bathroom, balcony, prepaid electricity and built-in cupboards..."
                                 rows={2}
-                                className="w-full px-5 py-3 bg-white border border-gray-200 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all resize-none shadow-sm"
+                                className="w-full px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all resize-none shadow-sm"
                               />
                             </div>
 
@@ -2327,7 +2327,7 @@ export default function CreateListing() {
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
                               <div className="flex items-center gap-3">
                                 {newRoom.image ? (
-                                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-gray-200 shadow-sm shrink-0">
+                                  <div className="relative w-16 h-16 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-sm shrink-0">
                                     <img src={newRoom.image} alt="Unit preview" className="w-full h-full object-cover" />
                                     <button
                                       type="button"
@@ -2338,7 +2338,7 @@ export default function CreateListing() {
                                     </button>
                                   </div>
                                 ) : (
-                                  <label className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-100 border border-gray-200 rounded-2xl cursor-pointer text-xs font-bold text-gray-700 shadow-sm transition-all active:scale-95">
+                                  <label className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-2xl cursor-pointer text-xs font-bold text-gray-700 dark:text-white shadow-sm transition-all active:scale-95">
                                     <CameraIcon className="w-4 h-4 text-rose-500" />
                                     <span>{roomImageUploading ? "Uploading..." : "Upload Unit Picture"}</span>
                                     <input
@@ -2373,9 +2373,9 @@ export default function CreateListing() {
                                 {listingForm.roomTypes.map((room, idx) => (
                                   <div
                                     key={idx}
-                                    className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm flex items-start gap-3.5 group hover:border-gray-300 transition-all"
+                                    className="p-4 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex items-start gap-3.5 group hover:border-gray-300 dark:hover:border-gray-700 transition-all"
                                   >
-                                    <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center border border-gray-100">
+                                    <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 flex items-center justify-center border border-gray-100 dark:border-gray-800">
                                       {room.image ? (
                                         <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
                                       ) : (
@@ -2384,7 +2384,7 @@ export default function CreateListing() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center justify-between gap-1">
-                                        <h4 className="font-black text-gray-900 text-sm truncate">{room.name}</h4>
+                                        <h4 className="font-black text-gray-900 dark:text-white text-sm truncate">{room.name}</h4>
                                         <button
                                           type="button"
                                           onClick={() => handleRemoveRoom(idx)}
@@ -2398,13 +2398,13 @@ export default function CreateListing() {
                                         <p className="text-xs font-black text-rose-600">
                                           R{room.price?.toLocaleString()}
                                         </p>
-                                        <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="text-[10px] font-black text-slate-500 dark:text-white bg-slate-100 dark:bg-gray-800 px-2 py-0.5 rounded-full flex items-center gap-1">
                                           <span>👥</span>
                                           <span>{room.capacity || 1} {(room.capacity || 1) === 1 ? 'Guest' : 'Guests'}</span>
                                         </span>
                                       </div>
                                       {room.description && (
-                                        <p className="text-[11px] text-gray-500 font-medium line-clamp-2 mt-1">
+                                        <p className="text-[11px] text-gray-500 dark:text-white font-medium line-clamp-2 mt-1">
                                           {room.description}
                                         </p>
                                       )}
@@ -2420,8 +2420,8 @@ export default function CreateListing() {
 
                     {/* Sneaker Cleaner Specific Fields */}
                     {selectedCategory === 'online' && selectedType === 'sneaker' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Sneaker Cleaning Details</h3>
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Sneaker Cleaning Details</h3>
                         
                         <FormInput
                           label="Types of Sneakers You Clean"
@@ -2457,8 +2457,8 @@ export default function CreateListing() {
 
                     {/* Animal Care Specific Fields */}
                     {selectedCategory === 'online' && selectedType === 'animals' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Animal Care Details</h3>
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Animal Care Details</h3>
                         
                         <FormInput
                           label="Types of Animals You Care For"
@@ -2501,8 +2501,8 @@ export default function CreateListing() {
 
                     {/* Book Specific Fields */}
                     {selectedCategory === 'selling' && selectedType === 'books' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900">Book Details</h3>
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Book Details</h3>
                         
                         <FormInput
                           label="Author"
@@ -2546,9 +2546,9 @@ export default function CreateListing() {
                     )}
 
                     {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
-                          <label className="block text-base font-medium text-gray-900 mb-3">
+                          <label className="block text-base font-medium text-gray-900 dark:text-white mb-3">
                             Car Wash Packages <span className="text-[#FF5A5F]">*</span>
                           </label>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2561,8 +2561,8 @@ export default function CreateListing() {
                               <label key={pkg.id} className={`
                                 p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
                                 ${listingForm.carWashPackages?.includes(pkg.id) 
-                                  ? 'border-black bg-gray-50' 
-                                  : 'border-gray-200 hover:border-gray-400'}
+                                  ? 'border-black bg-gray-50 dark:bg-gray-800' 
+                                  : 'border-gray-200 dark:border-gray-800 hover:border-gray-400'}
                               `}>
                                 <input
                                   type="checkbox"
@@ -2588,14 +2588,14 @@ export default function CreateListing() {
                                     w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5
                                     ${listingForm.carWashPackages?.includes(pkg.id) 
                                       ? 'bg-black border-black' 
-                                      : 'bg-white border-gray-300'}
+                                      : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700'}
                                   `}>
                                     {listingForm.carWashPackages?.includes(pkg.id) && 
                                       <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
                                   </div>
                                   <div>
-                                    <p className="font-semibold text-gray-900">{pkg.label}</p>
-                                    <p className="text-sm text-gray-500">{pkg.desc}</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white">{pkg.label}</p>
+                                    <p className="text-sm text-gray-500 dark:text-white">{pkg.desc}</p>
                                   </div>
                                 </div>
                               </label>
@@ -2625,10 +2625,10 @@ export default function CreateListing() {
                     )}
 
                     {selectedCategory === 'experiences' && selectedType === 'moving' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Moving Rates Configuration</h3>
-                          <p className="text-sm text-gray-500 mb-4">Set your rates for boxes, kilos, and transport vehicles. These are used to calculate dynamic totals for clients.</p>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Moving Rates Configuration</h3>
+                          <p className="text-sm text-gray-500 dark:text-white mb-4">Set your rates for boxes, kilos, and transport vehicles. These are used to calculate dynamic totals for clients.</p>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2699,10 +2699,10 @@ export default function CreateListing() {
                     )}
 
                     {selectedCategory === 'experiences' && selectedType === 'storage' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200">
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Storage Configuration</h3>
-                          <p className="text-sm text-gray-500 mb-4">Set up the details of the storage space and pricing options.</p>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Storage Configuration</h3>
+                          <p className="text-sm text-gray-500 dark:text-white mb-4">Set up the details of the storage space and pricing options.</p>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2761,20 +2761,20 @@ export default function CreateListing() {
 
                         {/* PDF Policy Document Upload */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-800 mb-1">
+                          <label className="block text-sm font-semibold text-gray-800 dark:text-white mb-1">
                             📄 Policy Document (PDF)
                           </label>
-                          <p className="text-xs text-gray-500 mb-3">
+                          <p className="text-xs text-gray-500 dark:text-white mb-3">
                             Upload a PDF that customers must read before booking (rental agreement, terms sheet, etc.)
                           </p>
 
                           {!listingForm.storagePolicyDocUrl ? (
-                            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-rose-50 hover:border-rose-400 transition-all group">
+                            <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-rose-50 hover:border-rose-400 transition-all group">
                               <div className="flex flex-col items-center gap-1">
                                 <svg className="w-8 h-8 text-gray-400 group-hover:text-rose-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 16v-8m0 0-3 3m3-3 3 3M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1" />
                                 </svg>
-                                <span className="text-sm text-gray-500 group-hover:text-rose-500">Click to upload PDF</span>
+                                <span className="text-sm text-gray-500 dark:text-white group-hover:text-rose-500">Click to upload PDF</span>
                                 <span className="text-xs text-gray-400">Max 10 MB</span>
                               </div>
                               <input
@@ -2822,7 +2822,7 @@ export default function CreateListing() {
                     )}
 
                     {selectedCategory === 'events' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <FormInput
                           label="Event Date"
                           type="date"
@@ -2853,7 +2853,7 @@ export default function CreateListing() {
               {/* Guest house / Hotel / Resort / Self-Catering → Check-in & Check-out */}
               {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'hotel' || selectedType === 'resort' || selectedType === 'land') && (
                 <SectionCard title="Check-in & Check-out">
-                  <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
+                  <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div className="group/form">
                       <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">Check-in Time</label>
@@ -2863,7 +2863,7 @@ export default function CreateListing() {
                           type="time"
                           value={listingForm.checkInTime}
                           onChange={(e) => setListingForm({ ...listingForm, checkInTime: e.target.value })}
-                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
                         />
                       </div>
                       <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Earliest time guests may check in</p>
@@ -2876,7 +2876,7 @@ export default function CreateListing() {
                           type="time"
                           value={listingForm.checkOutTime}
                           onChange={(e) => setListingForm({ ...listingForm, checkOutTime: e.target.value })}
-                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-black text-lg shadow-sm"
+                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
                         />
                       </div>
                       <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Latest time guests must check out</p>
@@ -2887,23 +2887,23 @@ export default function CreateListing() {
               {/* Services / Experiences / Events → full weekly operating schedule */}
               {selectedCategory !== 'property' && (
               <SectionCard title="Operating Schedule">
-                <p className="text-gray-600 mb-10 leading-relaxed font-medium">Define when you are available for bookings. This helps customers know when they can reach you or visit your location.</p>
+                <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Define when you are available for bookings. This helps customers know when they can reach you or visit your location.</p>
                 <div className="space-y-4">
                   {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
                     <motion.div 
                       key={day}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`p-6 rounded-[2.5rem] border-4 transition-all duration-700 ${listingForm.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm hover:shadow-md'}`}
+                      className={`p-6 rounded-[2.5rem] border-4 transition-all duration-700 ${listingForm.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-50 shadow-sm hover:shadow-md'}`}
                     >
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-5 min-w-[140px]">
                           <div className={`w-4 h-4 rounded-full ${listingForm.operatingHours[day].closed ? 'bg-gray-300' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse'}`} />
-                          <h3 className="text-xl font-black text-gray-900 uppercase tracking-tight">{day}</h3>
+                          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{day}</h3>
                         </div>
                         
                         {!listingForm.operatingHours[day].closed ? (
-                          <div className="flex items-center gap-4 flex-1 justify-center bg-gray-50/50 p-2 rounded-[1.5rem]">
+                          <div className="flex items-center gap-4 flex-1 justify-center bg-gray-50 dark:bg-gray-800/50 p-2 rounded-[1.5rem]">
                             <div className="flex flex-col items-center">
                               <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Open</span>
                               <input 
@@ -2916,7 +2916,7 @@ export default function CreateListing() {
                                     [day]: { ...listingForm.operatingHours[day], open: e.target.value }
                                   }
                                 })}
-                                className="px-5 py-3 bg-white rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                                className="px-5 py-3 bg-white dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
                               />
                             </div>
                             <div className="h-8 w-[2px] bg-gray-200 mt-4" />
@@ -2932,12 +2932,12 @@ export default function CreateListing() {
                                     [day]: { ...listingForm.operatingHours[day], close: e.target.value }
                                   }
                                 })}
-                                className="px-5 py-3 bg-white rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                                className="px-5 py-3 bg-white dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
                               />
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1 text-center py-6 bg-gray-100/50 rounded-[1.5rem] border-2 border-dashed border-gray-200">
+                          <div className="flex-1 text-center py-6 bg-gray-100 dark:bg-gray-800/50 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-gray-800">
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Unavailable for Business</span>
                           </div>
                         )}
@@ -2951,7 +2951,7 @@ export default function CreateListing() {
                               [day]: { ...listingForm.operatingHours[day], closed: !listingForm.operatingHours[day].closed }
                             }
                           })}
-                          className={`min-w-[120px] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${listingForm.operatingHours[day].closed ? 'bg-rose-500 text-white shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95' : 'bg-gray-100 text-gray-400 hover:bg-gray-900 hover:text-white shadow-sm'}`}
+                          className={`min-w-[120px] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${listingForm.operatingHours[day].closed ? 'bg-rose-500 text-white shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white shadow-sm'}`}
                         >
                           {listingForm.operatingHours[day].closed ? 'Activate' : 'Deactivate'}
                         </button>
@@ -2968,7 +2968,7 @@ export default function CreateListing() {
             {currentStep === 5 && (
               <div className="space-y-8">
                 <SectionCard title="What amenities do you offer?">
-                  <p className="text-gray-600 mb-6">Select all that apply</p>
+                  <p className="text-gray-600 dark:text-white mb-6">Select all that apply</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {getAmenitiesByCategory().map((amenity) => (
                       <AmenityCard
@@ -2987,7 +2987,7 @@ export default function CreateListing() {
             {currentStep === 6 && (
               <div className="space-y-8">
                 <SectionCard title="Services & Pricing">
-                  <p className="text-gray-600 mb-6">List the specific services you offer and their prices.</p>
+                  <p className="text-gray-600 dark:text-white mb-6">List the specific services you offer and their prices.</p>
                   
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -3016,22 +3016,22 @@ export default function CreateListing() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700">Description</label>
+                        <label className="text-sm font-bold text-gray-700 dark:text-white">Description</label>
                         <textarea
                           placeholder="What is included in this service?"
                           value={listingForm.newServiceDescription || ""}
                           onChange={(e) => setListingForm({...listingForm, newServiceDescription: e.target.value})}
-                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-medium shadow-sm outline-none resize-none"
+                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-medium shadow-sm outline-none resize-none"
                           rows="3"
                         />
                       </div>
                       <div className="flex flex-col gap-2 justify-center">
-                        <label className="text-sm font-bold text-gray-700">Service Photo</label>
+                        <label className="text-sm font-bold text-gray-700 dark:text-white">Service Photo</label>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleServiceImageChange}
-                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white transition-all duration-700 hover:border-gray-100 font-bold shadow-sm outline-none"
+                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm outline-none"
                         />
                         {serviceUploading && <span className="text-xs text-rose-500 font-black animate-pulse mt-1">Uploading...</span>}
                         {listingForm.newServiceImage && (
@@ -3070,25 +3070,25 @@ export default function CreateListing() {
 
                     {listingForm.serviceList.length > 0 && (
                       <div className="mt-8 space-y-4">
-                        <h3 className="font-bold text-gray-900 uppercase tracking-widest text-[10px]">Your Service List</h3>
+                        <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-widest text-[10px]">Your Service List</h3>
                         <div className="space-y-3">
                           {listingForm.serviceList.map((service, index) => (
-                            <div key={index} className="flex items-center justify-between p-6 bg-gray-50 rounded-[2rem] border-2 border-transparent hover:border-gray-100 transition-all">
+                            <div key={index} className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 rounded-[2rem] border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-800 transition-all">
                               <div className="flex items-center gap-4">
                                 {service.image && (
-                                  <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-2xl border bg-white shadow-sm" />
+                                  <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-2xl border bg-white dark:bg-gray-900 shadow-sm" />
                                 )}
                                 <div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-bold text-gray-900">{service.name}</p>
+                                    <p className="font-bold text-gray-900 dark:text-white">{service.name}</p>
                                     {service.type && (
-                                      <span className="px-2.5 py-1 bg-gray-200 text-gray-700 text-[10px] font-black uppercase tracking-wider rounded-lg">
+                                      <span className="px-2.5 py-1 bg-gray-200 text-gray-700 dark:text-white text-[10px] font-black uppercase tracking-wider rounded-lg">
                                         {service.type}
                                       </span>
                                     )}
                                   </div>
                                   {service.description && (
-                                    <p className="text-xs text-gray-500 mt-1 max-w-xs md:max-w-md">{service.description}</p>
+                                    <p className="text-xs text-gray-500 dark:text-white mt-1 max-w-xs md:max-w-md">{service.description}</p>
                                   )}
                                   <p className="text-rose-500 font-black mt-1">R{service.price}</p>
                                 </div>
@@ -3117,7 +3117,7 @@ export default function CreateListing() {
             {currentStep === 7 && (
               <div className="space-y-8">
                 <SectionCard title="Our Team">
-                  <p className="text-gray-600 mb-6">Introduce the people who will be performing the services.</p>
+                  <p className="text-gray-600 dark:text-white mb-6">Introduce the people who will be performing the services.</p>
                   
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -3137,9 +3137,9 @@ export default function CreateListing() {
                       />
                     </div>
                     
-                    <div className="flex flex-col gap-6 p-10 bg-gray-50/50 border-4 border-dashed border-gray-100 rounded-[3rem] transition-all hover:border-gray-200">
+                    <div className="flex flex-col gap-6 p-10 bg-gray-50 dark:bg-gray-800/50 border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem] transition-all hover:border-gray-200 dark:hover:border-gray-800">
                       <div className="flex flex-col md:flex-row items-center gap-8">
-                        <div className="w-32 h-32 rounded-[2.5rem] bg-white shadow-inner flex items-center justify-center overflow-hidden border-2 border-gray-50 flex-shrink-0 relative group">
+                        <div className="w-32 h-32 rounded-[2.5rem] bg-white dark:bg-gray-900 shadow-inner flex items-center justify-center overflow-hidden border-2 border-gray-50 flex-shrink-0 relative group">
                           {performerUploading ? (
                             <div className="flex flex-col items-center gap-2">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
@@ -3153,10 +3153,10 @@ export default function CreateListing() {
                         </div>
                         
                         <div className="flex-1 space-y-4 text-center md:text-left">
-                          <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.1em]">Performer Photo</h4>
+                          <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.1em]">Performer Photo</h4>
                           <p className="text-xs text-gray-400 font-medium leading-relaxed">Add a face to the name. Choose a clear, professional photo from your device.</p>
                           
-                          <label className="inline-flex items-center gap-3 px-8 py-4 bg-white border-2 border-gray-100 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.15em] text-gray-900 cursor-pointer hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all active:scale-95 shadow-sm">
+                          <label className="inline-flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.15em] text-gray-900 dark:text-white cursor-pointer hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all active:scale-95 shadow-sm">
                             <PlusIcon className="w-4 h-4" />
                             <span>Select Photo</span>
                             <input 
@@ -3197,12 +3197,12 @@ export default function CreateListing() {
                     {listingForm.performers.length > 0 && (
                       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {listingForm.performers.map((performer, index) => (
-                          <div key={index} className="relative p-6 bg-white border-2 border-gray-100 rounded-[2.5rem] flex items-center gap-6 group hover:border-gray-900 transition-all">
+                          <div key={index} className="relative p-6 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-[2.5rem] flex items-center gap-6 group hover:border-gray-900 transition-all">
                             <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-50">
                               <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1">
-                              <p className="font-black text-gray-900">{performer.name}</p>
+                              <p className="font-black text-gray-900 dark:text-white">{performer.name}</p>
                               <p className="text-sm font-bold text-gray-400">{performer.experience}</p>
                             </div>
                             <button
@@ -3228,7 +3228,7 @@ export default function CreateListing() {
             {currentStep === 8 && (
               <div className="space-y-8">
                 <SectionCard title="Add some photos of your place">
-                  <p className="text-gray-600 mb-6">You'll need at least 1 photo to get started (upload up to 20 photos).</p>
+                  <p className="text-gray-600 dark:text-white mb-6">You'll need at least 1 photo to get started (upload up to 20 photos).</p>
                   
                   <MediaUploadArea
                     type="image"
@@ -3248,7 +3248,7 @@ export default function CreateListing() {
 
                   {listingForm.imageUrls.length > 0 && (
                     <div className="mt-8">
-                      <h3 className="font-semibold text-gray-900 mb-4">Uploaded photos</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Uploaded photos</h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {listingForm.imageUrls.map((url, index) => (
                           <div key={url} className="relative aspect-square rounded-xl overflow-hidden group">
@@ -3260,9 +3260,9 @@ export default function CreateListing() {
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(index)}
-                              className="absolute top-2 right-2 bg-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-white dark:bg-gray-900 p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              <XMarkIcon className="w-4 h-4 text-gray-900" />
+                              <XMarkIcon className="w-4 h-4 text-gray-900 dark:text-white" />
                             </button>
                           </div>
                         ))}
@@ -3270,9 +3270,9 @@ export default function CreateListing() {
                     </div>
                   )}
 
-                  <div className="mt-8 pt-8 border-t border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-2">Add a video (optional)</h3>
-                    <p className="text-gray-600 text-sm mb-4">Show guests what your place looks like</p>
+                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800">
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Add a video (optional)</h3>
+                    <p className="text-gray-600 dark:text-white text-sm mb-4">Show guests what your place looks like</p>
                     <MediaUploadArea
                       type="video"
                       onChange={(e) => setVideoFile(e.target.files[0])}
@@ -3291,7 +3291,7 @@ export default function CreateListing() {
                 </SectionCard>
 
                 <SectionCard title="Pricing">
-                  <p className="text-gray-600 mb-10 leading-relaxed font-medium">Set the price for your listing so customers or guests know what to expect.</p>
+                  <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Set the price for your listing so customers or guests know what to expect.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <FormInput
                       label={getPricingLabel()}
@@ -3303,7 +3303,7 @@ export default function CreateListing() {
                       required
                     />
                     <div className="space-y-4">
-                      <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 transition-all">
+                      <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 dark:hover:border-gray-800 transition-all">
                         <input
                           type="checkbox"
                           id="offer"
@@ -3311,7 +3311,7 @@ export default function CreateListing() {
                           onChange={handleFormChange}
                           className="w-5 h-5 accent-rose-500 rounded"
                         />
-                        <span className="font-black text-gray-900 text-sm">Offer a discounted / adjusted price</span>
+                        <span className="font-black text-gray-900 dark:text-white text-sm">Offer a discounted / adjusted price</span>
                       </label>
                       {listingForm.offer && (
                         <FormInput
@@ -3334,51 +3334,51 @@ export default function CreateListing() {
               <div className="space-y-8">
                 <SectionCard title="Review your listing">
                   <div className="space-y-6">
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Summary</h3>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Summary</h3>
                       <div className="space-y-3 text-sm">
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Category</span>
-                          <span className="font-medium text-gray-900 capitalize">{selectedCategory}</span>
+                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                          <span className="text-gray-600 dark:text-white">Category</span>
+                          <span className="font-medium text-gray-900 dark:text-white capitalize">{selectedCategory}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Type</span>
-                          <span className="font-medium text-gray-900 capitalize">{selectedType}</span>
+                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                          <span className="text-gray-600 dark:text-white">Type</span>
+                          <span className="font-medium text-gray-900 dark:text-white capitalize">{selectedType}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Title</span>
-                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.name}</span>
+                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                          <span className="text-gray-600 dark:text-white">Title</span>
+                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.name}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Host/Organizer</span>
-                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.host}</span>
+                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                          <span className="text-gray-600 dark:text-white">Host/Organizer</span>
+                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.host}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200">
-                          <span className="text-gray-600">Location</span>
-                          <span className="font-medium text-gray-900 text-right max-w-xs">{listingForm.address}</span>
+                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
+                          <span className="text-gray-600 dark:text-white">Location</span>
+                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.address}</span>
                         </div>
                         <div className="flex justify-between py-2">
-                          <span className="text-gray-600">Price</span>
-                          <span className="font-medium text-gray-900">R{listingForm.regularPrice}</span>
+                          <span className="text-gray-600 dark:text-white">Price</span>
+                          <span className="font-medium text-gray-900 dark:text-white">R{listingForm.regularPrice}</span>
                         </div>
                         {selectedCategory === 'property' && ['over', 'sale', 'resort', 'land'].includes(selectedType) && (
                           <>
-                            <div className="flex justify-between py-2 border-t border-gray-100 mt-2">
-                              <span className="text-gray-600">Check-in Time</span>
-                              <span className="font-medium text-gray-900">{listingForm.checkInTime}</span>
+                            <div className="flex justify-between py-2 border-t border-gray-100 dark:border-gray-800 mt-2">
+                              <span className="text-gray-600 dark:text-white">Check-in Time</span>
+                              <span className="font-medium text-gray-900 dark:text-white">{listingForm.checkInTime}</span>
                             </div>
                             <div className="flex justify-between py-2">
-                              <span className="text-gray-600">Check-out Time</span>
-                              <span className="font-medium text-gray-900">{listingForm.checkOutTime}</span>
+                              <span className="text-gray-600 dark:text-white">Check-out Time</span>
+                              <span className="font-medium text-gray-900 dark:text-white">{listingForm.checkOutTime}</span>
                             </div>
                           </>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Photos</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Photos</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-white">
                         <CameraIcon className="w-5 h-5" />
                         <span>{listingForm.imageUrls.length} photos uploaded</span>
                       </div>
@@ -3386,90 +3386,90 @@ export default function CreateListing() {
 
                     {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
                       <>
-                        <div className="bg-gray-50 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Provider Details</h3>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Provider Details</h3>
                           <div className="space-y-2 text-sm">
-                            <div className="flex justify-between py-1 border-b border-gray-100">
-                              <span className="text-gray-600">Type:</span>
-                              <span className="font-medium text-gray-900 capitalize">{listingForm.providerType || "Not selected"}</span>
+                            <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
+                              <span className="text-gray-600 dark:text-white">Type:</span>
+                              <span className="font-medium text-gray-900 dark:text-white capitalize">{listingForm.providerType || "Not selected"}</span>
                             </div>
                             {listingForm.providerType === 'individual' && (
                               <div className="flex justify-between py-1">
-                                <span className="text-gray-600">Citizenship:</span>
-                                <span className="font-medium text-gray-900">{listingForm.citizenship}</span>
+                                <span className="text-gray-600 dark:text-white">Citizenship:</span>
+                                <span className="font-medium text-gray-900 dark:text-white">{listingForm.citizenship}</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="bg-gray-50 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Services</h3>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Services</h3>
                           <div className="space-y-3 text-sm">
                             {listingForm.serviceList.map((s, i) => (
-                              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 gap-4">
+                              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0 gap-4">
                                 <div className="flex items-center gap-3">
                                   {s.image && (
-                                    <img src={s.image} alt={s.name} className="w-10 h-10 object-cover rounded-lg border bg-white" />
+                                    <img src={s.image} alt={s.name} className="w-10 h-10 object-cover rounded-lg border bg-white dark:bg-gray-900" />
                                   )}
                                   <div>
-                                    <span className="font-bold text-gray-900 block">{s.name}</span>
+                                    <span className="font-bold text-gray-900 dark:text-white block">{s.name}</span>
                                     {s.description && (
-                                      <span className="text-xs text-gray-500 block max-w-xs">{s.description}</span>
+                                      <span className="text-xs text-gray-500 dark:text-white block max-w-xs">{s.description}</span>
                                     )}
                                   </div>
                                 </div>
                                 <span className="font-black text-rose-500">R{s.price}</span>
                               </div>
                             ))}
-                            {listingForm.serviceList.length === 0 && <p className="text-gray-500">No services added</p>}
+                            {listingForm.serviceList.length === 0 && <p className="text-gray-500 dark:text-white">No services added</p>}
                           </div>
                         </div>
 
-                        <div className="bg-gray-50 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 mb-4">Team Members</h3>
+                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Team Members</h3>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {listingForm.performers.map((p, i) => (
-                              <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100">
+                              <div key={i} className="flex items-center gap-3 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
                                 <img src={p.image} className="w-10 h-10 rounded-lg object-cover" />
                                 <div>
-                                  <p className="font-bold text-gray-900 text-xs">{p.name}</p>
-                                  <p className="text-[10px] text-gray-500">{p.experience}</p>
+                                  <p className="font-bold text-gray-900 dark:text-white text-xs">{p.name}</p>
+                                  <p className="text-[10px] text-gray-500 dark:text-white">{p.experience}</p>
                                 </div>
                               </div>
                             ))}
-                            {listingForm.performers.length === 0 && <p className="text-gray-500 text-sm">No team members added</p>}
+                            {listingForm.performers.length === 0 && <p className="text-gray-500 dark:text-white text-sm">No team members added</p>}
                           </div>
                         </div>
                       </>
                     )}
 
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 mb-4">Amenities</h3>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Amenities</h3>
                       <div className="flex flex-wrap gap-2">
                         {getAmenitiesByCategory()
                           .filter(amenity => listingForm[amenity.id])
                           .map(amenity => (
-                            <span key={amenity.id} className="px-3 py-1 bg-white rounded-full text-sm border border-gray-200">
+                            <span key={amenity.id} className="px-3 py-1 bg-white dark:bg-gray-900 rounded-full text-sm border border-gray-200 dark:border-gray-800">
                               {amenity.label}
                             </span>
                           ))}
                         {getAmenitiesByCategory().filter(amenity => listingForm[amenity.id]).length === 0 && (
-                          <p className="text-gray-500 text-sm">No amenities selected</p>
+                          <p className="text-gray-500 dark:text-white text-sm">No amenities selected</p>
                         )}
                       </div>
                     </div>
 
                     {selectedCategory !== 'selling' && selectedCategory !== 'events' && selectedCategory !== 'property' && (
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Operating Schedule</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Operating Schedule</h3>
                         <div className="grid grid-cols-1 gap-2 text-sm">
                           {Object.entries(listingForm.operatingHours).map(([day, hours]) => (
-                            <div key={day} className="flex justify-between py-1 border-b border-gray-100 last:border-0">
-                              <span className="text-gray-600 capitalize font-bold">{day}</span>
+                            <div key={day} className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                              <span className="text-gray-600 dark:text-white capitalize font-bold">{day}</span>
                               {hours.closed ? (
                                 <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded">Closed</span>
                               ) : (
-                                <span className="font-black text-gray-900">{hours.open} - {hours.close}</span>
+                                <span className="font-black text-gray-900 dark:text-white">{hours.open} - {hours.close}</span>
                               )}
                             </div>
                           ))}
@@ -3479,20 +3479,20 @@ export default function CreateListing() {
 
                     {/* Show specific details based on type */}
                     {selectedCategory === 'online' && selectedType === 'sneaker' && (
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Sneaker Cleaning Details</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Sneaker Cleaning Details</h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Shoe Types:</span>
-                            <span className="font-medium text-gray-900">{listingForm.shoeTypes}</span>
+                            <span className="text-gray-600 dark:text-white">Shoe Types:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.shoeTypes}</span>
                           </div>
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Cleaning Method:</span>
-                            <span className="font-medium text-gray-900">{listingForm.cleaningMethod || "Not specified"}</span>
+                            <span className="text-gray-600 dark:text-white">Cleaning Method:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.cleaningMethod || "Not specified"}</span>
                           </div>
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Turnaround Time:</span>
-                            <span className="font-medium text-gray-900">{listingForm.turnaroundTime}</span>
+                            <span className="text-gray-600 dark:text-white">Turnaround Time:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.turnaroundTime}</span>
                           </div>
                         </div>
                       </div>
@@ -3501,24 +3501,24 @@ export default function CreateListing() {
 
 
                     {selectedCategory === 'online' && selectedType === 'animals' && (
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 mb-4">Animal Care Details</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Animal Care Details</h3>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Animal Types:</span>
-                            <span className="font-medium text-gray-900">{listingForm.animalTypes}</span>
+                            <span className="text-gray-600 dark:text-white">Animal Types:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.animalTypes}</span>
                           </div>
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Services Offered:</span>
-                            <span className="font-medium text-gray-900">{listingForm.servicesOffered}</span>
+                            <span className="text-gray-600 dark:text-white">Services Offered:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.servicesOffered}</span>
                           </div>
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Experience:</span>
-                            <span className="font-medium text-gray-900">{listingForm.experience}</span>
+                            <span className="text-gray-600 dark:text-white">Experience:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.experience}</span>
                           </div>
                           <div className="flex justify-between py-1">
-                            <span className="text-gray-600">Certifications:</span>
-                            <span className="font-medium text-gray-900">{listingForm.certifications || "None listed"}</span>
+                            <span className="text-gray-600 dark:text-white">Certifications:</span>
+                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.certifications || "None listed"}</span>
                           </div>
                         </div>
                       </div>
@@ -3549,7 +3549,7 @@ export default function CreateListing() {
             )}
 
             {/* Navigation Buttons - Airbnb Style */}
-            <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
+            <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
               <button
                 type="button"
                 onClick={() => {
@@ -3562,7 +3562,7 @@ export default function CreateListing() {
                 }}
                 className={`
                   px-10 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 text-[10px]
-                  ${currentStep > 1 ? 'text-gray-900 hover:bg-gray-100' : 'invisible'}
+                  ${currentStep > 1 ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800' : 'invisible'}
                 `}
               >
                 Go Back
@@ -3602,8 +3602,8 @@ export default function CreateListing() {
 
         {/* Help Text */}
         <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500">
-            Having trouble? <button type="button" onClick={() => navigate('/help-center')} className="underline font-medium text-gray-900 hover:text-rose-600 transition-colors">Get help</button>
+          <p className="text-sm text-gray-500 dark:text-white">
+            Having trouble? <button type="button" onClick={() => navigate('/help-center')} className="underline font-medium text-gray-900 dark:text-white hover:text-rose-600 transition-colors">Get help</button>
           </p>
         </div>
       </main>
@@ -3614,9 +3614,9 @@ export default function CreateListing() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-[3rem] p-12 max-w-md w-full shadow-2xl relative overflow-hidden"
+            className="bg-white dark:bg-gray-900 rounded-[3rem] p-12 max-w-md w-full shadow-2xl relative overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-2 bg-gray-100">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gray-100 dark:bg-gray-800">
                <motion.div 
                  className="h-full bg-rose-500"
                  initial={{ width: 0 }}
@@ -3640,7 +3640,7 @@ export default function CreateListing() {
                   <Sparkles className="w-10 h-10" />
                 </motion.div>
               </div>
-              <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Deploying...</h3>
+              <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Deploying...</h3>
               <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mb-6">Masterpiece {Math.round(uploadProgress)}% Complete</p>
               
               <div className="flex items-center justify-center gap-2">
@@ -3664,17 +3664,17 @@ export default function CreateListing() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 30 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-[3.5rem] max-w-3xl w-full overflow-hidden shadow-2xl my-auto border border-gray-100"
+            className="bg-white dark:bg-gray-900 rounded-[3.5rem] max-w-3xl w-full overflow-hidden shadow-2xl my-auto border border-gray-100 dark:border-gray-800"
           >
             {promotionSteps === 0 && (
               <div className="p-12 md:p-16 text-center bg-gradient-to-b from-rose-50/50 to-white">
                 <div className="w-24 h-24 bg-rose-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-rose-200 rotate-12 transition-transform hover:rotate-0">
                   <Sparkles className="w-12 h-12" />
                 </div>
-                <h3 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight leading-tight">
+                <h3 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight leading-tight">
                    Your listing is <br /> <span className="text-rose-500">Live & Legends</span>! 🎉
                 </h3>
-                <p className="text-gray-500 font-medium mb-12 text-lg max-w-md mx-auto leading-relaxed">
+                <p className="text-gray-500 dark:text-white font-medium mb-12 text-lg max-w-md mx-auto leading-relaxed">
                   Now, give it the spotlight it deserves. Boost your visibility to reach thousands more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-5 justify-center">
@@ -3692,7 +3692,7 @@ export default function CreateListing() {
                                  `/event/${newListingId}`;
                       navigate(path);
                     }}
-                    className="px-10 py-5 bg-white border-2 border-gray-100 text-gray-400 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 hover:text-gray-900 transition-all active:scale-95"
+                    className="px-10 py-5 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-400 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95"
                   >
                     Discover it
                   </button>
@@ -3702,8 +3702,8 @@ export default function CreateListing() {
 
             {promotionSteps === 1 && (
               <div className="p-10 md:p-14">
-                <h3 className="text-3xl font-black text-gray-900 mb-2 tracking-tight">Choose your <span className="text-rose-500">Boost</span></h3>
-                <p className="text-gray-500 font-medium mb-12">Select a masterpiece package that fits your ambition</p>
+                <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Choose your <span className="text-rose-500">Boost</span></h3>
+                <p className="text-gray-500 dark:text-white font-medium mb-12">Select a masterpiece package that fits your ambition</p>
                 
                 <div className="grid md:grid-cols-2 gap-6 mb-12">
                   {[
@@ -3717,23 +3717,23 @@ export default function CreateListing() {
                         p-8 border-4 rounded-[2.5rem] cursor-pointer transition-all duration-500 relative overflow-hidden group
                         ${promotionPackage === pkg.id 
                           ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.03]' 
-                          : 'border-gray-50 hover:border-gray-200 bg-gray-50/50 hover:bg-white'}
+                          : 'border-gray-50 hover:border-gray-200 dark:hover:border-gray-800 bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-900'}
                       `}
                     >
                       <div className="flex justify-between items-start mb-6">
                         <div>
-                          <h4 className={`font-black text-2xl capitalize mb-1 ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900'}`}>{pkg.id}</h4>
+                          <h4 className={`font-black text-2xl capitalize mb-1 ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{pkg.id}</h4>
                           <div className={`text-[10px] font-bold uppercase tracking-widest ${promotionPackage === pkg.id ? 'text-rose-400' : 'text-rose-500'}`}>{pkg.multiplier} Reach Expansion</div>
                         </div>
                         <div className="text-right">
-                          <span className={`text-3xl font-black ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900'}`}>R{pkg.price}</span>
+                          <span className={`text-3xl font-black ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>R{pkg.price}</span>
                         </div>
                       </div>
                       <ul className="space-y-3">
                         {pkg.features.map((feat, i) => (
                           <li key={i} className="flex items-center gap-3 text-sm font-medium">
                             <CheckCircleIcon className={`w-5 h-5 ${promotionPackage === pkg.id ? 'text-rose-500' : 'text-rose-400'}`} />
-                            <span className={promotionPackage === pkg.id ? 'text-gray-300' : 'text-gray-600'}>{feat}</span>
+                            <span className={promotionPackage === pkg.id ? 'text-gray-300' : 'text-gray-600 dark:text-white'}>{feat}</span>
                           </li>
                         ))}
                       </ul>
@@ -3750,7 +3750,7 @@ export default function CreateListing() {
                 <div className="flex justify-between">
                   <button
                     onClick={() => setPromotionSteps(0)}
-                    className="px-6 py-3 text-gray-900 font-medium underline underline-offset-4"
+                    className="px-6 py-3 text-gray-900 dark:text-white font-medium underline underline-offset-4"
                   >
                     Back
                   </button>
@@ -3770,10 +3770,10 @@ export default function CreateListing() {
 
             {promotionSteps === 2 && (
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">Complete payment</h3>
-                <p className="text-gray-600 mb-6">You will complete payment securely on PayFast. loopOut never receives or stores your card details.</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Complete payment</h3>
+                <p className="text-gray-600 dark:text-white mb-6">You will complete payment securely on PayFast. loopOut never receives or stores your card details.</p>
 
-                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">{promotionPackage} promotion</span>
                     <span className="text-xl font-bold">R{promotionPackage === 'standard' ? '40' : '100'}</span>
@@ -3794,7 +3794,7 @@ export default function CreateListing() {
                 <div className="flex justify-between">
                   <button
                     onClick={() => setPromotionSteps(1)}
-                    className="px-6 py-3 text-gray-900 font-medium underline underline-offset-4"
+                    className="px-6 py-3 text-gray-900 dark:text-white font-medium underline underline-offset-4"
                   >
                     Back
                   </button>

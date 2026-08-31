@@ -38,7 +38,7 @@ export default function EventPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-airbnb-red mx-auto" />
-          <p className="mt-4 text-gray-600">Loading event details...</p>
+          <p className="mt-4 text-gray-600 dark:text-white">Loading event details...</p>
         </div>
       </div>
     );
@@ -49,7 +49,7 @@ export default function EventPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-2xl mb-4">⚠️</div>
-          <p className="text-gray-700 text-lg">{error}</p>
+          <p className="text-gray-700 dark:text-white text-lg">{error}</p>
           <Link to="/events" className="mt-4 inline-block px-4 py-2 bg-airbnb-red text-white rounded-lg hover:bg-red-700">Browse All Events</Link>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default function EventPage() {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         Back to events
       </button>
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
         <div className="relative">
           {event.imageUrls && event.imageUrls.length > 0 && (
             <img src={event.imageUrls[0]} alt={event.name} className="w-full h-96 object-cover" />
@@ -80,9 +80,9 @@ export default function EventPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left: Details */}
             <div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Event Details</h2>
-              <p className="text-gray-600 whitespace-pre-line mb-6">{event.description}</p>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Event Features</h3>
+              <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Event Details</h2>
+              <p className="text-gray-600 dark:text-white whitespace-pre-line mb-6">{event.description}</p>
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">Event Features</h3>
               <div className="flex flex-wrap gap-3 mb-6">
                 {event.parking && (
                   <InfoBadge icon={<FaParking className="h-4 w-4" />}>Parking Available</InfoBadge>
@@ -96,7 +96,7 @@ export default function EventPage() {
               </div>
               {event.videoUrl && (
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-3">Event Video</h3>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">Event Video</h3>
                   <div className="aspect-w-16 aspect-h-9">
                     <video controls className="rounded-lg w-full">
                       <source src={event.videoUrl} type="video/mp4" />
@@ -107,7 +107,7 @@ export default function EventPage() {
               )}
               {event.imageUrls && event.imageUrls.length > 1 && (
                 <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-3">More Photos</h3>
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-3">More Photos</h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {event.imageUrls.slice(1).map((url, index) => (
                       <div key={index} className="aspect-square">
@@ -119,8 +119,8 @@ export default function EventPage() {
               )}
             </div>
             {/* Right: Information */}
-            <div className="bg-gray-50 rounded-xl p-6 sticky top-6 h-fit">
-              <h2 className="text-xl font-bold text-gray-800 mb-4">Event Information</h2>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 sticky top-6 h-fit">
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Event Information</h2>
               <div className="space-y-4">
                 <InfoBadge icon={<FaMapMarkerAlt className="h-4 w-4" />}>{event.address}</InfoBadge>
                 <InfoBadge icon={<FaCalendarAlt className="h-4 w-4" />}>{event.date}</InfoBadge>

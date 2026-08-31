@@ -27,7 +27,7 @@ export default function SafetyProtocols() {
   ];
 
   return (
-    <div className="bg-white min-h-screen font-inter">
+    <div className="bg-white dark:bg-gray-900 min-h-screen font-inter">
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 sm:px-12 max-w-[1200px] mx-auto">
         <motion.div 
@@ -39,7 +39,7 @@ export default function SafetyProtocols() {
             <ShieldAlert className="w-4 h-4 text-emerald-500" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">loopOut Security</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 tracking-tighter leading-[0.9]">
+          <h1 className="text-6xl md:text-8xl font-black text-gray-900 dark:text-white mb-8 tracking-tighter leading-[0.9]">
             Safety <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Protocols.</span>
           </h1>
@@ -78,8 +78,8 @@ export default function SafetyProtocols() {
       <section className="py-32 px-6 sm:px-12 max-w-[800px] mx-auto text-center">
         <div className="bg-rose-50 p-12 rounded-[3rem] border border-rose-100">
           <ShieldAlert className="w-16 h-16 text-rose-500 mx-auto mb-6" />
-          <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">Need Immediate Assistance?</h2>
-          <p className="text-gray-500 font-medium leading-relaxed mb-8 max-w-lg mx-auto">
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">Need Immediate Assistance?</h2>
+          <p className="text-gray-500 dark:text-white font-medium leading-relaxed mb-8 max-w-lg mx-auto">
             If you are in an emergency situation, please contact your local emergency services immediately. For urgent loopOut matters, our critical response team is standing by.
           </p>
           <button className="px-10 py-5 bg-gray-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-500 transition-all shadow-xl">

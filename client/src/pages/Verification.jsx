@@ -242,7 +242,7 @@ export default function Verification() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20 pt-32">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-20 pt-32">
       {/* Background Cinematic Elements */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-rose-500/5 blur-[120px]" />
@@ -255,7 +255,7 @@ export default function Verification() {
           onClick={handleBack}
           className="flex items-center gap-3 text-gray-400 hover:text-rose-600 transition-colors mb-12"
         >
-          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-rose-50 transition-all">
+          <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center hover:bg-rose-50 transition-all">
             <ArrowLeft size={18} />
           </div>
           <span className="text-[10px] font-black uppercase tracking-[0.3em]">Protocol Abort / Return</span>
@@ -280,7 +280,7 @@ export default function Verification() {
                   NEURAL <br/>
                   <span className="text-gray-300">IDENTITY</span>
                 </h1>
-                <p className="max-w-xl text-gray-500 font-medium leading-relaxed">
+                <p className="max-w-xl text-gray-500 dark:text-white font-medium leading-relaxed">
                   Establish an immutable connection between your physical presence and the loopOut network. 
                   Choose a deployment protocol to securely verify your identity.
                 </p>
@@ -291,7 +291,7 @@ export default function Verification() {
                   <button
                     key={protocol.id}
                     onClick={() => startVerification(protocol.id)}
-                    className="flex flex-col items-start gap-8 p-8 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-200 hover:shadow-2xl rounded-[2.5rem] transition-all"
+                    className="flex flex-col items-start gap-8 p-8 bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-900 border border-transparent hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-2xl rounded-[2.5rem] transition-all"
                   >
                     <div className={`p-4 ${protocol.color} text-white rounded-2xl shadow-xl transition-transform hover:rotate-12`}>
                       {protocol.icon}
@@ -306,7 +306,7 @@ export default function Verification() {
               </div>
 
               {/* Verified Benefits */}
-              <div className="pt-12 border-t border-gray-100 flex flex-wrap gap-12">
+              <div className="pt-12 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-12">
                  {[
                    { label: "Elite Badge", desc: "Gain the Masterpiece Elite status mark" },
                    { label: "Priority Signals", desc: "Faster response times on all requests" },
@@ -341,12 +341,12 @@ export default function Verification() {
                      <div className="w-full text-center space-y-12">
                        <div className="space-y-4">
                           <h2 className="text-4xl font-black text-gray-950 tracking-tighter italic">STEP 1: IDENTITY DOCUMENT</h2>
-                          <p className="text-gray-500 font-medium">Please upload a clear image of your Passport, National ID, or Driver's License.</p>
+                          <p className="text-gray-500 dark:text-white font-medium">Please upload a clear image of your Passport, National ID, or Driver's License.</p>
                        </div>
                        
                        <input type="file" ref={fileRef} hidden accept="image/*" onChange={handleIdChange} />
                        
-                       <div className="relative aspect-[1.6/1] bg-gray-50 border-4 border-dashed border-gray-200 rounded-[3rem] flex flex-col items-center justify-center p-12 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all cursor-pointer"
+                       <div className="relative aspect-[1.6/1] bg-gray-50 dark:bg-gray-800 border-4 border-dashed border-gray-200 dark:border-gray-800 rounded-[3rem] flex flex-col items-center justify-center p-12 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all cursor-pointer"
                         onClick={() => fileRef.current.click()}
                        >
                            {isProcessing ? (
@@ -359,7 +359,7 @@ export default function Verification() {
                              </div>
                            ) : (
                              <>
-                               <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
+                               <div className="w-20 h-20 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                                   <IdentificationIcon className="w-10 h-10 text-indigo-500" />
                                </div>
                                <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-indigo-600">Select Document File</p>
@@ -438,7 +438,7 @@ export default function Verification() {
                          <Zap size={14} /> SECURITY SIGNAL ACTIVE
                       </div>
                       <h2 className="text-4xl font-black text-gray-950 tracking-tighter">SIGNAL VERIFY</h2>
-                      <p className="text-gray-500 font-medium">Link your secure communication channel to the loopOut neural network.</p>
+                      <p className="text-gray-500 dark:text-white font-medium">Link your secure communication channel to the loopOut neural network.</p>
                    </div>
 
                    <AnimatePresence mode="wait">
@@ -451,13 +451,13 @@ export default function Verification() {
                          className="space-y-8"
                        >
                          {/* Toggle Type */}
-                         <div className="flex p-1 bg-gray-100 rounded-full">
+                         <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-full">
                            {['phone', 'email'].map((type) => (
                              <button
                                key={type}
                                onClick={() => setContactInfo({ ...contactInfo, type })}
                                className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                                 contactInfo.type === type ? 'bg-white text-gray-950 shadow-sm' : 'text-gray-400'
+                                 contactInfo.type === type ? 'bg-white dark:bg-gray-900 text-gray-950 shadow-sm' : 'text-gray-400'
                                }`}
                              >
                                {type}
@@ -469,7 +469,7 @@ export default function Verification() {
                             <input 
                               type={contactInfo.type === 'phone' ? 'tel' : 'email'}
                               placeholder={contactInfo.type === 'phone' ? '+27 000 000 0000' : 'user@neural.com'}
-                              className="w-full px-8 py-6 bg-gray-50 border border-gray-100 rounded-[2rem] text-lg font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-gray-300"
+                              className="w-full px-8 py-6 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-[2rem] text-lg font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all placeholder:text-gray-300"
                               value={contactInfo.value}
                               onChange={(e) => setContactInfo({ ...contactInfo, value: e.target.value })}
                             />
@@ -506,7 +506,7 @@ export default function Verification() {
                                key={i}
                                type="text"
                                maxLength={1}
-                               className="w-12 h-16 bg-gray-50 border border-gray-100 rounded-2xl text-center text-xl font-black text-gray-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                               className="w-12 h-16 bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 rounded-2xl text-center text-xl font-black text-gray-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
                                value={digit}
                                onChange={(e) => {
                                  const newCode = [...otpCode];
@@ -533,7 +533,7 @@ export default function Verification() {
                             {error && <p className="text-center text-rose-500 text-[10px] font-black uppercase tracking-widest bg-rose-50 py-2 rounded-full">{error}</p>}
                             <button 
                               onClick={() => { setOtpSent(false); setError(null); }}
-                              className="w-full py-4 text-gray-400 hover:text-gray-600 text-[10px] font-black uppercase tracking-widest transition-all"
+                              className="w-full py-4 text-gray-400 hover:text-gray-600 dark:hover:text-white text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                               Edit Contact Information
                             </button>
@@ -568,12 +568,12 @@ export default function Verification() {
 
               <div className="space-y-6 mb-12">
                  <h2 className="text-6xl font-black text-gray-950 tracking-tighter italic">IDENTITY <br/> ESTABLISHED</h2>
-                 <p className="text-gray-500 max-w-md mx-auto font-medium">
+                 <p className="text-gray-500 dark:text-white max-w-md mx-auto font-medium">
                    Your neural signal has been successfully hard-coded into the loopOut verification chain. You now hold ELITE level status.
                  </p>
               </div>
 
-              <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 max-w-md w-full mb-12 flex items-center gap-6">
+              <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 max-w-md w-full mb-12 flex items-center gap-6">
                  <div className="relative">
                    <img src={currentUser?.avatar} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500 p-0.5" />
                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-[3px] border-white flex items-center justify-center">
@@ -582,7 +582,7 @@ export default function Verification() {
                  </div>
                  <div className="text-left flex-1 min-w-0">
                     <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">ELITE VERIFIED</p>
-                    <p className="text-lg font-bold text-gray-900 truncate">{currentUser?.username}</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{currentUser?.username}</p>
                  </div>
                  <div className="text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Trust Score</p>

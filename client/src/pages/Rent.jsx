@@ -94,8 +94,8 @@ export default function Rent() {
       {/* top */}
       
       <div className='flex flex-col gap-4 p-10 px-3 max-w-6xl mx-auto'>
-        <h1 className='text-slate-700 font-bold text-3xl text-center lg:text-6xl'>
-        Find Property to  <span className='text-slate-500'>Rent</span>
+        <h1 className='text-slate-700 dark:text-white font-bold text-3xl text-center lg:text-6xl'>
+        Find Property to  <span className='text-slate-500 dark:text-white'>Rent</span>
           <br />
           
         </h1>
@@ -114,7 +114,7 @@ export default function Rent() {
 
 
   
-     <div className='slide-container font-semibold text-slate-700'>
+     <div className='slide-container font-semibold text-slate-700 dark:text-white'>
            <Fade>
                {slideImages.map((image, index) => (
                 <div key={index}>
@@ -130,64 +130,64 @@ export default function Rent() {
       <div className=' p-10 px-2 max-w-6xl  mx-auto'>
 
 <ul className='flex gap-4 text-center'>
-<div className='bg-white shadow-lg transition-shadow rounded-md h-50 w-60'>
+<div className='bg-white dark:bg-gray-900 shadow-lg transition-shadow rounded-md h-50 w-60'>
 <Link
    to={'/Rent'}
  
 >
-     <img className='bg-white  transition-shadow overflow-hidden  w-full sm:w-[330px]'
+     <img className='bg-white dark:bg-gray-900  transition-shadow overflow-hidden  w-full sm:w-[330px]'
 src="https://ryecroftglenton.com/wp-content/uploads/2019/07/c7aa6d3b-4d64-4ea3-87f0-b4d2ad4b070e.jpg"
 alt="example"
 />
-   <span  className='text-xs sm:text-sm text-slate-700 font-bold hover:underline'>Rent a home</span>
+   <span  className='text-xs sm:text-sm text-slate-700 dark:text-white font-bold hover:underline'>Rent a home</span>
    <p className='text-gray-400 p-1 text-xs sm:text-sm'> Advertise your rental property on our site.</p>
 </Link>
 
 </div>
 
 
-<div className='bg-white shadow-lg transition-shadow rounded-md h-50 w-60'>
+<div className='bg-white dark:bg-gray-900 shadow-lg transition-shadow rounded-md h-50 w-60'>
 <Link
   to={'/Search'}
   
 >
-    <img className='bg-white  transition-shadow overflow-hidden  w-full sm:w-[330px]'
+    <img className='bg-white dark:bg-gray-900  transition-shadow overflow-hidden  w-full sm:w-[330px]'
 src="https://st.depositphotos.com/1002709/2986/i/450/depositphotos_29865165-stock-photo-home-search.jpg"
 alt="example"
 />
-  <span  className='text-xs sm:text-sm text-slate-700 font-bold hover:underline'>Find a home</span>
+  <span  className='text-xs sm:text-sm text-slate-700 dark:text-white font-bold hover:underline'>Find a home</span>
 
    <p className='text-gray-400 p-1 text-xs sm:text-sm'>Find a rental space that you’ll love to seen </p>
 </Link>
 </div>
 
 
- <div className='bg-white shadow-lg transition-shadow rounded-md h-50 w-60'>
+ <div className='bg-white dark:bg-gray-900 shadow-lg transition-shadow rounded-md h-50 w-60'>
 <Link
   to={'/Sale'}
   
 >
-    <img className='bg-white  transition-shadow overflow-hidden  w-full sm:w-[330px]'
+    <img className='bg-white dark:bg-gray-900  transition-shadow overflow-hidden  w-full sm:w-[330px]'
 src="https://www.ngfcu.us/files/ngfcu/1/banners/Interior-ProductPageImage_New_Home_975.jpg"
 alt="example"
 />
-    <span  className='text-xs sm:text-sm text-slate-700 font-bold hover:underline'>Sell a home</span> 
+    <span  className='text-xs sm:text-sm text-slate-700 dark:text-white font-bold hover:underline'>Sell a home</span> 
    <p className='text-gray-400 p-1 text-xs sm:text-sm'>Advertise with us,to be seen by millions of people. </p>
 </Link>
 </div>
 
 
 
-<div className='bg-white shadow-lg hidden sm:inline transition-shadow rounded-md h-50 w-60'>
+<div className='bg-white dark:bg-gray-900 shadow-lg hidden sm:inline transition-shadow rounded-md h-50 w-60'>
 <Link
   to={'/'}
   
 >
-    <img className='bg-white  transition-shadow overflow-hidden  w-full sm:w-[330px]'
+    <img className='bg-white dark:bg-gray-900  transition-shadow overflow-hidden  w-full sm:w-[330px]'
 src="https://static.vecteezy.com/system/resources/previews/020/552/404/non_2x/map-pin-magnifying-glass-flat-design-illustration-vector.jpg"
 alt="example"
 />
-    <span  className='text-xs sm:text-sm text-slate-700 font-bold hover:underline'>Find Agsnts</span> 
+    <span  className='text-xs sm:text-sm text-slate-700 dark:text-white font-bold hover:underline'>Find Agsnts</span> 
    <p className='text-gray-400 p-1 text-xs sm:text-sm'>Well pair you with a best agent who has the inside scoop on your market.</p>
 </Link>
 </div>
@@ -196,9 +196,9 @@ alt="example"
 </div>
     
    
-<div className="bg-white shadow-lg transition-shadow flex-col text-center p-4 sm:hidden">
+<div className="bg-white dark:bg-gray-900 shadow-lg transition-shadow flex-col text-center p-4 sm:hidden">
         
-        <h1 className='text-slate-700 text-center font-semibold'>List Independently</h1>
+        <h1 className='text-slate-700 dark:text-white text-center font-semibold'>List Independently</h1>
         <p className='text-gray-400 p-6 text-center text-xs sm:text-sm'>Reach a vast and engaged audience of potential buyers by showcasing your property on Loupeout Home.Making it an ideal destination for those looking to buy, sell, or rent properties.</p>
     
             <l className="p-5">
@@ -220,9 +220,9 @@ alt="example"
             </div>
       
 
-            <div className="bg-white flex-col p-6  sm:hidden">
+            <div className="bg-white dark:bg-gray-900 flex-col p-6  sm:hidden">
         
-        <h1 className='text-slate-700 text-center p-4 font-semibold'>Property Advices For:</h1>
+        <h1 className='text-slate-700 dark:text-white text-center p-4 font-semibold'>Property Advices For:</h1>
             <div className='text-center'>
                     <l className="p-5">
                  <Link
@@ -264,7 +264,7 @@ alt="example"
         {offerListings && offerListings.length > 0 && (
           <div className=''>
             <div className='my-3'>
-              <h2 className='text-2xl font-semibold text-slate-600'>Recent offers</h2>
+              <h2 className='text-2xl font-semibold text-slate-600 dark:text-white'>Recent offers</h2>
               <Link className='text-sm text-blue-800 hover:underline' to={'/search?offer=true'}>Show more offers</Link>
             </div>
             <div className='flex flex-wrap gap-4'>
@@ -277,7 +277,7 @@ alt="example"
         {rentListings && rentListings.length > 0 && (
           <div className=''>
             <div className='my-3'>
-              <h2 className='text-2xl font-semibold p-4 text-center text-slate-600'>Recent places for rent</h2>
+              <h2 className='text-2xl font-semibold p-4 text-center text-slate-600 dark:text-white'>Recent places for rent</h2>
               <Link className='text-sm text-blue-800 hover:underline' to={'/search?type=rent'}>Show more places for rent</Link>
             </div>
             <div className='flex flex-wrap gap-4'>

@@ -293,10 +293,10 @@ export default function UpdateHelper() {
             value={formData.host}
           />
           {/* Operating Schedule Section */}
-          <div className="col-span-full pt-8 border-t border-gray-100">
+          <div className="col-span-full pt-8 border-t border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-xl font-black text-gray-900 tracking-tight">Operating Schedule</h3>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Operating Schedule</h3>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Define your weekly availability</p>
               </div>
               <div className="p-3 bg-rose-50 rounded-2xl">
@@ -306,12 +306,12 @@ export default function UpdateHelper() {
 
             <div className="space-y-4">
               {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm'}`}>
+                <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-3xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-50 shadow-sm'}`}>
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-tighter ${formData.operatingHours[day].closed ? 'bg-gray-200 text-gray-400' : 'bg-rose-500 text-white'}`}>
                       {day.slice(0, 3)}
                     </div>
-                    <span className="font-black text-gray-900 capitalize">{day}</span>
+                    <span className="font-black text-gray-900 dark:text-white capitalize">{day}</span>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -330,7 +330,7 @@ export default function UpdateHelper() {
                           }))}
                         />
                         <div className={`w-12 h-6 rounded-full transition-colors ${formData.operatingHours[day].closed ? 'bg-rose-500' : 'bg-gray-200'}`} />
-                        <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
+                        <div className={`absolute top-1 left-1 bg-white dark:bg-gray-900 w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
                       </div>
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-rose-500 transition-colors">Closed</span>
                     </label>
@@ -350,7 +350,7 @@ export default function UpdateHelper() {
                               [day]: { ...prev.operatingHours[day], open: e.target.value }
                             }
                           }))}
-                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                         />
                       </div>
                       <div className="flex flex-col gap-2">
@@ -365,7 +365,7 @@ export default function UpdateHelper() {
                               [day]: { ...prev.operatingHours[day], close: e.target.value }
                             }
                           }))}
-                          className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                          className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                         />
                       </div>
                     </>
@@ -419,7 +419,7 @@ export default function UpdateHelper() {
                   type='number'
                   id='regularPrice'
                   min='50'
-                  className='p-3 border border-gray-300 rounded-lg w-32'
+                  className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg w-32'
                   onChange={handleChange}
                   value={formData.regularPrice}
                 />
@@ -463,7 +463,7 @@ export default function UpdateHelper() {
                 id='bedrooms'
                 min='1'
                 max='24'
-                className='p-3 border border-gray-300 rounded-lg w-32'
+                className='p-3 border border-gray-300 dark:border-gray-700 rounded-lg w-32'
                 onChange={handleChange}
                 value={formData.bedrooms}
               />
@@ -487,14 +487,14 @@ export default function UpdateHelper() {
           />
 
           {/* Check-in / Check-out Times */}
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
             <div className='flex items-center gap-2 mb-1'>
               <ClockIcon className='w-5 h-5 text-rose-500' />
-              <span className='font-semibold text-gray-800'>Check-in & Check-out Times</span>
+              <span className='font-semibold text-gray-800 dark:text-white'>Check-in & Check-out Times</span>
             </div>
             <div className='flex flex-wrap gap-6'>
               <div className='flex flex-col gap-2'>
-                <label className='text-sm font-medium text-gray-600'>🛬 Check-in Time</label>
+                <label className='text-sm font-medium text-gray-600 dark:text-white'>🛬 Check-in Time</label>
                 <input
                   type='time'
                   id='checkInTime'
@@ -504,7 +504,7 @@ export default function UpdateHelper() {
                 />
               </div>
               <div className='flex flex-col gap-2'>
-                <label className='text-sm font-medium text-gray-600'>🛫 Check-out Time</label>
+                <label className='text-sm font-medium text-gray-600 dark:text-white'>🛫 Check-out Time</label>
                 <input
                   type='time'
                   id='checkOutTime'
@@ -516,7 +516,7 @@ export default function UpdateHelper() {
             </div>
           </div>
 
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800'>
             <div className='flex justify-between items-center'>
               <h3 className='font-semibold text-lg'>Additional Services & Prices</h3>
               <button
@@ -530,7 +530,7 @@ export default function UpdateHelper() {
             {formData.serviceList && formData.serviceList.length > 0 ? (
               <div className='flex flex-col gap-3 mt-2'>
                 {formData.serviceList.map((service, index) => (
-                  <div key={index} className='flex flex-col gap-2 bg-white p-3 rounded-md shadow-sm border border-gray-100'>
+                  <div key={index} className='flex flex-col gap-2 bg-white dark:bg-gray-900 p-3 rounded-md shadow-sm border border-gray-100 dark:border-gray-800'>
                     <div className='flex items-center gap-2'>
                       <input
                         type='text'
@@ -548,7 +548,7 @@ export default function UpdateHelper() {
                         required
                       />
                       <div className='flex items-center gap-1'>
-                        <span className='text-gray-500'>R</span>
+                        <span className='text-gray-500 dark:text-white'>R</span>
                         <input
                           type='number'
                           placeholder='Price'
@@ -576,12 +576,12 @@ export default function UpdateHelper() {
                     />
                     <div className='flex items-center gap-4 mt-2'>
                       <div className='flex-1 flex flex-col gap-1'>
-                        <span className='text-xs font-semibold text-gray-500'>Service Photo</span>
+                        <span className='text-xs font-semibold text-gray-500 dark:text-white'>Service Photo</span>
                         <input
                           type='file'
                           accept='image/*'
                           onChange={(e) => handleServiceImageUpload(index, e.target.files[0])}
-                          className='border p-1 rounded-lg text-sm w-full bg-gray-50'
+                          className='border p-1 rounded-lg text-sm w-full bg-gray-50 dark:bg-gray-800'
                         />
                       </div>
                       {serviceImageUploading[index] && (
@@ -595,13 +595,13 @@ export default function UpdateHelper() {
                 ))}
               </div>
             ) : (
-              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
+              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg'>
                 No additional services added yet
               </div>
             )}
           </div>
 
-          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 mt-4'>
+          <div className='flex flex-col gap-4 border p-4 rounded-lg bg-gray-50 dark:bg-gray-800 mt-4'>
             <div className='flex justify-between items-center'>
               <h3 className='font-semibold text-lg'>Service Performers</h3>
               <button
@@ -615,7 +615,7 @@ export default function UpdateHelper() {
             {formData.performers && formData.performers.length > 0 ? (
               <div className='flex flex-col gap-4 mt-2'>
                 {formData.performers.map((performer, index) => (
-                  <div key={index} className='bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3'>
+                  <div key={index} className='bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col gap-3'>
                     <div className='flex justify-between items-start'>
                       <span className='text-xs font-bold text-gray-400 uppercase tracking-widest'>Performer {index + 1}</span>
                       <button
@@ -680,7 +680,7 @@ export default function UpdateHelper() {
                           />
                           <label
                             htmlFor={`perf-img-${index}`}
-                            className='px-3 py-1 border border-gray-300 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50'
+                            className='px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg text-xs font-semibold cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'
                           >
                             Upload Photo
                           </label>
@@ -691,7 +691,7 @@ export default function UpdateHelper() {
                 ))}
               </div>
             ) : (
-              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg'>
+              <div className='text-center py-4 text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg'>
                 No performers added yet
               </div>
             )}
@@ -708,7 +708,7 @@ export default function UpdateHelper() {
         <div className='flex flex-col flex-1 gap-4'>
           <p className='font-semibold'>
             Images:
-            <span className='font-normal text-gray-600 ml-2'>
+            <span className='font-normal text-gray-600 dark:text-white ml-2'>
               The first image will be the cover (max 10)
             </span>
           </p>
@@ -719,7 +719,7 @@ export default function UpdateHelper() {
               accept='image/*'
               multiple
               onChange={handleFileChange}
-              className='p-3 border border-gray-300 rounded w-full'
+              className='p-3 border border-gray-300 dark:border-gray-700 rounded w-full'
             />
             <button
               type='button'

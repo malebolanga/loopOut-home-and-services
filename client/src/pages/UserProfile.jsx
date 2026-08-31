@@ -158,8 +158,8 @@ const UserProfile = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">User Not Found</h2>
-          <p className="text-gray-600 mb-6">The user you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">User Not Found</h2>
+          <p className="text-gray-600 dark:text-white mb-6">The user you're looking for doesn't exist.</p>
           <Link
             to="/"
             className="bg-gradient-to-br from-pink-500 to-purple-600 text-white px-6 py-3 rounded-full font-medium hover:shadow-lg transition-shadow"
@@ -172,7 +172,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
       {/* Cover Photo */}
       <div className="relative h-64 md:h-80 lg:h-96">
         <img
@@ -183,7 +183,7 @@ const UserProfile = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white transition-colors"
+          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -194,17 +194,17 @@ const UserProfile = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative">
         {/* Profile Header */}
-        <div className="bg-transparent rounded-[3rem] p-6 md:p-10 border border-slate-200/50 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+        <div className="bg-transparent rounded-[3rem] p-6 md:p-10 border border-slate-200 dark:border-gray-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
           <div className="flex flex-col lg:flex-row lg:items-center space-y-8 lg:space-y-0 lg:space-x-12">
             
             {/* Left: Avatar & Interaction */}
             <div className="flex flex-col items-center flex-shrink-0">
               <div className="relative -mt-24 md:-mt-36 mb-6">
-                <div className="relative p-1.5 bg-white rounded-[2.5rem] shadow-2xl transform transition-transform hover:scale-105 duration-500">
+                <div className="relative p-1.5 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl transform transition-transform hover:scale-105 duration-500">
                   <img
                     src={userData.avatar}
                     alt={userData.username}
-                    className="w-32 h-32 md:w-44 md:h-44 lg:w-48 lg:h-48 rounded-[2rem] object-cover ring-2 ring-gray-50 bg-gray-50"
+                    className="w-32 h-32 md:w-44 md:h-44 lg:w-48 lg:h-48 rounded-[2rem] object-cover ring-2 ring-gray-50 bg-gray-50 dark:bg-gray-800"
                   />
                   {userData.isVerified && (
                     <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-2 md:p-2.5 rounded-2xl shadow-xl border-4 border-white">
@@ -222,7 +222,7 @@ const UserProfile = () => {
                       onClick={handleFollow}
                       className={`flex-1 px-8 py-3.5 rounded-2xl font-bold transition-all duration-300 transform active:scale-95 shadow-lg flex items-center justify-center gap-2 ${
                         isFollowing
-                          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
                           : 'bg-gradient-to-br from-rose-500 to-pink-600 text-white hover:shadow-rose-200 hover:shadow-2xl'
                       }`}
                     >
@@ -230,7 +230,7 @@ const UserProfile = () => {
                     </button>
                     <button
                       onClick={handleMessage}
-                      className="px-6 py-3.5 border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-rose-500 hover:text-rose-600 transition-all duration-300 flex items-center gap-2 bg-gray-50 hover:bg-white"
+                      className="px-6 py-3.5 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-gray-700 dark:text-white hover:border-rose-500 hover:text-rose-600 transition-all duration-300 flex items-center gap-2 bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-900"
                     >
                       <ChatBubbleLeftRightIcon className="w-5 h-5" />
                       Message
@@ -240,7 +240,7 @@ const UserProfile = () => {
                   <div className="flex w-full space-x-3">
                     <Link
                       to="/profile"
-                      className="flex-1 px-4 py-3.5 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all text-center flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white rounded-2xl font-bold hover:bg-gray-200 transition-all text-center flex items-center justify-center gap-2"
                     >
                       Edit Profile
                     </Link>
@@ -261,7 +261,7 @@ const UserProfile = () => {
               <div className="flex flex-col md:flex-row md:items-start justify-between mb-8">
                 <div>
                   <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 dark:text-white tracking-tight">
                       {userData.username || 'User'}
                     </h1>
                     {userData.likeCount > 50 && (
@@ -278,13 +278,13 @@ const UserProfile = () => {
                     )}
                   </div>
                   
-                  <div className="flex flex-wrap items-center gap-4 md:gap-8 text-gray-600 font-medium">
+                  <div className="flex flex-wrap items-center gap-4 md:gap-8 text-gray-600 dark:text-white font-medium">
                     <div className="flex items-center cursor-default">
                       <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center mr-3 hover:bg-rose-100 transition-colors">
                         <StarIconSolid className="w-5 h-5 text-rose-500" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-900 font-bold leading-tight">
+                        <span className="text-gray-900 dark:text-white font-bold leading-tight">
                           {userData.likeCount + userData.dislikeCount > 0 
                             ? ((userData.likeCount / (userData.likeCount + userData.dislikeCount)) * 5).toFixed(1) 
                             : '0.0'}
@@ -297,7 +297,7 @@ const UserProfile = () => {
                         <MapPinIcon className="w-5 h-5 text-blue-500" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-900 font-bold leading-tight truncate max-w-[150px]">
+                        <span className="text-gray-900 dark:text-white font-bold leading-tight truncate max-w-[150px]">
                           {userData.location || 'loopOut Member'}
                         </span>
                         <span className="text-[10px] opacity-60 uppercase">Primary Base</span>
@@ -308,7 +308,7 @@ const UserProfile = () => {
                         <CalendarIcon className="w-5 h-5 text-purple-500" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-gray-900 font-bold leading-tight">
+                        <span className="text-gray-900 dark:text-white font-bold leading-tight">
                           {new Date(userData.createdAt).getFullYear()}
                         </span>
                         <span className="text-[10px] opacity-60 uppercase">Partner Since</span>
@@ -324,12 +324,12 @@ const UserProfile = () => {
                       navigator.clipboard.writeText(window.location.href);
                       alert('Profile URL copied to clipboard!');
                     }}
-                    className="w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300"
                     title="Copy Profile URL"
                   >
                     <GlobeAltIcon className="w-5 h-5 text-gray-400 hover:text-rose-500" />
                   </button>
-                  <button className="w-12 h-12 flex items-center justify-center bg-gray-50 hover:bg-white border border-gray-100 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
+                  <button className="w-12 h-12 flex items-center justify-center bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
                     <HeartIcon className="w-5 h-5 text-gray-400 hover:text-rose-500" />
                   </button>
                 </div>
@@ -339,7 +339,7 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="md:col-span-2">
                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Host Story</h3>
-                   <p className="text-gray-600 leading-relaxed font-medium">
+                   <p className="text-gray-600 dark:text-white leading-relaxed font-medium">
                     {userData.bio || 'This loopOut partner prefers to let their creations speak for themselves. Reach out to learn more about their journey.'}
                   </p>
                 </div>
@@ -354,7 +354,7 @@ const UserProfile = () => {
                       rel="noreferrer"
                       className="flex items-center gap-3 p-3 bg-emerald-50 rounded-2xl border border-emerald-100 hover:bg-emerald-100 transition-colors "
                     >
-                      <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-8 h-8 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center shadow-sm">
                         <FaWhatsapp className="text-emerald-500 text-lg" />
                       </div>
                       <div className="flex flex-col">
@@ -366,14 +366,14 @@ const UserProfile = () => {
                   {userData.email && (
                     <a 
                       href={`mailto:${userData.email}`}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:border-rose-200 transition-all"
+                      className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-800 hover:bg-white dark:hover:bg-gray-900 hover:border-rose-200 transition-all"
                     >
-                      <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-8 h-8 bg-white dark:bg-gray-900 rounded-xl flex items-center justify-center shadow-sm">
                         <EnvelopeIcon className="w-5 h-5 text-gray-400" />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Business Inquiries</span>
-                        <span className="text-sm font-bold text-gray-800 truncate max-w-[140px]">{userData.email}</span>
+                        <span className="text-sm font-bold text-gray-800 dark:text-white truncate max-w-[140px]">{userData.email}</span>
                       </div>
                     </a>
                   )}
@@ -391,19 +391,19 @@ const UserProfile = () => {
                   <div 
                     key={idx} 
                     onClick={stat.onClick}
-                    className={`relative bg-gray-50 hover:bg-white p-4 rounded-2xl border border-gray-100 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 overflow-hidden ${stat.onClick ? 'cursor-pointer' : 'cursor-default'}`}
+                    className={`relative bg-gray-50 dark:bg-gray-800 hover:bg-white dark:hover:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center transition-all duration-500 hover:shadow-2xl hover:shadow-gray-100 overflow-hidden ${stat.onClick ? 'cursor-pointer' : 'cursor-default'}`}
                   >
                     <div className="absolute -right-2 -bottom-2 opacity-[0.03] hover:opacity-[0.07] transition-opacity duration-500 scale-[3]">
                       {stat.icon}
                     </div>
-                    <div className="text-2xl font-black text-gray-900 mb-0.5">{stat.value}</div>
+                    <div className="text-2xl font-black text-gray-900 dark:text-white mb-0.5">{stat.value}</div>
                     <div className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-400">{stat.label}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>          {/* Premium Tab Navigation */}
-          <div className="mt-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/50 p-1 mb-8 overflow-hidden">
+          <div className="mt-12 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200 dark:border-gray-800/50 p-1 mb-8 overflow-hidden">
             <nav className="flex flex-wrap md:flex-nowrap">
               {['overview', 'portfolio', 'appreciation', 'about'].map((tab) => (
                 <button
@@ -412,7 +412,7 @@ const UserProfile = () => {
                   className={`flex-1 py-4 px-6 font-bold text-sm tracking-tight transition-all duration-300 rounded-xl flex items-center justify-center gap-2 ${
                     activeTab === tab
                       ? 'bg-rose-500 text-white shadow-lg shadow-rose-200 pointer-events-none'
-                      : 'bg-transparent text-gray-500 hover:text-rose-600 hover:bg-rose-50'
+                      : 'bg-transparent text-gray-500 dark:text-white hover:text-rose-600 hover:bg-rose-50'
                   }`}
                 >
                   {tab === 'overview' && <GlobeAltIcon className="w-5 h-5" />}
@@ -433,7 +433,7 @@ const UserProfile = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                   <div className="lg:col-span-2 space-y-8">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+                      <h2 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
                         <div className="w-2 h-8 bg-rose-500 rounded-full"></div>
                         Recent Creations
                       </h2>
@@ -448,7 +448,7 @@ const UserProfile = () => {
                       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((item, index) => (
                         <div
                           key={index}
-                          className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
+                          className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200 dark:border-gray-800/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)]"
                           onClick={() => {
                             if (item.category === 'service' && item.type === 'carwash') return navigate(`/carwash/${item._id}`);
                             if (item.category === 'helper' && item.type === 'photography') return navigate(`/photography/${item._id}`);
@@ -474,8 +474,8 @@ const UserProfile = () => {
                             </div>
                           </div>
                           <div className="p-5">
-                            <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{item.name}</h3>
-                            <p className="text-gray-500 text-xs mb-4 flex items-center gap-1">
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">{item.name}</h3>
+                            <p className="text-gray-500 dark:text-white text-xs mb-4 flex items-center gap-1">
                               <MapPinIcon className="w-3.5 h-3.5" />
                               {item.address || item.location}
                             </p>
@@ -511,11 +511,11 @@ const UserProfile = () => {
                         ].map((stat, i) => (
                           <div key={i} className="flex justify-between items-center bg-white/5 p-3 rounded-2xl">
                             <span className="text-xs text-gray-400 font-medium">{stat.label}</span>
-                            <span className={`text-xs font-bold ${stat.active ? 'text-emerald-400' : 'text-gray-500'}`}>{stat.value}</span>
+                            <span className={`text-xs font-bold ${stat.active ? 'text-emerald-400' : 'text-gray-500 dark:text-white'}`}>{stat.value}</span>
                           </div>
                         ))}
                       </div>
-                      <button className="w-full mt-8 py-4 bg-white text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-rose-500 hover:text-white transition-all duration-300">
+                      <button className="w-full mt-8 py-4 bg-white dark:bg-gray-900 text-black font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-rose-500 hover:text-white transition-all duration-300">
                         View Detailed History
                       </button>
                     </div>
@@ -526,15 +526,15 @@ const UserProfile = () => {
 
             {activeTab === 'portfolio' && (
               <div className="space-y-8 animate-fadeIn">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4 border-b border-gray-100">
-                  <h2 className="text-3xl font-black text-gray-900 tracking-tight">Full Portfolio</h2>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Full Portfolio</h2>
                   <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
                     {['all', 'listing', 'service', 'helper', 'event'].map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setPortfolioFilter(cat)}
                         className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          portfolioFilter === cat ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          portfolioFilter === cat ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-white hover:bg-gray-200'
                         }`}
                       >
                         {cat === 'all' ? 'All' : cat + 's'}
@@ -552,7 +552,7 @@ const UserProfile = () => {
                   ].filter(item => portfolioFilter === 'all' || item.category === portfolioFilter).map((item, index) => (
                     <div
                       key={index}
-                      className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex flex-col"
+                      className="bg-transparent rounded-[2rem] overflow-hidden border border-slate-200 dark:border-gray-800/50 hover:shadow-2xl transition-all duration-500 cursor-pointer shadow-[0_20px_50px_rgba(0,0,0,0.04)] flex flex-col"
                       onClick={() => {
                         if (item.category === 'service' && item.type === 'carwash') return navigate(`/carwash/${item._id}`);
                         if (item.category === 'helper' && item.type === 'photography') return navigate(`/photography/${item._id}`);
@@ -579,7 +579,7 @@ const UserProfile = () => {
                       </div>
                       <div className="p-6 flex-1 flex flex-col">
                         <div className="mb-4">
-                           <h3 className="font-extrabold text-gray-900 text-lg mb-1 leading-tight line-clamp-2">{item.name || item.title}</h3>
+                           <h3 className="font-extrabold text-gray-900 dark:text-white text-lg mb-1 leading-tight line-clamp-2">{item.name || item.title}</h3>
                            <p className="text-gray-400 text-xs font-semibold flex items-center gap-1">
                             <MapPinIcon className="w-3.5 h-3.5 text-rose-500" />
                             {item.address || item.location || 'loopOut Community'}
@@ -589,11 +589,11 @@ const UserProfile = () => {
                         <div className="mt-auto pt-5 border-t border-gray-50 flex items-center justify-between">
                           <div className="flex flex-col">
                             <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Rate Starts From</span>
-                            <span className="text-xl font-black text-gray-900">
+                            <span className="text-xl font-black text-gray-900 dark:text-white">
                              {item.regularPrice ? `R${item.regularPrice}` : item.price || 'Free'}
                             </span>
                           </div>
-                          <div className="w-10 h-10 bg-gray-50 rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-colors">
+                          <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-colors">
                              <ChevronRightIcon className="w-5 h-5 text-gray-400 hover:text-white" />
                           </div>
                         </div>
@@ -601,7 +601,7 @@ const UserProfile = () => {
                     </div>
                   ))}
                   {(!userData.listings?.length && !userData.services?.length && !userData.helpers?.length && !userData.events?.length) && (
-                    <div className="col-span-full py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+                    <div className="col-span-full py-20 text-center bg-gray-50 dark:bg-gray-800 rounded-[3rem] border-2 border-dashed border-gray-200 dark:border-gray-800">
                        <BriefcaseIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
                        <p className="text-gray-400 font-bold text-xl tracking-tight">This partner's portfolio is currently empty.</p>
                     </div>
@@ -613,20 +613,20 @@ const UserProfile = () => {
             {activeTab === 'appreciation' && (
               <div className="max-w-4xl mx-auto space-y-10">
                 <div className="text-center space-y-4">
-                   <h2 className="text-4xl font-black text-gray-900 tracking-tight">Host Reputation</h2>
-                   <p className="text-gray-500 max-w-lg mx-auto font-medium">Platform-wide feedback and trust indicators across all services and listings provided by this host.</p>
+                   <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Host Reputation</h2>
+                   <p className="text-gray-500 dark:text-white max-w-lg mx-auto font-medium">Platform-wide feedback and trust indicators across all services and listings provided by this host.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl shadow-rose-50/50 flex flex-col items-center">
+                   <div className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl shadow-rose-50/50 flex flex-col items-center">
                       <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center mb-6">
                          <HandThumbUpIcon className="w-10 h-10 text-rose-500" />
                       </div>
-                      <div className="text-5xl font-black text-gray-900 mb-2">{userData.likeCount || 0}</div>
+                      <div className="text-5xl font-black text-gray-900 dark:text-white mb-2">{userData.likeCount || 0}</div>
                       <div className="text-xs font-black uppercase tracking-widest text-gray-400">Total Recommendations</div>
                    </div>
-                   <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-50/50 flex flex-col items-center">
-                      <div className="w-20 h-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6">
+                   <div className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-50/50 flex flex-col items-center">
+                      <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-[2rem] flex items-center justify-center mb-6">
                          <HandThumbDownIcon className="w-10 h-10 text-gray-400" />
                       </div>
                       <div className="text-5xl font-black text-gray-400 mb-2">{userData.dislikeCount || 0}</div>
@@ -657,22 +657,22 @@ const UserProfile = () => {
                     <section className="space-y-4">
                        <h3 className="text-xs font-black uppercase tracking-[0.25em] text-rose-500">Professional Background</h3>
                        <div className="space-y-4">
-                          <div className="flex items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100">
+                          <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
                                 <BriefcaseIcon className="w-6 h-6 text-blue-500" />
                              </div>
                              <div>
                                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Main Occupation</p>
-                                <p className="text-gray-900 font-extrabold">{userData.occupation || 'Platform Professional'}</p>
+                                <p className="text-gray-900 dark:text-white font-extrabold">{userData.occupation || 'Platform Professional'}</p>
                              </div>
                           </div>
-                          <div className="flex items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100">
+                          <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
                              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center">
                                 <AcademicCapIcon className="w-6 h-6 text-purple-500" />
                              </div>
                              <div>
                                 <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Skills & Expertise</p>
-                                <p className="text-gray-900 font-extrabold">{userData.interests || 'Multi-talented Partner'}</p>
+                                <p className="text-gray-900 dark:text-white font-extrabold">{userData.interests || 'Multi-talented Partner'}</p>
                              </div>
                           </div>
                        </div>
@@ -686,7 +686,7 @@ const UserProfile = () => {
                              { label: 'Social', icon: <UserCircleIcon className="w-5 h-5" />, value: userData.socialMedia }
                           ].map((item, i) => (
                              item.value && (
-                                <a key={i} href={item.value.startsWith('http') ? item.value : `https://${item.value}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-3 py-4 border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:border-rose-500 hover:text-rose-600 transition-all">
+                                <a key={i} href={item.value.startsWith('http') ? item.value : `https://${item.value}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-3 py-4 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-gray-700 dark:text-white hover:border-rose-500 hover:text-rose-600 transition-all">
                                    {item.icon}
                                    {item.label}
                                 </a>
@@ -697,10 +697,10 @@ const UserProfile = () => {
                  </div>
 
                  <div className="space-y-8">
-                    <section className="bg-gray-50 p-8 rounded-[3rem] border border-gray-100 space-y-6">
-                       <h3 className="text-xl font-black tracking-tight text-gray-900">Partner Bio</h3>
+                    <section className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[3rem] border border-gray-100 dark:border-gray-800 space-y-6">
+                       <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">Partner Bio</h3>
                        <div className="prose prose-rose">
-                          <p className="text-gray-600 leading-relaxed font-medium">
+                          <p className="text-gray-600 dark:text-white leading-relaxed font-medium">
                             {userData.bio || "No detailed autobiographical data available for this loopOut partner. We recommend messaging the host directly for more specific inquiries about their experience or vision."}
                           </p>
                        </div>
@@ -714,14 +714,14 @@ const UserProfile = () => {
       {/* Follow List Modal */}
       {showFollowList && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h3 className="text-xl font-black text-gray-900 capitalize tracking-tight">
+          <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+              <h3 className="text-xl font-black text-gray-900 dark:text-white capitalize tracking-tight">
                 {showFollowList}
               </h3>
               <button 
                 onClick={() => setShowFollowList(null)}
-                className="p-2 hover:bg-white rounded-full transition-colors bg-gray-100 shadow-sm"
+                className="p-2 hover:bg-white dark:hover:bg-gray-900 rounded-full transition-colors bg-gray-100 dark:bg-gray-800 shadow-sm"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -747,7 +747,7 @@ const UserProfile = () => {
                       className="w-12 h-12 rounded-2xl object-cover shadow-md hover:scale-110 transition-transform duration-500" 
                     />
                     <div className="flex-1">
-                      <p className="font-bold text-gray-900 hover:text-rose-600 transition-colors">{user.username}</p>
+                      <p className="font-bold text-gray-900 dark:text-white hover:text-rose-600 transition-colors">{user.username}</p>
                       <p className="text-xs text-gray-400 line-clamp-1 font-medium">{user.bio || 'loopOut Member'}</p>
                     </div>
                     <ChevronRightIcon className="w-5 h-5 text-gray-300 hover:text-rose-400 transition-colors" />

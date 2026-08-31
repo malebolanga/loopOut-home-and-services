@@ -152,13 +152,13 @@ export default function PropertyListings() {
             </div>
             <div className="absolute -inset-2 border-4 border-blue-100 rounded-full animate-spin-slow opacity-70"></div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-3 font-sans">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-3 font-sans">
             Loading Your Properties
           </h1>
           <div className="flex justify-center mb-6">
             <span className="text-2xl text-blue-500 animate-spin">⏳</span>
           </div>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-500 dark:text-white text-lg">
             Preparing your property portfolio...
           </p>
           <div className="mt-8 w-full bg-gray-200 rounded-full h-1.5">
@@ -175,15 +175,15 @@ export default function PropertyListings() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
-      <div className="sticky top-0 p-2 z-30 bg-white/95 backdrop-blur-sm py-4 border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 p-2 z-30 bg-white/95 backdrop-blur-sm py-4 border-b border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl sm:text-2.5xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl sm:text-2.5xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
               <span className="text-2xl">📋</span>
               Your Property Listings
             </h1>
-            <p className="mt-1.5 text-sm text-gray-500 flex items-center gap-1.5">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-600">
+            <p className="mt-1.5 text-sm text-gray-500 dark:text-white flex items-center gap-1.5">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-800 text-xs font-medium text-gray-600 dark:text-white">
                 {filteredListings.length} of {userListings.length} {userListings.length === 1 ? 'property' : 'properties'}
               </span>
               <span>•</span>
@@ -196,7 +196,7 @@ export default function PropertyListings() {
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="py-2 pl-3 pr-10 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                className="py-2 pl-3 pr-10 text-sm border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
               >
                 <option value="newest">🆕 Newest First</option>
                 <option value="oldest">📅 Oldest First</option>
@@ -207,11 +207,11 @@ export default function PropertyListings() {
             
             <button
               onClick={refreshListings}
-              className="p-2.5 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors shadow-xs"
+              className="p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-xs"
               disabled={refreshing}
               aria-label="Refresh listings"
             >
-              <span className={`text-gray-500 ${refreshing ? 'animate-spin' : ''}`}>🔄</span>
+              <span className={`text-gray-500 dark:text-white ${refreshing ? 'animate-spin' : ''}`}>🔄</span>
             </button>
             
            
@@ -220,9 +220,9 @@ export default function PropertyListings() {
       </div>
 
       {/* Filter Bar */}
-      <div className="sticky top-[68px] z-20 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 shadow-xs">
+      <div className="sticky top-[68px] z-20 bg-white/95 backdrop-blur-sm py-3 border-b border-gray-100 dark:border-gray-800 shadow-xs">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3 text-gray-500 shrink-0">
+          <div className="flex items-center gap-3 text-gray-500 dark:text-white shrink-0">
             <span className="text-gray-400">🔍</span>
             <span className="text-xs font-medium uppercase tracking-wider">Filter By Type</span>
           </div>
@@ -236,7 +236,7 @@ export default function PropertyListings() {
                   flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 relative
                   ${selectedTypes.includes(type)
                     ? 'bg-rose-100/80 text-rose-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/50'
+                    : 'text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50'
                   }
                   group focus:outline-none focus:ring-2 focus:ring-rose-400/30
                 `}
@@ -259,7 +259,7 @@ export default function PropertyListings() {
           <div
             key={listing._id}
             onClick={() => navigate(`/listing/${listing._id}`)}
-            className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+            className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
           >
             <div className="absolute inset-0 z-0">
               <img
@@ -274,7 +274,7 @@ export default function PropertyListings() {
             <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
               <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-rose-500" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{listing.type}</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{listing.type}</span>
               </div>
             </div>
 
@@ -323,7 +323,7 @@ export default function PropertyListings() {
                   </button>
                 </div>
                 <div 
-                  className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                  className="w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                   onClick={(e) => { e.stopPropagation(); navigate(`/listing/${listing._id}`); }}
                 >
                   Inspect Original Masterpiece
@@ -336,14 +336,14 @@ export default function PropertyListings() {
 
       {/* Empty State */}
       {filteredListings.length === 0 && (
-        <div className="text-center py-16 rounded-xl bg-gray-50 mt-6">
+        <div className="text-center py-16 rounded-xl bg-gray-50 dark:bg-gray-800 mt-6">
           <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-rose-50 flex items-center justify-center">
             <span className="text-4xl">🏡</span>
           </div>
-          <h2 className="text-xl font-medium text-gray-700">
+          <h2 className="text-xl font-medium text-gray-700 dark:text-white">
             {userListings.length === 0 ? 'No properties yet' : 'No matching properties'}
           </h2>
-          <p className="text-gray-500 mt-2 max-w-md mx-auto">
+          <p className="text-gray-500 dark:text-white mt-2 max-w-md mx-auto">
             {userListings.length === 0
               ? 'Get started by adding your first property listing'
               : 'Try adjusting your filters'}

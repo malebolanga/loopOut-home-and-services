@@ -17,50 +17,50 @@ import {
 
 export default function Adiver() {
   return (
-    <div className="bg-gray-50 min-h-screen py-8">
+    <div className="bg-gray-50 dark:bg-gray-800 min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-2">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-800 mb-4">
+          <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">
             Tips for a Smooth Renting Experience
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 dark:text-white max-w-2xl mx-auto">
             Whether you re a tenant or a landlord, these tips will help ensure a
             successful and stress-free renting experience.
           </p>
         </div>
 
         {/* For Tenants Section */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-12">
-          <h2 className="text-2xl font-bold text-slate-800 text-center mb-8 flex items-center justify-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-12">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white text-center mb-8 flex items-center justify-center gap-2">
             <FaHome className="text-blue-600" /> For Tenants
           </h2>
 
           {/* Image Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-2">
-            <div className="bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://th.bing.com/th/id/R.b80a1eee64880b4b1e43cdf34201542f?rik=E%2f%2ftq%2baDsdKDmA&pid=ImgRaw&r=0"
                 alt="Tenant Tips"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Understand the Lease Agreement
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Read the lease thoroughly before signing and clarify any vague clauses.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://www.globalpropertysystems.com/wp-content/uploads/2022/05/home-appraisals.jpg"
                 alt="Tenant Tips"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Document the Property Condition
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Conduct a walk-through inspection and take pictures of any damages.
               </p>
             </div>
@@ -135,10 +135,10 @@ export default function Adiver() {
               },
             ].map((item, index) => (
               <div key={index}>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2 flex items-center gap-2">
                   {item.icon} {item.title}
                 </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-1 pl-5">
+                <ul className="list-disc list-inside text-gray-600 dark:text-white space-y-1 pl-5">
                   {item.points.map((point, i) => (
                     <li key={i}>{point}</li>
                   ))}
@@ -149,36 +149,36 @@ export default function Adiver() {
         </div>
 
         {/* For Landlords Section */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-12">
-          <h2 className="text-2xl font-bold text-slate-800 text-center mb-8 flex items-center justify-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-12">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white text-center mb-8 flex items-center justify-center gap-2">
             <FaKey className="text-green-600" /> For Landlords
           </h2>
 
           {/* Image Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://4.bp.blogspot.com/-OdZ7Z5GAV1Y/WNEmwwDJf4I/AAAAAAAAAPc/eidpflvXxR8h42vxGMSWR0CtpjHEt0ZIACPcBGAYYCw/w1200-h630-p-k-no-nu/buyer-agents-in-Melbourne-1000x600.jpg"
                 alt="Landlord Tips"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Screen Tenants Thoroughly
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Conduct credit checks, reference checks, and verify employment.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://th.bing.com/th/id/R.28443305db7c42d0fe153bae50f5b878?rik=rbNrIqgss0KsbQ&riu=http%3a%2f%2f2.bp.blogspot.com%2f-zoegNGhD7oM%2fTuvxyycg97I%2fAAAAAAAABic%2fnCcxB5YjaiE%2fs1600%2fTenant%2bCheck.jpg&ehk=ZVesGLOxriOOxpvWtjb%2bCKYGsNjIYe07izKQm%2bcMNFg%3d&risl=&pid=ImgRaw&r=0"
                 alt="Landlord Tips"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Create a Clear Lease Agreement
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Draft a comprehensive lease agreement covering all important details.
               </p>
             </div>
@@ -269,10 +269,10 @@ export default function Adiver() {
               },
             ].map((item, index) => (
               <div key={index}>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2 flex items-center gap-2">
                   {item.icon} {item.title}
                 </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-1 pl-5">
+                <ul className="list-disc list-inside text-gray-600 dark:text-white space-y-1 pl-5">
                   {item.points.map((point, i) => (
                     <li key={i}>{point}</li>
                   ))}
@@ -283,37 +283,37 @@ export default function Adiver() {
         </div>
 
         {/* Common Rental Scams Section */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-12">
-          <h2 className="text-2xl font-bold text-slate-800 text-center mb-8 flex items-center justify-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-12">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white text-center mb-8 flex items-center justify-center gap-2">
             <FaExclamationTriangle className="text-red-600" /> Common Rental
             Scams to Watch For
           </h2>
 
           {/* Image Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://cdn.propertyupdate.com.au/wp-content/uploads/2022/10/scam.jpg"
                 alt="Rental Scams"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Fake Listings
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Scammers copy legitimate listings and repost them with lower prices.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://www.hostmerchantservices.com/wp-content/uploads/2023/02/alert-new-phishing-scam-1024x684.jpg"
                 alt="Rental Scams"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Phantom Rentals
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Properties that don’t exist or aren’t available for rent.
               </p>
             </div>
@@ -388,10 +388,10 @@ export default function Adiver() {
               },
             ].map((item, index) => (
               <div key={index}>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2 flex items-center gap-2">
                   {item.icon} {item.title}
                 </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-1 pl-5">
+                <ul className="list-disc list-inside text-gray-600 dark:text-white space-y-1 pl-5">
                   {item.points.map((point, i) => (
                     <li key={i}>{point}</li>
                   ))}
@@ -402,36 +402,36 @@ export default function Adiver() {
         </div>
 
         {/* How to Avoid Scams Section */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h2 className="text-2xl font-bold text-slate-800 text-center mb-8 flex items-center justify-center gap-2">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-8">
+          <h2 className="text-2xl font-bold text-slate-800 dark:text-white text-center mb-8 flex items-center justify-center gap-2">
             <FaShieldAlt className="text-purple-600" /> How to Avoid Rental Scams
           </h2>
 
           {/* Image Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhrCUvwz_QRhvtlwBrIHcVaayaDQikqtHFGlYE5TZWInjQFJkrFZ3etL6dgjdwmPTo2veElm4_D8eF9B0ykBx3QXBXbqGmkc7Ev_ePzz6pkpZvZGwTTrulA2k8cMZ9w8cwHKPHFpxBUbMDgamXqX1BrddfpTrwrIto062935uemAdkW2HQPw1cXgukmLXH2/w1600/Keys%20to%20Safety%20Identifying%20and%20Avoiding%20Real%20Estate%20Scams.jpg"
                 alt="Avoid Scams"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Research the Property and Landlord
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Verify the listing by doing an online search and checking public records.
               </p>
             </div>
-            <div className="bg-white rounded-lg p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-6 border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow">
               <img
                 src="https://www.saturdayeveningpost.com/wp-content/uploads/satevepost/2022-01-12-home-scam-shutterstock-860x573.jpg"
                 alt="Avoid Scams"
                 className="rounded-lg w-full h-48 object-cover mb-4"
               />
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">
+              <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2">
                 Never Pay Before Seeing the Property
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-white">
                 Avoid sending money before viewing the property.
               </p>
             </div>
@@ -498,10 +498,10 @@ export default function Adiver() {
               },
             ].map((item, index) => (
               <div key={index}>
-                <h3 className="text-xl font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                <h3 className="text-xl font-semibold text-slate-700 dark:text-white mb-2 flex items-center gap-2">
                   {item.icon} {item.title}
                 </h3>
-                <ul className="list-disc list-inside text-gray-600 space-y-1 pl-5">
+                <ul className="list-disc list-inside text-gray-600 dark:text-white space-y-1 pl-5">
                   {item.points.map((point, i) => (
                     <li key={i}>{point}</li>
                   ))}

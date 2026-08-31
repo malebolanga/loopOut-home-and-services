@@ -231,10 +231,10 @@ const TripSearch = () => {
     <div className="min-h-screen from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
             Plan Your Perfect Trip
           </h1>
-          <p className="mt-3 text-lg text-gray-700 max-w-2xl mx-auto">
+          <p className="mt-3 text-lg text-gray-700 dark:text-white max-w-2xl mx-auto">
             Discover events, services, and accommodations for each stop on your journey
           </p>
         </div>
@@ -245,17 +245,17 @@ const TripSearch = () => {
           </div>
         )}
 
-        <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 border border-gray-100">
+        <div className="bg-white dark:bg-gray-900 shadow-xl rounded-2xl p-6 mb-8 border border-gray-100 dark:border-gray-800">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                 Trip Name *
               </label>
               <input
                 type="text"
                 value={tripName}
                 onChange={(e) => setTripName(e.target.value)}
-                className={`w-full px-4 py-3 border rounded-xl ${errors.tripName ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                className={`w-full px-4 py-3 border rounded-xl ${errors.tripName ? 'border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
                 placeholder="Summer Europe Adventure"
               />
               {errors.tripName && (
@@ -264,14 +264,14 @@ const TripSearch = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                 Main Destination *
               </label>
               <input
                 type="text"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                className={`w-full px-4 py-3 border rounded-xl ${errors.destination ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                className={`w-full px-4 py-3 border rounded-xl ${errors.destination ? 'border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
                 placeholder="Paris, France"
               />
               {errors.destination && (
@@ -280,18 +280,18 @@ const TripSearch = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                 Start Date *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaCalendarAlt className="text-gray-500" />
+                  <FaCalendarAlt className="text-gray-500 dark:text-white" />
                 </div>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl ${errors.startDate ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl ${errors.startDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
                 />
               </div>
               {errors.startDate && (
@@ -300,18 +300,18 @@ const TripSearch = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                 End Date *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FaCalendarAlt className="text-gray-500" />
+                  <FaCalendarAlt className="text-gray-500 dark:text-white" />
                 </div>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl ${errors.endDate ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl ${errors.endDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
                 />
               </div>
               {errors.endDate && (
@@ -324,14 +324,14 @@ const TripSearch = () => {
           </div>
 
           <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows="3"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-xl focus:border-blue-500"
               placeholder="What are your plans? Any special activities or notes?"
             />
           </div>
@@ -339,7 +339,7 @@ const TripSearch = () => {
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Trip Stops</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Trip Stops</h2>
             <button
               type="button"
               onClick={handleAddStop}
@@ -352,10 +352,10 @@ const TripSearch = () => {
           {stops.map((stop, index) => (
             <div 
               key={stop.id}
-              className="mb-8 bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100"
+              className="mb-8 bg-white dark:bg-gray-900 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800"
             >
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="font-bold text-gray-800">Stop {index + 1}: {stop.location || 'New Location'}</h3>
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                <h3 className="font-bold text-gray-800 dark:text-white">Stop {index + 1}: {stop.location || 'New Location'}</h3>
                 {stops.length > 1 && (
                   <button
                     type="button"
@@ -369,14 +369,14 @@ const TripSearch = () => {
 
               <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                     Location *
                   </label>
                   <input
                     type="text"
                     value={stop.location}
                     onChange={(e) => handleStopChange(stop.id, 'location', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-xl ${errors[`stopLocation-${index}`] ? 'border-red-500' : 'border-gray-300 focus:border-blue-500'}`}
+                    className={`w-full px-4 py-3 border rounded-xl ${errors[`stopLocation-${index}`] ? 'border-red-500' : 'border-gray-300 dark:border-gray-700 focus:border-blue-500'}`}
                     placeholder="City or specific place"
                   />
                   {errors[`stopLocation-${index}`] && (
@@ -387,7 +387,7 @@ const TripSearch = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">
                     Date *
                   </label>
                   <div className="flex">
@@ -395,7 +395,7 @@ const TripSearch = () => {
                       type="date"
                       value={stop.date}
                       onChange={(e) => handleStopChange(stop.id, 'date', e.target.value)}
-                      className={`w-full px-4 py-3 border border-gray-300 rounded-l-xl ${errors[`stopDate-${index}`] ? 'border-red-500' : 'focus:border-blue-500'}`}
+                      className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-l-xl ${errors[`stopDate-${index}`] ? 'border-red-500' : 'focus:border-blue-500'}`}
                     />
                     <button
                       type="button"
@@ -415,25 +415,25 @@ const TripSearch = () => {
               </div>
 
               {searchResults[stop.id] && (
-                <div className="p-4 border-t border-gray-200 bg-gray-50">
-                  <h4 className="font-bold text-xl text-gray-800 mb-4">Search Results for {stop.location}</h4>
+                <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
+                  <h4 className="font-bold text-xl text-gray-800 dark:text-white mb-4">Search Results for {stop.location}</h4>
                   
                   {/* Category Selector */}
-                  <div className="flex mb-6 border-b border-gray-200">
+                  <div className="flex mb-6 border-b border-gray-200 dark:border-gray-800">
                     <button
-                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'events' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'events' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 dark:text-white hover:text-blue-500'}`}
                       onClick={() => setCategory(stop.id, 'events')}
                     >
                       Events
                     </button>
                     <button
-                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'helpers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'helpers' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 dark:text-white hover:text-blue-500'}`}
                       onClick={() => setCategory(stop.id, 'helpers')}
                     >
                       Services
                     </button>
                     <button
-                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'listings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+                      className={`px-4 py-2 font-medium ${activeCategory[stop.id] === 'listings' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 dark:text-white hover:text-blue-500'}`}
                       onClick={() => setCategory(stop.id, 'listings')}
                     >
                       Accommodations
@@ -444,7 +444,7 @@ const TripSearch = () => {
                   {activeCategory[stop.id] === 'events' && searchResults[stop.id].events.length > 0 && (
                     <div className="mb-8">
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className="font-bold text-lg text-gray-800">Events in {stop.location}</h5>
+                        <h5 className="font-bold text-lg text-gray-800 dark:text-white">Events in {stop.location}</h5>
                         <div className="flex space-x-2">
                           <button 
                             className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -468,7 +468,7 @@ const TripSearch = () => {
                         >
                           {searchResults[stop.id].events.map(event => (
                             <div key={event._id} className="flex-shrink-0 w-full md:w-1/2 lg:w-1/3 pr-4">
-                              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                                 {event.imageUrls && event.imageUrls.length > 0 && (
                                   <div className="h-48 overflow-hidden">
                                     <img 
@@ -482,11 +482,11 @@ const TripSearch = () => {
                                 <div className="p-4">
                                   <div className="flex justify-between items-start">
                                     <div>
-                                      <h6 className="font-bold text-gray-900">{event.name}</h6>
+                                      <h6 className="font-bold text-gray-900 dark:text-white">{event.name}</h6>
                                       <p className="text-sm text-blue-600 font-medium capitalize mt-1">
                                         {event.type} • {event.date}
                                       </p>
-                                      <p className="text-sm text-gray-600 mt-2">
+                                      <p className="text-sm text-gray-600 dark:text-white mt-2">
                                         {getShortDescription(event.description)}
                                       </p>
                                     </div>
@@ -510,7 +510,7 @@ const TripSearch = () => {
                   {activeCategory[stop.id] === 'helpers' && searchResults[stop.id].helpers.length > 0 && (
                     <div className="mb-8">
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className="font-bold text-lg text-gray-800">Services in {stop.location}</h5>
+                        <h5 className="font-bold text-lg text-gray-800 dark:text-white">Services in {stop.location}</h5>
                         <div className="flex space-x-2">
                           <button 
                             className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -534,7 +534,7 @@ const TripSearch = () => {
                         >
                           {searchResults[stop.id].helpers.map(helper => (
                             <div key={helper._id} className="flex-shrink-0 w-full md:w-1/2 lg:w-1/3 pr-4">
-                              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                                 {helper.imageUrls && helper.imageUrls.length > 0 && (
                                   <div className="h-48 overflow-hidden">
                                     <img 
@@ -548,11 +548,11 @@ const TripSearch = () => {
                                 <div className="p-4">
                                   <div className="flex justify-between items-start">
                                     <div>
-                                      <h6 className="font-bold text-gray-900">{helper.name}</h6>
+                                      <h6 className="font-bold text-gray-900 dark:text-white">{helper.name}</h6>
                                       <p className="text-sm text-blue-600 font-medium capitalize mt-1">
                                         {helper.type} • ${helper.regularPrice}
                                       </p>
-                                      <p className="text-sm text-gray-600 mt-2">
+                                      <p className="text-sm text-gray-600 dark:text-white mt-2">
                                         {getShortDescription(helper.description)}
                                       </p>
                                     </div>
@@ -576,7 +576,7 @@ const TripSearch = () => {
                   {activeCategory[stop.id] === 'listings' && searchResults[stop.id].listings.length > 0 && (
                     <div className="mb-8">
                       <div className="flex justify-between items-center mb-4">
-                        <h5 className="font-bold text-lg text-gray-800">Accommodations in {stop.location}</h5>
+                        <h5 className="font-bold text-lg text-gray-800 dark:text-white">Accommodations in {stop.location}</h5>
                         <div className="flex space-x-2">
                           <button 
                             className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
@@ -600,7 +600,7 @@ const TripSearch = () => {
                         >
                           {searchResults[stop.id].listings.map(listing => (
                             <div key={listing._id} className="flex-shrink-0 w-full md:w-1/2 lg:w-1/3 pr-4">
-                              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                                 {listing.imageUrls && listing.imageUrls.length > 0 && (
                                   <div className="h-48 overflow-hidden">
                                     <img 
@@ -614,13 +614,13 @@ const TripSearch = () => {
                                 <div className="p-4">
                                   <div className="flex justify-between items-start">
                                     <div>
-                                      <h6 className="font-bold text-gray-900">{listing.name}</h6>
+                                      <h6 className="font-bold text-gray-900 dark:text-white">{listing.name}</h6>
                                       <p className="text-sm text-blue-600 font-medium mt-1">
                                         {listing.bedrooms} {listing.bedrooms === 1 ? 'bed' : 'beds'} • 
                                         {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} • 
                                         R{listing.regularPrice}/night
                                       </p>
-                                      <p className="text-sm text-gray-600 mt-2">
+                                      <p className="text-sm text-gray-600 dark:text-white mt-2">
                                         {getShortDescription(listing.description)}
                                       </p>
                                     </div>
@@ -643,10 +643,10 @@ const TripSearch = () => {
                   {searchResults[stop.id].events.length === 0 && 
                    searchResults[stop.id].helpers.length === 0 && 
                    searchResults[stop.id].listings.length === 0 && (
-                    <div className="bg-white rounded-xl p-8 text-center border border-gray-200">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-800">
                       <div className="text-5xl text-gray-300 mb-4">🔍</div>
-                      <h5 className="font-bold text-gray-700 text-lg">No results found</h5>
-                      <p className="text-gray-500 mt-2">
+                      <h5 className="font-bold text-gray-700 dark:text-white text-lg">No results found</h5>
+                      <p className="text-gray-500 dark:text-white mt-2">
                         We couldn t find any matches for  {stop.location}  on {stop.date}
                       </p>
                     </div>

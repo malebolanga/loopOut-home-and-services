@@ -48,7 +48,7 @@ export default function HelpCenter() {
   ];
 
   return (
-    <div className="min-h-screen bg-white font-inter">
+    <div className="min-h-screen bg-white dark:bg-gray-900 font-inter">
       {/* Cinematic Hero Section */}
       <section className="relative h-[65vh] flex items-center justify-center overflow-hidden bg-gray-950 text-center">
          <div className="absolute inset-0">
@@ -65,7 +65,7 @@ export default function HelpCenter() {
             >
                <button 
                 onClick={() => navigate(-1)}
-                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-rose-500 transition-colors mb-12"
+                className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-white hover:text-rose-500 transition-colors mb-12"
                >
                 <ArrowLeftIcon className="w-4 h-4" /> Back to neural grid
                </button>
@@ -84,7 +84,7 @@ export default function HelpCenter() {
                   <input 
                     type="text"
                     placeholder="Search for articles, protocols, or help..."
-                    className="w-full px-8 py-7 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl text-xl font-medium text-white placeholder:text-gray-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500/30 transition-all font-inter"
+                    className="w-full px-8 py-7 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl text-xl font-medium text-white placeholder:text-gray-500 dark:text-white focus:outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500/30 transition-all font-inter"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -103,7 +103,7 @@ export default function HelpCenter() {
             <motion.div
               key={i}
               whileHover={{ y: -8 }}
-              className="group p-8 bg-white border border-gray-100 rounded-[3rem] shadow-2xl shadow-gray-200/50 cursor-pointer hover:border-rose-200 transition-all"
+              className="group p-8 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[3rem] shadow-2xl shadow-gray-200/50 cursor-pointer hover:border-rose-200 transition-all"
             >
               <div className={`w-14 h-14 ${cat.color} text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform mb-8`}>
                 <cat.icon className="w-7 h-7" />
@@ -134,13 +134,13 @@ export default function HelpCenter() {
               {faqs.map((faq, i) => (
                 <div 
                   key={i}
-                  className="bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden transition-all shadow-sm hover:shadow-md"
+                  className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] overflow-hidden transition-all shadow-sm hover:shadow-md"
                 >
                   <button 
                     onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between p-8 text-left hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between p-8 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    <span className="text-sm font-bold text-gray-900 pr-8">{faq.q}</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white pr-8">{faq.q}</span>
                     <ChevronRightIcon className={`w-5 h-5 text-gray-400 transition-transform ${activeFaq === i ? 'rotate-90 text-rose-500' : ''}`} />
                   </button>
                   <AnimatePresence>
@@ -149,7 +149,7 @@ export default function HelpCenter() {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="px-8 pb-8 text-sm font-medium text-gray-500 leading-relaxed max-w-2xl"
+                        className="px-8 pb-8 text-sm font-medium text-gray-500 dark:text-white leading-relaxed max-w-2xl"
                       >
                         {faq.a}
                       </motion.div>
@@ -190,10 +190,10 @@ export default function HelpCenter() {
       </section>
 
       {/* Support Channels */}
-      <section className="bg-gray-50 py-32 mt-20 relative overflow-hidden">
+      <section className="bg-gray-50 dark:bg-gray-800 py-32 mt-20 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="space-y-4 mb-16">
-             <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500">Manual Transmission</div>
+             <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-200 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-white">Manual Transmission</div>
              <h2 className="text-5xl font-black tracking-tighter text-gray-950 m-0 leading-none italic">STILL NEED SUPPORT?</h2>
              <p className="text-gray-400 text-lg font-medium mx-auto max-w-xl">Our human operators are available for escalated mission-critical inquiries.</p>
           </div>
@@ -204,8 +204,8 @@ export default function HelpCenter() {
               { label: 'Signal Support', icon: PhoneIcon, sub: '+27 00 000 0000' },
               { label: 'Transmission', icon: EnvelopeIcon, sub: 'support@loopout.com' }
             ].map((channel, i) => (
-              <div key={i} className="bg-white p-12 rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-200/20 hover:border-rose-200 transition-all group">
-                <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-10 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner">
+              <div key={i} className="bg-white dark:bg-gray-900 p-12 rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 hover:border-rose-200 transition-all group">
+                <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-10 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner">
                   <channel.icon className="w-10 h-10" />
                 </div>
                 <h4 className="text-xs font-black uppercase tracking-[0.2em] text-gray-950 mb-3">{channel.label}</h4>
@@ -216,7 +216,7 @@ export default function HelpCenter() {
         </div>
       </section>
 
-      <footer className="py-16 border-t border-gray-100 text-center">
+      <footer className="py-16 border-t border-gray-100 dark:border-gray-800 text-center">
          <div className="flex flex-col items-center gap-6">
             <div className="w-10 h-10 bg-gray-950 rounded-xl flex items-center justify-center">
                <span className="text-white font-black">L</span>

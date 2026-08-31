@@ -135,12 +135,12 @@ export default function WishList() {
         </div>
       )}
       {wishlist.length === 0 ? (
-        <div className="text-center py-16 rounded-xl bg-white border border-gray-200">
+        <div className="text-center py-16 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
           <div className="w-10 h-10 mx-auto mb-4 rounded-2xl flex items-center justify-center">
             <Heart className="w-10 h-10 text-rose-300" />
           </div>
-          <h2 className="text-xl font-medium text-gray-700">No favorites yet</h2>
-          <p className="text-gray-500 mt-2 max-w-md mx-auto">
+          <h2 className="text-xl font-medium text-gray-700 dark:text-white">No favorites yet</h2>
+          <p className="text-gray-500 dark:text-white mt-2 max-w-md mx-auto">
             Save properties, services, helpers, and events you love by clicking the heart icon
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function WishList() {
                 className={`absolute top-3 right-3 z-20 p-2 rounded-full transition-all ${
                   removingId === item._id 
                     ? 'bg-white/80 shadow-inner' 
-                    : 'bg-white/90 hover:bg-white shadow-sm hover:shadow-md'
+                    : 'bg-white/90 hover:bg-white dark:hover:bg-gray-900 shadow-sm hover:shadow-md'
                 }`}
                 aria-label={`Remove ${item.type === 'listing' ? 'property' : item.type} from wishlist`}
               >

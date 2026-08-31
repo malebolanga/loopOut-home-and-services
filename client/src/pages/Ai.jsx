@@ -122,13 +122,13 @@ const PropertyVideoShowcase = () => {
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Featured Property Videos</h1>
-        <p className="text-gray-600 mb-8">Experience properties through immersive video tours</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Featured Property Videos</h1>
+        <p className="text-gray-600 dark:text-white mb-8">Experience properties through immersive video tours</p>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Video Player */}
           <div className="lg:w-2/3">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
               <div className="relative">
                 <video
                   ref={videoRef}
@@ -166,17 +166,17 @@ const PropertyVideoShowcase = () => {
               <div className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">{properties[activeProperty].title}</h2>
-                    <p className="text-gray-600">{properties[activeProperty].location}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{properties[activeProperty].title}</h2>
+                    <p className="text-gray-600 dark:text-white">{properties[activeProperty].location}</p>
                   </div>
                   <span className="text-xl font-semibold text-blue-600">{properties[activeProperty].price}</span>
                 </div>
-                <p className="mt-4 text-gray-700">{properties[activeProperty].description}</p>
+                <p className="mt-4 text-gray-700 dark:text-white">{properties[activeProperty].description}</p>
                 <div className="mt-4">
-                  <h4 className="font-medium text-gray-900">Amenities:</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Amenities:</h4>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {properties[activeProperty].amenities.map((amenity, index) => (
-                      <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                      <span key={index} className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white px-3 py-1 rounded-full text-sm">
                         {amenity}
                       </span>
                     ))}
@@ -194,15 +194,15 @@ const PropertyVideoShowcase = () => {
 
           {/* Property Thumbnail List */}
           <div className="lg:w-1/3">
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900">More Properties</h3>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                <h3 className="font-semibold text-gray-900 dark:text-white">More Properties</h3>
               </div>
               <div className="divide-y divide-gray-200 max-h-[800px] overflow-y-auto">
                 {properties.map((property, index) => (
                   <div 
                     key={property.id} 
-                    className={`p-4 cursor-pointer transition ${activeProperty === index ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                    className={`p-4 cursor-pointer transition ${activeProperty === index ? 'bg-blue-50' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                     onClick={() => handlePropertySelect(index)}
                   >
                     <div className="flex space-x-4">
@@ -221,8 +221,8 @@ const PropertyVideoShowcase = () => {
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{property.title}</p>
-                        <p className="text-sm text-gray-500 truncate">{property.location}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{property.title}</p>
+                        <p className="text-sm text-gray-500 dark:text-white truncate">{property.location}</p>
                         <p className="text-sm font-semibold text-blue-600">{property.price}</p>
                       </div>
                     </div>
@@ -237,14 +237,14 @@ const PropertyVideoShowcase = () => {
       {/* AI Assistant Modal */}
       {aiAssistantOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                 <FaRobot className="text-green-500 mr-2" /> Property AI Assistant
               </h3>
               <button 
                 onClick={() => setAiAssistantOpen(false)}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -256,15 +256,15 @@ const PropertyVideoShowcase = () => {
               {chatMessages.length === 0 ? (
                 <div className="text-center py-8">
                   <FaRobot className="mx-auto text-4xl text-green-500 mb-3" />
-                  <h4 className="text-lg font-medium text-gray-900">How can I help you with this property?</h4>
-                  <p className="text-gray-500 mt-1">Ask about pricing, availability, or neighborhood info</p>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-white">How can I help you with this property?</h4>
+                  <p className="text-gray-500 dark:text-white mt-1">Ask about pricing, availability, or neighborhood info</p>
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     <button 
                       onClick={() => {
                         setUserMessage("What's special about this property?");
                         setTimeout(() => handleSendMessage({ preventDefault: () => {} }), 100);
                       }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-2 rounded-lg transition"
+                      className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 dark:text-white text-sm px-3 py-2 rounded-lg transition"
                     >
                       What s special?
                     </button>
@@ -273,7 +273,7 @@ const PropertyVideoShowcase = () => {
                         setUserMessage("Is this property good for families?");
                         setTimeout(() => handleSendMessage({ preventDefault: () => {} }), 100);
                       }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-2 rounded-lg transition"
+                      className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 dark:text-white text-sm px-3 py-2 rounded-lg transition"
                     >
                       Good for families?
                     </button>
@@ -282,7 +282,7 @@ const PropertyVideoShowcase = () => {
                         setUserMessage("What's the best time to book?");
                         setTimeout(() => handleSendMessage({ preventDefault: () => {} }), 100);
                       }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-2 rounded-lg transition"
+                      className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 dark:text-white text-sm px-3 py-2 rounded-lg transition"
                     >
                       Best booking time?
                     </button>
@@ -291,7 +291,7 @@ const PropertyVideoShowcase = () => {
                         setUserMessage("Are there any discounts available?");
                         setTimeout(() => handleSendMessage({ preventDefault: () => {} }), 100);
                       }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-sm px-3 py-2 rounded-lg transition"
+                      className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-800 dark:text-white text-sm px-3 py-2 rounded-lg transition"
                     >
                       Any discounts?
                     </button>
@@ -303,7 +303,7 @@ const PropertyVideoShowcase = () => {
                     key={index} 
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                    <div className={`max-w-xs lg:max-w-md rounded-lg px-4 py-2 ${msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'}`}>
                       {msg.text}
                     </div>
                   </div>
@@ -311,7 +311,7 @@ const PropertyVideoShowcase = () => {
               )}
               {loadingResponse && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-2">
+                  <div className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white rounded-lg px-4 py-2">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"></div>
                       <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -322,14 +322,14 @@ const PropertyVideoShowcase = () => {
               )}
             </div>
             
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 dark:border-gray-800">
               <div className="flex space-x-2">
                 <input
                   type="text"
                   value={userMessage}
                   onChange={(e) => setUserMessage(e.target.value)}
                   placeholder="Ask about this property..."
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <button 
                   type="submit"

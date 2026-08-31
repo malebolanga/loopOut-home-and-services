@@ -299,14 +299,14 @@ export default function UpdateListing() {
            {/* Heading */}
            <div className="text-center space-y-2">
                <h1 className="text-3xl font-bold text-airbnb-red">Create New Listing</h1>
-               <p className="text-gray-600">Share your space with travelers from around the world</p>
+               <p className="text-gray-600 dark:text-white">Share your space with travelers from around the world</p>
              </div>
      
            {/* Form */}
            {/* Main Form */}
            <form onSubmit={handleSubmit} className="space-y-8">
                {/* Section 1: Property Type */}
-               <div className="bg-white p-6 rounded-xl shadow-sm">
+               <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm">
                  <h2 className="text-xl font-semibold mb-6">Property Type</h2>
                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {[
@@ -324,26 +324,26 @@ export default function UpdateListing() {
                        className={`p-4 border-2 rounded-lg flex flex-col items-center transition-all ${
                          formData.type === type.id
                            ? "border-airbnb-red bg-red-50"
-                           : "border-gray-200 hover:border-airbnb-red/50"
+                           : "border-gray-200 dark:border-gray-800 hover:border-airbnb-red/50"
                        }`}
                      >
                        <span className="text-2xl mb-2">{type.emoji}</span>
-                       <span className="font-medium text-gray-700">{type.label}</span>
+                       <span className="font-medium text-gray-700 dark:text-white">{type.label}</span>
                      </button>
                    ))}
                  </div>
                </div>
    
                {/* Section 2: Basic Information */}
-               <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+               <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm space-y-6">
                  <h2 className="text-xl font-semibold">Basic Information</h2>
                  <div className="grid md:grid-cols-2 gap-6">
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Property Name</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Property Name</label>
                      <input
                        type="text"
                        id="name"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                        placeholder="Cozy Mountain Cabin"
                        onChange={handleChange}
                        value={formData.name}
@@ -351,11 +351,11 @@ export default function UpdateListing() {
                    </div>
    
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Address</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Address</label>
                      <input
                        type="text"
                        id="address"
-                       className="w-full p-3 border border-gray-200 rounded-lg"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg"
                        placeholder="Enter full address"
                        onChange={handleChange}
                        value={formData.address}
@@ -363,10 +363,10 @@ export default function UpdateListing() {
                    </div>
    
                    <div className="md:col-span-2 space-y-1">
-                     <label className="font-medium text-gray-700">Description</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Description</label>
                      <textarea
                        id="description"
-                       className="w-full p-3 border border-gray-200 rounded-lg h-32"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg h-32"
                        placeholder="Describe your property..."
                        onChange={handleChange}
                        value={formData.description}
@@ -374,10 +374,10 @@ export default function UpdateListing() {
                    </div>
             
                    <div className="md:col-span-2 space-y-1">
-                     <label className="font-medium text-gray-700">Mention nearby points of interes</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Mention nearby points of interes</label>
                      <textarea
                        id="near"
-                       className="w-full p-3 border border-gray-200 rounded-lg h-32"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg h-32"
                        placeholder="Mention nearby points of interes"
                        onChange={handleChange}
                        value={formData.near}
@@ -385,10 +385,10 @@ export default function UpdateListing() {
                    </div>
    
                    <div className="md:col-span-2 space-y-1">
-                     <label className="font-medium text-gray-700">Enter any rules or regulations for the property</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Enter any rules or regulations for the property</label>
                      <textarea
                        id="rules"
-                       className="w-full p-3 border border-gray-200 rounded-lg h-32"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg h-32"
                        placeholder="Enter any rules or regulations for the property"
                        onChange={handleChange}
                        value={formData.rules}
@@ -397,11 +397,11 @@ export default function UpdateListing() {
    
    
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Contact Details</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Contact Details</label>
                      <input
                        type="number"
                        id="contact"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                        placeholder="Contact Details"
                        onChange={handleChange}
                        value={formData.contact}
@@ -410,11 +410,11 @@ export default function UpdateListing() {
    
    
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Name of Host/Seller</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Name of Host/Seller</label>
                      <input
                        type="text"
                        id="host"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                        placeholder="Contact Details"
                        onChange={handleChange}
                        value={formData.host}
@@ -423,11 +423,11 @@ export default function UpdateListing() {
    
    
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Type (e.g., House or Room)</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Type (e.g., House or Room)</label>
                      <input
                        type="text"
                        id="kind"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                        placeholder="Type (e.g., House or Room)"
                        onChange={handleChange}
                        value={formData.kind}
@@ -436,11 +436,11 @@ export default function UpdateListing() {
                   
    
                    <div className="space-y-1">
-                     <label className="font-medium text-gray-700">Available from which date</label>
+                     <label className="font-medium text-gray-700 dark:text-white">Available from which date</label>
                      <input
                        type="text"
                        id="period"
-                       className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                       className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                        placeholder="Available from which date"
                        onChange={handleChange}
                        value={formData.period}
@@ -449,11 +449,11 @@ export default function UpdateListing() {
    
    
                     <div className="space-y-1">
-                      <label className="font-medium text-gray-700">Cancellation Policy</label>
+                      <label className="font-medium text-gray-700 dark:text-white">Cancellation Policy</label>
                       <input
                         type="text"
                         id="cancel"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                        className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                         placeholder="Cancellation Policy"
                         onChange={handleChange}
                         value={formData.cancel}
@@ -461,12 +461,12 @@ export default function UpdateListing() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="font-medium text-gray-700">Max Guests / Capacity</label>
+                      <label className="font-medium text-gray-700 dark:text-white">Max Guests / Capacity</label>
                       <input
                         type="number"
                         id="numberOfGuests"
                         min="1"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+                        className="w-full p-3 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                         placeholder="e.g. 2 Guests"
                         onChange={handleChange}
                         value={formData.numberOfGuests || 1}
@@ -479,7 +479,7 @@ export default function UpdateListing() {
                </div>
    
                {/* Section 3: Media Upload */}
-               <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+               <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm space-y-6">
                  <h2 className="text-xl font-semibold">Add Photos & Video</h2>
                  
                  {/* Image Upload */}
@@ -495,11 +495,11 @@ export default function UpdateListing() {
                      />
                      <label
                        htmlFor="images"
-                       className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
+                       className="flex-1 p-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
                      >
                        <FaCamera className="text-3xl text-gray-400 mb-2" />
-                       <span className="text-gray-600">Drag photos or click to upload</span>
-                       <span className="text-sm text-gray-500">Up to 10 photos</span>
+                       <span className="text-gray-600 dark:text-white">Drag photos or click to upload</span>
+                       <span className="text-sm text-gray-500 dark:text-white">Up to 10 photos</span>
                      </label>
                      <button
                        type="button"
@@ -524,7 +524,7 @@ export default function UpdateListing() {
                            <button
                              type="button"
                              onClick={() => handleRemoveImage(index)}
-                             className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                             className="absolute top-2 right-2 bg-white dark:bg-gray-900 p-1 rounded-full shadow-sm hover:text-airbnb-red"
                            >
                              <FaTimes />
                            </button>
@@ -546,11 +546,11 @@ export default function UpdateListing() {
                      />
                      <label
                        htmlFor="video"
-                       className="flex-1 p-8 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
+                       className="flex-1 p-8 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-airbnb-red transition-colors"
                      >
                        <FaVideo className="text-3xl text-gray-400 mb-2" />
-                       <span className="text-gray-600">Upload a property video</span>
-                       <span className="text-sm text-gray-500">Max 50MB</span>
+                       <span className="text-gray-600 dark:text-white">Upload a property video</span>
+                       <span className="text-sm text-gray-500 dark:text-white">Max 50MB</span>
                      </label>
                      <button
                        type="button"
@@ -571,7 +571,7 @@ export default function UpdateListing() {
                        <button
                          type="button"
                          onClick={() => setFormData({ ...formData, videoUrl: "" })}
-                         className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-sm hover:text-airbnb-red"
+                         className="absolute top-2 right-2 bg-white dark:bg-gray-900 p-1 rounded-full shadow-sm hover:text-airbnb-red"
                        >
                          <FaTimes />
                        </button>
@@ -581,7 +581,7 @@ export default function UpdateListing() {
                </div>
    
                {/* Section 4: Amenities */}
-               <div className="bg-white p-6 rounded-xl shadow-sm">
+               <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm">
                  <h2 className="text-xl font-semibold mb-6">Amenities</h2>
                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                    {[
@@ -605,7 +605,7 @@ export default function UpdateListing() {
                      <label
                        key={amenity.id}
                        className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer ${
-                         formData[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200"
+                         formData[amenity.id] ? "border-airbnb-red bg-red-50" : "border-gray-200 dark:border-gray-800"
                        }`}
                      >
                        <input
@@ -623,11 +623,11 @@ export default function UpdateListing() {
                 </div>
 
                 {/* Operating Schedule Section */}
-                <div className="bg-white p-6 rounded-xl shadow-sm space-y-6">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-semibold">Operating Schedule</h2>
-                      <p className="text-sm text-gray-500">Define your weekly availability</p>
+                      <p className="text-sm text-gray-500 dark:text-white">Define your weekly availability</p>
                     </div>
                     <div className="p-3 bg-rose-50 rounded-2xl">
                       <ClockIcon className="w-6 h-6 text-rose-500" />
@@ -636,12 +636,12 @@ export default function UpdateListing() {
 
                   <div className="space-y-4">
                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                      <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-2xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 border-gray-100 opacity-60' : 'bg-white border-gray-50 shadow-sm'}`}>
+                      <div key={day} className={`grid grid-cols-1 md:grid-cols-4 gap-6 p-6 rounded-2xl border-2 transition-all ${formData.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-50 shadow-sm'}`}>
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-tighter ${formData.operatingHours[day].closed ? 'bg-gray-200 text-gray-400' : 'bg-rose-500 text-white'}`}>
                             {day.slice(0, 3)}
                           </div>
-                          <span className="font-bold text-gray-900 capitalize">{day}</span>
+                          <span className="font-bold text-gray-900 dark:text-white capitalize">{day}</span>
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -660,7 +660,7 @@ export default function UpdateListing() {
                                 }))}
                               />
                               <div className={`w-12 h-6 rounded-full transition-colors ${formData.operatingHours[day].closed ? 'bg-rose-500' : 'bg-gray-200'}`} />
-                              <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
+                              <div className={`absolute top-1 left-1 bg-white dark:bg-gray-900 w-4 h-4 rounded-full transition-transform ${formData.operatingHours[day].closed ? 'translate-x-6' : ''}`} />
                             </div>
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-rose-500 transition-colors">Closed</span>
                           </label>
@@ -680,7 +680,7 @@ export default function UpdateListing() {
                                     [day]: { ...prev.operatingHours[day], open: e.target.value }
                                   }
                                 }))}
-                                className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                                className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                               />
                             </div>
                             <div className="flex flex-col gap-2">
@@ -695,7 +695,7 @@ export default function UpdateListing() {
                                     [day]: { ...prev.operatingHours[day], close: e.target.value }
                                   }
                                 }))}
-                                className="px-4 py-2 bg-gray-50 border-2 border-gray-100 rounded-xl focus:border-rose-500 focus:bg-white transition-all font-bold text-xs"
+                                className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-800 rounded-xl focus:border-rose-500 focus:bg-white dark:focus:bg-gray-900 transition-all font-bold text-xs"
                               />
                             </div>
                           </>
@@ -706,7 +706,7 @@ export default function UpdateListing() {
                 </div>
    
                {/* Property Details */}
-   <div className="bg-white p-6 rounded-xl shadow-sm">
+   <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm">
      <h2 className="text-xl font-semibold mb-6">Property Details</h2>
      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
        {[
@@ -747,7 +747,7 @@ export default function UpdateListing() {
          },
        ].map((input) => (
          <div key={input.id} className="space-y-2">
-           <label htmlFor={input.id} className="flex items-center gap-2 text-gray-700 font-medium">
+           <label htmlFor={input.id} className="flex items-center gap-2 text-gray-700 dark:text-white font-medium">
              {input.icon}
              {input.label}
            </label>
@@ -758,12 +758,12 @@ export default function UpdateListing() {
                min={input.min}
                max={input.max}
                required
-               className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+               className="w-full p-3 pl-10 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                onChange={handleChange}
                value={input.value}
              />
              {input.additionalInfo && (
-               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-white">
                  {input.additionalInfo}
                </span>
              )}
@@ -774,7 +774,7 @@ export default function UpdateListing() {
        {/* Discount Price */}
        {formData.offer && (
          <div className="space-y-2">
-           <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 font-medium">
+           <label htmlFor="discountPrice" className="flex items-center gap-2 text-gray-700 dark:text-white font-medium">
              <FaPercent className="text-airbnb-red" />
              Discounted Price
            </label>
@@ -785,12 +785,12 @@ export default function UpdateListing() {
                min="0"
                max="10000000"
                required
-               className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
+               className="w-full p-3 pl-10 border border-gray-200 dark:border-gray-800 rounded-lg focus:ring-airbnb-red focus:border-airbnb-red"
                onChange={handleChange}
                value={formData.discountPrice}
              />
              {formData.type === "rent" && (
-               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-white">
                  / month
                </span>
              )}
@@ -801,7 +801,7 @@ export default function UpdateListing() {
    </div>
    
                {/* Submit Section */}
-               <div className="bg-white p-6 rounded-xl shadow-sm">
+               <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm">
                  <button
                    type="submit"
                    disabled={loading}
@@ -814,11 +814,11 @@ export default function UpdateListing() {
              </form>
      
            {/* Important Message */}
-           <div className="mt-6 p-4 border bg-white rounded-lg">
-             <h2 className="text-slate-700 text-center font-semibold mb-4">
+           <div className="mt-6 p-4 border bg-white dark:bg-gray-900 rounded-lg">
+             <h2 className="text-slate-700 dark:text-white text-center font-semibold mb-4">
                Important Message
              </h2>
-             <p className="text-xs sm:text-sm text-center text-slate-700">
+             <p className="text-xs sm:text-sm text-center text-slate-700 dark:text-white">
                If your post does not go through, we recommend logging out of your
                account and then logging back in. This will help refresh your session
                and resolve any potential errors you may encounter.

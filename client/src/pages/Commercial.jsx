@@ -20,7 +20,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
 // Component for user feedback messages (errors, no results, etc.)
 // eslint-disable-next-line react/prop-types
 const UserMessage = ({ type, message, onAction, actionText }) => (
-  <div className={`text-center py-12 sm:py-16 ${type === 'error' ? 'text-rose-700' : 'text-gray-600'}`}>
+  <div className={`text-center py-12 sm:py-16 ${type === 'error' ? 'text-rose-700' : 'text-gray-600 dark:text-white'}`}>
     <svg
       className={`mx-auto h-12 w-12 ${type === 'error' ? 'text-rose-500' : 'text-gray-400'}`}
       fill="none"
@@ -43,7 +43,7 @@ const UserMessage = ({ type, message, onAction, actionText }) => (
         />
       )}
     </svg>
-    <h3 className="mt-2 text-lg font-semibold text-gray-900">{message}</h3>
+    <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">{message}</h3>
     {onAction && (
       <button
         onClick={onAction}
@@ -306,7 +306,7 @@ export default function Commercial() {
 
 
       {/* Type Filters */}
-      <div className="sticky top-0 bg-white border-b z-10">
+      <div className="sticky top-0 bg-white dark:bg-gray-900 border-b z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          
         </div>
@@ -319,7 +319,7 @@ export default function Commercial() {
         {recentlyViewed.length > 0 && (
             <section className="mb-10">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">Recently viewed commercial properties</h2>
+                  <h2 className="text-xl font-bold text-gray-800 dark:text-white">Recently viewed commercial properties</h2>
                   {recentlyViewed.length > 0 && (
                     <button
                       className="text-sm text-rose-600 hover:text-rose-800 transition-colors"
@@ -352,7 +352,7 @@ export default function Commercial() {
                                   : null
                           }
                           onClick={() => markAsViewed(listing)}
-                          className="group bg-white rounded-xl scrollbar-hide shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 cursor-pointer w-full h-full"
+                          className="group bg-white dark:bg-gray-900 rounded-xl scrollbar-hide shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer w-full h-full"
                         />
                       </div>
                     ))}
@@ -369,7 +369,7 @@ export default function Commercial() {
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100"
+                className="animate-pulse bg-white dark:bg-gray-900 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800"
               >
                 <div className="aspect-video bg-gray-200" />
                 <div className="p-4 space-y-3">
@@ -383,7 +383,7 @@ export default function Commercial() {
         ) : commercialListings.length > 0 ? (
           // Display actual listings in a responsive grid
           <section>
-            <h2 className="text-xl font-bold text-gray-800 mb-6">All commercial properties</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">All commercial properties</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 rounded-2xl">
                 {commercialListings.map((listing) => (
                 <ListingItem
@@ -400,7 +400,7 @@ export default function Commercial() {
                         : null
                     }
                     onClick={() => markAsViewed(listing)}
-                    className="group bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 cursor-pointer"
+                    className="group bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 dark:border-gray-800 cursor-pointer"
                 />
                 ))}
                 {loading && page > 1 && (
@@ -409,7 +409,7 @@ export default function Commercial() {
                 </div>
                 )}
                 {!hasMore && commercialListings.length > 0 && (
-                <div className="col-span-full text-center py-8 text-gray-500">
+                <div className="col-span-full text-center py-8 text-gray-500 dark:text-white">
                     You ve seen all the commercial properties! Explore different filters or locations.
                 </div>
                 )}

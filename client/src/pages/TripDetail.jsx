@@ -89,12 +89,12 @@ const TripDetails = () => {
     if (!text) return null;
     
     if (text.length <= maxLength) {
-      return <p className="text-sm text-gray-600 mt-2">{text}</p>;
+      return <p className="text-sm text-gray-600 dark:text-white mt-2">{text}</p>;
     }
     
     return (
       <div>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-sm text-gray-600 dark:text-white mt-2">
           {expanded ? text : `${text.substring(0, maxLength)}...`}
         </p>
         <button 
@@ -109,10 +109,10 @@ const TripDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your trip details...</p>
+          <p className="mt-4 text-gray-600 dark:text-white">Loading your trip details...</p>
         </div>
       </div>
     );
@@ -120,10 +120,10 @@ const TripDetails = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-6 bg-white rounded-lg shadow-md max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+        <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md max-w-md">
           <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Trip</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
+          <p className="text-gray-700 dark:text-white mb-6">{error}</p>
           <Link 
             to="/" 
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -137,10 +137,10 @@ const TripDetails = () => {
 
   if (!trip) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center p-6 bg-white rounded-lg shadow-md max-w-md">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Trip Not Found</h2>
-          <p className="text-gray-700 mb-6">The trip you re looking for doesn t exist or has been deleted.</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+        <div className="text-center p-6 bg-white dark:bg-gray-900 rounded-lg shadow-md max-w-md">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Trip Not Found</h2>
+          <p className="text-gray-700 dark:text-white mb-6">The trip you re looking for doesn t exist or has been deleted.</p>
           <Link 
             to="/" 
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -162,18 +162,18 @@ const TripDetails = () => {
     <div className="min-h-screen from-blue-50 to-indigo-100 py-8 px-4">
       {/* Reminder Notifications */}
       {showReminder && (
-        <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border-l-4 border-red-500 max-w-md animate-fadeIn">
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-900 shadow-lg rounded-lg p-4 border-l-4 border-red-500 max-w-md animate-fadeIn">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-bold text-gray-900">Departure Soon!</h3>
-              <p className="text-gray-700 mt-1">
+              <h3 className="font-bold text-gray-900 dark:text-white">Departure Soon!</h3>
+              <p className="text-gray-700 dark:text-white mt-1">
                 Your trip to {trip.destination} starts in less than 6 hours.
                 Time to get ready!
               </p>
             </div>
             <button 
               onClick={() => setShowReminder(false)}
-              className="text-gray-500 hover:text-gray-700 ml-4"
+              className="text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white ml-4"
             >
               ✕
             </button>
@@ -182,18 +182,18 @@ const TripDetails = () => {
       )}
       
       {show24hReminder && (
-        <div className="fixed top-4 right-4 z-50 bg-white shadow-lg rounded-lg p-4 border-l-4 border-blue-500 max-w-md animate-fadeIn">
+        <div className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-900 shadow-lg rounded-lg p-4 border-l-4 border-blue-500 max-w-md animate-fadeIn">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="font-bold text-gray-900">Trip Starts Tomorrow!</h3>
-              <p className="text-gray-700 mt-1">
+              <h3 className="font-bold text-gray-900 dark:text-white">Trip Starts Tomorrow!</h3>
+              <p className="text-gray-700 dark:text-white mt-1">
                 Your trip to {trip.destination} starts in 24 hours.
                 Don t forget to pack!
               </p>
             </div>
             <button 
               onClick={() => setShow24hReminder(false)}
-              className="text-gray-500 hover:text-gray-700 ml-4"
+              className="text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white ml-4"
             >
               ✕
             </button>
@@ -202,9 +202,9 @@ const TripDetails = () => {
       )}
       
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl p-6 mb-8">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
               {trip.name}
             </h1>
             
@@ -216,11 +216,11 @@ const TripDetails = () => {
             )}
             
             <div className="mt-4 flex flex-wrap justify-center gap-4">
-              <div className="flex items-center text-gray-700">
+              <div className="flex items-center text-gray-700 dark:text-white">
                 <FaMapMarkerAlt className="text-blue-600 mr-2" />
                 <span>{trip.destination}</span>
               </div>
-              <div className="flex items-center text-gray-700">
+              <div className="flex items-center text-gray-700 dark:text-white">
                 <FaCalendarAlt className="text-blue-600 mr-2" />
                 <span>{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
               </div>
@@ -230,12 +230,12 @@ const TripDetails = () => {
           {trip.description && (
             <div className="mb-8 p-4 bg-blue-50 rounded-xl border border-blue-100">
               <h3 className="font-bold text-lg text-blue-800 mb-2">Trip Description</h3>
-              <p className="text-gray-700">{trip.description}</p>
+              <p className="text-gray-700 dark:text-white">{trip.description}</p>
             </div>
           )}
 
           <div className="mt-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Trip Itinerary</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Trip Itinerary</h2>
             
             {trip.stops.map((stop, index) => (
               <div key={index} className="mb-10 last:mb-0">
@@ -243,7 +243,7 @@ const TripDetails = () => {
                   <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">
                     {index + 1}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                     {stop.location} - {formatDate(stop.date)}
                   </h3>
                 </div>
@@ -253,11 +253,11 @@ const TripDetails = () => {
                   <div className="mb-6">
                     <div className="flex items-center mb-3">
                       <FaMusic className="text-purple-600 text-xl mr-2" />
-                      <h4 className="font-bold text-lg text-gray-800">Events</h4>
+                      <h4 className="font-bold text-lg text-gray-800 dark:text-white">Events</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {stop.events.map(event => (
-                        <div key={event._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                        <div key={event._id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                           {event.imageUrls && event.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
                               <ImageWithFallback 
@@ -269,7 +269,7 @@ const TripDetails = () => {
                             </div>
                           )}
                           <div className="p-4">
-                            <h5 className="font-bold text-gray-900">{event.name}</h5>
+                            <h5 className="font-bold text-gray-900 dark:text-white">{event.name}</h5>
                             <p className="text-sm text-purple-600 font-medium capitalize">
                               {event.type} • {formatDate(event.date)}
                             </p>
@@ -286,11 +286,11 @@ const TripDetails = () => {
                   <div className="mb-6">
                     <div className="flex items-center mb-3">
                       <FaTools className="text-green-600 text-xl mr-2" />
-                      <h4 className="font-bold text-lg text-gray-800">Services</h4>
+                      <h4 className="font-bold text-lg text-gray-800 dark:text-white">Services</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {stop.helpers.map(helper => (
-                        <div key={helper._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                        <div key={helper._id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                           {helper.imageUrls && helper.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
                               <ImageWithFallback 
@@ -302,7 +302,7 @@ const TripDetails = () => {
                             </div>
                           )}
                           <div className="p-4">
-                            <h5 className="font-bold text-gray-900">{helper.name}</h5>
+                            <h5 className="font-bold text-gray-900 dark:text-white">{helper.name}</h5>
                             <p className="text-sm text-green-600 font-medium capitalize">
                               {helper.type} • R{helper.regularPrice}
                             </p>
@@ -319,11 +319,11 @@ const TripDetails = () => {
                   <div className="mb-6">
                     <div className="flex items-center mb-3">
                       <FaHome className="text-blue-600 text-xl mr-2" />
-                      <h4 className="font-bold text-lg text-gray-800">Accommodations</h4>
+                      <h4 className="font-bold text-lg text-gray-800 dark:text-white">Accommodations</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {stop.listings.map(listing => (
-                        <div key={listing._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md">
+                        <div key={listing._id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-md">
                           {listing.imageUrls && listing.imageUrls.length > 0 && (
                             <div className="h-48 overflow-hidden">
                               <ImageWithFallback 
@@ -335,7 +335,7 @@ const TripDetails = () => {
                             </div>
                           )}
                           <div className="p-4">
-                            <h5 className="font-bold text-gray-900">{listing.name}</h5>
+                            <h5 className="font-bold text-gray-900 dark:text-white">{listing.name}</h5>
                             <p className="text-sm text-blue-600 font-medium">
                               {listing.bedrooms} {listing.bedrooms === 1 ? 'bed' : 'beds'} • 
                               {listing.bathrooms} {listing.bathrooms === 1 ? 'bath' : 'baths'} • 
@@ -350,8 +350,8 @@ const TripDetails = () => {
                 )}
 
                 {stop.events.length === 0 && stop.helpers.length === 0 && stop.listings.length === 0 && (
-                  <div className="bg-gray-50 rounded-xl p-6 text-center border border-gray-200">
-                    <p className="text-gray-500">No activities planned for this stop</p>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 text-center border border-gray-200 dark:border-gray-800">
+                    <p className="text-gray-500 dark:text-white">No activities planned for this stop</p>
                   </div>
                 )}
               </div>

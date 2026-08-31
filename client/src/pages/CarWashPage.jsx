@@ -424,8 +424,8 @@ export default function CarWashPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
           <FaExclamationTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Something went wrong</h2>
+          <p className="text-gray-600 dark:text-white mb-4">{error}</p>
           <button onClick={() => window.location.reload()} className="text-rose-500 font-semibold hover:underline">
             Try again
           </button>
@@ -438,7 +438,7 @@ export default function CarWashPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Car wash not found</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Car wash not found</h2>
           <button onClick={() => navigate('/')} className="mt-4 text-rose-500 font-semibold">
             Go back home
           </button>
@@ -453,12 +453,12 @@ export default function CarWashPage() {
   return (
     <div className="min-h-screen">
       {/* Navigation Header - Transparent on top of image */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/50' : 'bg-transparent py-2'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-800/50' : 'bg-transparent py-2'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button 
               onClick={() => navigate(-1)}
-              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-900 dark:text-white' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
             >
               <FaArrowLeft className="text-lg" />
             </button>
@@ -466,17 +466,17 @@ export default function CarWashPage() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleShare}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-900 dark:text-white' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
               >
                 <FiShare2 className="text-lg" />
               </button>
               <button 
                 onClick={() => setIsSaved(!isSaved)}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 hover:bg-gray-200 text-gray-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
+                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-gray-900 dark:text-white' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
               >
                 {isSaved ? 
                   <FaHeart className="text-lg text-rose-500" /> : 
-                  <FiHeart className={`text-lg ${isScrolled ? 'text-gray-900' : 'text-white'}`} />
+                  <FiHeart className={`text-lg ${isScrolled ? 'text-gray-900 dark:text-white' : 'text-white'}`} />
                 }
               </button>
             </div>
@@ -485,7 +485,7 @@ export default function CarWashPage() {
       </nav>
 
       {/* Image Gallery Section - Edge to Edge Style */}
-      <div className="relative w-full overflow-hidden bg-slate-900 border-b border-gray-200 shadow-sm">
+      <div className="relative w-full overflow-hidden bg-slate-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
           {/* Main Large Image */}
           <div 
@@ -539,20 +539,20 @@ export default function CarWashPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white px-4 sm:px-6 lg:px-8 py-8 pb-24 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <div className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-8 pb-24 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* Header Info */}
-            <div className="border-b border-gray-200 pb-6">
-              <h1 className="text-3xl font-semibold text-gray-900 mb-2">{carWash.name}</h1>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600">
+            <div className="border-b border-gray-200 dark:border-gray-800 pb-6">
+              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">{carWash.name}</h1>
+              <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-white">
                 <div className="flex items-center gap-1">
                   <FaStar className="text-rose-500 fill-rose-500" />
-                  <span className="font-semibold text-gray-900">{carWash.rating || '4.9'}</span>
-                  <span className="underline cursor-pointer hover:text-gray-900">{carWash.reviewCount || '12'} reviews</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{carWash.rating || '4.9'}</span>
+                  <span className="underline cursor-pointer hover:text-gray-900 dark:hover:text-white">{carWash.reviewCount || '12'} reviews</span>
                 </div>
                 <span>·</span>
                 <div className="flex items-center gap-1">
@@ -568,7 +568,7 @@ export default function CarWashPage() {
             </div>
 
             {/* Service Provider Info */}
-            <div className="flex items-center gap-4 py-6 border-b border-gray-200">
+            <div className="flex items-center gap-4 py-6 border-b border-gray-200 dark:border-gray-800">
               <Link to={`/user-profile/${carWash.userRef?._id}`} className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
                 {carWash.userRef?.avatar ? (
                   <img 
@@ -577,48 +577,48 @@ export default function CarWashPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-400">
                     <FaUser className="text-2xl" />
                   </div>
                 )}
               </Link>
               <div>
                 <Link to={`/user-profile/${carWash.userRef?._id}`} className="hover:underline">
-                  <h2 className="text-lg font-semibold text-gray-900">{carWash.userRef?.username || 'Car Wash Professional'}</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{carWash.userRef?.username || 'Car Wash Professional'}</h2>
                 </Link>
-                <p className="text-gray-600">{carWash.host || '5'} years of experience</p>
+                <p className="text-gray-600 dark:text-white">{carWash.host || '5'} years of experience</p>
               </div>
             </div>
 
             {/* Highlights */}
-            <div className="space-y-4 py-6 border-b border-gray-200">
+            <div className="space-y-4 py-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex gap-4">
-                <FaHome className="text-2xl text-gray-700 mt-1" />
+                <FaHome className="text-2xl text-gray-700 dark:text-white mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Mobile Service</h3>
-                  <p className="text-gray-600 text-sm mt-1">I come to your location for ultimate convenience. All equipment provided.</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Mobile Service</h3>
+                  <p className="text-gray-600 dark:text-white text-sm mt-1">I come to your location for ultimate convenience. All equipment provided.</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <FaCertificate className="text-2xl text-gray-700 mt-1" />
+                <FaCertificate className="text-2xl text-gray-700 dark:text-white mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Experienced Professional</h3>
-                  <p className="text-gray-600 text-sm mt-1">Certified and trained in premium detailing techniques and products.</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Experienced Professional</h3>
+                  <p className="text-gray-600 dark:text-white text-sm mt-1">Certified and trained in premium detailing techniques and products.</p>
                 </div>
               </div>
               <div className="flex gap-4">
-                <FaClock className="text-2xl text-gray-700 mt-1" />
+                <FaClock className="text-2xl text-gray-700 dark:text-white mt-1" />
                 <div>
-                  <h3 className="font-semibold text-gray-900">Flexible Scheduling</h3>
-                  <p className="text-gray-600 text-sm mt-1">Available 7 days a week. Same-day bookings often available.</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Flexible Scheduling</h3>
+                  <p className="text-gray-600 dark:text-white text-sm mt-1">Available 7 days a week. Same-day bookings often available.</p>
                 </div>
               </div>
             </div>
 
             {/* Description */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About this service</h2>
-              <div className="text-gray-700 leading-relaxed space-y-4">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About this service</h2>
+              <div className="text-gray-700 dark:text-white leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
                 ))}
@@ -626,7 +626,7 @@ export default function CarWashPage() {
               {description.length > 250 && (
                 <button 
                   onClick={toggleDescription}
-                  className="mt-4 flex items-center gap-2 font-semibold underline text-gray-900 hover:text-gray-700"
+                  className="mt-4 flex items-center gap-2 font-semibold underline text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-white"
                 >
                   {showFullDescription ? 'Show less' : 'Show more'}
                 </button>
@@ -634,8 +634,8 @@ export default function CarWashPage() {
             </div>
 
             {/* Services Offered */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Select your service</h2>
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Select your service</h2>
               <div className="space-y-4">
                 {carWashServices.map((service) => (
                   <div 
@@ -644,36 +644,36 @@ export default function CarWashPage() {
                     className={`relative border-2 rounded-xl p-6 cursor-pointer transition-all hover:border-gray-400 ${
                       selectedServices.includes(service.id) 
                         ? 'border-rose-500 bg-rose-50/30' 
-                        : 'border-gray-200'
+                        : 'border-gray-200 dark:border-gray-800'
                     }`}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{service.name}</h3>
                           {service.popular && (
                             <span className="px-2 py-1 bg-rose-100 text-rose-700 text-xs font-semibold rounded-full">
                               Popular
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-600 text-sm mb-3">{service.description}</p>
+                        <p className="text-gray-600 dark:text-white text-sm mb-3">{service.description}</p>
                         <div className="flex flex-wrap gap-2 mb-3">
                           {service.includes.map((item, idx) => (
-                            <span key={idx} className="text-xs text-gray-500 flex items-center gap-1">
+                            <span key={idx} className="text-xs text-gray-500 dark:text-white flex items-center gap-1">
                               <FaCheck className="text-green-500" /> {item}
                             </span>
                           ))}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-white">
                           <span className="flex items-center gap-1">
                             <FaClock /> {service.duration}
                           </span>
                         </div>
                       </div>
                       <div className="text-right ml-4">
-                        <div className="text-xl font-semibold text-gray-900">R{service.price}</div>
-                        <div className="text-sm text-gray-500">per vehicle</div>
+                        <div className="text-xl font-semibold text-gray-900 dark:text-white">R{service.price}</div>
+                        <div className="text-sm text-gray-500 dark:text-white">per vehicle</div>
                       </div>
                     </div>
                     
@@ -681,7 +681,7 @@ export default function CarWashPage() {
                     <div className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       selectedServices.includes(service.id) 
                         ? 'border-rose-500 bg-rose-500' 
-                        : 'border-gray-300'
+                        : 'border-gray-300 dark:border-gray-700'
                     }`}>
                       {selectedServices.includes(service.id) && <FaCheck className="text-white text-xs" />}
                     </div>
@@ -690,14 +690,14 @@ export default function CarWashPage() {
               </div>
               
               {selectedServices.length > 0 && (
-                <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Vehicle type adjustment</span>
+                    <span className="text-gray-600 dark:text-white">Vehicle type adjustment</span>
                     <select 
                       name="vehicleType"
                       value={bookingData.vehicleType}
                       onChange={handleBookingChange}
-                      className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
+                      className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1 text-sm"
                     >
                       <option value="">Select vehicle</option>
                       {vehicleTypes.map(v => (
@@ -705,19 +705,19 @@ export default function CarWashPage() {
                       ))}
                     </select>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    <span className="font-semibold text-gray-900">Total estimate</span>
-                    <span className="text-2xl font-bold text-gray-900">R{totalPrice}</span>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                    <span className="font-semibold text-gray-900 dark:text-white">Total estimate</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">R{totalPrice}</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Reviews Section */}
-            <div className="py-6 border-b border-gray-200">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-6">
                 <FaStar className="text-rose-500 fill-rose-500 text-xl" />
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {carWash.rating || '4.9'} · {carWash.reviewCount || '12'} reviews
                 </h2>
               </div>
@@ -769,48 +769,48 @@ export default function CarWashPage() {
               
               <button 
                 onClick={() => setShowCommentsPanel(true)}
-                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Show all {commentCount} reviews
               </button>
             </div>
 
             {/* Qualifications */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">My qualifications</h2>
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">My qualifications</h2>
               <div className="space-y-4">
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <FaBriefcase className="text-gray-700 text-xl" />
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                    <FaBriefcase className="text-gray-700 dark:text-white text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{carWash.host || '5'} years of experience</h3>
-                    <p className="text-gray-600 text-sm mt-1">Professional car detailing and washing services with premium products.</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{carWash.host || '5'} years of experience</h3>
+                    <p className="text-gray-600 dark:text-white text-sm mt-1">Professional car detailing and washing services with premium products.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <FaCertificate className="text-gray-700 text-xl" />
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                    <FaCertificate className="text-gray-700 dark:text-white text-xl" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Certified Detailer</h3>
-                    <p className="text-gray-600 text-sm mt-1">Trained in ceramic coating, paint correction, and interior restoration.</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">Certified Detailer</h3>
+                    <p className="text-gray-600 dark:text-white text-sm mt-1">Trained in ceramic coating, paint correction, and interior restoration.</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Location / Service Area */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">I'll come to you</h2>
-              <p className="text-gray-600 mb-4">
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">I'll come to you</h2>
+              <p className="text-gray-600 dark:text-white mb-4">
                 I travel to guests in the {carWash.address || 'surrounding area'}. To book in a different location, you can message me.
               </p>
               <div className="h-64 bg-gray-200 rounded-xl overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
                   <div className="text-center">
                     <FaMapPin className="text-4xl text-rose-500 mx-auto mb-2" />
-                    <p className="text-gray-600">Service Area Map</p>
+                    <p className="text-gray-600 dark:text-white">Service Area Map</p>
                   </div>
                 </div>
               </div>
@@ -818,26 +818,26 @@ export default function CarWashPage() {
 
             {/* Things to Know */}
             <div className="py-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Things to know</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Things to know</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Service requirements</h3>
-                  <ul className="space-y-2 text-gray-600 text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Service requirements</h3>
+                  <ul className="space-y-2 text-gray-600 dark:text-white text-sm">
                     <li>Access to water source</li>
                     <li>Safe parking space</li>
                     <li>All vehicle types welcome</li>
                   </ul>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Cancellation policy</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Cancellation policy</h3>
+                  <p className="text-gray-600 dark:text-white text-sm">
                     Cancel at least 24 hours before the start time for a full refund.
                   </p>
-                  <button className="text-gray-900 font-semibold underline text-sm mt-2">Learn more</button>
+                  <button className="text-gray-900 dark:text-white font-semibold underline text-sm mt-2">Learn more</button>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-3">Safety & quality</h3>
-                  <p className="text-gray-600 text-sm">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Safety & quality</h3>
+                  <p className="text-gray-600 dark:text-white text-sm">
                     All professionals are vetted for quality and safety standards.
                   </p>
                 </div>
@@ -849,11 +849,11 @@ export default function CarWashPage() {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <div className="border border-gray-300 rounded-xl shadow-lg p-6 bg-white">
+              <div className="border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg p-6 bg-white dark:bg-gray-900">
                 <div className="flex items-end justify-between mb-6">
                   <div>
-                    <span className="text-2xl font-bold text-gray-900">R{carWash.regularPrice}</span>
-                    <span className="text-gray-600"> / service</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">R{carWash.regularPrice}</span>
+                    <span className="text-gray-600 dark:text-white"> / service</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm">
                     <FaStar className="text-rose-500 fill-rose-500" />
@@ -862,19 +862,19 @@ export default function CarWashPage() {
                 </div>
 
                 {/* Quick Booking Form */}
-                <div className="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                  <div className="p-3 border-b border-gray-300">
-                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Date</label>
+                <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
+                  <div className="p-3 border-b border-gray-300 dark:border-gray-700">
+                    <label className="block text-xs font-bold text-gray-900 dark:text-white uppercase mb-1">Date</label>
                     <input 
                       type="date"
                       name="date"
                       value={bookingData.date}
                       onChange={handleBookingChange}
-                      className="w-full text-sm text-gray-700 outline-none"
+                      className="w-full text-sm text-gray-700 dark:text-white outline-none"
                       min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
-                  <div className="p-3 border-b border-gray-300">
+                  <div className="p-3 border-b border-gray-300 dark:border-gray-700">
                     <BookingTimeSlots
                       selectedDate={bookingData.date}
                       selectedTime={bookingData.time}
@@ -884,14 +884,14 @@ export default function CarWashPage() {
                     />
                   </div>
                   <div className="p-3">
-                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Your Name</label>
+                    <label className="block text-xs font-bold text-gray-900 dark:text-white uppercase mb-1">Your Name</label>
                     <input 
                       type="text"
                       name="name"
                       value={bookingData.name}
                       onChange={handleBookingChange}
                       placeholder="Full name"
-                      className="w-full text-sm text-gray-700 outline-none"
+                      className="w-full text-sm text-gray-700 dark:text-white outline-none"
                     />
                   </div>
                 </div>
@@ -903,34 +903,34 @@ export default function CarWashPage() {
                   Check availability
                 </button>
 
-                <div className="text-center text-gray-500 text-sm mb-4">
+                <div className="text-center text-gray-500 dark:text-white text-sm mb-4">
                   You won't be charged yet
                 </div>
 
                 {totalPrice > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between text-gray-600">
+                  <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+                    <div className="flex justify-between text-gray-600 dark:text-white">
                       <span className="underline">Service estimate</span>
                       <span>R{totalPrice}</span>
                     </div>
-                    <div className="flex justify-between font-bold text-gray-900 text-lg pt-3 border-t border-gray-200">
+                    <div className="flex justify-between font-bold text-gray-900 dark:text-white text-lg pt-3 border-t border-gray-200 dark:border-gray-800">
                       <span>Total</span>
                       <span>R{totalPrice}</span>
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-start gap-3 mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-start gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
                   <FaCheckCircle className="text-rose-500 mt-0.5" />
-                  <p className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">High demand:</span> This service is usually booked within 3 hours.
+                  <p className="text-sm text-gray-600 dark:text-white">
+                    <span className="font-semibold text-gray-900 dark:text-white">High demand:</span> This service is usually booked within 3 hours.
                   </p>
                 </div>
               </div>
 
               {/* Report Link */}
               <div className="mt-6 text-center">
-                <button className="flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 text-sm mx-auto">
+                <button className="flex items-center justify-center gap-2 text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white text-sm mx-auto">
                   <FaFlag className="text-xs" />
                   Report this listing
                 </button>
@@ -1007,11 +1007,11 @@ export default function CarWashPage() {
       {/* Full Page Booking Form Overlay */}
       {showBookingFormOverlay && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
               <button
                 onClick={closeBookingFormOverlay}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               >
                 <FaTimes className="text-xl" />
               </button>
@@ -1025,26 +1025,26 @@ export default function CarWashPage() {
                 <h3 className="text-lg font-semibold mb-4">Your information</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Full name *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Full name *</label>
                     <input
                       type="text"
                       name="name"
                       value={bookingData.name}
                       onChange={handleBookingChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="Enter your full name"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone number *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Phone number *</label>
                     <input
                       type="tel"
                       name="phone"
                       value={bookingData.phone}
                       onChange={handleBookingChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="071 234 5678"
                     />
                   </div>
@@ -1056,13 +1056,13 @@ export default function CarWashPage() {
                 <h3 className="text-lg font-semibold mb-4">Vehicle details</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle type *</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle type *</label>
                     <select
                       name="vehicleType"
                       value={bookingData.vehicleType}
                       onChange={handleBookingChange}
                       required
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     >
                       <option value="">Select vehicle type</option>
                       {vehicleTypes.map(v => (
@@ -1071,24 +1071,24 @@ export default function CarWashPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle make (optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle make (optional)</label>
                     <input
                       type="text"
                       name="vehicleMake"
                       value={bookingData.vehicleMake}
                       onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="e.g. Toyota"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle model (optional)</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle model (optional)</label>
                     <input
                       type="text"
                       name="vehicleModel"
                       value={bookingData.vehicleModel}
                       onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                       placeholder="e.g. Corolla"
                     />
                   </div>
@@ -1099,14 +1099,14 @@ export default function CarWashPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-4">Service location</h3>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Address *</label>
                   <textarea
                     name="address"
                     value={bookingData.address}
                     onChange={handleBookingChange}
                     required
                     rows="3"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     placeholder="Enter your full address for mobile service"
                   />
                 </div>
@@ -1117,7 +1117,7 @@ export default function CarWashPage() {
                 <h3 className="text-lg font-semibold mb-4">Service requirements</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Water source</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Water source</label>
                     <div className="flex gap-4">
                       <label className="flex items-center">
                         <input
@@ -1145,7 +1145,7 @@ export default function CarWashPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Electricity access</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Electricity access</label>
                     <div className="flex gap-4">
                       <label className="flex items-center">
                         <input
@@ -1173,7 +1173,7 @@ export default function CarWashPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Safe parking available</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Safe parking available</label>
                     <div className="flex gap-4">
                       <label className="flex items-center">
                         <input
@@ -1211,7 +1211,7 @@ export default function CarWashPage() {
                     value={bookingData.specialRequirements}
                     onChange={handleBookingChange}
                     rows="3"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
                     placeholder="Any special requests or instructions for the service provider..."
                   />
                 </div>
@@ -1230,31 +1230,31 @@ export default function CarWashPage() {
                         className="hidden"
                         multiple
                       />
-                      <div className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors">
+                      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 dark:text-white transition-colors">
                         Choose files
                       </div>
                     </label>
-                    <span className="text-sm text-gray-500">Max 2 files (5MB each)</span>
+                    <span className="text-sm text-gray-500 dark:text-white">Max 2 files (5MB each)</span>
                   </div>
                   
                   {attachments.length > 0 && (
                     <div className="space-y-2">
                       {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                           <div className="flex items-center gap-2">
                             {file.type.startsWith('image/') ? (
                               <FaFileImage className="text-blue-500" />
                             ) : (
                               <FaFilePdf className="text-red-500" />
                             )}
-                            <span className="text-sm text-gray-700 truncate max-w-[200px]">
+                            <span className="text-sm text-gray-700 dark:text-white truncate max-w-[200px]">
                               {file.name}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-gray-600"
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
                           >
                             <FaTimes className="text-sm" />
                           </button>
@@ -1267,12 +1267,12 @@ export default function CarWashPage() {
 
               {/* Price Summary */}
               {totalPrice > 0 && (
-                <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600">Total estimate</span>
-                    <span className="text-xl font-bold text-gray-900">R{totalPrice}</span>
+                    <span className="text-gray-600 dark:text-white">Total estimate</span>
+                    <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice}</span>
                   </div>
-                  <p className="text-xs text-gray-500">Final price may vary based on vehicle condition and additional requests.</p>
+                  <p className="text-xs text-gray-500 dark:text-white">Final price may vary based on vehicle condition and additional requests.</p>
                 </div>
               )}
 
@@ -1295,7 +1295,7 @@ export default function CarWashPage() {
                 )}
               </button>
 
-              <p className="text-xs text-center text-gray-500">
+              <p className="text-xs text-center text-gray-500 dark:text-white">
                 By submitting this form, you agree to our terms of service and privacy policy.
               </p>
             </form>
@@ -1312,11 +1312,11 @@ export default function CarWashPage() {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-xl font-bold text-gray-900">R{totalPrice || carWash.regularPrice}</span>
-            <span className="text-gray-600 text-sm"> / service</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice || carWash.regularPrice}</span>
+            <span className="text-gray-600 dark:text-white text-sm"> / service</span>
           </div>
           <button 
             onClick={openBookingFormOverlay}

@@ -210,7 +210,7 @@ export default function Planner() {
             <h1 className="text-xl font-black tracking-tighter leading-none">
               My <span className="text-rose-500">Planner</span>
             </h1>
-            <p className="text-gray-500 text-[11px] font-medium mt-1">
+            <p className="text-gray-500 dark:text-white text-[11px] font-medium mt-1">
               {now.toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}
             </p>
           </div>
@@ -256,7 +256,7 @@ export default function Planner() {
               className={`relative px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-1.5 ${
                 activeTab === tab.key
                   ? tab.special ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-[0_6px_16px_rgba(225,29,72,0.35)]'
-                                : 'bg-white text-gray-950 shadow-md'
+                                : 'bg-white dark:bg-gray-900 text-gray-950 shadow-md'
                   : 'text-white/40 hover:text-white/70'
               }`}>
               {tab.special && <SparklesIcon className="w-3.5 h-3.5" />}

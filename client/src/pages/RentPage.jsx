@@ -152,7 +152,7 @@ const InquiryModal = ({ listing, onClose }) => {
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-        className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col"
       >
         <div className="bg-gray-950 p-6 sm:p-8 flex items-center justify-between">
           <div>
@@ -167,7 +167,7 @@ const InquiryModal = ({ listing, onClose }) => {
         {sent ? (
           <div className="p-10 flex flex-col items-center gap-4">
             <CheckCircleIcon className="w-16 h-16 text-green-500" />
-            <p className="font-black text-gray-900 text-xl">Message Sent!</p>
+            <p className="font-black text-gray-900 dark:text-white text-xl">Message Sent!</p>
           </div>
         ) : (
           <form onSubmit={handleSend} className="p-6 sm:p-8 space-y-4 overflow-y-auto">
@@ -182,7 +182,7 @@ const InquiryModal = ({ listing, onClose }) => {
                   type={type} required value={form[id]}
                   onChange={(e) => setForm((p) => ({ ...p, [id]: e.target.value }))}
                   placeholder={placeholder}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-sm"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-sm"
                 />
               </div>
             ))}
@@ -199,7 +199,7 @@ const InquiryModal = ({ listing, onClose }) => {
                     className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition text-center ${
                       form.inquiryType === purpose
                         ? 'bg-gray-900 text-white border-gray-900 shadow-sm'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-400'
+                        : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:border-gray-400'
                     }`}
                   >
                     {purpose}
@@ -216,7 +216,7 @@ const InquiryModal = ({ listing, onClose }) => {
                   type="date"
                   value={form.viewingDate}
                   onChange={(e) => setForm(p => ({ ...p, viewingDate: e.target.value }))}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
                 />
               </div>
               <div>
@@ -224,7 +224,7 @@ const InquiryModal = ({ listing, onClose }) => {
                 <select
                   value={form.viewingTime}
                   onChange={(e) => setForm(p => ({ ...p, viewingTime: e.target.value }))}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
                 >
                   {['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'].map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -240,7 +240,7 @@ const InquiryModal = ({ listing, onClose }) => {
                 <select
                   value={form.leaseDuration}
                   onChange={(e) => setForm(p => ({ ...p, leaseDuration: e.target.value }))}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
                 >
                   <option value="Month-to-Month">Month-to-Month</option>
                   <option value="6 Months">6 Months</option>
@@ -253,7 +253,7 @@ const InquiryModal = ({ listing, onClose }) => {
                 <select
                   value={form.occupants}
                   onChange={(e) => setForm(p => ({ ...p, occupants: e.target.value }))}
-                  className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition text-xs"
                 >
                   {[1, 2, 3, 4, 5, 6].map(n => (
                     <option key={n} value={String(n)}>{n} {n === 1 ? 'Person' : 'People'}</option>
@@ -267,7 +267,7 @@ const InquiryModal = ({ listing, onClose }) => {
               <textarea
                 rows={2} value={form.message}
                 onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
-                className="w-full px-4 py-3 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition resize-none text-sm"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border-2 border-transparent focus:border-gray-900 outline-none font-medium transition resize-none text-sm"
               />
             </div>
             <button type="submit"
@@ -359,7 +359,7 @@ export default function RentPage() {
       <div className="w-20 h-20 bg-rose-50 rounded-[2rem] flex items-center justify-center">
         <HomeModernIcon className="w-10 h-10 text-rose-300" />
       </div>
-      <h2 className="text-2xl font-black text-gray-900">Property not found</h2>
+      <h2 className="text-2xl font-black text-gray-900 dark:text-white">Property not found</h2>
       <p className="text-gray-400">{error}</p>
       <button onClick={() => navigate(-1)}
         className="px-8 py-4 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-rose-600 transition"
@@ -377,22 +377,22 @@ export default function RentPage() {
     <div className="min-h-screen bg-[#FDFDFD]">
 
       {/* ── Top bar ── */}
-      <div className="fixed top-0 left-0 right-0 z-[90] flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+      <div className="fixed top-0 left-0 right-0 z-[90] flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
         <button onClick={() => navigate(-1)}
-          className="flex items-center gap-2 font-black text-sm text-gray-900 hover:text-rose-600 transition group"
+          className="flex items-center gap-2 font-black text-sm text-gray-900 dark:text-white hover:text-rose-600 transition group"
         >
           <ArrowLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           Back
         </button>
         <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em]">For Rent</span>
         <div className="flex items-center gap-3">
-          <button onClick={share} className="p-2.5 hover:bg-gray-100 rounded-full transition">
-            <ShareIcon className="w-5 h-5 text-gray-600" />
+          <button onClick={share} className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition">
+            <ShareIcon className="w-5 h-5 text-gray-600 dark:text-white" />
           </button>
           <button onClick={toggleFavorite} className="p-2.5 hover:bg-rose-50 rounded-full transition">
             {isFavorite
               ? <HeartIconSolid className="w-5 h-5 text-rose-500" />
-              : <HeartIcon className="w-5 h-5 text-gray-600" />}
+              : <HeartIcon className="w-5 h-5 text-gray-600 dark:text-white" />}
           </button>
         </div>
       </div>
@@ -425,7 +425,7 @@ export default function RentPage() {
               ))}
             </div>
             <button onClick={() => openGallery(0)}
-              className="hidden md:flex absolute bottom-6 right-8 items-center gap-2 bg-white px-5 py-2.5 rounded-2xl shadow-lg font-black text-xs uppercase tracking-widest hover:shadow-xl transition"
+              className="hidden md:flex absolute bottom-6 right-8 items-center gap-2 bg-white dark:bg-gray-900 px-5 py-2.5 rounded-2xl shadow-lg font-black text-xs uppercase tracking-widest hover:shadow-xl transition"
             >
               <Squares2X2Icon className="w-4 h-4" /> Show all photos
             </button>
@@ -442,7 +442,7 @@ export default function RentPage() {
             </div>
           </div>
         ) : (
-          <div className="h-72 bg-gray-100 flex items-center justify-center">
+          <div className="h-72 bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <CameraIcon className="w-16 h-16 text-gray-300" />
           </div>
         )}
@@ -457,14 +457,14 @@ export default function RentPage() {
           {/* Title + location */}
           <div>
             <div className="flex items-start justify-between gap-4">
-              <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-tight">
                 {listing.name}
               </h1>
               <span className="shrink-0 px-5 py-2 bg-gray-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest">
                 For Rent
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-3 text-gray-500">
+            <div className="flex items-center gap-2 mt-3 text-gray-500 dark:text-white">
               <MdLocationOn className="text-rose-500 shrink-0" size={18} />
               <span className="font-medium text-sm">{listing.address}</span>
             </div>
@@ -472,19 +472,19 @@ export default function RentPage() {
             {/* Stat chips */}
             <div className="flex flex-wrap gap-3 mt-6">
               {listing.bedrooms > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-white">
                   <FaBed className="text-rose-400" />
                   {listing.bedrooms} bed{listing.bedrooms > 1 ? "s" : ""}
                 </div>
               )}
               {listing.bathrooms > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-white">
                   <FaBath className="text-rose-400" />
                   {listing.bathrooms} bath{listing.bathrooms > 1 ? "s" : ""}
                 </div>
               )}
               {listing.kind && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-2xl text-sm font-bold text-gray-700 capitalize">
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-white capitalize">
                   <HomeModernIcon className="w-4 h-4 text-rose-400" />
                   {listing.kind.replace(/_/g, " ")}
                 </div>
@@ -500,7 +500,7 @@ export default function RentPage() {
 
           {/* Host */}
           {(listing.host || listing.userRef) && (
-            <div className="flex items-center gap-4 p-6 bg-gray-50 rounded-[2rem]">
+            <div className="flex items-center gap-4 p-6 bg-gray-50 dark:bg-gray-800 rounded-[2rem]">
               <div className="w-14 h-14 rounded-2xl bg-gray-200 overflow-hidden shrink-0">
                 {listing.userRef?.avatar
                   ? <img src={listing.userRef.avatar} alt="" className="w-full h-full object-cover" />
@@ -508,7 +508,7 @@ export default function RentPage() {
               </div>
               <div>
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Hosted by</p>
-                <p className="text-lg font-black text-gray-900 mt-0.5">
+                <p className="text-lg font-black text-gray-900 dark:text-white mt-0.5">
                   {listing.host || listing.userRef?.username}
                 </p>
               </div>
@@ -517,27 +517,27 @@ export default function RentPage() {
 
           {/* Description */}
           <div>
-            <h2 className="text-xl font-black text-gray-900 mb-4">About this rental</h2>
-            <p className="text-gray-600 leading-relaxed font-medium whitespace-pre-line">{listing.description}</p>
+            <h2 className="text-xl font-black text-gray-900 dark:text-white mb-4">About this rental</h2>
+            <p className="text-gray-600 dark:text-white leading-relaxed font-medium whitespace-pre-line">{listing.description}</p>
           </div>
 
           {/* Nearby */}
           {listing.near && (
             <div>
-              <h2 className="text-xl font-black text-gray-900 mb-4">What's nearby</h2>
-              <p className="text-gray-600 leading-relaxed font-medium">{listing.near}</p>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white mb-4">What's nearby</h2>
+              <p className="text-gray-600 dark:text-white leading-relaxed font-medium">{listing.near}</p>
             </div>
           )}
 
           {/* Amenities */}
           {amenities.length > 0 && (
             <div>
-              <h2 className="text-xl font-black text-gray-900 mb-6">What this place offers</h2>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white mb-6">What this place offers</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {amenities.map(([key, { icon: Icon, label }]) => (
-                  <div key={key} className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
+                  <div key={key} className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl">
                     <Icon className="text-rose-500 shrink-0" size={20} />
-                    <span className="text-sm font-bold text-gray-700">{label}</span>
+                    <span className="text-sm font-bold text-gray-700 dark:text-white">{label}</span>
                   </div>
                 ))}
               </div>
@@ -547,9 +547,9 @@ export default function RentPage() {
           {/* House rules */}
           {listing.rules && (
             <div>
-              <h2 className="text-xl font-black text-gray-900 mb-4">House rules</h2>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white mb-4">House rules</h2>
               <div className="p-6 bg-amber-50 border border-amber-100 rounded-[2rem]">
-                <p className="text-gray-700 font-medium leading-relaxed">{listing.rules}</p>
+                <p className="text-gray-700 dark:text-white font-medium leading-relaxed">{listing.rules}</p>
               </div>
             </div>
           )}
@@ -557,10 +557,10 @@ export default function RentPage() {
           {/* Cancellation */}
           {listing.cancel && (
             <div>
-              <h2 className="text-xl font-black text-gray-900 mb-4">Cancellation policy</h2>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white mb-4">Cancellation policy</h2>
               <div className="flex items-start gap-4 p-6 bg-blue-50 border border-blue-100 rounded-[2rem]">
                 <ShieldCheckIcon className="w-6 h-6 text-blue-500 shrink-0 mt-0.5" />
-                <p className="text-gray-700 font-medium">{listing.cancel}</p>
+                <p className="text-gray-700 dark:text-white font-medium">{listing.cancel}</p>
               </div>
             </div>
           )}
@@ -571,7 +571,7 @@ export default function RentPage() {
           <div className="sticky top-24">
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-gray-100 rounded-[2.5rem] shadow-[0_30px_80px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
+              className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-[2.5rem] shadow-[0_30px_80px_-15px_rgba(0,0,0,0.1)] overflow-hidden"
             >
               {/* Price */}
               <div className="bg-gray-950 p-8">
@@ -581,7 +581,7 @@ export default function RentPage() {
                 </div>
                 {hasDiscount && (
                   <div className="mt-2 flex items-center gap-2">
-                    <span className="line-through text-gray-500 text-sm">
+                    <span className="line-through text-gray-500 dark:text-white text-sm">
                       R{listing.regularPrice?.toLocaleString()}
                     </span>
                     <span className="bg-rose-500 text-white text-xs font-black px-2 py-0.5 rounded-lg">OFFER</span>
@@ -601,7 +601,7 @@ export default function RentPage() {
                 ].filter(Boolean).map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                     <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{label}</span>
-                    <span className="text-sm font-black text-gray-900 capitalize">{value}</span>
+                    <span className="text-sm font-black text-gray-900 dark:text-white capitalize">{value}</span>
                   </div>
                 ))}
 
@@ -629,9 +629,9 @@ export default function RentPage() {
             </motion.div>
 
             {/* Safety note */}
-            <div className="mt-4 p-5 bg-gray-50 rounded-[1.5rem] flex items-start gap-3">
+            <div className="mt-4 p-5 bg-gray-50 dark:bg-gray-800 rounded-[1.5rem] flex items-start gap-3">
               <ShieldCheckIcon className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-gray-500 leading-relaxed">
+              <p className="text-xs font-bold text-gray-500 dark:text-white leading-relaxed">
                 Always communicate through verified channels. Never transfer money without viewing the property first.
               </p>
             </div>

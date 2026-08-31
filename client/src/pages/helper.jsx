@@ -178,24 +178,24 @@ export default function Helper() {
   return (
     <main className="min-h-screen from-slate-50 to-white">
       {/* Breadcrumb Navigation */}
-      <div className="bg-white border-b border-slate-200">
+      <div className="bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex items-center space-x-2 text-sm">
             <button
               onClick={() => navigate('/')}
-              className="text-slate-500 hover:text-slate-700 transition-colors duration-200"
+              className="text-slate-500 dark:text-white hover:text-slate-700 dark:hover:text-white transition-colors duration-200"
             >
               Home
             </button>
             <span className="text-slate-300">/</span>
             <button
               onClick={() => navigate('/helpers')}
-              className="text-slate-500 hover:text-slate-700 transition-colors duration-200"
+              className="text-slate-500 dark:text-white hover:text-slate-700 dark:hover:text-white transition-colors duration-200"
             >
               Helpers
             </button>
             <span className="text-slate-300">/</span>
-            <span className="text-slate-900 font-medium truncate">{helper.name}</span>
+            <span className="text-slate-900 dark:text-white font-medium truncate">{helper.name}</span>
           </nav>
         </div>
       </div>
@@ -204,14 +204,14 @@ export default function Helper() {
         {/* Main Content Grid */}
         <div className="space-y-8">
           {/* Image Gallery Section */}
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-slate-100 dark:border-gray-800">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8">
               {/* Main Image Gallery */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="relative h-[550px] rounded-2xl overflow-hidden shadow-2xl group">
                   {imageLoading && (
-                    <div className="absolute inset-0 bg-slate-100 animate-pulse flex items-center justify-center">
-                      <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-400 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 bg-slate-100 dark:bg-gray-800 animate-pulse flex items-center justify-center">
+                      <div className="w-12 h-12 border-4 border-slate-200 dark:border-gray-800 border-t-slate-400 rounded-full animate-spin"></div>
                     </div>
                   )}
                   
@@ -263,14 +263,14 @@ export default function Helper() {
 
                   {/* Custom Navigation Buttons */}
                   <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-10">
-                    <button className="swiper-button-prev bg-white/90 hover:bg-white text-slate-800 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 group">
+                    <button className="swiper-button-prev bg-white/90 hover:bg-white dark:hover:bg-gray-900 text-slate-800 dark:text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 group">
                       <svg className="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
                   </div>
                   <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-10">
-                    <button className="swiper-button-next bg-white/90 hover:bg-white text-slate-800 w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 group">
+                    <button className="swiper-button-next bg-white/90 hover:bg-white dark:hover:bg-gray-900 text-slate-800 dark:text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 group">
                       <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
@@ -327,18 +327,18 @@ export default function Helper() {
               {/* Quick Info & Contact Sidebar */}
               <div className="space-y-6">
                 {/* Price & Actions Card */}
-                <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg p-6 border border-slate-200">
+                <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-lg p-6 border border-slate-200 dark:border-gray-800">
                   <div className="flex justify-between items-start mb-6">
                     <div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold text-slate-900">R{helper.regularPrice}</span>
-                        <span className="text-slate-500 text-lg">
+                        <span className="text-4xl font-bold text-slate-900 dark:text-white">R{helper.regularPrice}</span>
+                        <span className="text-slate-500 dark:text-white text-lg">
                           {helper.type === 'tutor' ? '/hour' : '/service'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
                         <FaTag className="text-slate-400" />
-                        <span className="text-sm text-slate-500">Fixed Rate • No Hidden Fees</span>
+                        <span className="text-sm text-slate-500 dark:text-white">Fixed Rate • No Hidden Fees</span>
                       </div>
                     </div>
                     
@@ -367,51 +367,51 @@ export default function Helper() {
                   </div>
 
                   {/* Quick Info Grid */}
-                  <div className="grid grid-cols-1 gap-4 py-6 border-y border-slate-200">
-                    <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 hover:border-blue-200 transition-colors duration-200">
+                  <div className="grid grid-cols-1 gap-4 py-6 border-y border-slate-200 dark:border-gray-800">
+                    <div className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-slate-100 dark:border-gray-800 hover:border-blue-200 transition-colors duration-200">
                       <div className="bg-blue-50 p-3 rounded-lg">
                         <IoTimeOutline className="text-blue-600 text-xl" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-500">Availability</p>
-                        <p className="font-semibold text-slate-900">{helper.period}</p>
+                        <p className="text-sm text-slate-500 dark:text-white">Availability</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{helper.period}</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 hover:border-green-200 transition-colors duration-200">
+                    <div className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-slate-100 dark:border-gray-800 hover:border-green-200 transition-colors duration-200">
                       <div className="bg-green-50 p-3 rounded-lg">
                         <IoLocationOutline className="text-green-600 text-xl" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-500">Service Area</p>
-                        <p className="font-semibold text-slate-900">{helper.address}</p>
+                        <p className="text-sm text-slate-500 dark:text-white">Service Area</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{helper.address}</p>
                       </div>
                     </div>
 
                     {helper.contact && (
-                      <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 hover:border-purple-200 transition-colors duration-200">
+                      <div className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-slate-100 dark:border-gray-800 hover:border-purple-200 transition-colors duration-200">
                         <div className="bg-purple-50 p-3 rounded-lg">
                           <IoCallOutline className="text-purple-600 text-xl" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm text-slate-500">Contact Number</p>
-                          <p className="font-semibold text-slate-900">{helper.contact}</p>
+                          <p className="text-sm text-slate-500 dark:text-white">Contact Number</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{helper.contact}</p>
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 hover:border-amber-200 transition-colors duration-200">
+                    <div className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-slate-100 dark:border-gray-800 hover:border-amber-200 transition-colors duration-200">
                       <div className="bg-amber-50 p-3 rounded-lg">
                         <IoPersonOutline className="text-amber-600 text-xl" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm text-slate-500">Service Provider</p>
-                        <p className="font-semibold text-slate-900">{helper.host}</p>
+                        <p className="text-sm text-slate-500 dark:text-white">Service Provider</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{helper.host}</p>
                         {helper.providerType === 'company' && (
-                          <p className="text-sm text-slate-600 font-medium mt-1">Company</p>
+                          <p className="text-sm text-slate-600 dark:text-white font-medium mt-1">Company</p>
                         )}
                         {helper.providerType === 'individual' && helper.citizenship && (
-                          <p className="text-sm text-slate-600 font-medium mt-1">Citizenship: {helper.citizenship}</p>
+                          <p className="text-sm text-slate-600 dark:text-white font-medium mt-1">Citizenship: {helper.citizenship}</p>
                         )}
                       </div>
                     </div>
@@ -488,23 +488,23 @@ export default function Helper() {
             {/* Left Column - Main Details */}
             <div className="lg:col-span-2 space-y-8">
               {/* Profile Header Card */}
-              <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
+              <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-gray-800">
                 <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-8">
                   <div className="flex-1">
-                    <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-4 leading-tight">
+                    <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">
                       {helper.name}
                     </h1>
-                    <p className="text-slate-600 text-lg flex items-center gap-2">
+                    <p className="text-slate-600 dark:text-white text-lg flex items-center gap-2">
                       <span>Professional service by</span>
-                      <span className="font-semibold text-slate-800 bg-slate-100 px-3 py-1 rounded-full">
+                      <span className="font-semibold text-slate-800 dark:text-white bg-slate-100 dark:bg-gray-800 px-3 py-1 rounded-full">
                         {helper.host}
                       </span>
                     </p>
                     {helper.providerType === 'company' && (
-                      <p className="text-slate-600 mt-3 text-sm font-semibold">Company</p>
+                      <p className="text-slate-600 dark:text-white mt-3 text-sm font-semibold">Company</p>
                     )}
                     {helper.providerType === 'individual' && helper.citizenship && (
-                      <p className="text-slate-600 mt-3 text-sm font-semibold">Citizenship: {helper.citizenship}</p>
+                      <p className="text-slate-600 dark:text-white mt-3 text-sm font-semibold">Citizenship: {helper.citizenship}</p>
                     )}
                   </div>
                   
@@ -531,12 +531,12 @@ export default function Helper() {
                     <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-2 rounded-xl">
                       <GiAchievement className="text-white text-2xl" />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900">About This Service</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">About This Service</h2>
                   </div>
                   
-                  <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl border border-slate-200 shadow-inner">
+                  <div className="bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-inner">
                     <div className="prose prose-lg max-w-none">
-                      <p className="text-slate-700 leading-relaxed text-lg whitespace-pre-line">
+                      <p className="text-slate-700 dark:text-white leading-relaxed text-lg whitespace-pre-line">
                         {helper.description}
                       </p>
                     </div>
@@ -550,14 +550,14 @@ export default function Helper() {
                       <div className="bg-gradient-to-r from-rose-500 to-rose-600 p-2 rounded-xl">
                         <FaUser className="text-white text-2xl" />
                       </div>
-                      <h2 className="text-3xl font-bold text-slate-900">Meet the Team</h2>
+                      <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Meet the Team</h2>
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       {helper.performers.map((performer, idx) => (
                         <div 
                           key={idx} 
-                          className="group bg-white border border-slate-100 rounded-3xl p-6 hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 relative overflow-hidden"
+                          className="group bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-3xl p-6 hover:shadow-2xl hover:shadow-rose-500/10 transition-all duration-500 relative overflow-hidden"
                         >
                           <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-bl-full -mr-10 -mt-10 group-hover:scale-110 transition-transform duration-700"></div>
                           
@@ -576,7 +576,7 @@ export default function Helper() {
                             </div>
                             
                             <div className="flex-1">
-                              <h3 className="text-xl font-bold text-slate-900 mb-1">{performer.name}</h3>
+                              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{performer.name}</h3>
                               <p className="text-xs font-black text-rose-500 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full inline-block">
                                 {performer.experience}
                               </p>
@@ -594,7 +594,7 @@ export default function Helper() {
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-2 rounded-xl">
                       <FaAward className="text-white text-2xl" />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-900">Services & Expertise</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Services & Expertise</h2>
                   </div>
                   
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-100 shadow-inner">
@@ -604,7 +604,7 @@ export default function Helper() {
                           <div className="bg-blue-100 p-2 rounded-lg">
                             <FaRegCheckCircle className="text-blue-600" />
                           </div>
-                          <span className="font-medium text-slate-800">{service.trim()}</span>
+                          <span className="font-medium text-slate-800 dark:text-white">{service.trim()}</span>
                         </div>
                       ))}
                     </div>
@@ -613,8 +613,8 @@ export default function Helper() {
               </div>
 
               {/* Additional Information */}
-              <div className="bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-                <h3 className="text-2xl font-bold text-slate-900 mb-6">What's Included</h3>
+              <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-8 border border-slate-100 dark:border-gray-800">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">What's Included</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
@@ -622,8 +622,8 @@ export default function Helper() {
                         <FaRegCalendarAlt className="text-green-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Flexible Scheduling</p>
-                        <p className="text-sm text-slate-600">Book at your convenience</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Flexible Scheduling</p>
+                        <p className="text-sm text-slate-600 dark:text-white">Book at your convenience</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -631,8 +631,8 @@ export default function Helper() {
                         <FaCertificate className="text-purple-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Professional Quality</p>
-                        <p className="text-sm text-slate-600">Guaranteed satisfaction</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Professional Quality</p>
+                        <p className="text-sm text-slate-600 dark:text-white">Guaranteed satisfaction</p>
                       </div>
                     </div>
                   </div>
@@ -642,8 +642,8 @@ export default function Helper() {
                         <FaShieldAlt className="text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Secure Booking</p>
-                        <p className="text-sm text-slate-600">Safe & protected transactions</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Secure Booking</p>
+                        <p className="text-sm text-slate-600 dark:text-white">Safe & protected transactions</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -651,8 +651,8 @@ export default function Helper() {
                         <FaStar className="text-amber-600" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900">Quality Assured</p>
-                        <p className="text-sm text-slate-600">High standard service</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Quality Assured</p>
+                        <p className="text-sm text-slate-600 dark:text-white">High standard service</p>
                       </div>
                     </div>
                   </div>
@@ -663,17 +663,17 @@ export default function Helper() {
             {/* Right Column - Additional Cards */}
             <div className="space-y-8">
               {/* Service Summary Card */}
-              <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
-                <h3 className="text-xl font-bold text-slate-900 mb-6">Service Summary</h3>
+              <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl p-6 border border-slate-100 dark:border-gray-800">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Service Summary</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-shadow duration-200">
                     <div className="flex items-center gap-3">
-                      <div className="bg-slate-100 p-2 rounded-lg">
-                        <FaTag className="text-slate-600" />
+                      <div className="bg-slate-100 dark:bg-gray-800 p-2 rounded-lg">
+                        <FaTag className="text-slate-600 dark:text-white" />
                       </div>
-                      <span className="text-slate-700">Service Type</span>
+                      <span className="text-slate-700 dark:text-white">Service Type</span>
                     </div>
-                    <span className="font-bold text-slate-900 capitalize">{helper.type}</span>
+                    <span className="font-bold text-slate-900 dark:text-white capitalize">{helper.type}</span>
                   </div>
                   
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-shadow duration-200">
@@ -681,9 +681,9 @@ export default function Helper() {
                       <div className="bg-blue-100 p-2 rounded-lg">
                         <FaClock className="text-blue-600" />
                       </div>
-                      <span className="text-slate-700">Duration</span>
+                      <span className="text-slate-700 dark:text-white">Duration</span>
                     </div>
-                    <span className="font-bold text-slate-900">{helper.period}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{helper.period}</span>
                   </div>
                   
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl hover:shadow-md transition-shadow duration-200">
@@ -691,9 +691,9 @@ export default function Helper() {
                       <div className="bg-emerald-100 p-2 rounded-lg">
                         <FaMapMarkerAlt className="text-emerald-600" />
                       </div>
-                      <span className="text-slate-700">Location</span>
+                      <span className="text-slate-700 dark:text-white">Location</span>
                     </div>
-                    <span className="font-bold text-slate-900 text-right">{helper.address}</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-right">{helper.address}</span>
                   </div>
                 </div>
               </div>
@@ -709,7 +709,7 @@ export default function Helper() {
                 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl">
-                    <div className="bg-white p-1.5 rounded-full mt-0.5">
+                    <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full mt-0.5">
                       <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                     </div>
                     <div>
@@ -719,7 +719,7 @@ export default function Helper() {
                   </div>
                   
                   <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl">
-                    <div className="bg-white p-1.5 rounded-full mt-0.5">
+                    <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full mt-0.5">
                       <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                     </div>
                     <div>
@@ -729,7 +729,7 @@ export default function Helper() {
                   </div>
                   
                   <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl">
-                    <div className="bg-white p-1.5 rounded-full mt-0.5">
+                    <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full mt-0.5">
                       <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                     </div>
                     <div>
@@ -739,7 +739,7 @@ export default function Helper() {
                   </div>
                   
                   <div className="flex items-start gap-3 p-4 bg-white/50 rounded-xl">
-                    <div className="bg-white p-1.5 rounded-full mt-0.5">
+                    <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full mt-0.5">
                       <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
                     </div>
                     <div>
@@ -760,7 +760,7 @@ export default function Helper() {
                   <p className="text-slate-300 text-sm">
                     Our support team is available 24/7 to help with any questions or concerns.
                   </p>
-                  <button className="w-full bg-white text-slate-900 py-3 rounded-xl font-bold hover:bg-slate-100 transition-colors duration-200">
+                  <button className="w-full bg-white dark:bg-gray-900 text-slate-900 dark:text-white py-3 rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors duration-200">
                     Contact Support
                   </button>
                 </div>

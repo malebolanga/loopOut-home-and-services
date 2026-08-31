@@ -167,7 +167,7 @@ export default function UpdateEvent() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Event Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Event Name</label>
             <input
               type="text"
               id="name"
@@ -179,7 +179,7 @@ export default function UpdateEvent() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Event Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Event Type</label>
             <select
               id="type"
               className="w-full p-3 border rounded-lg"
@@ -196,7 +196,7 @@ export default function UpdateEvent() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Description</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-white">Description</label>
           <textarea
             id="description"
             className="w-full p-3 border rounded-lg"
@@ -210,7 +210,7 @@ export default function UpdateEvent() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Date</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Date</label>
             <div className="relative">
               <input
                 type="date"
@@ -224,7 +224,7 @@ export default function UpdateEvent() {
             </div>
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Time</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Time</label>
             <div className="relative">
               <input
                 type="time"
@@ -240,7 +240,7 @@ export default function UpdateEvent() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-white">Location</label>
           <div className="relative">
             <input
               type="text"
@@ -257,7 +257,7 @@ export default function UpdateEvent() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Host Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Host Name</label>
             <input
               type="text"
               id="host"
@@ -269,7 +269,7 @@ export default function UpdateEvent() {
             />
           </div>
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Contact Info</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Contact Info</label>
             <input
               type="text"
               id="contact"
@@ -284,7 +284,7 @@ export default function UpdateEvent() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700">Ticket Price (R)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white">Ticket Price (R)</label>
             <input
               type="number"
               id="regularPrice"
@@ -302,11 +302,11 @@ export default function UpdateEvent() {
             <input
               type="checkbox"
               id="parking"
-              className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
+              className="h-4 w-4 text-red-600 rounded border-gray-300 dark:border-gray-700 focus:ring-red-500"
               checked={formData.parking}
               onChange={handleChange}
             />
-            <label htmlFor="parking" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="parking" className="ml-2 block text-sm text-gray-700 dark:text-white">
               Parking Available
             </label>
           </div>
@@ -314,11 +314,11 @@ export default function UpdateEvent() {
             <input
               type="checkbox"
               id="foodAvailable"
-              className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
+              className="h-4 w-4 text-red-600 rounded border-gray-300 dark:border-gray-700 focus:ring-red-500"
               checked={formData.foodAvailable}
               onChange={handleChange}
             />
-            <label htmlFor="foodAvailable" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="foodAvailable" className="ml-2 block text-sm text-gray-700 dark:text-white">
               Food Available
             </label>
           </div>
@@ -326,11 +326,11 @@ export default function UpdateEvent() {
             <input
               type="checkbox"
               id="familyFriendly"
-              className="h-4 w-4 text-red-600 rounded border-gray-300 focus:ring-red-500"
+              className="h-4 w-4 text-red-600 rounded border-gray-300 dark:border-gray-700 focus:ring-red-500"
               checked={formData.familyFriendly}
               onChange={handleChange}
             />
-            <label htmlFor="familyFriendly" className="ml-2 block text-sm text-gray-700">
+            <label htmlFor="familyFriendly" className="ml-2 block text-sm text-gray-700 dark:text-white">
               Family Friendly
             </label>
           </div>
@@ -340,7 +340,7 @@ export default function UpdateEvent() {
         <div className='flex flex-col gap-4 p-4 border rounded-lg'>
           <p className='font-semibold'>
             Images:
-            <span className='font-normal text-gray-600 ml-2'>The first image will be the cover (max 10)</span>
+            <span className='font-normal text-gray-600 dark:text-white ml-2'>The first image will be the cover (max 10)</span>
           </p>
           <div className='flex gap-4'>
             <input
@@ -348,7 +348,7 @@ export default function UpdateEvent() {
               accept='image/*'
               multiple
               onChange={(e) => setFiles(Array.from(e.target.files))}
-              className='p-3 border border-gray-300 rounded w-full'
+              className='p-3 border border-gray-300 dark:border-gray-700 rounded w-full'
             />
             <button
               type='button'

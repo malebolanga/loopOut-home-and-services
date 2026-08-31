@@ -27,7 +27,7 @@ export default function PrivacyEthics() {
   ];
 
   return (
-    <div className="bg-white min-h-screen font-inter">
+    <div className="bg-white dark:bg-gray-900 min-h-screen font-inter">
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 sm:px-12 max-w-[1200px] mx-auto">
         <motion.div 
@@ -39,7 +39,7 @@ export default function PrivacyEthics() {
             <Lock className="w-4 h-4 text-blue-500" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600">Trust & Transparency</span>
           </div>
-          <h1 className="text-6xl md:text-8xl font-black text-gray-900 mb-8 tracking-tighter leading-[0.9]">
+          <h1 className="text-6xl md:text-8xl font-black text-gray-900 dark:text-white mb-8 tracking-tighter leading-[0.9]">
             Privacy & <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">Ethics.</span>
           </h1>
@@ -51,7 +51,7 @@ export default function PrivacyEthics() {
       </section>
 
       {/* Principles Grid */}
-      <section className="py-20 px-6 sm:px-12 bg-gray-50/50">
+      <section className="py-20 px-6 sm:px-12 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           {principles.map((p, i) => (
             <motion.div 
@@ -60,12 +60,12 @@ export default function PrivacyEthics() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white p-10 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500"
+              className="bg-white dark:bg-gray-900 p-10 rounded-[2rem] border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-500"
             >
               <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
                 {p.icon}
               </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">{p.title}</h3>
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">{p.title}</h3>
               <p className="text-gray-400 font-medium leading-relaxed">{p.description}</p>
             </motion.div>
           ))}
@@ -75,8 +75,8 @@ export default function PrivacyEthics() {
       {/* Detailed Policy Text */}
       <section className="py-32 px-6 sm:px-12 max-w-[800px] mx-auto">
         <div className="prose prose-lg prose-gray">
-          <h2 className="text-3xl font-black text-gray-900 mb-6 tracking-tight">Our Core Commitment</h2>
-          <p className="text-gray-500 font-medium leading-relaxed mb-8">
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">Our Core Commitment</h2>
+          <p className="text-gray-500 dark:text-white font-medium leading-relaxed mb-8">
             loopOut operates on a simple principle: your information belongs to you. We employ state-of-the-art encryption protocols across all our services, whether you are booking a home, hiring a professional, or curating an event.
           </p>
           <div className="bg-gray-900 text-white p-8 rounded-[2rem] mb-12">

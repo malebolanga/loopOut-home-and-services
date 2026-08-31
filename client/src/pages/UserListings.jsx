@@ -34,7 +34,7 @@ const ListingTypeConfig = {
   stays: {
     label: 'Stays',
     icon: <FaBuilding className="w-3.5 h-3.5" />,
-    style: 'bg-slate-50 text-slate-700 border-slate-100',
+    style: 'bg-slate-50 dark:bg-gray-950 text-slate-700 dark:text-white border-slate-100 dark:border-gray-800',
   },
   experiences: {
     label: 'Experiences',
@@ -152,22 +152,22 @@ export default function UserListings() {
     return (
       <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mb-4"></div>
-        <p className="text-gray-500 font-medium">Loading your host dashboard...</p>
+        <p className="text-gray-500 dark:text-white font-medium">Loading your host dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-[#F7F7F7] min-h-screen pb-20">
+    <div className="bg-[#F7F7F7] dark:bg-gray-800 min-h-screen pb-20">
       {/* Premium Header */}
-      <div className="bg-white border-b border-gray-200 pt-12 pb-8 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 pt-12 pb-8 shadow-sm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                 Welcome back, {currentUser?.username?.split(' ')[0] || 'User'}
               </h1>
-              <p className="mt-2 text-lg text-gray-500 flex items-center gap-2">
+              <p className="mt-2 text-lg text-gray-500 dark:text-white flex items-center gap-2">
                 <FaCheckCircle className="text-rose-500" />
                 You have {userListings.length} active postings to manage
               </p>
@@ -199,7 +199,7 @@ export default function UserListings() {
                   className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full border transition-all duration-300 font-semibold shadow-sm flex-shrink-0 ${
                     selectedTypes.includes(type)
                       ? 'border-rose-600 bg-rose-600 text-white shadow-rose-200 scale-105'
-                      : 'border-white bg-white hover:border-gray-200 text-gray-700 hover:bg-gray-50'
+                      : 'border-white bg-white dark:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {config.icon}
@@ -221,7 +221,7 @@ export default function UserListings() {
                             `/helper/${listing._id}`;
                 navigate(path);
               }}
-              className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+              className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
               <div className="absolute inset-0 z-0">
                 <img
@@ -236,7 +236,7 @@ export default function UserListings() {
               <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
                 <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-rose-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">
                     {ListingTypeConfig[listing.type]?.label || ListingTypeConfig[listing.category]?.label}
                   </span>
                 </div>
@@ -290,7 +290,7 @@ export default function UserListings() {
                     </button>
                   </div>
                   <div 
-                    className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                    className="w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                     onClick={(e) => { 
                       e.stopPropagation(); 
                       const viewPath = listing.category === 'stays' ? `/listing/${listing._id}` : 
@@ -309,15 +309,15 @@ export default function UserListings() {
 
         {/* Improved Empty State */}
         {filteredListings.length === 0 && (
-          <div className="text-center py-32 bg-white rounded-[40px] shadow-sm border border-gray-100 mt-10">
+          <div className="text-center py-32 bg-white dark:bg-gray-900 rounded-[40px] shadow-sm border border-gray-100 dark:border-gray-800 mt-10">
             <div className="max-w-md mx-auto px-6">
               <div className="mb-8 w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto">
                 <FaPlus className="w-10 h-10 text-rose-500" />
               </div>
-              <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">
+              <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
                 {userListings.length === 0 ? "Ready to become a host?" : "No matches found"}
               </h3>
-              <p className="text-lg text-gray-500 mb-10 leading-relaxed font-medium">
+              <p className="text-lg text-gray-500 dark:text-white mb-10 leading-relaxed font-medium">
                 {userListings.length === 0
                   ? "Start by creating your first listing. It only takes a few minutes to showcase your space or service."
                   : "We couldn't find any results for those filters. Try selecting a different category or clearing all filters."}

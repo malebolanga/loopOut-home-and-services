@@ -82,16 +82,16 @@ export default function CreateRequest() {
       <div className="max-w-3xl mx-auto">
         <button 
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-12 group"
+          className="flex items-center gap-2 text-gray-500 dark:text-white hover:text-gray-900 dark:hover:text-white transition-colors mb-12 group"
         >
           <ChevronLeftIcon className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-xs font-black uppercase tracking-widest">Go Back</span>
         </button>
 
-        <div className="bg-white rounded-[3rem] border border-gray-100 p-8 md:p-16 shadow-2xl shadow-rose-100/20">
+        <div className="bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 p-8 md:p-16 shadow-2xl shadow-rose-100/20">
           <div className="mb-12">
-            <h1 className="text-4xl font-black text-gray-900 tracking-tight">Post your Need</h1>
-            <p className="text-gray-500 font-medium mt-2">Tell the loopOut community exactly what you're looking for.</p>
+            <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Post your Need</h1>
+            <p className="text-gray-500 dark:text-white font-medium mt-2">Tell the loopOut community exactly what you're looking for.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">
@@ -109,7 +109,7 @@ export default function CreateRequest() {
                   <div
                     key={cat.id}
                     onClick={() => setFormData({ ...formData, category: cat.id })}
-                    className={`p-6 rounded-3xl border-4 transition-all cursor-pointer flex flex-col items-center gap-3 ${formData.category === cat.id ? 'border-gray-900 bg-gray-950 text-white shadow-xl scale-105' : 'border-gray-50 bg-gray-50 hover:border-gray-200'}`}
+                    className={`p-6 rounded-3xl border-4 transition-all cursor-pointer flex flex-col items-center gap-3 ${formData.category === cat.id ? 'border-gray-900 bg-gray-950 text-white shadow-xl scale-105' : 'border-gray-50 bg-gray-50 dark:bg-gray-800 hover:border-gray-200 dark:hover:border-gray-800'}`}
                   >
                     <span className="text-3xl">{cat.icon}</span>
                     <span className="text-[10px] font-black uppercase tracking-widest">{cat.label}</span>
@@ -130,7 +130,7 @@ export default function CreateRequest() {
                     placeholder="e.g. Looking for a roommate in Turfloop"
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full pl-16 pr-8 py-6 bg-gray-50 border-none rounded-[2rem] font-bold text-gray-900 focus:ring-2 focus:ring-rose-500 transition-all"
+                    className="w-full pl-16 pr-8 py-6 bg-gray-50 dark:bg-gray-800 border-none rounded-[2rem] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition-all"
                   />
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function CreateRequest() {
                   placeholder="Describe what you need in detail..."
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full px-8 py-6 bg-gray-50 border-none rounded-[2rem] font-bold text-gray-900 focus:ring-2 focus:ring-rose-500 transition-all resize-none"
+                  className="w-full px-8 py-6 bg-gray-50 dark:bg-gray-800 border-none rounded-[2rem] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition-all resize-none"
                 />
               </div>
 
@@ -160,7 +160,7 @@ export default function CreateRequest() {
                       placeholder="e.g. Polokwane"
                       value={formData.location}
                       onChange={handleChange}
-                      className="w-full pl-16 pr-8 py-6 bg-gray-50 border-none rounded-[2rem] font-bold text-gray-900 focus:ring-2 focus:ring-rose-500 transition-all"
+                      className="w-full pl-16 pr-8 py-6 bg-gray-50 dark:bg-gray-800 border-none rounded-[2rem] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition-all"
                     />
                   </div>
                 </div>
@@ -175,7 +175,7 @@ export default function CreateRequest() {
                       placeholder="e.g. 2500"
                       value={formData.budget}
                       onChange={handleChange}
-                      className="w-full pl-16 pr-8 py-6 bg-gray-50 border-none rounded-[2rem] font-black text-gray-900 focus:ring-2 focus:ring-rose-500 transition-all"
+                      className="w-full pl-16 pr-8 py-6 bg-gray-50 dark:bg-gray-800 border-none rounded-[2rem] font-black text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition-all"
                     />
                   </div>
                 </div>
@@ -192,7 +192,7 @@ export default function CreateRequest() {
                     placeholder="e.g. 071 234 5678"
                     value={formData.contact}
                     onChange={handleChange}
-                    className="w-full pl-16 pr-8 py-6 bg-gray-50 border-none rounded-[2rem] font-bold text-gray-900 focus:ring-2 focus:ring-rose-500 transition-all"
+                    className="w-full pl-16 pr-8 py-6 bg-gray-50 dark:bg-gray-800 border-none rounded-[2rem] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 transition-all"
                   />
                 </div>
               </div>

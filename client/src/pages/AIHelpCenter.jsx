@@ -227,7 +227,7 @@ export default function AIHelpCenter() {
                         ? 'bg-slate-950 text-white rounded-tr-xs shadow-md' 
                         : msg.isError 
                           ? 'bg-red-50 text-red-700 rounded-tl-xs border border-red-200'
-                          : 'bg-white text-slate-800 rounded-tl-xs border border-slate-200/90'
+                          : 'bg-white dark:bg-gray-900 text-slate-800 dark:text-white rounded-tl-xs border border-slate-200 dark:border-gray-800/90'
                     }`}
                   >
                     <div className="whitespace-pre-line prose prose-sm max-w-none">
@@ -236,7 +236,7 @@ export default function AIHelpCenter() {
 
                     {/* Interactive Item Cards returned by LoopBot */}
                     {msg.actionItems && msg.actionItems.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-slate-100 space-y-2.5">
+                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-gray-800 space-y-2.5">
                         <p className="text-[11px] font-black uppercase tracking-wider text-rose-600 flex items-center gap-1">
                           <Sparkles className="w-3.5 h-3.5 text-rose-500" />
                           Matching Live Listings on loopOut:
@@ -246,22 +246,22 @@ export default function AIHelpCenter() {
                             <div
                               key={item.id || item.link}
                               onClick={() => handleActionClick(item.link)}
-                              className="group flex flex-col p-3 bg-slate-50 hover:bg-rose-50/60 rounded-2xl border border-slate-200 hover:border-rose-300 transition-all cursor-pointer shadow-xs"
+                              className="group flex flex-col p-3 bg-slate-50 dark:bg-gray-950 hover:bg-rose-50/60 rounded-2xl border border-slate-200 dark:border-gray-800 hover:border-rose-300 transition-all cursor-pointer shadow-xs"
                             >
                               <div className="flex items-center gap-3">
                                 <img
                                   src={item.imageUrl}
                                   alt={item.title}
-                                  className="w-12 h-12 rounded-xl object-cover bg-slate-200 shrink-0 border border-slate-200"
+                                  className="w-12 h-12 rounded-xl object-cover bg-slate-200 shrink-0 border border-slate-200 dark:border-gray-800"
                                   onError={(e) => {
                                     e.target.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=200&auto=format&fit=crop';
                                   }}
                                 />
                                 <div className="min-w-0 flex-1">
-                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-black uppercase">
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 dark:text-white font-black uppercase">
                                     {item.category}
                                   </span>
-                                  <p className="font-bold text-xs text-slate-900 group-hover:text-rose-600 transition-colors truncate mt-1">
+                                  <p className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-rose-600 transition-colors truncate mt-1">
                                     {item.title}
                                   </p>
                                   <p className="text-xs font-black text-rose-600 mt-0.5">
@@ -269,12 +269,12 @@ export default function AIHelpCenter() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/60 text-[10px] text-slate-500">
+                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200 dark:border-gray-800/60 text-[10px] text-slate-500 dark:text-white">
                                 <span className="flex items-center gap-1 truncate">
                                   <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                                   <span className="truncate">{item.location}</span>
                                 </span>
-                                <span className="font-bold text-slate-900 group-hover:text-rose-600 flex items-center gap-0.5 shrink-0">
+                                <span className="font-bold text-slate-900 dark:text-white group-hover:text-rose-600 flex items-center gap-0.5 shrink-0">
                                   Book <ChevronRight className="w-3 h-3" />
                                 </span>
                               </div>
@@ -292,7 +292,7 @@ export default function AIHelpCenter() {
                         <button
                           key={idx}
                           onClick={() => handleSendMessage(null, followUp)}
-                          className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-900 hover:text-white text-slate-700 border border-slate-200 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+                          className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-white dark:bg-gray-900 hover:bg-slate-900 hover:text-white text-slate-700 dark:text-white border border-slate-200 dark:border-gray-800 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
                         >
                           <Zap className="w-3 h-3 text-amber-500" />
                           {followUp}
@@ -314,9 +314,9 @@ export default function AIHelpCenter() {
           >
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-2xl bg-gradient-to-tr from-slate-200 to-slate-300 flex items-center justify-center shadow-xs">
-                <Bot className="w-4 h-4 text-slate-600" />
+                <Bot className="w-4 h-4 text-slate-600 dark:text-white" />
               </div>
-              <div className="bg-white px-5 py-4 rounded-2xl rounded-tl-xs border border-slate-200 shadow-xs flex items-center gap-2 text-xs font-medium text-slate-500">
+              <div className="bg-white dark:bg-gray-900 px-5 py-4 rounded-2xl rounded-tl-xs border border-slate-200 dark:border-gray-800 shadow-xs flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-white">
                 <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
                 <span>LoopBot is consulting marketplace data…</span>
               </div>
@@ -337,11 +337,11 @@ export default function AIHelpCenter() {
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(null, promptObj.prompt)}
-                  className="p-2.5 bg-white border border-slate-200 rounded-2xl text-left hover:border-slate-900 hover:shadow-md transition-all flex items-center gap-2 group shadow-2xs"
+                  className="p-2.5 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl text-left hover:border-slate-900 hover:shadow-md transition-all flex items-center gap-2 group shadow-2xs"
                 >
                   <span className="text-xl shrink-0">{promptObj.icon}</span>
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-900 group-hover:text-rose-600 truncate">{promptObj.title}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 truncate">{promptObj.title}</p>
                     <p className="text-[10px] text-slate-400 truncate">Ask LoopBot</p>
                   </div>
                 </button>
@@ -351,7 +351,7 @@ export default function AIHelpCenter() {
 
           <form 
             onSubmit={handleSendMessage}
-            className="relative flex items-end gap-2 bg-white rounded-[1.6rem] p-2 shadow-xl shadow-slate-200/60 border border-slate-200 focus-within:border-slate-400 focus-within:ring-4 focus-within:ring-rose-500/10 transition-all"
+            className="relative flex items-end gap-2 bg-white dark:bg-gray-900 rounded-[1.6rem] p-2 shadow-xl shadow-slate-200/60 border border-slate-200 dark:border-gray-800 focus-within:border-slate-400 focus-within:ring-4 focus-within:ring-rose-500/10 transition-all"
           >
             <textarea
               value={inputValue}
@@ -363,7 +363,7 @@ export default function AIHelpCenter() {
                 }
               }}
               placeholder="Ask LoopBot (e.g. find room in Polokwane, hire a barber, how escrow works)..."
-              className="flex-1 max-h-32 min-h-[44px] bg-transparent outline-none resize-none px-4 py-3 text-[14px] text-slate-900 placeholder:text-slate-400 scrollbar-hide"
+              className="flex-1 max-h-32 min-h-[44px] bg-transparent outline-none resize-none px-4 py-3 text-[14px] text-slate-900 dark:text-white placeholder:text-slate-400 scrollbar-hide"
               rows={1}
             />
             <button

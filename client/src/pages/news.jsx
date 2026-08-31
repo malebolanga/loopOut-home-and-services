@@ -32,7 +32,7 @@ function ListingItem({ listing = "", compactMode = false }) {
   };
 
   return (
-    <div className={`bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg ${compactMode ? 'h-full' : ''}`}>
+    <div className={`bg-white dark:bg-gray-900 rounded-xl shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg ${compactMode ? 'h-full' : ''}`}>
       {compactMode ? (
         <>
           {/* Compact Mode Layout - Optimized for small slides */}
@@ -65,24 +65,24 @@ function ListingItem({ listing = "", compactMode = false }) {
             </div>
             
             {/* Address with smaller font and truncation */}
-            <p className="text-gray-500 text-xs truncate min-w-0">
+            <p className="text-gray-500 dark:text-white text-xs truncate min-w-0">
               {listing.address}
             </p>
             
-            <div className="flex items-center gap-2 text-xs text-gray-700">
+            <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-white">
               {listing.type !== 'land' && listing.type !== 'office' && (
                 <>
                   <span className="flex items-center gap-1">
-                    <FaBed className="text-[10px] text-gray-500" />
+                    <FaBed className="text-[10px] text-gray-500 dark:text-white" />
                     {listing.bedrooms || 0}
                   </span>
                   <span className="flex items-center gap-1">
-                    <FaBath className="text-[10px] text-gray-500" />
+                    <FaBath className="text-[10px] text-gray-500 dark:text-white" />
                     {listing.bathrooms || 0}
                   </span>
                 </>
               )}
-              <span className="bg-gray-100 px-1 py-0.5 rounded text-[10px]">
+              <span className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-[10px]">
                 {getPropertyTypeName(listing.type)}
               </span>
               {isNewListing && (
@@ -93,7 +93,7 @@ function ListingItem({ listing = "", compactMode = false }) {
             </div>
             
             <div className="flex justify-between items-center mt-1">
-              <div className="text-xs font-bold text-gray-900">
+              <div className="text-xs font-bold text-gray-900 dark:text-white">
                 {formatPrice(
                   listing.offer ? listing.discountPrice : listing.regularPrice,
                   { type: listing.type }
@@ -110,18 +110,18 @@ function ListingItem({ listing = "", compactMode = false }) {
           </div>
           
           {showShareOptions && (
-            <div className="absolute right-0 top-8 mt-1 w-36 bg-white rounded-lg shadow-lg z-20 border border-gray-200 divide-y divide-gray-100 text-xs">
+            <div className="absolute right-0 top-8 mt-1 w-36 bg-white dark:bg-gray-900 rounded-lg shadow-lg z-20 border border-gray-200 dark:border-gray-800 divide-y divide-gray-100 text-xs">
               <div className="py-1">
                 <button onClick={(e) => { e.preventDefault(); shareListing('whatsapp'); }} 
-                  className="block w-full text-left px-2 py-1 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  className="block w-full text-left px-2 py-1 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
                   WhatsApp
                 </button>
                 <button onClick={(e) => { e.preventDefault(); shareListing('facebook'); }} 
-                  className="block w-full text-left px-2 py-1 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  className="block w-full text-left px-2 py-1 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
                   Facebook
                 </button>
                 <button onClick={(e) => { e.preventDefault(); shareListing('copy'); }} 
-                  className="block w-full text-left px-2 py-1 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+                  className="block w-full text-left px-2 py-1 text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
                   Copy Link
                 </button>
               </div>

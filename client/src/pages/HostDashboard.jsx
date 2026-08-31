@@ -134,24 +134,17 @@ const BookingProtocolCard = ({ booking, idx, handleUpdateStatusGlobal }) => {
                  <button onClick={() => handleStatusUpdate('confirmed')} className="py-4 bg-emerald-500 hover:bg-emerald-400 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20">Authorize</button>
                  <button onClick={() => handleStatusUpdate('declined')} className="py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all">Deny</button>
               </div>
-           ) : booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing' ? (
+           ) : booking.status === 'confirmed' || booking.status === 'approved' ? (
               <button 
-                onClick={() => handleStatusUpdate('work_completed')}
-                className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.25em] rounded-2xl transition-all shadow-[0_15px_30px_rgba(225,29,72,0.2)] flex items-center justify-center gap-2 group-hover:animate-pulse cursor-pointer"
+                onClick={() => handleStatusUpdate('completed')}
+                className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-[0_15px_30px_rgba(225,29,72,0.2)] flex items-center justify-center gap-2 group-hover:animate-pulse"
               >
                  <SignalIcon className="w-4 h-4" />
-                 Signal Work Complete
+                 Signal Completed
               </button>
-           ) : booking.status === 'work_completed' ? (
-              <div className="w-full py-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl text-center">
-                 <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest flex items-center justify-center gap-1.5">
-                   <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
-                   Awaiting Client Closure &amp; Rating
-                 </span>
-              </div>
            ) : (
               <div className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-center">
-                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest italic">{booking.status.toUpperCase()}</span>
+                 <span className="text-[10px] font-black text-white/20 uppercase tracking-widest italic">{booking.status.toUpperCase()}</span>
               </div>
            )}
         </div>
@@ -396,7 +389,7 @@ export default function HostDashboard() {
                            onClick={() => setProtocolState(p => ({...p, audio: !p.audio}))}
                            className={`w-14 h-8 rounded-full p-1 transition-all ${protocolState.audio ? 'bg-rose-500' : 'bg-white/10'}`}
                         >
-                           <div className={`w-6 h-6 bg-white rounded-full transition-transform ${protocolState.audio ? 'translate-x-6' : 'translate-x-0'}`} />
+                           <div className={`w-6 h-6 bg-white dark:bg-gray-900 rounded-full transition-transform ${protocolState.audio ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
                      </div>
 
@@ -414,7 +407,7 @@ export default function HostDashboard() {
                            onClick={() => setProtocolState(p => ({...p, thermal: !p.thermal}))}
                            className={`w-14 h-8 rounded-full p-1 transition-all ${protocolState.thermal ? 'bg-blue-500' : 'bg-white/10'}`}
                         >
-                           <div className={`w-6 h-6 bg-white rounded-full transition-transform ${protocolState.thermal ? 'translate-x-6' : 'translate-x-0'}`} />
+                           <div className={`w-6 h-6 bg-white dark:bg-gray-900 rounded-full transition-transform ${protocolState.thermal ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
                      </div>
 
@@ -528,7 +521,7 @@ export default function HostDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-8 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap border ${activeTab === tab.id ? 'bg-white text-gray-950 border-white shadow-[0_20px_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white'}`}
+              className={`flex items-center gap-3 px-8 py-5 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all whitespace-nowrap border ${activeTab === tab.id ? 'bg-white dark:bg-gray-900 text-gray-950 border-white shadow-[0_20px_40px_rgba(255,255,255,0.1)]' : 'bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white'}`}
             >
               <tab.icon className="w-5 h-5" />
               {tab.label}
@@ -549,13 +542,13 @@ export default function HostDashboard() {
                   <div className="flex flex-wrap items-center justify-between gap-6">
                      <h2 className="text-3xl font-black italic tracking-tighter">ACTIVE <span className="text-rose-500">DEPLOYS</span></h2>
                      <div className="flex bg-white/5 p-1.5 rounded-2xl border border-white/5">
-                        {['all', 'pending', 'confirmed', 'work_completed', 'completed'].map(f => (
+                        {['all', 'pending', 'confirmed', 'completed'].map(f => (
                           <button 
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-white/40 hover:text-white'}`}
+                            className={`px-6 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-white/40 hover:text-white'}`}
                           >
-                            {f.replace('_', ' ')}
+                            {f}
                           </button>
                         ))}
                      </div>

@@ -120,7 +120,7 @@ const ALL_CATEGORIES = [
   { id: 'sneaker', label: 'Sneaker Cleaner', type: 'helper', icon: BoltIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Premium shoe cleaning' },
   { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
   { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
-  { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 text-gray-800', description: 'Repair & maintenance' },
+  { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', description: 'Repair & maintenance' },
   { id: 'storage', label: 'Booking Storage', type: 'services', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Secure storage units' },
 
   // Transport
@@ -161,7 +161,7 @@ const HELPER_CATEGORY_CONFIG = {
   washingmat: { label: 'Washing Mat', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
   animals: { label: 'Animal Care', color: 'bg-amber-100 text-amber-800', icon: '🐾', endpoint: 'helper' },
   cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
-  handyman: { label: 'Handyman', color: 'bg-gray-100 text-gray-800', icon: '🔧', endpoint: 'helper' },
+  handyman: { label: 'Handyman', color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', icon: '🔧', endpoint: 'helper' },
   maintenance: { label: 'Maintenance', color: 'bg-amber-100 text-amber-800', icon: '🔧', endpoint: 'helper' }
 };
 
@@ -194,7 +194,7 @@ const SEARCH_TYPE_CONFIG = {
     icon: Sparkles,
     color: 'from-gray-900 to-gray-800',
     bgColor: 'bg-gray-900',
-    textColor: 'text-gray-900',
+    textColor: 'text-gray-900 dark:text-white',
     endpoint: 'all'
   },
   properties: {
@@ -318,10 +318,10 @@ const CategoryDropdown = ({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 10, scale: 0.95 }}
       transition={{ duration: 0.2 }}
-      className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 max-h-[400px] flex flex-col"
+      className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800 z-50 max-h-[400px] flex flex-col"
     >
       {/* Search within dropdown - Fixed */}
-      <div className="flex-shrink-0 bg-white border-b border-gray-100 p-3">
+      <div className="flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-3">
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -329,7 +329,7 @@ const CategoryDropdown = ({
             placeholder="Search categories..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full pl-9 pr-8 py-2 bg-gray-100 dark:bg-gray-800 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
             autoFocus
           />
           {searchQuery && (
@@ -337,7 +337,7 @@ const CategoryDropdown = ({
               onClick={() => setSearchQuery('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full"
             >
-              <XMarkIcon className="w-3 h-3 text-gray-500" />
+              <XMarkIcon className="w-3 h-3 text-gray-500 dark:text-white" />
             </button>
           )}
         </div>
@@ -347,7 +347,7 @@ const CategoryDropdown = ({
       <div className="flex-1 overflow-y-auto p-2">
         {Object.entries(groupedCategories).map(([type, categories]) => (
           <div key={type} className="mb-4">
-            <h3 className="px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <h3 className="px-3 py-2 text-xs font-bold text-gray-500 dark:text-white uppercase tracking-wider">
               {getGroupLabel(type)}
             </h3>
             <div className="space-y-1">
@@ -360,7 +360,7 @@ const CategoryDropdown = ({
                     onClick={() => onSelect(category)}
                     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-left ${isSelected
                       ? 'bg-rose-50 border-rose-200 border'
-                      : 'hover:bg-gray-50 border border-transparent'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-800 border border-transparent'
                       }`}
                   >
                     <div className={`p-2 rounded-lg ${category.color} hover:scale-110 transition-transform flex-shrink-0`}>
@@ -368,12 +368,12 @@ const CategoryDropdown = ({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`font-semibold text-sm truncate ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                        <span className={`font-semibold text-sm truncate ${isSelected ? 'text-rose-700' : 'text-gray-900 dark:text-white'}`}>
                           {category.label}
                         </span>
                         {isSelected && <CheckIcon className="w-4 h-4 text-rose-500 flex-shrink-0" />}
                       </div>
-                      <p className="text-xs text-gray-500 truncate">{category.description}</p>
+                      <p className="text-xs text-gray-500 dark:text-white truncate">{category.description}</p>
                     </div>
                   </button>
                 );
@@ -383,7 +383,7 @@ const CategoryDropdown = ({
         ))}
 
         {filteredCategories.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-white">
             <MagnifyingGlassIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-sm">No categories found</p>
             <p className="text-xs mt-1">Try a different search term</p>
@@ -392,8 +392,8 @@ const CategoryDropdown = ({
       </div>
 
       {/* Quick select footer - Fixed */}
-      <div className="flex-shrink-0 bg-gray-50 border-t border-gray-200 p-3">
-        <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-800 p-3">
+        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-white">
           <span>{filteredCategories.length} categories</span>
         </div>
       </div>
@@ -519,8 +519,8 @@ const EmptyState = ({ onClear }) => (
     <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner">
       <MagnifyingGlassIcon className="w-10 h-10 text-rose-500" />
     </div>
-    <h3 className="text-3xl font-black text-gray-900 mb-4 tracking-tight">No results in this loop</h3>
-    <p className="text-gray-500 font-medium mb-10 leading-relaxed">
+    <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">No results in this loop</h3>
+    <p className="text-gray-500 dark:text-white font-medium mb-10 leading-relaxed">
       We couldn't find exactly what you're looking for. <br />
       Try broadening your search or resetting your filters.
     </p>
@@ -943,14 +943,14 @@ const SearchPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col relative overflow-x-hidden no-scrollbar">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col relative overflow-x-hidden no-scrollbar">
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
 
       {/* Clean Airbnb-style Header */}
-      <div className="sticky top-0 z-[60] bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-[60] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
 
           {/* Logo */}
@@ -967,11 +967,11 @@ const SearchPage = () => {
               type="button"
               onClick={() => setShowFilters(true)}
               aria-label="Open search filters"
-              className="flex items-center gap-3 bg-white border border-gray-300 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
             >
-              <SearchIconLucide className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <SearchIconLucide className="w-4 h-4 text-gray-500 dark:text-white flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-800 truncate block">
+                <span className="text-sm font-semibold text-gray-800 dark:text-white truncate block">
                   {searchTerm || filters.location
                     ? `${searchTerm || 'Anywhere'} / ${filters.location || 'Anywhere'}`
                     : 'Search services, venues...'}
@@ -988,7 +988,7 @@ const SearchPage = () => {
             <button
               onClick={() => setViewMode(viewMode === 'map' ? 'grid' : 'map')}
               aria-label={viewMode === 'map' ? 'Hide map' : 'Show map'}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-300 text-sm font-semibold text-gray-700 hover:border-gray-900 hover:bg-gray-50 transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-gray-300 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-white hover:border-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
             >
               <MapIcon className="w-4 h-4" />
               {viewMode === 'map' ? 'Hide map' : 'Show map'}
@@ -998,7 +998,7 @@ const SearchPage = () => {
       </div>
 
       {/* Airbnb-style Category Bar */}
-      <div className="sticky top-[61px] z-[50] bg-white border-b border-gray-100">
+      <div className="sticky top-[61px] z-[50] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-[2520px] mx-auto">
           <div className="overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-1 px-6 py-3">
@@ -1007,8 +1007,8 @@ const SearchPage = () => {
                 onClick={() => handleCategorySelect(null)}
                 className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
                   !selectedCategory
-                    ? 'text-gray-900 border-b-2 border-gray-900'
-                    : 'text-gray-400 hover:text-gray-700 border-b-2 border-transparent'
+                    ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
+                    : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
                 }`}
               >
                 <Sparkles className="w-5 h-5" />
@@ -1021,8 +1021,8 @@ const SearchPage = () => {
                   onClick={() => handleCategorySelect(cat)}
                   className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
                     selectedCategory === cat.id
-                      ? 'text-gray-900 border-b-2 border-gray-900'
-                      : 'text-gray-400 hover:text-gray-700 border-b-2 border-transparent'
+                      ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
+                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
                   }`}
                 >
                   <cat.icon className="w-5 h-5" />
@@ -1049,7 +1049,7 @@ const SearchPage = () => {
 
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-500">
+              <p className="text-sm font-semibold text-gray-500 dark:text-white">
                 {loading ? 'Searching...' : `${listings.length} ${searchType !== 'all' ? searchType : 'places'} ${filters.location ? `near ${filters.location}` : 'found'}`}
               </p>
               {/* Mobile View Toggle */}
@@ -1057,14 +1057,14 @@ const SearchPage = () => {
                 <button
                   onClick={() => setViewMode('grid')}
                   aria-label="Show results as a grid"
-                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'grid' ? 'text-gray-900' : 'text-gray-400'}`}
+                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'grid' ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}
                 >
                   <Squares2X2Icon className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode('map')}
                   aria-label="Show results on the map"
-                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'map' ? 'text-gray-900' : 'text-gray-400'}`}
+                  className={`p-2 rounded-lg transition-colors ${ viewMode === 'map' ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}
                 >
                   <MapIcon className="w-5 h-5" />
                 </button>
@@ -1104,8 +1104,8 @@ const SearchPage = () => {
 
             {/* Recently Viewed */}
             {recentlyViewedItems.length > 0 && (
-              <section className="mt-16 pt-10 border-t border-gray-100">
-                <h2 className="text-base font-bold text-gray-900 mb-5">Recently viewed</h2>
+              <section className="mt-16 pt-10 border-t border-gray-100 dark:border-gray-800">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white mb-5">Recently viewed</h2>
                 <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
                   {recentlyViewedItems.map((item) => (
                     <div
@@ -1113,15 +1113,15 @@ const SearchPage = () => {
                       onClick={() => navigate(`/${item.itemType || item.type || 'listing'}/${item._id || item.id}`)}
                       className="flex-shrink-0 w-48 cursor-pointer"
                     >
-                      <div className="aspect-square rounded-xl overflow-hidden mb-2 bg-gray-100">
+                      <div className="aspect-square rounded-xl overflow-hidden mb-2 bg-gray-100 dark:bg-gray-800">
                         <ImageWithFallback
                           src={item.imageUrls?.[0] || item.images?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
                           alt={item.name || item.title || 'Item'}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
-                      <h3 className="font-semibold text-sm text-gray-900 truncate">{item.name || item.title || 'Untitled'}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">{item.name || item.title || 'Untitled'}</h3>
+                      <p className="text-sm text-gray-500 dark:text-white">
                         {typeof (item.regularPrice || item.price) === 'number'
                           ? `R${(item.regularPrice || item.price).toLocaleString()}`
                           : (item.regularPrice || item.price || 'Contact')}
@@ -1148,9 +1148,9 @@ const SearchPage = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               onClick={() => setViewMode('grid')}
-              className="lg:hidden absolute top-6 left-6 z-[160] flex items-center gap-2 px-4 py-2.5 bg-white/95 backdrop-blur-md rounded-full shadow-xl text-sm font-semibold text-gray-900 active:scale-95 transition-all border border-gray-200 cursor-pointer"
+              className="lg:hidden absolute top-6 left-6 z-[160] flex items-center gap-2 px-4 py-2.5 bg-white/95 backdrop-blur-md rounded-full shadow-xl text-sm font-semibold text-gray-900 dark:text-white active:scale-95 transition-all border border-gray-200 dark:border-gray-800 cursor-pointer"
             >
-              <ArrowLeftIcon className="w-4 h-4 text-gray-700" />
+              <ArrowLeftIcon className="w-4 h-4 text-gray-700 dark:text-white" />
               <span>Show list</span>
             </motion.button>
           )}
@@ -1194,16 +1194,16 @@ const SearchPage = () => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 35, stiffness: 400 }}
-              className="fixed bottom-0 inset-x-0 h-[85vh] md:h-full md:inset-y-0 md:right-0 md:left-auto md:w-[480px] bg-white z-[101] flex flex-col shadow-2xl md:rounded-none rounded-t-3xl overflow-hidden"
+              className="fixed bottom-0 inset-x-0 h-[85vh] md:h-full md:inset-y-0 md:right-0 md:left-auto md:w-[480px] bg-white dark:bg-gray-900 z-[101] flex flex-col shadow-2xl md:rounded-none rounded-t-3xl overflow-hidden"
             >
               {/* Header */}
-              <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+              <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-800">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Filters</h2>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-700" />
+                  <XMarkIcon className="w-5 h-5 text-gray-700 dark:text-white" />
                 </button>
               </div>
 
@@ -1212,7 +1212,7 @@ const SearchPage = () => {
 
                   {/* What */}
                   <div className="space-y-3">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Service or Venue</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Service or Venue</label>
                     <div className="relative">
                       <SearchIconLucide className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
@@ -1220,14 +1220,14 @@ const SearchPage = () => {
                         placeholder="e.g. Nails, Hair, Guest house"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Where */}
                   <div className="space-y-3">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Location</label>
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <input
@@ -1235,7 +1235,7 @@ const SearchPage = () => {
                         placeholder="City or neighbourhood"
                         value={filters.location}
                         onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
-                        className="w-full bg-gray-50 border border-gray-200 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
+                        className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 focus:border-gray-900 rounded-xl py-3.5 pl-11 pr-4 focus:ring-0 transition-all outline-none text-sm"
                       />
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -1246,7 +1246,7 @@ const SearchPage = () => {
                           className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${
                             filters.location === loc
                               ? 'bg-gray-900 text-white border-gray-900'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-900'
+                              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:border-gray-900'
                           }`}
                         >
                           {loc}
@@ -1257,7 +1257,7 @@ const SearchPage = () => {
 
                   {/* Category */}
                   <div className="space-y-3">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Category</label>
                     <div className="grid grid-cols-2 gap-2">
                       {ALL_CATEGORIES.slice(0, 10).map(cat => (
                         <button
@@ -1266,7 +1266,7 @@ const SearchPage = () => {
                           className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left ${
                             selectedCategory === cat.id
                               ? 'bg-gray-900 text-white border-gray-900'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:border-gray-400'
                           }`}
                         >
                           <cat.icon className={`w-4 h-4 flex-shrink-0 ${ selectedCategory === cat.id ? 'text-white' : 'text-gray-400'}`} />
@@ -1278,14 +1278,14 @@ const SearchPage = () => {
 
                   {/* Price Range */}
                   <div className="space-y-3">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Price range (R)</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Price range (R)</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
                         placeholder="Min"
                         value={filters.minPrice}
                         onChange={(e) => setFilters(prev => ({ ...prev, minPrice: e.target.value }))}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
+                        className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
                       />
                       <span className="text-gray-400 font-medium">-</span>
                       <input
@@ -1293,21 +1293,21 @@ const SearchPage = () => {
                         placeholder="Max"
                         value={filters.maxPrice}
                         onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
+                        className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 focus:ring-0 outline-none text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Property Basics */}
                   <div className="space-y-3">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Property basics</label>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Property basics</label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <span className="mb-2 block text-xs font-semibold text-gray-500">Bedrooms</span>
+                        <span className="mb-2 block text-xs font-semibold text-gray-500 dark:text-white">Bedrooms</span>
                         <select
                           value={filters.bedroomsMin}
                           onChange={(e) => setFilters(prev => ({ ...prev, bedroomsMin: e.target.value }))}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
+                          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
                         >
                           <option value="">Any</option>
                           {[1, 2, 3, 4, 5].map(count => (
@@ -1316,11 +1316,11 @@ const SearchPage = () => {
                         </select>
                       </div>
                       <div>
-                        <span className="mb-2 block text-xs font-semibold text-gray-500">Bathrooms</span>
+                        <span className="mb-2 block text-xs font-semibold text-gray-500 dark:text-white">Bathrooms</span>
                         <select
                           value={filters.bathroomsMin}
                           onChange={(e) => setFilters(prev => ({ ...prev, bathroomsMin: e.target.value }))}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
+                          className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 rounded-xl py-3 px-4 focus:border-gray-900 focus:ring-0 outline-none text-sm"
                         >
                           <option value="">Any</option>
                           {[1, 2, 3, 4, 5].map(count => (
@@ -1335,10 +1335,10 @@ const SearchPage = () => {
               </div>
 
               {/* Footer */}
-              <div className="flex-shrink-0 px-6 py-5 border-t border-gray-100 bg-white flex items-center justify-between gap-4">
+              <div className="flex-shrink-0 px-6 py-5 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 flex items-center justify-between gap-4">
                 <button
                   onClick={clearFilters}
-                  className="text-sm font-semibold text-gray-700 underline underline-offset-4 hover:text-gray-900 transition-colors"
+                  className="text-sm font-semibold text-gray-700 dark:text-white underline underline-offset-4 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   Clear all
                 </button>

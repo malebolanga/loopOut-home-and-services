@@ -51,7 +51,7 @@ export default function ListingsPage() {
              <div
               key={listing._id || listing.id}
               onClick={() => navigate(`/listing/${listing._id || listing.id}`)}
-              className="group relative aspect-square bg-white rounded-[3rem] border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+              className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
               <div className="absolute inset-0 z-0">
                 <img
@@ -66,7 +66,7 @@ export default function ListingsPage() {
               <div className="absolute top-5 left-5 right-5 flex items-center justify-between z-10 pointer-events-none">
                 <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
                   <Sparkles className="w-3 h-3 text-rose-500" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{listing.type || type}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900 dark:text-white">{listing.type || type}</span>
                 </div>
               </div>
 
@@ -99,7 +99,7 @@ export default function ListingsPage() {
               <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
                 <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
                   <div 
-                    className="w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
+                    className="w-full py-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
                     onClick={(e) => { e.stopPropagation(); navigate(`/listing/${listing._id || listing.id}`); }}
                   >
                     Inspect Original Masterpiece
