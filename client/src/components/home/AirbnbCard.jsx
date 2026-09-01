@@ -261,16 +261,16 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
 export const AirbnbCardSkeleton = ({ reducedSize = false }) => (
   <div className={`flex flex-col ${reducedSize ? 'gap-1.5' : 'gap-2'} animate-pulse`}>
-    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-200" />
+    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-200 dark:bg-gray-800" />
     <div className="flex flex-col pt-1 gap-1">
       <div className="flex justify-between items-start gap-2">
-        <div className="h-4 bg-gray-200 rounded-md w-2/3" />
-        <div className="h-4 bg-gray-200 rounded-md w-8" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded-md w-2/3" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded-md w-8" />
       </div>
-      <div className="h-3 bg-gray-200 rounded-md w-1/3" />
-      <div className="h-3 bg-gray-200 rounded-md w-1/4 mt-1" />
+      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-md w-1/3" />
+      <div className="h-3 bg-gray-200 dark:bg-gray-800 rounded-md w-1/4 mt-1" />
       <div className="flex items-baseline gap-2">
-        <div className="h-5 bg-gray-200 rounded-md w-20" />
+        <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded-md w-20" />
       </div>
     </div>
   </div>

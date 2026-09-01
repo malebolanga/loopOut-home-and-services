@@ -17,16 +17,18 @@
   --app-input: #f8fafc;
 }
 
-html.dark {
+html.dark,
+.dark {
   color-scheme: dark;
   --app-bg: #030712;
   --app-surface: #111827;
   --app-surface-muted: #1f2937;
   --app-surface-hover: #374151;
-  --app-text: #f9fafb;
-  --app-text-muted: #9ca3af;
+  --app-text: #ffffff;
+  --app-text-muted: #e2e8f0;
   --app-border: #374151;
   --app-input: #111827;
+  color: #ffffff;
 }
 
 html, body, #root {
@@ -77,7 +79,96 @@ button, input, select, textarea {
 .dark body,
 html.dark body {
   background-color: var(--app-bg);
-  color: var(--app-text);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   GLOBAL DARK MODE TYPOGRAPHY ENFORCEMENT
+   Ensures all pages, headings, labels, texts, and elements render with white font
+   when dark mode is active.
+   ========================================================================== */
+html.dark,
+.dark {
+  color: #ffffff;
+}
+
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6,
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff;
+}
+
+/* Dark text utility overrides in dark mode when no explicit dark:text is provided */
+html.dark .text-slate-950:not([class*="dark:text-"]),
+html.dark .text-slate-900:not([class*="dark:text-"]),
+html.dark .text-slate-800:not([class*="dark:text-"]),
+html.dark .text-slate-700:not([class*="dark:text-"]),
+html.dark .text-gray-950:not([class*="dark:text-"]),
+html.dark .text-gray-900:not([class*="dark:text-"]),
+html.dark .text-gray-800:not([class*="dark:text-"]),
+html.dark .text-gray-700:not([class*="dark:text-"]),
+html.dark .text-zinc-950:not([class*="dark:text-"]),
+html.dark .text-zinc-900:not([class*="dark:text-"]),
+html.dark .text-zinc-800:not([class*="dark:text-"]),
+html.dark .text-zinc-700:not([class*="dark:text-"]),
+html.dark .text-neutral-950:not([class*="dark:text-"]),
+html.dark .text-neutral-900:not([class*="dark:text-"]),
+html.dark .text-neutral-800:not([class*="dark:text-"]),
+html.dark .text-neutral-700:not([class*="dark:text-"]),
+html.dark .text-black:not([class*="dark:text-"]),
+html.dark .text-airbnb-dark:not([class*="dark:text-"]),
+.dark .text-slate-950:not([class*="dark:text-"]),
+.dark .text-slate-900:not([class*="dark:text-"]),
+.dark .text-slate-800:not([class*="dark:text-"]),
+.dark .text-slate-700:not([class*="dark:text-"]),
+.dark .text-gray-950:not([class*="dark:text-"]),
+.dark .text-gray-900:not([class*="dark:text-"]),
+.dark .text-gray-800:not([class*="dark:text-"]),
+.dark .text-gray-700:not([class*="dark:text-"]),
+.dark .text-zinc-950:not([class*="dark:text-"]),
+.dark .text-zinc-900:not([class*="dark:text-"]),
+.dark .text-zinc-800:not([class*="dark:text-"]),
+.dark .text-zinc-700:not([class*="dark:text-"]),
+.dark .text-neutral-950:not([class*="dark:text-"]),
+.dark .text-neutral-900:not([class*="dark:text-"]),
+.dark .text-neutral-800:not([class*="dark:text-"]),
+.dark .text-neutral-700:not([class*="dark:text-"]),
+.dark .text-black:not([class*="dark:text-"]),
+.dark .text-airbnb-dark:not([class*="dark:text-"]) {
+  color: #ffffff;
+}
+
+/* Secondary / muted typography in dark mode */
+html.dark .text-slate-600:not([class*="dark:text-"]),
+html.dark .text-slate-500:not([class*="dark:text-"]),
+html.dark .text-slate-400:not([class*="dark:text-"]),
+html.dark .text-gray-600:not([class*="dark:text-"]),
+html.dark .text-gray-500:not([class*="dark:text-"]),
+html.dark .text-gray-400:not([class*="dark:text-"]),
+html.dark .text-zinc-600:not([class*="dark:text-"]),
+html.dark .text-zinc-500:not([class*="dark:text-"]),
+html.dark .text-zinc-400:not([class*="dark:text-"]),
+html.dark .text-airbnb-gray:not([class*="dark:text-"]),
+.dark .text-slate-600:not([class*="dark:text-"]),
+.dark .text-slate-500:not([class*="dark:text-"]),
+.dark .text-slate-400:not([class*="dark:text-"]),
+.dark .text-gray-600:not([class*="dark:text-"]),
+.dark .text-gray-500:not([class*="dark:text-"]),
+.dark .text-gray-400:not([class*="dark:text-"]),
+.dark .text-zinc-600:not([class*="dark:text-"]),
+.dark .text-zinc-500:not([class*="dark:text-"]),
+.dark .text-zinc-400:not([class*="dark:text-"]),
+.dark .text-airbnb-gray:not([class*="dark:text-"]) {
+  color: #e2e8f0;
+}
+
+/* Form controls text in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="dark:text-"]),
+html.dark textarea:not([class*="dark:text-"]),
+html.dark select:not([class*="dark:text-"]),
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="dark:text-"]),
+.dark textarea:not([class*="dark:text-"]),
+.dark select:not([class*="dark:text-"]) {
+  color: #ffffff;
 }
 
 /* Global overflow/scroll safety: one unified viewport scroll, no stuck horizontal contexts */

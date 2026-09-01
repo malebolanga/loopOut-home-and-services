@@ -857,6 +857,56 @@ export default function Header() {
                   )}
                 </button>
 
+                {/* Profile / Sign In — Desktop */}
+                <div className="relative hidden md:block" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown((prev) => !prev);
+                      setShowLanguageDropdown(false);
+                      setShowCurrencyDropdown(false);
+                    }}
+                    aria-label={currentUser ? 'Account menu' : 'Sign in'}
+                    aria-expanded={showProfileDropdown}
+                    className={`flex items-center gap-2 rounded-full border border-slate-200 dark:border-gray-700 pl-1.5 pr-3 h-9 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all ${
+                      currentUser ? '' : 'bg-slate-950 dark:bg-white border-slate-950 dark:border-white pl-3'
+                    }`}
+                  >
+                    {currentUser ? (
+                      <>
+                        <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 dark:border-gray-700 flex-shrink-0">
+                          <ImageWithFallback
+                            src={currentUser.avatar}
+                            type="avatar"
+                            alt="Profile"
+                            className="w-full h-full"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-slate-700 dark:text-gray-300 max-w-[80px] truncate">
+                          {currentUser.username}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[11px] font-black uppercase tracking-wider text-white dark:text-slate-950">
+                        Sign In
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showProfileDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute top-full right-0 mt-3 w-80 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 p-4 z-50 max-h-[85vh] overflow-y-auto"
+                      >
+                        {profileMenuContent}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
               </div>
 
               {/* Language Dropdown */}
