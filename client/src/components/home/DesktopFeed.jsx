@@ -5,7 +5,6 @@ import { FunnelIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { AirbnbCard } from './AirbnbCard';
 import { NeuralPicksSection, SellItemsSection, CompareRecommendedSection } from './HomeSections';
-import DailyLoopHub from './DailyLoopHub';
 import ContinueSearchingCard from './ContinueSearchingCard';
 import MyBookingsConsumer from '../MyBookingsConsumer';
 
@@ -108,9 +107,6 @@ export const DesktopFeed = ({
 
       {/* ── Main Feed ── */}
       <main className="max-w-7xl mx-auto px-8 py-10">
-
-        {/* Daily Loop Hub */}
-        <DailyLoopHub />
 
         {/* Continue Searching Card */}
         <ContinueSearchingCard navigate={navigate} />

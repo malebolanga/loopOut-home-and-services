@@ -10,6 +10,7 @@ import {
   ChevronLeftIcon,
   CheckCircleIcon
 } from "@heroicons/react/24/outline";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { hasProfanity } from "../utils/profanityFilter";
 
 export default function CreateRequest() {
@@ -52,7 +53,7 @@ export default function CreateRequest() {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/looking-for/create', {
+      const res = await authenticatedFetch('/api/looking-for/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ export default function CreateRequest() {
       if (data.success === false) {
         setError(data.message);
       } else {
-        navigate('/looking-for');
+        navigate('/micro-gigs');
       }
     } catch (error) {
       setError(error.message);

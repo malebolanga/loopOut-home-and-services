@@ -9,23 +9,47 @@ import LoopOutWhisper from './LoopOutWhisper';
 import DailySpinWheelModal from './DailySpinWheelModal';
 import { UpcomingBookingsSection } from './HomeSections';
 
+import LoopStreakModal from './LoopStreakModal';
+
 // Hub items config: emoji, label, description, color accent
 const HUB_ITEMS = [
   {
-    id: 'daily-spin',
-    emoji: '🎁',
-    label: 'Daily Spoil',
-    desc: 'Spin & Win',
-   
-    textColor: 'text-amber-600',
-    action: 'modal-spin',
+    id: 'loop-drop',
+    emoji: '⚡',
+    label: 'Hourly Drop',
+    desc: 'Flash discounts',
+    textColor: 'text-amber-500',
+    action: 'scroll-drops',
+  },
+  {
+    id: 'gig-radar',
+    emoji: '📡',
+    label: 'Micro-Gigs',
+    desc: 'Paid quick tasks',
+    textColor: 'text-emerald-500',
+    action: '/micro-gigs',
+  },
+  {
+    id: 'loop-pool',
+    emoji: '👥',
+    label: 'Group Deals',
+    desc: 'Estate pools',
+    textColor: 'text-indigo-500',
+    action: 'scroll-pools',
+  },
+  {
+    id: 'daily-streak',
+    emoji: '🔥',
+    label: 'Daily Streak',
+    desc: 'Claim R-Credits',
+    textColor: 'text-rose-500',
+    action: 'modal-streak',
   },
   {
     id: 'lunch',
     emoji: '🍔',
     label: 'Lunch Hub',
     desc: 'Order food',
-  
     textColor: 'text-rose-600',
     action: '/lunch',
   },
@@ -34,7 +58,6 @@ const HUB_ITEMS = [
     emoji: '📸',
     label: 'Vision Scan',
     desc: 'Scan with camera',
-  
     textColor: 'text-purple-700',
     action: 'modal-vision',
   },
@@ -43,27 +66,16 @@ const HUB_ITEMS = [
     emoji: '🎙️',
     label: 'Whisper AI',
     desc: 'Voice assistant',
-   
     textColor: 'text-cyan-700',
     action: 'modal-whisper',
   },
   {
     id: 'matchmaker',
-    emoji: '🔥',
+    emoji: '💖',
     label: 'Matchmaker',
     desc: 'Find your match',
-    
     textColor: 'text-rose-600',
     action: '/matchmaker',
-  },
-  {
-    id: 'live-radar',
-    emoji: '📍',
-    label: 'Live Radar',
-    desc: 'Nearby activity',
-
-    textColor: 'text-emerald-600',
-    action: '/radar',
   },
 ];
 
@@ -78,6 +90,7 @@ const DailyLoopHub = () => {
   const [showVisionModal, setShowVisionModal] = useState(false);
   const [showWhisperModal, setShowWhisperModal] = useState(false);
   const [showSpinModal, setShowSpinModal] = useState(false);
+  const [showStreakModal, setShowStreakModal] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
   const [hideHub, setHideHub] = useState(false);
   const containerRef = useRef(null);
@@ -121,7 +134,18 @@ const DailyLoopHub = () => {
     setActiveId(item.id);
     setTimeout(() => setActiveId(null), 600);
 
-    if (item.action === 'modal-broadcast') {
+    if (item.action === 'modal-streak') {
+      setShowStreakModal(true);
+    } else if (item.action === 'scroll-drops') {
+      const el = document.getElementById('loop-drops-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else if (item.action === 'scroll-gigs') {
+      const el = document.getElementById('gig-radar-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else if (item.action === 'scroll-pools') {
+      const el = document.getElementById('loop-pool-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    } else if (item.action === 'modal-broadcast') {
       setShowBroadcastModal(true);
     } else if (item.action === 'modal-vision') {
       setShowVisionModal(true);
@@ -291,6 +315,9 @@ const DailyLoopHub = () => {
 
       {/* LoopOut Whisper Modal */}
       <LoopOutWhisper isOpen={showWhisperModal} onClose={() => setShowWhisperModal(false)} />
+
+      {/* Daily LoopStreak & Rewards Modal */}
+      <LoopStreakModal isOpen={showStreakModal} onClose={() => setShowStreakModal(false)} />
     </>
   );
 };

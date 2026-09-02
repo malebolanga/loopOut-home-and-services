@@ -34,7 +34,7 @@ export const CategoriesSlider = ({ navigate, TOP_CATEGORIES = [] }) => {
     const services = ['baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare', 'storage'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
-    if (needs.includes(category.id)) navigate('/looking-for');
+    if (needs.includes(category.id)) navigate('/micro-gigs');
     else if (helpers.includes(category.id)) navigate(`/search?category=${category.id}&type=helpers`);
     else if (services.includes(category.id)) navigate(`/search?category=${category.id}&type=services`);
     else if (properties.includes(category.id)) navigate(`/search?category=${category.id}&type=properties`);

@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, useLocation, useNavigate, useParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -155,8 +155,9 @@ const Trip = lazy(() => import('./pages/Trip'));
 const SmartSearchPage = lazy(() => import('./pages/SmartSearchPage'));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const Inbox = lazy(() => import('./pages/Inbox'));
-const LookingForDiscovery = lazy(() => import('./pages/LookingForDiscovery'));
+
 const CreateRequest = lazy(() => import('./pages/CreateRequest'));
+const MicroGigs = lazy(() => import('./pages/MicroGigs'));
 
 // Categories page
 const Categories = lazy(() => import('./pages/Categories'));
@@ -210,7 +211,10 @@ const AnimatedRoutes = () => {
         <Route path="/event-home-page" element={<PageTransition><EventsHomePage /></PageTransition>} />
         <Route path="/listing-home-page" element={<PageTransition><ListingsHomePage /></PageTransition>} />
         <Route path="/service-home-page" element={<PageTransition><ServicesHomePage /></PageTransition>} />
-        <Route path="/looking-for" element={<PageTransition><LookingForDiscovery /></PageTransition>} />
+        <Route path="/looking-for" element={<Navigate to="/micro-gigs" replace />} />
+        <Route path="/micro-gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
+        <Route path="/gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
+        <Route path="/neighborhood-gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
         <Route path="/create-request" element={<PageTransition><CreateRequest /></PageTransition>} />
 
         {/* Trip Routes */}
@@ -388,7 +392,10 @@ function AppContent() {
     '/my-bookings',
     '/upcoming',
     '/notifications',
-    '/settings'
+    '/settings',
+    '/micro-gigs',
+    '/gigs',
+    '/neighborhood-gigs'
   ];
 
   const specializedHelperPaths = [

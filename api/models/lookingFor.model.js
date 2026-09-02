@@ -22,19 +22,31 @@ const lookingForSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['room', 'nanny', 'dog', 'roommate', 'other', 'sharing', 'place', 'pampering', 'household', 'others'],
+      default: 'other',
+    },
+    urgency: {
+      type: String,
+      enum: ['flexible', 'today', 'immediate', 'urgent'],
+      default: 'flexible',
     },
     budget: {
       type: Number,
       required: false,
+      default: 0,
     },
     contact: {
       type: String,
-      required: true,
+      required: false,
+      default: 'In-app message',
+    },
+    contactPhone: {
+      type: String,
+      required: false,
     },
     imageUrls: {
       type: [String],
       required: false,
+      default: [],
     },
     deviceType: {
       type: String,
@@ -47,6 +59,11 @@ const lookingForSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
+    },
+    expiresAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
+      index: { expires: 0 },
     },
     likes: {
       type: [mongoose.Schema.Types.ObjectId],

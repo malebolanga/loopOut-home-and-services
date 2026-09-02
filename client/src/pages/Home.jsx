@@ -16,11 +16,10 @@ import {
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
-  HeartIcon as HeartIconSolid,
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2 } from 'lucide-react';
+import { Sparkles, ChevronDown, ChevronUp, MapPin, Loader2 } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -28,8 +27,6 @@ import 'swiper/css/free-mode';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import {
-  FaApple,
-  FaGooglePlay,
   FaWhatsapp,
   FaPhone,
   FaMapMarkerAlt,
@@ -55,10 +52,12 @@ import {
   UpcomingBookingsSection,
   CompareRecommendedSection
 } from '../components/home/HomeSections';
-import DailyLoopHub from '../components/home/DailyLoopHub';
 import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 import CaughtUpHub from '../components/home/CaughtUpHub';
+import LoopDropSection from '../components/home/LoopDropSection';
+import GigRadarSection from '../components/home/GigRadarSection';
+import LoopStreakWidget from '../components/home/LoopStreakWidget';
 import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
@@ -568,7 +567,7 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
     <motion.div
       whileHover={{ y: -5 }}
       whileTap={{ scale: 0.98 }}
-      onClick={() => navigate(`/looking-for?id=${request._id}`)}
+      onClick={() => navigate(`/micro-gigs`)}
       className="p-6 flex flex-col gap-5 h-full cursor-pointer"
     >
       <div className="flex items-center justify-between mb-2">
@@ -1286,32 +1285,23 @@ function MobileAppHomepage({
       ]
     },
     {
-      id: 'Lunch',
-      label: 'Lunch',
-      emoji: '🍱',
-      desc: 'Food & eats',
-      textColor: 'text-orange-600',
-      bgColor: 'bg-orange-500',
-      route: '/lunch'
-    },
-    {
-      id: 'Matchmaker',
-      label: 'Matchmaker',
-      emoji: '🎯',
-      desc: 'AI matching',
-      textColor: 'text-fuchsia-600',
-      bgColor: 'bg-fuchsia-500',
-      route: '/matchmaker'
-    },
-    {
-      id: 'LookingFor',
-      label: 'Needs',
-      emoji: '📢',
-      desc: 'Live requests',
-      textColor: 'text-rose-600',
+      id: 'HourlyDrop',
+      label: 'Hourly Drops',
+      emoji: '⚡',
+      desc: 'Flash discounts',
+      textColor: 'text-rose-500',
       bgColor: 'bg-rose-500',
-      route: '/looking-for'
-    }
+      action: 'scroll-drops'
+    },
+    {
+      id: 'MicroGigs',
+      label: 'Micro-Gigs',
+      emoji: '📡',
+      desc: 'Live tasks',
+      textColor: 'text-emerald-500',
+      bgColor: 'bg-emerald-500',
+      route: '/micro-gigs'
+    },
   ];
 
 
@@ -1416,39 +1406,51 @@ function MobileAppHomepage({
       <main className="px-4 pt-2 pb-4 w-full">
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
-        {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
-        <AnimatePresence>
-          {showLocationToast && (
-            <motion.button
-              initial={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto', marginBottom: 12 }}
-              exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
-              transition={{ duration: 0.3 }}
-              onClick={onRequestLocation}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden"
-            >
-              {geoLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />
-                  <span>Finding your location…</span>
-                </>
-              ) : geoCity ? (
-                <>
-                  <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span>Showing results near <span className="text-gray-900">{geoCity}</span></span>
-                </>
-              ) : (
-                <>
-                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  <span>{geoError ? 'Enable location for results near you' : 'Set your location'}</span>
-                </>
-              )}
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* ── TOP UTILITY STRIP: Daily Streak + Location Toast ── */}
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <LoopStreakWidget />
+
+          <AnimatePresence>
+            {showLocationToast && (
+              <motion.button
+                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                onClick={onRequestLocation}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-xs font-bold text-gray-600 dark:text-gray-300 active:scale-95 overflow-hidden"
+              >
+                {geoLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />
+                    <span>Locating…</span>
+                  </>
+                ) : geoCity ? (
+                  <>
+                    <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                    <span className="truncate max-w-[120px]">{geoCity}</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span>Location</span>
+                  </>
+                )}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
+
+        {/* ── HOURLY FLASH DROPS (HourFlash Top Banner) ── */}
+        <LoopDropSection
+          featuredProperties={featuredProperties}
+          featuredServices={featuredServices}
+          featuredHelpers={featuredHelpers}
+          navigate={navigate}
+        />
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
@@ -1463,6 +1465,16 @@ function MobileAppHomepage({
                     layout
                     key={tab.id}
                     onClick={() => {
+                      if (tab.action === 'scroll-drops') {
+                        const el = document.getElementById('loop-drops-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        return;
+                      }
+                      if (tab.action === 'scroll-gigs') {
+                        const el = document.getElementById('gig-radar-section');
+                        if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        return;
+                      }
                       if (tab.route) {
                         navigate(tab.route);
                         return;
@@ -1634,7 +1646,9 @@ function MobileAppHomepage({
         </div>
 
         {/* Sell Items */}
-        <SellItemsSection navigate={navigate} />
+        <div className="mb-10">
+          <SellItemsSection navigate={navigate} />
+        </div>
 
         {/* End of Feed */}
         <CaughtUpHub stats={stats} navigate={navigate} />
@@ -1686,6 +1700,7 @@ function DesktopHomepage({
   featuredSellItems,
   recentlyAddedItems,
   navigate,
+  currentUser,
   isBookingsOpen,
   setIsBookingsOpen,
   requestCount,
@@ -1722,14 +1737,21 @@ function DesktopHomepage({
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
-        body::-webkit-scrollbar { display: none; }
-        * { scrollbar-width: none; -ms-overflow-style: none; }
-        *::-webkit-scrollbar { display: none; }
       `}</style>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
       <div className="max-w-7xl mx-auto px-8 pt-6">
         <HomeHero navigate={navigate} />
+
+        {/* ── HOURLY FLASH DROPS (Desktop Top Banner) ── */}
+        <div className="mt-4">
+          <LoopDropSection
+            featuredProperties={featuredProperties}
+            featuredServices={featuredServices}
+            featuredHelpers={featuredHelpers}
+            navigate={navigate}
+          />
+        </div>
       </div>
 
       {/* Sticky Elite Categories Bar */}
@@ -1743,6 +1765,16 @@ function DesktopHomepage({
                   layout
                   key={tab.id}
                   onClick={() => {
+                    if (tab.action === 'scroll-drops') {
+                      const el = document.getElementById('loop-drops-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      return;
+                    }
+                    if (tab.action === 'scroll-gigs') {
+                      const el = document.getElementById('gig-radar-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                      return;
+                    }
                     if (tab.route) {
                       navigate(tab.route);
                       return;
@@ -1772,33 +1804,31 @@ function DesktopHomepage({
                       }`}>
                       {tab.label || tab.id}
                     </span>
-                    <span className="block text-[9.5px] text-gray-400 dark:text-gray-500 font-semibold mt-0.5 leading-tight">
-                      {tab.desc}
+                    <span className="block text-[8.5px] text-gray-400 font-bold uppercase tracking-wider leading-tight">
+                      {tab.desc || 'Explore'}
                     </span>
                   </div>
                 </motion.button>
               );
             })}
 
-            {/* Toggle See more categories button */}
+            {/* Toggle 'See more categories' button */}
             <motion.button
               layout
               onClick={() => setShowAllCategories(prev => !prev)}
               whileTap={{ scale: 0.92 }}
               whileHover={{ y: -2 }}
-              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200 border ${
+              className={`shrink-0 flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200 shadow-2xs ${
                 showAllCategories
-                  ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
-                  : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-2xs'
+                  ? 'bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200'
+                  : 'bg-rose-50 dark:bg-rose-500/10 border border-rose-200/90 dark:border-rose-500/30 text-rose-600 hover:bg-rose-100'
               }`}
             >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
-                showAllCategories ? 'bg-white text-slate-700' : 'bg-white text-rose-600'
-              } shadow-2xs`}>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center">
                 {showAllCategories ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
+                  <ChevronUp className="w-5 h-5 stroke-[2.5]" />
                 ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-5 h-5 stroke-[2.5]" />
                 )}
               </div>
               <div className="text-left">
@@ -1812,14 +1842,18 @@ function DesktopHomepage({
             </motion.button>
           </div>
 
-          {/* Premium Filter Button */}
-          <button
-            onClick={() => navigate('/search')}
-            className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 ml-4 cursor-pointer"
-          >
-            <FunnelIcon className="w-3.5 h-3.5" />
-            <span>Filters</span>
-          </button>
+          {/* Right Action Bar: Daily Streak + Filter Button */}
+          <div className="flex items-center gap-3 shrink-0 ml-4">
+            <LoopStreakWidget />
+
+            <button
+              onClick={() => navigate('/search')}
+              className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 dark:border-gray-700 rounded-full hover:border-slate-900 hover:bg-slate-50 dark:hover:bg-gray-800 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 dark:text-gray-300 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md active:scale-95 cursor-pointer"
+            >
+              <FunnelIcon className="w-3.5 h-3.5" />
+              <span>Filters</span>
+            </button>
+          </div>
         </div>
       </div>
 
