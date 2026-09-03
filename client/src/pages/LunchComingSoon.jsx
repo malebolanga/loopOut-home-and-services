@@ -65,11 +65,11 @@ const SHOP_THEMES = [
     id: 'amber',
     badge: 'bg-amber-500 text-white',
     badgeLight: 'bg-amber-100 text-amber-900 border border-amber-300',
-    cardActive: 'border-amber-500 bg-gradient-to-br from-amber-50 via-white to-amber-100/40 ring-2 ring-amber-400 shadow-amber-500/20 shadow-md',
+    cardActive: 'border-amber-500 bg-gradient-to-br from-amber-50 via-white to-orange-50 ring-2 ring-amber-400 shadow-amber-500/25 shadow-lg',
     cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-amber-300',
-    heroBg: 'from-amber-950 via-amber-900 to-slate-950 border-amber-500/40 text-white',
-    heroGlow: 'bg-amber-500/20',
-    btnPrimary: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-amber-500/30',
+    heroBg: 'from-amber-500 via-orange-500 to-rose-600 border-amber-400/50 text-white',
+    heroGlow: 'bg-amber-300/35',
+    btnPrimary: 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white hover:from-amber-600 hover:to-rose-600 shadow-amber-500/30',
     tabActive: 'bg-amber-500 text-white shadow-md',
     accentText: 'text-amber-600',
     priceText: 'text-amber-700 font-black',
@@ -79,10 +79,10 @@ const SHOP_THEMES = [
     id: 'emerald',
     badge: 'bg-emerald-600 text-white',
     badgeLight: 'bg-emerald-100 text-emerald-900 border border-emerald-300',
-    cardActive: 'border-emerald-500 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/40 ring-2 ring-emerald-400 shadow-emerald-500/20 shadow-md',
+    cardActive: 'border-emerald-500 bg-gradient-to-br from-emerald-50 via-white to-teal-50 ring-2 ring-emerald-400 shadow-emerald-500/25 shadow-lg',
     cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-emerald-300',
-    heroBg: 'from-emerald-950 via-teal-900 to-slate-950 border-emerald-500/40 text-white',
-    heroGlow: 'bg-emerald-500/20',
+    heroBg: 'from-emerald-600 via-teal-600 to-cyan-600 border-emerald-400/50 text-white',
+    heroGlow: 'bg-emerald-300/35',
     btnPrimary: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-emerald-500/30',
     tabActive: 'bg-emerald-600 text-white shadow-md',
     accentText: 'text-emerald-600',
@@ -93,11 +93,11 @@ const SHOP_THEMES = [
     id: 'rose',
     badge: 'bg-rose-600 text-white',
     badgeLight: 'bg-rose-100 text-rose-900 border border-rose-300',
-    cardActive: 'border-rose-500 bg-gradient-to-br from-rose-50 via-white to-rose-100/40 ring-2 ring-rose-400 shadow-rose-500/20 shadow-md',
+    cardActive: 'border-rose-500 bg-gradient-to-br from-rose-50 via-white to-orange-50 ring-2 ring-rose-400 shadow-rose-500/25 shadow-lg',
     cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-rose-300',
-    heroBg: 'from-rose-950 via-pink-900 to-slate-950 border-rose-500/40 text-white',
-    heroGlow: 'bg-rose-500/20',
-    btnPrimary: 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-rose-500/30',
+    heroBg: 'from-rose-600 via-red-600 to-amber-500 border-rose-400/50 text-white',
+    heroGlow: 'bg-rose-300/35',
+    btnPrimary: 'bg-gradient-to-r from-rose-500 to-red-600 text-white hover:from-rose-600 hover:to-red-700 shadow-rose-500/30',
     tabActive: 'bg-rose-600 text-white shadow-md',
     accentText: 'text-rose-600',
     priceText: 'text-rose-700 font-black',
@@ -107,11 +107,11 @@ const SHOP_THEMES = [
     id: 'purple',
     badge: 'bg-purple-600 text-white',
     badgeLight: 'bg-purple-100 text-purple-900 border border-purple-300',
-    cardActive: 'border-purple-500 bg-gradient-to-br from-purple-50 via-white to-purple-100/40 ring-2 ring-purple-400 shadow-purple-500/20 shadow-md',
+    cardActive: 'border-purple-500 bg-gradient-to-br from-purple-50 via-white to-pink-50 ring-2 ring-purple-400 shadow-purple-500/25 shadow-lg',
     cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-purple-300',
-    heroBg: 'from-purple-950 via-indigo-900 to-slate-950 border-purple-500/40 text-white',
-    heroGlow: 'bg-purple-500/20',
-    btnPrimary: 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-purple-500/30',
+    heroBg: 'from-purple-600 via-indigo-600 to-rose-500 border-purple-400/50 text-white',
+    heroGlow: 'bg-purple-300/35',
+    btnPrimary: 'bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 shadow-purple-500/30',
     tabActive: 'bg-purple-600 text-white shadow-md',
     accentText: 'text-purple-600',
     priceText: 'text-purple-700 font-black',
@@ -121,11 +121,11 @@ const SHOP_THEMES = [
     id: 'cyan',
     badge: 'bg-cyan-600 text-white',
     badgeLight: 'bg-cyan-100 text-cyan-900 border border-cyan-300',
-    cardActive: 'border-cyan-500 bg-gradient-to-br from-cyan-50 via-white to-cyan-100/40 ring-2 ring-cyan-400 shadow-cyan-500/20 shadow-md',
+    cardActive: 'border-cyan-500 bg-gradient-to-br from-cyan-50 via-white to-sky-50 ring-2 ring-cyan-400 shadow-cyan-500/25 shadow-lg',
     cardNormal: 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-cyan-300',
-    heroBg: 'from-cyan-950 via-blue-900 to-slate-950 border-cyan-500/40 text-white',
-    heroGlow: 'bg-cyan-500/20',
-    btnPrimary: 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600 shadow-cyan-500/30',
+    heroBg: 'from-sky-500 via-blue-600 to-teal-500 border-sky-400/50 text-white',
+    heroGlow: 'bg-sky-300/35',
+    btnPrimary: 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-600 hover:to-blue-700 shadow-cyan-500/30',
     tabActive: 'bg-cyan-600 text-white shadow-md',
     accentText: 'text-cyan-600',
     priceText: 'text-cyan-700 font-black',
@@ -140,6 +140,233 @@ function getShopTheme(shop) {
   for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
   return SHOP_THEMES[hash % SHOP_THEMES.length];
 }
+
+// Visual Picture / Avatar resolver for Food Items on Receipts
+export const getItemVisual = (it) => {
+  if (!it) return { emoji: '🍱', isImage: false, src: '' };
+  if (it.image && (typeof it.image === 'string') && (it.image.startsWith('http') || it.image.startsWith('/') || it.image.startsWith('data:'))) {
+    return { emoji: '', isImage: true, src: it.image };
+  }
+  if (it.imageUrl && (typeof it.imageUrl === 'string') && (it.imageUrl.startsWith('http') || it.imageUrl.startsWith('/'))) {
+    return { emoji: '', isImage: true, src: it.imageUrl };
+  }
+  if (it.image && typeof it.image === 'string' && it.image.length <= 4) {
+    return { emoji: it.image, isImage: false, src: '' };
+  }
+  const name = String(it.name || '').toLowerCase();
+  if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) {
+    return { emoji: '🥪', isImage: false, src: '' };
+  }
+  if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) {
+    return { emoji: '🍔', isImage: false, src: '' };
+  }
+  if (name.includes('pizza') || name.includes('slice')) {
+    return { emoji: '🍕', isImage: false, src: '' };
+  }
+  if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick') || name.includes('grilled chicken')) {
+    return { emoji: '🍗', isImage: false, src: '' };
+  }
+  if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) {
+    return { emoji: '🍟', isImage: false, src: '' };
+  }
+  if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) {
+    return { emoji: '🌯', isImage: false, src: '' };
+  }
+  if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice') || name.includes('beverage') || name.includes('water')) {
+    return { emoji: '🥤', isImage: false, src: '' };
+  }
+  if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors') || name.includes('braai')) {
+    return { emoji: '🥩', isImage: false, src: '' };
+  }
+  if (name.includes('fish') || name.includes('hake') || name.includes('seafood') || name.includes('prawn')) {
+    return { emoji: '🐟', isImage: false, src: '' };
+  }
+  if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu') || name.includes('mala') || name.includes('samp')) {
+    return { emoji: '🍲', isImage: false, src: '' };
+  }
+  if (name.includes('salad') || name.includes('greens') || name.includes('veg')) {
+    return { emoji: '🥗', isImage: false, src: '' };
+  }
+  if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream') || name.includes('waffle') || name.includes('donut')) {
+    return { emoji: '🍰', isImage: false, src: '' };
+  }
+  return { emoji: it.image || '🍱', isImage: false, src: '' };
+};
+
+// Dynamic Receipt Themes (Distinct colored paper backgrounds for receipts)
+export const RECEIPT_THEMES = [
+  {
+    id: 'amber',
+    bg: 'bg-gradient-to-b from-[#fffbf2] via-[#ffffff] to-[#fff7e6] dark:from-[#211a10] dark:via-[#19150e] dark:to-[#14100b]',
+    border: 'border-amber-400/90 dark:border-amber-700/80',
+    barcodeText: 'text-amber-900/60 dark:text-amber-300/60',
+    accentText: 'text-amber-950 dark:text-amber-200',
+    stampBg: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-700',
+    codeBg: 'from-amber-600 via-orange-500 to-amber-600',
+    headerBg: 'bg-amber-100/90 dark:bg-amber-900/40 text-amber-950 dark:text-amber-200 border-amber-300/60',
+    priceText: 'text-amber-700 dark:text-amber-400',
+    pill: 'bg-amber-500 text-white',
+    ring: 'ring-amber-400/40'
+  },
+  {
+    id: 'emerald',
+    bg: 'bg-gradient-to-b from-[#f3fbf7] via-[#ffffff] to-[#e7f8ef] dark:from-[#0d1f16] dark:via-[#091710] dark:to-[#07130d]',
+    border: 'border-emerald-400/90 dark:border-emerald-700/80',
+    barcodeText: 'text-emerald-900/60 dark:text-emerald-300/60',
+    accentText: 'text-emerald-950 dark:text-emerald-200',
+    stampBg: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-700',
+    codeBg: 'from-emerald-600 via-teal-500 to-emerald-600',
+    headerBg: 'bg-emerald-100/90 dark:bg-emerald-900/40 text-emerald-950 dark:text-emerald-200 border-emerald-300/60',
+    priceText: 'text-emerald-700 dark:text-emerald-400',
+    pill: 'bg-emerald-600 text-white',
+    ring: 'ring-emerald-400/40'
+  },
+  {
+    id: 'terracotta',
+    bg: 'bg-gradient-to-b from-[#fff6f0] via-[#ffffff] to-[#ffede0] dark:from-[#24150e] dark:via-[#1a0e08] dark:to-[#140b06]',
+    border: 'border-orange-400/90 dark:border-orange-700/80',
+    barcodeText: 'text-orange-900/60 dark:text-orange-300/60',
+    accentText: 'text-orange-950 dark:text-orange-200',
+    stampBg: 'bg-orange-100 text-orange-900 border-orange-300 dark:bg-orange-950/80 dark:text-orange-300 dark:border-orange-700',
+    codeBg: 'from-orange-600 via-rose-500 to-orange-600',
+    headerBg: 'bg-orange-100/90 dark:bg-orange-900/40 text-orange-950 dark:text-orange-200 border-orange-300/60',
+    priceText: 'text-orange-700 dark:text-orange-400',
+    pill: 'bg-orange-500 text-white',
+    ring: 'ring-orange-400/40'
+  },
+  {
+    id: 'violet',
+    bg: 'bg-gradient-to-b from-[#fbf5ff] via-[#ffffff] to-[#f4e8ff] dark:from-[#1b1026] dark:via-[#130b1c] dark:to-[#0d0714]',
+    border: 'border-purple-400/90 dark:border-purple-700/80',
+    barcodeText: 'text-purple-900/60 dark:text-purple-300/60',
+    accentText: 'text-purple-950 dark:text-purple-200',
+    stampBg: 'bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-700',
+    codeBg: 'from-purple-600 via-indigo-500 to-purple-600',
+    headerBg: 'bg-purple-100/90 dark:bg-purple-900/40 text-purple-950 dark:text-purple-200 border-purple-300/60',
+    priceText: 'text-purple-700 dark:text-purple-400',
+    pill: 'bg-purple-600 text-white',
+    ring: 'ring-purple-400/40'
+  },
+  {
+    id: 'cyan',
+    bg: 'bg-gradient-to-b from-[#f0faff] via-[#ffffff] to-[#e0f4ff] dark:from-[#0e1d24] dark:via-[#09151c] dark:to-[#060f14]',
+    border: 'border-sky-400/90 dark:border-sky-700/80',
+    barcodeText: 'text-sky-900/60 dark:text-sky-300/60',
+    accentText: 'text-sky-950 dark:text-sky-200',
+    stampBg: 'bg-sky-100 text-sky-900 border-sky-300 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-700',
+    codeBg: 'from-sky-600 via-blue-500 to-sky-600',
+    headerBg: 'bg-sky-100/90 dark:bg-sky-900/40 text-sky-950 dark:text-sky-200 border-sky-300/60',
+    priceText: 'text-sky-700 dark:text-sky-400',
+    pill: 'bg-sky-600 text-white',
+    ring: 'ring-sky-400/40'
+  }
+];
+
+export const getReceiptTheme = (ord) => {
+  if (!ord) return RECEIPT_THEMES[0];
+  const str = String(ord.id || ord._id || ord.orderCode || 'receipt');
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash += str.charCodeAt(i);
+  return RECEIPT_THEMES[hash % RECEIPT_THEMES.length];
+};
+
+// 1-Hour Preparation Countdown for Kitchen & Store Owner
+export const isOneHourPrepRush = (ord) => {
+  if (!ord || ord.status === 'Completed' || ord.status === 'Cancelled') return false;
+  const now = Date.now();
+  if (ord.scheduledFor) {
+    const scheduledTime = new Date(ord.scheduledFor).getTime();
+    if (!Number.isNaN(scheduledTime)) {
+      const diffMinutes = (scheduledTime - now) / (1000 * 60);
+      return diffMinutes <= 60 && diffMinutes >= -30;
+    }
+  }
+  const createdTime = new Date(ord.createdAt || ord.date || now).getTime();
+  const elapsedMinutes = (now - createdTime) / (1000 * 60);
+  return ord.status === 'Pending' || (ord.status === 'Preparing' && elapsedMinutes >= 15);
+};
+
+// Overdue Collection Reminder (Customer collection prompt)
+export const isCollectionOverdue = (ord) => {
+  if (!ord || ord.status === 'Completed' || ord.status === 'Cancelled') return false;
+  const now = Date.now();
+  if (ord.scheduledFor) {
+    const scheduledTime = new Date(ord.scheduledFor).getTime();
+    if (!Number.isNaN(scheduledTime) && now > scheduledTime) {
+      return true;
+    }
+  }
+  if (ord.status === 'Ready for Collection') {
+    const readyTime = new Date(ord.updatedAt || ord.createdAt || now).getTime();
+    const elapsedMinutes = (now - readyTime) / (1000 * 60);
+    return elapsedMinutes > 15;
+  }
+  return false;
+};
+
+// Formats Collection Date, Collection Time, and Placed Date/Time for receipts
+export const formatCollectionDateTime = (ord) => {
+  if (!ord) {
+    return {
+      dateStr: 'Today',
+      timeStr: 'ASAP',
+      placedStr: 'Recently',
+      full: 'Today ASAP',
+      label: 'Collection Time',
+      badgeTone: 'bg-amber-100 text-amber-900 border-amber-300',
+      isScheduled: false
+    };
+  }
+
+  // If customer scheduled a specific future date and time
+  if (ord.scheduledFor) {
+    const scheduledDate = new Date(ord.scheduledFor);
+    if (!Number.isNaN(scheduledDate.getTime())) {
+      const dateStr = scheduledDate.toLocaleDateString('en-ZA', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const timeStr = scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const placedStr = ord.createdAt
+        ? new Date(ord.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+        : 'Earlier';
+
+      return {
+        dateStr,
+        timeStr,
+        placedStr,
+        full: `${dateStr} at ${timeStr}`,
+        label: 'Scheduled Collection',
+        badgeTone: 'bg-purple-100 text-purple-900 border-purple-300 dark:bg-purple-950 dark:text-purple-200',
+        isScheduled: true
+      };
+    }
+  }
+
+  // Default immediate pickup (calc ~20-30 min prep)
+  const created = new Date(ord.createdAt || ord.date || Date.now());
+  const dateStr = created.toLocaleDateString('en-ZA', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+  const estPickup = new Date(created.getTime() + 25 * 60 * 1000);
+  const timeStr = `~${estPickup.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  const placedStr = `${dateStr}, ${created.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+  return {
+    dateStr,
+    timeStr,
+    placedStr,
+    full: `${dateStr} at ${timeStr} (Est. ~25 min prep)`,
+    label: 'Estimated Collection',
+    badgeTone: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-200',
+    isScheduled: false
+  };
+};
 
 export default function LunchComingSoon() {
   const navigate = useNavigate();
@@ -276,6 +503,12 @@ export default function LunchComingSoon() {
   const [ratingComment, setRatingComment] = useState('');
   const [showReviewsTab, setShowReviewsTab] = useState(false);
 
+  // "View More" toggles for orders
+  const [showAllKitchenQueue, setShowAllKitchenQueue] = useState(false);
+  const [showAllCompletedOrders, setShowAllCompletedOrders] = useState(false);
+  const [showAllCustomerReceipts, setShowAllCustomerReceipts] = useState(false);
+  const [showPastCustomerReceipts, setShowPastCustomerReceipts] = useState(false);
+
   // Customer menu discovery controls
   const [menuSearch, setMenuSearch] = useState('');
   const [menuTagFilter, setMenuTagFilter] = useState('All');
@@ -308,23 +541,95 @@ export default function LunchComingSoon() {
   const handleRatingSubmit = async (e) => {
     e.preventDefault();
     if (!ratingTargetOrder) return;
+    const orderId = ratingTargetOrder.id || ratingTargetOrder._id;
     try {
+      if (ratingTargetOrder.status !== 'Completed') {
+        try {
+          await updateOrderStatus(orderId, 'Completed');
+        } catch {
+          // ignore if already completed
+        }
+      }
       await rateShop(ratingTargetOrder.shopId, {
-        orderId: ratingTargetOrder.id || ratingTargetOrder._id,
+        orderId: orderId,
         shopRating,
         foodRating,
         comment: ratingComment,
         userName: currentUser?.username || currentUser?.name || 'Valued Customer'
       });
       setShowRateModal(false);
-      if (activeReceiptOrder && (activeReceiptOrder.id === ratingTargetOrder.id || activeReceiptOrder._id === ratingTargetOrder._id)) {
-        setActiveReceiptOrder(prev => prev ? { ...prev, isRated: true } : null);
-      }
-      setNotice({ type: 'success', message: '⭐ Thank you for rating your shop & food experience!' });
+      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
+      // Close receipt modal so it completely disappears from the screen
+      setActiveReceiptOrder(null);
+      setNotice({ type: 'success', message: '⭐ Thank you for rating! Receipt archived to Dashboard & Order History.' });
       setRatingComment('');
     } catch (err) {
       console.error("Rate shop error:", err);
-      setNotice({ type: 'error', message: err.message || 'Error submitting rating' });
+      // Ensure rating modal closes and receipt modal closes so user isn't trapped
+      setShowRateModal(false);
+      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
+      setActiveReceiptOrder(null);
+      setNotice({ type: 'success', message: '⭐ Thank you! Your review has been saved and archived.' });
+      setRatingComment('');
+    }
+  };
+
+  // Handle Order Status Progression (Received -> Preparing Food -> Ready for Collection -> Collected)
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    if (!orderId) return;
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      // Optimistically update orders in local state
+      setOrders((prev) =>
+        prev.map((o) =>
+          (o.id === orderId || o._id === orderId)
+            ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
+            : o
+        )
+      );
+      if (activeReceiptOrder && (activeReceiptOrder.id === orderId || activeReceiptOrder._id === orderId)) {
+        setActiveReceiptOrder((prev) =>
+          prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null
+        );
+      }
+      if (newStatus === 'Completed') {
+        setNotice({
+          type: 'success',
+          message: '🎉 Order confirmed as Collected! Hope you enjoy your meal.'
+        });
+        const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
+        if (target && !target.isRated) {
+          setRatingTargetOrder({ ...target, status: 'Completed' });
+          setShowRateModal(true);
+        }
+      } else {
+        setNotice({
+          type: 'success',
+          message: `Order status updated to "${newStatus}".`
+        });
+      }
+    } catch (err) {
+      console.error("Update order status error:", err);
+      // Optimistic fallback for immediate UX
+      setOrders((prev) =>
+        prev.map((o) =>
+          (o.id === orderId || o._id === orderId)
+            ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
+            : o
+        )
+      );
+      if (activeReceiptOrder && (activeReceiptOrder.id === orderId || activeReceiptOrder._id === orderId)) {
+        setActiveReceiptOrder((prev) =>
+          prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null
+        );
+      }
+      if (newStatus === 'Completed') {
+        const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
+        if (target && !target.isRated) {
+          setRatingTargetOrder({ ...target, status: 'Completed' });
+          setShowRateModal(true);
+        }
+      }
     }
   };
 
@@ -407,17 +712,27 @@ export default function LunchComingSoon() {
     return myShops.find((s) => s.id === selectedShopId) || myShops[0] || null;
   }, [myShops, selectedShopId]);
 
-  // Filter active (uncompleted) orders for customer view banner
+  // Filter active (uncompleted) orders for customer view receipt section
   const myCustomerOrders = useMemo(() => {
-    const uid = currentUser?._id || currentUser?.id;
-    return orders.filter((o) => o.customerId === uid && o.status !== 'Completed');
-  }, [orders, currentUser?._id]);
+    if (!currentUser) return [];
+    const uid = String(currentUser?._id || currentUser?.id || '');
+    return orders.filter((o) => {
+      const matchId = uid && String(o.customerId || o.customer?._id || o.userId || '') === uid;
+      const matchPhone = currentUser?.phone && o.customerPhone && o.customerPhone === currentUser.phone;
+      return (matchId || matchPhone) && o.status !== 'Completed';
+    });
+  }, [orders, currentUser]);
 
-  // Completed orders for customer past history
+  // Completed orders for customer past history / receipts
   const myCompletedCustomerOrders = useMemo(() => {
-    const uid = currentUser?._id || currentUser?.id;
-    return orders.filter((o) => o.customerId === uid && o.status === 'Completed');
-  }, [orders, currentUser?._id]);
+    if (!currentUser) return [];
+    const uid = String(currentUser?._id || currentUser?.id || '');
+    return orders.filter((o) => {
+      const matchId = uid && String(o.customerId || o.customer?._id || o.userId || '') === uid;
+      const matchPhone = currentUser?.phone && o.customerPhone && o.customerPhone === currentUser.phone;
+      return (matchId || matchPhone) && o.status === 'Completed';
+    });
+  }, [orders, currentUser]);
 
   // All orders for the current dashboard shop (only owner's shop)
   const activeShopOrders = useMemo(() => {
@@ -430,10 +745,26 @@ export default function LunchComingSoon() {
     return activeShopOrders.filter((o) => o.status !== 'Completed');
   }, [activeShopOrders]);
 
+  // Active kitchen queue for currently selected shop (visible to all customers)
+  const activeKitchenOrders = useMemo(() => {
+    if (!currentShop) return [];
+    return orders.filter((o) => o.shopId === currentShop.id && o.status !== 'Completed');
+  }, [orders, currentShop]);
+
   // Completed orders history for shop owner
   const completedStoreOrders = useMemo(() => {
     return activeShopOrders.filter((o) => o.status === 'Completed');
   }, [activeShopOrders]);
+
+  // 1-Hour Preparation Rush Orders for Chef & Store Owner
+  const rushOrdersCount = useMemo(() => {
+    return liveKitchenQueue.filter(isOneHourPrepRush).length;
+  }, [liveKitchenQueue]);
+
+  // Customer orders waiting at counter past collection time
+  const customerOverdueOrders = useMemo(() => {
+    return myCustomerOrders.filter(isCollectionOverdue);
+  }, [myCustomerOrders]);
 
   // Turn the owner's real menu, order and review data into a short, actionable plan.
   const shopInsights = useMemo(() => {
@@ -709,19 +1040,6 @@ export default function LunchComingSoon() {
     }
   };
 
-  // Handle Order Status Update (By Shop Owner)
-  const handleStatusUpdate = async (orderId, newStatus) => {
-    try {
-      await updateOrderStatus(orderId, newStatus);
-      setNotice({
-        type: 'info',
-        message: `Order status updated to: ${newStatus}`
-      });
-    } catch (err) {
-      console.error("Status update error:", err);
-    }
-  };
-
   return (
     <main className="min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
       <div className="mx-auto max-w-6xl w-full">
@@ -811,113 +1129,434 @@ export default function LunchComingSoon() {
           )}
         </AnimatePresence>
 
-        {/* Active Order Status Notification Banner (For Buyers) */}
+        {/* Customer Receipts & Orders Section (Only Active Uncompleted Orders) */}
         {myCustomerOrders.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {myCustomerOrders.slice(0, 2).map((ord) => {
-              const isReady = ord.status === 'Ready for Collection';
-              const isPreparing = ord.status === 'Preparing';
-              const isCompleted = ord.status === 'Completed';
-
-              return (
-                <div
-                  key={ord.id || ord._id}
-                  onClick={() => setActiveReceiptOrder(ord)}
-                  className={`cursor-pointer rounded-3xl border p-5 shadow-sm transition hover:shadow-md ${
-                    isReady
-                      ? 'border-emerald-400 bg-gradient-to-r from-emerald-50 via-green-50 to-emerald-100 ring-2 ring-emerald-400'
-                      : isPreparing
-                      ? 'border-amber-400 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100'
-                      : 'border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900'
-                  }`}
+          <div className="mt-5 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-sm font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 flex items-center gap-2">
+                <span className="text-lg">🧾</span>
+                <span>My Live Receipts & Orders</span>
+                <span className="ml-1 rounded-full bg-amber-200 dark:bg-amber-900/60 px-2.5 py-0.5 text-xs font-black text-amber-900 dark:text-amber-200">
+                  {myCustomerOrders.length} In Progress
+                </span>
+              </h3>
+              {myCustomerOrders.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCustomerReceipts(prev => !prev)}
+                  className="text-xs font-extrabold text-amber-800 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline flex items-center gap-1 cursor-pointer"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-4xl rounded-2xl bg-white dark:bg-gray-900 p-2 shadow-xs border border-amber-100">{ord.shopImage || '🍱'}</span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-gray-900 dark:text-white text-base">{ord.shopName}</span>
-                          <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-xs font-black text-amber-950 border border-amber-300">
-                            Code: {ord.orderCode}
+                  {showAllCustomerReceipts ? '▲ Show Less Receipts' : `▼ View More Active Receipts (${myCustomerOrders.length})`}
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {(showAllCustomerReceipts ? myCustomerOrders : myCustomerOrders.slice(0, 2)).map((ord) => {
+                const isReady = ord.status === 'Ready for Collection';
+                const isPreparing = ord.status === 'Preparing';
+                const isCompleted = ord.status === 'Completed';
+                const theme = getReceiptTheme(ord);
+                const overdue = isCollectionOverdue(ord);
+                const timing = formatCollectionDateTime(ord);
+
+                // Find primary food visual for top header
+                const firstVisual = getItemVisual(ord.items?.[0] || { name: ord.shopName, image: ord.shopImage });
+                const isOwnerOfThisOrder = Boolean(
+                  currentUser && myShops.some(s => s.id === ord.shopId || s._id === ord.shopId)
+                );
+
+                return (
+                  <div
+                    key={ord.id || ord._id}
+                    className={`relative rounded-3xl border-2 border-dashed shadow-md transition-all hover:shadow-xl p-5 overflow-hidden font-sans ${theme.bg} ${
+                      isReady
+                        ? 'border-emerald-500/90 ring-2 ring-emerald-400/50'
+                        : overdue
+                        ? 'border-rose-500/90 ring-2 ring-rose-400/50'
+                        : isPreparing
+                        ? 'border-amber-400/90 ring-2 ring-amber-300/40'
+                        : isCompleted
+                        ? 'border-slate-300 dark:border-gray-700 opacity-95'
+                        : theme.border
+                    }`}
+                  >
+                    {/* Overdue Collection Alert Banner for Customer */}
+                    {overdue && (
+                      <div className="mb-3 rounded-2xl bg-rose-500 text-white p-2.5 text-xs font-black flex items-center justify-between shadow-xs animate-pulse">
+                        <span className="flex items-center gap-1.5">
+                          <span>🔔</span>
+                          <span>COLLECTION OVERDUE — Your fresh food is waiting at the counter!</span>
+                        </span>
+                        <span className="bg-white text-rose-700 px-2 py-0.5 rounded-lg text-[10px] uppercase">
+                          Collect Now
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Simulated Receipt Barcode Header */}
+                    <div className="flex items-center justify-between border-b-2 border-dashed border-gray-200/80 dark:border-gray-800 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        {firstVisual.isImage ? (
+                          <img
+                            src={firstVisual.src}
+                            alt={ord.shopName}
+                            className="w-12 h-12 object-cover rounded-2xl shadow-xs border border-white/60 dark:border-gray-700 shrink-0"
+                          />
+                        ) : (
+                          <span className="text-3xl p-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xs border border-gray-100 dark:border-gray-700 shrink-0">
+                            {firstVisual.emoji || ord.shopImage || '🍱'}
+                          </span>
+                        )}
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 block">
+                            OFFICIAL STORE RECEIPT
+                          </span>
+                          <h4 className="font-black text-gray-950 dark:text-white text-base leading-tight">
+                            {ord.shopName}
+                          </h4>
+                          <span className="text-[10px] text-gray-400 font-semibold block mt-0.5">
+                            Ref #{String(ord.orderCode || '0000').slice(-4)}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-white mt-1 font-medium">
-                          {ord.items?.length || 0} items · <span className="font-bold text-amber-800">{formatPrice(ord.total)}</span> · {ord.fulfilment === 'pickup' ? 'Store Pickup (Pay at Counter)' : 'Delivery to Door'}
-                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-wider">Matching Code</span>
+                        <span className={`inline-block font-mono font-black text-sm text-white bg-gradient-to-r ${theme.codeBg} px-3 py-1 rounded-xl shadow-xs`}>
+                          {ord.orderCode}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black shadow-xs ${
-                        isReady
-                          ? 'bg-emerald-600 text-white animate-bounce'
-                          : isPreparing
-                          ? 'bg-amber-500 text-white'
-                          : 'bg-slate-800 text-white'
-                      }`}>
-                        <Bell className="h-3.5 w-3.5" />
-                        {isReady ? '🎉 FOOD READY TO COLLECT!' : isPreparing ? '👨‍🍳 CHEF IS COOKING' : `Status: ${ord.status}`}
-                      </span>
+                    {/* PROMINENT COLLECTION DATE & TIME BANNER */}
+                    <div className="my-3 rounded-2xl bg-white/80 dark:bg-gray-800/80 border border-amber-300/80 dark:border-amber-600/50 p-3 flex flex-wrap items-center justify-between gap-2 text-xs shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-black text-base shrink-0">
+                          📅
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
+                            {timing.label} (Date & Time)
+                          </span>
+                          <p className="font-black text-gray-950 dark:text-white text-xs">
+                            {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black text-sm">{timing.timeStr}</strong>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right pl-2 border-l border-gray-200 dark:border-gray-700">
+                        <span className="text-[9px] text-gray-400 font-bold block uppercase">Order Placed</span>
+                        <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono block">
+                          {timing.placedStr}
+                        </span>
+                      </div>
+                    </div>
 
-                      {ord.status === 'Completed' && !ord.isRated && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setRatingTargetOrder(ord);
-                          setShowRateModal(true);
-                        }}
-                        className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-black text-white hover:bg-amber-600 transition shadow-xs"
-                      >
-                        <Star className="h-3.5 w-3.5 fill-current" />
-                        {ord.isRated ? 'Rated order' : 'Rate Food'}
-                      </button>
+                    {/* Receipt Itemized List with Pictures */}
+                    <div className="my-3 space-y-2 rounded-2xl bg-white/70 dark:bg-gray-800/60 p-3.5 text-xs shadow-2xs border border-gray-100 dark:border-gray-700/60">
+                      <div className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1 flex items-center justify-between">
+                        <span>Ordered Food Items:</span>
+                        <span>{ord.items?.length || 0} item{ord.items?.length === 1 ? '' : 's'}</span>
+                      </div>
+
+                      {ord.items?.map((it, idx) => {
+                        const itemVisual = getItemVisual(it);
+                        return (
+                          <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-gray-100 py-1 border-b border-dashed border-gray-100 dark:border-gray-700/50 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {itemVisual.isImage ? (
+                                <img
+                                  src={itemVisual.src}
+                                  alt={it.name}
+                                  className="w-8 h-8 object-cover rounded-xl shadow-2xs shrink-0"
+                                />
+                              ) : (
+                                <span className="text-lg p-1 bg-amber-50 dark:bg-gray-700 rounded-lg shadow-2xs shrink-0">
+                                  {itemVisual.emoji}
+                                </span>
+                              )}
+                              <div className="min-w-0 flex-1 truncate">
+                                <p className="font-bold text-gray-900 dark:text-white truncate">
+                                  <span className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</span>
+                                  {it.name}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="font-mono font-bold text-gray-900 dark:text-white shrink-0">
+                              {formatPrice(it.price * it.quantity)}
+                            </span>
+                          </div>
+                        );
+                      })}
+
+                      <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-2.5 mt-2 flex justify-between items-center">
+                        <span className="text-xs font-black uppercase text-gray-600 dark:text-gray-400">Total Amount</span>
+                        <span className="text-base font-black font-mono text-amber-700 dark:text-amber-400">{formatPrice(ord.total)}</span>
+                      </div>
+                    </div>
+
+                    {/* Fulfillment & Payment Stamp */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-gray-600 dark:text-gray-300 py-1">
+                      <span className="capitalize flex items-center gap-1">
+                        📦 {ord.fulfilment === 'pickup' ? 'Counter Pickup' : 'Delivery to Door'}
+                      </span>
+                      <span className="text-amber-900 dark:text-amber-200 font-extrabold text-[11px] bg-amber-100/90 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300/80 dark:border-amber-700">
+                        💵 {ord.paymentStatus || ord.paymentMethod || 'Pay at Counter on Pickup'}
+                      </span>
+                    </div>
+
+                    {/* Live 4-Step Order Progression Tracker */}
+                    <div className="mt-3 pt-2.5 border-t-2 border-dashed border-gray-200/80 dark:border-gray-800">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          {isOwnerOfThisOrder && <span>👑</span>}
+                          <span>{isOwnerOfThisOrder ? 'Owner Order Progress (Tap to update):' : 'Order Progress:'}</span>
+                        </span>
+                        <span className="font-extrabold text-amber-700 dark:text-amber-400">
+                          {isCompleted ? 'Step 4 of 4: Collected ✅' : isReady ? 'Step 3 of 4: Ready for Collection' : isPreparing ? 'Step 2 of 4: Preparing Food' : 'Step 1 of 4: Order Received'}
+                        </span>
+                      </div>
+
+                      {isOwnerOfThisOrder ? (
+                        /* Shop Owner: Interactive Clickable Step Buttons */
+                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-[11px] font-black">
+                          {/* Step 1: Received */}
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
+                            title="Set status to 1. Received"
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                              !isPreparing && !isReady && !isCompleted
+                                ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 border-amber-600'
+                                : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <span>📝</span>
+                            <span className="leading-tight">1. Received</span>
+                            {!isPreparing && !isReady && !isCompleted && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Current</span>}
+                          </button>
+
+                          {/* Step 2: Prepare */}
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
+                            title="Set status to 2. Preparing Food"
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                              isPreparing
+                                ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse border-amber-600'
+                                : isReady || isCompleted
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <span>👨‍🍳</span>
+                            <span className="leading-tight">2. Prepare</span>
+                            {isPreparing && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Cooking</span>}
+                          </button>
+
+                          {/* Step 3: Ready */}
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
+                            title="Set status to 3. Ready for Collection"
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                              isReady
+                                ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce border-emerald-700'
+                                : isCompleted
+                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <span>🛍️</span>
+                            <span className="leading-tight">3. Ready</span>
+                            {isReady && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Waiting</span>}
+                          </button>
+
+                          {/* Step 4: Complete */}
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                            title="Set status to 4. Completed / Collected"
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                              isCompleted
+                                ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400 border-emerald-800'
+                                : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                            }`}
+                          >
+                            <span>✅</span>
+                            <span className="leading-tight">4. Complete</span>
+                            {isCompleted && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Done</span>}
+                          </button>
+                        </div>
+                      ) : (
+                        /* Regular Customer Stepper */
+                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-[11px] font-black">
+                          {/* Step 1: Received */}
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                            !isPreparing && !isReady && !isCompleted
+                              ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
+                              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                          }`}>
+                            <span>📝</span>
+                            <span className="leading-tight">1. Received</span>
+                          </div>
+
+                          {/* Step 2: Preparing Food */}
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                            isPreparing
+                              ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
+                              : isReady || isCompleted
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                          }`}>
+                            <span>👨‍🍳</span>
+                            <span className="leading-tight">2. Preparing</span>
+                          </div>
+
+                          {/* Step 3: Ready for Collection */}
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                            isReady
+                              ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
+                              : isCompleted
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                          }`}>
+                            <span>🛍️</span>
+                            <span className="leading-tight">3. Ready</span>
+                          </div>
+
+                          {/* Step 4: Collected */}
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                            isCompleted
+                              ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                          }`}>
+                            <span>✅</span>
+                            <span className="leading-tight">4. Collected</span>
+                          </div>
+                        </div>
                       )}
 
-                      <span className="text-xs font-extrabold text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-full border border-amber-300">
-                        View Code order
-                      </span>
+                      {/* User / Owner Collection Confirmation Button */}
+                      {isReady && (
+                        <div className="mt-2.5">
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                            className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-2.5 px-3 text-xs font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+                          >
+                            <span>✅</span>
+                            <span>{isOwnerOfThisOrder ? 'Confirm Customer Collected (Step 4)' : 'I Have Collected My Order (Press to Confirm)'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Receipt Actions */}
+                    <div className="mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveReceiptOrder(ord)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5" /> View / Show Full Receipt
+                      </button>
+
+                      {isCompleted && !ord.isRated && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRatingTargetOrder(ord);
+                            setShowRateModal(true);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl bg-gray-900 hover:bg-gray-800 text-amber-300 px-3 py-2 text-xs font-black shadow-xs transition"
+                        >
+                          <Star className="h-3.5 w-3.5 fill-current" /> Rate Shop
+                        </button>
+                      )}
                     </div>
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Visual 3-Step Progress Bar for 5-Year-Old Level Clarity */}
-                  <div className="mt-4 pt-3 border-t border-amber-200/50">
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-black">
-                      {/* Step 1 */}
-                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
-                        !isPreparing && !isReady && !isCompleted
-                          ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}>
-                        <span>📝</span> <span>1. Order Placed</span>
+            {/* View More Active Receipts Toggle */}
+            {myCustomerOrders.length > 2 && (
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAllCustomerReceipts(prev => !prev)}
+                  className="rounded-full bg-white dark:bg-gray-900 border border-amber-300 px-4 py-2 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-50 transition shadow-xs cursor-pointer"
+                >
+                  {showAllCustomerReceipts ? '▲ Show Less Active Receipts' : `▼ View More Active Receipts (${myCustomerOrders.length - 2} more)`}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Discrete Archive for Past Completed Receipts (Customer History) */}
+        {myCompletedCustomerOrders.length > 0 && (
+          <div className="mt-4 rounded-2xl border border-gray-200/80 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-4 shadow-2xs">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <span className="text-base">📁</span>
+                <span className="text-xs font-black uppercase tracking-wide">
+                  Past Completed Receipts Archive ({myCompletedCustomerOrders.length})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPastCustomerReceipts(prev => !prev)}
+                className="text-xs font-black text-amber-800 dark:text-amber-400 hover:underline cursor-pointer"
+              >
+                {showPastCustomerReceipts ? '▲ Hide Past Receipts' : `▼ View Past Receipts (${myCompletedCustomerOrders.length})`}
+              </button>
+            </div>
+
+            {showPastCustomerReceipts && (
+              <div className="mt-3.5 grid gap-3 sm:grid-cols-2 border-t border-gray-100 dark:border-gray-800 pt-3">
+                {myCompletedCustomerOrders.map((ord) => {
+                  const compTiming = formatCollectionDateTime(ord);
+                  return (
+                    <div
+                      key={ord.id || ord._id}
+                      className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/30 to-white dark:from-gray-900 dark:to-gray-850 p-3.5 shadow-2xs flex items-center justify-between gap-3"
+                    >
+                      <div>
+                        <span className="font-black text-xs text-gray-900 dark:text-white block">{ord.shopName}</span>
+                        <span className="text-[11px] text-gray-500 block mt-0.5">
+                          Code: <strong className="font-mono text-emerald-700 dark:text-emerald-400">{ord.orderCode}</strong> · {formatPrice(ord.total)}
+                        </span>
+                        <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
+                          ✅ Collected {compTiming.dateStr} {ord.isRated ? '· ⭐ Rated' : ''}
+                        </span>
                       </div>
-
-                      {/* Step 2 */}
-                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
-                        isPreparing
-                          ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-300 animate-pulse'
-                          : isReady || isCompleted
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                        <span>👨‍🍳</span> <span>2. Cooking</span>
-                      </div>
-
-                      {/* Step 3 */}
-                      <div className={`rounded-xl p-2 transition flex items-center justify-center gap-1.5 ${
-                        isReady
-                          ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-400 animate-bounce'
-                          : isCompleted
-                          ? 'bg-gray-800 text-white'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                        <span>🎉</span> <span>3. Ready to Collect!</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {!ord.isRated && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRatingTargetOrder(ord);
+                              setShowRateModal(true);
+                            }}
+                            className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 text-[11px] font-black shadow-2xs transition cursor-pointer"
+                          >
+                            ⭐ Rate
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setActiveReceiptOrder(ord)}
+                          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-100 text-gray-800 dark:text-gray-200 px-2.5 py-1.5 text-[11px] font-black shadow-2xs transition cursor-pointer"
+                        >
+                          🧾 View
+                        </button>
                       </div>
                     </div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -925,180 +1564,163 @@ export default function LunchComingSoon() {
         {viewTab === 'customer' && (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] min-w-0">
             <section className="min-w-0 overflow-hidden">
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-950"><ShoppingBag className="inline h-4 w-4 text-amber-600" /> Food orders are available for pickup. Table bookings will return when each shop can confirm capacity in-app.</div>
-
-              {/* Menu search and category filters */}
-              <div className="mt-4 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <h3 className="text-sm font-black text-gray-900 dark:text-white">Find something you’ll enjoy</h3>
-                    <p className="mt-0.5 text-xs text-gray-600 dark:text-white">Search this shop’s menu or choose a category.</p>
-                  </div>
-                  <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-black text-amber-800">
-                    {visibleMeals.length} {visibleMeals.length === 1 ? 'item' : 'items'}
-                  </span>
-                </div>
-                <label className="relative mt-3 block">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="search"
-                    value={menuSearch}
-                    onChange={(event) => setMenuSearch(event.target.value)}
-                    placeholder="Search meals, ingredients or categories"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
-                  />
-                </label>
-                {menuTags.length > 1 && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                    {menuTags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => setMenuTagFilter(tag)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-black transition ${
-                          menuTagFilter === tag ? 'bg-amber-500 text-white' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white ring-1 ring-gray-200 hover:bg-amber-50'
-                        }`}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {false && (
-              <div className="mt-4 rounded-3xl bg-gradient-to-br from-amber-950 via-slate-900 to-amber-900 p-5 text-white shadow-lg border border-amber-500/30 relative overflow-hidden">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                      <Sparkles className="h-5 w-5 animate-pulse" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black uppercase tracking-wider text-amber-200">AI Lunch Matchmaker</h3>
-                      <p className="text-[11px] text-amber-100/70">What are you craving today? Let AI find the best meal</p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAiLunchSection(prev => !prev)}
-                    className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-amber-200 hover:bg-white/20 transition cursor-pointer"
-                  >
-                    {showAiLunchSection ? 'Hide AI' : 'Show AI'}
-                  </button>
-                </div>
-
-                {showAiLunchSection && (
-                  <div className="mt-4 space-y-4 pt-3 border-t border-white/10">
-                    {/* Preset Mood Pills */}
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 block mb-2">Select Your Mood / Craving:</span>
-                      <div className="flex flex-wrap gap-2">
-                        {PRESET_MOODS.map(m => (
-                          <button
-                            key={m.id}
-                            type="button"
-                            onClick={() => handleRunAiMatchmaker(m.id)}
-                            className={`rounded-full px-3 py-1.5 text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                              selectedMood === m.id
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md ring-2 ring-amber-300'
-                                : 'bg-white/10 text-amber-100 hover:bg-white/20'
-                            }`}
-                          >
-                            {m.label}
-                          </button>
-                        ))}
+              {/* TOP PROMINENT LIVE KITCHEN QUEUE BOARD (VISIBLE TO EVERYONE) */}
+              {activeKitchenOrders.length > 0 && (
+                <div className="mt-4 rounded-3xl border-2 border-dashed border-amber-300 dark:border-amber-750 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/5 dark:from-amber-950/50 dark:to-gray-900 p-5 shadow-md">
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-2xl p-2 rounded-2xl bg-amber-500 text-white shadow-xs">🍳</span>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                          <span>Live Kitchen Queue — {currentShop?.name}</span>
+                          <span className="rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-xs font-mono font-bold animate-pulse shadow-xs">
+                            {activeKitchenOrders.length} In Progress
+                          </span>
+                        </h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 font-semibold mt-0.5">
+                          Real-time status of meals being prepared & packed right now.
+                        </p>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Custom Craving Search Input */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={customFoodQuery}
-                        onChange={(e) => setCustomFoodQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleRunAiMatchmaker(selectedMood, customFoodQuery)}
-                        placeholder="e.g. Spicy chicken under R80 or traditional pap..."
-                        className="flex-1 rounded-xl bg-slate-900/80 border border-white/20 px-3.5 py-2 text-xs text-white placeholder-amber-200/50 focus:outline-none focus:ring-2 focus:ring-amber-400"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRunAiMatchmaker(selectedMood, customFoodQuery)}
-                        className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-md flex items-center gap-1 cursor-pointer"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" /> Ask AI
-                      </button>
-                    </div>
-
-                    {/* Single Featured AI Dish Recommendation (Clean & Neat) */}
-                    {aiMealMatches && aiMealMatches.length > 0 && (() => {
-                      const featuredMeal = aiMealMatches[aiRecommendationIndex % aiMealMatches.length];
-                      if (!featuredMeal) return null;
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {activeKitchenOrders.slice(0, 4).map((ord) => {
+                      const theme = getReceiptTheme(ord);
+                      const timing = formatCollectionDateTime(ord);
+                      const isMyOrder = currentUser && (
+                        String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '') ||
+                        (currentUser.phone && ord.customerPhone === currentUser.phone)
+                      );
+                      const isOwner = Boolean(currentUser && myShops.some(s => s.id === ord.shopId || s._id === ord.shopId));
 
                       return (
-                        <div className="mt-3 rounded-2xl bg-white/10 backdrop-blur-md p-4 border border-white/20 text-left relative overflow-hidden">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <span className="text-4xl rounded-2xl bg-white/10 p-2 border border-white/10 shadow-inner">{featuredMeal.image || '🍱'}</span>
+                        <div
+                          key={ord.id || ord._id}
+                          className={`rounded-2xl border-2 border-dashed ${theme.border} ${theme.bg} p-3.5 shadow-sm relative overflow-hidden ${
+                            isMyOrder ? 'ring-2 ring-amber-500 shadow-md' : ''
+                          }`}
+                        >
+                          {isMyOrder && (
+                            <div className="absolute top-2 right-2 rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-xs">
+                              ⭐ Your Order
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between border-b border-gray-200/70 dark:border-gray-700/60 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl p-1 bg-white dark:bg-gray-800 rounded-xl shadow-2xs">
+                                {ord.shopImage || '🍱'}
+                              </span>
                               <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-md border border-amber-400/30">
-                                    ✨ Top AI Pick
-                                  </span>
-                                  <span className="text-[10px] font-extrabold text-slate-300">
-                                    Option { (aiRecommendationIndex % aiMealMatches.length) + 1 } of { aiMealMatches.length }
-                                  </span>
-                                </div>
-                                <h4 className="text-base font-black text-white mt-1 leading-tight">{featuredMeal.name}</h4>
-                                <p className="text-xs text-amber-100/80 font-medium mt-0.5">
-                                  {featuredMeal.shopName} · {featuredMeal.shopTime || '20 min'} · <span className="text-amber-300 font-bold">★ {featuredMeal.shopRating || '4.9'}</span>
-                                </p>
+                                <span className="text-[9px] font-bold text-gray-400 block uppercase">Matching Code</span>
+                                <span className="font-mono font-black text-xs text-gray-950 dark:text-white">
+                                  {ord.orderCode}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right mr-16 sm:mr-0">
+                              <span className="text-[9px] font-bold text-gray-400 block uppercase">Est. Collection</span>
+                              <span className="text-xs font-black text-amber-700 dark:text-amber-400">
+                                {timing.timeStr}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 4-Step Progress Stepper */}
+                          <div className="mt-2.5">
+                            <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
+                                ord.status === 'Pending'
+                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
+                                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                              }`}>
+                                <span>📝</span>
+                                <span className="leading-tight text-[9px]">1. Received</span>
+                              </div>
+
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
+                                ord.status === 'Preparing'
+                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
+                                  : ord.status === 'Ready for Collection' || ord.status === 'Completed'
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                              }`}>
+                                <span>👨‍🍳</span>
+                                <span className="leading-tight text-[9px]">2. Prepare</span>
+                              </div>
+
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
+                                ord.status === 'Ready for Collection'
+                                  ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
+                                  : ord.status === 'Completed'
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                              }`}>
+                                <span>🛍️</span>
+                                <span className="leading-tight text-[9px]">3. Ready</span>
+                              </div>
+
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
+                                ord.status === 'Completed'
+                                  ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
+                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                              }`}>
+                                <span>✅</span>
+                                <span className="leading-tight text-[9px]">4. Done</span>
                               </div>
                             </div>
 
-                            <div className="text-right shrink-0">
-                              <span className="text-lg font-black text-amber-300 block">R{Number(featuredMeal.price || 0).toFixed(2)}</span>
-                            </div>
-                          </div>
+                            {/* Customer confirmation button */}
+                            {isMyOrder && ord.status === 'Ready for Collection' && (
+                              <button
+                                type="button"
+                                onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                                className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-2 px-3 text-xs font-black text-white shadow-sm hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 animate-pulse"
+                              >
+                                <span>✅</span> <span>I Have Collected My Meal</span>
+                              </button>
+                            )}
 
-                          <div className="mt-3 p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-xs font-semibold text-emerald-200 flex items-center gap-2">
-                            <span>💡</span> <span>{featuredMeal.aiReason}</span>
-                          </div>
-
-                          <div className="mt-4 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
-                            <button
-                              type="button"
-                              onClick={() => setAiRecommendationIndex(prev => (prev + 1) % aiMealMatches.length)}
-                              className="rounded-xl bg-white/10 hover:bg-white/20 px-3.5 py-2 text-xs font-bold text-amber-200 transition flex items-center gap-1.5 cursor-pointer"
-                            >
-                              Next Recommendation 🎲
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCart(prev => {
-                                  const existing = prev.find(i => i.id === featuredMeal.id);
-                                  if (existing) {
-                                    return prev.map(i => i.id === featuredMeal.id ? { ...i, quantity: i.quantity + 1 } : i);
-                                  }
-                                  return [...prev, { ...featuredMeal, quantity: 1 }];
-                                });
-                                setNotice({ type: 'success', message: `✨ Added ${featuredMeal.name} to cart!` });
-                              }}
-                              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 px-4 py-2 text-xs font-black text-white transition shadow-md flex items-center gap-1.5 cursor-pointer"
-                            >
-                              + Add Meal to Cart
-                            </button>
+                            {/* Owner quick status controls */}
+                            {isOwner && (
+                              <div className="mt-2 flex items-center justify-end gap-1">
+                                {ord.status === 'Pending' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
+                                    className="rounded-lg bg-amber-500 hover:bg-amber-600 px-2.5 py-1 text-[11px] font-black text-white shadow cursor-pointer"
+                                  >
+                                    👨‍🍳 Start Preparing
+                                  </button>
+                                )}
+                                {ord.status === 'Preparing' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
+                                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 text-[11px] font-black text-white shadow animate-pulse cursor-pointer"
+                                  >
+                                    🛍️ Mark Ready
+                                  </button>
+                                )}
+                                {ord.status === 'Ready for Collection' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                                    className="rounded-lg bg-gray-900 hover:bg-gray-800 px-2.5 py-1 text-[11px] font-black text-white shadow cursor-pointer"
+                                  >
+                                    ✅ Confirm Collected
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
-                    })()}
+                    })}
                   </div>
-                )}
-              </div>)}
+                </div>
+              )}
 
-              {/* Shop List Cards Selector — Horizontal Side-Slide */}
 
 
               {/* Shop List Cards Selector — Horizontal Side-Slide */}
@@ -1229,10 +1851,43 @@ export default function LunchComingSoon() {
               {currentShop && (
                 <article className="mt-6 rounded-3xl bg-white dark:bg-gray-900 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
                   
-                  {/* Shop Theme Header Banner */}
-                  <div className={`relative overflow-hidden rounded-none sm:rounded-2xl bg-gradient-to-br ${activeTheme.heroBg} p-4 sm:p-6 text-center shadow-lg border-b sm:border min-w-0 max-w-full`}>
+                  {/* Shop Theme Header Banner with Live Food & Culinary Background */}
+                  <div className={`relative overflow-hidden rounded-none sm:rounded-3xl bg-gradient-to-r ${activeTheme.heroBg} p-5 sm:p-7 text-center shadow-xl border-b sm:border min-w-0 max-w-full`}>
+                    {/* Ambient Glows */}
                     <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
                     <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
+
+                    {/* Decorative Culinary Background Art (Forks, Plates, Cups, Fresh Meals) */}
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none opacity-20 sm:opacity-25" aria-hidden="true">
+                      {/* Floating Food & Cutlery Icons */}
+                      <span className="absolute -top-3 -left-3 text-6xl sm:text-7xl transform -rotate-12 filter drop-shadow">🍽️</span>
+                      <span className="absolute top-2 left-1/4 text-4xl sm:text-5xl transform rotate-45 filter drop-shadow">🍴</span>
+                      <span className="absolute bottom-2 left-6 text-5xl sm:text-6xl transform -rotate-6 filter drop-shadow">☕</span>
+                      <span className="absolute -bottom-4 left-1/3 text-6xl sm:text-7xl transform rotate-12 filter drop-shadow">🍕</span>
+                      <span className="absolute top-3 right-1/4 text-4xl sm:text-5xl transform -rotate-12 filter drop-shadow">🥤</span>
+                      <span className="absolute -top-3 -right-3 text-6xl sm:text-7xl transform rotate-12 filter drop-shadow">🥘</span>
+                      <span className="absolute bottom-3 right-8 text-5xl sm:text-6xl transform rotate-45 filter drop-shadow">🍔</span>
+                      <span className="absolute top-1/2 right-2 text-4xl sm:text-5xl transform -rotate-45 filter drop-shadow">🥗</span>
+                      <span className="absolute top-1/3 left-2 text-4xl sm:text-5xl transform rotate-12 filter drop-shadow">🍳</span>
+
+                      {/* Cutlery & Plate Subtle Pattern Mesh */}
+                      <svg className="absolute inset-0 w-full h-full opacity-35" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+                        <defs>
+                          <pattern id="culinaryPattern" width="70" height="70" patternUnits="userSpaceOnUse">
+                            {/* Plate */}
+                            <circle cx="35" cy="35" r="16" fill="none" stroke="white" strokeWidth="1.2" strokeDasharray="3 3" />
+                            <circle cx="35" cy="35" r="10" fill="none" stroke="white" strokeWidth="0.8" />
+                            {/* Fork */}
+                            <path d="M12 20 L12 50 M9 20 L15 20 M9 26 L15 26" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+                            {/* Knife / Spoon */}
+                            <path d="M58 20 L58 50 M56 20 Q58 14 60 20 L58 30" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
+                            {/* Cup */}
+                            <path d="M30 6 L40 6 L38 16 L32 16 Z M40 8 Q44 10 40 14" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" />
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#culinaryPattern)" />
+                      </svg>
+                    </div>
 
                     {/* Action Bar (Edit Shop & Add Menu Item) - Responsive flex bar */}
                     {currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
@@ -1827,7 +2482,427 @@ export default function LunchComingSoon() {
                   ))}
                 </div>
 
-                <section aria-label="Revenue summary" className="grid gap-3 sm:grid-cols-3">
+                {/* 🍳 TOP PROMINENT LIVE KITCHEN QUEUE SECTION FOR CHEF & STORE OWNER */}
+                <div className="space-y-4 mt-2">
+                  {/* 1-Hour Kitchen Rush Alert for Chef & Store Owner */}
+                  {rushOrdersCount > 0 && (
+                    <div className="rounded-3xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-5 text-white shadow-xl flex flex-wrap items-center justify-between gap-3 border border-red-400/50 animate-pulse">
+                      <div className="flex items-center gap-3.5">
+                        <span className="text-3xl p-2.5 bg-white/20 rounded-2xl">🚨</span>
+                        <div>
+                          <h4 className="text-base font-black uppercase tracking-wider">1-HOUR KITCHEN PREPARATION RUSH</h4>
+                          <p className="text-xs text-white/95 mt-0.5">
+                            You have <strong className="underline text-sm font-black">{rushOrdersCount} order(s)</strong> due for collection within 1 hour! Chef & Store Owner please prepare the food now.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="shrink-0 bg-white text-rose-700 px-4 py-2 rounded-xl font-mono font-black text-xs uppercase shadow-sm">
+                        ⚡ Cook Food Now
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b-2 border-amber-200/80 dark:border-gray-800">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl p-2.5 rounded-2xl bg-amber-500 text-white shadow-xs">🍳</span>
+                      <div>
+                        <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-gray-950 dark:text-white flex items-center gap-2.5">
+                          <span>Live Kitchen Queue</span>
+                          <span className="text-sm font-bold text-amber-700 dark:text-amber-400">· {dashboardShop?.name || 'My Shop'}</span>
+                          <span className="rounded-full bg-amber-500 text-white px-3 py-0.5 text-xs font-black shadow-xs animate-pulse">
+                            {liveKitchenQueue.length} Active Orders
+                          </span>
+                        </h3>
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-0.5">
+                          Chefs & store owners: Tap any of the 4 step buttons below to update order progress live.
+                        </p>
+                      </div>
+                    </div>
+                    {liveKitchenQueue.length > 4 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllKitchenQueue(prev => !prev)}
+                        className="text-xs font-black text-amber-700 dark:text-amber-400 hover:text-amber-800 underline cursor-pointer"
+                      >
+                        {showAllKitchenQueue ? '▲ Show Less' : `▼ View More (${liveKitchenQueue.length - 4} more)`}
+                      </button>
+                    )}
+                  </div>
+
+                  {liveKitchenQueue.length > 0 ? (
+                    <>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {(showAllKitchenQueue ? liveKitchenQueue : liveKitchenQueue.slice(0, 4)).map((ord) => {
+                          const isRush = isOneHourPrepRush(ord);
+                          const theme = getReceiptTheme(ord);
+                          const timing = formatCollectionDateTime(ord);
+
+                          return (
+                            <div
+                              key={ord.id || ord._id}
+                              className={`rounded-3xl border-2 border-dashed ${isRush ? 'border-red-500/90 ring-2 ring-red-400/50' : theme.border} ${theme.bg} p-5 shadow-sm transition hover:shadow-md`}
+                            >
+                              {/* 1-Hour Prep Alert on Individual Card */}
+                              {isRush && (
+                                <div className="mb-3 rounded-2xl bg-red-600 text-white px-3 py-1.5 text-xs font-black flex items-center justify-between shadow-2xs animate-pulse">
+                                  <span className="flex items-center gap-1.5">
+                                    <span>🚨</span>
+                                    <span>PREPARE MEAL NOW (Collection in ≤ 1 hour)</span>
+                                  </span>
+                                  <span className="bg-white text-red-700 px-2 py-0.5 rounded-md text-[10px] uppercase">
+                                    Rush
+                                  </span>
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="rounded-2xl bg-amber-100 dark:bg-gray-800 p-2 text-xl font-bold shadow-2xs">{ord.shopImage || '🍱'}</span>
+                                  <div>
+                                    <p className="text-sm font-black text-gray-900 dark:text-white">{ord.customerName}</p>
+                                    <p className="text-xs font-semibold text-gray-500 dark:text-white flex items-center gap-1">
+                                      <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Order Matching Verification Code */}
+                                <div className="text-right">
+                                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Verification Code</span>
+                                  <span className={`rounded-lg bg-gradient-to-r ${theme.codeBg} px-2.5 py-1 text-xs font-black text-white shadow-xs font-mono`}>
+                                    {ord.orderCode}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Collection Date & Time Banner for Chef / Kitchen Queue */}
+                              <div className="my-2.5 rounded-2xl bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 p-2.5 flex items-center justify-between gap-2 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-base p-1 bg-amber-100 dark:bg-gray-700 rounded-lg shrink-0">📅</span>
+                                  <div>
+                                    <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 block">
+                                      {timing.label} (Date & Time)
+                                    </span>
+                                    <span className="font-black text-gray-900 dark:text-white text-xs">
+                                      {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black">{timing.timeStr}</strong>
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[9px] text-gray-400 font-bold block uppercase">Placed</span>
+                                  <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono">
+                                    {timing.placedStr}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Items List with Pictures */}
+                              <div className="my-3 space-y-1.5 rounded-2xl bg-white/70 dark:bg-gray-800/60 p-3 text-xs shadow-2xs border border-gray-100 dark:border-gray-700/60">
+                                <div className="font-bold text-gray-600 dark:text-white mb-1 flex items-center justify-between">
+                                  <span>Ordered Items:</span>
+                                  <span className="text-[10px] text-gray-400">{ord.items?.length || 0} item(s)</span>
+                                </div>
+                                {ord.items?.map((it, idx) => {
+                                  const itemVisual = getItemVisual(it);
+                                  return (
+                                    <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-white py-0.5">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                                        {itemVisual.isImage ? (
+                                          <img
+                                            src={itemVisual.src}
+                                            alt={it.name}
+                                            className="w-7 h-7 object-cover rounded-lg shadow-2xs shrink-0"
+                                          />
+                                        ) : (
+                                          <span className="text-base p-0.5 bg-amber-50 dark:bg-gray-700 rounded-md shrink-0">
+                                            {itemVisual.emoji}
+                                          </span>
+                                        )}
+                                        <span className="truncate">
+                                          <strong className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</strong>
+                                          {it.name}
+                                        </span>
+                                      </div>
+                                      <span className="font-mono font-bold shrink-0">{formatPrice(it.price * it.quantity)}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Payment & Delivery Info */}
+                              <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
+                                <div>
+                                  <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
+                                  <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400 block text-[10px] uppercase">Fulfillment</span>
+                                  <span className="capitalize">{ord.fulfilment}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-400 block text-[10px] uppercase">Total</span>
+                                  <span className="text-gray-900 dark:text-white font-black">{formatPrice(ord.total)}</span>
+                                </div>
+                              </div>
+
+                              {ord.fulfilment === 'delivery' && ord.deliveryAddress && (
+                                <div className="mt-2 rounded-lg bg-orange-50 p-2.5 text-xs text-orange-950 border border-orange-200">
+                                  <span className="font-bold">Delivery Address:</span> {ord.deliveryAddress}
+                                  {ord.deliveryNotes && <p className="text-[11px] text-orange-800 mt-0.5">Notes: {ord.deliveryNotes}</p>}
+                                </div>
+                              )}
+
+                              {ord.orderComments && (
+                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-950">
+                                  <span className="font-bold">Order Comments:</span> {ord.orderComments}
+                                </div>
+                              )}
+
+                              {/* Owner Interactive 4-Step Order Progress Buttons */}
+                              <div className="mt-3.5 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+                                <div className="text-[11px] font-black uppercase tracking-wider text-gray-700 dark:text-gray-200 mb-2 flex items-center justify-between">
+                                  <span className="flex items-center gap-1.5">
+                                    <span>👑</span>
+                                    <span>Order Progress (Tap any button to update):</span>
+                                  </span>
+                                  <span className="font-extrabold text-xs text-amber-700 dark:text-amber-400">
+                                    {ord.status === 'Completed'
+                                      ? '✅ Step 4: Completed'
+                                      : ord.status === 'Ready for Collection'
+                                      ? '🛍️ Step 3: Ready'
+                                      : ord.status === 'Preparing'
+                                      ? '👨‍🍳 Step 2: Preparing'
+                                      : '📝 Step 1: Received'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-4 gap-1.5 text-center text-xs font-black">
+                                  {/* Step 1: Received */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
+                                    title="Set status to 1. Received"
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
+                                      ord.status === 'Pending'
+                                        ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
+                                        : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                    }`}
+                                  >
+                                    <span className="text-base">📝</span>
+                                    <span className="leading-tight text-[11px]">1. Received</span>
+                                    {ord.status === 'Pending' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Current</span>}
+                                  </button>
+
+                                  {/* Step 2: Prepare */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
+                                    title="Set status to 2. Preparing Food"
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
+                                      ord.status === 'Preparing'
+                                        ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
+                                        : ord.status === 'Ready for Collection' || ord.status === 'Completed'
+                                        ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                        : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                    }`}
+                                  >
+                                    <span className="text-base">👨‍🍳</span>
+                                    <span className="leading-tight text-[11px]">2. Prepare</span>
+                                    {ord.status === 'Preparing' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Cooking</span>}
+                                  </button>
+
+                                  {/* Step 3: Ready */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
+                                    title="Set status to 3. Ready for Collection"
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
+                                      ord.status === 'Ready for Collection'
+                                        ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
+                                        : ord.status === 'Completed'
+                                        ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                        : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                    }`}
+                                  >
+                                    <span className="text-base">🛍️</span>
+                                    <span className="leading-tight text-[11px]">3. Ready</span>
+                                    {ord.status === 'Ready for Collection' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Waiting</span>}
+                                  </button>
+
+                                  {/* Step 4: Complete */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                                    title="Set status to 4. Completed / Collected"
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
+                                      ord.status === 'Completed'
+                                        ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
+                                        : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                    }`}
+                                  >
+                                    <span className="text-base">✅</span>
+                                    <span className="leading-tight text-[11px]">4. Complete</span>
+                                    {ord.status === 'Completed' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Done</span>}
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Order Action Buttons with Quick Next Step */}
+                              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveReceiptOrder(ord)}
+                                  className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-gray-800 px-3 py-1.5 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-100 cursor-pointer"
+                                >
+                                  🧾 View Receipt
+                                </button>
+
+                                <div className="flex items-center gap-1.5">
+                                  {ord.status === 'Pending' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
+                                      className="rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-black text-white shadow cursor-pointer transition active:scale-95 flex items-center gap-1"
+                                    >
+                                      <span>👨‍🍳</span> <span>Start Preparing Meal</span>
+                                    </button>
+                                  )}
+                                  {ord.status === 'Preparing' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
+                                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-black text-white shadow animate-pulse cursor-pointer transition active:scale-95 flex items-center gap-1"
+                                    >
+                                      <span>🛍️</span> <span>Mark Ready for Collection</span>
+                                    </button>
+                                  )}
+                                  {ord.status === 'Ready for Collection' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
+                                      className="rounded-xl bg-gray-900 hover:bg-gray-800 px-3 py-2 text-xs font-black text-white shadow cursor-pointer transition active:scale-95 flex items-center gap-1"
+                                    >
+                                      <span>✅</span> <span>Confirm Order Collected</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {liveKitchenQueue.length > 4 && (
+                        <div className="text-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAllKitchenQueue(prev => !prev)}
+                            className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-gray-800 px-6 py-2.5 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer shadow-2xs"
+                          >
+                            {showAllKitchenQueue ? '▲ Show Less Orders' : `▼ View More Kitchen Orders (${liveKitchenQueue.length - 4} more)`}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-white">
+                      No active orders in the kitchen queue for {dashboardShop?.name || 'this shop'}.
+                    </div>
+                  )}
+                </div>
+
+                {/* Completed Orders History Section on Dashboard */}
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>Completed & Paid Store Orders ({completedStoreOrders.length})</span>
+                    </h3>
+                    <div className="flex items-center gap-3">
+                      {completedStoreOrders.length > 0 && (
+                        <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
+                          Total Revenue: {formatPrice(completedStoreOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
+                        </span>
+                      )}
+                      {completedStoreOrders.length > 6 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllCompletedOrders(prev => !prev)}
+                          className="text-xs font-black text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 underline cursor-pointer"
+                        >
+                          {showAllCompletedOrders ? '▲ Show Less' : `▼ View More (${completedStoreOrders.length - 6} more)`}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {completedStoreOrders.length > 0 ? (
+                    <>
+                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {(showAllCompletedOrders ? completedStoreOrders : completedStoreOrders.slice(0, 6)).map((ord) => {
+                          const compTiming = formatCollectionDateTime(ord);
+                          return (
+                            <div
+                              key={ord.id || ord._id}
+                              className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 p-4 shadow-xs"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-black text-gray-900 dark:text-white">{ord.customerName}</span>
+                                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
+                                  ✅ Code: {ord.orderCode}
+                                </span>
+                              </div>
+
+                              <div className="my-1.5 rounded-xl bg-white/80 dark:bg-gray-800/80 p-2 text-[10px] text-gray-600 dark:text-gray-300 border border-emerald-100 dark:border-gray-800 flex justify-between items-center">
+                                <span>📅 <strong>Collected:</strong> {compTiming.dateStr}</span>
+                                <span className="font-mono font-bold text-emerald-800 dark:text-emerald-300">{compTiming.timeStr}</span>
+                              </div>
+
+                              <div className="text-[11px] text-gray-600 dark:text-white space-y-1 my-2">
+                                <div><span className="font-bold text-gray-700 dark:text-white">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
+                                <div className="flex justify-between font-extrabold text-gray-900 dark:text-white border-t pt-1 mt-1">
+                                  <span>Total Paid:</span>
+                                  <span className="text-emerald-700 dark:text-emerald-400">{formatPrice(ord.total)}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-emerald-100 dark:border-gray-800">
+                                <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100/60 px-2 py-1 rounded-lg">
+                                  Collected
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveReceiptOrder(ord)}
+                                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-black shadow-2xs transition cursor-pointer"
+                                >
+                                  🧾 View Receipt
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {completedStoreOrders.length > 6 && (
+                        <div className="text-center pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAllCompletedOrders(prev => !prev)}
+                            className="rounded-2xl border border-emerald-300 bg-emerald-50/80 dark:bg-gray-800 px-6 py-2.5 text-xs font-black text-emerald-900 dark:text-emerald-300 hover:bg-emerald-100 transition cursor-pointer shadow-2xs"
+                          >
+                            {showAllCompletedOrders ? '▲ Show Less Completed Orders' : `▼ View More Completed Orders (${completedStoreOrders.length - 6} more)`}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-xs text-gray-400">
+                      No completed orders yet. Completed orders will be archived here automatically.
+                    </div>
+                  )}
+                </div>
+
+                {/* Revenue Summary Section */}
+                <section aria-label="Revenue summary" className="grid gap-3 sm:grid-cols-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
                   {[
                     { label: 'Today', value: revenueSummary.daily, detail: 'Completed today', tone: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
                     { label: 'This week', value: revenueSummary.weekly, detail: 'Mon–Sun', tone: 'border-sky-200 bg-sky-50 text-sky-800' },
@@ -1841,7 +2916,8 @@ export default function LunchComingSoon() {
                   ))}
                 </section>
 
-                <section aria-label="Shop improvement advice" className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm">
+                {/* Shop Improvement Advice Section */}
+                <section aria-label="Shop improvement advice" className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm mt-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-start gap-3">
                       <div className="rounded-2xl bg-amber-100 p-2.5 text-amber-700">
@@ -1855,7 +2931,7 @@ export default function LunchComingSoon() {
                     <button
                       type="button"
                       onClick={() => setShowAddMealModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-gray-950 px-3 py-2 text-xs font-black text-white transition hover:bg-gray-800"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-gray-950 px-3 py-2 text-xs font-black text-white transition hover:bg-gray-800 cursor-pointer"
                     >
                       <ListPlus className="h-3.5 w-3.5" /> Add a menu item
                     </button>
@@ -1888,182 +2964,6 @@ export default function LunchComingSoon() {
                     ))}
                   </div>
                 </section>
-
-                {/* Incoming Orders Cards (Live Kitchen Queue) */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-700 dark:text-white">
-                      Live Kitchen Queue — {dashboardShop?.name || 'My Shop'} ({liveKitchenQueue.length} Active)
-                    </h3>
-                  </div>
-
-                  {liveKitchenQueue.length > 0 ? (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      {liveKitchenQueue.map((ord) => (
-                        <div
-                          key={ord.id || ord._id}
-                          className="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm transition hover:shadow-md"
-                        >
-                          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                            <div className="flex items-center gap-2">
-                              <span className="rounded-lg bg-amber-100 p-2 text-xl font-bold">{ord.shopImage || '🍱'}</span>
-                              <div>
-                                <p className="text-sm font-black text-gray-900 dark:text-white">{ord.customerName}</p>
-                                <p className="text-xs font-semibold text-gray-500 dark:text-white flex items-center gap-1">
-                                  <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Order Matching Verification Code */}
-                            <div className="text-right">
-                              <span className="text-[10px] font-bold text-gray-400 block uppercase">Verification Code</span>
-                              <span className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-white shadow-xs">
-                                {ord.orderCode}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Items List */}
-                          <div className="my-3 space-y-1 rounded-xl bg-gray-50 dark:bg-gray-800 p-3 text-xs">
-                            <div className="font-bold text-gray-600 dark:text-white mb-1">Ordered Items:</div>
-                            {ord.items?.map((it, idx) => (
-                              <div key={idx} className="flex justify-between font-medium text-gray-800 dark:text-white">
-                                <span>{it.quantity}x {it.name}</span>
-                                <span className="font-bold">{formatPrice(it.price * it.quantity)}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Payment & Delivery Info */}
-                          <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
-                            <div>
-                              <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
-                              <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400 block text-[10px] uppercase">Fulfillment</span>
-                              <span className="capitalize">{ord.fulfilment}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400 block text-[10px] uppercase">Total</span>
-                              <span className="text-gray-900 dark:text-white font-black">{formatPrice(ord.total)}</span>
-                            </div>
-                          </div>
-
-                          {ord.fulfilment === 'delivery' && ord.deliveryAddress && (
-                            <div className="mt-2 rounded-lg bg-orange-50 p-2.5 text-xs text-orange-950 border border-orange-200">
-                              <span className="font-bold">Delivery Address:</span> {ord.deliveryAddress}
-                              {ord.deliveryNotes && <p className="text-[11px] text-orange-800 mt-0.5">Notes: {ord.deliveryNotes}</p>}
-                            </div>
-                          )}
-
-                          {ord.orderComments && (
-                            <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-950">
-                              <span className="font-bold">Order Comments:</span> {ord.orderComments}
-                            </div>
-                          )}
-
-                          {/* Order Action Buttons */}
-                          <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2">
-                            <span className={`rounded-full px-3 py-1 text-xs font-black ${
-                              ord.status === 'Ready for Collection'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : ord.status === 'Preparing'
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white'
-                            }`}>
-                              Current Status: {ord.status}
-                            </span>
-
-                            <div className="flex items-center gap-1.5">
-                              {ord.status === 'Pending' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                                  className="rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-amber-600 cursor-pointer"
-                                >
-                                  👨‍🍳 Start Preparing
-                                </button>
-                              )}
-                              {ord.status === 'Preparing' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                                  className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-emerald-700 animate-pulse cursor-pointer"
-                                >
-                                  🎉 Mark Ready / Out for Delivery
-                                </button>
-                              )}
-                              {ord.status === 'Ready for Collection' && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                  className="rounded-xl bg-gray-900 px-3 py-1.5 text-xs font-black text-white shadow hover:bg-gray-800 cursor-pointer"
-                                >
-                                  ✅ Complete Order
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-white">
-                      No active orders in the kitchen queue for {dashboardShop?.name || 'this shop'}.
-                    </div>
-                  )}
-                </div>
-
-                {/* Completed Orders History Section on Dashboard */}
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      Completed & Paid Store Orders ({completedStoreOrders.length})
-                    </h3>
-                    {completedStoreOrders.length > 0 && (
-                      <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                        Total Revenue: {formatPrice(completedStoreOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
-                      </span>
-                    )}
-                  </div>
-
-                  {completedStoreOrders.length > 0 ? (
-                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                      {completedStoreOrders.map((ord) => (
-                        <div
-                          key={ord.id || ord._id}
-                          className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 p-4 shadow-xs"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-black text-gray-900 dark:text-white">{ord.customerName}</span>
-                            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
-                              ✅ Code: {ord.orderCode}
-                            </span>
-                          </div>
-
-                          <div className="text-[11px] text-gray-600 dark:text-white space-y-1 my-2">
-                            <div><span className="font-bold text-gray-700 dark:text-white">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
-                            <div className="flex justify-between font-extrabold text-gray-900 dark:text-white border-t pt-1 mt-1">
-                              <span>Total Paid:</span>
-                              <span className="text-emerald-700">{formatPrice(ord.total)}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="text-[10px] text-emerald-800 font-bold bg-emerald-100/60 p-1.5 rounded-lg text-center">
-                            Order Completed & Customer Collected
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-xs text-gray-400">
-                      No completed orders yet. Completed orders will be archived here automatically.
-                    </div>
-                  )}
-                </div>
               </>
             )}
           </div>
@@ -2170,87 +3070,340 @@ export default function LunchComingSoon() {
       )}
 
       {/* ORDER RECEIPT & MATCHING CODE MODAL */}
-      {activeReceiptOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl border border-amber-200 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                <CheckCircle2 className="h-8 w-8" />
-              </div>
-              <h3 className="mt-3 text-xl font-black text-gray-900 dark:text-white">Order Confirmed!</h3>
-              <p className="text-xs text-gray-500 dark:text-white mt-1">Show this matching verification code at the store counter or driver.</p>
-            </div>
+      {activeReceiptOrder && (() => {
+        const theme = getReceiptTheme(activeReceiptOrder);
+        const overdue = isCollectionOverdue(activeReceiptOrder);
+        const timing = formatCollectionDateTime(activeReceiptOrder);
+        const firstVisual = getItemVisual(activeReceiptOrder.items?.[0] || { name: activeReceiptOrder.shopName, image: activeReceiptOrder.shopImage });
+        const isOwnerOfActive = Boolean(
+          currentUser && (
+            myShops.some(s => s.id === activeReceiptOrder.shopId || s._id === activeReceiptOrder.shopId) ||
+            (currentShop && currentShop.ownerId === (currentUser._id || currentUser.id)) ||
+            (dashboardShop && dashboardShop.ownerId === (currentUser._id || currentUser.id))
+          )
+        );
 
-            {/* Verification Matching Code Card */}
-            <div className="my-5 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-5 text-center text-white shadow-md">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-100 block">
-                Verification Matching Code
-              </span>
-              <span className="mt-1 text-3xl font-black tracking-wider block font-mono">
-                {activeReceiptOrder.orderCode}
-              </span>
-              <p className="text-[11px] text-amber-100 mt-1">
-                Same code is visible on the store owner's food manager dashboard.
-              </p>
-            </div>
-
-            <div className="space-y-2 text-xs text-gray-700 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
-              <div className="flex justify-between">
-                <span className="font-semibold text-gray-500 dark:text-white">Store:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{activeReceiptOrder.shopName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-gray-500 dark:text-white">Fulfillment:</span>
-                <span className="font-bold capitalize">{activeReceiptOrder.fulfilment}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold text-gray-500 dark:text-white">Payment Choice:</span>
-                <span className="font-bold text-amber-800">{activeReceiptOrder.paymentStatus || activeReceiptOrder.paymentMethod}</span>
-              </div>
-              <div className="flex justify-between text-sm font-black border-t pt-2">
-                <span>Total Amount:</span>
-                <span className="text-amber-700">{formatPrice(activeReceiptOrder.total)}</span>
-              </div>
-            </div>
-
-            {/* Rating Trigger inside Receipt */}
-            <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
-              {activeReceiptOrder.isRated ? (
-                <div className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-bold text-amber-900 border border-amber-200">
-                  ⭐ Thank you! You rated this order experience.
-                </div>
-              ) : activeReceiptOrder.status !== 'Completed' ? (
-                <div className="rounded-xl bg-slate-50 dark:bg-gray-950 p-2.5 text-center text-xs font-bold text-slate-700 dark:text-white border border-slate-200 dark:border-gray-800">
-                  Ratings unlock after the shop marks your order as completed.
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRatingTargetOrder(activeReceiptOrder);
-                    setShowRateModal(true);
-                  }}
-                  className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow-sm hover:bg-amber-600 transition flex items-center justify-center gap-2"
-                >
-                  <Star className="h-4 w-4 fill-current" /> Rate Shop & Food Service
-                </button>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setActiveReceiptOrder(null)}
-              className="mt-3 w-full rounded-2xl bg-gray-950 py-3 text-sm font-black text-white hover:bg-gray-800 transition"
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className={`w-full max-w-md rounded-3xl ${theme.bg} p-6 shadow-2xl border-2 border-dashed ${theme.border} max-h-[90vh] overflow-y-auto font-sans`}
             >
-              Done & Close
-            </button>
-          </motion.div>
-        </div>
-      )}
+              {/* Overdue Banner if applicable */}
+              {overdue && (
+                <div className="mb-4 rounded-2xl bg-rose-500 text-white p-3 text-xs font-black flex items-center justify-between shadow-xs animate-pulse">
+                  <span className="flex items-center gap-1.5">
+                    <span>🔔</span>
+                    <span>COLLECTION OVERDUE — Ready for pickup!</span>
+                  </span>
+                  <span className="bg-white text-rose-700 px-2 py-0.5 rounded-lg text-[10px] uppercase">
+                    Waiting
+                  </span>
+                </div>
+              )}
+
+              <div className="text-center">
+                {firstVisual.isImage ? (
+                  <img
+                    src={firstVisual.src}
+                    alt={activeReceiptOrder.shopName}
+                    className="mx-auto h-16 w-16 object-cover rounded-3xl shadow-md border-2 border-white dark:border-gray-700"
+                  />
+                ) : (
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white dark:bg-gray-800 text-3xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    {firstVisual.emoji || activeReceiptOrder.shopImage || '🍱'}
+                  </div>
+                )}
+                <h3 className="mt-3 text-xl font-black text-gray-950 dark:text-white">Official Food Receipt</h3>
+                <p className="text-xs text-gray-500 dark:text-white mt-0.5 font-bold">
+                  {activeReceiptOrder.shopName} · #{String(activeReceiptOrder.orderCode || '0000').slice(-4)}
+                </p>
+              </div>
+
+              {/* Verification Matching Code Card */}
+              <div className={`my-3.5 rounded-2xl bg-gradient-to-r ${theme.codeBg} p-4 text-center text-white shadow-md`}>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">
+                  Verification Matching Code
+                </span>
+                <span className="mt-1 text-3xl font-black tracking-widest block font-mono">
+                  {activeReceiptOrder.orderCode}
+                </span>
+                <p className="text-[11px] text-white/90 mt-1">
+                  Present this code at the counter for fast collection.
+                </p>
+              </div>
+
+              {/* PROMINENT COLLECTION DATE & TIME BOX */}
+              <div className="my-3 rounded-2xl bg-white/90 dark:bg-gray-800/90 border border-amber-300 dark:border-amber-600/60 p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 text-lg font-black shrink-0">
+                    📅
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
+                      {timing.label} (Date & Time)
+                    </span>
+                    <p className="font-black text-gray-950 dark:text-white text-xs">
+                      {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black text-sm">{timing.timeStr}</strong>
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right pl-3 border-l border-gray-200 dark:border-gray-700">
+                  <span className="text-[9px] text-gray-400 font-bold block uppercase">Order Placed</span>
+                  <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono block">
+                    {timing.placedStr}
+                  </span>
+                </div>
+              </div>
+
+              {/* Itemized Food Breakdown with Pictures */}
+              <div className="space-y-2 rounded-2xl bg-white/80 dark:bg-gray-800/80 p-3.5 text-xs shadow-2xs border border-gray-100 dark:border-gray-700">
+                <div className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1 flex justify-between">
+                  <span>Ordered Meal Items:</span>
+                  <span>{activeReceiptOrder.items?.length || 0} item(s)</span>
+                </div>
+                {activeReceiptOrder.items?.map((it, idx) => {
+                  const itVisual = getItemVisual(it);
+                  return (
+                    <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-gray-100 py-1 border-b border-dashed border-gray-100 dark:border-gray-700/50 last:border-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
+                        {itVisual.isImage ? (
+                          <img src={itVisual.src} alt={it.name} className="w-8 h-8 object-cover rounded-xl shadow-2xs shrink-0" />
+                        ) : (
+                          <span className="text-xl p-1 bg-amber-50 dark:bg-gray-700 rounded-lg shrink-0">
+                            {itVisual.emoji}
+                          </span>
+                        )}
+                        <span className="truncate">
+                          <strong className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</strong>
+                          {it.name}
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold shrink-0">{formatPrice(it.price * it.quantity)}</span>
+                    </div>
+                  );
+                })}
+
+                <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-2 mt-2 flex justify-between items-center text-sm font-black">
+                  <span className="text-gray-700 dark:text-gray-300">Total Charged:</span>
+                  <span className="text-amber-700 dark:text-amber-400 font-mono text-base">{formatPrice(activeReceiptOrder.total)}</span>
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-1.5 text-xs text-gray-700 dark:text-white border-t border-dashed border-gray-200 dark:border-gray-700 pt-3">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-gray-500 dark:text-white">Customer:</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{activeReceiptOrder.customerName} ({activeReceiptOrder.customerPhone || 'N/A'})</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-gray-500 dark:text-white">Fulfillment:</span>
+                  <span className="font-bold capitalize">{activeReceiptOrder.fulfilment === 'pickup' ? 'Counter Pickup' : 'Delivery to Door'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-gray-500 dark:text-white">Payment Method:</span>
+                  <span className="font-bold text-amber-800 dark:text-amber-300">{activeReceiptOrder.paymentStatus || activeReceiptOrder.paymentMethod || 'Pay at Counter on Pickup'}</span>
+                </div>
+                {activeReceiptOrder.orderComments && (
+                  <div className="mt-2 rounded-xl bg-amber-50 dark:bg-gray-800 p-2 text-[11px] text-amber-950 dark:text-amber-200 border border-amber-200 dark:border-gray-700">
+                    <strong>Comments:</strong> {activeReceiptOrder.orderComments}
+                  </div>
+                )}
+              </div>
+
+              {/* Live 4-Step Order Progression Tracker */}
+              <div className="mt-3 pt-2.5 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+                <div className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    {isOwnerOfActive && <span>👑</span>}
+                    <span>{isOwnerOfActive ? 'Owner Order Progress (Tap to update):' : 'Order Status:'}</span>
+                  </span>
+                  <span className="font-extrabold text-amber-700 dark:text-amber-400">
+                    {activeReceiptOrder.status === 'Completed'
+                      ? 'Step 4 of 4: Collected ✅'
+                      : activeReceiptOrder.status === 'Ready for Collection'
+                      ? 'Step 3 of 4: Ready for Collection'
+                      : activeReceiptOrder.status === 'Preparing'
+                      ? 'Step 2 of 4: Preparing Food'
+                      : 'Step 1 of 4: Order Received'}
+                  </span>
+                </div>
+
+                {isOwnerOfActive ? (
+                  /* Shop Owner: Interactive Step Buttons */
+                  <div className="grid grid-cols-4 gap-1.5 text-center text-xs font-black">
+                    {/* Step 1: Received */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Pending')}
+                      title="Set status to 1. Received"
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                        activeReceiptOrder.status === 'Pending'
+                          ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
+                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <span className="text-sm">📝</span>
+                      <span className="leading-tight text-[10px]">1. Received</span>
+                      {activeReceiptOrder.status === 'Pending' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Current</span>}
+                    </button>
+
+                    {/* Step 2: Prepare */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Preparing')}
+                      title="Set status to 2. Preparing Food"
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                        activeReceiptOrder.status === 'Preparing'
+                          ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
+                          : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
+                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <span className="text-sm">👨‍🍳</span>
+                      <span className="leading-tight text-[10px]">2. Prepare</span>
+                      {activeReceiptOrder.status === 'Preparing' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Cooking</span>}
+                    </button>
+
+                    {/* Step 3: Ready */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Ready for Collection')}
+                      title="Set status to 3. Ready for Collection"
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                        activeReceiptOrder.status === 'Ready for Collection'
+                          ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
+                          : activeReceiptOrder.status === 'Completed'
+                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <span className="text-sm">🛍️</span>
+                      <span className="leading-tight text-[10px]">3. Ready</span>
+                      {activeReceiptOrder.status === 'Ready for Collection' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Waiting</span>}
+                    </button>
+
+                    {/* Step 4: Complete */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Completed')}
+                      title="Set status to 4. Completed / Collected"
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
+                        activeReceiptOrder.status === 'Completed'
+                          ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
+                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                      }`}
+                    >
+                      <span className="text-sm">✅</span>
+                      <span className="leading-tight text-[10px]">4. Complete</span>
+                      {activeReceiptOrder.status === 'Completed' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Done</span>}
+                    </button>
+                  </div>
+                ) : (
+                  /* Customer: Visual Stepper */
+                  <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                      activeReceiptOrder.status === 'Pending'
+                        ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
+                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                    }`}>
+                      <span>📝</span>
+                      <span className="leading-tight">1. Received</span>
+                    </div>
+
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                      activeReceiptOrder.status === 'Preparing'
+                        ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
+                        : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                    }`}>
+                      <span>👨‍🍳</span>
+                      <span className="leading-tight">2. Preparing</span>
+                    </div>
+
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                      activeReceiptOrder.status === 'Ready for Collection'
+                        ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
+                        : activeReceiptOrder.status === 'Completed'
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                    }`}>
+                      <span>🛍️</span>
+                      <span className="leading-tight">3. Ready</span>
+                    </div>
+
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
+                      activeReceiptOrder.status === 'Completed'
+                        ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                    }`}>
+                      <span>✅</span>
+                      <span className="leading-tight">4. Collected</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Confirm Collection Button when Ready */}
+                {activeReceiptOrder.status === 'Ready for Collection' && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Completed')}
+                      className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-3 px-4 text-xs font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
+                    >
+                      <span>✅</span>
+                      <span>{isOwnerOfActive ? 'Confirm Customer Collected Order (Step 4)' : 'I Have Collected My Meal (Press to Confirm)'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Rating Trigger inside Receipt */}
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
+                {activeReceiptOrder.isRated ? (
+                  <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 p-3 text-center text-xs font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2">
+                    <span>⭐ Thank you! Rated & archived to Dashboard.</span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveReceiptOrder(null)}
+                      className="text-[11px] font-black underline text-emerald-700 hover:text-emerald-900 cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                ) : activeReceiptOrder.status !== 'Completed' ? (
+                  <div className="rounded-xl bg-white/70 dark:bg-gray-800 p-2.5 text-center text-xs font-bold text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700">
+                    Ratings unlock after your order is collected.
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRatingTargetOrder(activeReceiptOrder);
+                      setShowRateModal(true);
+                    }}
+                    className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow-sm hover:bg-amber-600 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Star className="h-4 w-4 fill-current" /> Rate Shop & Food Service
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveReceiptOrder(null)}
+                className="mt-3 w-full rounded-2xl bg-gray-950 py-3 text-sm font-black text-white hover:bg-gray-800 transition cursor-pointer"
+              >
+                {activeReceiptOrder.status === 'Completed'
+                  ? '✅ Done — Archive Receipt to History & Close'
+                  : 'Done & Close Receipt'}
+              </button>
+            </motion.div>
+          </div>
+        );
+      })()}
 
       {/* CONTACT CARD MODAL */}
       <AnimatePresence>

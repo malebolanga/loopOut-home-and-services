@@ -133,7 +133,10 @@ export const updateOrderStatus = async (req, res, next) => {
     if (!requireDatabase(res)) return;
     const status = req.body.status; if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ success: false, message: 'Invalid order status.' });
     const order = validId(req.params.id) ? await FoodOrder.findById(req.params.id) : null; if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
-    const shop = await Shop.findById(order.shopId); if (!shop || !isOwner(shop, req)) return res.status(403).json({ success: false, message: 'You do not manage this order.' });
+    const shop = await Shop.findById(order.shopId);
+    const isShopManager = shop && isOwner(shop, req);
+    const isCustomer = order.customerId === userId(req);
+    if (!isShopManager && !(isCustomer && status === 'Completed')) return res.status(403).json({ success: false, message: 'You do not manage this order.' });
     order.status = status; if (status === 'Completed') order.completedAt = new Date(); await order.save();
     await createNotification(order.customerId, 'Food order update', `Order #${order.orderCode} is now ${status}.`, { orderId: order._id, status }); return res.json(format(order));
   } catch (error) { return next(error); }
@@ -153,11 +156,55 @@ export const createTableBooking = async (req, res, next) => {
 export const rateShop = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
-    const order = validId(req.body.orderId) ? await FoodOrder.findOne({ _id: req.body.orderId, customerId: userId(req), shopId: req.params.id, status: 'Completed', isRated: false }) : null;
-    if (!order) return res.status(403).json({ success: false, message: 'Only a completed order can be reviewed once.' });
-    const shop = await Shop.findById(req.params.id); if (!shop) return res.status(404).json({ success: false, message: 'Shop not found.' });
-    const rating = Number(req.body.shopRating); if (!Number.isInteger(rating) || rating < 1 || rating > 5) return res.status(400).json({ success: false, message: 'Choose a rating from 1 to 5.' });
-    const review = { id: crypto.randomUUID(), userName: cleanText(req.body.userName, 50) || 'Customer', shopRating: rating, foodRating: Math.min(Math.max(Number(req.body.foodRating) || rating, 1), 5), comment: cleanText(req.body.comment, 500) };
-    shop.reviews.push(review); shop.ratingsCount = shop.reviews.length; shop.rating = (shop.reviews.reduce((sum, entry) => sum + entry.shopRating, 0) / shop.reviews.length).toFixed(1); order.isRated = true; order.ratingDetails = review; await Promise.all([shop.save(), order.save()]); return res.json({ success: true, review });
+    const shop = await Shop.findById(req.params.id);
+    if (!shop) return res.status(404).json({ success: false, message: 'Shop not found.' });
+
+    let order = null;
+    const orderId = req.body.orderId;
+    if (validId(orderId)) {
+      order = await FoodOrder.findById(orderId);
+    }
+    if (!order && orderId) {
+      order = await FoodOrder.findOne({ orderCode: orderId });
+    }
+
+    if (order) {
+      if (order.isRated) {
+        return res.status(400).json({ success: false, message: 'This order has already been reviewed.' });
+      }
+      if (order.status !== 'Completed') {
+        order.status = 'Completed';
+        order.completedAt = order.completedAt || new Date();
+      }
+    }
+
+    const rating = Number(req.body.shopRating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Choose a rating from 1 to 5.' });
+    }
+
+    const review = {
+      id: crypto.randomUUID(),
+      userName: cleanText(req.body.userName, 50) || 'Customer',
+      shopRating: rating,
+      foodRating: Math.min(Math.max(Number(req.body.foodRating) || rating, 1), 5),
+      comment: cleanText(req.body.comment, 500),
+      createdAt: new Date()
+    };
+
+    shop.reviews = shop.reviews || [];
+    shop.reviews.push(review);
+    shop.ratingsCount = shop.reviews.length;
+    shop.rating = (shop.reviews.reduce((sum, entry) => sum + entry.shopRating, 0) / shop.reviews.length).toFixed(1);
+
+    if (order) {
+      order.isRated = true;
+      order.ratingDetails = review;
+      await Promise.all([shop.save(), order.save()]);
+    } else {
+      await shop.save();
+    }
+
+    return res.json({ success: true, review });
   } catch (error) { return next(error); }
 };

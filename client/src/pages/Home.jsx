@@ -133,6 +133,16 @@ const CATEGORY_ICON_DETAILS = {
     main: '🎟️',
     details: ['🎪', '🎭', '🎉'],
     bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
+  },
+  Selling: {
+    main: '🏷️',
+    details: ['📦', '🛋️', '💻'],
+    bg: 'from-teal-600 via-emerald-500 to-cyan-500'
+  },
+  Lunch: {
+    main: '🍱',
+    details: ['🍔', '🥗', '🥤'],
+    bg: 'from-orange-500 via-amber-500 to-rose-500'
   }
 };
 
@@ -1285,13 +1295,13 @@ function MobileAppHomepage({
       ]
     },
     {
-      id: 'HourlyDrop',
-      label: 'Hourly Drops',
-      emoji: '⚡',
-      desc: 'Flash discounts',
-      textColor: 'text-rose-500',
-      bgColor: 'bg-rose-500',
-      action: 'scroll-drops'
+      id: 'Lunch',
+      label: 'Lunch',
+      emoji: '🍱',
+      desc: 'Order food',
+      textColor: 'text-orange-500',
+      bgColor: 'bg-orange-500',
+      route: '/lunch'
     },
     {
       id: 'MicroGigs',
@@ -1601,54 +1611,76 @@ function MobileAppHomepage({
 
           {/* Empty State */}
           {filteredItems.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
-              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
-              <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
-                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
-              </h3>
-              <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">Be the first to list in this category.</p>
-              {activeSubcategory !== 'all' && (
+            <div className="flex flex-col items-center justify-center py-14 text-center rounded-3xl border border-dashed border-slate-200 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.02] p-8 my-4 gap-3">
+              <span className="text-5xl">{currentCategoryObj?.emoji || '🔍'}</span>
+              <div className="space-y-1 max-w-xs">
+                <h3 className="text-sm font-black text-slate-800 dark:text-slate-100">
+                  Nothing here yet
+                  {activeSubcategory !== 'all'
+                    ? ` in ${activeSubcategory.replace(/_/g, ' ')}`
+                    : ` in ${activeTab}`}
+                </h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+                  Be the first to list in this category — or try a different filter.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                {activeSubcategory !== 'all' && (
+                  <button
+                    onClick={() => setActiveSubcategory('all')}
+                    className="px-4 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-wider transition-all active:scale-95"
+                  >
+                    Show all {activeTab}
+                  </button>
+                )}
                 <button
-                  onClick={() => setActiveSubcategory('all')}
-                  className="px-4 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider"
+                  onClick={() => navigate('/search')}
+                  className="px-4 py-2 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-rose-500 transition-all active:scale-95"
                 >
-                  Show All {activeTab}
+                  Search LoopOut
                 </button>
-              )}
+              </div>
             </div>
           )}
 
           {/* Load More / Search */}
           {visibleCount < filteredItems.length ? (
-            <button
-              onClick={() => setVisibleCount(prev => prev + 8)}
-              className="w-full mt-10 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
-            >
-              Load More {activeTab}
-            </button>
-          ) : filteredItems.length > 0 && (
-            <div className="flex justify-center mt-12 mb-4">
+            <div className="flex flex-col items-center justify-center mt-10 mb-6 gap-2.5">
               <motion.button
-                whileHover={{ scale: 1.2, rotate: 5 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => navigate('/search')}
-                className="text-gray-400 hover:text-rose-500 transition-colors"
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setVisibleCount(prev => prev + 8)}
+                className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-wider shadow-md hover:shadow-xl hover:bg-slate-800 dark:hover:bg-slate-100 transition-all cursor-pointer"
               >
-                <MagnifyingGlassIcon className="w-10 h-10" />
+                <span>Load More {activeTab}</span>
+                <ChevronDown className="w-4 h-4 group-hover:translate-y-0.5 transition-transform duration-200 text-rose-500" />
+              </motion.button>
+              <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">
+                Showing {Math.min(visibleCount, filteredItems.length)} of {filteredItems.length} items
+              </p>
+            </div>
+          ) : filteredItems.length > 0 && (
+            <div className="flex flex-col items-center justify-center mt-10 mb-4 gap-3">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-base">🎉</span>
+                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                  That&apos;s everything in <span className="text-slate-800 dark:text-slate-200">{activeTab}</span> right now.
+                </span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">Try a different category or search across all of LoopOut.</span>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/search')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
+                title="Search all listings"
+              >
+                <MagnifyingGlassIcon className="w-3.5 h-3.5" />
+                <span>Search everything on LoopOut</span>
               </motion.button>
             </div>
           )}
         </section>
-
-        {/* Community Pulse */}
-        <div className="mb-10 -mx-4 lg:mx-0">
-          <LoopOutPulse />
-        </div>
-
-        {/* Sell Items */}
-        <div className="mb-10">
-          <SellItemsSection navigate={navigate} />
-        </div>
 
         {/* End of Feed */}
         <CaughtUpHub stats={stats} navigate={navigate} />

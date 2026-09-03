@@ -107,16 +107,35 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
       buttonClass: 'bg-amber-600 hover:bg-amber-700',
       dismissClass: 'text-amber-800 hover:bg-amber-100 hover:text-amber-950'
     },
-    'Ready for Collection': {
-      title: 'Your food is ready for collection',
-      message: `${orderLabel} from ${activeOrder.shopName || 'the restaurant'} is ready to collect.`,
-      iconClass: 'bg-emerald-600',
-      borderClass: 'border-emerald-200 bg-gradient-to-r from-emerald-50 via-lime-50 to-amber-50',
-      textClass: 'text-emerald-950',
-      detailClass: 'text-emerald-800',
-      buttonClass: 'bg-emerald-600 hover:bg-emerald-700',
-      dismissClass: 'text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950'
-    }
+    'Ready for Collection': (() => {
+      const now = Date.now();
+      const readyTime = new Date(activeOrder.updatedAt || activeOrder.createdAt || now).getTime();
+      const isOverdue = (now - readyTime) > 15 * 60 * 1000;
+
+      if (isOverdue) {
+        return {
+          title: '🚨 Collection Overdue — Food is ready at counter',
+          message: `${orderLabel} from ${activeOrder.shopName || 'the shop'} is fresh and waiting. Please pick it up now!`,
+          iconClass: 'bg-rose-600 animate-pulse',
+          borderClass: 'border-rose-300 bg-gradient-to-r from-rose-50 via-amber-50 to-white shadow-md',
+          textClass: 'text-rose-950 font-black',
+          detailClass: 'text-rose-800 font-bold',
+          buttonClass: 'bg-rose-600 hover:bg-rose-700 font-black',
+          dismissClass: 'text-rose-800 hover:bg-rose-100 hover:text-rose-950'
+        };
+      }
+
+      return {
+        title: 'Your food is ready for collection',
+        message: `${orderLabel} from ${activeOrder.shopName || 'the restaurant'} is ready to collect.`,
+        iconClass: 'bg-emerald-600',
+        borderClass: 'border-emerald-200 bg-gradient-to-r from-emerald-50 via-lime-50 to-amber-50',
+        textClass: 'text-emerald-950',
+        detailClass: 'text-emerald-800',
+        buttonClass: 'bg-emerald-600 hover:bg-emerald-700',
+        dismissClass: 'text-emerald-800 hover:bg-emerald-100 hover:text-emerald-950'
+      };
+    })()
   }[activeOrder.status];
 
   return (

@@ -82,7 +82,7 @@ const Footer = () => {
   
 
       {/* Main Footer - Hidden on mobile, visible on desktop */}
-      <footer className="hidden md:block bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-20 pb-12 mt-20 border-t border-gray-100 dark:border-gray-800">
+      <footer className="hidden md:block bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-10 pb-12 mt-6 border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-16">
             
@@ -135,7 +135,7 @@ const Footer = () => {
           </div>
         </div>
       </footer>      
-      <footer className="md:hidden mt-12 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 py-8 text-center">
+      <footer className="md:hidden mt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 py-6 text-center">
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 text-xs font-bold text-gray-500 dark:text-gray-400">
           <Link to="/help-center">Help</Link>
           <Link to="/contact">Contact</Link>

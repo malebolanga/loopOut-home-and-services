@@ -14,12 +14,12 @@ import LoopStreakModal from './LoopStreakModal';
 // Hub items config: emoji, label, description, color accent
 const HUB_ITEMS = [
   {
-    id: 'loop-drop',
-    emoji: '⚡',
-    label: 'Hourly Drop',
-    desc: 'Flash discounts',
-    textColor: 'text-amber-500',
-    action: 'scroll-drops',
+    id: 'lunch',
+    emoji: '🍱',
+    label: 'Lunch Hub',
+    desc: 'Order food',
+    textColor: 'text-rose-600',
+    action: '/lunch',
   },
   {
     id: 'gig-radar',
@@ -44,14 +44,6 @@ const HUB_ITEMS = [
     desc: 'Claim R-Credits',
     textColor: 'text-rose-500',
     action: 'modal-streak',
-  },
-  {
-    id: 'lunch',
-    emoji: '🍔',
-    label: 'Lunch Hub',
-    desc: 'Order food',
-    textColor: 'text-rose-600',
-    action: '/lunch',
   },
   {
     id: 'vision-scan',
