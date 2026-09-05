@@ -351,49 +351,115 @@ const getVisibleSteps = (category, type) => {
   });
 };
 
+const getCurrentPhase = (step) => {
+  if (step <= 3) return 1;
+  if (step <= 8) return 2;
+  return 3;
+};
+
+const getPhaseMeta = (phase, category) => {
+  if (phase === 1) {
+    return {
+      phase: 1,
+      label: 'Category & Basics',
+      sub: 'Category · Type · Overview',
+    };
+  }
+  if (phase === 2) {
+    if (category === 'selling') {
+      return {
+        phase: 2,
+        label: 'Upload Photo',
+        sub: 'Photos of your item',
+      };
+    }
+    return {
+      phase: 2,
+      label: 'Photos & Details',
+      sub: 'Schedule · Amenities · Media',
+    };
+  }
+  return {
+    phase: 3,
+    label: 'Pricing & Publish',
+    sub: 'Price · Review · Go live',
+  };
+};
+
 const StepProgress = ({ currentStep, category, type }) => {
+  const currentPhase = getCurrentPhase(currentStep);
   const visibleSteps = getVisibleSteps(category, type);
+  const currIdx = visibleSteps.findIndex(s => s.id === currentStep);
+  const totalVisible = visibleSteps.length;
+
+  const phases = [1, 2, 3].map(p => ({
+    number: p,
+    ...getPhaseMeta(p, category)
+  }));
 
   return (
-    <div className="mb-16 md:mb-20 overflow-x-auto scrollbar-hide">
-      <div className="flex items-center justify-between min-w-[700px] max-w-4xl mx-auto px-4">
-        {visibleSteps.map((step, index) => {
-          const isActive = step.id === currentStep;
-          const isCompleted = visibleSteps.some((s, idx) => s.id === currentStep && idx > index);
-          const StepIcon = step.icon;
+    <div className="mb-10 md:mb-14">
+      {/* 3 Macro Phase Bubbles */}
+      <div className="max-w-xl mx-auto px-4">
+        <div className="relative flex items-center justify-between">
+          {/* Connecting Track behind circles */}
+          <div className="absolute top-5 sm:top-6 left-6 right-6 h-1 bg-gray-200 dark:bg-gray-800 rounded-full z-0" />
+          
+          {/* Active Colored Track */}
+          <div 
+            className="absolute top-5 sm:top-6 left-6 h-1 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full transition-all duration-500 z-0"
+            style={{ 
+              width: currentPhase === 1 ? '0%' : currentPhase === 2 ? '50%' : 'calc(100% - 48px)' 
+            }}
+          />
 
-          return (
-            <div key={step.id} className="flex flex-col items-center flex-1 relative">
-              {/* Connector Line */}
-              {index < visibleSteps.length - 1 && (
-                <div className={`absolute top-6 left-1/2 w-full h-[3px] transition-all duration-700 ${isCompleted ? 'bg-rose-500' : 'bg-gray-100 dark:bg-gray-800'}`} />
-              )}
+          {phases.map((phase) => {
+            const isCompleted = currentPhase > phase.number;
+            const isActive = currentPhase === phase.number;
 
-              {/* Step Circle */}
-              <div className={`
-                w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 relative z-10 shadow-lg
-                ${isCompleted ? 'bg-rose-500 text-white' : 
-                  isActive ? 'bg-gray-900 text-white scale-125 ring-8 ring-gray-50 shadow-gray-200' : 
-                  'bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-300'}
-              `}>
-                {isCompleted ? <CheckCircleIcon className="w-6 h-6" /> : <StepIcon className="w-5 h-5" />}
+            return (
+              <div key={phase.number} className="relative z-10 flex flex-col items-center">
+                <div
+                  className={`
+                    w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 shadow-md
+                    ${isCompleted 
+                      ? 'bg-rose-500 text-white shadow-rose-200 dark:shadow-none' 
+                      : isActive 
+                        ? 'bg-gray-900 text-white ring-4 ring-rose-500/30 scale-110 shadow-lg dark:bg-white dark:text-gray-900' 
+                        : 'bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 text-gray-400'}
+                  `}
+                >
+                  {isCompleted ? (
+                    <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  ) : (
+                    <span>{phase.number}</span>
+                  )}
+                </div>
+
+                <div className="mt-2.5 text-center">
+                  <div className={`text-[11px] sm:text-xs md:text-sm font-bold tracking-tight whitespace-nowrap transition-colors ${
+                    isActive ? 'text-gray-900 dark:text-white font-extrabold' : isCompleted ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-400 dark:text-gray-500'
+                  }`}>
+                    {phase.label}
+                  </div>
+                  <div className="hidden sm:block text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 max-w-[130px] line-clamp-1">
+                    {phase.sub}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              {/* Label */}
-              <div className="mt-4 text-center">
-                <span className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${isActive || isCompleted ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-                  {step.label}
-                </span>
-                {isActive && (
-                   <motion.div 
-                     layoutId="step-indicator"
-                     className="h-1 w-4 bg-rose-500 mx-auto mt-1 rounded-full" 
-                   />
-                )}
-              </div>
-            </div>
-          );
-        })}
+        {/* Granular step breadcrumb / pill */}
+        <div className="mt-6 flex items-center justify-center">
+          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200/60 dark:border-gray-700/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+            Phase {currentPhase} of 3: <strong className="font-semibold text-gray-900 dark:text-white">{getPhaseMeta(currentPhase, category).label}</strong>
+            <span className="text-gray-400">·</span>
+            <span className="text-gray-400">Step {Math.max(1, currIdx + 1)} of {totalVisible}</span>
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -1803,6 +1869,14 @@ export default function CreateListing() {
   }
 
 
+  const currentPhase = getCurrentPhase(currentStep);
+  const visibleSteps = getVisibleSteps(selectedCategory, selectedType);
+  const currStepIdx = visibleSteps.findIndex(s => s.id === currentStep);
+  const nextStepObj = currStepIdx !== -1 && currStepIdx < visibleSteps.length - 1 ? visibleSteps[currStepIdx + 1] : null;
+  const nextPhase = nextStepObj ? getCurrentPhase(nextStepObj.id) : 3;
+  const isPhaseTransition = nextStepObj && nextPhase > currentPhase;
+  const nextPhaseMeta = getPhaseMeta(nextPhase, selectedCategory);
+
   return (
     <div className="min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-gray-800">
       {/* Cinematic Animated Background */}
@@ -1814,7 +1888,7 @@ export default function CreateListing() {
 
       {/* Airbnb-style Header */}
       <header>
-        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#DDDDDD]">
+        <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#DDDDDD] dark:border-gray-800">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="flex items-center justify-between h-20">
               <button 
@@ -1824,21 +1898,23 @@ export default function CreateListing() {
                 }`}
               >
                 <ArrowLeftIcon className={`w-6 h-6 ${
-                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black'
+                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black dark:text-white'
                 }`} />
               </button>
               
-              <div className="flex items-center gap-2">
-                <span className={`font-bold text-2xl tracking-tighter ${
-                  isScrolled ? 'text-[#FF5A5F]' : 'text-[#FF5A5F]'
-                }`}>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="font-bold text-2xl tracking-tighter text-[#FF5A5F]">
                   loopOut
                 </span>
-                <span className={`${isScrolled ? 'text-gray-400' : 'text-white/60'}`}>|</span>
+                <span className="text-gray-300 dark:text-gray-600">|</span>
                 <span className={`font-medium ${
-                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black'
+                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'
                 }`}>
                   Create listing
+                </span>
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  Phase {currentPhase} of 3: {getPhaseMeta(currentPhase, selectedCategory).label}
                 </span>
               </div>
               
@@ -3549,7 +3625,7 @@ export default function CreateListing() {
             )}
 
             {/* Navigation Buttons - Airbnb Style */}
-            <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-6 pb-8 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center">
+            <div className="sticky bottom-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-5 pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center gap-4 z-40">
               <button
                 type="button"
                 onClick={() => {
@@ -3561,37 +3637,46 @@ export default function CreateListing() {
                   }, 300);
                 }}
                 className={`
-                  px-10 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] transition-all duration-500 text-[10px]
-                  ${currentStep > 1 ? 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800' : 'invisible'}
+                  px-6 sm:px-9 py-4 sm:py-4.5 rounded-[2rem] font-bold uppercase tracking-[0.15em] transition-all duration-300 text-[11px] sm:text-xs
+                  ${currentStep > 1 ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700' : 'invisible'}
                 `}
               >
                 Go Back
               </button>
+
+              {/* Phase progress indicator */}
+              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-700/60 shadow-sm">
+                <span className="font-semibold text-gray-800 dark:text-gray-200">Phase {currentPhase} of 3</span>
+                <span>·</span>
+                <span>Step {Math.max(1, currStepIdx + 1)} of {visibleSteps.length}</span>
+              </div>
               
               {currentStep < 9 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                  className="px-8 sm:px-10 py-4 sm:py-4.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-[2rem] font-bold uppercase tracking-[0.15em] shadow-xl hover:bg-rose-600 dark:hover:bg-rose-600 dark:hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2.5 sm:gap-3 group text-[11px] sm:text-xs"
                 >
-                  <span className="text-[10px]">Next Masterpiece</span>
-                  <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  <span>
+                    {isPhaseTransition ? `Next: ${nextPhaseMeta.label}` : 'Continue'}
+                  </span>
+                  <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-12 py-5 bg-rose-500 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-rose-200 hover:bg-gray-900 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 group"
+                  className="px-10 sm:px-12 py-4 sm:py-4.5 bg-rose-500 text-white rounded-[2rem] font-bold uppercase tracking-[0.15em] shadow-xl shadow-rose-200 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 group text-[11px] sm:text-xs"
                 >
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span className="text-[10px]">Deploying...</span>
+                      <span>Deploying...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
-                      <span className="text-[10px]">Finalize Listing</span>
+                      <span>Finalize Listing</span>
                     </>
                   )}
                 </button>

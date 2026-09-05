@@ -685,16 +685,10 @@ export default function Header() {
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
           <div className="flex flex-row items-center justify-between h-14 md:h-16">
             
-            {/* Left: Branding & Home Link */}
-            <div className={`transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            {/* Left: Branding & Home Link — desktop only per this request */}
+            <div className={`hidden md:flex transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <Link
                 to="/"
-                onClick={(e) => {
-                  if (window.innerWidth < 768) {
-                    e.preventDefault();
-                    setShowSearch(true);
-                  }
-                }}
                 aria-label="loopOut Home"
                 className="flex items-center gap-2 cursor-pointer"
               >
@@ -716,6 +710,20 @@ export default function Header() {
               </Link>
             </div>
 
+            {/* Mobile Search Pill — takes the logo's place in the main row */}
+            <div className={`flex-1 md:hidden transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+              <button
+                onClick={() => setShowSearch(true)}
+                aria-label="Open search"
+                className="search-trigger w-full flex items-center gap-2.5 rounded-full border border-slate-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer bg-white dark:bg-gray-900 py-2 px-2.5"
+              >
+                <div className="w-7 h-7 flex-shrink-0 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center text-white shadow-md shadow-rose-200">
+                  <MagnifyingGlassIcon className="w-3.5 h-3.5 stroke-[2.5px]" />
+                </div>
+                <span className="text-[13px] font-black text-slate-900 dark:text-white leading-tight truncate">Where to?</span>
+              </button>
+            </div>
+
             {/* Center: Search Pill (Airbnb Style) */}
             <div className={`flex-1 hidden md:flex justify-center transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
@@ -735,7 +743,7 @@ export default function Header() {
             </div>
 
             {/* Right: User Menu */}
-            <div className="relative md:translate-x-[20px]" ref={profileDropdownRef}>
+            <div className="relative md:translate-x-[20px]">
               <div className="flex flex-row items-center gap-1.5 md:gap-3">
 
                 <div className="relative" ref={createDropdownRef}>
@@ -813,16 +821,6 @@ export default function Header() {
                 >
                   <span>{getCurrencySymbol()}</span>
                   <span>{selectedCurrency}</span>
-                </button>
-
-                {/* LoopBot AI Header Pill */}
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot'))}
-                  aria-label="Open LoopBot AI"
-                  className="relative px-3 h-9 bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white rounded-full flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg hover:scale-105 transition-all text-[11px] font-black uppercase tracking-wider"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">LoopBot</span>
                 </button>
 
                 {/* Home Icon - Desktop */}

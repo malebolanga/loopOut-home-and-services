@@ -135,7 +135,7 @@ const Footer = () => {
           </div>
         </div>
       </footer>      
-      <footer className="md:hidden mt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 py-6 text-center">
+      <footer className="md:hidden mt-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 pt-6 pb-24 text-center">
         <div className="flex flex-wrap justify-center gap-x-5 gap-y-3 text-xs font-bold text-gray-500 dark:text-gray-400">
           <Link to="/help-center">Help</Link>
           <Link to="/contact">Contact</Link>
