@@ -296,18 +296,49 @@ export default function Notifications() {
         return map;
     }, [notifications, formatDate]);
 
-    const myId = (currentUser?._id || currentUser?.id)?.toString();
-    const hostId = (
-        bookingDetails?.listing?.userRef?._id || bookingDetails?.listing?.userRef ||
-        bookingDetails?.helper?.userRef?._id || bookingDetails?.helper?.userRef ||
-        bookingDetails?.service?.userRef?._id || bookingDetails?.service?.userRef ||
-        bookingDetails?.service?.creator?._id || bookingDetails?.service?.creator ||
-        bookingDetails?.event?.userRef?._id || bookingDetails?.event?.userRef ||
+    const getUserIdString = (val) => {
+        if (!val) return '';
+        if (typeof val === 'string') return val;
+        if (val._id) return val._id.toString();
+        if (val.id) return val.id.toString();
+        return val.toString();
+    };
+
+    const myId = getUserIdString(currentUser);
+    const hostId = getUserIdString(
+        bookingDetails?.listing?.userRef ||
+        bookingDetails?.helper?.userRef ||
+        bookingDetails?.service?.userRef ||
+        bookingDetails?.service?.creator ||
+        bookingDetails?.event?.userRef ||
         bookingDetails?.hostUserId
-    )?.toString();
-    const clientUserId = (bookingDetails?.user?._id || bookingDetails?.user)?.toString();
-    const isHost = Boolean(myId && hostId && myId === hostId);
-    const isClient = Boolean(myId && clientUserId && myId === clientUserId);
+    );
+    const clientUserId = getUserIdString(bookingDetails?.user) || getUserIdString(selectedNotification?.data?.userId);
+
+    const notifTitleLower = (selectedNotification?.title || '').toLowerCase();
+    const notifMsgLower = (selectedNotification?.message || '').toLowerCase();
+
+    const isClientMatch = Boolean(myId && clientUserId && myId === clientUserId);
+    const isHostMatch = Boolean(myId && hostId && myId === hostId);
+
+    // Heuristics to detect whether notification was delivered to requester vs provider
+    const looksLikeRequesterNotif = notifTitleLower.includes('request placed') ||
+        notifTitleLower.includes('booking approved') ||
+        notifTitleLower.includes('booking declined') ||
+        notifTitleLower.includes('reminder') ||
+        notifMsgLower.includes('your booking request') ||
+        notifMsgLower.includes('your appointment');
+
+    const looksLikeProviderNotif = notifTitleLower.includes('new booking') ||
+        notifTitleLower.includes('table request') ||
+        notifMsgLower.includes('new booking request') ||
+        notifMsgLower.includes('waiting for your confirmation');
+
+    // If current user is the one who requested/made the booking
+    const isRequester = isClientMatch || (!isHostMatch && looksLikeRequesterNotif);
+    // If current user is the one who is providing the service/listing/booking
+    const isProvider = (isHostMatch && !isClientMatch) || (!isClientMatch && !isRequester && looksLikeProviderNotif);
+
     const isPending = bookingDetails?.status === 'pending';
     const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
     const isCompleted = bookingDetails?.status === 'completed';
@@ -433,9 +464,14 @@ export default function Notifications() {
                                                 Review
                                             </span>
                                         )}
-                                        {notification.title?.toLowerCase().includes('request') && (
+                                        {(notification.title?.toLowerCase().includes('new booking request') || notification.title?.toLowerCase().includes('action required')) && (
                                             <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                                                 Action Required
+                                            </span>
+                                        )}
+                                        {notification.title?.toLowerCase().includes('request placed') && (
+                                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+                                                Pending Approval
                                             </span>
                                         )}
                                     </div>
@@ -516,8 +552,14 @@ export default function Notifications() {
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Client Name</p>
-                                                <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.user?.username || 'Client'}</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">
+                                                    {isRequester ? 'Provider / Host' : 'Client Name'}
+                                                </p>
+                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                    {isRequester
+                                                        ? (bookingDetails.listing?.userRef?.username || bookingDetails.helper?.userRef?.username || bookingDetails.service?.userRef?.username || bookingDetails.service?.creator?.username || bookingDetails.helper?.name || bookingDetails.listing?.name || 'Provider / Host')
+                                                        : (bookingDetails.user?.username || 'Client')}
+                                                </p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">Total Price</p>
@@ -556,7 +598,8 @@ export default function Notifications() {
                                                             {bookingDetails.status}
                                                         </span>
 
-                                                        {isPending && (isHost || selectedNotification.title?.toLowerCase().includes('request')) && (
+                                                        {/* 1. PROVIDER ACTIONS: If user is the provider and booking is pending */}
+                                                        {isPending && isProvider && !isRequester && (
                                                             <div className="flex items-center gap-3 w-full sm:w-auto">
                                                                 <button
                                                                     onClick={async () => {
@@ -613,9 +656,11 @@ export default function Notifications() {
                                                             </div>
                                                         )}
 
-                                                        {isConfirmed && isHost && (
+                                                        {/* 2. REQUESTER ACTIONS: If user requested the booking, show ONLY "Cancel your booking" */}
+                                                        {isRequester && (isPending || isConfirmed) && (
                                                             <button
                                                                 onClick={async () => {
+                                                                    if (!window.confirm('Are you sure you want to cancel your booking?')) return;
                                                                     try {
                                                                         const token = getToken();
                                                                         const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
@@ -625,49 +670,7 @@ export default function Notifications() {
                                                                                 'Content-Type': 'application/json',
                                                                                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                             },
-                                                                            body: JSON.stringify({ status: 'completed' })
-                                                                        });
-                                                                        if (res.ok) {
-                                                                            const updatedBooking = await res.json();
-                                                                            setBookingDetails(updatedBooking);
-                                                                            fetchNotifications();
-                                                                        }
-                                                                    } catch (err) {
-                                                                        console.error('Failed to complete booking:', err);
-                                                                    }
-                                                                }}
-                                                                className="px-4 py-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold rounded-lg transition-colors border border-purple-200"
-                                                            >
-                                                                ✓ Mark as Completed
-                                                            </button>
-                                                        )}
-
-                                                        {(isConfirmed || isCompleted) && !isHost && itemId && (
-                                                            <button
-                                                                onClick={() => {
-                                                                    navigate(`/${itemType}/${itemId}`);
-                                                                    setSelectedNotification(null);
-                                                                }}
-                                                                className="px-5 py-2 text-white bg-amber-500 hover:bg-amber-600 font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
-                                                            >
-                                                                ⭐ Leave a Review
-                                                            </button>
-                                                        )}
-
-                                                        {(isPending || isConfirmed) && (
-                                                            <button
-                                                                onClick={async () => {
-                                                                    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-                                                                    try {
-                                                                        const token = getToken();
-                                                                        const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
-                                                                            method: 'POST',
-                                                                            credentials: 'include',
-                                                                            headers: {
-                                                                                'Content-Type': 'application/json',
-                                                                                ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                                                                            },
-                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: isClient ? 'user' : 'host' })
+                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
                                                                         });
                                                                         if (res.ok) {
                                                                             const updatedBooking = await res.json();
@@ -678,9 +681,81 @@ export default function Notifications() {
                                                                         console.error('Failed to cancel booking:', err);
                                                                     }
                                                                 }}
-                                                                className="px-3 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg transition-colors border border-red-200"
+                                                                className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200 shadow-sm"
                                                             >
-                                                                Cancel Booking
+                                                                Cancel your booking
+                                                            </button>
+                                                        )}
+
+                                                        {/* 3. PROVIDER ACTIONS: Confirmed state */}
+                                                        {isConfirmed && isProvider && !isRequester && (
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const token = getToken();
+                                                                            const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                                method: 'POST',
+                                                                                credentials: 'include',
+                                                                                headers: {
+                                                                                    'Content-Type': 'application/json',
+                                                                                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                                                                },
+                                                                                body: JSON.stringify({ status: 'completed' })
+                                                                            });
+                                                                            if (res.ok) {
+                                                                                const updatedBooking = await res.json();
+                                                                                setBookingDetails(updatedBooking);
+                                                                                fetchNotifications();
+                                                                            }
+                                                                        } catch (err) {
+                                                                            console.error('Failed to complete booking:', err);
+                                                                        }
+                                                                    }}
+                                                                    className="px-4 py-2 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 font-bold rounded-lg transition-colors border border-purple-200"
+                                                                >
+                                                                    ✓ Mark as Completed
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+                                                                        try {
+                                                                            const token = getToken();
+                                                                            const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
+                                                                                method: 'POST',
+                                                                                credentials: 'include',
+                                                                                headers: {
+                                                                                    'Content-Type': 'application/json',
+                                                                                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                                                                                },
+                                                                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'host' })
+                                                                            });
+                                                                            if (res.ok) {
+                                                                                const updatedBooking = await res.json();
+                                                                                setBookingDetails(updatedBooking);
+                                                                                fetchNotifications();
+                                                                            }
+                                                                        } catch (err) {
+                                                                            console.error('Failed to cancel booking:', err);
+                                                                        }
+                                                                    }}
+                                                                    className="px-3 py-1.5 text-xs text-red-600 bg-red-50 hover:bg-red-100 font-medium rounded-lg transition-colors border border-red-200"
+                                                                >
+                                                                    Cancel Booking
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                        {/* 4. REQUESTER REVIEW: Review button for requester */}
+                                                        {(isConfirmed || isCompleted) && isRequester && itemId && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    navigate(`/${itemType}/${itemId}`);
+                                                                    setSelectedNotification(null);
+                                                                }}
+                                                                className="px-5 py-2 text-white bg-amber-500 hover:bg-amber-600 font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
+                                                            >
+                                                                ⭐ Leave a Review
                                                             </button>
                                                         )}
                                                     </div>

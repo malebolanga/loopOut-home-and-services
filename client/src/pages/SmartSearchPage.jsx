@@ -219,7 +219,6 @@ const SmartSearchPage = () => {
 
   // Handle listing click
   const handleListingClick = (listingId) => {
-    console.log(`Listing ${listingId} clicked`);
     // In a real app, you might track analytics or perform other actions
   };
 

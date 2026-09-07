@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import HomeHero from "./HomeHero";
-import CategoriesSlider from "./CategoriesSlider";
+import { CategoriesSlider } from "./CategoriesSlider";
 import LoopOutPulse from "../LoopOutPulse";
 import { TOP_CATEGORIES } from "../../data/categories";
 import { authenticatedFetch } from "../../utils/authenticatedFetch";
@@ -56,7 +56,7 @@ export default function HomeExperience() {
         }).sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date)) : [];
         setUpcomingBooking(active[0] || null);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => controller.abort();
   }, [currentUser?._id]);
 
@@ -73,7 +73,7 @@ export default function HomeExperience() {
           merged.push(...items);
         }
         if (!cancelled) setRecommendations(merged.slice(0, 6));
-      } catch (_) {}
+      } catch (_) { }
     };
     load();
     return () => { cancelled = true; };
@@ -86,7 +86,7 @@ export default function HomeExperience() {
         const response = await fetch('/api/stats/home', { headers: { Accept: 'application/json' } });
         const data = await response.json();
         if (!cancelled && data?.success) setPulseStats(data.stats || {});
-      } catch (_) {}
+      } catch (_) { }
     };
     load();
     const interval = window.setInterval(load, 30000);

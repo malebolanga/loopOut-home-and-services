@@ -828,7 +828,7 @@ export default function BarberPage() {
         title: `${getProfessionalTitle(helper?.type)} services by ${helper?.name}`,
         text: helper?.description,
         url: window.location.href,
-      }).catch((error) => console.log('Error sharing', error));
+      }).catch((error) => console.error('Error sharing:', error));
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);

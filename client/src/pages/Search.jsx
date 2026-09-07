@@ -1045,7 +1045,7 @@ const SearchPage = () => {
               : 'w-full'
           }`}
         >
-          <div className="px-6 md:px-10 pt-6 pb-28">
+          <div className="px-2 md:px-10 pt-6 pb-28">
 
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">
@@ -1079,7 +1079,7 @@ const SearchPage = () => {
               </div>
             )}
             {loading ? (
-              <div className={`grid gap-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
+              <div className={`grid gap-x-[18px] gap-y-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
                 {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
               </div>
             ) : listings.length > 0 ? (
@@ -1087,7 +1087,7 @@ const SearchPage = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className={`grid gap-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}
+                className={`grid gap-x-[18px] gap-y-5 ${ viewMode === 'map' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}
               >
                 {listings.map((item, idx) => (
                   <ResultCard

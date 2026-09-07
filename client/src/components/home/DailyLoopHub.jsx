@@ -19,6 +19,9 @@ const HUB_ITEMS = [
     label: 'Lunch Hub',
     desc: 'Order food',
     textColor: 'text-rose-600',
+    gradient: 'from-rose-400 via-orange-400 to-amber-400',
+    shadow: 'shadow-rose-400/30',
+    border: 'ring-1 ring-rose-200/60',
     action: '/lunch',
   },
   {
@@ -26,7 +29,10 @@ const HUB_ITEMS = [
     emoji: '📡',
     label: 'Micro-Gigs',
     desc: 'Paid quick tasks',
-    textColor: 'text-emerald-500',
+    textColor: 'text-emerald-600',
+    gradient: 'from-emerald-400 via-teal-400 to-cyan-400',
+    shadow: 'shadow-emerald-400/30',
+    border: 'ring-1 ring-emerald-200/60',
     action: '/micro-gigs',
   },
   {
@@ -34,7 +40,10 @@ const HUB_ITEMS = [
     emoji: '👥',
     label: 'Group Deals',
     desc: 'Estate pools',
-    textColor: 'text-indigo-500',
+    textColor: 'text-indigo-600',
+    gradient: 'from-indigo-400 via-violet-400 to-purple-400',
+    shadow: 'shadow-indigo-400/30',
+    border: 'ring-1 ring-indigo-200/60',
     action: 'scroll-pools',
   },
   {
@@ -42,7 +51,10 @@ const HUB_ITEMS = [
     emoji: '🔥',
     label: 'Daily Streak',
     desc: 'Claim R-Credits',
-    textColor: 'text-rose-500',
+    textColor: 'text-amber-600',
+    gradient: 'from-amber-400 via-orange-500 to-rose-500',
+    shadow: 'shadow-amber-400/30',
+    border: 'ring-1 ring-amber-200/60',
     action: 'modal-streak',
   },
   {
@@ -51,6 +63,9 @@ const HUB_ITEMS = [
     label: 'Vision Scan',
     desc: 'Scan with camera',
     textColor: 'text-purple-700',
+    gradient: 'from-purple-500 via-fuchsia-500 to-pink-500',
+    shadow: 'shadow-purple-400/30',
+    border: 'ring-1 ring-purple-200/60',
     action: 'modal-vision',
   },
   {
@@ -59,6 +74,9 @@ const HUB_ITEMS = [
     label: 'Whisper AI',
     desc: 'Voice assistant',
     textColor: 'text-cyan-700',
+    gradient: 'from-cyan-400 via-sky-500 to-blue-500',
+    shadow: 'shadow-cyan-400/30',
+    border: 'ring-1 ring-cyan-200/60',
     action: 'modal-whisper',
   },
   {
@@ -67,6 +85,9 @@ const HUB_ITEMS = [
     label: 'Matchmaker',
     desc: 'Find your match',
     textColor: 'text-rose-600',
+    gradient: 'from-pink-400 via-rose-500 to-red-500',
+    shadow: 'shadow-pink-400/30',
+    border: 'ring-1 ring-pink-200/60',
     action: '/matchmaker',
   },
 ];
@@ -160,9 +181,8 @@ const DailyLoopHub = () => {
             exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             ref={containerRef}
-            className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md transition-all duration-300 -mx-4 px-4 border-b border-gray-100/80 ${
-              isStuck ? 'py-2 shadow-sm' : 'pt-3 pb-2 mb-6 shadow-xs'
-            }`}
+            className={`sticky top-0 z-30 bg-white/95 backdrop-blur-md transition-all duration-300 -mx-4 px-4 border-b border-gray-100/80 ${isStuck ? 'py-2 shadow-sm' : 'pt-3 pb-2 mb-6 shadow-xs'
+              }`}
           >
             {/* Daily Loop Header - collapses smoothly when stuck at top */}
             <AnimatePresence initial={false}>
@@ -176,7 +196,7 @@ const DailyLoopHub = () => {
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 animate-ping" />
-                   
+
                   </div>
                 </motion.div>
               )}
@@ -281,8 +301,8 @@ const DailyLoopHub = () => {
                 onClick={handleBroadcast}
                 disabled={isBroadcasting || !broadcastMessage.trim()}
                 className={`w-full py-4 rounded-2xl text-[13px] font-black uppercase tracking-widest transition-all flex justify-center items-center gap-2 ${isBroadcasting || !broadcastMessage.trim()
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-rose-500 text-white shadow-xl shadow-rose-500/20 hover:bg-rose-600 active:scale-95'
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-rose-500 text-white shadow-xl shadow-rose-500/20 hover:bg-rose-600 active:scale-95'
                   }`}
               >
                 {isBroadcasting ? (

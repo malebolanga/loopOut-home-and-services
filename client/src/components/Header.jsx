@@ -76,6 +76,7 @@ import {
 
 import { Sparkles } from 'lucide-react';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
+import LoopStreakWidget from './home/LoopStreakWidget';
 
 const PROPERTY_SUBTYPES = [
   { id: 'rent', label: 'Rental', icon: '🏠' },
@@ -854,6 +855,13 @@ export default function Header() {
                     </span>
                   )}
                 </button>
+
+                {/* Loop Streak Widget — Desktop, logged-in users only */}
+                {currentUser && (
+                  <div className="hidden md:flex">
+                    <LoopStreakWidget />
+                  </div>
+                )}
 
                 {/* Profile / Sign In — Desktop */}
                 <div className="relative hidden md:block" ref={profileDropdownRef}>

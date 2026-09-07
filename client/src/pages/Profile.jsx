@@ -320,7 +320,6 @@ export default function Profile() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [verificationError, setVerificationError] = useState('');
-  const [otpDebug, setOtpDebug] = useState(''); // Only for dev mode
   const [securityForm, setSecurityForm] = useState({ currentPassword: '', newPassword: '' });
 
   useEffect(() => {
@@ -444,10 +443,6 @@ export default function Profile() {
         return;
       }
       setOtpSent(true);
-      if (data.otpDebug) {
-        setOtpDebug(data.otpDebug);
-        console.log('Verification Code (Dev Mode):', data.otpDebug);
-      }
       setOtpLoading(false);
     } catch (err) {
       setVerificationError('Could not send verification code. Please try again.');
@@ -1385,9 +1380,6 @@ export default function Profile() {
                                       onChange={(e) => setVerificationOtp(e.target.value)}
                                       className="w-full px-4 py-2 border border-[#DDDDDD] rounded-xl text-center font-bold tracking-[0.5em] text-lg focus:ring-2 focus:ring-[#FF5A5F] outline-none"
                                     />
-                                    {otpDebug && (
-                                       <p className="text-[10px] text-[#00A699] font-mono text-center">Development Code: {otpDebug}</p>
-                                    )}
                                     <button
                                       type="button"
                                       disabled={otpLoading || verificationOtp.length < 6}

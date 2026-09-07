@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -9,6 +9,10 @@ import {
   TicketIcon,
   CheckCircleIcon,
   CalendarIcon,
+  CalendarDaysIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ListBulletIcon,
   XMarkIcon,
   MapPinIcon,
   SparklesIcon,
@@ -18,6 +22,9 @@ import {
   CurrencyDollarIcon,
   ArrowRightIcon,
   UserIcon,
+  ChatBubbleLeftRightIcon,
+  PhoneIcon,
+  ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleIconSolid } from "@heroicons/react/24/solid";
 import { updateUserSuccess } from "../redux/user/userSlice";
@@ -64,6 +71,11 @@ export default function Planner() {
   const now = useClock();
 
   const [activeTab, setActiveTab] = useState("schedule");
+  const [calendarMode, setCalendarMode] = useState("month"); // "month" | "week" | "day" | "list"
+  const [currentMonthDate, setCurrentMonthDate] = useState(new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(new Date());
+  const [selectedBookingModal, setSelectedBookingModal] = useState(null);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +88,108 @@ export default function Planner() {
 
   const tasks = currentUser?.plannerTasks || [];
   const completedCount = tasks.filter(t => t.completed).length;
+
+  // Month Grid Calculation
+  const year = currentMonthDate.getFullYear();
+  const month = currentMonthDate.getMonth();
+
+  const monthGridDays = useMemo(() => {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    let startDayOfWeek = firstDay.getDay() - 1; // 0 = Mon
+    if (startDayOfWeek === -1) startDayOfWeek = 6;
+
+    const days = [];
+
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = startDayOfWeek - 1; i >= 0; i--) {
+      days.push({
+        date: new Date(year, month - 1, prevMonthLastDay - i),
+        isCurrentMonth: false,
+        dayNum: prevMonthLastDay - i,
+      });
+    }
+
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      days.push({
+        date: new Date(year, month, d),
+        isCurrentMonth: true,
+        dayNum: d,
+      });
+    }
+
+    const remainingCells = (7 - (days.length % 7)) % 7;
+    for (let i = 1; i <= remainingCells; i++) {
+      days.push({
+        date: new Date(year, month + 1, i),
+        isCurrentMonth: false,
+        dayNum: i,
+      });
+    }
+
+    return days;
+  }, [year, month]);
+
+  // Week Calculation (Monday to Sunday)
+  const currentWeekDays = useMemo(() => {
+    const curr = new Date(selectedCalendarDate);
+    let dayOfWeek = curr.getDay() - 1;
+    if (dayOfWeek === -1) dayOfWeek = 6;
+
+    const mon = new Date(curr);
+    mon.setDate(curr.getDate() - dayOfWeek);
+
+    const week = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(mon);
+      d.setDate(mon.getDate() + i);
+      week.push(d);
+    }
+    return week;
+  }, [selectedCalendarDate]);
+
+  const handlePrevMonth = () => {
+    setCurrentMonthDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonthDate(new Date(year, month + 1, 1));
+  };
+
+  const handlePrevWeek = () => {
+    const prev = new Date(selectedCalendarDate);
+    prev.setDate(prev.getDate() - 7);
+    setSelectedCalendarDate(prev);
+    setCurrentMonthDate(prev);
+  };
+
+  const handleNextWeek = () => {
+    const next = new Date(selectedCalendarDate);
+    next.setDate(next.getDate() + 7);
+    setSelectedCalendarDate(next);
+    setCurrentMonthDate(next);
+  };
+
+  const handlePrevDay = () => {
+    const prev = new Date(selectedCalendarDate);
+    prev.setDate(prev.getDate() - 1);
+    setSelectedCalendarDate(prev);
+    setCurrentMonthDate(prev);
+  };
+
+  const handleNextDay = () => {
+    const next = new Date(selectedCalendarDate);
+    next.setDate(next.getDate() + 1);
+    setSelectedCalendarDate(prev);
+    setCurrentMonthDate(prev);
+  };
+
+  const handleTodayReset = () => {
+    const today = new Date();
+    setCurrentMonthDate(today);
+    setSelectedCalendarDate(today);
+  };
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -248,27 +362,58 @@ export default function Planner() {
           ))}
         </motion.div>
 
-        {/* ── Tab Bar ── */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
-          className="flex gap-1.5 mb-8 bg-white/3 border border-white/5 p-1 rounded-2xl w-fit">
-          {tabs.map(tab => (
-            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`relative px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-1.5 ${
-                activeTab === tab.key
-                  ? tab.special ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-[0_6px_16px_rgba(225,29,72,0.35)]'
-                                : 'bg-white dark:bg-gray-900 text-gray-950 shadow-md'
-                  : 'text-white/40 hover:text-white/70'
-              }`}>
-              {tab.special && <SparklesIcon className="w-3.5 h-3.5" />}
-              {tab.label}
-              {tab.count > 0 && (
-                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-black/10' : 'bg-white/10'}`}>
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          ))}
-        </motion.div>
+        {/* ── Tab Bar & View Toggle Row ── */}
+        <div className="flex items-center justify-between mb-8">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+            className="flex gap-1.5 bg-white/3 border border-white/5 p-1 rounded-2xl w-fit">
+            {tabs.map(tab => (
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                className={`relative px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-1.5 ${
+                  activeTab === tab.key
+                    ? tab.special ? 'bg-gradient-to-r from-rose-500 to-violet-600 text-white shadow-[0_6px_16px_rgba(225,29,72,0.35)]'
+                                  : 'bg-white dark:bg-gray-900 text-gray-950 shadow-md'
+                    : 'text-white/40 hover:text-white/70'
+                }`}>
+                {tab.special && <SparklesIcon className="w-3.5 h-3.5" />}
+                {tab.label}
+                {tab.count > 0 && (
+                  <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-black/10' : 'bg-white/10'}`}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </motion.div>
+
+          {/* Schedule View Mode Switcher (Month, Week, Day, List) */}
+          {activeTab === 'schedule' && (
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-xl">
+              {[
+                { key: 'month', label: 'Month', icon: CalendarDaysIcon },
+                { key: 'week',  label: 'Week',  icon: CalendarIcon },
+                { key: 'day',   label: 'Day',   icon: ClockIcon },
+                { key: 'list',  label: 'List',  icon: ListBulletIcon },
+              ].map((mode) => {
+                const ModeIcon = mode.icon;
+                return (
+                  <button
+                    key={mode.key}
+                    onClick={() => setCalendarMode(mode.key)}
+                    className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      calendarMode === mode.key
+                        ? 'bg-rose-500 text-white shadow-md'
+                        : 'text-white/40 hover:text-white'
+                    }`}
+                    title={`${mode.label} View`}
+                  >
+                    <ModeIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline text-[9px] font-black uppercase tracking-wider">{mode.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* ── Tab Content ── */}
         <AnimatePresence mode="wait">
@@ -276,57 +421,422 @@ export default function Planner() {
           {/* SCHEDULE */}
           {activeTab === 'schedule' && (
             <motion.div key="schedule" initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 15 }}
-              className="space-y-4">
-              {loading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-36 bg-white/5 border border-white/5 rounded-[2rem] animate-pulse" />
-                ))
-              ) : bookings.filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0).length > 0 ? (
-                bookings
-                  .filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0)
-                  .map((booking, idx) => {
-                  const meta = getBookingMeta(booking);
-                  const status = STATUS_MAP[booking.status] || { label: booking.status, dot: 'bg-gray-400', badge: 'bg-white/5 border-white/10 text-white/40' };
-                  const Icon = meta.icon;
-                  if (!meta.item) return null;
-                  const startDate = new Date(booking.startDate);
-                  const msPerDay  = 86400000;
-                  const diffDays  = Math.round((startDate - new Date()) / msPerDay);
-                  const countdown = diffDays > 0
-                    ? { label: `in ${diffDays}d`, cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
-                    : diffDays === 0
-                    ? { label: 'Today!',          cls: 'text-amber-400  bg-amber-500/10  border-amber-500/20'  }
-                    : { label: `${Math.abs(diffDays)}d ago`, cls: 'text-white/30 bg-white/5 border-white/10' };
-                  const fmtDate   = (d) => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
-                  return (
-                    <motion.div key={booking._id}
-                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-                      onClick={() => navigate(`/${meta.label.toLowerCase()}/${meta.item._id}`)}
-                      className="group relative bg-white/3 border border-white/5 hover:border-white/15 hover:bg-white/[0.06] rounded-[2rem] cursor-pointer transition-all duration-300 overflow-hidden">
+              className="space-y-6">
 
-                      {/* X Button to hide/cancel booking */}
-                      <button 
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
-                            try {
-                              const res = await fetch(`/api/bookings/update/${booking._id}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
-                              });
-                              if (res.ok) {
-                                setBookings(prev => prev.filter(b => b._id !== booking._id));
-                              }
-                            } catch (err) {
-                              console.error('Failed to cancel booking:', err);
-                            }
-                          }
-                        }}
-                        className="absolute top-4 right-4 w-8 h-8 bg-black/20 hover:bg-rose-500/80 text-white/40 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm"
+              {/* ── 1. CALENDAR MONTH GRID VIEW ── */}
+              {calendarMode === 'month' && (
+                <div className="bg-white/3 border border-white/8 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+                  {/* Calendar Month Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-white capitalize">
+                        {currentMonthDate.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })}
+                      </h2>
+                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
+                        Selected: {selectedCalendarDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleTodayReset}
+                        className="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-all"
                       >
-                        <XMarkIcon className="w-4 h-4" />
+                        Today
                       </button>
+                      <button
+                        onClick={handlePrevMonth}
+                        className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all"
+                        aria-label="Previous Month"
+                      >
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={handleNextMonth}
+                        className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all"
+                        aria-label="Next Month"
+                      >
+                        <ChevronRightIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Weekday Names Header */}
+                  <div className="grid grid-cols-7 text-center border-b border-white/5 pb-3">
+                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((dayName, idx) => (
+                      <span key={idx} className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                        {dayName}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Month Grid Cells */}
+                  <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                    {monthGridDays.map((cell, idx) => {
+                      const isToday = cell.date.toDateString() === new Date().toDateString();
+                      const isSelected = cell.date.toDateString() === selectedCalendarDate.toDateString();
+
+                      // Find bookings on this date
+                      const dayBookings = bookings.filter((b) => {
+                        if (!b.startDate || b.status === 'cancelled' || b.status === 'declined') return false;
+                        const bDate = new Date(b.startDate);
+                        return bDate.toDateString() === cell.date.toDateString();
+                      });
+
+                      const hasStay = dayBookings.some((b) => b.listing);
+                      const hasHelper = dayBookings.some((b) => b.helper);
+                      const hasService = dayBookings.some((b) => b.service);
+                      const hasEvent = dayBookings.some((b) => b.event);
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedCalendarDate(cell.date)}
+                          className={`relative h-14 sm:h-16 rounded-2xl flex flex-col items-center justify-between p-2 transition-all border ${
+                            isSelected
+                              ? 'bg-rose-500/20 border-rose-500 text-white shadow-[0_0_20px_rgba(225,29,72,0.3)] scale-[1.03] z-10 font-black'
+                              : isToday
+                              ? 'bg-white/10 border-white/40 text-white font-bold'
+                              : cell.isCurrentMonth
+                              ? 'bg-white/3 border-white/5 hover:border-white/20 text-white/80 hover:bg-white/5'
+                              : 'bg-transparent border-transparent text-white/15 hover:text-white/30'
+                          }`}
+                        >
+                          <span className={`text-xs ${isToday ? 'text-rose-400 font-black' : ''}`}>
+                            {cell.dayNum}
+                          </span>
+
+                          {/* Event / Booking Colored Indicator Dots */}
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            {hasStay && <span className="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-[0_0_6px_rgba(251,113,133,0.8)]" title="Stay booked" />}
+                            {hasHelper && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]" title="Helper booked" />}
+                            {hasService && <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_6px_rgba(167,139,250,0.8)]" title="Service booked" />}
+                            {hasEvent && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" title="Event ticket" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Calendar Legend */}
+                  <div className="flex flex-wrap items-center justify-center gap-4 pt-2 border-t border-white/5 text-[10px] font-bold text-white/40">
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-400" /> Stays</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> Helpers</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-violet-400" /> Services</span>
+                    <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> Events</span>
+                  </div>
+
+                  {/* Selected Date Agenda Section */}
+                  <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-rose-400" />
+                        Agenda for {selectedCalendarDate.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </h3>
+                      <button
+                        onClick={() => setShowAddModal(true)}
+                        className="text-[10px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-300 flex items-center gap-1"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5" />
+                        Book on this date
+                      </button>
+                    </div>
+
+                    {/* Filter bookings for selected date */}
+                    {(() => {
+                      const selectedBookings = bookings.filter((b) => {
+                        if (!b.startDate || b.status === 'cancelled' || b.status === 'declined') return false;
+                        return new Date(b.startDate).toDateString() === selectedCalendarDate.toDateString();
+                      });
+
+                      if (selectedBookings.length === 0) {
+                        return (
+                          <div className="p-6 bg-white/2 border border-dashed border-white/10 rounded-2xl text-center">
+                            <p className="text-xs text-white/40 font-medium">No bookings or events scheduled for this date.</p>
+                            <button
+                              onClick={() => setShowAddModal(false)}
+                              className="mt-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-wider text-white hover:bg-white/10 transition-all"
+                            >
+                              Explore Available Services
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {selectedBookings.map((booking) => {
+                            const meta = getBookingMeta(booking);
+                            const status = STATUS_MAP[booking.status] || { label: booking.status, badge: 'bg-white/5 text-white/40' };
+                            const Icon = meta.icon;
+                            if (!meta.item) return null;
+
+                            return (
+                              <div
+                                key={booking._id}
+                                onClick={() => setSelectedBookingModal(booking)}
+                                className="flex items-center justify-between p-4 bg-white/4 border border-white/8 hover:border-rose-500/40 rounded-2xl cursor-pointer transition-all"
+                              >
+                                <div className="flex items-center gap-3.5">
+                                  <div className={`w-10 h-10 ${meta.color} rounded-xl flex items-center justify-center text-white shrink-0`}>
+                                    <Icon className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-black text-white text-sm leading-tight">{meta.item.name || meta.item.eventName}</h4>
+                                    <p className="text-[10px] text-white/40 font-medium mt-0.5">{meta.item.address || meta.item.location}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${status.badge}`}>
+                                    {status.label}
+                                  </span>
+                                  <p className="text-xs font-black text-white mt-1">R{Number(booking.totalPrice || 0).toLocaleString()}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 2. CALENDAR WEEKLY VIEW ── */}
+              {calendarMode === 'week' && (
+                <div className="bg-white/3 border border-white/8 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+                  {/* Week Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-white capitalize">
+                        Week of {currentWeekDays[0]?.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })} – {currentWeekDays[6]?.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </h2>
+                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
+                        Selected: {selectedCalendarDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleTodayReset} className="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-all">
+                        Today
+                      </button>
+                      <button onClick={handlePrevWeek} className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all" aria-label="Previous Week">
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </button>
+                      <button onClick={handleNextWeek} className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all" aria-label="Next Week">
+                        <ChevronRightIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 7 Columns Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-7 gap-3">
+                    {currentWeekDays.map((wDate, idx) => {
+                      const isToday = wDate.toDateString() === new Date().toDateString();
+                      const isSelected = wDate.toDateString() === selectedCalendarDate.toDateString();
+
+                      const dayBookings = bookings.filter(b => {
+                        if (!b.startDate || b.status === 'cancelled' || b.status === 'declined') return false;
+                        return new Date(b.startDate).toDateString() === wDate.toDateString();
+                      });
+
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedCalendarDate(wDate)}
+                          className={`rounded-2xl p-3 border transition-all cursor-pointer flex flex-col justify-between min-h-[160px] ${
+                            isSelected
+                              ? 'bg-rose-500/15 border-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.2)]'
+                              : isToday
+                              ? 'bg-white/10 border-white/30'
+                              : 'bg-white/3 border-white/5 hover:border-white/20 hover:bg-white/5'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/5">
+                              <span className={`text-[10px] font-black uppercase tracking-wider ${isToday ? 'text-rose-400' : 'text-white/40'}`}>
+                                {wDate.toLocaleDateString('en-ZA', { weekday: 'short' })}
+                              </span>
+                              <span className={`text-xs font-black px-1.5 py-0.5 rounded-md ${isToday ? 'bg-rose-500 text-white' : 'text-white'}`}>
+                                {wDate.getDate()}
+                              </span>
+                            </div>
+
+                            {/* Booking chips in column */}
+                            <div className="space-y-1.5 mt-2">
+                              {dayBookings.map((b) => {
+                                const meta = getBookingMeta(b);
+                                if (!meta.item) return null;
+                                return (
+                                  <div
+                                    key={b._id}
+                                    onClick={(e) => { e.stopPropagation(); setSelectedBookingModal(b); }}
+                                    className={`p-1.5 rounded-lg text-[9px] font-bold text-white truncate flex items-center gap-1 ${meta.color} bg-opacity-80 hover:bg-opacity-100 transition-all`}
+                                  >
+                                    <span className="truncate">{meta.item.name || meta.item.eventName}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {dayBookings.length === 0 && (
+                            <p className="text-[9px] font-bold text-white/20 text-center py-2 italic">+ Open</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 3. CALENDAR DAILY TIMELINE VIEW ── */}
+              {calendarMode === 'day' && (
+                <div className="bg-white/3 border border-white/8 rounded-[2.5rem] p-6 sm:p-8 space-y-6 shadow-2xl backdrop-blur-xl">
+                  {/* Day Header */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight text-white capitalize">
+                        {selectedCalendarDate.toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </h2>
+                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
+                        {selectedCalendarDate.toDateString() === new Date().toDateString() ? 'Today Schedule' : 'Daily Timeline'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={handleTodayReset} className="px-3 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-all">
+                        Today
+                      </button>
+                      <button onClick={handlePrevDay} className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all" aria-label="Previous Day">
+                        <ChevronLeftIcon className="w-4 h-4" />
+                      </button>
+                      <button onClick={handleNextDay} className="w-9 h-9 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl flex items-center justify-center text-white transition-all" aria-label="Next Day">
+                        <ChevronRightIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Day Agenda Timeline */}
+                  <div className="space-y-3 pt-2">
+                    {(() => {
+                      const dayBookings = bookings.filter(b => {
+                        if (!b.startDate || b.status === 'cancelled' || b.status === 'declined') return false;
+                        return new Date(b.startDate).toDateString() === selectedCalendarDate.toDateString();
+                      });
+
+                      if (dayBookings.length === 0) {
+                        return (
+                          <div className="text-center py-16 border-2 border-dashed border-white/5 rounded-3xl bg-white/2">
+                            <CalendarIcon className="w-10 h-10 mx-auto text-white/20 mb-3" />
+                            <p className="text-white/50 font-bold text-sm">No bookings scheduled for this date</p>
+                            <button
+                              onClick={() => setShowAddModal(true)}
+                              className="mt-4 px-6 py-2.5 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-400 transition-all shadow-[0_6px_16px_rgba(225,29,72,0.3)]"
+                            >
+                              + Add Booking
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-4">
+                          {dayBookings.map(b => {
+                            const meta = getBookingMeta(b);
+                            const status = STATUS_MAP[b.status] || { label: b.status, badge: 'bg-white/5 text-white/40' };
+                            const Icon = meta.icon;
+                            if (!meta.item) return null;
+
+                            return (
+                              <div
+                                key={b._id}
+                                onClick={() => setSelectedBookingModal(b)}
+                                className="group flex items-center justify-between p-5 bg-white/4 border border-white/8 hover:border-rose-500/40 rounded-2xl cursor-pointer transition-all"
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-12 h-12 ${meta.color} rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg`}>
+                                    <Icon className="w-6 h-6" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[9px] font-black text-rose-400 uppercase tracking-widest">{meta.label}</span>
+                                      <span className="text-xs text-white/30">•</span>
+                                      <span className="text-xs font-bold text-white/50">{new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <h4 className="font-black text-white text-base leading-tight group-hover:text-rose-300 transition-colors mt-0.5">{meta.item.name || meta.item.eventName}</h4>
+                                    <p className="text-xs text-white/40 font-medium mt-0.5">{meta.item.address || meta.item.location}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${status.badge}`}>
+                                    {status.label}
+                                  </span>
+                                  <p className="text-base font-black text-white mt-1.5">R{Number(b.totalPrice || 0).toLocaleString()}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* ── 4. LINEAR LIST VIEW ── */}
+              {calendarMode === 'list' && (
+                <div className="space-y-4">
+                  {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="h-36 bg-white/5 border border-white/5 rounded-[2rem] animate-pulse" />
+                    ))
+                  ) : bookings.filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0).length > 0 ? (
+                    bookings
+                      .filter(b => Math.round((new Date(b.startDate) - new Date()) / 86400000) >= 0)
+                      .map((booking, idx) => {
+                      const meta = getBookingMeta(booking);
+                      const status = STATUS_MAP[booking.status] || { label: booking.status, dot: 'bg-gray-400', badge: 'bg-white/5 border-white/10 text-white/40' };
+                      const Icon = meta.icon;
+                      if (!meta.item) return null;
+                      const startDate = new Date(booking.startDate);
+                      const msPerDay  = 86400000;
+                      const diffDays  = Math.round((startDate - new Date()) / msPerDay);
+                      const countdown = diffDays > 0
+                        ? { label: `in ${diffDays}d`, cls: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
+                        : diffDays === 0
+                        ? { label: 'Today!',          cls: 'text-amber-400  bg-amber-500/10  border-amber-500/20'  }
+                        : { label: `${Math.abs(diffDays)}d ago`, cls: 'text-white/30 bg-white/5 border-white/10' };
+                      const fmtDate   = (d) => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+                      return (
+                        <motion.div key={booking._id}
+                          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
+                          onClick={() => setSelectedBookingModal(booking)}
+                          className="group relative bg-white/3 border border-white/5 hover:border-white/15 hover:bg-white/[0.06] rounded-[2rem] cursor-pointer transition-all duration-300 overflow-hidden">
+
+                          {/* X Button to hide/cancel booking */}
+                          <button 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
+                                try {
+                                  const res = await fetch(`/api/bookings/update/${booking._id}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                  });
+                                  if (res.ok) {
+                                    setBookings(prev => prev.filter(b => b._id !== booking._id));
+                                  }
+                                } catch (err) {
+                                  console.error('Failed to cancel booking:', err);
+                                }
+                              }
+                            }}
+                            className="absolute top-4 right-4 w-8 h-8 bg-black/20 hover:bg-rose-500/80 text-white/40 hover:text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-20 backdrop-blur-sm"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                          </button>
 
                       <div className={`h-1.5 w-full ${meta.color} opacity-70`} />
 
@@ -383,6 +893,8 @@ export default function Planner() {
                     Start Booking
                   </button>
                 </motion.div>
+              )}
+                </div>
               )}
             </motion.div>
           )}
@@ -632,6 +1144,228 @@ export default function Planner() {
                   Dismiss
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Booking Details Popup Modal ── */}
+      <AnimatePresence>
+        {selectedBookingModal && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedBookingModal(null)}
+              className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            {/* Modal Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-[#0f172a] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl z-[1001]"
+            >
+              {(() => {
+                const booking = selectedBookingModal;
+                const meta = getBookingMeta(booking);
+                const status = STATUS_MAP[booking.status] || { label: booking.status, badge: 'bg-white/5 border-white/10 text-white/40' };
+                const Icon = meta.icon;
+                const targetItem = meta.item || {};
+
+                const startDate = booking.startDate ? new Date(booking.startDate) : null;
+                const endDate = booking.endDate ? new Date(booking.endDate) : null;
+                const fmtDate = (d) => d ? d.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : 'TBD';
+                const fmtTime = (d) => d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                const providerName = targetItem.userRef?.username || targetItem.hostName || targetItem.providerName || targetItem.name || 'Service Provider';
+                const contactPhone = booking.phone || targetItem.phone || targetItem.contact || targetItem.userRef?.phone || '';
+                
+                let cleanedPhone = contactPhone.toString().replace(/\D/g, '');
+                if (cleanedPhone.startsWith('0')) cleanedPhone = '27' + cleanedPhone.substring(1);
+
+                const mapsUrl = (targetItem.address || targetItem.location) ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(targetItem.address || targetItem.location)}` : null;
+
+                return (
+                  <div>
+                    {/* Header Gradient Banner */}
+                    <div className={`relative p-6 ${meta.color} text-white flex items-start justify-between`}>
+                      <div className="flex items-center gap-3.5 pr-8">
+                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-black/20 px-2.5 py-0.5 rounded-full border border-white/15">
+                            {meta.label} Booking
+                          </span>
+                          <h2 className="text-xl font-black leading-tight mt-1 truncate max-w-[240px] sm:max-w-[300px]">
+                            {targetItem.name || targetItem.eventName || 'Untitled Booking'}
+                          </h2>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedBookingModal(null)}
+                        className="w-9 h-9 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-all shrink-0"
+                      >
+                        <XMarkIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 sm:p-8 space-y-6 max-h-[75vh] overflow-y-auto scrollbar-hide text-gray-200">
+                      {/* Status & Price Row */}
+                      <div className="flex items-center justify-between p-4 bg-white/5 border border-white/8 rounded-2xl">
+                        <div>
+                          <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Booking Status</p>
+                          <span className={`inline-block text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${status.badge} mt-1`}>
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Total Price</p>
+                          <p className="text-xl font-black text-white mt-0.5">R{Number(booking.totalPrice || booking.totalAmount || targetItem.regularPrice || 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {/* Date & Time Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-1">
+                          <div className="flex items-center gap-1.5 text-rose-400">
+                            <CalendarIcon className="w-4 h-4" />
+                            <span className="text-[10px] font-black uppercase tracking-wider">Check-In / Date</span>
+                          </div>
+                          <p className="text-sm font-black text-white">{fmtDate(startDate)}</p>
+                          {startDate && <p className="text-xs text-white/40 font-medium">{fmtTime(startDate)}</p>}
+                        </div>
+
+                        {endDate ? (
+                          <div className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-1">
+                            <div className="flex items-center gap-1.5 text-emerald-400">
+                              <ClockIcon className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-wider">Check-Out Date</span>
+                            </div>
+                            <p className="text-sm font-black text-white">{fmtDate(endDate)}</p>
+                            <p className="text-xs text-white/40 font-medium">{fmtTime(endDate)}</p>
+                          </div>
+                        ) : (
+                          <div className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-1">
+                            <div className="flex items-center gap-1.5 text-amber-400">
+                              <ClockIcon className="w-4 h-4" />
+                              <span className="text-[10px] font-black uppercase tracking-wider">Reference ID</span>
+                            </div>
+                            <p className="text-xs font-mono font-bold text-white/70 truncate">{booking._id}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* People Details (Booked By & Provider) */}
+                      <div className="p-4 bg-white/3 border border-white/5 rounded-2xl space-y-3">
+                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest block">People Details</span>
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center font-black text-xs">
+                              {currentUser?.username?.[0]?.toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-white/40 font-bold uppercase">Booked By (Inquirer)</p>
+                              <p className="text-xs font-black text-white">{currentUser?.username || 'Guest Inquirer'}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-0.5">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center font-black text-xs">
+                              {providerName[0]?.toUpperCase() || 'P'}
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-white/40 font-bold uppercase">Host / Provider</p>
+                              <p className="text-xs font-black text-white">{providerName}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      {(targetItem.address || targetItem.location) && (
+                        <div className="p-4 bg-white/3 border border-white/5 rounded-2xl flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <MapPinIcon className="w-5 h-5 text-rose-400 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Location</p>
+                              <p className="text-xs font-bold text-white truncate">{targetItem.address || targetItem.location}</p>
+                            </div>
+                          </div>
+                          {mapsUrl && (
+                            <a
+                              href={mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-rose-400 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shrink-0 transition-all"
+                            >
+                              Map <ArrowTopRightOnSquareIcon className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="pt-2 space-y-2.5">
+                        {cleanedPhone && (
+                          <a
+                            href={`https://wa.me/${cleanedPhone}?text=${encodeURIComponent(`Hi ${providerName}, I'm inquiring about my booking for ${targetItem.name || 'the service'} on ${fmtDate(startDate)}.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all"
+                          >
+                            <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                            <span>Contact Provider on WhatsApp</span>
+                          </a>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            setSelectedBookingModal(null);
+                            navigate(`/${meta.label.toLowerCase()}/${targetItem._id}`);
+                          }}
+                          className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                        >
+                          <span>View Full {meta.label} Details</span>
+                          <ArrowRightIcon className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
+                              try {
+                                const res = await fetch(`/api/bookings/update/${booking._id}`, {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                });
+                                if (res.ok) {
+                                  setBookings(prev => prev.filter(b => b._id !== booking._id));
+                                  setSelectedBookingModal(null);
+                                }
+                              } catch (err) {
+                                console.error('Failed to cancel booking:', err);
+                              }
+                            }
+                          }}
+                          className="w-full py-2 text-[10px] font-black text-rose-400/60 hover:text-rose-400 uppercase tracking-widest transition-colors text-center"
+                        >
+                          Cancel Booking
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </motion.div>
           </div>
         )}

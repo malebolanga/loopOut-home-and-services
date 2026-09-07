@@ -403,7 +403,7 @@ export default function CarWashPage() {
           url: window.location.href,
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        console.error('Error sharing:', err);
       }
     }
   };
