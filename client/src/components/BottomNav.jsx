@@ -13,7 +13,8 @@ import {
   ArrowRightOnRectangleIcon,
   InboxIcon,
   ChevronRightIcon,
-  QueueListIcon
+  QueueListIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 import { 
   HomeIcon as HomeIconSolid, 
@@ -163,6 +164,7 @@ const BottomNav = () => {
                     { label: 'LoopBot AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
                     { label: 'Profile', route: '/profile', icon: <UserIcon className="w-5 h-5" />, color: 'bg-rose-500' },
                     { label: 'Dashboard', route: '/dashboard', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
+                    { label: 'Calendar', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
                     { label: 'Create', route: `/${currentUser._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
                     { label: 'Listings', route: `/${currentUser._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
                     { label: 'Wishlist', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },

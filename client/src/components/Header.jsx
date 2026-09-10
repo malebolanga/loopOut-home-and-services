@@ -48,7 +48,8 @@ import {
   ArrowLongRightIcon,
   MicrophoneIcon,
   BoltIcon,
-  FireIcon
+  FireIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -447,6 +448,7 @@ export default function Header() {
     { label: 'LOOPBOT AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
     { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'ELITE REWARDS', route: '/rewards', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
+    { label: 'SALON CALENDAR', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'BILL SPLITTER', route: '/splitter', icon: <ChartPieIcon className="w-5 h-5" />, color: 'bg-emerald-600' },
     { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },

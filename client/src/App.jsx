@@ -77,6 +77,7 @@ const CarWashPage = lazy(() => import('./pages/CarWashPage'));
 const StoragePage = lazy(() => import('./pages/StoragePage'));
 
 // AI & Content Pages
+const FreshaCalendarPage = lazy(() => import('./pages/FreshaCalendarPage'));
 const Ai = lazy(() => import("./pages/Ai"));
 const Content = lazy(() => import("./pages/Content"));
 const ArticlePages = lazy(() => import('./pages/ArticlePages'));
@@ -239,6 +240,8 @@ const AnimatedRoutes = () => {
         <Route path="/update-service/:serviceId" element={<PageTransition><UpdateService /></PageTransition>} />
 
         {/* User Routes */}
+        <Route path="/calendar" element={<PageTransition><FreshaCalendarPage /></PageTransition>} />
+        <Route path="/schedule" element={<PageTransition><FreshaCalendarPage /></PageTransition>} />
         <Route path="/upcoming-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
         <Route path="/my-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
         <Route path="/upcoming" element={<PageTransition><UpcomingBookings /></PageTransition>} />
