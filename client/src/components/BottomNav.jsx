@@ -107,11 +107,11 @@ const BottomNav = () => {
   if (isBottomNavHidden) return null;
 
   const navItems = [
-    { id: 'home', label: '', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
-    { id: 'wishlist', label: '', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    { id: 'create', label: '', icon: PlusCircleIcon, activeIcon: PlusCircleIconSolid, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
-    { id: 'dashboard', label: '', icon: Squares2X2Icon, activeIcon: Squares2X2IconSolid, route: '/dashboard' },
-    { id: 'profile', label: '', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
+    { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
+    { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
+    { id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIconSolid, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
+    { id: 'dashboard', label: 'Dashboard', icon: Squares2X2Icon, activeIcon: Squares2X2IconSolid, route: '/dashboard' },
+    { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];
 
   return (
@@ -229,7 +229,7 @@ const BottomNav = () => {
       </AnimatePresence>
 
       {/* App-like Bottom Navigation Bar */}
-      <div className="glass-bottom-nav px-6 py-1.5 pb-2 flex items-center justify-between ">
+      <div className="glass-bottom-nav px-4 py-1.5 pb-2 flex items-center justify-between gap-1">
         {navItems.map((item) => {
           const isActive = item.isProfile 
             ? showProfileDropup
@@ -251,11 +251,11 @@ const BottomNav = () => {
             <motion.button
               key={item.id}
               whileTap={{ scale: 0.8 }}
-              animate={{ opacity: item.id === 'dashboard' && !isActive ? 0.4 : 1 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.25 }}
               onClick={handleClick}
               aria-label={item.label || item.id}
-              className="flex flex-col items-center gap-1 touch-target transition-opacity"
+              className="flex min-w-0 flex-1 flex-col items-center gap-1 touch-target transition-opacity"
             >
               <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                 {item.isProfile && currentUser ? (
@@ -272,7 +272,7 @@ const BottomNav = () => {
                   <Icon className={`w-7 h-7 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`} />
                 )}
               </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`}>
+              <span className={`max-w-full truncate text-[9px] font-black uppercase tracking-wide ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`}>
                 {item.label}
               </span>
               {isActive && (

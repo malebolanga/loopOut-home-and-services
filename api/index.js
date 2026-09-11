@@ -41,6 +41,8 @@ import { initBookingScheduler } from './utils/bookingScheduler.js';
 import path from 'path';
 dotenv.config();
 dotenv.config({ path: new URL('./.env', import.meta.url) });
+mongoose.set('bufferCommands', false);
+
 const criticalProductionVariables = ['MONGO', 'JWT_SECRET'];
 const recommendedProductionVariables = ['CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS'];
 if (process.env.NODE_ENV === 'production') {
@@ -49,9 +51,17 @@ if (process.env.NODE_ENV === 'production') {
     const missingRecommended = recommendedProductionVariables.filter((name) => !process.env[name]);
     if (missingRecommended.length) console.warn(`[WARNING] Missing recommended production environment variables: ${missingRecommended.join(', ')}.`);
 }
-if (process.env.MONGO && process.env.NODE_ENV !== 'test') {
-    mongoose.connect(process.env.MONGO).then(() => { console.log('Connected to MongoDB'); initBookingScheduler(); }).catch((err) => console.error('MongoDB connection failed:', err.message));
-} else if (process.env.NODE_ENV !== 'test') console.error('MongoDB is not configured; API data routes will be unavailable.');
+const connectDatabase = async () => {
+    if (process.env.NODE_ENV === 'test') return;
+    if (!process.env.MONGO) throw new Error('MongoDB is not configured. Set MONGO before starting the API.');
+
+    await mongoose.connect(process.env.MONGO, {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000,
+    });
+    console.log('Connected to MongoDB');
+    initBookingScheduler();
+};
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,5 +100,26 @@ app.use('/api/user', userRouter); app.use('/api/auth', authRouter); app.use('/ap
 const distPath = path.resolve(__dirname, '../client/dist'); app.use(express.static(distPath));
 app.get('*', (req, res) => { if (req.url.startsWith('/api/')) return res.status(404).json({ success: false, message: 'API endpoint not found' }); if (req.url.startsWith('/assets/')) return res.status(404).send('Asset not found'); const indexFile = path.join(distPath, 'index.html'); res.sendFile(indexFile, (err) => { if (err) { console.error('Error sending index.html:', err); res.status(500).send('<h1>Server Configuration Error</h1><p>The application was built but the server cannot find the entry point. Please check the build artifacts.</p>'); } }); });
 app.use((err, req, res, next) => { const statusCode = err.statusCode || (err.name === 'MulterError' ? 400 : 500); const message = err.message || 'Internal Server Error'; if (statusCode >= 500) console.error(`[SERVER ERROR] ${req.method} ${req.url} → ${statusCode}:`, err.message || err); return res.status(statusCode).json({ success: false, statusCode, message }); });
-const port = process.env.PORT || 3000; if (process.env.NODE_ENV !== 'test') app.listen(port, () => console.log(`Server is running on port ${port}!`));
+const startServer = async () => {
+    if (process.env.NODE_ENV === 'test') return;
+
+    try {
+        await connectDatabase();
+        const port = process.env.PORT || 3000;
+        const server = app.listen(port, () => console.log(`Server is running on port ${port}!`));
+        server.on('error', (error) => {
+            if (error.code === 'EADDRINUSE') {
+                console.error(`Port ${port} is already in use. Stop the other API process before starting this server.`);
+            } else {
+                console.error(`API server failed to start: ${error.message}`);
+            }
+            process.exit(1);
+        });
+    } catch (error) {
+        console.error(`MongoDB connection failed; API did not start: ${error.message}`);
+        process.exit(1);
+    }
+};
+
+startServer();
 export default app;

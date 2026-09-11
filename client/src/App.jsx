@@ -374,7 +374,9 @@ function AppContent() {
     '/terms',
     '/host'
   ];
-    const hideHeaderPaths = [
+  const hideHeaderPaths = [
+    '/calendar',
+    '/schedule',
     '/host-dashboard',
     '/pro',
     '/host-earnings',

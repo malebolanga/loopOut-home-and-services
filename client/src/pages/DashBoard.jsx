@@ -494,8 +494,16 @@ export default function DashBoard() {
               </div>
            </div>
            
-           <div className="flex items-center gap-6">
-              <div className="relative">
+            <div className="flex items-center gap-3 sm:gap-6">
+               <button
+                 onClick={() => navigate('/calendar')}
+                 className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-rose-600 dark:border-gray-800 dark:bg-gray-900 dark:text-white"
+                 title="Open calendar"
+               >
+                 <CalendarIcon className="h-4 w-4" />
+                 <span className="hidden sm:inline">Calendar</span>
+               </button>
+               <div className="relative">
                 <div 
                   onClick={markAllAsRead}
                   className="w-16 h-16 bg-white/80 backdrop-blur-md rounded-[2rem] shadow-[0_15px_35px_-10px_rgba(0,0,0,0.05)] border border-slate-200 dark:border-gray-800/50 flex items-center justify-center text-gray-400 group-hover:text-rose-500 transition-all duration-300 cursor-pointer"

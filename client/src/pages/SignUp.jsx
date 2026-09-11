@@ -31,7 +31,7 @@ export default function SignUp() {
   const checkCredentials = (event) => {
     event.preventDefault(); setError('');
     if (!/^[a-zA-Z0-9_]{3,30}$/.test(formData.username)) return setError('Use 3–30 letters, numbers, or underscores for your username.');
-    if (formData.password.length < 6) return setError('Use at least 6 characters for your password.');
+    if (formData.password.length < 8) return setError('Use a password of at least 8 characters.');
     if (formData.password !== formData.confirmPassword) return setError('Your passwords do not match.');
     setStep(2);
   };
@@ -44,6 +44,7 @@ export default function SignUp() {
       const response = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to create your account.');
+      setFormData((current) => ({ ...current, email: current.email.trim().toLowerCase(), otp: '' }));
       if (data.devCode) {
         setDevCode(data.devCode);
       }
@@ -54,7 +55,7 @@ export default function SignUp() {
     event.preventDefault(); setError('');
     try {
       setLoading(true);
-      const response = await fetch('/api/auth/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email, otp: formData.otp }) });
+      const response = await fetch('/api/auth/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to verify that code.');
       persistSessionToken(data);
@@ -64,7 +65,7 @@ export default function SignUp() {
   const resend = async () => {
     try {
       setResending(true); setError('');
-      const response = await fetch('/api/auth/resend-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: formData.email }) });
+      const response = await fetch('/api/auth/resend-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase() }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to send a new code.');
       if (data.devCode) {
@@ -101,7 +102,7 @@ export default function SignUp() {
             </button>
           </div>
         )}
-        <form onSubmit={verify} className="space-y-4"><label className="block text-sm">Verification code<input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength="6" className={`${inputClass} mt-1 tracking-[0.4em] text-center`} value={formData.otp} onChange={change} required /></label><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Verify and continue'}</button></form><button disabled={resending} onClick={resend} className="w-full mt-4 text-sm underline disabled:opacity-60">{resending ? 'Sending…' : 'Resend code'}</button></>}
+        <form onSubmit={verify} className="space-y-4"><label className="block text-sm">Verification code<input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength="6" className={`${inputClass} mt-1 tracking-[0.4em] text-center`} value={formData.otp} onChange={({ target }) => setFormData((current) => ({ ...current, otp: target.value.replace(/\D/g, '') }))} required /></label><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Verify and continue'}</button></form><button type="button" disabled={resending} onClick={resend} className="w-full mt-4 text-sm underline disabled:opacity-60">{resending ? 'Sending…' : 'Resend code'}</button></>}
       {error && <p role="alert" className="mt-5 p-3 text-center text-sm bg-red-500/25 border border-red-300/40 rounded-xl">{error}</p>}
       <p className="mt-7 text-center text-sm text-gray-200">Already have an account? <Link to="/sign-in" className="font-semibold underline">Sign in</Link></p>
     </div></div>;

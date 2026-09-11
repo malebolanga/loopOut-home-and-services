@@ -181,8 +181,8 @@ export default function Planner() {
   const handleNextDay = () => {
     const next = new Date(selectedCalendarDate);
     next.setDate(next.getDate() + 1);
-    setSelectedCalendarDate(prev);
-    setCurrentMonthDate(prev);
+    setSelectedCalendarDate(next);
+    setCurrentMonthDate(next);
   };
 
   const handleTodayReset = () => {

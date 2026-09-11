@@ -2,15 +2,12 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import ImageWithFallback from "../components/ImageWithFallback";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import {
   CalendarIcon,
-  TagIcon,
   FaceSmileIcon,
-  BookOpenIcon,
-  UserGroupIcon,
-  MegaphoneIcon,
   Squares2X2Icon,
-  Cog6ToothIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   AdjustmentsHorizontalIcon,
@@ -90,6 +87,18 @@ function getBookingProvider(b) {
   return item.userRef || item.createdBy || null;
 }
 
+function getBookingDetailPath(booking) {
+  const item = getBookingItem(booking);
+  if (!item?._id) return "/upcoming-bookings";
+
+  switch (getBookingType(booking)) {
+    case "helper": return `/helper/${item._id}`;
+    case "service": return `/service/${item._id}`;
+    case "event": return `/event/${item._id}`;
+    default: return `/listing/${item._id}`;
+  }
+}
+
 // Convert a booking's startDate to grid minutes (from 7 AM = 420 min)
 function toGridMinutes(dateStr) {
   if (!dateStr) return null;
@@ -142,9 +151,9 @@ export default function FreshaCalendarPage() {
   // ── State ──
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("Day");
-  const [activeNavTab, setActiveNavTab] = useState("calendar");
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [showMobilePreview, setShowMobilePreview] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -152,12 +161,35 @@ export default function FreshaCalendarPage() {
   // ── Fetch real loopOut bookings ──
   useEffect(() => {
     if (!currentUser?._id) { setLoading(false); return; }
-    setLoading(true);
-    fetch(`/api/bookings/user/${currentUser._id}`, { credentials: "include" })
-      .then((r) => r.ok ? r.json() : [])
-      .then((data) => setBookings(Array.isArray(data) ? data : []))
-      .catch(() => setBookings([]))
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+
+    const loadBookings = async () => {
+      setLoading(true);
+      setLoadError("");
+
+      try {
+        const response = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(response.status === 401 || response.status === 403 ? "Your session has expired." : "We couldn't load your bookings.");
+        }
+
+        const data = await response.json();
+        if (!controller.signal.aborted) setBookings(Array.isArray(data) ? data : []);
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        if (!controller.signal.aborted) {
+          setBookings([]);
+          setLoadError(error.message || "We couldn't load your bookings.");
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+
+    loadBookings();
+    return () => controller.abort();
   }, [currentUser?._id, refreshKey]);
 
   // ── Bookings on selected day ──
@@ -242,7 +274,7 @@ export default function FreshaCalendarPage() {
         </div>
         <button
           onClick={() => setShowMobilePreview(!showMobilePreview)}
-          className={`px-3 py-1 rounded-lg font-semibold text-xs transition flex items-center gap-1.5 border ${
+          className={`hidden xl:flex px-3 py-1 rounded-lg font-semibold text-xs transition items-center gap-1.5 border ${
             showMobilePreview
               ? "bg-rose-600 border-rose-500 text-white"
               : "bg-slate-800 border-slate-700 text-slate-300"
@@ -256,65 +288,11 @@ export default function FreshaCalendarPage() {
       {/* ── Main layout ── */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* ── Left sidebar ── */}
-        <aside className="w-14 sm:w-16 bg-[#0f0f11] text-slate-400 flex flex-col items-center py-4 gap-5 shrink-0 shadow-xl z-20">
-          {/* loopOut brand icon */}
-          <button onClick={() => navigate("/")} className="group flex flex-col items-center">
-            <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-400 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition">
-              <span className="text-white font-black text-sm leading-none">L</span>
-            </div>
-          </button>
-
-          <nav className="flex-1 flex flex-col gap-3 w-full px-2">
-            {[
-              { id: "calendar", icon: CalendarIcon, tip: "Schedule" },
-              { id: "services", icon: TagIcon, tip: "Services" },
-              { id: "clients", icon: FaceSmileIcon, tip: "Clients" },
-              { id: "bookings", icon: BookOpenIcon, tip: "Bookings" },
-              { id: "team", icon: UserGroupIcon, tip: "Providers" },
-              { id: "promos", icon: MegaphoneIcon, tip: "Promos" },
-            ].map(({ id, icon: Icon, tip }) => (
-              <button
-                key={id}
-                title={tip}
-                onClick={() => {
-                  setActiveNavTab(id);
-                  if (id === "bookings") navigate("/upcoming-bookings");
-                  if (id === "services") navigate("/categories");
-                }}
-                className={`w-10 h-10 mx-auto rounded-xl flex items-center justify-center transition ${
-                  activeNavTab === id
-                    ? "bg-rose-600 text-white shadow-lg shadow-rose-500/30"
-                    : "hover:bg-slate-800 hover:text-slate-200"
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex flex-col gap-3 w-full px-2">
-            <button
-              title="Apps"
-              className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center hover:bg-slate-800 hover:text-slate-200 transition"
-            >
-              <Squares2X2Icon className="w-5 h-5" />
-            </button>
-            <button
-              title="Settings"
-              onClick={() => navigate("/settings")}
-              className="w-10 h-10 mx-auto rounded-xl flex items-center justify-center hover:bg-slate-800 hover:text-slate-200 transition"
-            >
-              <Cog6ToothIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </aside>
-
         {/* ── Calendar main panel ── */}
         <div className="flex-1 flex flex-col bg-white overflow-hidden shadow-2xl">
 
           {/* ── Top toolbar ── */}
-          <header className="h-16 border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between bg-white z-10 shrink-0 gap-3">
+          <header className="min-h-16 border-b border-slate-200 px-4 py-2 sm:px-6 flex flex-wrap items-center justify-between bg-white z-10 shrink-0 gap-2">
             <div className="flex items-center gap-2 flex-wrap">
               <button onClick={handleToday} className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition shadow-sm">
                 Today
@@ -330,7 +308,7 @@ export default function FreshaCalendarPage() {
               <span className="font-bold text-sm text-slate-800">{formattedDate}</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-auto">
               {/* Stats pills */}
               <div className="hidden md:flex items-center gap-2">
                 <span className="px-2.5 py-1 bg-rose-50 text-rose-700 font-bold text-[11px] rounded-full border border-rose-200">
@@ -340,6 +318,16 @@ export default function FreshaCalendarPage() {
                   {upcomingCount} Upcoming
                 </span>
               </div>
+
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white p-2 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                title="Open dashboard"
+                aria-label="Open dashboard"
+              >
+                <Squares2X2Icon className="h-4 w-4" />
+                <span className="hidden md:inline text-xs font-semibold">Dashboard</span>
+              </button>
 
               <button
                 onClick={() => setRefreshKey((k) => k + 1)}
@@ -365,10 +353,10 @@ export default function FreshaCalendarPage() {
               {/* Navigate to bookings */}
               <button
                 onClick={() => navigate("/upcoming-bookings")}
-                className="bg-slate-900 hover:bg-black text-white font-semibold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition active:scale-95"
+                className="bg-slate-900 hover:bg-black text-white font-semibold text-xs px-3 sm:px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition active:scale-95"
               >
                 <PlusIcon className="w-4 h-4" />
-                Book
+                <span className="hidden sm:inline">Book</span>
               </button>
             </div>
           </header>
@@ -380,9 +368,51 @@ export default function FreshaCalendarPage() {
                 <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin" />
                 <p className="text-slate-500 text-sm font-semibold">Loading your bookings…</p>
               </div>
+            ) : loadError ? (
+              <div className="flex-1 flex items-center justify-center p-6">
+                <div className="max-w-sm text-center">
+                  <p className="font-bold text-slate-800">Bookings are unavailable</p>
+                  <p className="mt-1 text-sm text-slate-500" role="alert">{loadError}</p>
+                  <button
+                    onClick={() => setRefreshKey((key) => key + 1)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                  >
+                    <ArrowPathIcon className="w-4 h-4" /> Retry
+                  </button>
+                </div>
+              </div>
             ) : (
               <>
-                {/* ── Column header (booking types) ── */}
+                {/* Compact agenda for phones. The time grid below needs a wider viewport. */}
+                <div className="lg:hidden p-4 space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{dayBookings.length} booking{dayBookings.length === 1 ? "" : "s"} on this day</p>
+                  {dayBookings.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-slate-300 px-4 py-10 text-center text-sm font-medium text-slate-500">
+                      No bookings on {formattedDate}
+                    </div>
+                  ) : dayBookings.map((booking) => {
+                    const meta = TYPE_META[getBookingType(booking)];
+                    return (
+                      <button
+                        key={booking._id}
+                        onClick={() => setSelectedBooking(booking)}
+                        className={`w-full rounded-lg p-4 text-left shadow-sm transition active:scale-[0.99] ${meta?.bgClass}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold opacity-80">{fmtTime(booking.startDate)}{booking.endDate ? ` - ${fmtTime(booking.endDate)}` : ""}</p>
+                            <p className="mt-1 truncate text-sm font-extrabold">{getBookingTitle(booking)}</p>
+                            {getBookingAddress(booking) && <p className="mt-1 truncate text-xs opacity-75">{getBookingAddress(booking)}</p>}
+                          </div>
+                          <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-black ${STATUS_COLOR[booking.status] || "bg-slate-100 text-slate-600"}`}>{booking.status}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* ── Desktop time-grid ── */}
+                <div className="hidden lg:flex lg:flex-col">
                 <div className="sticky top-0 bg-white z-10 border-b border-slate-200 flex min-w-[600px] shadow-sm">
                   <div className="w-16 sm:w-20 shrink-0 border-r border-slate-200 bg-slate-50/70 p-2 flex items-center justify-center text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     Time
@@ -517,6 +547,7 @@ export default function FreshaCalendarPage() {
                     </button>
                   </div>
                 )}
+                </div>
               </>
             )}
           </div>
@@ -524,7 +555,7 @@ export default function FreshaCalendarPage() {
 
         {/* ── Mobile preview panel ── */}
         {showMobilePreview && (
-          <aside className="w-72 lg:w-80 bg-slate-900 border-l border-slate-800 flex flex-col p-4 z-20 shrink-0 overflow-y-auto">
+          <aside className="hidden xl:flex w-80 bg-slate-900 border-l border-slate-800 flex-col p-4 z-20 shrink-0 overflow-y-auto">
             <div className="flex items-center justify-between text-slate-200 mb-4 pb-2 border-b border-slate-800">
               <span className="font-bold text-sm flex items-center gap-2">
                 <DevicePhoneMobileIcon className="w-4 h-4 text-rose-400" />
@@ -551,7 +582,7 @@ export default function FreshaCalendarPage() {
                 <div className="flex items-center gap-1.5 text-slate-500">
                   <BellIcon className="w-4 h-4" />
                   {currentUser?.avatar && (
-                    <img src={currentUser.avatar} className="w-5 h-5 rounded-full object-cover" alt="User" />
+                    <ImageWithFallback src={currentUser.avatar} type="avatar" alt="User" className="w-5 h-5 rounded-full" />
                   )}
                 </div>
               </div>
@@ -559,7 +590,7 @@ export default function FreshaCalendarPage() {
               {/* User card */}
               <div className="bg-white px-3 py-2 border-b border-slate-100 flex items-center gap-2">
                 {currentUser?.avatar && (
-                  <img src={currentUser.avatar} className="w-8 h-8 rounded-full object-cover border-2 border-rose-500" alt="User" />
+                  <ImageWithFallback src={currentUser.avatar} type="avatar" alt="User" className="w-8 h-8 rounded-full border-2 border-rose-500" />
                 )}
                 <div>
                   <div className="font-black text-xs text-slate-800 leading-tight">{currentUser?.username}</div>
@@ -690,9 +721,7 @@ export default function FreshaCalendarPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    const type = getBookingType(selectedBooking);
-                    const item = getBookingItem(selectedBooking);
-                    if (item?._id) navigate(`/${type}/${item._id}`);
+                    navigate(getBookingDetailPath(selectedBooking));
                     setSelectedBooking(null);
                   }}
                   className="flex-1 py-2.5 bg-slate-900 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:bg-black transition"

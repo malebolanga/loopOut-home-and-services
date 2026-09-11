@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
   SignalIcon,
-  CpuChipIcon,
+  CalendarDaysIcon,
   BellIcon,
   UserIcon,
   WrenchScrewdriverIcon,
@@ -17,7 +17,7 @@ const FooterDock = ({ unreadCount = 0 }) => {
   const navItems = [
     { icon: HomeIcon, route: '/', label: 'Home' },
     { icon: SignalIcon, route: '/search', label: 'Explore' },
-    { icon: CpuChipIcon, route: '/host-dashboard', label: 'Dashboard' },
+    { icon: CalendarDaysIcon, route: '/calendar', label: 'Calendar' },
     { icon: BanknotesIcon, route: '/host-earnings', label: 'Earnings' },
     { icon: WrenchScrewdriverIcon, route: '/host-tools', label: 'Tools' },
     { icon: BellIcon, route: '/dashboard', label: 'Alerts', badge: unreadCount },
