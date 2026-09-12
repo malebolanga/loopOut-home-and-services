@@ -149,7 +149,9 @@ const GoogleMapComponent = ({ latitude, longitude, address, title }) => {
       if (leafletMapRef.current) {
         try {
           leafletMapRef.current.remove();
-        } catch (_) {}
+        } catch (_) {
+          // The map may already have been disposed during component cleanup.
+        }
         leafletMapRef.current = null;
       }
     };

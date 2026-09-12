@@ -133,7 +133,9 @@ const MapView = ({
         if (!leafletMapRef.current || !Array.isArray(data)) return;
         // Clean up existing markers
         markersRef.current.forEach(m => {
-          try { map.removeLayer(m); } catch (_) {}
+          try { map.removeLayer(m); } catch (_) {
+            // Ignore markers already removed by Leaflet.
+          }
         });
         markersRef.current = [];
 
@@ -236,7 +238,9 @@ const MapView = ({
         console.warn("Leaflet map center update recovered:", e);
         try {
           leafletMapRef.current.setView([lat, lng], 13, { animate: false });
-        } catch (_) {}
+        } catch (_) {
+          // A map may be disposed while a location update is in flight.
+        }
       }
     }
   }, [center]);

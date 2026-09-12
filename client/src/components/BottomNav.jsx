@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   HomeIcon, 
   HeartIcon, 
+  PlusCircleIcon,
   MapIcon,
   Squares2X2Icon,
   UserIcon,
@@ -27,7 +28,7 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Utensils } from 'lucide-react';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -105,8 +106,8 @@ const BottomNav = () => {
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
     { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    { id: 'calendar', label: 'Calendar', icon: CalendarIcon, activeIcon: CalendarIcon, route: '/calendar' },
-    { id: 'listings', label: 'Listings', icon: QueueListIcon, activeIcon: QueueListIcon, route: currentUser ? `/${currentUser._id}/listings` : '/sign-in' },
+    { id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
+    { id: 'lunch', label: 'Lunch', icon: Utensils, activeIcon: Utensils, route: '/lunch' },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];
 

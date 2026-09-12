@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { useState, useEffect, useMemo, useCallback } from "react";
 import ListingItem from "../components/ListingItem";
 import { FaSearch, FaFilter, FaTimes, FaSlidersH, FaHome } from "react-icons/fa";

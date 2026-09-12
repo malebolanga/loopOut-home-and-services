@@ -122,7 +122,9 @@ export default function MobileAppHomepage({
         const parsed = JSON.parse(storedWishlist);
         if (Array.isArray(parsed)) setSavedItemsCount(parsed.length);
       }
-    } catch (_) {}
+    } catch (_) {
+      // Ignore malformed local wishlist data and start with an empty count.
+    }
   }, []);
 
   // Compute live timestamp for pulse
@@ -183,7 +185,9 @@ export default function MobileAppHomepage({
         const parsed = JSON.parse(lastSearch);
         historyCategory = parsed?.category || parsed?.query || '';
       }
-    } catch (_) {}
+    } catch (_) {
+      // Recent searches are non-essential and may be unavailable.
+    }
 
     const pool = [
       ...featuredServices.map((s) => ({ ...s, itemType: 'service' })),
@@ -218,7 +222,9 @@ export default function MobileAppHomepage({
       // Store in recent searches
       try {
         localStorage.setItem('lastUserSearch', JSON.stringify({ query, location: displayCity, date: new Date().toISOString() }));
-      } catch (_) {}
+      } catch (_) {
+        // Navigation should still continue if browser storage is unavailable.
+      }
       navigate(`/search?searchTerm=${encodeURIComponent(query)}&type=all`);
     } else {
       navigate('/search');

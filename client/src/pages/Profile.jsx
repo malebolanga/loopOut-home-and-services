@@ -1719,15 +1719,38 @@ export default function Profile() {
             {/* My Listings Section */}
             {activeSection === "my-listings" && (
               <SectionCard title="My listings" icon={ListBulletIcon}>
-                <div className="flex justify-between items-center mb-6">
-                  <p className="text-[#767676] dark:text-white">Manage your properties</p>
-                  <Link
-                    to={`/${currentUser?._id}/create-listing`}
-                    className="flex items-center gap-2 bg-[#FF5A5F] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#E00B41] transition-colors"
-                  >
-                    <PlusIcon className="w-4 h-4" />
-                    Create listing
-                  </Link>
+                <div className="mb-7 rounded-[1.75rem] border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 dark:border-rose-900/50 dark:from-rose-950/30 dark:via-gray-900 dark:to-amber-950/20">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-[0.18em] text-rose-500">Start listing</p>
+                      <h4 className="text-lg font-black text-slate-900 dark:text-white">What would you like to share?</h4>
+                      <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-300">Choose the option that best matches what you offer. You can add photos, availability, pricing and contact details in the next step.</p>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/${currentUser?._id}/create-listing`)}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#FF5A5F] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/20 transition hover:bg-[#E00B41]"
+                    >
+                      <PlusIcon className="h-4 w-4" /> Create listing
+                    </button>
+                  </div>
+                  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    {[
+                      { label: 'Stay', hint: 'Home, room or holiday stay', icon: HomeIcon, tab: 'stays', color: 'text-blue-600 bg-blue-100 dark:bg-blue-950/50' },
+                      { label: 'Helper', hint: 'Local help or personal service', icon: FaHandsHelping, tab: 'online', color: 'text-violet-600 bg-violet-100 dark:bg-violet-950/50' },
+                      { label: 'Event', hint: 'Experience, activity or occasion', icon: CalendarIcon, tab: 'events', color: 'text-amber-600 bg-amber-100 dark:bg-amber-950/50' },
+                      { label: 'Service', hint: 'Professional or home service', icon: FaTools, tab: 'experiences', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/50' },
+                    ].map(({ label, hint, icon: Icon, tab, color }) => (
+                      <button
+                        key={label}
+                        onClick={() => navigate(`/${currentUser?._id}/create-listing?tab=${tab}`)}
+                        className="group rounded-2xl border border-white bg-white/80 p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900/80 dark:hover:border-rose-900"
+                      >
+                        <span className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${color}`}><Icon className="h-4 w-4" /></span>
+                        <span className="block text-sm font-black text-slate-900 dark:text-white">{label}</span>
+                        <span className="mt-0.5 block text-[10px] font-medium leading-4 text-slate-500 dark:text-slate-400">{hint}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {userListings && userListings.length > 0 ? (

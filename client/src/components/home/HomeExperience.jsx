@@ -73,7 +73,9 @@ export default function HomeExperience() {
           merged.push(...items);
         }
         if (!cancelled) setRecommendations(merged.slice(0, 6));
-      } catch (_) { }
+      } catch (_) {
+        // Recommendations are optional; retain the existing experience on failure.
+      }
     };
     load();
     return () => { cancelled = true; };
@@ -86,7 +88,9 @@ export default function HomeExperience() {
         const response = await fetch('/api/stats/home', { headers: { Accept: 'application/json' } });
         const data = await response.json();
         if (!cancelled && data?.success) setPulseStats(data.stats || {});
-      } catch (_) { }
+      } catch (_) {
+        // Home pulse statistics are optional; leave the current values intact.
+      }
     };
     load();
     const interval = window.setInterval(load, 30000);
