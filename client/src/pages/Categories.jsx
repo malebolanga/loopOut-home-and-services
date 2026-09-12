@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
   HomeIcon,
@@ -17,7 +17,6 @@ import {
   CameraIcon,
   MusicalNoteIcon,
   SunIcon,
-  MapPinIcon,
   ComputerDesktopIcon,
   BookOpenIcon,
   FireIcon,
@@ -25,53 +24,15 @@ import {
   ArrowLeftIcon,
   MagnifyingGlassIcon,
   StarIcon,
-  XMarkIcon,
-  MapIcon,
-  GlobeAltIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
-import {
-  StarIcon as StarIconSolid,
-  HeartIcon as HeartIconSolid,
-} from '@heroicons/react/24/solid';
 import { Sparkles } from 'lucide-react';
 
 const Categories = () => {
   const navigate = useNavigate();
-  const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchVisible, setSearchVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentLocation] = useState('South Africa');
-  const searchInputRef = useRef(null);
-
-  // Check screen size for responsive design
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsDesktop(window.innerWidth >= 768);
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  // Handle search visibility
-  const handleSearchClick = () => {
-    setSearchVisible(true);
-    setTimeout(() => {
-      if (searchInputRef.current) {
-        searchInputRef.current.focus();
-      }
-    }, 100);
-  };
-
-  const handleSearchSubmit = (value) => {
-    if (value.trim()) {
-      navigate(`/search?searchTerm=${value}&type=all&address=${encodeURIComponent(currentLocation)}`);
-    }
-    setSearchVisible(false);
-  };
 
   // Quick Categories Grid from Home.jsx
   const categories = [
@@ -85,9 +46,6 @@ const Categories = () => {
     { icon: '➕', label: 'More', color: 'bg-gray-100 dark:bg-gray-800', onClick: () => navigate('/categories') }
   ];
 
-  // Responsive grid classes
-  const gridCols = isDesktop ? 'grid-cols-4' : 'grid-cols-4';
-  
   // Main categories data
   const mainCategories = [
     {
@@ -236,7 +194,7 @@ const Categories = () => {
   };
 
   // Responsive grid classes
-  const subcategoryGridCols = isDesktop ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1';
+  const subcategoryGridCols = 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
 
   return (
     <div className="min-h-screen pb-0">
@@ -244,89 +202,43 @@ const Categories = () => {
         <title>All Categories | LoopOut</title>
         <meta name="description" content="Browse all categories on LoopOut: Properties, Services, Helpers, Events, and more." />
       </Helmet>
-      {/* Header - Sticky */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
-        <div className={`${isDesktop ? 'px-6 max-w-7xl mx-auto' : 'px-4'} py-4`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate(-1)}
-                className="mr-3 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <ArrowLeftIcon className="w-5 h-5 text-gray-600 dark:text-white" />
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8">
+        <section className="relative isolate overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-5 py-6 text-white shadow-2xl shadow-slate-900/20 sm:px-8 sm:py-9">
+          <div className="absolute -right-16 -top-24 h-64 w-64 rounded-full bg-rose-500/30 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-40 w-40 rounded-full bg-indigo-400/20 blur-3xl" />
+          <div className="relative">
+            <div className="mb-6 flex items-center justify-between">
+              <button onClick={() => navigate(-1)} className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/20">
+                <ArrowLeftIcon className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" /> Back
               </button>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">All Categories</h1>
+              <span className="inline-flex items-center gap-2 rounded-full bg-rose-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-rose-200 ring-1 ring-inset ring-rose-300/20">
+                <Sparkles className="h-3.5 w-3.5" /> Explore LoopOut
+              </span>
             </div>
-            <button
-              onClick={handleSearchClick}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <MagnifyingGlassIcon className="w-5 h-5 text-gray-600 dark:text-white" />
-            </button>
+            <div className="max-w-2xl">
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-indigo-200">Your local directory</p>
+              <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">Find what moves <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-300 to-amber-200">your day.</span></h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300 sm:text-base">Browse homes, trusted professionals, events and everyday essentials—all in one place.</p>
+            </div>
+            <div className="mt-7 max-w-3xl">
+              <label className="sr-only" htmlFor="category-search">Search categories</label>
+              <div className="relative rounded-2xl bg-white p-1.5 shadow-xl shadow-black/20">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <input id="category-search" type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="What are you looking for?" className="w-full rounded-xl bg-transparent py-3 pl-11 pr-12 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 sm:text-base" />
+                {searchTerm && <button onClick={() => setSearchTerm('')} aria-label="Clear category search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"><XMarkIcon className="h-4 w-4" /></button>}
+              </div>
+            </div>
           </div>
-
-          {/* Search Input - Same as Home.jsx */}
-          {searchVisible && (
-            <div className="mb-4">
-              <div className="relative">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search categories..."
-                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearchSubmit(e.target.value);
-                    }
-                  }}
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <button
-                  onClick={() => setSearchVisible(false)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                >
-                  <XMarkIcon className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-white" />
-                </button>
-              </div>
+        </section>
+        <section className="mt-10 mb-12">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-rose-500">Start here</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">Explore by need</h2>
             </div>
-          )}
-
-          {/* Search Bar for non-visible state */}
-          {!searchVisible && (
-            <div className="mb-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 right-4 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search categories..."
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  >
-                    <span className="text-gray-400 hover:text-gray-600 dark:hover:text-white text-sm">Clear</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className={`${isDesktop ? 'px-6 max-w-7xl mx-auto' : 'px-4'} py-4`}>
-        {/* Quick Categories Grid - Same as Home.jsx */}
-        <section className="mb-8">
-          <h2 className="font-bold text-gray-900 dark:text-white text-lg md:text-xl mb-4">Explore categories</h2>
-          <div className={`grid ${gridCols} gap-3 md:gap-4`}>
+            <span className="hidden text-sm font-medium text-slate-500 sm:block">Six ways to get started</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
             {categories.map((cat, index) => (
               <button
                 key={index}
@@ -339,48 +251,54 @@ const Categories = () => {
                     navigate(`/search?type=${cat.type}&address=${encodeURIComponent(currentLocation)}`);
                   }
                 }}
-                className="flex flex-col items-center p-3 md:p-4 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-sm transition-all duration-200 active:opacity-80 border border-transparent hover:border-gray-200 dark:hover:border-gray-800"
+                className="group flex min-h-32 flex-col items-start justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-black/20"
               >
-                <div className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-full flex items-center justify-center text-xl md:text-2xl mb-2 hover:scale-105 transition-transform`}>
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${cat.color} text-xl shadow-sm transition duration-300 group-hover:scale-110`}>
                   {cat.icon}
                 </div>
-                <span className="text-xs md:text-sm text-gray-700 dark:text-white text-center">{cat.label}</span>
+                <span className="flex w-full items-center justify-between text-sm font-bold text-slate-800 dark:text-white"><span>{cat.label}</span><ChevronRightIcon className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-rose-500" /></span>
               </button>
             ))}
           </div>
         </section>
 
         {/* Browse All Categories Section */}
-        <section className="mb-6">
-          <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-4">Browse All Categories</h2>
+        <section className="mb-12">
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-indigo-500">The directory</p>
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">{searchTerm.trim() ? 'Matching categories' : 'Browse collections'}</h2>
+            </div>
+            {!searchTerm.trim() && <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">6 collections · 46 categories</span>}
+          </div>
           
           {searchTerm.trim() === '' ? (
             // Show main categories when no search
-            <div className={`grid ${isDesktop ? 'grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-4`}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               {mainCategories.map((category) => {
                 const Icon = category.icon;
                 return (
                   <div
                     key={category.id}
                     onClick={() => handleCategoryClick(category)}
-                    className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden cursor-pointer shadow-sm hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-800 active:opacity-80"
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:shadow-black/20"
                   >
-                    <div className={`h-2 ${category.color}`}></div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
+                    <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${category.gradient}`} />
+                    <div>
+                      <div className="mb-4 flex items-center justify-between">
                         <div className="flex items-center">
-                          <div className={`p-2 rounded-lg ${category.color} bg-opacity-10`}>
-                            <Icon className={`w-6 h-6 ${category.color.replace('bg-', 'text-')}`} />
+                          <div className={`rounded-xl p-2.5 ${category.color} bg-opacity-10`}>
+                            <Icon className={`h-6 w-6 ${category.color.replace('bg-', 'text-')}`} />
                           </div>
-                          <h3 className="font-medium text-gray-900 dark:text-white ml-3">{category.title}</h3>
+                          <h3 className="ml-3 text-lg font-black tracking-tight text-slate-900 dark:text-white">{category.title}</h3>
                         </div>
-                        <ChevronRightIcon className={`w-5 h-5 text-gray-400 transition-transform ${
+                        <ChevronRightIcon className={`h-5 w-5 text-slate-400 transition-transform ${
                           selectedCategory?.id === category.id ? 'rotate-90' : ''
                         }`} />
                       </div>
-                      <p className="text-sm text-gray-500 dark:text-white mb-3">{category.description}</p>
+                      <p className="mb-5 text-sm leading-6 text-slate-500 dark:text-slate-300">{category.description}</p>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-500 dark:text-white">
+                        <span className="text-xs font-bold text-slate-400 dark:text-slate-400">
                           {category.subcategories.length} categories
                         </span>
                         <button
@@ -388,9 +306,9 @@ const Categories = () => {
                             e.stopPropagation();
                             handleViewAll(category.id);
                           }}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                          className="text-sm font-black text-rose-500 transition hover:text-rose-600"
                         >
-                          View all
+                          View all →
                         </button>
                       </div>
                     </div>
@@ -474,7 +392,7 @@ const Categories = () => {
               </button>
             </div>
             
-            <div className="bg-gradient-to-r from-white to-gray-50 rounded-xl p-4 mb-4 border border-gray-200 dark:border-gray-800">
+            <div className="mb-5 rounded-2xl border border-slate-200 bg-gradient-to-r from-white via-slate-50 to-rose-50 p-5 dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-rose-950/30">
               <div className="flex items-center mb-2">
                 <div className={`p-2 rounded-lg ${selectedCategory.color} bg-opacity-10 mr-3`}>
                   {selectedCategory.icon && (
@@ -495,7 +413,7 @@ const Categories = () => {
                   <div
                     key={subcategory.id}
                     onClick={() => handleSubcategoryClick(selectedCategory.id, subcategory.id)}
-                    className="bg-white dark:bg-gray-900 rounded-xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 border border-gray-200 dark:border-gray-800 active:scale-[0.98]"
+                    className="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 transition duration-300 hover:-translate-y-0.5 hover:border-rose-200 hover:shadow-lg hover:shadow-rose-100/60 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-rose-900 dark:hover:shadow-black/20"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center">
@@ -504,7 +422,7 @@ const Categories = () => {
                         </div>
                         <span className="font-medium text-gray-900 dark:text-white ml-3">{subcategory.name}</span>
                       </div>
-                      <ChevronRightIcon className="w-4 h-4 text-gray-400" />
+                      <ChevronRightIcon className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-rose-500" />
                     </div>
                     <div className="text-xs text-gray-500 dark:text-white">
                       {subcategory.count.toLocaleString()} listings
@@ -517,7 +435,7 @@ const Categories = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => handleViewAll(selectedCategory.id)}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+                className="w-full rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 py-3.5 font-black text-white shadow-lg shadow-rose-500/20 transition hover:scale-[1.01] hover:shadow-rose-500/30"
               >
                 View All {selectedCategory.title}
               </button>
@@ -527,9 +445,9 @@ const Categories = () => {
 
         {/* Popular Categories Quick Links */}
         {searchTerm.trim() === '' && !selectedCategory && (
-          <section className="mt-8">
-            <h2 className="font-bold text-gray-900 dark:text-white text-lg mb-4">Popular Categories</h2>
-            <div className="flex flex-wrap gap-2">
+          <section className="mb-12 rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-7 dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="mb-5 flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-100 text-rose-500 dark:bg-rose-950/50">🔥</span><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-500">Most explored</p><h2 className="font-black text-slate-900 dark:text-white">Popular right now</h2></div></div>
+            <div className="flex flex-wrap gap-2.5">
               {[
                 { id: 'rent-short', name: 'Short Term Rentals', color: 'bg-green-100 text-green-800' },
                 { id: 'cleaning', name: 'Cleaning Services', color: 'bg-emerald-100 text-emerald-800' },
@@ -541,7 +459,7 @@ const Categories = () => {
                 <button
                   key={cat.id}
                   onClick={() => navigate(`/search?category=${cat.id}&address=${encodeURIComponent(currentLocation)}`)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium ${cat.color} hover:opacity-90 transition-opacity`}
+                  className={`rounded-full px-4 py-2 text-sm font-bold ${cat.color} shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
                 >
                   {cat.name}
                 </button>
@@ -550,40 +468,34 @@ const Categories = () => {
           </section>
         )}
 
-        {/* Stats Section for Desktop - Like Home.jsx */}
-        {isDesktop && (
-          <section className="mb-8 bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 border border-gray-200 dark:border-gray-800">
-            <h2 className="font-bold text-gray-900 dark:text-white text-xl mb-6">Categories Insights</h2>
-            <div className="grid grid-cols-4 gap-6">
+        <section className="mb-10 rounded-3xl bg-slate-950 p-6 text-white shadow-xl shadow-slate-900/15 sm:p-8">
+            <div className="mb-7 flex items-end justify-between"><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-300">At a glance</p><h2 className="mt-1 text-2xl font-black">A world close to home</h2></div><Sparkles className="h-7 w-7 text-rose-300" /></div>
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 mb-2">6</div>
-                <p className="text-gray-600 dark:text-white text-sm">Main Categories</p>
+                <div className="mb-1 text-3xl font-black text-blue-300">6</div>
+                <p className="text-xs font-bold text-slate-400">Collections</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-emerald-600 mb-2">{mainCategories.reduce((acc, cat) => acc + cat.subcategories.length, 0)}</div>
-                <p className="text-gray-600 dark:text-white text-sm">Subcategories</p>
+                <div className="mb-1 text-3xl font-black text-emerald-300">{mainCategories.reduce((acc, cat) => acc + cat.subcategories.length, 0)}</div>
+                <p className="text-xs font-bold text-slate-400">Categories</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600 mb-2">48</div>
-                <p className="text-gray-600 dark:text-white text-sm">Total Filters</p>
+                <div className="mb-1 text-3xl font-black text-purple-300">48</div>
+                <p className="text-xs font-bold text-slate-400">Filters</p>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-amber-600 mb-2">10K+</div>
-                <p className="text-gray-600 dark:text-white text-sm">Listings Available</p>
+                <div className="mb-1 text-3xl font-black text-amber-200">10K+</div>
+                <p className="text-xs font-bold text-slate-400">Listings</p>
               </div>
             </div>
           </section>
-        )}
 
         {/* Back to Home */}
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-          <Link
-            to="/"
-            className="flex items-center justify-center text-blue-600 hover:text-blue-700 font-medium"
-          >
+        <div className="border-t border-slate-200 pt-6 dark:border-slate-800">
+          <button onClick={() => navigate('/')} className="mx-auto flex items-center justify-center text-sm font-bold text-slate-500 transition hover:text-rose-500 dark:text-slate-400">
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Back to Home
-          </Link>
+          </button>
         </div>
       </main>
 

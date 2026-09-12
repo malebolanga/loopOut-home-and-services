@@ -19,8 +19,6 @@ import {
   Bars3Icon,
   ChatBubbleLeftRightIcon,
   Squares2X2Icon,
-  PlusIcon,
-  PlusCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
@@ -176,7 +174,6 @@ export default function Header() {
   const prevUnreadCountRef = useRef(0);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [showCreateDropdown, setShowCreateDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -219,7 +216,6 @@ export default function Header() {
   });
 
   const profileDropdownRef = useRef(null);
-  const createDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const headerRef = useRef(null);
@@ -345,9 +341,6 @@ export default function Header() {
         setShowProfileDropdown(false);
       }
 
-      if (createDropdownRef.current && !createDropdownRef.current.contains(e.target)) {
-        setShowCreateDropdown(false);
-      }
 
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target) && !e.target.closest('.mobile-menu-button')) {
         setShowMobileMenu(false);
@@ -451,7 +444,6 @@ export default function Header() {
     { label: 'SALON CALENDAR', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
     { label: 'AI PLANNER', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-pink-500' },
     { label: 'BILL SPLITTER', route: '/splitter', icon: <ChartPieIcon className="w-5 h-5" />, color: 'bg-emerald-600' },
-    { label: 'CREATE LISTING', route: `/${currentUser?._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
     { label: 'MY LISTINGS', route: `/${currentUser?._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
     { label: 'HELP CENTER', route: '/help-center', icon: <QuestionMarkCircleIcon className="w-5 h-5" />, color: 'bg-indigo-600' },
     { label: 'SIGNAL INBOX', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
@@ -748,56 +740,6 @@ export default function Header() {
             {/* Right: User Menu */}
             <div className="relative md:translate-x-[20px]">
               <div className="flex flex-row items-center gap-1.5 md:gap-3">
-
-                <div className="relative" ref={createDropdownRef}>
-                  <button
-                    onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                    className="hidden xl:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] py-3.5 px-8 rounded-full bg-gray-950 text-white hover:bg-black transition-all duration-500 cursor-pointer shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4)] active:scale-95 relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full hover:animate-shimmer" />
-                    <PlusIcon className="w-4 h-4 stroke-[3px] text-rose-500 hover:rotate-90 transition-transform duration-500" />
-                    <span>Create</span>
-                  </button>
-
-                  <AnimatePresence>
-                    {showCreateDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full right-0 mt-3 w-72 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 py-5 z-50 overflow-hidden"
-                      >
-                        {[
-                          { label: 'Create Stay', icon: HomeIcon, tab: 'stays' },
-                          { label: 'Create Helper', icon: UserGroupIcon, tab: 'online' },
-                          { label: 'Create Event', icon: BellIcon, tab: 'events' },
-                          { label: 'Create Service', icon: BriefcaseIcon, tab: 'experiences' }
-                        ].map((item, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              if (item.path) {
-                                handleNavigate(currentUser ? item.path : '/sign-in');
-                              } else {
-                                handleNavigate(currentUser ? `/${currentUser._id}/create-listing?tab=${item.tab}` : '/sign-in');
-                              }
-                              setShowCreateDropdown(false);
-                            }}
-                            className="w-full px-6 py-4 hover:bg-rose-50 transition-colors flex items-center gap-4 text-left"
-                          >
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
-                              <item.icon className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-black text-[#222222]">{item.label}</p>
-                              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-0.5">Start Now</p>
-                            </div>
-                          </button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
                 {/* Globe Icon */}
                 <button

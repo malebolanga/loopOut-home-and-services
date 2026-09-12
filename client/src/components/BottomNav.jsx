@@ -5,7 +5,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   HomeIcon, 
   HeartIcon, 
-  PlusCircleIcon,
   MapIcon,
   Squares2X2Icon,
   UserIcon,
@@ -19,9 +18,6 @@ import {
 import { 
   HomeIcon as HomeIconSolid, 
   HeartIcon as HeartIconSolid, 
-  PlusCircleIcon as PlusCircleIconSolid,
-  MapIcon as MapIconSolid,
-  Squares2X2Icon as Squares2X2IconSolid,
   UserIcon as UserIconSolid,
   CheckBadgeIcon
 } from '@heroicons/react/24/solid';
@@ -109,8 +105,8 @@ const BottomNav = () => {
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
     { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    { id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIconSolid, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
-    { id: 'dashboard', label: 'Dashboard', icon: Squares2X2Icon, activeIcon: Squares2X2IconSolid, route: '/dashboard' },
+    { id: 'calendar', label: 'Calendar', icon: CalendarIcon, activeIcon: CalendarIcon, route: '/calendar' },
+    { id: 'listings', label: 'Listings', icon: QueueListIcon, activeIcon: QueueListIcon, route: currentUser ? `/${currentUser._id}/listings` : '/sign-in' },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];
 
@@ -165,7 +161,6 @@ const BottomNav = () => {
                     { label: 'Profile', route: '/profile', icon: <UserIcon className="w-5 h-5" />, color: 'bg-rose-500' },
                     { label: 'Dashboard', route: '/dashboard', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
                     { label: 'Calendar', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
-                    { label: 'Create', route: `/${currentUser._id}/create-listing`, icon: <PlusCircleIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
                     { label: 'Listings', route: `/${currentUser._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
                     { label: 'Wishlist', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
                     { label: 'Inbox', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
@@ -233,9 +228,7 @@ const BottomNav = () => {
         {navItems.map((item) => {
           const isActive = item.isProfile 
             ? showProfileDropup
-            : item.id === 'create'
-              ? location.pathname.endsWith('/create-listing')
-              : location.pathname === item.route;
+            : location.pathname === item.route;
           const Icon = isActive ? item.activeIcon : item.icon;
           
           const handleClick = () => {

@@ -171,6 +171,101 @@ html.dark select:not([class*="dark:text-"]),
   color: #ffffff;
 }
 
+/*
+ * Dark-mode surface fallback
+ *
+ * A number of the older routes predate the dark variant convention and use
+ * light Tailwind surface utilities directly.  Keeping this at the app root
+ * means the selected theme is honoured on every route (including lazy-loaded
+ * pages, dialogs and cards) while an explicit `dark:bg-*` / `dark:border-*`
+ * class still wins when a component needs a custom dark treatment.
+ */
+html.dark .bg-white:not([class*="dark:bg-"]),
+.dark .bg-white:not([class*="dark:bg-"]) {
+  background-color: var(--app-surface);
+}
+
+html.dark [class*="bg-white/"]:not([class*="dark:bg-"]),
+.dark [class*="bg-white/"]:not([class*="dark:bg-"]) {
+  background-color: rgb(17 24 39 / 0.92);
+}
+
+html.dark .bg-gray-50:not([class*="dark:bg-"]),
+html.dark .bg-slate-50:not([class*="dark:bg-"]),
+html.dark .bg-zinc-50:not([class*="dark:bg-"]),
+html.dark .bg-neutral-50:not([class*="dark:bg-"]),
+.dark .bg-gray-50:not([class*="dark:bg-"]),
+.dark .bg-slate-50:not([class*="dark:bg-"]),
+.dark .bg-zinc-50:not([class*="dark:bg-"]),
+.dark .bg-neutral-50:not([class*="dark:bg-"]) {
+  background-color: var(--app-surface-muted);
+}
+
+html.dark .bg-gray-100:not([class*="dark:bg-"]),
+html.dark .bg-slate-100:not([class*="dark:bg-"]),
+html.dark .bg-zinc-100:not([class*="dark:bg-"]),
+html.dark .bg-neutral-100:not([class*="dark:bg-"]),
+.dark .bg-gray-100:not([class*="dark:bg-"]),
+.dark .bg-slate-100:not([class*="dark:bg-"]),
+.dark .bg-zinc-100:not([class*="dark:bg-"]),
+.dark .bg-neutral-100:not([class*="dark:bg-"]) {
+  background-color: #1f2937;
+}
+
+html.dark .bg-gray-200:not([class*="dark:bg-"]),
+html.dark .bg-slate-200:not([class*="dark:bg-"]),
+html.dark .bg-zinc-200:not([class*="dark:bg-"]),
+html.dark .bg-neutral-200:not([class*="dark:bg-"]),
+.dark .bg-gray-200:not([class*="dark:bg-"]),
+.dark .bg-slate-200:not([class*="dark:bg-"]),
+.dark .bg-zinc-200:not([class*="dark:bg-"]),
+.dark .bg-neutral-200:not([class*="dark:bg-"]) {
+  background-color: #334155;
+}
+
+/* Preserve card boundaries and input affordances on legacy screens. */
+html.dark .border-gray-50:not([class*="dark:border-"]),
+html.dark .border-gray-100:not([class*="dark:border-"]),
+html.dark .border-gray-200:not([class*="dark:border-"]),
+html.dark .border-gray-300:not([class*="dark:border-"]),
+html.dark .border-slate-50:not([class*="dark:border-"]),
+html.dark .border-slate-100:not([class*="dark:border-"]),
+html.dark .border-slate-200:not([class*="dark:border-"]),
+html.dark .border-slate-300:not([class*="dark:border-"]),
+html.dark .border-zinc-100:not([class*="dark:border-"]),
+html.dark .border-zinc-200:not([class*="dark:border-"]),
+.dark .border-gray-50:not([class*="dark:border-"]),
+.dark .border-gray-100:not([class*="dark:border-"]),
+.dark .border-gray-200:not([class*="dark:border-"]),
+.dark .border-gray-300:not([class*="dark:border-"]),
+.dark .border-slate-50:not([class*="dark:border-"]),
+.dark .border-slate-100:not([class*="dark:border-"]),
+.dark .border-slate-200:not([class*="dark:border-"]),
+.dark .border-slate-300:not([class*="dark:border-"]),
+.dark .border-zinc-100:not([class*="dark:border-"]),
+.dark .border-zinc-200:not([class*="dark:border-"]) {
+  border-color: var(--app-border);
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select,
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark textarea,
+.dark select {
+  background-color: var(--app-input);
+  border-color: var(--app-border);
+  caret-color: #ffffff;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #cbd5e1;
+  opacity: 1;
+}
+
 /* Global overflow/scroll safety: one unified viewport scroll, no stuck horizontal contexts */
 #root {
   overflow-x: clip;

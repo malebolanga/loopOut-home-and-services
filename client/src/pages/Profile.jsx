@@ -1114,7 +1114,7 @@ export default function Profile() {
                     />
                     <MenuItem
                       icon={ListBulletIcon}
-                      label="Active Deployments"
+                      label="My listings"
                       active={activeSection === "my-listings"}
                       onClick={() => setActiveSection("my-listings")}
                       badge={userListings?.length || 0}
