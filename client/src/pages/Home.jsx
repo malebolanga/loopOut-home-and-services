@@ -64,8 +64,6 @@ import DownloadAppSection from '../components/home/DownloadAppSection';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 
 import {
-  calculateDistance,
-  POLOKWANE_COORDS,
   DISTANCE_TIERS,
   filterByDistanceTier
 } from '../utils/locationUtils';
@@ -135,6 +133,18 @@ const CATEGORY_ICON_DETAILS = {
     bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
   }
 };
+
+const HomeDataErrorNotice = ({ onRetry }) => (
+  <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-950 sm:flex-row sm:items-center sm:justify-between dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+    <div>
+      <p className="text-sm font-bold">Some listings could not be refreshed.</p>
+      <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-200">Check your connection and try again. Listings already on screen are still available.</p>
+    </div>
+    <button type="button" onClick={onRetry} className="shrink-0 rounded-xl bg-amber-950 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-amber-800 dark:bg-amber-400 dark:text-amber-950 dark:hover:bg-amber-300">
+      Try again
+    </button>
+  </div>
+);
 
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
@@ -1130,7 +1140,8 @@ function MobileAppHomepage({
   loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation, currentUser
+  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation, currentUser,
+  homeLoadError, onRetryHomeData
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -1416,6 +1427,8 @@ function MobileAppHomepage({
         setIsBookingsOpen={setIsBookingsOpen}
         requestCount={requestCount}
         stats={stats}
+        homeLoadError={homeLoadError}
+        onRetryHomeData={onRetryHomeData}
       />
     );
   }
@@ -1437,6 +1450,7 @@ function MobileAppHomepage({
       `}</style>
 
       <main className="px-4 pt-2 pb-4 w-full">
+        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
@@ -1559,7 +1573,7 @@ function MobileAppHomepage({
                     <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
                       }`}>
-                      {count}
+                      {isLoadingCurrentTab ? '...' : count}
                     </span>
                   </motion.button>
                 );
@@ -1575,7 +1589,7 @@ function MobileAppHomepage({
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                Live · {filteredItems.length}
+                {isLoadingCurrentTab ? 'Loading listings' : `Live · ${filteredItems.length}`}
               </span>
             </div>
           </div>
@@ -1739,7 +1753,9 @@ function DesktopHomepage({
   isBookingsOpen,
   setIsBookingsOpen,
   requestCount,
-  stats
+  stats,
+  homeLoadError,
+  onRetryHomeData
 }) {
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
@@ -1899,6 +1915,7 @@ function DesktopHomepage({
 
       {/* Main Clean Feed Grid */}
       <main className="max-w-7xl mx-auto px-8 py-8">
+        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Subcategories Horizontal Bar */}
         {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
           <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
@@ -1923,7 +1940,7 @@ function DesktopHomepage({
                       : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
                       }`}
                   >
-                    {count}
+                    {isLoadingCurrentTab ? '...' : count}
                   </span>
                 </motion.button>
               );
@@ -1948,7 +1965,7 @@ function DesktopHomepage({
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
-              Live · {getFilteredItems().length}
+              {isLoadingCurrentTab ? 'Loading listings' : `Live · ${getFilteredItems().length}`}
             </span>
           </div>
         </div>
@@ -2130,6 +2147,8 @@ const Home = () => {
   const [loadingHelpers, setLoadingHelpers] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingSellItems, setLoadingSellItems] = useState(true);
+  const [homeLoadError, setHomeLoadError] = useState(null);
+  const [dataRefreshKey, setDataRefreshKey] = useState(0);
 
   const [stats] = useState({});
   const [aiRecommendations, setAiRecommendations] = useState([]);
@@ -2237,8 +2256,18 @@ const Home = () => {
 
   const { coords, city, error: geoError, loading: geoLoading, requestLocation } = useLocationCoords();
   const [locationStatus, setLocationStatus] = useState(null);
+  const retryHomepageData = useCallback(() => {
+    setHomeLoadError(null);
+    setLoadingProperties(true);
+    setLoadingServices(true);
+    setLoadingHelpers(true);
+    setLoadingEvents(true);
+    setLoadingSellItems(true);
+    setDataRefreshKey((key) => key + 1);
+  }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const controllers = {
       properties: new AbortController(),
       services: new AbortController(),
@@ -2251,8 +2280,15 @@ const Home = () => {
     }, API_TIMEOUT);
 
     const fetchHomepageData = async () => {
+      setHomeLoadError(null);
       let searchCoords = coords || null;
       let detectedCity = city || null;
+      const hasPreciseLocation = Boolean(searchCoords?.latitude && searchCoords?.longitude);
+      const handleFetchFailure = (error) => {
+        if (!cancelled && error?.name !== 'AbortError') {
+          setHomeLoadError('Unable to refresh all homepage listings.');
+        }
+      };
 
       if (!coords && !city) {
         try {
@@ -2268,18 +2304,15 @@ const Home = () => {
         }
       }
 
-      if (!detectedCity) {
-        detectedCity = "Polokwane";
-        if (!searchCoords) searchCoords = { latitude: -23.8962, longitude: 29.4486 }; // POLOKWANE_COORDS
-      }
-
       const fetchPromises = [
         fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
             if (data?.length > 0) {
-              const localMatches = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
+              const localMatches = hasPreciseLocation
+                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity)
+                : [];
               if (localMatches.length > 0) {
                 setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                 setLocationStatus({
@@ -2287,7 +2320,9 @@ const Home = () => {
                   description: "Showing the best properties within your immediate area."
                 });
               } else {
-                const nearby = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
+                const nearby = hasPreciseLocation
+                  ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity)
+                  : [];
                 if (nearby.length > 0) {
                   setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                   setLocationStatus({
@@ -2295,7 +2330,9 @@ const Home = () => {
                     description: "No direct matches in your city, showing nearby neighborhoods."
                   });
                 } else {
-                  const regional = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
+                  const regional = hasPreciseLocation
+                    ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity)
+                    : [];
                   if (regional.length > 0) {
                     setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
                     setLocationStatus({
@@ -2311,14 +2348,16 @@ const Home = () => {
               setFeaturedProperties([]);
             }
           })
-          .catch(() => { setFeaturedProperties([]); }).finally(() => setLoadingProperties(false)),
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingProperties(false); }),
 
         fetch(`/api/service/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
+              const sorted = hasPreciseLocation
+                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+                : data;
               if (sorted.length > 0) {
                 setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
               } else {
@@ -2328,14 +2367,16 @@ const Home = () => {
               setFeaturedServices([]);
             }
           })
-          .catch(() => { setFeaturedServices([]); }).finally(() => setLoadingServices(false)),
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingServices(false); }),
 
         fetch(`/api/helper/get?limit=50&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
+              const sorted = hasPreciseLocation
+                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+                : data;
               if (sorted.length > 0) {
                 setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
               } else {
@@ -2345,14 +2386,16 @@ const Home = () => {
               setFeaturedHelpers([]);
             }
           })
-          .catch(() => { setFeaturedHelpers([]); }).finally(() => setLoadingHelpers(false)),
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
         fetch(`/api/event/get?limit=50&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
             if (data?.length > 0) {
-              const sorted = filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity);
+              const sorted = hasPreciseLocation
+                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+                : data;
               if (sorted.length > 0) {
                 setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
               } else {
@@ -2362,7 +2405,7 @@ const Home = () => {
               setFeaturedEvents([]);
             }
           })
-          .catch(() => { setFeaturedEvents([]); }).finally(() => setLoadingEvents(false)),
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingEvents(false); }),
 
         fetch(`/api/sell?limit=50`, {
           signal: controllers.sell.signal
@@ -2380,7 +2423,7 @@ const Home = () => {
               setFeaturedSellItems([]);
             }
           })
-          .catch(() => { setFeaturedSellItems([]); }).finally(() => setLoadingSellItems(false))
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingSellItems(false); })
       ];
 
       try {
@@ -2396,10 +2439,11 @@ const Home = () => {
     }
 
     return () => {
+      cancelled = true;
       clearTimeout(timeoutId);
       Object.values(controllers).forEach(controller => controller.abort());
     };
-  }, [coords, city, geoLoading]);
+  }, [coords, city, geoLoading, dataRefreshKey]);
 
   const recentlyAddedItems = useMemo(() => {
     const combined = [
@@ -2457,6 +2501,8 @@ const Home = () => {
       geoError={geoError}
       onRequestLocation={requestLocation}
       currentUser={currentUser}
+      homeLoadError={homeLoadError}
+      onRetryHomeData={retryHomepageData}
     />
   );
 };

@@ -14,9 +14,8 @@ import { BrandIcon } from '../BrandLogo';
 
 const SCREEN_DURATION = 3500;
 
-// Four mock screens walking through an actual booking — browse, view a
-// service, pick a time, get confirmed. Content is illustrative (fixed
-// sample data), not live app data.
+// Four static preview screens illustrate the booking journey. They are not
+// live listings, availability, or booking confirmations.
 const SCREENS = [
   {
     id: 'browse',
@@ -293,15 +292,15 @@ const SCREENS = [
         <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
           <CheckCircleIcon className="w-7 h-7 text-emerald-500" />
         </div>
-        <h4 className="text-[13px] font-black text-gray-900 tracking-tight">Booking confirmed!</h4>
+        <h4 className="text-[13px] font-black text-gray-900 tracking-tight">Booking preview</h4>
         <p className="text-[9px] text-gray-500 font-medium mt-1 leading-relaxed">
-          Home Deep Clean on Thu, 12 Sep at 14:00. Your pro will message you shortly.
+          Example confirmation for a home cleaning appointment.
         </p>
         <div className="mt-4 w-full rounded-xl border border-gray-100 p-2.5 flex items-center gap-2 text-left">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-rose-300 to-rose-400 flex-shrink-0" />
           <div>
-            <p className="text-[9px] font-black text-gray-900">Thandi M.</p>
-            <p className="text-[8px] text-gray-400 font-semibold">Your cleaning pro</p>
+            <p className="text-[9px] font-black text-gray-900">Example provider</p>
+            <p className="text-[8px] text-gray-400 font-semibold">Booking flow preview</p>
           </div>
         </div>
       </div>
@@ -390,9 +389,10 @@ const DownloadAppSection = () => {
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-[1.1]">
             Book a home service in under a minute
           </h2>
-          <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium leading-relaxed max-w-md mx-auto md:mx-0">
-            Browse trusted local pros, pick a time that works, and get confirmed instantly — the loopOut app is on its way to iOS and Android.
-          </p>
+           <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium leading-relaxed max-w-md mx-auto md:mx-0">
+             Browse trusted local pros, pick a time that works, and get confirmed instantly — the loopOut app is on its way to iOS and Android.
+           </p>
+           <p className="mt-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Illustrative app preview. Listings, prices, and availability shown in the preview are examples.</p>
           <div className="mt-8 flex flex-col sm:flex-row items-center md:items-start justify-center md:justify-start gap-3">
             <StoreBadge platform="ios" />
             <StoreBadge platform="android" />
