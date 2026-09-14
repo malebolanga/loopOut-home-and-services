@@ -175,32 +175,18 @@ export default function AIAssistantWidget() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 flex items-center gap-3"
+            className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50"
           >
-            {/* Pulsing Hint Pill */}
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1 }}
-              onClick={() => setIsOpen(true)}
-              className="hidden md:flex items-center gap-2 px-3.5 py-2 rounded-full bg-slate-950/90 text-white text-xs font-bold shadow-xl border border-white/10 backdrop-blur-md cursor-pointer hover:bg-slate-900 transition-all"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Ask LoopBot AI</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-500 font-extrabold uppercase">Live</span>
-            </motion.div>
-
-            {/* Glowing Bot Button */}
             <motion.button
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.94 }}
               onClick={() => setIsOpen(true)}
               aria-label="Open LoopBot AI Assistant"
-              className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-400 p-[2px] shadow-[0_10px_30px_rgba(244,63,94,0.4)] flex items-center justify-center group focus:outline-none"
+              className="relative h-[3.25rem] w-[3.25rem] rounded-full bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-400 p-[2px] shadow-[0_8px_22px_rgba(244,63,94,0.32)] flex items-center justify-center group focus:outline-none sm:h-14 sm:w-14"
             >
               <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-95">
                 <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/30 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Bot className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[2.2] group-hover:rotate-12 transition-transform duration-300" />
+                <Bot className="h-6 w-6 text-white stroke-[2.2] transition-transform duration-300 group-hover:rotate-12 sm:h-7 sm:w-7" />
                 <div className="absolute bottom-2 right-2 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full" />
               </div>
 

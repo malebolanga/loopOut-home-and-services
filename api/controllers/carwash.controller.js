@@ -4,7 +4,7 @@ import { errorHandler } from '../utils/error.js';
 // Get single car wash by ID
 export const getCarWash = async (req, res, next) => {
   try {
-    const carWash = await Service.findById(req.params.id);
+    const carWash = await Service.findById(req.params.id).populate('userRef', 'username avatar email isSuperhost');
     
     if (!carWash) {
       return next(errorHandler(404, 'Car wash not found!'));

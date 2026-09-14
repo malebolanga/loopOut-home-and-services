@@ -417,9 +417,24 @@ export const updateBookingStatus = async (req, res) => {
             messageText = `Your booking for "${itemName}" has been cancelled by the host.`;
           }
         } else if (status === 'confirmed' || status === 'approved') {
-          title = 'Booking Approved';
+          title = '📅 Booking Confirmed';
           recipientId = bookingUserId;
-          messageText = `Your booking request for "${itemName}" has been approved!`;
+          messageText = `Your appointment for "${itemName}" has been confirmed! View your schedule on the Calendar.`;
+
+          // Also notify the service provider / host so both parties receive the calendar confirmation
+          if (hostId && hostId.toString() !== bookingUserId?.toString()) {
+            try {
+              await new Notification({
+                userId: hostId,
+                type: 'booking',
+                title: '📅 Appointment Confirmed',
+                message: `Appointment for "${itemName}" with ${booking.user?.username || 'client'} is confirmed on your Calendar schedule.`,
+                data: { bookingId: booking._id, itemType, itemId, status: 'confirmed', isCalendar: true, link: '/calendar' }
+              }).save();
+            } catch (hostNotifErr) {
+              console.error('Failed to notify host of calendar confirmation:', hostNotifErr);
+            }
+          }
         } else if (status === 'declined') {
           title = 'Booking Declined';
           recipientId = bookingUserId;

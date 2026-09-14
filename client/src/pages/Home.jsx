@@ -1699,29 +1699,6 @@ function MobileAppHomepage({
         <CaughtUpHub stats={stats} navigate={navigate} />
 
       </main>
-
-      {/* loopOut Schedule FAB - Mobile */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsBookingsOpen(true)}
-        className="fixed bottom-52 right-4 z-[100] cursor-pointer"
-      >
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full blur-md opacity-40" />
-        <div className="relative bg-white text-gray-900 p-4 rounded-full shadow-2xl flex items-center justify-center border border-gray-100">
-          <CalendarDaysIcon className="w-5 h-5 text-blue-600" />
-          {requestCount > 0 && (
-            <div className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1.5 bg-rose-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] text-white font-bold shadow-sm z-10">
-              {requestCount}
-            </div>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Bookings Modal */}
-      <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
     </div>
   );
 }
@@ -2101,30 +2078,6 @@ function DesktopHomepage({
           <CaughtUpHub stats={stats} navigate={navigate} />
         </div>
       </main>
-
-      {/* loopOut Schedule FAB - Desktop */}
-      <motion.div
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 1.2, type: 'spring', stiffness: 200 }}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsBookingsOpen(true)}
-        className="fixed bottom-44 right-6 z-50 cursor-pointer"
-      >
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full blur-md opacity-30" />
-        <div className="relative bg-white text-slate-950 p-4 rounded-full shadow-xl flex items-center justify-center border border-slate-200 hover:border-blue-300 hover:shadow-2xl transition-all">
-          <CalendarDaysIcon className="w-5 h-5 text-blue-600" />
-          {requestCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[9px] font-bold min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm border-2 border-white">
-              {requestCount}
-            </span>
-          )}
-        </div>
-      </motion.div>
-
-      {/* Bookings Modal */}
-      <MyBookingsConsumer isOpen={isBookingsOpen} onClose={() => setIsBookingsOpen(false)} />
     </div>
   );
 }

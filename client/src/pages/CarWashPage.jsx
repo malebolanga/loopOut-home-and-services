@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
@@ -83,52 +83,88 @@ export default function CarWashPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Car wash service options - Airbnb style cards
-  const carWashServices = [
-    { 
-      id: 'basic-wash', 
-      name: 'Basic Exterior Wash', 
-      description: 'Complete exterior hand wash with tire shine and window cleaning',
-      price: 120,
-      duration: '45 mins',
-      includes: ['Hand wash', 'Tire shine', 'Window clean', 'Rinse & dry'],
-      popular: true
-    },
-    { 
-      id: 'interior-clean', 
-      name: 'Interior Deep Clean', 
-      description: 'Deep vacuum, surface wipe down, and odor elimination',
-      price: 180,
-      duration: '1 hr',
-      includes: ['Full vacuum', 'Dashboard clean', 'Door panels', 'Odor removal'],
-      popular: false
-    },
-    { 
-      id: 'full-detail', 
-      name: 'Full Detail Package', 
-      description: 'Complete interior and exterior detailing service',
-      price: 350,
-      duration: '2 hrs',
-      includes: ['Exterior wash', 'Interior clean', 'Wax polish', 'Tire dressing'],
-      popular: true
-    },
-    { 
-      id: 'premium-detail', 
-      name: 'Premium Ceramic Detail', 
-      description: 'Luxury treatment with ceramic coating protection',
-      price: 800,
-      duration: '3 hrs',
-      includes: ['Clay bar treatment', 'Ceramic coating', 'Leather conditioning', 'Engine bay clean'],
-      popular: false
-    }
+  // Standard package definitions fallback map
+  const STANDARD_PACKAGES_MAP = {
+    wash_glow: { id: 'wash_glow', name: 'Wash & Glow', description: 'Exterior hand wash, tire shine & high-gloss spray finish', price: 130, duration: '30-45 mins', includes: ['Exterior hand wash', 'Tire shine', 'High-gloss spray', 'Rinse & dry'], popular: true },
+    wash_dry: { id: 'wash_dry', name: 'Wash & Dry', description: 'Exterior hand wash, streak-free microfibre towel dry & windows', price: 100, duration: '30 mins', includes: ['Hand wash', 'Towel dry', 'Window clean', 'Tire rinse'], popular: false },
+    wash_dry_polish: { id: 'wash_dry_polish', name: 'Wash, Dry & Polish', description: 'Full exterior hand wash, towel dry & protective hand wax polish', price: 200, duration: '1 hr', includes: ['Hand wash', 'Microfibre dry', 'Hand wax polish', 'Tire shine'], popular: true },
+    engine_wash: { id: 'engine_wash', name: 'Engine Wash', description: 'High-pressure engine bay degrease & protective engine detailing', price: 150, duration: '30 mins', includes: ['Engine degreasing', 'High-pressure spray', 'Hose detailing', 'Protective coat'], popular: false },
+    interior_clean: { id: 'interior_clean', name: 'Interior Deep Clean', description: 'Full seat vacuuming, dashboard wipe, panel clean & odor elimination', price: 180, duration: '45 mins', includes: ['Full vacuum', 'Dashboard wipe', 'Panel cleaning', 'Odor removal'], popular: false },
+    full_detail: { id: 'full_detail', name: 'Full Detailing', description: 'Complete interior deep clean + exterior hand wash, dry & polish', price: 350, duration: '2 hrs', includes: ['Exterior wash & polish', 'Interior deep clean', 'Leather treatment', 'Tire dressing'], popular: true },
+    ceramic: { id: 'ceramic', name: 'Ceramic Coating', description: 'Paint decontamination, clay bar & long-lasting ceramic coat protection', price: 800, duration: '3 hrs', includes: ['Clay bar treatment', 'Ceramic coating', 'Paint decontamination', 'Engine clean'], popular: false },
+  };
+
+  const defaultServices = [
+    STANDARD_PACKAGES_MAP.wash_glow,
+    STANDARD_PACKAGES_MAP.wash_dry,
+    STANDARD_PACKAGES_MAP.wash_dry_polish,
+    STANDARD_PACKAGES_MAP.engine_wash,
+    STANDARD_PACKAGES_MAP.interior_clean,
+    STANDARD_PACKAGES_MAP.full_detail
   ];
 
-  const vehicleTypes = [
-    { id: 'sedan', name: 'Sedan', multiplier: 1.0 },
-    { id: 'suv', name: 'SUV', multiplier: 1.3 },
-    { id: '4x4', name: '4x4 / Truck', multiplier: 1.5 },
-    { id: 'luxury', name: 'Luxury / Executive', multiplier: 1.8 }
-  ];
+  // Dynamic wash services based on listing serviceList or carWashPackages
+  const activeServices = useMemo(() => {
+    if (carWash?.serviceList && carWash.serviceList.length > 0) {
+      return carWash.serviceList.map((item, idx) => ({
+        id: item.type || `service_${idx}`,
+        name: item.name,
+        description: item.description || 'Car wash service option',
+        price: item.price || 100,
+        duration: item.duration || '30-45 mins',
+        includes: item.description ? [item.description] : ['Professional wash service'],
+        popular: idx === 0 || item.type === 'full_detail' || item.type === 'wash_glow'
+      }));
+    }
+
+    if (carWash?.carWashPackages) {
+      const pkgList = carWash.carWashPackages.split(',').map(s => s.trim()).filter(Boolean);
+      return pkgList.map(pkgId => {
+        if (STANDARD_PACKAGES_MAP[pkgId]) return STANDARD_PACKAGES_MAP[pkgId];
+        return {
+          id: pkgId,
+          name: pkgId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          description: 'Car wash package option',
+          price: 150,
+          duration: '30-45 mins',
+          includes: ['Professional car wash service'],
+          popular: false
+        };
+      });
+    }
+
+    return defaultServices;
+  }, [carWash]);
+
+  // Dynamic vehicle types based on listing vehicleTypes string
+  const activeVehicleTypes = useMemo(() => {
+    if (carWash?.vehicleTypes) {
+      const typesList = carWash.vehicleTypes.split(',').map(s => s.trim()).filter(Boolean);
+      return typesList.map(typeStr => {
+        const lower = typeStr.toLowerCase();
+        let multiplier = 1.0;
+        if (lower.includes('suv') || lower.includes('crossover')) multiplier = 1.25;
+        else if (lower.includes('4x4') || lower.includes('bakkie') || lower.includes('truck')) multiplier = 1.4;
+        else if (lower.includes('van') || lower.includes('minibus')) multiplier = 1.5;
+        else if (lower.includes('luxury') || lower.includes('sports')) multiplier = 1.6;
+        else if (lower.includes('motorcycle') || lower.includes('quad')) multiplier = 0.8;
+
+        return {
+          id: typeStr,
+          name: typeStr,
+          multiplier
+        };
+      });
+    }
+    return [
+      { id: 'Sedan', name: 'Sedan', multiplier: 1.0 },
+      { id: 'Hatchback', name: 'Hatchback', multiplier: 1.0 },
+      { id: 'SUV / Crossover', name: 'SUV / Crossover', multiplier: 1.25 },
+      { id: '4x4 / Bakkie / Truck', name: '4x4 / Bakkie / Truck', multiplier: 1.4 },
+      { id: 'Van / Minibus', name: 'Van / Minibus', multiplier: 1.5 },
+      { id: 'Luxury / Sports Car', name: 'Luxury / Sports Car', multiplier: 1.6 }
+    ];
+  }, [carWash]);
 
   useEffect(() => {
     const fetchCarWash = async () => {
@@ -150,15 +186,15 @@ export default function CarWashPage() {
   useEffect(() => {
     let total = 0;
     selectedServices.forEach(serviceId => {
-      const service = carWashServices.find(s => s.id === serviceId);
+      const service = activeServices.find(s => s.id === serviceId || s.name === serviceId);
       if (service) total += service.price;
     });
     if (bookingData.vehicleType) {
-      const vehicle = vehicleTypes.find(v => v.id === bookingData.vehicleType);
-      if (vehicle) total = total * vehicle.multiplier;
+      const vehicle = activeVehicleTypes.find(v => v.id === bookingData.vehicleType || v.name === bookingData.vehicleType);
+      if (vehicle) total = Math.round(total * vehicle.multiplier);
     }
     setTotalPrice(Math.round(total));
-  }, [selectedServices, bookingData.vehicleType]);
+  }, [selectedServices, bookingData.vehicleType, activeServices, activeVehicleTypes]);
 
   const toggleDescription = () => setShowFullDescription(!showFullDescription);
 
@@ -636,7 +672,7 @@ export default function CarWashPage() {
             <div className="py-6 border-b border-gray-200 dark:border-gray-800">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Select your service</h2>
               <div className="space-y-4">
-                {carWashServices.map((service) => (
+                {activeServices.map((service) => (
                   <div 
                     key={service.id}
                     onClick={() => handleServiceSelection(service.id)}
@@ -691,15 +727,15 @@ export default function CarWashPage() {
               {selectedServices.length > 0 && (
                 <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600 dark:text-white">Vehicle type adjustment</span>
+                    <span className="text-gray-600 dark:text-white font-medium">Vehicle type adjustment</span>
                     <select 
                       name="vehicleType"
                       value={bookingData.vehicleType}
                       onChange={handleBookingChange}
-                      className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1 text-sm"
+                      className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-semibold"
                     >
-                      <option value="">Select vehicle</option>
-                      {vehicleTypes.map(v => (
+                      <option value="">Select vehicle type</option>
+                      {activeVehicleTypes.map(v => (
                         <option key={v.id} value={v.id}>{v.name}</option>
                       ))}
                     </select>

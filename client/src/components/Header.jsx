@@ -47,7 +47,8 @@ import {
   MicrophoneIcon,
   BoltIcon,
   FireIcon,
-  CalendarIcon
+  CalendarIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline';
 
 import {
@@ -75,7 +76,6 @@ import {
 
 import { Sparkles } from 'lucide-react';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
-import LoopStreakWidget from './home/LoopStreakWidget';
 
 const PROPERTY_SUBTYPES = [
   { id: 'rent', label: 'Rental', icon: '🏠' },
@@ -300,17 +300,85 @@ export default function Header() {
     }
   }, [currentUser?._id, playNotificationChime]);
 
+  // Track confirmed calendar appointments for user or host
+  const [calendarAlertCount, setCalendarAlertCount] = useState(0);
+
+  const fetchCalendarAlerts = useCallback(async (signal) => {
+    if (!currentUser?._id) {
+      setCalendarAlertCount(0);
+      return;
+    }
+    try {
+      const [userRes, hostRes] = await Promise.allSettled([
+        authenticatedFetch(`/api/bookings/user/${currentUser._id}`, { signal }),
+        authenticatedFetch(`/api/bookings/host/${currentUser._id}`, { signal })
+      ]);
+
+      let confirmedCount = 0;
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      if (userRes.status === 'fulfilled' && userRes.value?.ok) {
+        const uData = await userRes.value.json();
+        if (Array.isArray(uData)) {
+          const activeUser = uData.filter(b => {
+            const d = new Date(b.startDate);
+            d.setHours(0, 0, 0, 0);
+            return (b.status === 'confirmed' || b.status === 'approved') && d >= now;
+          });
+          confirmedCount += activeUser.length;
+        }
+      }
+
+      if (hostRes.status === 'fulfilled' && hostRes.value?.ok) {
+        const hData = await hostRes.value.json();
+        if (Array.isArray(hData)) {
+          const activeHost = hData.filter(b => {
+            const d = new Date(b.startDate);
+            d.setHours(0, 0, 0, 0);
+            return (b.status === 'confirmed' || b.status === 'approved') && d >= now;
+          });
+          confirmedCount += activeHost.length;
+        }
+      }
+
+      setCalendarAlertCount(confirmedCount);
+    } catch {
+      // Ignore aborts or network issues
+    }
+  }, [currentUser?._id]);
+
+  // Combined calendar notification indicator (unread calendar alerts + upcoming confirmed bookings)
+  const calendarBadgeCount = useMemo(() => {
+    const calendarUnread = notifications.filter(n =>
+      !n.read && (
+        n.type === 'booking' ||
+        n.data?.isCalendar ||
+        n.title?.toLowerCase().includes('calendar') ||
+        n.title?.toLowerCase().includes('confirmed') ||
+        n.message?.toLowerCase().includes('calendar') ||
+        n.message?.toLowerCase().includes('confirmed')
+      )
+    ).length;
+    return calendarUnread > 0 ? calendarUnread : calendarAlertCount;
+  }, [notifications, calendarAlertCount]);
+
   useEffect(() => {
     const controller = new AbortController();
     fetchNotifications(controller.signal);
+    fetchCalendarAlerts(controller.signal);
 
-    const refreshNotifications = () => fetchNotifications();
+    const refreshNotifications = () => {
+      fetchNotifications();
+      fetchCalendarAlerts();
+    };
     window.addEventListener('loopout:notification-created', refreshNotifications);
 
     // Set up polling for real-time alerts
     const interval = setInterval(() => {
       const pollController = new AbortController();
       fetchNotifications(pollController.signal);
+      fetchCalendarAlerts(pollController.signal);
     }, 30000); // Poll every 30s
 
     return () => {
@@ -318,7 +386,7 @@ export default function Header() {
       clearInterval(interval);
       window.removeEventListener('loopout:notification-created', refreshNotifications);
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, fetchCalendarAlerts]);
 
   // Sync search state with URL
   useEffect(() => {
@@ -741,71 +809,35 @@ export default function Header() {
             <div className="relative md:translate-x-[20px]">
               <div className="flex flex-row items-center gap-1.5 md:gap-3">
 
-                {/* Globe Icon */}
+                {/* Calendar Icon - Desktop and Mobile (Alone, sleek, without circle) */}
                 <button
-                  onClick={() => {
-                    setShowLanguageDropdown(!showLanguageDropdown);
-                    setShowProfileDropdown(false);
-                    setShowCurrencyDropdown(false);
-                  }}
-                  aria-label="Select language"
-                  className="language-button w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900"
+                  onClick={() => handleNavigate('/calendar')}
+                  aria-label={`Calendar Schedule${calendarBadgeCount > 0 ? `. ${calendarBadgeCount} confirmed appointments` : ''}`}
+                  title="Daily Schedule & Appointments Calendar"
+                  className="relative p-2 text-slate-700 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors flex items-center justify-center cursor-pointer rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-800/60"
                 >
-                  <GlobeAltIcon className="w-4 h-4" />
-                </button>
-
-                {/* Currency Selector */}
-                <button
-                  onClick={() => {
-                    setShowCurrencyDropdown(!showCurrencyDropdown);
-                    setShowLanguageDropdown(false);
-                    setShowProfileDropdown(false);
-                  }}
-                  aria-label={`Select currency. Current: ${selectedCurrency}`}
-                  className="currency-button px-3 h-9 border border-slate-200 rounded-full flex items-center gap-1 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 font-black text-[10px]"
-                >
-                  <span>{getCurrencySymbol()}</span>
-                  <span>{selectedCurrency}</span>
-                </button>
-
-                {/* Home Icon - Desktop */}
-                <Link
-                  to="/"
-                  aria-label="Home"
-                  className="relative w-9 h-9 border border-slate-200 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 hover:text-slate-900"
-                >
-                  <HomeIcon className="w-4 h-4 stroke-[2px]" />
-                </Link>
-
-                {/* Wishlist Icon - Desktop */}
-                <button
-                  onClick={() => handleNavigate('/wishlist')}
-                  aria-label="Wishlist"
-                  className="relative w-9 h-9 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all hidden md:flex text-slate-700 dark:text-gray-300 hover:text-slate-900 hover:text-rose-500"
-                >
-                  <HeartIcon className="w-4 h-4 stroke-[2px]" />
-                </button>
-
-                {/* Notification Bell Icon - Desktop and Mobile */}
-                <button
-                  onClick={handleNotificationsClick}
-                  aria-label={`Notifications. ${unreadCount} unread`}
-                  className="relative w-9 h-9 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center cursor-pointer hover:shadow-md hover:border-slate-400 transition-all flex text-slate-700 dark:text-gray-300"
-                >
-                  <BellIcon className="w-4 h-4 stroke-[2px]" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[14px] h-[14px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white shadow-sm z-10 font-bold">
-                      {unreadCount}
+                  <CalendarDaysIcon className="w-6 h-6 stroke-[1.8px]" />
+                  {calendarBadgeCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[15px] h-[15px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white dark:border-gray-900 shadow-sm z-10 font-black">
+                      {calendarBadgeCount}
                     </span>
                   )}
                 </button>
 
-                {/* Loop Streak Widget — Desktop, logged-in users only */}
-                {currentUser && (
-                  <div className="hidden md:flex">
-                    <LoopStreakWidget />
-                  </div>
-                )}
+                {/* Notification Bell Icon - Desktop and Mobile (Alone, sleek, without circle) */}
+                <button
+                  onClick={handleNotificationsClick}
+                  aria-label={`Notifications. ${unreadCount} unread`}
+                  title="Notifications"
+                  className="relative p-2 text-slate-700 dark:text-gray-300 hover:text-slate-950 dark:hover:text-white transition-colors flex items-center justify-center cursor-pointer rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-800/60"
+                >
+                  <BellIcon className="w-6 h-6 stroke-[1.8px]" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[15px] h-[15px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white dark:border-gray-900 shadow-sm z-10 font-black">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
 
                 {/* Profile / Sign In — Desktop */}
                 <div className="relative hidden md:block" ref={profileDropdownRef}>

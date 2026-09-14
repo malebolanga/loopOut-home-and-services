@@ -524,6 +524,24 @@ export default function CreateListing() {
   });
   const [roomImageUploading, setRoomImageUploading] = useState(false);
 
+  // Car Wash custom builder state
+  const [customVehicleInput, setCustomVehicleInput] = useState('');
+  const [customWashPackage, setCustomWashPackage] = useState({
+    name: '',
+    price: '',
+    description: '',
+    duration: ''
+  });
+  const [washPrices, setWashPrices] = useState({
+    wash_glow: 130,
+    wash_dry: 100,
+    wash_dry_polish: 200,
+    engine_wash: 150,
+    interior_clean: 180,
+    full_detail: 350,
+    ceramic: 800
+  });
+
   // Combined form state with all required fields
   const [listingForm, setListingForm] = useState({
     // Common fields
@@ -2622,80 +2640,327 @@ export default function CreateListing() {
                     )}
 
                     {selectedCategory === 'experiences' && selectedType === 'carwash' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <div>
-                          <label className="block text-base font-medium text-gray-900 dark:text-white mb-3">
-                            Car Wash Packages <span className="text-[#FF5A5F]">*</span>
+                      <div className="space-y-8 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        {/* 1. VEHICLE TYPES SECTION */}
+                        <div className="bg-gray-50 dark:bg-gray-800/60 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
+                          <label className="block text-base font-bold text-gray-900 dark:text-white mb-1">
+                            🚗 Vehicle Types Serviced (Type of the Car) <span className="text-[#FF5A5F]">*</span>
                           </label>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Select all car types your service accommodates, or add custom vehicle types.</p>
+                          
+                          <div className="flex flex-wrap gap-2.5 mb-4">
                             {[
-                              { id: "basic", label: "Basic Wash", desc: "Exterior wash, windows, tires" },
-                              { id: "premium", label: "Premium Wash", desc: "Exterior + interior vacuuming" },
-                              { id: "detailing", label: "Full Detailing", desc: "Complete interior/exterior" },
-                              { id: "ceramic", label: "Ceramic Coating", desc: "Ceramic coating protection" },
-                            ].map((pkg) => (
-                              <label key={pkg.id} className={`
-                                p-4 border-2 rounded-xl cursor-pointer transition-all duration-200
-                                ${listingForm.carWashPackages?.includes(pkg.id) 
-                                  ? 'border-black bg-gray-50 dark:bg-gray-800' 
-                                  : 'border-gray-200 dark:border-gray-800 hover:border-gray-400'}
-                              `}>
-                                <input
-                                  type="checkbox"
-                                  value={pkg.id}
-                                  checked={listingForm.carWashPackages?.includes(pkg.id)}
-                                  onChange={(e) => {
-                                    const current = listingForm.carWashPackages ? listingForm.carWashPackages.split(',') : [];
-                                    if (e.target.checked) {
-                                      current.push(pkg.id);
+                              "Sedan",
+                              "Hatchback",
+                              "SUV / Crossover",
+                              "4x4 / Bakkie / Truck",
+                              "Van / Minibus",
+                              "Luxury / Sports Car",
+                              "Motorcycle / Quad"
+                            ].map((vType) => {
+                              const currentTypes = listingForm.vehicleTypes ? listingForm.vehicleTypes.split(',').map(s => s.trim()).filter(Boolean) : [];
+                              const isSelected = currentTypes.includes(vType);
+                              return (
+                                <button
+                                  type="button"
+                                  key={vType}
+                                  onClick={() => {
+                                    let updated;
+                                    if (isSelected) {
+                                      updated = currentTypes.filter(t => t !== vType);
                                     } else {
-                                      const index = current.indexOf(pkg.id);
-                                      if (index > -1) current.splice(index, 1);
+                                      updated = [...currentTypes, vType];
                                     }
                                     setListingForm({
                                       ...listingForm,
-                                      carWashPackages: current.join(',')
+                                      vehicleTypes: updated.join(', ')
                                     });
                                   }}
-                                  className="hidden"
-                                />
-                                <div className="flex items-start gap-3">
-                                  <div className={`
-                                    w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5
-                                    ${listingForm.carWashPackages?.includes(pkg.id) 
-                                      ? 'bg-black border-black' 
-                                      : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700'}
-                                  `}>
-                                    {listingForm.carWashPackages?.includes(pkg.id) && 
-                                      <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-gray-900 dark:text-white">{pkg.label}</p>
-                                    <p className="text-sm text-gray-500 dark:text-white">{pkg.desc}</p>
+                                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 border-2 ${
+                                    isSelected 
+                                      ? 'bg-rose-500 text-white border-rose-500 shadow-sm' 
+                                      : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-gray-400'
+                                  }`}
+                                >
+                                  {isSelected && <CheckCircleIcon className="w-4 h-4 text-white" />}
+                                  {vType}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Custom vehicle type adder */}
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={customVehicleInput}
+                              onChange={(e) => setCustomVehicleInput(e.target.value)}
+                              placeholder="Add custom vehicle type (e.g. Coupe, Trailer)..."
+                              className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white focus:border-rose-500 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!customVehicleInput.trim()) return;
+                                const currentTypes = listingForm.vehicleTypes ? listingForm.vehicleTypes.split(',').map(s => s.trim()).filter(Boolean) : [];
+                                if (!currentTypes.includes(customVehicleInput.trim())) {
+                                  const updated = [...currentTypes, customVehicleInput.trim()];
+                                  setListingForm({
+                                    ...listingForm,
+                                    vehicleTypes: updated.join(', ')
+                                  });
+                                }
+                                setCustomVehicleInput('');
+                              }}
+                              className="px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-semibold text-sm hover:opacity-90 transition-opacity"
+                            >
+                              + Add
+                            </button>
+                          </div>
+
+                          {listingForm.vehicleTypes && (
+                            <p className="mt-3 text-xs font-semibold text-rose-500">
+                              Selected: {listingForm.vehicleTypes}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* 2. CAR WASH PACKAGES & OPTIONS */}
+                        <div>
+                          <label className="block text-base font-bold text-gray-900 dark:text-white mb-1">
+                            🧼 Car Wash Packages & Wash Options <span className="text-[#FF5A5F]">*</span>
+                          </label>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Select the wash options you offer and customize your price for each.</p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {[
+                              { id: "wash_glow", label: "Wash & Glow", desc: "Exterior hand wash, tire shine & high-gloss spray finish", defaultPrice: 130, duration: "30-45 mins", emoji: "✨" },
+                              { id: "wash_dry", label: "Wash & Dry", desc: "Exterior hand wash, streak-free microfibre towel dry & windows", defaultPrice: 100, duration: "30 mins", emoji: "🧽" },
+                              { id: "wash_dry_polish", label: "Wash, Dry & Polish", desc: "Full exterior hand wash, towel dry & protective hand wax polish", defaultPrice: 200, duration: "1 hr", emoji: "🚗" },
+                              { id: "engine_wash", label: "Engine Wash", desc: "High-pressure engine bay degrease & protective engine detailing", defaultPrice: 150, duration: "30 mins", emoji: "⚙️" },
+                              { id: "interior_clean", label: "Interior Deep Clean", desc: "Full seat vacuuming, dashboard wipe, panel clean & odor elimination", defaultPrice: 180, duration: "45 mins", emoji: "🪑" },
+                              { id: "full_detail", label: "Full Detailing", desc: "Complete interior deep clean + exterior hand wash, dry & polish", defaultPrice: 350, duration: "2 hrs", emoji: "💎" },
+                              { id: "ceramic", label: "Ceramic Coating", desc: "Paint decontamination, clay bar & long-lasting ceramic coat protection", defaultPrice: 800, duration: "3 hrs", emoji: "🛡️" }
+                            ].map((pkg) => {
+                              const currentPackages = listingForm.carWashPackages ? listingForm.carWashPackages.split(',').map(s => s.trim()).filter(Boolean) : [];
+                              const isChecked = currentPackages.includes(pkg.id);
+                              const price = washPrices[pkg.id] !== undefined ? washPrices[pkg.id] : pkg.defaultPrice;
+
+                              const handleToggle = (checked) => {
+                                let updatedPackages;
+                                if (checked) {
+                                  updatedPackages = [...currentPackages, pkg.id];
+                                } else {
+                                  updatedPackages = currentPackages.filter(p => p !== pkg.id);
+                                }
+                                
+                                // Build serviceList items for selected packages
+                                const allSelectedPkgObjs = [
+                                  { id: "wash_glow", label: "Wash & Glow", desc: "Exterior hand wash, tire shine & high-gloss spray finish", duration: "30-45 mins" },
+                                  { id: "wash_dry", label: "Wash & Dry", desc: "Exterior hand wash, streak-free microfibre towel dry & windows", duration: "30 mins" },
+                                  { id: "wash_dry_polish", label: "Wash, Dry & Polish", desc: "Full exterior hand wash, towel dry & protective hand wax polish", duration: "1 hr" },
+                                  { id: "engine_wash", label: "Engine Wash", desc: "High-pressure engine bay degrease & protective engine detailing", duration: "30 mins" },
+                                  { id: "interior_clean", label: "Interior Deep Clean", desc: "Full seat vacuuming, dashboard wipe, panel clean & odor elimination", duration: "45 mins" },
+                                  { id: "full_detail", label: "Full Detailing", desc: "Complete interior deep clean + exterior hand wash, dry & polish", duration: "2 hrs" },
+                                  { id: "ceramic", label: "Ceramic Coating", desc: "Paint decontamination, clay bar & long-lasting ceramic coat protection", duration: "3 hrs" }
+                                ].filter(item => updatedPackages.includes(item.id)).map(item => ({
+                                  type: item.id,
+                                  name: item.label,
+                                  description: item.desc,
+                                  price: washPrices[item.id] || 150,
+                                  duration: item.duration
+                                }));
+
+                                // Keep custom services in serviceList
+                                const existingCustom = (listingForm.serviceList || []).filter(s => !s.type || !["wash_glow","wash_dry","wash_dry_polish","engine_wash","interior_clean","full_detail","ceramic"].includes(s.type));
+
+                                setListingForm({
+                                  ...listingForm,
+                                  carWashPackages: updatedPackages.join(','),
+                                  serviceList: [...allSelectedPkgObjs, ...existingCustom]
+                                });
+                              };
+
+                              return (
+                                <div 
+                                  key={pkg.id} 
+                                  className={`p-4 border-2 rounded-2xl transition-all duration-200 ${
+                                    isChecked 
+                                      ? 'border-rose-500 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm' 
+                                      : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <label className="flex items-start gap-3 cursor-pointer flex-1">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={(e) => handleToggle(e.target.checked)}
+                                        className="mt-1 w-4 h-4 rounded text-rose-500 focus:ring-rose-500 border-gray-300"
+                                      />
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-lg">{pkg.emoji}</span>
+                                          <span className="font-bold text-gray-900 dark:text-white text-base">{pkg.label}</span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{pkg.desc}</p>
+                                        <span className="inline-block mt-1 text-[11px] font-semibold text-gray-400 dark:text-gray-500">Duration: {pkg.duration}</span>
+                                      </div>
+                                    </label>
+
+                                    {/* Price Input */}
+                                    <div className="w-28 flex-shrink-0">
+                                      <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Price (R)</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={price}
+                                        onChange={(e) => {
+                                          const newPrice = Number(e.target.value);
+                                          setWashPrices(prev => ({ ...prev, [pkg.id]: newPrice }));
+                                          if (isChecked) {
+                                            const updatedList = (listingForm.serviceList || []).map(item => {
+                                              if (item.type === pkg.id || item.name === pkg.label) {
+                                                return { ...item, price: newPrice };
+                                              }
+                                              return item;
+                                            });
+                                            setListingForm(prev => ({ ...prev, serviceList: updatedList }));
+                                          }
+                                        }}
+                                        className="w-full px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-900 dark:text-white focus:border-rose-500 focus:outline-none"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
-                              </label>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
 
+                        {/* 3. ADD CUSTOM CAR WASH SERVICE BUILDER */}
+                        <div className="bg-gray-50 dark:bg-gray-800/60 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 space-y-4">
+                          <div>
+                            <h4 className="font-bold text-gray-900 dark:text-white text-base">➕ Add Custom Car Wash Package / Service</h4>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Offer custom services like Headlight Restoration, Leather Treatment, Underbody Clean, etc.</p>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <input
+                              type="text"
+                              placeholder="Service Name (e.g. Underbody Wash)"
+                              value={customWashPackage.name}
+                              onChange={(e) => setCustomWashPackage({ ...customWashPackage, name: e.target.value })}
+                              className="px-3.5 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Price in R (e.g. 150)"
+                              value={customWashPackage.price}
+                              onChange={(e) => setCustomWashPackage({ ...customWashPackage, price: e.target.value })}
+                              className="px-3.5 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Duration (e.g. 30 mins)"
+                              value={customWashPackage.duration}
+                              onChange={(e) => setCustomWashPackage({ ...customWashPackage, duration: e.target.value })}
+                              className="px-3.5 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white"
+                            />
+                          </div>
+                          
+                          <input
+                            type="text"
+                            placeholder="Description of custom wash option..."
+                            value={customWashPackage.description}
+                            onChange={(e) => setCustomWashPackage({ ...customWashPackage, description: e.target.value })}
+                            className="w-full px-3.5 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!customWashPackage.name.trim() || !customWashPackage.price) return;
+                              const newCustomItem = {
+                                type: 'custom_' + Date.now(),
+                                name: customWashPackage.name.trim(),
+                                price: Number(customWashPackage.price),
+                                description: customWashPackage.description.trim() || 'Custom wash service',
+                                duration: customWashPackage.duration.trim() || '30 mins'
+                              };
+                              const updatedServiceList = [...(listingForm.serviceList || []), newCustomItem];
+                              setListingForm({
+                                ...listingForm,
+                                serviceList: updatedServiceList
+                              });
+                              setCustomWashPackage({ name: '', price: '', description: '', duration: '' });
+                            }}
+                            className="px-4 py-2 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 transition-colors"
+                          >
+                            + Add Custom Service Option
+                          </button>
+
+                          {/* List added custom services */}
+                          {listingForm.serviceList?.filter(s => s.type?.startsWith('custom_')).length > 0 && (
+                            <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                              <p className="text-xs font-bold text-gray-700 dark:text-gray-300">Custom Services Added:</p>
+                              {listingForm.serviceList.filter(s => s.type?.startsWith('custom_')).map((cItem, index) => (
+                                <div key={index} className="flex items-center justify-between p-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm">
+                                  <div>
+                                    <span className="font-bold text-gray-900 dark:text-white">{cItem.name}</span>
+                                    <span className="text-xs text-gray-500 ml-2">R{cItem.price} ({cItem.duration})</span>
+                                    {cItem.description && <p className="text-xs text-gray-400">{cItem.description}</p>}
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const filtered = listingForm.serviceList.filter(s => s.type !== cItem.type);
+                                      setListingForm({ ...listingForm, serviceList: filtered });
+                                    }}
+                                    className="text-xs font-bold text-rose-500 hover:underline"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 4. DURATION & SERVICE OPTIONS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <FormInput
-                            label="Vehicle Types Serviced"
-                            id="vehicleTypes"
-                            value={listingForm.vehicleTypes}
-                            onChange={handleFormChange}
-                            placeholder="e.g., Sedan, SUV, Truck"
-                            required
-                          />
-                          <FormInput
-                            label="Service Duration"
+                            label="Overall Estimated Duration"
                             id="serviceDuration"
                             value={listingForm.serviceDuration}
                             onChange={handleFormChange}
-                            placeholder="e.g., 30-45 mins"
+                            placeholder="e.g., 30-45 mins, 1-2 hours"
                             required
                           />
+                          
+                          <div className="space-y-3 pt-2">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                id="mobileService"
+                                checked={listingForm.mobileService}
+                                onChange={(e) => setListingForm({ ...listingForm, mobileService: e.target.checked })}
+                                className="w-5 h-5 rounded text-rose-500 focus:ring-rose-500 border-gray-300"
+                              />
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white">🚗 Mobile Service (I travel to customer's location)</span>
+                            </label>
+                            
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                id="ecoFriendly"
+                                checked={listingForm.ecoFriendly}
+                                onChange={(e) => setListingForm({ ...listingForm, ecoFriendly: e.target.checked })}
+                                className="w-5 h-5 rounded text-rose-500 focus:ring-rose-500 border-gray-300"
+                              />
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white">🌱 Eco-Friendly Products Used</span>
+                            </label>
+                          </div>
                         </div>
                       </div>
                     )}
