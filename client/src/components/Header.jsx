@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo, { BrandIcon } from './BrandLogo';
 import ImageWithFallback from './ImageWithFallback';
