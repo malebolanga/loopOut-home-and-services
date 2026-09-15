@@ -69,7 +69,10 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-const allowedOrigins = ['http://localhost:5173','http://localhost:5174','http://localhost:3000',process.env.CLIENT_URL,process.env.RENDER_EXTERNAL_URL].filter(Boolean);
+// Capacitor serves bundled Android files from https://localhost. Keep it in
+// the credentialed CORS allow-list so sign-in and authenticated API calls work
+// in the installed app as well as the browser development server.
+const allowedOrigins = ['http://localhost:5173','http://localhost:5174','http://localhost:3000','https://localhost',process.env.CLIENT_URL,process.env.RENDER_EXTERNAL_URL].filter(Boolean);
 app.use(cors({ origin: (origin, callback) => { if (!origin) return callback(null, true); if (allowedOrigins.includes(origin) || allowedOrigins.some(o => origin.startsWith(o)) || origin.endsWith('.onrender.com')) return callback(null, true); return callback(null, false); }, credentials: true }));
 app.use(helmet({
     contentSecurityPolicy: {

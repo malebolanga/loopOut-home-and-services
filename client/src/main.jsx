@@ -6,6 +6,12 @@ import './index.css';
 import { persistor, store } from './redux/store.js';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { installApiBaseUrl } from './utils/apiBaseUrl.js';
+
+// Android uses bundled web files, not Vite's development proxy. A release
+// build supplies VITE_API_BASE_URL so all existing /api requests reach the
+// deployed backend. Browser development keeps using the local Vite proxy.
+installApiBaseUrl();
 
 // Apply the user's saved theme immediately on load, before React renders.
 // Without this, dark mode only applied while the Settings page itself was
