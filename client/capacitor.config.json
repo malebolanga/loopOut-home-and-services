@@ -2,5 +2,8 @@
   "appId": "com.loupeout.app",
   "appName": "LoopOut",
   "webDir": "dist",
-  "backgroundColor": "#0f172a"
+  "backgroundColor": "#0f172a",
+  "server": {
+    "androidScheme": "http"
+  }
 }

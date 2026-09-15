@@ -1,12 +1,10 @@
+import { Capacitor } from '@capacitor/core';
+
 const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
-// Capacitor serves an installed Android app from https://localhost. A normal
-// browser must keep relative /api paths so the API and UI can share the same
-// local development origin.
-const isCapacitorApp = () =>
-  typeof window !== 'undefined' &&
-  window.location.protocol === 'https:' &&
-  window.location.hostname === 'localhost';
+// Only the installed Capacitor app uses the Wi-Fi API address. Browsers keep
+// relative /api paths, regardless of whether they are served over HTTP or HTTPS.
+const isCapacitorApp = () => Capacitor.isNativePlatform();
 
 /**
  * Resolves app API paths against a public backend when the web app runs in a
