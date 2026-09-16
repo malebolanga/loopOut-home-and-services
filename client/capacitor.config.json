@@ -1,6 +1,6 @@
 {
   "appId": "com.loupeout.app",
-  "appName": "LoopOut",
+  "appName": "loopOut",
   "webDir": "dist",
   "backgroundColor": "#0f172a",
   "server": {
