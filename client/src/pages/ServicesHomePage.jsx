@@ -139,7 +139,7 @@ const ServicesHomePage = () => {
       `}</style>
       
       {/* Sticky Header with Categories and Search */}
-      <div className="sticky top-0 z-40 bg-slate-50 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="app-safe-top sticky top-0 z-40 bg-slate-50 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
          {/* Top section: Search & Filters */}
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between gap-4">

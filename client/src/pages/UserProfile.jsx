@@ -183,7 +183,7 @@ const UserProfile = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors"
+          className="absolute left-4 bg-white/90 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:hover:bg-gray-900 transition-colors" style={{top: 'calc(1rem + env(safe-area-inset-top, 16px))'}}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

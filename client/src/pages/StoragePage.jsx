@@ -143,7 +143,7 @@ export default function StoragePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-800">
       {/* Nav */}
-      <div className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
+      <div className="app-safe-top sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-700 dark:text-white hover:text-rose-600 font-medium transition-colors">
           <FaArrowLeft className="w-4 h-4" /> Back
         </button>

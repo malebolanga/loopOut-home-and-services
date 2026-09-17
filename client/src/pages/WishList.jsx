@@ -348,7 +348,7 @@ const WishList = () => {
       `}</style>
       
       {/* Animated Header Section */}
-      <div className="relative pt-8 pb-8 px-6 overflow-hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
+      <div className="app-safe-top relative pb-8 px-6 overflow-hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-50/20 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto relative">
           {/* Back Button */}

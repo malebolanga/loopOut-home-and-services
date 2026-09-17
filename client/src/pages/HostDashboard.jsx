@@ -460,7 +460,7 @@ export default function HostDashboard() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-32">
-        <header className="sticky top-0 z-[100] -mx-6 px-6 py-5 bg-[#020617]/80 backdrop-blur-3xl border-b border-white/5 mb-16 flex items-center justify-between">
+        <header className="app-safe-top sticky top-0 z-[100] -mx-6 px-6 py-5 bg-[#020617]/80 backdrop-blur-3xl border-b border-white/5 mb-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
              <BrandLogo showText={true} textColor="text-white" className="h-10 w-auto" />
              <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />

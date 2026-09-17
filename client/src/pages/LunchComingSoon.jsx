@@ -1041,7 +1041,7 @@ export default function LunchComingSoon() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
+    <main className="app-safe-top min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
       <div className="mx-auto max-w-6xl w-full">
         
         {/* Top Bar Navigation */}

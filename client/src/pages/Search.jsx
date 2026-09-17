@@ -950,7 +950,7 @@ const SearchPage = () => {
       `}</style>
 
       {/* Clean Airbnb-style Header */}
-      <div className="sticky top-0 z-[60] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+      <div className="app-safe-top sticky top-0 z-[60] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
 
           {/* Logo */}

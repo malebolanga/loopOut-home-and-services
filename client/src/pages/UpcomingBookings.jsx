@@ -189,7 +189,7 @@ export default function UpcomingBookings() {
       </Helmet>
 
       {/* Top sticky navigation bar */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 py-4 px-4 sm:px-8">
+      <div className="app-safe-top sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100 py-4 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
