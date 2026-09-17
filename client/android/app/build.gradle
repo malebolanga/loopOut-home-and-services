@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.loupeout.app"
-    compileSdk = rootProject.ext.compileSdkVersion
+    namespace "com.loupeout.app"
+    compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
         applicationId "com.loupeout.app"
-        minSdk = rootProject.ext.minSdkVersion
-        targetSdk = rootProject.ext.targetSdkVersion
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
