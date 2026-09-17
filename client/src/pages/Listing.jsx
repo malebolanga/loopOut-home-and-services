@@ -2382,7 +2382,7 @@ export default function Listing() {
     <main className="min-h-screen overflow-x-hidden p-0">
       {/* Navigation Header */}
       {/* Navigation Header - Transparent on top of image */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
+      <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
         <div className="max-w-screen-xl mx-auto px-4 md:px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
             <button 
