@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { BrandIcon } from '../BrandLogo';
+import { isNativeApp } from '../../utils/nativeApp';
 
 const SCREEN_DURATION = 3500;
 
@@ -375,6 +376,10 @@ const StoreBadge = ({ platform }) => (
 );
 
 const DownloadAppSection = () => {
+  if (isNativeApp()) {
+    return null;
+  }
+
   return (
     <section className="py-16 md:py-24 bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">

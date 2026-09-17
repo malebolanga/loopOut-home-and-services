@@ -3890,7 +3890,7 @@ export default function CreateListing() {
             )}
 
             {/* Navigation Buttons - Airbnb Style */}
-            <div className="sticky bottom-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-5 pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center gap-4 z-40">
+            <div className="sticky bottom-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-5 pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center gap-4 z-40 safe-area-bottom mobile-booking-bar">
               <button
                 type="button"
                 onClick={() => {

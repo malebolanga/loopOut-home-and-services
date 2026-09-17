@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { isNativeApp } from '../utils/nativeApp';
 import {
   Sparkles,
   X,
@@ -175,7 +176,7 @@ export default function AIAssistantWidget() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0, y: 20 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50"
+            className={`fixed ${isNativeApp() ? 'bottom-44' : 'bottom-24'} right-4 sm:bottom-8 sm:right-8 z-50`}
           >
             <motion.button
               whileHover={{ scale: 1.08 }}
@@ -211,7 +212,7 @@ export default function AIAssistantWidget() {
             className={`fixed z-[999] shadow-2xl bg-white flex flex-col overflow-hidden border border-slate-200/80 font-sans transition-all duration-300 ${
               isExpanded
                 ? 'inset-2 sm:inset-6 rounded-3xl'
-                : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[440px] h-[580px] max-h-[85vh] rounded-[2rem]'
+                : `${isNativeApp() ? 'bottom-28' : 'bottom-4'} right-4 sm:bottom-6 sm:right-6 w-[calc(100vw-2rem)] sm:w-[440px] h-[580px] max-h-[85vh] rounded-[2rem]`
             }`}
           >
             {/* Header */}

@@ -372,7 +372,13 @@ function AppContent() {
     '/privacy',
     '/trust',
     '/terms',
-    '/host'
+    '/host',
+    // App-style pages — no footer needed
+    '/wishlist',
+    '/profile',
+    '/dashboard',
+    '/calendar',
+    '/planner',
   ];
   const hideHeaderPaths = [
     '/calendar',
@@ -415,7 +421,14 @@ function AppContent() {
   const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
-  const hideFooter = hideFooterPaths.includes(location.pathname) || isStoragePage;
+  const isListingsPage = location.pathname.startsWith('/listings') || isUserListingsPage;
+  const isInboxPage = location.pathname.startsWith('/messages');
+  const hideFooter =
+    hideFooterPaths.includes(location.pathname) ||
+    isStoragePage ||
+    isCreateListingPage ||
+    isListingsPage ||
+    isInboxPage;
   
   return (
     <>

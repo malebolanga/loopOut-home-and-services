@@ -340,7 +340,7 @@ const WishList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pb-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 pb-24 md:pb-6">
        <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

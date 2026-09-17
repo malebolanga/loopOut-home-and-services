@@ -13,14 +13,21 @@ html, body {
 }
 
 /* Safe areas let the interface sit correctly below iPhone notches and above
-   Android gesture bars when installed as a Capacitor app. */
+   Android system navigation bar (Back/Home/Overview buttons) or gesture bar */
 .app-safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(0px, env(safe-area-inset-top, 0px));
 }
 
-.app-safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+.app-safe-bottom,
+.safe-area-bottom {
+  padding-bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 24px))) !important;
 }
+
+/* Dedicated mobile booking & action bar wrapper to prevent overlay by phone navigation buttons */
+.mobile-booking-bar {
+  padding-bottom: max(1.75rem, calc(1.25rem + env(safe-area-inset-bottom, 28px))) !important;
+}
+
 
 .native-scroll {
   overflow-y: auto;

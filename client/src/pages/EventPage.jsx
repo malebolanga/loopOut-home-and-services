@@ -793,7 +793,7 @@ export default function EventPage() {
       {/* Floating Mobile Booking Belt */}
       {showBookingBelt && (
         <div className="fixed bottom-0 left-0 right-0 z-[90] md:hidden">
-          <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-200 dark:border-gray-800 p-4 flex items-center justify-between gap-4 safe-area-bottom">
+          <div className="bg-white/80 backdrop-blur-2xl border-t border-slate-200 dark:border-gray-800 p-4 flex items-center justify-between gap-4 safe-area-bottom mobile-booking-bar">
             <div>
               <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entry</div>
               <div className="text-xl font-black text-slate-900 dark:text-white">{event.regularPrice ? `R${event.regularPrice}` : 'Free'}</div>

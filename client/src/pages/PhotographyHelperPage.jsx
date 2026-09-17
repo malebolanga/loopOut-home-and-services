@@ -3312,7 +3312,7 @@ export default function PhotographyHelperPage() {
 
 
       {/* Mobile Bottom Bar - 100% Width & Flush to Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom mobile-booking-bar">
         <div className="flex items-center justify-between">
           <div className="flex-1 mr-4">
             <div className="flex items-baseline gap-2">

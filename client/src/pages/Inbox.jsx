@@ -165,7 +165,7 @@ export default function Inbox() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
+    <div className="max-w-[1400px] mx-auto h-[calc(100vh-184px)] md:h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
       
       {/* Sidebar: Conversation List */}
       <div className={`${showMobileChat ? 'hidden md:flex' : 'flex'} w-full md:w-[400px] flex-col border-r border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30`}>

@@ -1347,7 +1347,7 @@ export default function CarWashPage() {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40 safe-area-bottom mobile-booking-bar">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice || carWash.regularPrice}</span>

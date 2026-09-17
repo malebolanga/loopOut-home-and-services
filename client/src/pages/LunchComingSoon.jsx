@@ -4303,7 +4303,7 @@ export default function LunchComingSoon() {
 
       {/* FIXED FLOATING STICKY ORDER BASKET BAR (AT THE BOTTOM OF SCREEN) */}
       {cart.length > 0 && viewTab === 'customer' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent backdrop-blur-md">
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent backdrop-blur-md safe-area-bottom mobile-booking-bar">
           <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-3.5 sm:p-4 text-white shadow-2xl ring-2 ring-amber-300 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="relative rounded-xl bg-white/20 p-2.5 backdrop-blur-md">

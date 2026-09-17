@@ -40,6 +40,15 @@ const BottomNav = () => {
   const navRef = useRef(null);
   
   const hiddenBottomNavRoutes = [
+    '/wishlist',
+    '/profile',
+    '/dashboard',
+    '/calendar',
+    '/messages',
+    '/inbox',
+    '/planner',
+    '/listings',
+    '/create-listing',
     '/host-dashboard', 
     '/pro', 
     '/host-earnings', 
@@ -50,6 +59,7 @@ const BottomNav = () => {
     '/lunch'
   ];
   const hiddenBottomNavPrefixes = [
+    '/listings/',
     '/user/', 
     '/user-profile/', 
     '/listing/', 
@@ -72,7 +82,9 @@ const BottomNav = () => {
   
   const isBottomNavHidden = 
     hiddenBottomNavRoutes.includes(location.pathname) || 
-    hiddenBottomNavPrefixes.some(prefix => location.pathname.startsWith(prefix));
+    hiddenBottomNavPrefixes.some(prefix => location.pathname.startsWith(prefix)) ||
+    // User-specific workspace routes: /:userId/create-listing and /:userId/listings.
+    /^\/[^/]+\/(?:create-listing|listings)(?:\/|$)/.test(location.pathname);
 
   useEffect(() => {
     const handleClickOutside = (e) => {

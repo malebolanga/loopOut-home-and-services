@@ -468,7 +468,7 @@ export default function DashBoard() {
   });
 
   return (
-    <div className="min-h-screen py-8 bg-slate-50 dark:bg-gray-950 dashboard-container">
+    <div className="min-h-screen py-8 pb-24 md:pb-8 bg-slate-50 dark:bg-gray-950 dashboard-container">
       <style>{hideScrollbarStyle}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}

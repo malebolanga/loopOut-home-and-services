@@ -3526,7 +3526,7 @@ const ServicePage = () => {
       )}
 
       {/* Mobile Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-slate-100 dark:border-gray-800 px-4 py-3 lg:hidden z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-slate-100 dark:border-gray-800 px-4 py-3 lg:hidden z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] safe-area-bottom mobile-booking-bar">
         <div className="flex items-center justify-between gap-4 max-w-xl mx-auto">
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-1.5">

@@ -321,7 +321,7 @@ export default function StoragePage() {
       </div>
 
       {/* Mobile booking action */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 dark:border-gray-800 bg-white/95 p-3 backdrop-blur sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 dark:border-gray-800 bg-white/95 p-3 backdrop-blur sm:hidden safe-area-bottom mobile-booking-bar">
         <button onClick={() => setShowBooking(true)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 py-3.5 font-bold text-white shadow-lg shadow-rose-500/25">
           <FaRegCalendarAlt /> Choose a storage plan
         </button>

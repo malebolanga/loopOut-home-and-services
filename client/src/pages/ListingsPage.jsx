@@ -34,7 +34,7 @@ export default function ListingsPage() {
   }, [type]);
 
   return (
-    <div className="listings-page p-10">
+    <div className="listings-page p-10 pb-24 md:pb-10">
       <h1 className="text-2xl font-bold mb-4">
         Listings for {type.charAt(0).toUpperCase() + type.slice(1)}
       </h1>
