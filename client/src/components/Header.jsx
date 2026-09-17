@@ -741,7 +741,7 @@ export default function Header() {
           }}
           transition={{ type: 'spring', damping: 25, stiffness: 120, opacity: { duration: 0.2 } }}
           ref={headerRef}
-        className={`app-safe-top fixed top-0 left-0 right-0 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
+        className={`app-safe-top fixed top-1 left-0 right-0 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
           scrolled ? 'bg-white/90 dark:bg-gray-950/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
         }`}
         >

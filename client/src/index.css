@@ -402,6 +402,7 @@ html.dark textarea::placeholder,
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+  transform: translateY(4px);
 }
 
 .dark .glass-bottom-nav {
