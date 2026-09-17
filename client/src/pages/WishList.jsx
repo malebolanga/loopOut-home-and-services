@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   Share2,
   ExternalLink,
-  Plus
+  Plus,
+  ArrowLeft
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -350,6 +351,17 @@ const WishList = () => {
       <div className="relative pt-8 pb-8 px-6 overflow-hidden bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-50/20 to-transparent pointer-events-none" />
         <div className="max-w-7xl mx-auto relative">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            aria-label="Go back"
+            className="mb-4 flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <span className="w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:border-rose-300 transition-all">
+              <ArrowLeft className="w-4 h-4" />
+            </span>
+            Back
+          </button>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

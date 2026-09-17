@@ -38,6 +38,7 @@ import {
   MdLogout,
   MdEdit,
   MdArrowForward,
+  MdArrowBack,
   MdAdd,
   MdDelete,
   MdCameraAlt
@@ -980,6 +981,20 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pb-32 bg-slate-50 dark:bg-gray-950">
+      {/* Sticky Back Bar */}
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-slate-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
+        >
+          <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center">
+            <MdArrowBack size={18} />
+          </span>
+          <span className="hidden sm:inline">Back</span>
+        </button>
+        <span className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-gray-500">Profile</span>
+      </div>
       {/* Masterpiece Elite Account Header */}
       <div className="max-w-7xl mx-auto px-6 pt-32 mb-12">
         <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 p-12 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5">

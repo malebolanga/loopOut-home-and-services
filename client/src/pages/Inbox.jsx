@@ -170,7 +170,16 @@ export default function Inbox() {
       {/* Sidebar: Conversation List */}
       <div className={`${showMobileChat ? 'hidden md:flex' : 'flex'} w-full md:w-[400px] flex-col border-r border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30`}>
         <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Messages</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+              className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-rose-50 hover:text-rose-500 transition-all flex-shrink-0"
+            >
+              <FiArrowLeft size={18} />
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messages</h1>
+          </div>
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 

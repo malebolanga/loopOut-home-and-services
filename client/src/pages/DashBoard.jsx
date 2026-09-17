@@ -475,6 +475,17 @@ export default function DashBoard() {
         {/* Header with Title and Notification */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
            <div>
+              {/* Back Button */}
+              <button
+                onClick={() => navigate(-1)}
+                aria-label="Go back"
+                className="mb-4 flex items-center gap-2 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors "
+              >
+                <span className="w-8 h-8 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:border-rose-300 transition-all">
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </span>
+                Back
+              </button>
               <h1 className="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
                 {dashboardMode === 'hosting' ? 'Host Dashboard' : 'My Requests'}
               </h1>

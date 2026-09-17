@@ -379,6 +379,7 @@ function AppContent() {
     '/dashboard',
     '/calendar',
     '/planner',
+    '/settings',
   ];
   const hideHeaderPaths = [
     '/calendar',
