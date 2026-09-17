@@ -20,12 +20,12 @@ html, body {
 
 .app-safe-bottom,
 .safe-area-bottom {
-  padding-bottom: max(1.25rem, calc(0.75rem + env(safe-area-inset-bottom, 20px))) !important;
+  padding-bottom: max(1rem, calc(0.5rem + env(safe-area-inset-bottom, 18px))) !important;
 }
 
 /* Dedicated mobile booking & action bar wrapper to prevent overlay by phone navigation buttons */
 .mobile-booking-bar {
-  padding-bottom: max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 24px))) !important;
+  padding-bottom: max(1.25rem, calc(0.75rem + env(safe-area-inset-bottom, 22px))) !important;
 }
 
 
@@ -100,7 +100,7 @@ html, body {
 
   .glass-bottom-nav {
     padding-bottom: calc(0.25rem + env(safe-area-inset-bottom, 0px));
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
 }
 

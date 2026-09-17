@@ -124,7 +124,7 @@ const BottomNav = () => {
   ];
 
   return (
-    <div ref={navRef} className="app-safe-bottom bg-white dark:bg-gray-950 fixed -bottom-1 left-0 right-0 z-[100] md:hidden">
+    <div ref={navRef} className="app-safe-bottom bg-white dark:bg-gray-950 fixed bottom-[-6px] left-0 right-0 z-[100] md:hidden">
       {/* Profile Dropup Menu */}
       <AnimatePresence>
         {showProfileDropup && (
