@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { UtensilsCrossed, Store } from 'lucide-react';
 import { FaTimes, FaCalendarCheck, FaWhatsapp, FaPhone, FaMapMarkerAlt } from 'react-icons/fa';
 import { authenticatedFetch } from '../../utils/authenticatedFetch';
 
@@ -19,6 +20,226 @@ const statusColors = {
   assigned: 'text-blue-500',
   enroute: 'text-indigo-500',
   ongoing: 'text-rose-500',
+};
+
+// ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
+export const FALLBACK_FOOD_SPECIALS = [
+  {
+    id: 'special-1',
+    name: 'Flame BBQ Ribs',
+    price: 145,
+    tag: 'Chef Special',
+    image: '🍖',
+    shopId: 'urban-grill',
+    shopName: 'Urban Grill',
+    shopImage: '🥙',
+    shopCuisine: 'Grill & Flame'
+  },
+  {
+    id: 'special-2',
+    name: 'Beef Stew & Pap',
+    price: 115,
+    tag: 'Special',
+    image: '🥘',
+    shopId: 'mamas-kitchen',
+    shopName: "Mama's Kitchen",
+    shopImage: '🍛',
+    shopCuisine: 'Local Favourites'
+  },
+  {
+    id: 'special-3',
+    name: 'Chicken Caesar Salad',
+    price: 105,
+    tag: 'Fresh Special',
+    image: '🥗',
+    shopId: 'green-table',
+    shopName: 'The Green Table',
+    shopImage: '🥗',
+    shopCuisine: 'Healthy & Fresh'
+  },
+  {
+    id: 'special-4',
+    name: 'Steak & Chakalaka Pap',
+    price: 99,
+    tag: 'Special',
+    image: '🥩',
+    shopId: 'mapho',
+    shopName: 'Mapho Kitchen',
+    shopImage: '🏪',
+    shopCuisine: 'Traditional'
+  },
+  {
+    id: 'special-5',
+    name: 'Special Dagwood Kota',
+    price: 55,
+    tag: 'Popular',
+    image: '🥪',
+    shopId: 'lungile-food',
+    shopName: 'Lungile & Son',
+    shopImage: '🥙',
+    shopCuisine: 'Street Food'
+  },
+  {
+    id: 'special-6',
+    name: 'Loaded Kota Special',
+    price: 50,
+    tag: 'Special',
+    image: '🥪',
+    shopId: 'kota-joint',
+    shopName: 'Kota Joint',
+    shopImage: '🥪',
+    shopCuisine: 'Fast Food'
+  },
+  {
+    id: 'special-7',
+    name: 'Crispy Seasoned Chips',
+    price: 35,
+    tag: 'Special',
+    image: '🍟',
+    shopId: 'lungile-food',
+    shopName: 'Lungile & Son',
+    shopImage: '🍿',
+    shopCuisine: 'Fast Food'
+  }
+];
+
+export const FoodSpecialsStrip = ({ navigate }) => {
+  const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchShops = async () => {
+      try {
+        const res = await fetch('/api/lunch/shops');
+        if (!res.ok) return;
+        const shops = await res.json();
+        if (!Array.isArray(shops) || shops.length === 0) return;
+
+        const collected = [];
+        shops.forEach((shop) => {
+          if (!shop.meals || !shop.meals.length) return;
+          const available = shop.meals.filter((m) => m.isAvailable !== false);
+          if (!available.length) return;
+
+          const sorted = [...available].sort((a, b) => {
+            const aSpec = /(special|popular|hot|chef)/i.test(a.tag || '');
+            const bSpec = /(special|popular|hot|chef)/i.test(b.tag || '');
+            if (aSpec && !bSpec) return -1;
+            if (!aSpec && bSpec) return 1;
+            return 0;
+          });
+
+          sorted.slice(0, 2).forEach((meal) => {
+            collected.push({
+              id: meal.id,
+              name: meal.name,
+              price: meal.price,
+              tag: meal.tag || 'Special',
+              image: meal.image || '🍱',
+              shopId: shop.id || shop._id,
+              shopName: shop.name,
+              shopImage: shop.image || '🏪',
+              shopCuisine: shop.cuisine || 'Local'
+            });
+          });
+        });
+
+        if (isMounted && collected.length > 0) {
+          setFoodItems(collected);
+        }
+      } catch (err) {
+        // Keep fallback list
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchShops();
+    return () => { isMounted = false; };
+  }, []);
+
+  return (
+    <section className="mb-6 -mx-4">
+      <div className="flex items-center justify-between px-4 mb-3">
+        <div className="flex items-center gap-2">
+          <UtensilsCrossed className="w-4 h-4 text-amber-500" />
+          <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
+          <span className="text-[9px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+            Specials
+          </span>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/lunch')}
+          className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1"
+        >
+          See All Food <span aria-hidden="true">→</span>
+        </motion.button>
+      </div>
+
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
+        {foodItems.map((item, i) => (
+          <motion.div
+            key={`${item.shopId}-${item.id || i}`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.04 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate('/lunch', { state: { selectedShopId: item.shopId, highlightMealId: item.id } })}
+            className="snap-start shrink-0 w-[140px] sm:w-[160px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
+          >
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50/50 to-rose-50 dark:from-gray-800 dark:to-gray-900 mb-1.5 border border-amber-100/70 dark:border-gray-800 shadow-2xs">
+              {item.image && (item.image.startsWith('http') || item.image.startsWith('/')) ? (
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-3xl select-none group-hover:scale-110 transition-transform duration-300">
+                  {item.image || '🍱'}
+                </div>
+              )}
+
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider shadow-sm bg-gradient-to-r from-amber-500 to-rose-500 text-white">
+                {item.tag || 'SPECIAL'}
+              </div>
+
+              <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/65 backdrop-blur-md text-white rounded-md text-[8px] font-bold flex items-center gap-1 shadow-sm max-w-[90px] truncate">
+                <span className="text-[9px]">{item.shopImage || '🏪'}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider truncate">{item.shopName}</span>
+              </div>
+
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
+            </div>
+
+            <div className="flex flex-col">
+              <p className="font-bold text-gray-900 dark:text-white truncate text-[12px] sm:text-[13px] leading-tight mb-0.5 group-hover:text-amber-600 transition-colors">
+                {item.name}
+              </p>
+
+              <p className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-[10.5px] truncate leading-tight flex items-center gap-1">
+                <span className="truncate font-medium text-gray-700 dark:text-gray-300">{item.shopName}</span>
+                <span className="text-gray-300 dark:text-gray-600">·</span>
+                <span className="truncate text-gray-400">{item.shopCuisine}</span>
+              </p>
+
+              <div className="flex items-center justify-between mt-1">
+                <span className="font-black text-gray-900 dark:text-white text-[11.5px] sm:text-[12px]">
+                  R{item.price}
+                </span>
+                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                  Order
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
 };
 
 export const UpcomingBookingStrip = ({ navigate }) => {
@@ -84,7 +305,31 @@ export const UpcomingBookingStrip = ({ navigate }) => {
     return () => controller.abort();
   }, [currentUser?._id]);
 
-  if (!currentUser || (!loading && bookings.length === 0)) return null;
+  if (loading && currentUser) {
+    return (
+      <section className="mb-6 -mx-4">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-28 animate-pulse" />
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="shrink-0 w-[140px] sm:w-[160px] animate-pulse">
+              <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-800 rounded-xl mb-1.5" />
+              <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-1" />
+              <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // If there are NO upcoming bookings, hide "Your Upcoming" and show the Food Specials strip!
+  if (!currentUser || bookings.length === 0) {
+    return <FoodSpecialsStrip navigate={navigate} />;
+  }
+
+  // If there ARE upcoming bookings, show "Your Upcoming" and hide the food specials!
 
   return (
     <section className="mb-6 -mx-4">

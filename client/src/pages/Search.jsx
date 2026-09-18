@@ -1045,7 +1045,7 @@ const SearchPage = () => {
               : 'w-full'
           }`}
         >
-          <div className="px-2 md:px-10 pt-6 pb-28">
+          <div className="px-2 md:px-10 pt-6 app-safe-content-bottom pb-36">
 
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">

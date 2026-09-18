@@ -172,7 +172,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 app-safe-content-bottom pb-36 md:pb-12">
       {/* Cover Photo */}
       <div className="relative h-64 md:h-80 lg:h-96">
         <img

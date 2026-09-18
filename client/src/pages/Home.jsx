@@ -20,7 +20,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2 } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -666,6 +666,317 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
 const CommunityNeedsSection = () => null;
 
+// ─── Food Detail Modal ────────────────────────────────────────────────────────
+const FoodDetailModal = ({ item, onClose, navigate }) => {
+  if (!item) return null;
+  const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="food-modal-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
+        onClick={onClose}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <motion.div
+          key="food-modal-sheet"
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative z-10 w-full max-w-sm mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden">
+            <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700" />
+          </div>
+          {/* Close */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          {/* Hero */}
+          <div className="flex flex-col items-center pt-6 pb-5 px-6 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50 dark:from-gray-900 dark:to-gray-950">
+            <div className="text-7xl mb-3 select-none">{emoji}</div>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm mb-2">
+              {item.tag || 'SPECIAL'}
+            </span>
+            <h2 className="text-xl font-black text-gray-900 dark:text-white text-center leading-tight">
+              {item.name}
+            </h2>
+          </div>
+          {/* Body */}
+          <div className="px-6 py-4 flex flex-col gap-3">
+            {/* Shop row */}
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+              <span className="text-2xl">{item.shopImage || '🏪'}</span>
+              <div>
+                <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
+              </div>
+            </div>
+            {/* Description */}
+            {item.description && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
+            )}
+            {/* Price */}
+            <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
+              <div>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Price</p>
+                <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">R{item.price}</p>
+              </div>
+              {item.originalPrice && item.originalPrice > item.price && (
+                <div className="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800">
+                  <p className="text-[10px] font-black text-green-600 dark:text-green-400">Save R{item.originalPrice - item.price}</p>
+                </div>
+              )}
+            </div>
+            {/* Actions */}
+            <div className="flex gap-2 pb-2">
+              <button
+                onClick={() => { onClose(); navigate('/lunch', { state: { selectedShopId: item.shopId, highlightMealId: item.id } }); }}
+                className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
+              >
+                Order Now 🛒
+              </button>
+              <button
+                onClick={() => { onClose(); navigate('/lunch'); }}
+                className="px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-black rounded-2xl text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                See All
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+// ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
+
+const FALLBACK_FOOD_SPECIALS = [
+  {
+    id: 'special-1',
+    name: 'Flame BBQ Ribs',
+    price: 145,
+    tag: 'Chef Special',
+    image: '🍖',
+    shopId: 'urban-grill',
+    shopName: 'Urban Grill',
+    shopImage: '🥙',
+    shopCuisine: 'Grill & Flame'
+  },
+  {
+    id: 'special-2',
+    name: 'Beef Stew & Pap',
+    price: 115,
+    tag: 'Special',
+    image: '🥘',
+    shopId: 'mamas-kitchen',
+    shopName: "Mama's Kitchen",
+    shopImage: '🍛',
+    shopCuisine: 'Local Favourites'
+  },
+  {
+    id: 'special-3',
+    name: 'Chicken Caesar Salad',
+    price: 105,
+    tag: 'Fresh Special',
+    image: '🥗',
+    shopId: 'green-table',
+    shopName: 'The Green Table',
+    shopImage: '🥗',
+    shopCuisine: 'Healthy & Fresh'
+  },
+  {
+    id: 'special-4',
+    name: 'Steak & Chakalaka Pap',
+    price: 99,
+    tag: 'Special',
+    image: '🥩',
+    shopId: 'mapho',
+    shopName: 'Mapho Kitchen',
+    shopImage: '🏪',
+    shopCuisine: 'Traditional'
+  },
+  {
+    id: 'special-5',
+    name: 'Special Dagwood Kota',
+    price: 55,
+    tag: 'Popular',
+    image: '🥪',
+    shopId: 'lungile-food',
+    shopName: 'Lungile & Son',
+    shopImage: '🥙',
+    shopCuisine: 'Street Food'
+  },
+  {
+    id: 'special-6',
+    name: 'Loaded Kota Special',
+    price: 50,
+    tag: 'Special',
+    image: '🥪',
+    shopId: 'kota-joint',
+    shopName: 'Kota Joint',
+    shopImage: '🥪',
+    shopCuisine: 'Fast Food'
+  },
+  {
+    id: 'special-7',
+    name: 'Crispy Seasoned Chips',
+    price: 35,
+    tag: 'Special',
+    image: '🍟',
+    shopId: 'lungile-food',
+    shopName: 'Lungile & Son',
+    shopImage: '🍿',
+    shopCuisine: 'Fast Food'
+  }
+];
+
+const FoodSpecialsStrip = ({ navigate }) => {
+  const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
+  const [loading, setLoading] = useState(true);
+  const [selectedFood, setSelectedFood] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchShops = async () => {
+      try {
+        const res = await fetch('/api/lunch/shops');
+        if (!res.ok) return;
+        const shops = await res.json();
+        if (!Array.isArray(shops) || shops.length === 0) return;
+
+        const collected = [];
+        shops.forEach((shop) => {
+          if (!shop.meals || !shop.meals.length) return;
+          const available = shop.meals.filter((m) => m.isAvailable !== false);
+          if (!available.length) return;
+
+          // Prioritize meals marked special, popular, chef special, or hot
+          const sorted = [...available].sort((a, b) => {
+            const aSpec = /(special|popular|hot|chef)/i.test(a.tag || '');
+            const bSpec = /(special|popular|hot|chef)/i.test(b.tag || '');
+            if (aSpec && !bSpec) return -1;
+            if (!aSpec && bSpec) return 1;
+            return 0;
+          });
+
+          // Take up to 2 items per shop to present a diverse range of foods across different shops
+          sorted.slice(0, 2).forEach((meal) => {
+            collected.push({
+              id: meal.id,
+              name: meal.name,
+              price: meal.price,
+              tag: meal.tag || 'Special',
+              image: meal.image || '🍱',
+              shopId: shop.id || shop._id,
+              shopName: shop.name,
+              shopImage: shop.image || '🏪',
+              shopCuisine: shop.cuisine || 'Local'
+            });
+          });
+        });
+
+        if (isMounted && collected.length > 0) {
+          setFoodItems(collected);
+        }
+      } catch (err) {
+        // Keep fallback list smoothly
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchShops();
+    return () => { isMounted = false; };
+  }, []);
+
+  return (
+    <section className="mb-6 -mx-4">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 mb-3">
+        <div className="flex items-center gap-2">
+          <UtensilsCrossed className="w-4 h-4 text-amber-500" />
+          <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
+          <span className="text-[9px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+            Specials
+          </span>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/lunch')}
+          className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1"
+        >
+          See All Food <span aria-hidden="true">→</span>
+        </motion.button>
+      </div>
+
+      {/* Horizontal food strip */}
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
+        {foodItems.map((item, i) => (
+          <motion.div
+            key={`${item.shopId}-${item.id || i}`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.04 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setSelectedFood(item)}
+            className="snap-start shrink-0 w-[110px] sm:w-[120px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
+          >
+            {/* Card — no image, just info */}
+            <div className="flex flex-col gap-1 p-2.5 rounded-xl bg-white dark:bg-gray-900 transition-colors">
+              {/* Emoji + Tag row */}
+              <div className="flex items-center justify-between">
+                <span className="text-xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
+                <span className="text-[6.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white">
+                  {item.tag || 'SPECIAL'}
+                </span>
+              </div>
+
+              {/* Name */}
+              <p className="font-bold text-gray-900 dark:text-white truncate text-[11px] leading-tight group-hover:text-amber-600 transition-colors">
+                {item.name}
+              </p>
+
+              {/* Shop */}
+              <p className="text-gray-400 dark:text-gray-500 text-[9.5px] truncate leading-tight">
+                {item.shopName}
+              </p>
+
+              {/* Price + Order */}
+              <div className="flex items-center justify-between mt-0.5">
+                <span className="font-black text-gray-900 dark:text-white text-[11px]">R{item.price}</span>
+                <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                  Order
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Food Detail Modal */}
+      {selectedFood && (
+        <FoodDetailModal
+          item={selectedFood}
+          onClose={() => setSelectedFood(null)}
+          navigate={navigate}
+        />
+      )}
+    </section>
+  );
+};
+
+
 // ─── Upcoming Bookings Strip ──────────────────────────────────────────────────
 const UpcomingBookingStrip = ({ navigate }) => {
   const { currentUser } = useSelector((state) => state.user);
@@ -730,7 +1041,31 @@ const UpcomingBookingStrip = ({ navigate }) => {
     return () => controller.abort();
   }, [currentUser?._id]);
 
-  if (!currentUser || (!loading && bookings.length === 0)) return null;
+  if (loading && currentUser) {
+    return (
+      <section className="mb-6 -mx-4">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-28 animate-pulse" />
+        </div>
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="shrink-0 w-[140px] sm:w-[160px] animate-pulse">
+              <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-800 rounded-xl mb-1.5" />
+              <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-1" />
+              <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // If there are NO upcoming bookings, return nothing (FoodSpecialsStrip is now rendered separately above)
+  if (!currentUser || bookings.length === 0) {
+    return null;
+  }
+
+  // If there ARE upcoming bookings, show "Your Upcoming" and hide the food specials!
 
   const urgencyStyles = {
     today: { pill: 'bg-rose-500 text-white', bar: 'bg-rose-500', label: 'TODAY' },
@@ -1484,6 +1819,9 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
+        {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
+        <FoodSpecialsStrip navigate={navigate} />
+
         {/* ── UPCOMING BOOKINGS STRIP ── */}
         <UpcomingBookingStrip navigate={navigate} />
 
@@ -1924,6 +2262,11 @@ function DesktopHomepage({
             })}
           </div>
         )}
+
+        {/* Food Specials Strip — Desktop (always visible, right under search) */}
+        <div className="mb-6">
+          <FoodSpecialsStrip navigate={navigate} />
+        </div>
 
         {/* Upcoming Bookings Strip — Desktop */}
         <div className="mb-8">

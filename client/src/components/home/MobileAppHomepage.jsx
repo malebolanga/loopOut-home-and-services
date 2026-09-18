@@ -239,7 +239,7 @@ export default function MobileAppHomepage({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 text-slate-900 overflow-x-hidden pb-24">
+    <div className="min-h-screen bg-slate-50/70 text-slate-900 overflow-x-hidden app-safe-content-bottom pb-36">
       <Helmet>
         <title>LoopOut | What's Happening Around You Today</title>
         <meta

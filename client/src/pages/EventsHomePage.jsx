@@ -105,7 +105,7 @@ const EventsHomePage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen app-safe-content-bottom pb-36">
       <style>{`\n        .scrollbar-hide::-webkit-scrollbar { display: none; }\n        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }\n      `}</style>
 
       {/* Sticky Header */}

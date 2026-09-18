@@ -174,7 +174,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="app-safe-top min-h-screen bg-gray-50/50 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-white pb-20">
+    <div className="app-safe-top min-h-screen bg-gray-50/50 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-white app-safe-content-bottom pb-36 md:pb-20">
       <div className="max-w-6xl mx-auto px-4 md:px-8">
         
         {/* Breadcrumb Header */}

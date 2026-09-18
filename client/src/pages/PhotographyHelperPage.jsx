@@ -2161,7 +2161,7 @@ export default function PhotographyHelperPage() {
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-slate-50 dark:bg-gray-950">
       {/* Navigation - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">

@@ -182,7 +182,7 @@ export default function UpcomingBookings() {
   }, [bookings, filterType, filterUrgency, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-white pb-28">
+    <div className="min-h-screen bg-white app-safe-content-bottom pb-36 md:pb-12">
       <Helmet>
         <title>Your Upcoming Bookings | loopOut</title>
         <meta name="description" content="View and manage all your upcoming stays, helpers, services and event bookings." />

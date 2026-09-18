@@ -2379,7 +2379,7 @@ export default function Listing() {
   const breakfastTotal = mealPlan === 'breakfast' ? breakfastPrice * (days || 1) : 0;
   const grandTotal = roomTotal + breakfastTotal;
   return (
-    <main className="min-h-screen overflow-x-hidden p-0">
+    <main className="min-h-screen overflow-x-hidden p-0 app-safe-content-bottom pb-36 lg:pb-0">
       {/* Navigation Header */}
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>

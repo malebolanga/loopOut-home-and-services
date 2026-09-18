@@ -126,7 +126,7 @@ const ListingsHomePage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen app-safe-content-bottom pb-36">
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

@@ -31,7 +31,7 @@ import {
   ListPlus,
   Search
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { 
   subscribeToShops, 
@@ -370,6 +370,7 @@ export const formatCollectionDateTime = (ord) => {
 
 export default function LunchComingSoon() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user || {});
 
   // Ref for the horizontal shop slider
@@ -642,7 +643,9 @@ export default function LunchComingSoon() {
       // would always read '' inside this callback, resetting the user's pick.
       if (fetchedShops.length > 0 && !hasInitializedShopRef.current) {
         hasInitializedShopRef.current = true;
-        setSelectedShopId(fetchedShops[0].id);
+        const targetId = location.state?.selectedShopId;
+        const matched = targetId && fetchedShops.find(s => String(s.id || s._id) === String(targetId));
+        setSelectedShopId(matched ? (matched.id || matched._id) : fetchedShops[0].id);
       }
     });
 
@@ -1041,7 +1044,7 @@ export default function LunchComingSoon() {
   };
 
   return (
-    <main className="app-safe-top min-h-screen bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
+    <main className="app-safe-top min-h-screen app-safe-content-bottom pb-36 sm:pb-8 bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
       <div className="mx-auto max-w-6xl w-full">
         
         {/* Top Bar Navigation */}

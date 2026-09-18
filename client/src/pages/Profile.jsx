@@ -980,7 +980,7 @@ export default function Profile() {
   const profileCompletion = calculateProfileCompletion();
 
   return (
-    <div className="min-h-screen pb-32 bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen app-safe-content-bottom pb-36 md:pb-32 bg-slate-50 dark:bg-gray-950">
       {/* Sticky Back Bar */}
       <div className="app-safe-top sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-slate-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
         <button

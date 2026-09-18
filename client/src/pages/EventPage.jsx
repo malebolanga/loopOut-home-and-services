@@ -405,7 +405,7 @@ export default function EventPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden w-full">
+    <div className="min-h-screen app-safe-content-bottom pb-36 md:pb-0 bg-white dark:bg-gray-900 overflow-x-hidden w-full">
       {/* Dynamic Navigation */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${
         isScrolled ? 'bg-white/80 backdrop-blur-2xl border-b border-slate-200 dark:border-gray-800 py-3' : 'bg-transparent py-5'

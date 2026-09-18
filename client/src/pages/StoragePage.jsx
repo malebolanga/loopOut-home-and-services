@@ -153,7 +153,7 @@ export default function StoragePage() {
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 pt-6 pb-20">
+      <div className="max-w-7xl mx-auto px-4 pt-6 app-safe-content-bottom pb-36 sm:pb-20">
         {/* Gallery */}
         {images.length > 0 ? (
           <div className="relative -mx-4 mb-8 h-[330px] overflow-hidden bg-slate-900 sm:h-[440px] lg:h-[540px]">

@@ -1896,7 +1896,7 @@ export default function CreateListing() {
   const nextPhaseMeta = getPhaseMeta(nextPhase, selectedCategory);
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-gray-800">
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-gray-800 app-safe-content-bottom pb-36 md:pb-12">
       {/* Cinematic Animated Background */}
       <div className="fixed inset-0 -z-10 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose-500/5 rounded-full blur-[120px] animate-pulse" />

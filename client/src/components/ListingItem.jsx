@@ -1,23 +1,18 @@
 /* eslint-disable react/prop-types */
 import { Link } from "react-router-dom";
-import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+
 import { motion } from "framer-motion";
 import { BookOpen } from "lucide-react";
 import {
   MapPin,
   Home,
-  Tag,
   Heart,
-  User,
   Sparkles,
   Key,
   Building,
   Moon,
   LayoutGrid,
   Star,
-  ThumbsUp,
-  ThumbsDown,
-  Share2
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -275,10 +270,11 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className={`${className} group relative aspect-square bg-white sm:rounded-[2.5rem] md:rounded-[3rem] rounded-xl sm:mx-0 -mx-4 border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer`}
+      className={`${className} group relative bg-white dark:bg-gray-900 sm:rounded-[2rem] md:rounded-[2.5rem] rounded-xl sm:mx-0 -mx-4 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 cursor-pointer flex flex-col`}
       onClick={handleCardClick}
     >
-      <div className="absolute inset-0 z-0">
+      {/* ── Image Thumbnail ── */}
+      <div className="relative w-full h-44 shrink-0 overflow-hidden">
         <Swiper
           modules={[Pagination, Autoplay]}
           pagination={{ clickable: true, dynamicBullets: true }}
@@ -290,113 +286,87 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
               <ImageWithFallback
                 src={img.url}
                 alt={`${listing.name || 'Property'} image ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 imageClassName="object-top"
                 loading="lazy"
               />
             </SwiperSlide>
           ))}
         </Swiper>
-      </div>
 
-      {/* Bookings Counter Overlay */}
-      <div className="absolute top-5 right-5 flex items-center justify-center z-20 pointer-events-auto group/booking hover:-translate-y-1 transition-transform cursor-pointer">
-        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_10px_20px_rgba(0,0,0,0.2)] flex items-center justify-center text-white transition-all overflow-hidden flex-nowrap whitespace-nowrap">
-          <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span className="text-[10px] font-black ml-1.5 shrink-0">{listing.bookingsCount || 0}</span>
-          <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden group-hover/booking:inline-block transition-all ml-1.5 text-slate-200">Bookings</span>
-        </div>
-      </div>
-
-      {/* Top Overlays */}
-      <div className="absolute top-5 left-5 z-10 pointer-events-none flex flex-col gap-4">
+        {/* Heart */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(e);
-          }}
-          className="w-10 h-10 bg-white/80 backdrop-blur-md border border-white/40 rounded-2xl shadow-lg flex items-center justify-center text-gray-900 hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
+          onClick={(e) => { e.stopPropagation(); toggleFavorite(e); }}
+          className="absolute top-3 left-3 z-10 w-8 h-8 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-md flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all active:scale-90 pointer-events-auto"
         >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
+          <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'text-rose-500 fill-rose-500' : 'text-gray-400'}`} />
         </button>
 
-        <div className="px-3 py-1.5 bg-white/80 backdrop-blur-md border border-white/40 rounded-xl shadow-lg flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3 text-rose-500" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
+        {/* Bookings counter */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 px-2 py-1 bg-black/55 backdrop-blur-md border border-white/20 rounded-lg text-white">
+          <BookOpen className="w-3 h-3 text-emerald-400" />
+          <span className="text-[9px] font-black">{listing.bookingsCount || 0}</span>
         </div>
+
+        {/* Type pill */}
+        <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1 px-2 py-1 bg-white/85 backdrop-blur-md rounded-lg shadow-sm">
+          <Sparkles className="w-2.5 h-2.5 text-rose-500" />
+          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-900">{getPropertyTypeName(listing.type)}</span>
+        </div>
+
+        <LoopOutBanner className="group-hover:translate-y-1 transition-transform duration-500" type="stay" />
       </div>
 
-      {/* LoopOut Brand Banner Overlay */}
-      <LoopOutBanner className="group-hover:translate-y-2 transition-transform duration-500" type="stay" />
-
-      {/* Permanent Information Overlay (On Image) */}
-      <div className="absolute inset-x-0 bottom-0 z-10 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none">
-        <div className="flex justify-between items-end gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1 text-white">
-              <Star className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
-              <span className="text-xs font-black flex items-center gap-1">
-                <span>{(ratingData.average || 0).toFixed(1)}</span>
-                <span className="font-normal opacity-80 pointer-events-auto hover:text-rose-300">({ratingData.count})</span>
-              </span>
-            </div>
-            <h3 className="text-base font-black text-white leading-tight truncate mb-0.5">
-              {listing.name}
-            </h3>
-            <p className="text-xs text-white/70 font-medium truncate flex items-center gap-1">
-               <MapPin className="w-3 h-3" />
-              {listing.address || 'Private Location'}
-            </p>
+      {/* ── Card Body ── */}
+      <div className="flex flex-col flex-1 p-4 gap-2">
+        {/* Name & Rating */}
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-black text-gray-900 dark:text-white leading-tight truncate flex-1">
+            {listing.name}
+          </h3>
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Star className="w-3 h-3 text-rose-400 fill-rose-400" />
+            <span className="text-xs font-black text-gray-900 dark:text-white">{(ratingData.average || 0).toFixed(1)}</span>
+            <span className="text-[9px] text-gray-400 ml-0.5">({ratingData.count})</span>
           </div>
-          <div className="flex flex-col items-end gap-2 shrink-0 pointer-events-auto">
-            <div className="flex items-center gap-1 mt-0.5">
-              <StarIconSolid className="w-3.5 h-3.5 text-white" />
-              <span className="font-medium text-white text-[14px]">
-                <span>{(ratingData.average || 0).toFixed(1)}</span>
-              </span>
-            </div>
+        </div>
+
+        {/* Address */}
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+          <MapPin className="w-3 h-3 shrink-0" />
+          {listing.address || 'Private Location'}
+        </p>
+
+        {/* Price + actions */}
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 dark:border-gray-800">
+          <div className="font-black text-gray-900 dark:text-white text-sm tracking-tight">
+            R{listing.regularPrice?.toLocaleString()}
+          </div>
+          <div className="flex items-center gap-2">
             {listing.userRef?.avatar && (
               <Link
                 to={`/user/${listing.userRef._id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="w-5 h-5 rounded-full border border-gray-150 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
+                className="w-6 h-6 rounded-full border border-gray-200 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0"
                 title={`Posted by ${listing.userRef.username}`}
               >
                 <img src={listing.userRef.avatar} alt={listing.userRef.username} loading="lazy" className="w-full h-full object-cover" />
               </Link>
             )}
-            <div className="text-xl font-black text-white tracking-tighter leading-none mb-1">
-              R{listing.regularPrice?.toLocaleString()}
-            </div>
-            <div className="text-[8px] font-black text-white/50 uppercase tracking-[0.2em] leading-none text-nowrap">Perspective</div>
+            <Link
+              to={`/listing/${listing._id}`}
+              onClick={handleCardClick}
+              className="text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl hover:bg-rose-500 dark:hover:bg-rose-500 dark:hover:text-white transition-all"
+            >
+              View
+            </Link>
           </div>
-        </div>
-      </div>
-
-      {/* Hover Action Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-8 bg-gray-900/50 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none group-hover:pointer-events-auto">
-        <div className="w-full space-y-4 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-          <div className="flex gap-2">
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-green-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsUp className="w-4 h-4" />
-              {listing.votes?.up || 0}
-            </div>
-            <div className="flex-1 py-3 bg-white/10 border border-white/20 backdrop-blur-sm text-rose-400 rounded-2xl font-black uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-1.5 shadow-sm">
-              <ThumbsDown className="w-4 h-4" />
-              {listing.votes?.down || 0}
-            </div>
-          </div>
-          <Link
-            to={`/listing/${listing._id}`}
-            onClick={handleCardClick}
-            className="block w-full py-4 bg-white text-gray-900 rounded-2xl font-black uppercase tracking-[0.2em] text-center text-xs hover:bg-rose-500 hover:text-white transition-all shadow-2xl"
-          >
-            Inspect Original Masterpiece
-          </Link>
         </div>
       </div>
     </motion.div>
   );
 }
 
+
 export default ListingItem;
+
