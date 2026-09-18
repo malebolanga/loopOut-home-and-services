@@ -35,9 +35,19 @@ export default function ListingsPage() {
 
   return (
     <div className="listings-page p-10 pb-24 md:pb-10">
-      <h1 className="text-2xl font-bold mb-4">
-        Listings for {type.charAt(0).toUpperCase() + type.slice(1)}
-      </h1>
+      <div className="mb-4 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg font-bold text-gray-700 shadow-sm ring-1 ring-gray-200 transition hover:bg-rose-50 hover:text-rose-600 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800"
+        >
+          ←
+        </button>
+        <h1 className="text-2xl font-bold">
+          Listings for {type.charAt(0).toUpperCase() + type.slice(1)}
+        </h1>
+      </div>
 
       {loading ? (
         <div className="flex justify-center py-20">

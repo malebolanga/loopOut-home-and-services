@@ -47,6 +47,35 @@ export default defineConfig({
             if (normalizedId.includes('/leaflet/')) {
               return 'vendor-leaflet';
             }
+            if (normalizedId.includes('/react/') || normalizedId.includes('/react-dom/') || normalizedId.includes('/scheduler/')) {
+              return 'vendor-react';
+            }
+            if (normalizedId.includes('/react-router/') || normalizedId.includes('/@remix-run/')) {
+              return 'vendor-router';
+            }
+            if (normalizedId.includes('/@reduxjs/') || normalizedId.includes('/react-redux/') || normalizedId.includes('/redux/')) {
+              return 'vendor-state';
+            }
+            if (normalizedId.includes('/framer-motion/') || normalizedId.includes('/motion-dom/') || normalizedId.includes('/motion-utils/')) {
+              return 'vendor-motion';
+            }
+            if (
+              normalizedId.includes('/bootstrap/') ||
+              normalizedId.includes('/react-bootstrap/') ||
+              normalizedId.includes('/@headlessui/')
+            ) {
+              return 'vendor-ui';
+            }
+            if (
+              normalizedId.includes('/swiper/') ||
+              normalizedId.includes('/react-multi-carousel/') ||
+              normalizedId.includes('/react-responsive-carousel/')
+            ) {
+              return 'vendor-carousel';
+            }
+            if (normalizedId.includes('/@react-google-maps/') || normalizedId.includes('/react-map-gl/')) {
+              return 'vendor-maps';
+            }
             if (
               normalizedId.includes('/@heroicons/') ||
               normalizedId.includes('/lucide-react/') ||

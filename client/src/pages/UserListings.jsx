@@ -164,6 +164,14 @@ export default function UserListings() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                aria-label="Go back"
+                className="mb-4 flex h-10 items-center gap-2 rounded-full bg-gray-100 px-4 text-sm font-bold text-gray-700 transition hover:bg-rose-50 hover:text-rose-600 dark:bg-gray-800 dark:text-gray-200"
+              >
+                <span aria-hidden="true">←</span> Back
+              </button>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                 Welcome back, {currentUser?.username?.split(' ')[0] || 'User'}
               </h1>

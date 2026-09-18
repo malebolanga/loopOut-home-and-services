@@ -47,6 +47,7 @@ const BottomNav = () => {
     '/messages',
     '/inbox',
     '/planner',
+    '/settings',
     '/listings',
     '/create-listing',
     '/host-dashboard', 
@@ -60,6 +61,7 @@ const BottomNav = () => {
   ];
   const hiddenBottomNavPrefixes = [
     '/listings/',
+    '/messages/',
     '/user/', 
     '/user-profile/', 
     '/listing/', 

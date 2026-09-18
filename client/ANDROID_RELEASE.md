@@ -1,7 +1,8 @@
 # Android release checklist
 
 LoopOut now runs from bundled app files in the Android shell. It does not load
-the development server on a private network.
+the development server on a private network. Release builds use HTTPS for the
+bundled app origin and must use a public HTTPS API.
 
 ## Build configuration
 
