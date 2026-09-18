@@ -3,11 +3,13 @@ services:
     name: loupeout-home
     runtime: node
     plan: free
-    buildCommand: npm ci && npm ci --prefix client && npm run build --prefix client
+    buildCommand: npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeployTrigger: commit
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: NODE_ENV
         value: production
       - key: MONGO
