@@ -716,15 +716,47 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
             {/* Shop row */}
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
               <span className="text-2xl">{item.shopImage || '🏪'}</span>
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
                 <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
               </div>
+              {/* Prep time + Calories chips */}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {item.prepTime && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                    ⏱ {item.prepTime}
+                  </span>
+                )}
+                {item.calories && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                    🔥 {item.calories}
+                  </span>
+                )}
+              </div>
             </div>
+
             {/* Description */}
             {item.description && (
               <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
             )}
+
+            {/* Ingredients */}
+            {item.ingredients && item.ingredients.length > 0 && (
+              <div>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Ingredients</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.ingredients.map((ing, idx) => (
+                    <span
+                      key={idx}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                    >
+                      {ing}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Price */}
             <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
               <div>
@@ -737,6 +769,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                 </div>
               )}
             </div>
+
             {/* Actions */}
             <div className="flex gap-2 pb-2">
               <button
@@ -771,7 +804,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
     shopImage: '🥙',
-    shopCuisine: 'Grill & Flame'
+    shopCuisine: 'Grill & Flame',
+    description: 'Slow-cooked pork ribs glazed with our signature smoky BBQ sauce, served with grilled corn and fries.',
+    prepTime: '25 min',
+    calories: '820 kcal',
+    ingredients: ['Pork ribs', 'BBQ sauce', 'Corn', 'Fries', 'Coleslaw']
   },
   {
     id: 'special-2',
@@ -782,7 +819,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'mamas-kitchen',
     shopName: "Mama's Kitchen",
     shopImage: '🍛',
-    shopCuisine: 'Local Favourites'
+    shopCuisine: 'Local Favourites',
+    description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
+    prepTime: '30 min',
+    calories: '650 kcal',
+    ingredients: ['Beef', 'Tomato gravy', 'Potatoes', 'Carrots', 'Pap']
   },
   {
     id: 'special-3',
@@ -793,7 +834,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'green-table',
     shopName: 'The Green Table',
     shopImage: '🥗',
-    shopCuisine: 'Healthy & Fresh'
+    shopCuisine: 'Healthy & Fresh',
+    description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
+    prepTime: '10 min',
+    calories: '420 kcal',
+    ingredients: ['Grilled chicken', 'Romaine lettuce', 'Parmesan', 'Croutons', 'Caesar dressing']
   },
   {
     id: 'special-4',
@@ -804,7 +849,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'mapho',
     shopName: 'Mapho Kitchen',
     shopImage: '🏪',
-    shopCuisine: 'Traditional'
+    shopCuisine: 'Traditional',
+    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
+    prepTime: '20 min',
+    calories: '720 kcal',
+    ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
   },
   {
     id: 'special-5',
@@ -815,7 +864,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
     shopImage: '🥙',
-    shopCuisine: 'Street Food'
+    shopCuisine: 'Street Food',
+    description: 'Quarter loaf loaded with Russian sausage, chips, egg, atchar and your choice of sauce.',
+    prepTime: '10 min',
+    calories: '580 kcal',
+    ingredients: ['Quarter loaf', 'Russian', 'Chips', 'Egg', 'Atchar', 'Sauce']
   },
   {
     id: 'special-6',
@@ -826,7 +879,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
     shopImage: '🥪',
-    shopCuisine: 'Fast Food'
+    shopCuisine: 'Fast Food',
+    description: 'Freshly hollowed quarter loaf packed with polony, cheese, chips and tangy chutney.',
+    prepTime: '8 min',
+    calories: '540 kcal',
+    ingredients: ['Quarter loaf', 'Polony', 'Cheese', 'Chips', 'Chutney']
   },
   {
     id: 'special-7',
@@ -837,7 +894,11 @@ const FALLBACK_FOOD_SPECIALS = [
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
     shopImage: '🍿',
-    shopCuisine: 'Fast Food'
+    shopCuisine: 'Fast Food',
+    description: 'Golden crispy chips seasoned with our house spice blend, served with tomato or chilli sauce.',
+    prepTime: '5 min',
+    calories: '310 kcal',
+    ingredients: ['Potatoes', 'Vegetable oil', 'House spice blend', 'Sauce of choice']
   }
 ];
 
@@ -876,8 +937,13 @@ const FoodSpecialsStrip = ({ navigate }) => {
               id: meal.id,
               name: meal.name,
               price: meal.price,
+              originalPrice: meal.originalPrice,
               tag: meal.tag || 'Special',
               image: meal.image || '🍱',
+              description: meal.description || '',
+              prepTime: meal.prepTime || null,
+              calories: meal.calories || null,
+              ingredients: meal.ingredients || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
               shopImage: shop.image || '🏪',
@@ -901,15 +967,12 @@ const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-6 -mx-4">
+    <section className="mb-4 -mx-4">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 mb-3">
+      <div className="flex items-center justify-between px-4 mb-1">
         <div className="flex items-center gap-2">
           <UtensilsCrossed className="w-4 h-4 text-amber-500" />
           <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
-          <span className="text-[9px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
-            Specials
-          </span>
         </div>
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -933,13 +996,10 @@ const FoodSpecialsStrip = ({ navigate }) => {
             className="snap-start shrink-0 w-[110px] sm:w-[120px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
           >
             {/* Card — no image, just info */}
-            <div className="flex flex-col gap-1 p-2.5 rounded-xl bg-white dark:bg-gray-900 transition-colors">
-              {/* Emoji + Tag row */}
-              <div className="flex items-center justify-between">
-                <span className="text-xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
-                <span className="text-[6.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white">
-                  {item.tag || 'SPECIAL'}
-                </span>
+            <div className="flex flex-col gap-1 p-2.5 rounded-xl transition-colors">
+              {/* Emoji centered */}
+              <div className="flex items-center justify-center">
+                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
               </div>
 
               {/* Name */}
@@ -952,12 +1012,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
                 {item.shopName}
               </p>
 
-              {/* Price + Order */}
-              <div className="flex items-center justify-between mt-0.5">
+              {/* Price only */}
+              <div className="flex items-center mt-0.5">
                 <span className="font-black text-gray-900 dark:text-white text-[11px]">R{item.price}</span>
-                <span className="text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                  Order
-                </span>
               </div>
             </div>
           </motion.div>

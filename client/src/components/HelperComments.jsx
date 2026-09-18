@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsChange, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
@@ -110,14 +111,16 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       return;
     }
     try {
-      const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+      const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`);
       if (res.ok) {
         const data = await res.json();
-        const booked = data.some(b => 
-          (b.listing?._id === helperId || b.service?._id === helperId || b.helper?._id === helperId || b.event?._id === helperId) &&
-          ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
-        );
-        setHasBooked(booked);
+        if (Array.isArray(data)) {
+          const booked = data.some(b => 
+            (b.listing?._id === helperId || b.service?._id === helperId || b.helper?._id === helperId || b.event?._id === helperId) &&
+            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+          );
+          setHasBooked(booked);
+        }
       }
     } catch (err) {
       console.error('Error checking booking status:', err);
@@ -147,13 +150,11 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     try {
       setLoading(prev => ({ ...prev, submitting: true }));
       
-      const res = await fetch('/api/helper-comments', {
+      const res = await authenticatedFetch('/api/helper-comments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           content: commentContent,
           helperId,
@@ -191,13 +192,11 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     try {
       setLoading(prev => ({ ...prev, liking: true }));
       
-      const res = await fetch(`/api/helper-comments/like/${commentId}`, {
+      const res = await authenticatedFetch(`/api/helper-comments/like/${commentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
         },
-        credentials: 'include'
       });
 
       const responseData = await res.json();
@@ -241,13 +240,11 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     try {
       setLoading(prev => ({ ...prev, replying: true }));
       
-      const res = await fetch(`/api/helper-comments/reply/${commentId}`, {
+      const res = await authenticatedFetch(`/api/helper-comments/reply/${commentId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           content: replyContent,
           userName: currentUser.username,

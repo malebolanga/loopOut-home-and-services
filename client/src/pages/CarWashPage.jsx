@@ -166,6 +166,9 @@ export default function CarWashPage() {
     ];
   }, [carWash]);
 
+  const carWashServices = activeServices;
+  const vehicleTypes = activeVehicleTypes;
+
   useEffect(() => {
     const fetchCarWash = async () => {
       try {

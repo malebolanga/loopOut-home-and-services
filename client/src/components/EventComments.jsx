@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
@@ -94,14 +95,16 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
       return;
     }
     try {
-      const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+      const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`);
       if (res.ok) {
         const data = await res.json();
-        const booked = data.some(b => 
-          (b.listing?._id === eventId || b.service?._id === eventId || b.helper?._id === eventId || b.event?._id === eventId) &&
-          ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
-        );
-        setHasBooked(booked);
+        if (Array.isArray(data)) {
+          const booked = data.some(b => 
+            (b.listing?._id === eventId || b.service?._id === eventId || b.helper?._id === eventId || b.event?._id === eventId) &&
+            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+          );
+          setHasBooked(booked);
+        }
       }
     } catch (err) {
       console.error('Error checking booking status:', err);

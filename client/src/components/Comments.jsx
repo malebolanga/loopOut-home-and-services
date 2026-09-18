@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, horizontalStyle = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
@@ -114,15 +115,17 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       return;
     }
     try {
-      const res = await fetch(`/api/bookings/user/${currentUser._id}`);
+      const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`);
       if (res.ok) {
         const data = await res.json();
-        // Check if user has a booking for this item that is not pending or cancelled
-        const booked = data.some(b => 
-          (b.listing?._id === listingId || b.service?._id === listingId || b.helper?._id === listingId || b.event?._id === listingId) &&
-          ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
-        );
-        setHasBooked(booked);
+        if (Array.isArray(data)) {
+          // Check if user has a booking for this item that is not pending or cancelled
+          const booked = data.some(b => 
+            (b.listing?._id === listingId || b.service?._id === listingId || b.helper?._id === listingId || b.event?._id === listingId) &&
+            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+          );
+          setHasBooked(booked);
+        }
       }
     } catch (err) {
       console.error('Error checking booking status:', err);

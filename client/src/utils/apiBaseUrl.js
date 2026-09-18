@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { getStoredToken } from './authenticatedFetch.js';
 
 const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
@@ -29,25 +30,45 @@ export const installApiBaseUrl = () => {
   if (!configuredApiBaseUrl) return;
 
   const browserFetch = window.fetch.bind(window);
-  window.fetch = (input, init) => {
-    if (typeof input === 'string') {
-      if (input.startsWith('/api/')) {
-        return browserFetch(`${configuredApiBaseUrl}${input}`, init);
+  window.fetch = (input, init = {}) => {
+    const isApiRequest =
+      (typeof input === 'string' && (input.startsWith('/api/') || input.startsWith('api/'))) ||
+      (input instanceof Request && input.url && new URL(input.url, window.location.origin).pathname.startsWith('/api/'));
+
+    if (isApiRequest) {
+      const token = getStoredToken();
+      const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : {}));
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
       }
-      if (input.startsWith('api/')) {
-        return browserFetch(`${configuredApiBaseUrl}/${input}`, init);
-      }
-    } else if (input instanceof Request && input.url) {
-      try {
-        const urlObj = new URL(input.url);
-        if (urlObj.pathname.startsWith('/api/')) {
-          const newUrl = `${configuredApiBaseUrl}${urlObj.pathname}${urlObj.search}`;
-          return browserFetch(new Request(newUrl, input), init);
+
+      const mergedInit = {
+        credentials: init?.credentials || 'include',
+        ...init,
+        headers,
+      };
+
+      if (typeof input === 'string') {
+        if (input.startsWith('/api/')) {
+          return browserFetch(`${configuredApiBaseUrl}${input}`, mergedInit);
         }
-      } catch (e) {
-        // Fallback
+        if (input.startsWith('api/')) {
+          return browserFetch(`${configuredApiBaseUrl}/${input}`, mergedInit);
+        }
+      } else if (input instanceof Request && input.url) {
+        try {
+          const urlObj = new URL(input.url, window.location.origin);
+          if (urlObj.pathname.startsWith('/api/')) {
+            const newUrl = `${configuredApiBaseUrl}${urlObj.pathname}${urlObj.search}`;
+            return browserFetch(new Request(newUrl, { ...input, ...mergedInit }), mergedInit);
+          }
+        } catch (e) {
+          // Fallback
+        }
       }
+      return browserFetch(input, mergedInit);
     }
+
     return browserFetch(input, init);
   };
 };
