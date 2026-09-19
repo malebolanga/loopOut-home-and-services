@@ -27,10 +27,16 @@ const cookieOptions = () => ({
   maxAge: SESSION_MAX_AGE_MS,
 });
 
-const issueSession = (res, user, status = 200) => {
+const issueSession = async (res, user, status = 200) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
+  const loginTime = new Date();
+  try {
+    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: loginTime } });
+  } catch (err) {
+    console.error('Failed to update lastLogin:', err.message);
+  }
   const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
-  return res.cookie('access_token', token, cookieOptions()).status(status).json({ ...safeUser, token, access_token: token });
+  return res.cookie('access_token', token, cookieOptions()).status(status).json({ ...safeUser, token, access_token: token, lastLogin: loginTime });
 };
 
 const sendVerificationCode = async (user, subject = 'Your LoopOut verification code', purpose = 'verify') => {
@@ -175,6 +181,9 @@ export const validateToken = async (req, res, next) => {
     const user = await User.findById(decoded.id).select('-password -otp');
     if (!user || !user.isVerified) return res.status(200).json({ valid: false });
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
+    try {
+      await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date() } });
+    } catch (err) {}
     const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
     return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({ valid: true, user: safeUser, token: refreshedToken, access_token: refreshedToken });
   } catch (error) { return res.status(200).json({ valid: false }); }

@@ -230,6 +230,10 @@ const userSchema = new mongoose.Schema({
         completed: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now }
     }],
+    lastLogin: {
+        type: Date,
+        default: Date.now,
+    },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
