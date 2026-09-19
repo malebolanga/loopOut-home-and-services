@@ -69,6 +69,7 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 import ServiceItem from '../components/ServiceItem';
 import BookingHistory from '../components/BookingHistory';
+import BookingProgress from '../components/BookingProgress';
 import OperatingSchedule from '../components/OperatingSchedule';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -2342,6 +2343,7 @@ const ServicePage = () => {
             </div>
 
             <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
+              <BookingProgress />
               {selectedService && (
                 <div className="bg-rose-50 p-4 rounded-lg border border-rose-200">
                   <div className="flex justify-between items-center">

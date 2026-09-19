@@ -3038,16 +3038,47 @@ export default function LunchComingSoon() {
                 <p className="mt-1 text-[11px] text-amber-900">Allergy notes are passed to the shop but cannot guarantee an allergen-free meal. Contact the shop directly for severe allergies.</p>
               </div>
 
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Schedule for later (optional)</label>
-                <input
-                  type="datetime-local"
-                  min={new Date().toISOString().slice(0, 16)}
-                  value={checkoutData.scheduledFor}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, scheduledFor: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                />
-              </div>
+              {/* Collection timing is intentionally prominent: it is part of every pickup order. */}
+              <section className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 dark:border-amber-800 dark:from-amber-950/30 dark:via-gray-900 dark:to-gray-900">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl bg-amber-500 p-2 text-white shadow-sm"><Clock3 className="h-5 w-5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <label className="text-sm font-black text-amber-950 dark:text-amber-200">Collection time</label>
+                      <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">Pickup order</span>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-amber-900/80 dark:text-amber-100/80">Tell the shop when you plan to collect your food.</p>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCheckoutData({ ...checkoutData, scheduledFor: '' })}
+                        className={`rounded-xl border-2 px-3 py-3 text-left transition ${!checkoutData.scheduledFor ? 'border-amber-500 bg-amber-500 text-white shadow-sm' : 'border-amber-200 bg-white text-amber-950 hover:border-amber-400 dark:border-amber-800 dark:bg-gray-800 dark:text-amber-100'}`}
+                      >
+                        <span className="block text-xs font-black">Collect ASAP</span>
+                        <span className={`mt-0.5 block text-[10px] ${!checkoutData.scheduledFor ? 'text-amber-50' : 'text-amber-700 dark:text-amber-300'}`}>Ready in about 25 min</span>
+                      </button>
+                      <div className={`rounded-xl border-2 px-3 py-2.5 transition ${checkoutData.scheduledFor ? 'border-purple-500 bg-purple-600 text-white shadow-sm' : 'border-amber-200 bg-white text-amber-950 dark:border-amber-800 dark:bg-gray-800 dark:text-amber-100'}`}>
+                        <label htmlFor="collection-time" className="block text-xs font-black">Choose a time</label>
+                        <input
+                          id="collection-time"
+                          aria-label="Collection date and time"
+                          type="datetime-local"
+                          min={new Date().toISOString().slice(0, 16)}
+                          value={checkoutData.scheduledFor}
+                          onChange={(e) => setCheckoutData({ ...checkoutData, scheduledFor: e.target.value })}
+                          className={`mt-1 w-full bg-transparent text-[10px] font-bold outline-none ${checkoutData.scheduledFor ? 'text-white [color-scheme:dark]' : 'text-amber-800 dark:text-amber-200 [color-scheme:light] dark:[color-scheme:dark]'}`}
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-3 rounded-lg bg-white/70 px-3 py-2 text-[11px] font-semibold text-amber-900 dark:bg-black/20 dark:text-amber-100">
+                      {checkoutData.scheduledFor
+                        ? `Collection scheduled for ${new Date(checkoutData.scheduledFor).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}.`
+                        : 'Your estimated collection time will be shown on your receipt after ordering.'}
+                    </p>
+                  </div>
+                </div>
+              </section>
 
               <div className="rounded-2xl bg-amber-50 p-4 border border-amber-200">
                 <div className="flex justify-between text-sm font-black text-amber-950">

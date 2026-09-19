@@ -668,8 +668,44 @@ const CommunityNeedsSection = () => null;
 
 // ─── Food Detail Modal ────────────────────────────────────────────────────────
 const FoodDetailModal = ({ item, onClose, navigate }) => {
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '' });
+  const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
+
   if (!item) return null;
   const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
+
+  const handleOrderSubmit = async (e) => {
+    e.preventDefault();
+    if (!orderForm.name.trim() || !orderForm.phone.trim()) return;
+    setOrderStatus('submitting');
+    try {
+      const res = await fetch('/api/lunch/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopId: item.shopId,
+          shopName: item.shopName,
+          mealId: item.id,
+          mealName: item.name,
+          mealPrice: item.price,
+          quantity: orderForm.qty,
+          customerName: orderForm.name.trim(),
+          customerPhone: orderForm.phone.trim(),
+          notes: orderForm.notes.trim(),
+          totalAmount: item.price * orderForm.qty,
+        }),
+      });
+      if (res.ok) {
+        setOrderStatus('success');
+      } else {
+        setOrderStatus('error');
+      }
+    } catch {
+      setOrderStatus('error');
+    }
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -688,104 +724,230 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-sm mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-sm mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         >
           {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-1 sm:hidden">
             <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700" />
           </div>
-          {/* Close */}
+          {/* Close / Back */}
+          <button
+            onClick={showOrderForm ? () => { setShowOrderForm(false); setOrderStatus(null); } : onClose}
+            className="absolute top-4 left-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            {showOrderForm
+              ? <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+              : <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            }
+          </button>
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className={`absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${showOrderForm ? '' : 'hidden'}`}
           >
             <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
-          {/* Hero */}
-          <div className="flex flex-col items-center pt-6 pb-5 px-6 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50 dark:from-gray-900 dark:to-gray-950">
-            <div className="text-7xl mb-3 select-none">{emoji}</div>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm mb-2">
-              {item.tag || 'SPECIAL'}
-            </span>
-            <h2 className="text-xl font-black text-gray-900 dark:text-white text-center leading-tight">
-              {item.name}
-            </h2>
-          </div>
-          {/* Body */}
-          <div className="px-6 py-4 flex flex-col gap-3">
-            {/* Shop row */}
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-              <span className="text-2xl">{item.shopImage || '🏪'}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
-                <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
-              </div>
-              {/* Prep time + Calories chips */}
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                {item.prepTime && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                    ⏱ {item.prepTime}
-                  </span>
-                )}
-                {item.calories && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
-                    🔥 {item.calories}
-                  </span>
-                )}
-              </div>
-            </div>
 
-            {/* Description */}
-            {item.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
-            )}
+          <AnimatePresence mode="wait">
+            {!showOrderForm ? (
+              /* ── DETAIL VIEW ── */
+              <motion.div
+                key="detail"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* Hero */}
+                <div className="flex flex-col items-center pt-6 pb-5 px-6 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50 dark:from-gray-900 dark:to-gray-950">
+                  <div className="text-7xl mb-3 select-none">{emoji}</div>
+                  <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm mb-2">
+                    {item.tag || 'SPECIAL'}
+                  </span>
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white text-center leading-tight">
+                    {item.name}
+                  </h2>
+                </div>
 
-            {/* Ingredients */}
-            {item.ingredients && item.ingredients.length > 0 && (
-              <div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Ingredients</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.ingredients.map((ing, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
+                {/* Body */}
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  {/* ── Order Now CTA (moved up, full-width) ── */}
+                  <button
+                    onClick={() => setShowOrderForm(true)}
+                    className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
+                  >
+                    Order Now 🛒
+                  </button>
+
+                  {/* Shop row */}
+                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                    <span className="text-2xl">{item.shopImage || '🏪'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {item.prepTime && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                          ⏱ {item.prepTime}
+                        </span>
+                      )}
+                      {item.calories && (
+                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                          🔥 {item.calories}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {item.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
+                  )}
+
+                  {/* Ingredients */}
+                  {item.ingredients && item.ingredients.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Ingredients</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.ingredients.map((ing, idx) => (
+                          <span key={idx} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                            {ing}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Price */}
+                  <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
+                    <div>
+                      <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Price</p>
+                      <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">R{item.price}</p>
+                    </div>
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <div className="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800">
+                        <p className="text-[10px] font-black text-green-600 dark:text-green-400">Save R{item.originalPrice - item.price}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Browse all — small text link */}
+                  <button
+                    onClick={() => { onClose(); navigate('/lunch'); }}
+                    className="text-center text-[11px] font-black text-amber-500 hover:text-amber-600 dark:text-amber-400 uppercase tracking-wider pb-2 transition-colors"
+                  >
+                    Browse all food →
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              /* ── ORDER FORM ── */
+              <motion.div
+                key="order-form"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                className="px-6 pt-14 pb-6"
+              >
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="text-3xl">{emoji}</span>
+                  <div>
+                    <p className="font-black text-gray-900 dark:text-white text-base leading-tight">{item.name}</p>
+                    <p className="text-[11px] text-gray-400">{item.shopName} · R{item.price} each</p>
+                  </div>
+                </div>
+
+                {orderStatus === 'success' ? (
+                  <div className="flex flex-col items-center gap-4 py-8 text-center">
+                    <div className="text-5xl">✅</div>
+                    <p className="font-black text-gray-900 dark:text-white text-lg">Order Placed!</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">The shop will contact you soon on <span className="font-bold text-gray-700 dark:text-gray-300">{orderForm.phone}</span></p>
+                    <button
+                      onClick={onClose}
+                      className="mt-2 w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg"
                     >
-                      {ing}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                      Done
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleOrderSubmit} className="flex flex-col gap-4">
+                    {/* Quantity */}
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Quantity</label>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, qty: Math.max(1, f.qty - 1) }))}
+                          className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
+                        >−</button>
+                        <span className="flex-1 text-center font-black text-xl text-gray-900 dark:text-white">{orderForm.qty}</span>
+                        <button
+                          type="button"
+                          onClick={() => setOrderForm(f => ({ ...f, qty: f.qty + 1 }))}
+                          className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
+                        >+</button>
+                      </div>
+                      <p className="text-[11px] text-amber-600 dark:text-amber-400 font-black mt-1.5 text-center">
+                        Total: R{(item.price * orderForm.qty).toFixed(2)}
+                      </p>
+                    </div>
+
+                    {/* Name */}
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Your Name</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full name"
+                        value={orderForm.name}
+                        onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. 082 000 0000"
+                        value={orderForm.phone}
+                        onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+
+                    {/* Notes */}
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Special Requests <span className="normal-case font-normal">(optional)</span></label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. No onions, extra sauce…"
+                        value={orderForm.notes}
+                        onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                      />
+                    </div>
+
+                    {orderStatus === 'error' && (
+                      <p className="text-[11px] text-rose-500 font-bold text-center">Failed to place order. Please try again.</p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={orderStatus === 'submitting'}
+                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
+                    >
+                      {orderStatus === 'submitting' ? 'Placing Order…' : `Confirm Order · R${(item.price * orderForm.qty).toFixed(2)}`}
+                    </button>
+                  </form>
+                )}
+              </motion.div>
             )}
-
-            {/* Price */}
-            <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
-              <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Price</p>
-                <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">R{item.price}</p>
-              </div>
-              {item.originalPrice && item.originalPrice > item.price && (
-                <div className="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800">
-                  <p className="text-[10px] font-black text-green-600 dark:text-green-400">Save R{item.originalPrice - item.price}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2 pb-2">
-              <button
-                onClick={() => { onClose(); navigate('/lunch', { state: { selectedShopId: item.shopId, highlightMealId: item.id } }); }}
-                className="flex-1 py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
-              >
-                Order Now 🛒
-              </button>
-              <button
-                onClick={() => { onClose(); navigate('/lunch'); }}
-                className="px-4 py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-black rounded-2xl text-sm hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                See All
-              </button>
-            </div>
-          </div>
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </AnimatePresence>

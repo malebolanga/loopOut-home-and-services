@@ -92,6 +92,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 import BookingHistory from '../components/BookingHistory';
+import BookingProgress from '../components/BookingProgress';
 
 export default function BeautyPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -3033,6 +3034,7 @@ export default function BeautyPage() {
             </div>
 
             <div className="p-6 space-y-6">
+              <BookingProgress />
               {/* Form content - simplified for Airbnb style */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Your information</h3>

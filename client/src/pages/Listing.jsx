@@ -19,6 +19,7 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingHistory from '../components/BookingHistory';
+import BookingProgress from '../components/BookingProgress';
 
 
 import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
@@ -714,6 +715,7 @@ const WhatsAppBookingModal = ({ listing, isOpen, onClose, initialDates, bookedDa
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-10 max-h-[calc(100vh-200px)] overflow-y-auto no-scrollbar">
+          <div className="lg:col-span-12"><BookingProgress property /></div>
           
           {/* Left Column: Input Fields */}
           <div className="lg:col-span-7 space-y-8">
