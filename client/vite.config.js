@@ -50,9 +50,9 @@ export default defineConfig({
             if (normalizedId.includes('/react/') || normalizedId.includes('/react-dom/') || normalizedId.includes('/scheduler/')) {
               return 'vendor-react';
             }
-            if (normalizedId.includes('/react-router/') || normalizedId.includes('/@remix-run/')) {
-              return 'vendor-router';
-            }
+            // Keep React Router with the core application bundle. Splitting it
+            // separately can leave a stale router chunk executing before React
+            // after a deployment, producing `createContext` on undefined.
             if (normalizedId.includes('/@reduxjs/') || normalizedId.includes('/react-redux/') || normalizedId.includes('/redux/')) {
               return 'vendor-state';
             }
