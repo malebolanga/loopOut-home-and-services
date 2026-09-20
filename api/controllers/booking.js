@@ -261,11 +261,13 @@ export const getHostBookings = async (req, res) => {
         { event: { $in: eventIds } }
       ]
     })
-      .populate({ path: 'listing', populate: { path: 'userRef' } })
-      .populate({ path: 'helper', populate: { path: 'userRef' } })
-      .populate({ path: 'service', populate: [{ path: 'userRef' }, { path: 'creator' }] })
-      .populate({ path: 'event', populate: { path: 'userRef' } })
-      .populate('user')
+      // Return only fields the host dashboard renders. Populating a User
+      // without a projection would expose private profile fields to the API.
+      .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
+      .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
+      .populate({ path: 'service', select: 'name title imageUrls address regularPrice price userRef creator', populate: [{ path: 'userRef', select: 'username avatar location' }, { path: 'creator', select: 'username avatar location' }] })
+      .populate({ path: 'event', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
+      .populate('user', 'username avatar location')
       .sort({ createdAt: -1 });
 
     return res.json(bookings);
