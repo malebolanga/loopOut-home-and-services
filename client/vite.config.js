@@ -53,8 +53,11 @@ export default defineConfig({
             // Keep React Router with the core application bundle. Splitting it
             // separately can leave a stale router chunk executing before React
             // after a deployment, producing `createContext` on undefined.
+            // React Redux imports React hooks. Keeping it in the same chunk
+            // group as React prevents a cached state chunk from evaluating
+            // before React is available (`useLayoutEffect` on undefined).
             if (normalizedId.includes('/@reduxjs/') || normalizedId.includes('/react-redux/') || normalizedId.includes('/redux/')) {
-              return 'vendor-state';
+              return 'vendor-react';
             }
             if (normalizedId.includes('/framer-motion/') || normalizedId.includes('/motion-dom/') || normalizedId.includes('/motion-utils/')) {
               return 'vendor-motion';
