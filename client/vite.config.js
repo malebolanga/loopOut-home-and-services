@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
-import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -33,63 +32,8 @@ export default defineConfig({
     minify: 'esbuild',
     chunkSizeWarningLimit: 500,
     assetsInlineLimit: 4096,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules')) {
-            const normalizedId = id.replace(/\\/g, '/');
-            if (normalizedId.includes('/firebase/') || normalizedId.includes('/@firebase/')) {
-              return 'vendor-firebase';
-            }
-            if (normalizedId.includes('/jspdf/') || normalizedId.includes('/jspdf-autotable/')) {
-              return 'vendor-pdf';
-            }
-            if (normalizedId.includes('/leaflet/')) {
-              return 'vendor-leaflet';
-            }
-            if (normalizedId.includes('/react/') || normalizedId.includes('/react-dom/') || normalizedId.includes('/scheduler/')) {
-              return 'vendor-react';
-            }
-            // Keep React Router with the core application bundle. Splitting it
-            // separately can leave a stale router chunk executing before React
-            // after a deployment, producing `createContext` on undefined.
-            // React Redux imports React hooks. Keeping it in the same chunk
-            // group as React prevents a cached state chunk from evaluating
-            // before React is available (`useLayoutEffect` on undefined).
-            if (normalizedId.includes('/@reduxjs/') || normalizedId.includes('/react-redux/') || normalizedId.includes('/redux/')) {
-              return 'vendor-react';
-            }
-            if (normalizedId.includes('/framer-motion/') || normalizedId.includes('/motion-dom/') || normalizedId.includes('/motion-utils/')) {
-              return 'vendor-motion';
-            }
-            if (
-              normalizedId.includes('/bootstrap/') ||
-              normalizedId.includes('/react-bootstrap/') ||
-              normalizedId.includes('/@headlessui/')
-            ) {
-              return 'vendor-ui';
-            }
-            if (
-              normalizedId.includes('/swiper/') ||
-              normalizedId.includes('/react-multi-carousel/') ||
-              normalizedId.includes('/react-responsive-carousel/')
-            ) {
-              return 'vendor-carousel';
-            }
-            if (normalizedId.includes('/@react-google-maps/') || normalizedId.includes('/react-map-gl/')) {
-              return 'vendor-maps';
-            }
-            if (
-              normalizedId.includes('/@heroicons/') ||
-              normalizedId.includes('/lucide-react/') ||
-              normalizedId.includes('/react-icons/')
-            ) {
-              return 'vendor-icons';
-            }
-            return 'vendor-core';
-          }
-        }
-      }
-    }
+    // Do not manually split packages that import React. The previous split
+    // could allow cached vendor chunks to run with a different React runtime,
+    // producing createContext/useLayoutEffect errors in production.
   }
 })
