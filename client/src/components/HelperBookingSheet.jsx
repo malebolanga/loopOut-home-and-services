@@ -361,28 +361,359 @@ export default function HelperBookingSheet({
                     <div className="flex items-center gap-2 text-orange-800 dark:text-orange-300 font-black text-xs uppercase tracking-wider">
                       👨‍🍳 Function & Catering Details
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Function Type</label>
-                      <input
-                        type="text"
-                        name="functionType"
-                        value={bookingData.functionType}
-                        onChange={handleBookingChange}
-                        placeholder="e.g. Birthday, Private Dinner, Braai..."
-                        className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Function Type</label>
+                        <input
+                          type="text"
+                          name="functionType"
+                          value={bookingData.functionType || ''}
+                          onChange={handleBookingChange}
+                          placeholder="e.g. Birthday, Dinner, Braai..."
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Number of Guests</label>
+                        <input
+                          type="number"
+                          name="numberOfGuests"
+                          value={bookingData.numberOfGuests || 1}
+                          onChange={handleBookingChange}
+                          min="1"
+                          placeholder="e.g. 6"
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Number of Guests</label>
-                      <input
-                        type="number"
-                        name="numberOfGuests"
-                        value={bookingData.numberOfGuests}
-                        onChange={handleBookingChange}
-                        min="1"
-                        placeholder="e.g. 6"
-                        className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
-                      />
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Meal Style / Presentation</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: '3-Course Plated', label: '3-Course Plated' },
+                          { id: 'Buffet Style', label: 'Buffet Style' },
+                          { id: 'Braai Experience', label: 'Braai Experience' },
+                          { id: 'Canapes & Finger Food', label: 'Canapés / Tapas' },
+                          { id: 'Weekly Meal Prep', label: 'Weekly Meal Prep' },
+                          { id: 'Family Feast', label: 'Family Feast' }
+                        ].map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, mealType: m.id }))}
+                            className={`p-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                              bookingData.mealType === m.id
+                                ? 'bg-orange-600 border-orange-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Barber / Grooming specifics */}
+                {(helper.type === 'barber' || helper.type === 'barbar') && (
+                  <div className="rounded-2xl border border-blue-200 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-black text-xs uppercase tracking-wider">
+                      💈 Barbershop & Grooming Details
+                    </div>
+
+                    {/* Haircut style options */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Select Haircut Style</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Fade & Taper', label: '✂️ Fade & Taper' },
+                          { id: 'Buzz Cut', label: '⚡ Buzz Cut' },
+                          { id: 'Short Back & Sides', label: '💼 Classic Executive' },
+                          { id: 'Beard Trim & Shape', label: '🧔 Beard Trim' },
+                          { id: 'Clean Razor Shave', label: '🪒 Clean Razor' },
+                          { id: 'VIP Haircut + Beard', label: '👑 VIP Hair + Beard' }
+                        ].map(style => (
+                          <button
+                            key={style.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, selectedHaircut: style.id }))}
+                            className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                              bookingData.selectedHaircut === style.id
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-300'
+                            }`}
+                          >
+                            {style.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Beard Grooming Selection */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Beard Grooming Preference</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {['Full Beard Shaping', 'Stubble Line-up', 'Clean Shave', 'No Beard Service'].map(b => (
+                          <button
+                            key={b}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, beardGrooming: b }))}
+                            className={`p-2 rounded-xl text-[11px] font-bold border-2 transition-all ${
+                              bookingData.beardGrooming === b
+                                ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {b}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Photography specifics */}
+                {(helper.type === 'photography') && (
+                  <div className="rounded-2xl border border-purple-200 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-purple-800 dark:text-purple-300 font-black text-xs uppercase tracking-wider">
+                      📸 Photoshoot & Media Details
+                    </div>
+
+                    {/* Shoot Style */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Shoot Style / Category</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Portrait & Headshots', label: '👤 Portrait & Headshots' },
+                          { id: 'Events & Parties', label: '🎉 Events & Parties' },
+                          { id: 'Wedding & Engagement', label: '💍 Wedding & Love' },
+                          { id: 'Commercial & Brand', label: '🛍️ Commercial & Brand' },
+                          { id: 'Family & Lifestyle', label: '👨‍👩‍👧 Family & Lifestyle' },
+                          { id: 'Studio Session', label: '🏢 Studio Session' }
+                        ].map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, photographyType: s.id }))}
+                            className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                              bookingData.photographyType === s.id
+                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-purple-300'
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Shoot Duration & Setting */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Estimated Duration</label>
+                        <select
+                          name="serviceDuration"
+                          value={bookingData.serviceDuration || ''}
+                          onChange={handleBookingChange}
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        >
+                          <option value="">Select session duration...</option>
+                          <option value="1 Hour Session">1 Hour Session (Quick Shoot)</option>
+                          <option value="2 Hours Session">2 Hours Standard Session</option>
+                          <option value="Half Day (4 Hours)">Half Day (4 Hours)</option>
+                          <option value="Full Day (8 Hours)">Full Day (8 Hours Coverage)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Location Setting</label>
+                        <select
+                          name="locationSetting"
+                          value={bookingData.locationSetting || ''}
+                          onChange={handleBookingChange}
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        >
+                          <option value="">Select shoot environment...</option>
+                          <option value="Photographer Studio">Photographer Studio</option>
+                          <option value="Outdoor / Natural Light">Outdoor / Natural Light</option>
+                          <option value="Client Home or Office">Client Home or Office</option>
+                          <option value="Event Venue">Event / Function Venue</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Beauty & Spa specifics */}
+                {(helper.type === 'beauty' || helper.type === 'spa') && (
+                  <div className="rounded-2xl border border-pink-200 dark:border-pink-900/40 bg-pink-50/50 dark:bg-pink-950/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-pink-800 dark:text-pink-300 font-black text-xs uppercase tracking-wider">
+                      💅 Beauty & Treatment Details
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Treatment Focus</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {[
+                          { id: 'Nails & Manicure', label: '💅 Nails & Mani' },
+                          { id: 'Facial & Skincare', label: '✨ Facial & Glow' },
+                          { id: 'Makeup & Glam', label: '💄 Makeup & Glam' },
+                          { id: 'Lash & Brow', label: '👁️ Lash & Brow' },
+                          { id: 'Full Body Massage', label: '💆 Massage' },
+                          { id: 'Waxing & Threading', label: '🌸 Waxing' }
+                        ].map(b => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, beautyFocus: b.id }))}
+                            className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all ${
+                              bookingData.beautyFocus === b.id
+                                ? 'bg-pink-600 border-pink-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-pink-300'
+                            }`}
+                          >
+                            {b.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tattoo specifics */}
+                {(helper.type === 'tattoo') && (
+                  <div className="rounded-2xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/50 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-black text-xs uppercase tracking-wider">
+                      🖋️ Tattoo Art & Session Details
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Tattoo Size Estimate</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {['Small (<5cm)', 'Medium (5-15cm)', 'Large (15-25cm)', 'Sleeve / Backpiece'].map(sz => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, tattooSize: sz }))}
+                            className={`p-2 rounded-xl text-[11px] font-bold border-2 transition-all ${
+                              bookingData.tattooSize === sz
+                                ? 'bg-zinc-900 border-zinc-900 text-white shadow-sm'
+                                : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Private Tutor specifics */}
+                {(helper.type === 'tutor') && (
+                  <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-black text-xs uppercase tracking-wider">
+                      📚 Academic Tutoring Details
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Academic Level</label>
+                        <select
+                          name="academicLevel"
+                          value={bookingData.academicLevel || ''}
+                          onChange={handleBookingChange}
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        >
+                          <option value="">Select student level...</option>
+                          <option value="Primary School">Primary School (Gr 1-7)</option>
+                          <option value="High School">High School (Gr 8-11)</option>
+                          <option value="Matric Prep">Matric / Grade 12</option>
+                          <option value="University / Tertiary">University / Tertiary</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Target Subject</label>
+                        <input
+                          type="text"
+                          name="subject"
+                          value={bookingData.subject || ''}
+                          onChange={handleBookingChange}
+                          placeholder="e.g. Mathematics, Physics, English"
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Car Wash specifics */}
+                {(helper.type === 'carwash') && (
+                  <div className="rounded-2xl border border-cyan-200 dark:border-cyan-900/40 bg-cyan-50/50 dark:bg-cyan-950/20 p-4 space-y-4">
+                    <div className="flex items-center gap-2 text-cyan-800 dark:text-cyan-300 font-black text-xs uppercase tracking-wider">
+                      🚗 Vehicle & Wash Details
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Vehicle Type</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {['Hatchback / Sedan', 'SUV / Crossover', 'Bakkie / 4x4', 'Minibus / Van'].map(v => (
+                          <button
+                            key={v}
+                            type="button"
+                            onClick={() => setBookingData(prev => ({ ...prev, vehicleType: v }))}
+                            className={`p-2 rounded-xl text-[11px] font-bold border-2 transition-all ${
+                              bookingData.vehicleType === v
+                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm'
+                                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Vehicle Make (Optional)</label>
+                        <input
+                          type="text"
+                          name="vehicleMake"
+                          value={bookingData.vehicleMake || ''}
+                          onChange={handleBookingChange}
+                          placeholder="e.g. Toyota, BMW..."
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Vehicle Model (Optional)</label>
+                        <input
+                          type="text"
+                          name="vehicleModel"
+                          value={bookingData.vehicleModel || ''}
+                          onChange={handleBookingChange}
+                          placeholder="e.g. Corolla, 3 Series..."
+                          className="w-full p-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">💧 Water Source on Site</label>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, waterSource: 'client' }))}
+                          className={`p-2 rounded-xl border-2 text-xs font-bold transition-all ${bookingData.waterSource !== 'provider' ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'}`}
+                        >
+                          Client provides water
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBookingData(prev => ({ ...prev, waterSource: 'provider' }))}
+                          className={`p-2 rounded-xl border-2 text-xs font-bold transition-all ${bookingData.waterSource === 'provider' ? 'bg-cyan-600 border-cyan-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'}`}
+                        >
+                          Provider brings tank
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

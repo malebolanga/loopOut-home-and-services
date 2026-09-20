@@ -8,7 +8,6 @@ import {
   HeartIcon,
   StarIcon,
   FunnelIcon,
-  CalendarDaysIcon,
   HandThumbUpIcon,
   HandThumbDownIcon,
   ChatBubbleOvalLeftEllipsisIcon,
@@ -20,7 +19,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -33,13 +32,11 @@ import {
   FaWhatsapp,
   FaPhone,
   FaMapMarkerAlt,
-  FaCalendarCheck,
   FaTimes
 } from 'react-icons/fa';
 import ImageGallery from '../components/ImageGallery';
 import useLocationCoords from '../hooks/useGeolocation';
 import { useWishlist } from '../hooks/useWishlist';
-import MyBookingsConsumer from '../components/MyBookingsConsumer';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
@@ -51,7 +48,6 @@ import {
   SmartRecommendations,
   ServicesToYourDoor,
   WeeklySpecialsSection,
-  UpcomingBookingsSection,
   CompareRecommendedSection
 } from '../components/home/HomeSections';
 import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
@@ -75,6 +71,19 @@ const DATA_FETCH_LIMIT = 50;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 15000;
+
+const CATEGORY_ICON_BY_ID = {
+  all: Sparkles, property: House, rooms: BedDouble, guesthouse: House, hotel: Building2, lodge: House, apartment: Building2, self_catering: UtensilsCrossed, resort: House, hourly_room: BedDouble,
+  service: Wrench, transport: Car, carwash: Car, catering: ChefHat, landscaping: Trees, moving: Truck, storage: Package, handyman: Hammer, others: Sparkles,
+  helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, animals: Dog,
+  event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
+  selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen,
+};
+
+const CategoryNavIcon = ({ id, className = 'h-4 w-4' }) => {
+  const Icon = CATEGORY_ICON_BY_ID[id] || Tags;
+  return <Icon className={className} aria-hidden="true" />;
+};
 
 // --- Framer Motion Animation Variants ---
 const fadeInUp = {
@@ -108,28 +117,28 @@ const itemVariants = {
 
 const CATEGORY_ICON_DETAILS = {
   Universe: {
-    main: '🪐',
-    details: ['✨', '🌙', '🚀'],
+    main: 'ðŸª',
+    details: ['âœ¨', 'ðŸŒ™', 'ðŸš€'],
     bg: 'from-slate-950 via-indigo-950 to-fuchsia-900'
   },
   Homes: {
-    main: '🏡',
-    details: ['🔑', '🪴', '📍'],
+    main: 'ðŸ¡',
+    details: ['ðŸ”‘', 'ðŸª´', 'ðŸ“'],
     bg: 'from-emerald-600 via-teal-500 to-sky-500'
   },
   Services: {
-    main: '🛠️',
-    details: ['⚡', '🧽', '🔧'],
+    main: 'ðŸ› ï¸',
+    details: ['âš¡', 'ðŸ§½', 'ðŸ”§'],
     bg: 'from-amber-500 via-orange-500 to-rose-500'
   },
   Helper: {
-    main: '🧹',
-    details: ['💅', '💈', '🍳'],
+    main: 'ðŸ§¹',
+    details: ['ðŸ’…', 'ðŸ’ˆ', 'ðŸ³'],
     bg: 'from-sky-500 via-blue-600 to-violet-600'
   },
   Events: {
-    main: '🎟️',
-    details: ['🎪', '🎭', '🎉'],
+    main: 'ðŸŽŸï¸',
+    details: ['ðŸŽª', 'ðŸŽ­', 'ðŸŽ‰'],
     bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
   }
 };
@@ -148,8 +157,8 @@ const HomeDataErrorNotice = ({ onRetry }) => (
 
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
-    main: '✨',
-    details: ['•', '•', '•']
+    main: 'âœ¨',
+    details: ['â€¢', 'â€¢', 'â€¢']
   };
 
   return (
@@ -257,11 +266,11 @@ class AIRecommendationEngine {
   generateInsights(trends) {
     const insights = [];
     const mostPopularCategory = Object.entries(trends.popularCategories).sort((a, b) => b[1] - a[1])[0];
-    if (mostPopularCategory) insights.push({ type: 'popular', text: `${mostPopularCategory[0]} properties are trending in your area`, icon: '🔥' });
+    if (mostPopularCategory) insights.push({ type: 'popular', text: `${mostPopularCategory[0]} properties are trending in your area`, icon: 'ðŸ”¥' });
     const priceRanges = Object.keys(trends.priceTrends).map(Number);
     if (priceRanges.length > 0) {
       const avgPrice = priceRanges.reduce((a, b) => a + b, 0) / priceRanges.length;
-      insights.push({ type: 'price', text: `Average price in your area: R${Math.round(avgPrice).toLocaleString()}`, icon: '💰' });
+      insights.push({ type: 'price', text: `Average price in your area: R${Math.round(avgPrice).toLocaleString()}`, icon: 'ðŸ’°' });
     }
     return insights;
   }
@@ -348,7 +357,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
           <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_20px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
 
           <div className="relative z-20 text-7xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.25)] group-hover:scale-125 group-hover:rotate-6 transition-transform duration-700">
-            {category.emoji || '✨'}
+            {category.emoji || 'âœ¨'}
           </div>
 
           {/* Isometric Overlay Image IF EXISTS */}
@@ -599,9 +608,9 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
           </div>
         </div>
         <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-lg border border-gray-100">
-          {request.category === 'roommate' ? '👤' :
-            request.category === 'nanny' ? '🍼' :
-              request.category === 'pampering' ? '💄' : '✨'}
+          {request.category === 'roommate' ? 'ðŸ‘¤' :
+            request.category === 'nanny' ? 'ðŸ¼' :
+              request.category === 'pampering' ? 'ðŸ’„' : 'âœ¨'}
         </div>
       </div>
 
@@ -666,14 +675,14 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
 const CommunityNeedsSection = () => null;
 
-// ─── Food Detail Modal ────────────────────────────────────────────────────────
+// â”€â”€â”€ Food Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const FoodDetailModal = ({ item, onClose, navigate }) => {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '' });
   const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
 
   if (!item) return null;
-  const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
+  const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? 'ðŸ±' : item.image;
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
@@ -749,7 +758,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
 
           <AnimatePresence mode="wait">
             {!showOrderForm ? (
-              /* ── DETAIL VIEW ── */
+              /* â”€â”€ DETAIL VIEW â”€â”€ */
               <motion.div
                 key="detail"
                 initial={{ opacity: 0, x: -20 }}
@@ -770,17 +779,17 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
 
                 {/* Body */}
                 <div className="px-6 py-4 flex flex-col gap-3">
-                  {/* ── Order Now CTA (moved up, full-width) ── */}
+                  {/* â”€â”€ Order Now CTA (moved up, full-width) â”€â”€ */}
                   <button
                     onClick={() => setShowOrderForm(true)}
                     className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
                   >
-                    Order Now 🛒
+                    Order Now ðŸ›’
                   </button>
 
                   {/* Shop row */}
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-2xl">{item.shopImage || '🏪'}</span>
+                    <span className="text-2xl">{item.shopImage || 'ðŸª'}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
                       <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
@@ -788,12 +797,12 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {item.prepTime && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                          ⏱ {item.prepTime}
+                          â± {item.prepTime}
                         </span>
                       )}
                       {item.calories && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
-                          🔥 {item.calories}
+                          ðŸ”¥ {item.calories}
                         </span>
                       )}
                     </div>
@@ -831,17 +840,17 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     )}
                   </div>
 
-                  {/* Browse all — small text link */}
+                  {/* Browse all â€” small text link */}
                   <button
                     onClick={() => { onClose(); navigate('/lunch'); }}
                     className="text-center text-[11px] font-black text-amber-500 hover:text-amber-600 dark:text-amber-400 uppercase tracking-wider pb-2 transition-colors"
                   >
-                    Browse all food →
+                    Browse all food â†’
                   </button>
                 </div>
               </motion.div>
             ) : (
-              /* ── ORDER FORM ── */
+              /* â”€â”€ ORDER FORM â”€â”€ */
               <motion.div
                 key="order-form"
                 initial={{ opacity: 0, x: 20 }}
@@ -855,13 +864,13 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                   <span className="text-3xl">{emoji}</span>
                   <div>
                     <p className="font-black text-gray-900 dark:text-white text-base leading-tight">{item.name}</p>
-                    <p className="text-[11px] text-gray-400">{item.shopName} · R{item.price} each</p>
+                    <p className="text-[11px] text-gray-400">{item.shopName} Â· R{item.price} each</p>
                   </div>
                 </div>
 
                 {orderStatus === 'success' ? (
                   <div className="flex flex-col items-center gap-4 py-8 text-center">
-                    <div className="text-5xl">✅</div>
+                    <div className="text-5xl">âœ…</div>
                     <p className="font-black text-gray-900 dark:text-white text-lg">Order Placed!</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">The shop will contact you soon on <span className="font-bold text-gray-700 dark:text-gray-300">{orderForm.phone}</span></p>
                     <button
@@ -881,7 +890,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                           type="button"
                           onClick={() => setOrderForm(f => ({ ...f, qty: Math.max(1, f.qty - 1) }))}
                           className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
-                        >−</button>
+                        >âˆ’</button>
                         <span className="flex-1 text-center font-black text-xl text-gray-900 dark:text-white">{orderForm.qty}</span>
                         <button
                           type="button"
@@ -925,7 +934,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Special Requests <span className="normal-case font-normal">(optional)</span></label>
                       <textarea
                         rows={2}
-                        placeholder="e.g. No onions, extra sauce…"
+                        placeholder="e.g. No onions, extra sauceâ€¦"
                         value={orderForm.notes}
                         onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
                         className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
@@ -941,7 +950,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       disabled={orderStatus === 'submitting'}
                       className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
                     >
-                      {orderStatus === 'submitting' ? 'Placing Order…' : `Confirm Order · R${(item.price * orderForm.qty).toFixed(2)}`}
+                      {orderStatus === 'submitting' ? 'Placing Orderâ€¦' : `Confirm Order Â· R${(item.price * orderForm.qty).toFixed(2)}`}
                     </button>
                   </form>
                 )}
@@ -954,7 +963,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
   );
 };
 
-// ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
+// â”€â”€â”€ Food Specials Strip (Shown when there is NO "Your Upcoming") â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const FALLBACK_FOOD_SPECIALS = [
   {
@@ -962,10 +971,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Flame BBQ Ribs',
     price: 145,
     tag: 'Chef Special',
-    image: '🍖',
+    image: 'ðŸ–',
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
-    shopImage: '🥙',
+    shopImage: 'ðŸ¥™',
     shopCuisine: 'Grill & Flame',
     description: 'Slow-cooked pork ribs glazed with our signature smoky BBQ sauce, served with grilled corn and fries.',
     prepTime: '25 min',
@@ -977,10 +986,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Beef Stew & Pap',
     price: 115,
     tag: 'Special',
-    image: '🥘',
+    image: 'ðŸ¥˜',
     shopId: 'mamas-kitchen',
     shopName: "Mama's Kitchen",
-    shopImage: '🍛',
+    shopImage: 'ðŸ›',
     shopCuisine: 'Local Favourites',
     description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
     prepTime: '30 min',
@@ -992,10 +1001,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Chicken Caesar Salad',
     price: 105,
     tag: 'Fresh Special',
-    image: '🥗',
+    image: 'ðŸ¥—',
     shopId: 'green-table',
     shopName: 'The Green Table',
-    shopImage: '🥗',
+    shopImage: 'ðŸ¥—',
     shopCuisine: 'Healthy & Fresh',
     description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
     prepTime: '10 min',
@@ -1007,12 +1016,12 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Steak & Chakalaka Pap',
     price: 99,
     tag: 'Special',
-    image: '🥩',
+    image: 'ðŸ¥©',
     shopId: 'mapho',
     shopName: 'Mapho Kitchen',
-    shopImage: '🏪',
+    shopImage: 'ðŸª',
     shopCuisine: 'Traditional',
-    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
+    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap â€” a true South African classic.',
     prepTime: '20 min',
     calories: '720 kcal',
     ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
@@ -1022,10 +1031,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Special Dagwood Kota',
     price: 55,
     tag: 'Popular',
-    image: '🥪',
+    image: 'ðŸ¥ª',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🥙',
+    shopImage: 'ðŸ¥™',
     shopCuisine: 'Street Food',
     description: 'Quarter loaf loaded with Russian sausage, chips, egg, atchar and your choice of sauce.',
     prepTime: '10 min',
@@ -1037,10 +1046,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Loaded Kota Special',
     price: 50,
     tag: 'Special',
-    image: '🥪',
+    image: 'ðŸ¥ª',
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
-    shopImage: '🥪',
+    shopImage: 'ðŸ¥ª',
     shopCuisine: 'Fast Food',
     description: 'Freshly hollowed quarter loaf packed with polony, cheese, chips and tangy chutney.',
     prepTime: '8 min',
@@ -1052,10 +1061,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Crispy Seasoned Chips',
     price: 35,
     tag: 'Special',
-    image: '🍟',
+    image: 'ðŸŸ',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🍿',
+    shopImage: 'ðŸ¿',
     shopCuisine: 'Fast Food',
     description: 'Golden crispy chips seasoned with our house spice blend, served with tomato or chilli sauce.',
     prepTime: '5 min',
@@ -1101,14 +1110,14 @@ const FoodSpecialsStrip = ({ navigate }) => {
               price: meal.price,
               originalPrice: meal.originalPrice,
               tag: meal.tag || 'Special',
-              image: meal.image || '🍱',
+              image: meal.image || 'ðŸ±',
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
               ingredients: meal.ingredients || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
-              shopImage: shop.image || '🏪',
+              shopImage: shop.image || 'ðŸª',
               shopCuisine: shop.cuisine || 'Local'
             });
           });
@@ -1141,7 +1150,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
           onClick={() => navigate('/lunch')}
           className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1"
         >
-          See All Food <span aria-hidden="true">→</span>
+          See All Food <span aria-hidden="true">â†’</span>
         </motion.button>
       </div>
 
@@ -1157,11 +1166,11 @@ const FoodSpecialsStrip = ({ navigate }) => {
             onClick={() => setSelectedFood(item)}
             className="snap-start shrink-0 w-[110px] sm:w-[120px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
           >
-            {/* Card — no image, just info */}
+            {/* Card â€” no image, just info */}
             <div className="flex flex-col gap-1 p-2.5 rounded-xl transition-colors">
               {/* Emoji centered */}
               <div className="flex items-center justify-center">
-                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
+                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? 'ðŸ±' : item.image}</span>
               </div>
 
               {/* Name */}
@@ -1194,413 +1203,6 @@ const FoodSpecialsStrip = ({ navigate }) => {
     </section>
   );
 };
-
-
-// ─── Upcoming Bookings Strip ──────────────────────────────────────────────────
-const UpcomingBookingStrip = ({ navigate }) => {
-  const { currentUser } = useSelector((state) => state.user);
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedBooking, setSelectedBooking] = useState(null);
-
-  useEffect(() => {
-    if (!currentUser?._id) { setLoading(false); return; }
-    const controller = new AbortController();
-    const fetch_ = async () => {
-      try {
-        const res = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`, { signal: controller.signal });
-        if (!res.ok) return;
-        const data = await res.json();
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        const active = data
-          .filter(b => {
-            const d = new Date(b.startDate);
-            d.setHours(0, 0, 0, 0);
-            return d >= now && !['cancelled', 'completed', 'declined'].includes(b.status);
-          })
-          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-          .slice(0, 8)
-          .map(b => {
-            const due = new Date(b.startDate);
-            const diffMs = due - new Date();
-            const diffDays = Math.floor(diffMs / 86400000);
-            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
-            const isToday = diffDays === 0;
-            const isTomorrow = diffDays === 1;
-            const urgency = isToday ? 'today' : isTomorrow ? 'tomorrow' : diffDays <= 3 ? 'soon' : 'upcoming';
-            return {
-              id: b._id,
-              title: b.listing?.name || b.helper?.name || b.service?.name || b.event?.name || 'Booking Request',
-              image: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || null,
-              status: b.status || 'pending',
-              dateStr: due.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }),
-              timeStr: due.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              diffDays, diffHrs, urgency, isToday, isTomorrow,
-              type: b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service',
-              itemId: b.listing?._id || b.helper?._id || b.service?._id || b.event?._id,
-              emoji: b.listing ? '🏡' : b.helper ? '🧹' : b.event ? '🎟️' : '🛠️',
-              proName: b.listing ? (b.listing.userRef?.username || b.listing.name || 'Host') : (b.helper?.name || b.service?.name || b.event?.name || 'Professional'),
-              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
-              proWhatsapp: b.phone || b.helper?.phone || b.service?.phone || '',
-              proPhone: b.phone || b.helper?.phone || b.service?.phone || '',
-              selectedPerformer: b.selectedPerformer || null,
-              performerExperience: b.performerExperience || null,
-              performerImage: b.performerImage || null,
-              address: b.address || b.listing?.address || b.service?.address || b.event?.address || b.location || '',
-              price: b.totalPrice || b.totalAmount || b.price || b.listing?.price || b.service?.price || b.helper?.price || null,
-              notes: b.notes || b.specialInstructions || ''
-            };
-          });
-        setBookings(active);
-      } catch (e) { if (e.name !== 'AbortError') console.error(e); }
-      finally { setLoading(false); }
-    };
-    fetch_();
-    return () => controller.abort();
-  }, [currentUser?._id]);
-
-  if (loading && currentUser) {
-    return (
-      <section className="mb-6 -mx-4">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-28 animate-pulse" />
-        </div>
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="shrink-0 w-[140px] sm:w-[160px] animate-pulse">
-              <div className="aspect-[4/3] bg-gray-200 dark:bg-gray-800 rounded-xl mb-1.5" />
-              <div className="h-3.5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-1" />
-              <div className="h-2.5 bg-gray-200 dark:bg-gray-800 rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  }
-
-  // If there are NO upcoming bookings, return nothing (FoodSpecialsStrip is now rendered separately above)
-  if (!currentUser || bookings.length === 0) {
-    return null;
-  }
-
-  // If there ARE upcoming bookings, show "Your Upcoming" and hide the food specials!
-
-  const urgencyStyles = {
-    today: { pill: 'bg-rose-500 text-white', bar: 'bg-rose-500', label: 'TODAY' },
-    tomorrow: { pill: 'bg-amber-500 text-white', bar: 'bg-amber-500', label: 'TOMORROW' },
-    soon: { pill: 'bg-blue-500 text-white', bar: 'bg-blue-500', label: 'SOON' },
-    upcoming: { pill: 'bg-slate-700 text-white', bar: 'bg-slate-400', label: 'UPCOMING' },
-  };
-
-  const statusColors = {
-    pending: 'text-amber-500',
-    confirmed: 'text-emerald-500',
-    approved: 'text-emerald-500',
-    assigned: 'text-blue-500',
-    enroute: 'text-indigo-500',
-    ongoing: 'text-rose-500',
-  };
-
-  return (
-    <section className="mb-6 -mx-4">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-center gap-2">
-          <CalendarDaysIcon className="w-4 h-4 text-rose-500" />
-          <span className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Your Upcoming</span>
-          {bookings.length > 0 && (
-            <span className="text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.5 rounded-full">{bookings.length}</span>
-          )}
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/upcoming-bookings')}
-          className="text-[10px] font-black text-rose-500 uppercase tracking-wider cursor-pointer hover:underline"
-        >
-          See All
-        </motion.button>
-      </div>
-
-      {/* Scroll strip */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
-        {loading
-          ? Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="snap-start shrink-0 w-[140px] sm:w-[160px] animate-pulse">
-              <div className="aspect-[4/3] bg-gray-200 rounded-xl mb-1.5" />
-              <div className="h-3.5 bg-gray-200 rounded w-3/4 mb-1" />
-              <div className="h-2.5 bg-gray-200 rounded w-1/2" />
-            </div>
-          ))
-          : bookings.map((b, i) => {
-            const u = urgencyStyles[b.urgency];
-            const sc = statusColors[b.status] || 'text-gray-400';
-            return (
-              <motion.div
-                key={b.id}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setSelectedBooking(b)}
-                className="snap-start shrink-0 w-[140px] sm:w-[160px] cursor-pointer flex flex-col bg-transparent border-0 shadow-none rounded-none"
-              >
-                {/* Compact Aspect-[4/3] Image Section */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gray-100 mb-1.5">
-                  {b.image ? (
-                    <img
-                      src={b.image}
-                      alt={b.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-slate-100 to-slate-200">
-                      {b.emoji}
-                    </div>
-                  )}
-
-                  {/* Due date pill (Top-Right) */}
-                  <div className={`absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider shadow-sm backdrop-blur-md ${u.pill}`}>
-                    {b.isToday ? 'Today' : b.isTomorrow ? 'Tomorrow' : `${b.diffDays}d left`}
-                  </div>
-
-                  {/* Category Type Pill (Top-Left) */}
-                  <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/60 backdrop-blur-md text-white rounded-md text-[8px] font-bold flex items-center gap-0.5 shadow-sm">
-                    <span className="text-[9px]">{b.emoji}</span>
-                    <span className="text-[7.5px] font-black uppercase tracking-wider capitalize hidden xs:inline">{b.type}</span>
-                  </div>
-
-                  {/* Urgency accent bar */}
-                  <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${u.bar}`} />
-                </div>
-
-                {/* Info section - Clean Compact Typography */}
-                <div className="flex flex-col">
-                  <p className="font-bold text-gray-900 truncate text-[12px] sm:text-[13px] leading-tight mb-0.5">
-                    {b.title}
-                  </p>
-
-                  <p className="text-gray-500 text-[10.5px] sm:text-[11px] truncate leading-tight">
-                    {b.dateStr.replace(/, \d{4}/, '')} · {b.timeStr}
-                  </p>
-
-                  <p className="text-gray-400 text-[9.5px] sm:text-[10px] truncate leading-tight mt-0.5">
-                    {b.address?.split(',')[0] || 'Location TBC'}
-                  </p>
-
-                  <p className="text-gray-500 text-[9.5px] sm:text-[10px] truncate leading-tight mt-0.5 flex items-center gap-1">
-                    <img src={b.proAvatar} alt="" className="w-3 h-3 rounded-full object-cover flex-shrink-0" />
-                    <span className="truncate">{b.proName}</span>
-                  </p>
-
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="font-bold text-gray-900 text-[11.5px] sm:text-[12px]">
-                      {b.price ? (typeof b.price === 'number' ? `R${b.price.toLocaleString()}` : `R${b.price}`) : 'Booked'}
-                    </span>
-                    <span className={`text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-50 ${sc}`}>
-                      {b.status}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })
-        }
-      </div>
-
-      {/* Interactive Booking Details Modal Popup */}
-      <AnimatePresence>
-        {selectedBooking && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedBooking(null)}
-              className="fixed inset-0 bg-slate-950/70 backdrop-blur-md"
-            />
-
-            {/* Modal Dialog */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-              className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden z-10 border border-slate-100 max-h-[88vh] flex flex-col"
-            >
-              {/* Header Image / Pattern Area */}
-              <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 flex-shrink-0">
-                {selectedBooking.image ? (
-                  <img
-                    src={selectedBooking.image}
-                    alt={selectedBooking.title}
-                    className="w-full h-full object-cover opacity-85"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-6xl">
-                    {selectedBooking.emoji}
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-
-                {/* Top Controls: Urgency Badge & Close button */}
-                <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md ${urgencyStyles[selectedBooking.urgency]?.pill || 'bg-rose-500 text-white'}`}>
-                      {selectedBooking.isToday ? '⚡ Due Today' : selectedBooking.isTomorrow ? '⏰ Due Tomorrow' : `🗓️ Due in ${selectedBooking.diffDays} days`}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/20 text-white text-[9px] font-black uppercase tracking-widest">
-                      {selectedBooking.type}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => setSelectedBooking(null)}
-                    className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <FaTimes className="text-xs" />
-                  </button>
-                </div>
-
-                {/* Title inside Header */}
-                <div className="absolute bottom-3.5 left-4 right-4 text-white">
-                  <p className="text-[10px] font-black text-rose-300 uppercase tracking-widest mb-0.5">Booking Details</p>
-                  <h3 className="text-lg font-black tracking-tight leading-tight line-clamp-1">
-                    {selectedBooking.title}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Scrollable Content Body */}
-              <div className="p-5 overflow-y-auto space-y-4 flex-1 scrollbar-hide text-left">
-                {/* Date & Time Widget */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-lg">
-                      <FaCalendarCheck />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scheduled Due Date</p>
-                      <p className="text-sm font-black text-slate-900">{selectedBooking.dateStr} &bull; {selectedBooking.timeStr}</p>
-                    </div>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${selectedBooking.status === 'confirmed' || selectedBooking.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                    selectedBooking.status === 'assigned' ? 'bg-blue-100 text-blue-700' :
-                      selectedBooking.status === 'enroute' ? 'bg-indigo-100 text-indigo-700' :
-                        selectedBooking.status === 'ongoing' ? 'bg-rose-100 text-rose-700' :
-                          'bg-amber-100 text-amber-700'
-                    }`}>
-                    {selectedBooking.status}
-                  </span>
-                </div>
-
-                {/* Assigned Performer / Pro Contact Card */}
-                <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <img
-                          src={selectedBooking.selectedPerformer ? (selectedBooking.performerImage || selectedBooking.proAvatar) : selectedBooking.proAvatar}
-                          alt={selectedBooking.proName}
-                          className="w-11 h-11 rounded-full object-cover border-2 border-slate-100"
-                          onError={(e) => { e.target.src = 'https://i.pravatar.cc/150?u=pro'; }}
-                        />
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          {selectedBooking.selectedPerformer ? 'Assigned Pro' : 'Provider / Host'}
-                        </p>
-                        <h4 className="text-sm font-black text-slate-900 leading-tight">
-                          {selectedBooking.selectedPerformer || selectedBooking.proName}
-                        </h4>
-                        {selectedBooking.performerExperience && (
-                          <span className="text-[9px] text-rose-500 font-bold uppercase">{selectedBooking.performerExperience} Exp</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Contact Buttons */}
-                    <div className="flex items-center gap-2">
-                      {selectedBooking.proWhatsapp && (
-                        <a
-                          href={`https://wa.me/${selectedBooking.proWhatsapp.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center hover:bg-emerald-600 shadow-md shadow-emerald-200 active:scale-95 transition-all"
-                          title="Chat on WhatsApp"
-                        >
-                          <FaWhatsapp className="text-base" />
-                        </a>
-                      )}
-                      {selectedBooking.proPhone && (
-                        <a
-                          href={`tel:${selectedBooking.proPhone}`}
-                          className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center hover:bg-slate-200 active:scale-95 transition-all"
-                          title="Call"
-                        >
-                          <FaPhone className="text-xs" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedBooking.address && (
-                    <div className="flex items-start gap-2 pt-2 border-t border-slate-100 text-slate-600 text-xs">
-                      <FaMapMarkerAlt className="text-rose-500 text-xs mt-0.5 shrink-0" />
-                      <span className="line-clamp-1">{selectedBooking.address}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Notes or Price Info */}
-                {(selectedBooking.price || selectedBooking.notes) && (
-                  <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-2xl text-xs">
-                    {selectedBooking.price && (
-                      <div>
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Total Price</span>
-                        <span className="font-black text-slate-900 text-sm">R{selectedBooking.price}</span>
-                      </div>
-                    )}
-                    {selectedBooking.notes && (
-                      <p className="text-[11px] text-slate-500 italic max-w-[200px] truncate">{selectedBooking.notes}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Action Buttons in Footer */}
-              <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2.5 flex-shrink-0">
-                <button
-                  onClick={() => {
-                    const itemRoute = `/${selectedBooking.type === 'listing' ? 'listing' : selectedBooking.type}/${selectedBooking.itemId}`;
-                    setSelectedBooking(null);
-                    navigate(itemRoute);
-                  }}
-                  className="flex-1 py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-200 active:scale-98 transition-all cursor-pointer"
-                >
-                  <span>View Item Details</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedBooking(null);
-                    navigate('/profile?tab=bookings');
-                  }}
-                  className="py-3 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-2xl text-xs font-black uppercase tracking-wider active:scale-98 transition-all cursor-pointer"
-                >
-                  <span>All Bookings</span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </section>
-  );
-};
-
 // --- Pure subcategory matcher (module-scope so both Mobile and Desktop can use it) ---
 const matchItemToSubcategory = (item, tab, subId) => {
   if (!item) return false;
@@ -1745,114 +1347,121 @@ function MobileAppHomepage({
     {
       id: 'RecentAdded',
       label: 'Recent Added',
-      emoji: '⚡',
+      emoji: '✨',
+      icon: Sparkles,
       desc: 'New listings',
       textColor: 'text-rose-600',
       bgColor: 'bg-rose-500',
       subcategories: [
-        { id: 'all', label: 'All Recent', emoji: '⚡' },
-        { id: 'property', label: 'Properties', emoji: '🏡' },
-        { id: 'service', label: 'Services', emoji: '🛠️' },
-        { id: 'helper', label: 'Helpers', emoji: '🧹' },
-        { id: 'event', label: 'Events', emoji: '🎟️' },
-        { id: 'selling', label: 'Items for Sale', emoji: '🏷️' }
+        { id: 'all', label: 'All Recent', emoji: '✨' },
+        { id: 'property', label: 'Properties', emoji: 'ðŸ¡' },
+        { id: 'service', label: 'Services', emoji: 'ðŸ› ï¸' },
+        { id: 'helper', label: 'Helpers', emoji: 'ðŸ§¹' },
+        { id: 'event', label: 'Events', emoji: 'ðŸŽŸï¸' },
+        { id: 'selling', label: 'Items for Sale', emoji: 'ðŸ·ï¸' }
       ]
     },
     {
       id: 'Property',
       label: 'Property',
-      emoji: '🏡',
+      emoji: 'ðŸ¡',
+      icon: House,
       desc: 'Rooms & stays',
       textColor: 'text-emerald-600',
       bgColor: 'bg-emerald-500',
       subcategories: [
-        { id: 'all', label: 'All Properties', emoji: '🏡' },
-        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: '🏠' },
-        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌' },
-        { id: 'hotel', label: 'Hotels', emoji: '🏨' },
-        { id: 'lodge', label: 'Lodges', emoji: '🏡' },
-        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
-        { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
-        { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
-        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪' }
+        { id: 'all', label: 'All Properties', emoji: 'ðŸ¡' },
+        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: 'ðŸ ' },
+        { id: 'guesthouse', label: 'Guest House & B&B', emoji: 'ðŸ›Œ' },
+        { id: 'hotel', label: 'Hotels', emoji: 'ðŸ¨' },
+        { id: 'lodge', label: 'Lodges', emoji: 'ðŸ¡' },
+        { id: 'apartment', label: 'Apartment & Complex', emoji: 'ðŸ¢' },
+        { id: 'self_catering', label: 'Self Catering', emoji: 'ðŸ³' },
+        { id: 'resort', label: 'Resort & Holiday Park', emoji: 'ðŸ–ï¸' },
+        { id: 'hourly_room', label: 'Room Per Hour', emoji: 'ðŸšª' }
       ]
     },
     {
       id: 'Services',
       label: 'Services',
-      emoji: '🛠️',
+      emoji: 'ðŸ› ï¸',
+      icon: Wrench,
       desc: 'Book pros',
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Services', emoji: '🛠️' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕' },
-        { id: 'carwash', label: 'Car Wash', emoji: '🚗' },
-        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚' },
-        { id: 'storage', label: 'Booking Storage', emoji: '📦' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧' },
-        { id: 'others', label: 'Others & General', emoji: '✨' }
+        { id: 'all', label: 'All Services', emoji: 'ðŸ› ï¸' },
+        { id: 'transport', label: 'Transport & Shuttle', emoji: 'ðŸš•' },
+        { id: 'carwash', label: 'Car Wash', emoji: 'ðŸš—' },
+        { id: 'catering', label: 'Catering & Baking', emoji: 'ðŸ½ï¸' },
+        { id: 'landscaping', label: 'Landscaping & Yard', emoji: 'ðŸŒ¿' },
+        { id: 'moving', label: 'Moving & Logistics', emoji: 'ðŸšš' },
+        { id: 'storage', label: 'Booking Storage', emoji: 'ðŸ“¦' },
+        { id: 'handyman', label: 'Handyman & Repairs', emoji: 'ðŸ”§' },
+        { id: 'others', label: 'Others & General', emoji: 'âœ¨' }
       ]
     },
     {
       id: 'Helper',
       label: 'Helper',
-      emoji: '🧹',
+      emoji: 'ðŸ§¹',
+      icon: HandHeart,
       desc: 'Chores & care',
       textColor: 'text-sky-600',
       bgColor: 'bg-sky-500',
       subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: '🧹' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹' },
-        { id: 'tutor', label: 'Private Tutor', emoji: '📚' },
-        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉' },
-        { id: 'barber', label: 'Barbershop', emoji: '💈' },
-        { id: 'photography', label: 'Photographer', emoji: '📸' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟' },
-        { id: 'animals', label: 'Animal Care', emoji: '🐕' }
+        { id: 'all', label: 'All Helpers', emoji: 'ðŸ§¹' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: 'ðŸ§¹' },
+        { id: 'tutor', label: 'Private Tutor', emoji: 'ðŸ“š' },
+        { id: 'chef', label: 'Private Chef', emoji: 'ðŸ‘¨â€ðŸ³' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: 'ðŸ’…' },
+        { id: 'tattoo', label: 'Tattoo Artist', emoji: 'ðŸ’‰' },
+        { id: 'barber', label: 'Barbershop', emoji: 'ðŸ’ˆ' },
+        { id: 'photography', label: 'Photographer', emoji: 'ðŸ“¸' },
+        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: 'ðŸ‘Ÿ' },
+        { id: 'animals', label: 'Animal Care', emoji: 'ðŸ•' }
       ]
     },
     {
       id: 'Events',
       label: 'Events',
-      emoji: '🎟️',
+      emoji: 'ðŸŽŸï¸',
+      icon: CalendarDays,
       desc: 'Shows & vibes',
       textColor: 'text-purple-600',
       bgColor: 'bg-purple-500',
       subcategories: [
-        { id: 'all', label: 'All Events', emoji: '🎟️' },
-        { id: 'music', label: 'Music & Concerts', emoji: '🎵' },
-        { id: 'sports', label: 'Sports & Matches', emoji: '⚽' },
-        { id: 'arts', label: 'Arts & Culture', emoji: '🎨' },
-        { id: 'community', label: 'Community & Meetups', emoji: '🤝' },
-        { id: 'food', label: 'Food & Markets', emoji: '🍔' },
-        { id: 'outdoors', label: 'Outdoors & Safari', emoji: '⛺' }
+        { id: 'all', label: 'All Events', emoji: 'ðŸŽŸï¸' },
+        { id: 'music', label: 'Music & Concerts', emoji: 'ðŸŽµ' },
+        { id: 'sports', label: 'Sports & Matches', emoji: 'âš½' },
+        { id: 'arts', label: 'Arts & Culture', emoji: 'ðŸŽ¨' },
+        { id: 'community', label: 'Community & Meetups', emoji: 'ðŸ¤' },
+        { id: 'food', label: 'Food & Markets', emoji: 'ðŸ”' },
+        { id: 'outdoors', label: 'Outdoors & Safari', emoji: 'â›º' }
       ]
     },
     {
       id: 'Selling',
       label: 'Marketplace',
-      emoji: '🏷️',
+      emoji: 'ðŸ·ï¸',
+      icon: Tags,
       desc: 'Buy & sell',
       textColor: 'text-teal-600',
       bgColor: 'bg-teal-500',
       subcategories: [
-        { id: 'all', label: 'All Items', emoji: '🏷️' },
-        { id: 'furniture', label: 'Furniture', emoji: '🛋️' },
-        { id: 'electronics', label: 'Electronics', emoji: '💻' },
-        { id: 'clothes', label: 'Clothes', emoji: '👕' },
-        { id: 'universities', label: 'Universities', emoji: '🎓' },
-        { id: 'books', label: 'Books', emoji: '📚' }
+        { id: 'all', label: 'All Items', emoji: 'ðŸ·ï¸' },
+        { id: 'furniture', label: 'Furniture', emoji: 'ðŸ›‹ï¸' },
+        { id: 'electronics', label: 'Electronics', emoji: 'ðŸ’»' },
+        { id: 'clothes', label: 'Clothes', emoji: 'ðŸ‘•' },
+        { id: 'universities', label: 'Universities', emoji: 'ðŸŽ“' },
+        { id: 'books', label: 'Books', emoji: 'ðŸ“š' }
       ]
     },
     {
       id: 'Lunch',
       label: 'Lunch',
-      emoji: '🍱',
+      emoji: 'ðŸ±',
+      icon: UtensilsCrossed,
       desc: 'Food & eats',
       textColor: 'text-orange-600',
       bgColor: 'bg-orange-500',
@@ -1861,7 +1470,8 @@ function MobileAppHomepage({
     {
       id: 'Matchmaker',
       label: 'Matchmaker',
-      emoji: '🎯',
+      emoji: 'ðŸŽ¯',
+      icon: Target,
       desc: 'AI matching',
       textColor: 'text-fuchsia-600',
       bgColor: 'bg-fuchsia-500',
@@ -1870,7 +1480,8 @@ function MobileAppHomepage({
     {
       id: 'LookingFor',
       label: 'Needs',
-      emoji: '📢',
+      emoji: 'ðŸ“¢',
+      icon: Megaphone,
       desc: 'Live requests',
       textColor: 'text-rose-600',
       bgColor: 'bg-rose-500',
@@ -1920,7 +1531,7 @@ function MobileAppHomepage({
 
   const currentCategoryObj = useMemo(() => tabs.find(t => t.id === activeTab) || tabs[0], [activeTab, tabs]);
 
-  // Which loading flag applies to the currently active tab — used to show
+  // Which loading flag applies to the currently active tab â€” used to show
   // skeleton placeholders instead of a misleading "nothing found" empty
   // state while that category's data is still being fetched.
   const isLoadingCurrentTab = useMemo(() => {
@@ -2007,7 +1618,7 @@ function MobileAppHomepage({
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
-        {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
+        {/* â”€â”€ LOCATION TOAST: appears briefly once location is resolved, then auto-hides â”€â”€ */}
         <AnimatePresence>
           {showLocationToast && (
             <motion.button
@@ -2021,7 +1632,7 @@ function MobileAppHomepage({
               {geoLoading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />
-                  <span>Finding your location…</span>
+                  <span>Finding your locationâ€¦</span>
                 </>
               ) : geoCity ? (
                 <>
@@ -2038,13 +1649,10 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
-        {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
+        {/* â”€â”€ FOOD SPECIALS STRIP (always visible, right under search) â”€â”€ */}
         <FoodSpecialsStrip navigate={navigate} />
 
-        {/* ── UPCOMING BOOKINGS STRIP ── */}
-        <UpcomingBookingStrip navigate={navigate} />
-
-        {/* ── EXPLORE SECTION (listings-first) ── */}
+        {/* â”€â”€ EXPLORE SECTION (listings-first) â”€â”€ */}
         <section id="explore-section" className="mb-8">
 
           {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
@@ -2075,7 +1683,10 @@ function MobileAppHomepage({
                         : 'bg-slate-50 dark:bg-gray-800 border border-slate-200/90 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700 hover:border-slate-300 shadow-2xs'
                         }`}
                     >
-                      <span className="text-xl sm:text-2xl leading-none select-none drop-shadow-sm">{tab.emoji}</span>
+                      {(() => {
+                        const TabIcon = tab.icon || Sparkles;
+                        return <TabIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${isActive ? 'text-rose-500 dark:text-rose-500' : (tab.textColor || 'text-slate-600')}`} aria-label={tab.label} />;
+                      })()}
                     </motion.div>
                     <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800 dark:text-gray-300')
                       }`}>
@@ -2104,7 +1715,7 @@ function MobileAppHomepage({
                 </div>
                 <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${showAllCategories ? 'text-slate-700' : 'text-rose-600'
                   }`}>
-                  {showAllCategories ? 'Hide icons' : 'See more'}
+                  {showAllCategories ? 'Show less' : 'More categories'}
                 </span>
               </motion.button>
             </div>
@@ -2126,7 +1737,7 @@ function MobileAppHomepage({
                       : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
                       }`}
                   >
-                    <span className="text-sm">{sub.emoji}</span>
+                    <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
                     <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
                       }`}>
@@ -2146,7 +1757,7 @@ function MobileAppHomepage({
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                {isLoadingCurrentTab ? 'Loading listings' : `Live · ${filteredItems.length}`}
+                {isLoadingCurrentTab ? 'Loading listings' : `Live Â· ${filteredItems.length}`}
               </span>
             </div>
           </div>
@@ -2188,7 +1799,7 @@ function MobileAppHomepage({
           {/* Empty State */}
           {!isLoadingCurrentTab && filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
-              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
+              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || 'ðŸ”'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
                 No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
               </h3>
@@ -2353,7 +1964,7 @@ function DesktopHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── HERO: brand intro, rotating campaigns ── */}
+      {/* â”€â”€ HERO: brand intro, rotating campaigns â”€â”€ */}
       <div className="max-w-7xl mx-auto px-8 pt-6">
         <HomeHero navigate={navigate} />
       </div>
@@ -2388,9 +1999,10 @@ function DesktopHomepage({
                       : 'bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:bg-gray-100/80 dark:hover:bg-gray-700 shadow-xs'
                       }`}
                   >
-                    <span className="text-xl leading-none select-none">
-                      {tab.emoji}
-                    </span>
+                    {(() => {
+                      const TabIcon = tab.icon || Sparkles;
+                      return <TabIcon className={`h-5 w-5 ${isActive ? 'text-rose-500 dark:text-rose-500' : (tab.textColor || 'text-slate-600')}`} aria-label={tab.label} />;
+                    })()}
                   </motion.div>
 
                   <div className="text-left">
@@ -2466,7 +2078,7 @@ function DesktopHomepage({
                     : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
                     }`}
                 >
-                  <span className="text-sm">{sub.emoji}</span>
+                  <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
                   <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
@@ -2482,14 +2094,9 @@ function DesktopHomepage({
           </div>
         )}
 
-        {/* Food Specials Strip — Desktop (always visible, right under search) */}
+        {/* Food Specials Strip â€” Desktop (always visible, right under search) */}
         <div className="mb-6">
           <FoodSpecialsStrip navigate={navigate} />
-        </div>
-
-        {/* Upcoming Bookings Strip — Desktop */}
-        <div className="mb-8">
-          <UpcomingBookingStrip navigate={navigate} />
         </div>
 
         {/* Section Header */}
@@ -2499,12 +2106,12 @@ function DesktopHomepage({
               <span className="text-slate-900">Explore </span>
               <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab}</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated Â· South Africa &amp; Beyond</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
-              {isLoadingCurrentTab ? 'Loading listings' : `Live · ${getFilteredItems().length}`}
+              {isLoadingCurrentTab ? 'Loading listings' : `Live Â· ${getFilteredItems().length}`}
             </span>
           </div>
         </div>
@@ -2587,7 +2194,7 @@ function DesktopHomepage({
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-rose-100 rounded-full blur-2xl opacity-60" />
               <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 rounded-3xl flex items-center justify-center border border-slate-200 dark:border-gray-700 shadow-sm">
-                <span className="text-3xl">{currentCategoryObj?.emoji || '🔍'}</span>
+                <span className="text-3xl">{currentCategoryObj?.emoji || 'ðŸ”'}</span>
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">

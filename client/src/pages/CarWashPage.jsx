@@ -28,6 +28,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 import HelperComments from '../components/HelperComments';
+import HelperBookingSheet from '../components/HelperBookingSheet';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 import BookingTimeSlots from '../components/BookingTimeSlots';
@@ -169,6 +170,26 @@ export default function CarWashPage() {
   const carWashServices = activeServices;
   const vehicleTypes = activeVehicleTypes;
 
+  const serviceOptions = useMemo(() => {
+    return carWashServices.map(s => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      icon: '🚗'
+    }));
+  }, [carWashServices]);
+
+  const helperObj = useMemo(() => {
+    if (!carWash) return null;
+    return {
+      ...carWash,
+      type: 'carwash',
+      name: carWash.name,
+      regularPrice: carWash.regularPrice || 100
+    };
+  }, [carWash]);
+
+
   useEffect(() => {
     const fetchCarWash = async () => {
       try {
@@ -204,8 +225,9 @@ export default function CarWashPage() {
   const handleServiceSelection = (serviceId) => {
     setSelectedServices(prev => {
       const exists = prev.includes(serviceId);
-      if (exists) return prev.filter(id => id !== serviceId);
-      return [...prev, serviceId];
+      const updated = exists ? prev.filter(id => id !== serviceId) : [...prev, serviceId];
+      setBookingData(b => ({ ...b, selectedServices: updated }));
+      return updated;
     });
   };
 
@@ -307,8 +329,8 @@ export default function CarWashPage() {
     }
   };
 
-  const handleBookingSubmit =async (e) => {
-    e.preventDefault();
+  const handleBookingSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
 
     if (!carWash?.contact) {
       alert("Contact information is missing.");
@@ -1042,304 +1064,23 @@ export default function CarWashPage() {
         </div>
       )}
 
-      {/* Full Page Booking Form Overlay */}
-      {showBookingFormOverlay && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
-              <button
-                onClick={closeBookingFormOverlay}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
-              >
-                <FaTimes className="text-xl" />
-              </button>
-              <h2 className="text-lg font-semibold">Complete your car wash booking</h2>
-              <div className="w-10" />
-            </div>
-            
-            <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
-              {/* Personal Information */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Your information</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Full name *</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      required
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Phone number *</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={bookingData.phone}
-                      onChange={handleBookingChange}
-                      required
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="071 234 5678"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Vehicle Details */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Vehicle details</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle type *</label>
-                    <select
-                      name="vehicleType"
-                      value={bookingData.vehicleType}
-                      onChange={handleBookingChange}
-                      required
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    >
-                      <option value="">Select vehicle type</option>
-                      {vehicleTypes.map(v => (
-                        <option key={v.id} value={v.id}>{v.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle make (optional)</label>
-                    <input
-                      type="text"
-                      name="vehicleMake"
-                      value={bookingData.vehicleMake}
-                      onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="e.g. Toyota"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Vehicle model (optional)</label>
-                    <input
-                      type="text"
-                      name="vehicleModel"
-                      value={bookingData.vehicleModel}
-                      onChange={handleBookingChange}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                      placeholder="e.g. Corolla"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Location */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Service location</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Address *</label>
-                  <textarea
-                    name="address"
-                    value={bookingData.address}
-                    onChange={handleBookingChange}
-                    required
-                    rows="3"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Enter your full address for mobile service"
-                  />
-                </div>
-              </div>
-
-              {/* Service Requirements */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Service requirements</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Water source</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="waterSource"
-                          value="client"
-                          checked={bookingData.waterSource === 'client'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        Client provides
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="waterSource"
-                          value="provider"
-                          checked={bookingData.waterSource === 'provider'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        Provider brings
-                      </label>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Electricity access</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="electricityAccess"
-                          value="yes"
-                          checked={bookingData.electricityAccess === 'yes'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        Yes
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="electricityAccess"
-                          value="no"
-                          checked={bookingData.electricityAccess === 'no'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        No
-                      </label>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">Safe parking available</label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="parkingAvailable"
-                          value="yes"
-                          checked={bookingData.parkingAvailable === 'yes'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        Yes
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="parkingAvailable"
-                          value="no"
-                          checked={bookingData.parkingAvailable === 'no'}
-                          onChange={handleBookingChange}
-                          className="mr-2"
-                        />
-                        No
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Special Requirements */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Special requirements</h3>
-                <div>
-                  <textarea
-                    name="specialRequirements"
-                    value={bookingData.specialRequirements}
-                    onChange={handleBookingChange}
-                    rows="3"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent"
-                    placeholder="Any special requests or instructions for the service provider..."
-                  />
-                </div>
-              </div>
-
-              {/* Attachments */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Attachments (optional)</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        onChange={handleAttachmentChange}
-                        accept="image/*,.pdf"
-                        className="hidden"
-                        multiple
-                      />
-                      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 dark:text-white transition-colors">
-                        Choose files
-                      </div>
-                    </label>
-                    <span className="text-sm text-gray-500 dark:text-white">Max 2 files (5MB each)</span>
-                  </div>
-                  
-                  {attachments.length > 0 && (
-                    <div className="space-y-2">
-                      {attachments.map((file, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? (
-                              <FaFileImage className="text-blue-500" />
-                            ) : (
-                              <FaFilePdf className="text-red-500" />
-                            )}
-                            <span className="text-sm text-gray-700 dark:text-white truncate max-w-[200px]">
-                              {file.name}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
-                          >
-                            <FaTimes className="text-sm" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Price Summary */}
-              {totalPrice > 0 && (
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600 dark:text-white">Total estimate</span>
-                    <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice}</span>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-white">Final price may vary based on vehicle condition and additional requests.</p>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isUploading ? (
-                  <>
-                    <FaSpinner className="animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <FaWhatsapp className="text-xl" />
-                    Send booking request via WhatsApp
-                  </>
-                )}
-              </button>
-
-              <p className="text-xs text-center text-gray-500 dark:text-white">
-                By submitting this form, you agree to our terms of service and privacy policy.
-              </p>
-            </form>
-          </div>
-        </div>
-      )}
+            {/* Car Wash Booking Sheet Popout */}
+      <HelperBookingSheet
+        isOpen={showBookingFormOverlay}
+        onClose={closeBookingFormOverlay}
+        helper={helperObj}
+        bookingData={bookingData}
+        handleBookingChange={handleBookingChange}
+        setBookingData={setBookingData}
+        serviceOptions={serviceOptions}
+        handleServiceSelection={handleServiceSelection}
+        totalPrice={totalPrice}
+        handleBookingSubmit={handleBookingSubmit}
+        handleEscrowCheckout={handleEscrowCheckout}
+        isUploading={isUploading}
+        isTimeSlotBooked={isTimeSlotBooked}
+        isDateFullyBooked={isDateFullyBooked}
+      />
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (

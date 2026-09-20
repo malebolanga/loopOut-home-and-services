@@ -95,6 +95,19 @@ function getBookingCost(b) {
   return 'R0';
 }
 
+function getBookingImage(b) {
+  const item = getBookingItem(b) || {};
+  return item.imageUrls?.[0] || item.image || item.imageUrl || item.photo || item.avatar || b.image || b.imageUrl || '';
+}
+
+function getBookingStatusLabel(status) {
+  const labels = {
+    pending: 'Pending', approved: 'Confirmed', confirmed: 'Confirmed', ongoing: 'In progress',
+    work_completed: 'Completed', completed: 'Completed', cancelled: 'Cancelled', declined: 'Declined',
+  };
+  return labels[String(status || 'pending').toLowerCase()] || 'Pending';
+}
+
 function getBookingTypeLabel(b) {
   if (!b) return 'Appointment';
   if (b.subtype) return b.subtype;
@@ -284,6 +297,47 @@ export default function FreshaCalendarPage() {
     });
   }, [roleFilteredBookings, selectedDate]);
 
+  const bookingsForDate = (date) => roleFilteredBookings.filter((booking) => {
+    if (!booking.startDate || ['cancelled', 'declined'].includes(booking.status)) return false;
+    const bookingDate = new Date(booking.startDate);
+    return bookingDate.getFullYear() === date.getFullYear() && bookingDate.getMonth() === date.getMonth() && bookingDate.getDate() === date.getDate();
+  });
+
+  const weekDays = useMemo(() => {
+    const start = new Date(selectedDate);
+    const weekday = (start.getDay() + 6) % 7;
+    start.setDate(start.getDate() - weekday);
+    start.setHours(0, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+  }, [selectedDate]);
+
+  const monthDays = useMemo(() => {
+    const first = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+    const startOffset = (first.getDay() + 6) % 7;
+    const start = new Date(first);
+    start.setDate(first.getDate() - startOffset);
+    return Array.from({ length: 42 }, (_, index) => {
+      const day = new Date(start);
+      day.setDate(start.getDate() + index);
+      return day;
+    });
+  }, [selectedDate]);
+
+  const upcomingBookings = useMemo(() => roleFilteredBookings
+    .filter((booking) => booking.startDate && !['cancelled', 'declined'].includes(booking.status))
+    .sort((a, b) => {
+      const now = Date.now();
+      const aFuture = new Date(a.startDate).getTime() >= now;
+      const bFuture = new Date(b.startDate).getTime() >= now;
+      if (aFuture !== bFuture) return aFuture ? -1 : 1;
+      return aFuture ? new Date(a.startDate) - new Date(b.startDate) : new Date(b.startDate) - new Date(a.startDate);
+    })
+    .slice(0, 6), [roleFilteredBookings]);
+
   // Unique service columns for the day
   const typeColumns = useMemo(() => {
     const seen = new Set();
@@ -319,12 +373,14 @@ export default function FreshaCalendarPage() {
 
   const handlePrevDay = () => {
     const d = new Date(selectedDate);
-    d.setDate(d.getDate() - 1);
+    if (viewMode === 'Month') d.setMonth(d.getMonth() - 1);
+    else d.setDate(d.getDate() - (viewMode === 'Week' ? 7 : 1));
     setSelectedDate(d);
   };
   const handleNextDay = () => {
     const d = new Date(selectedDate);
-    d.setDate(d.getDate() + 1);
+    if (viewMode === 'Month') d.setMonth(d.getMonth() + 1);
+    else d.setDate(d.getDate() + (viewMode === 'Week' ? 7 : 1));
     setSelectedDate(d);
   };
   const handleToday = () => setSelectedDate(new Date());
@@ -486,6 +542,42 @@ export default function FreshaCalendarPage() {
 
       {/* ── Main Daily & Hourly Calendar Schedule Grid ── */}
       <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4 sm:p-6">
+        <section className="mx-auto mb-5 max-w-7xl rounded-3xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div><h2 className="font-black text-gray-900 dark:text-white">Upcoming bookings</h2><p className="text-xs text-gray-500 dark:text-gray-400">Tap a card to view the full booking.</p></div>
+            <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600 dark:bg-rose-500/10 dark:text-rose-300">{upcomingBookings.length} upcoming</span>
+          </div>
+          {upcomingBookings.length ? <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            {upcomingBookings.map((booking) => {
+              const meta = TYPE_META[getBookingType(booking)] || TYPE_META.service;
+              const Icon = meta.icon;
+              const image = getBookingImage(booking);
+              const status = String(booking.status || 'pending').toLowerCase();
+              const statusClass = STATUS_COLOR[status] || STATUS_COLOR.pending;
+              return <button key={booking._id} type="button" onClick={() => setSelectedBooking(booking)} className="group min-w-[258px] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                <div className="relative h-28 bg-gradient-to-br from-rose-100 to-orange-100 dark:from-rose-950 dark:to-gray-800">
+                  {image ? <img src={image} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" onError={(event) => { event.currentTarget.style.display = 'none'; }} /> : <div className="flex h-full items-center justify-center"><Icon className="h-10 w-10 text-rose-400" /></div>}
+                  <span className={`absolute left-3 top-3 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase shadow-sm ${statusClass}`}>{getBookingStatusLabel(status)}</span>
+                  <span className="absolute bottom-3 right-3 rounded-xl bg-black/70 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur-sm">{fmtTime(booking.startDate)}</span>
+                </div>
+                <div className="p-3"><div className="flex items-start justify-between gap-2"><p className="line-clamp-1 text-sm font-black text-gray-900 dark:text-white">{getBookingTitle(booking)}</p><span className="shrink-0 text-xs font-black text-emerald-600 dark:text-emerald-400">{getBookingCost(booking)}</span></div><p className="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">{new Date(booking.startDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p><p className="mt-2 text-[10px] font-black uppercase tracking-wider text-rose-500">Tap to view booking</p></div>
+              </button>;
+            })}
+          </div> : <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm font-semibold text-gray-400 dark:border-gray-700">No upcoming bookings yet.</p>}
+        </section>
+
+        {viewMode === 'Week' && <section className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="grid min-w-[700px] grid-cols-7 divide-x divide-gray-200 dark:divide-gray-800">
+            {weekDays.map((day) => { const entries = bookingsForDate(day); const isToday = day.toDateString() === new Date().toDateString(); return <div key={day.toISOString()} className="min-h-[360px] p-3"><button type="button" onClick={() => { setSelectedDate(day); setViewMode('Day'); }} className={`w-full rounded-xl px-2 py-2 text-center transition ${isToday ? 'bg-rose-500 text-white' : 'hover:bg-rose-50 dark:hover:bg-rose-500/10'}`}><span className="block text-[10px] font-black uppercase">{day.toLocaleDateString('en-ZA', { weekday: 'short' })}</span><span className="text-lg font-black">{day.getDate()}</span></button><div className="mt-3 space-y-2">{entries.map((booking) => <button key={booking._id} type="button" onClick={() => setSelectedBooking(booking)} className="w-full rounded-xl border-l-4 border-rose-500 bg-rose-50 p-2 text-left text-xs font-bold text-rose-950 transition hover:shadow-sm dark:bg-rose-950/30 dark:text-rose-100"><span className="block text-[10px] text-rose-600">{fmtTime(booking.startDate)}</span><span className="mt-1 block truncate">{getBookingTitle(booking)}</span></button>)}</div></div>; })}
+          </div>
+        </section>}
+
+        {viewMode === 'Month' && <section className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-800">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label) => <div key={label} className="p-3 text-center text-xs font-black text-gray-500">{label}</div>)}</div>
+          <div className="grid grid-cols-7">{monthDays.map((day) => { const entries = bookingsForDate(day); const isCurrentMonth = day.getMonth() === selectedDate.getMonth(); const isToday = day.toDateString() === new Date().toDateString(); return <button key={day.toISOString()} type="button" onClick={() => { setSelectedDate(day); setViewMode('Day'); }} className={`min-h-[94px] border-b border-r border-gray-100 p-2 text-left transition hover:bg-rose-50 dark:border-gray-800 dark:hover:bg-rose-500/10 ${isCurrentMonth ? '' : 'bg-gray-50/60 text-gray-400 dark:bg-gray-900/50'} ${isToday ? 'ring-2 ring-inset ring-rose-400' : ''}`}><span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-black ${isToday ? 'bg-rose-500 text-white' : ''}`}>{day.getDate()}</span>{entries.slice(0, 2).map((booking) => <span key={booking._id} className="mt-1 block truncate rounded bg-rose-100 px-1.5 py-0.5 text-[9px] font-black text-rose-800 dark:bg-rose-500/20 dark:text-rose-200">{fmtTime(booking.startDate)} {getBookingTitle(booking)}</span>)}{entries.length > 2 && <span className="mt-1 block text-[9px] font-black text-rose-600">+{entries.length - 2} more</span>}</button>; })}</div>
+        </section>}
+
+        {viewMode === 'Day' && (
         <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col">
           
           {/* Column Headers for Booking Categories / Service Types */}
@@ -682,6 +774,7 @@ export default function FreshaCalendarPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* ── Slide-Over Booking Details Drawer ── */}
