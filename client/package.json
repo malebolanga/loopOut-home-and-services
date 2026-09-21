@@ -9,6 +9,9 @@
     "build:android": "vite build --mode android",
     "sync:android": "npm run build:android && npx cap sync android",
     "open:android": "npx cap open android",
+    "build:ios": "vite build --mode ios",
+    "sync:ios": "npm run build:ios && npx cap sync ios",
+    "open:ios": "npx cap open ios",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 500",
     "preview": "vite preview"
   },

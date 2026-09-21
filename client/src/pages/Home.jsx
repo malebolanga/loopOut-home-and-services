@@ -117,28 +117,28 @@ const itemVariants = {
 
 const CATEGORY_ICON_DETAILS = {
   Universe: {
-    main: 'ðŸª',
-    details: ['âœ¨', 'ðŸŒ™', 'ðŸš€'],
+    main: '🪐',
+    details: ['✨', '🌙', '🚀'],
     bg: 'from-slate-950 via-indigo-950 to-fuchsia-900'
   },
   Homes: {
-    main: 'ðŸ¡',
-    details: ['ðŸ”‘', 'ðŸª´', 'ðŸ“'],
+    main: '🏡',
+    details: ['🔑', '🪴', '📍'],
     bg: 'from-emerald-600 via-teal-500 to-sky-500'
   },
   Services: {
-    main: 'ðŸ› ï¸',
-    details: ['âš¡', 'ðŸ§½', 'ðŸ”§'],
+    main: '🛠️',
+    details: ['⚡', '🧽', '🔧'],
     bg: 'from-amber-500 via-orange-500 to-rose-500'
   },
   Helper: {
-    main: 'ðŸ§¹',
-    details: ['ðŸ’…', 'ðŸ’ˆ', 'ðŸ³'],
+    main: '🧹',
+    details: ['💅', '💈', '🍳'],
     bg: 'from-sky-500 via-blue-600 to-violet-600'
   },
   Events: {
-    main: 'ðŸŽŸï¸',
-    details: ['ðŸŽª', 'ðŸŽ­', 'ðŸŽ‰'],
+    main: '🎟️',
+    details: ['🎪', '🎭', '🎉'],
     bg: 'from-purple-600 via-fuchsia-600 to-rose-500'
   }
 };
@@ -157,8 +157,8 @@ const HomeDataErrorNotice = ({ onRetry }) => (
 
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
-    main: 'âœ¨',
-    details: ['â€¢', 'â€¢', 'â€¢']
+    main: '✨',
+    details: ['•', '•', '•']
   };
 
   return (
@@ -266,11 +266,11 @@ class AIRecommendationEngine {
   generateInsights(trends) {
     const insights = [];
     const mostPopularCategory = Object.entries(trends.popularCategories).sort((a, b) => b[1] - a[1])[0];
-    if (mostPopularCategory) insights.push({ type: 'popular', text: `${mostPopularCategory[0]} properties are trending in your area`, icon: 'ðŸ”¥' });
+    if (mostPopularCategory) insights.push({ type: 'popular', text: `${mostPopularCategory[0]} properties are trending in your area`, icon: '🔥' });
     const priceRanges = Object.keys(trends.priceTrends).map(Number);
     if (priceRanges.length > 0) {
       const avgPrice = priceRanges.reduce((a, b) => a + b, 0) / priceRanges.length;
-      insights.push({ type: 'price', text: `Average price in your area: R${Math.round(avgPrice).toLocaleString()}`, icon: 'ðŸ’°' });
+      insights.push({ type: 'price', text: `Average price in your area: R${Math.round(avgPrice).toLocaleString()}`, icon: '💰' });
     }
     return insights;
   }
@@ -357,7 +357,7 @@ const FreshaCategoryCard = ({ category, onClick, index }) => {
           <div className="absolute inset-0 bg-white/50 backdrop-blur-xl rounded-full border border-white/80 shadow-[inset_0_0_20px_white] group-hover:scale-110 group-hover:bg-white/70 transition-all duration-700" />
 
           <div className="relative z-20 text-7xl drop-shadow-[0_15px_15px_rgba(0,0,0,0.25)] group-hover:scale-125 group-hover:rotate-6 transition-transform duration-700">
-            {category.emoji || 'âœ¨'}
+            {category.emoji || '✨'}
           </div>
 
           {/* Isometric Overlay Image IF EXISTS */}
@@ -608,9 +608,9 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
           </div>
         </div>
         <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-lg border border-gray-100">
-          {request.category === 'roommate' ? 'ðŸ‘¤' :
-            request.category === 'nanny' ? 'ðŸ¼' :
-              request.category === 'pampering' ? 'ðŸ’„' : 'âœ¨'}
+          {request.category === 'roommate' ? '👤' :
+            request.category === 'nanny' ? '🍼' :
+              request.category === 'pampering' ? '💄' : '✨'}
         </div>
       </div>
 
@@ -675,14 +675,14 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
 const CommunityNeedsSection = () => null;
 
-// â”€â”€â”€ Food Detail Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Food Detail Modal ────────────────────────────────────────────────────────
 const FoodDetailModal = ({ item, onClose, navigate }) => {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '' });
   const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
 
   if (!item) return null;
-  const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? 'ðŸ±' : item.image;
+  const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
@@ -758,7 +758,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
 
           <AnimatePresence mode="wait">
             {!showOrderForm ? (
-              /* â”€â”€ DETAIL VIEW â”€â”€ */
+              /* ── DETAIL VIEW ── */
               <motion.div
                 key="detail"
                 initial={{ opacity: 0, x: -20 }}
@@ -779,17 +779,17 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
 
                 {/* Body */}
                 <div className="px-6 py-4 flex flex-col gap-3">
-                  {/* â”€â”€ Order Now CTA (moved up, full-width) â”€â”€ */}
+                  {/* ── Order Now CTA (moved up, full-width) ── */}
                   <button
                     onClick={() => setShowOrderForm(true)}
                     className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
                   >
-                    Order Now ðŸ›’
+                    Order Now 🛒
                   </button>
 
                   {/* Shop row */}
                   <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-2xl">{item.shopImage || 'ðŸª'}</span>
+                    <span className="text-2xl">{item.shopImage || '🏪'}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
                       <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
@@ -797,12 +797,12 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     <div className="flex flex-col items-end gap-1 shrink-0">
                       {item.prepTime && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                          â± {item.prepTime}
+                          ⏱ {item.prepTime}
                         </span>
                       )}
                       {item.calories && (
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
-                          ðŸ”¥ {item.calories}
+                          🔥 {item.calories}
                         </span>
                       )}
                     </div>
@@ -840,17 +840,17 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     )}
                   </div>
 
-                  {/* Browse all â€” small text link */}
+                  {/* Browse all — small text link */}
                   <button
                     onClick={() => { onClose(); navigate('/lunch'); }}
                     className="text-center text-[11px] font-black text-amber-500 hover:text-amber-600 dark:text-amber-400 uppercase tracking-wider pb-2 transition-colors"
                   >
-                    Browse all food â†’
+                    Browse all food →
                   </button>
                 </div>
               </motion.div>
             ) : (
-              /* â”€â”€ ORDER FORM â”€â”€ */
+              /* ── ORDER FORM ── */
               <motion.div
                 key="order-form"
                 initial={{ opacity: 0, x: 20 }}
@@ -864,13 +864,13 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                   <span className="text-3xl">{emoji}</span>
                   <div>
                     <p className="font-black text-gray-900 dark:text-white text-base leading-tight">{item.name}</p>
-                    <p className="text-[11px] text-gray-400">{item.shopName} Â· R{item.price} each</p>
+                    <p className="text-[11px] text-gray-400">{item.shopName} · R{item.price} each</p>
                   </div>
                 </div>
 
                 {orderStatus === 'success' ? (
                   <div className="flex flex-col items-center gap-4 py-8 text-center">
-                    <div className="text-5xl">âœ…</div>
+                    <div className="text-5xl">✅</div>
                     <p className="font-black text-gray-900 dark:text-white text-lg">Order Placed!</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">The shop will contact you soon on <span className="font-bold text-gray-700 dark:text-gray-300">{orderForm.phone}</span></p>
                     <button
@@ -890,7 +890,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                           type="button"
                           onClick={() => setOrderForm(f => ({ ...f, qty: Math.max(1, f.qty - 1) }))}
                           className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
-                        >âˆ’</button>
+                        >−</button>
                         <span className="flex-1 text-center font-black text-xl text-gray-900 dark:text-white">{orderForm.qty}</span>
                         <button
                           type="button"
@@ -934,7 +934,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Special Requests <span className="normal-case font-normal">(optional)</span></label>
                       <textarea
                         rows={2}
-                        placeholder="e.g. No onions, extra sauceâ€¦"
+                        placeholder="e.g. No onions, extra sauce…"
                         value={orderForm.notes}
                         onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
                         className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
@@ -950,7 +950,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       disabled={orderStatus === 'submitting'}
                       className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
                     >
-                      {orderStatus === 'submitting' ? 'Placing Orderâ€¦' : `Confirm Order Â· R${(item.price * orderForm.qty).toFixed(2)}`}
+                      {orderStatus === 'submitting' ? 'Placing Order…' : `Confirm Order · R${(item.price * orderForm.qty).toFixed(2)}`}
                     </button>
                   </form>
                 )}
@@ -963,7 +963,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
   );
 };
 
-// â”€â”€â”€ Food Specials Strip (Shown when there is NO "Your Upcoming") â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
 
 const FALLBACK_FOOD_SPECIALS = [
   {
@@ -971,10 +971,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Flame BBQ Ribs',
     price: 145,
     tag: 'Chef Special',
-    image: 'ðŸ–',
+    image: '🍖',
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
-    shopImage: 'ðŸ¥™',
+    shopImage: '🥙',
     shopCuisine: 'Grill & Flame',
     description: 'Slow-cooked pork ribs glazed with our signature smoky BBQ sauce, served with grilled corn and fries.',
     prepTime: '25 min',
@@ -986,10 +986,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Beef Stew & Pap',
     price: 115,
     tag: 'Special',
-    image: 'ðŸ¥˜',
+    image: '🥘',
     shopId: 'mamas-kitchen',
     shopName: "Mama's Kitchen",
-    shopImage: 'ðŸ›',
+    shopImage: '🍛',
     shopCuisine: 'Local Favourites',
     description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
     prepTime: '30 min',
@@ -1001,10 +1001,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Chicken Caesar Salad',
     price: 105,
     tag: 'Fresh Special',
-    image: 'ðŸ¥—',
+    image: '🥗',
     shopId: 'green-table',
     shopName: 'The Green Table',
-    shopImage: 'ðŸ¥—',
+    shopImage: '🥗',
     shopCuisine: 'Healthy & Fresh',
     description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
     prepTime: '10 min',
@@ -1016,12 +1016,12 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Steak & Chakalaka Pap',
     price: 99,
     tag: 'Special',
-    image: 'ðŸ¥©',
+    image: '🥩',
     shopId: 'mapho',
     shopName: 'Mapho Kitchen',
-    shopImage: 'ðŸª',
+    shopImage: '🏪',
     shopCuisine: 'Traditional',
-    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap â€” a true South African classic.',
+    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
     prepTime: '20 min',
     calories: '720 kcal',
     ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
@@ -1031,10 +1031,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Special Dagwood Kota',
     price: 55,
     tag: 'Popular',
-    image: 'ðŸ¥ª',
+    image: '🥪',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: 'ðŸ¥™',
+    shopImage: '🥙',
     shopCuisine: 'Street Food',
     description: 'Quarter loaf loaded with Russian sausage, chips, egg, atchar and your choice of sauce.',
     prepTime: '10 min',
@@ -1046,10 +1046,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Loaded Kota Special',
     price: 50,
     tag: 'Special',
-    image: 'ðŸ¥ª',
+    image: '🥪',
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
-    shopImage: 'ðŸ¥ª',
+    shopImage: '🥪',
     shopCuisine: 'Fast Food',
     description: 'Freshly hollowed quarter loaf packed with polony, cheese, chips and tangy chutney.',
     prepTime: '8 min',
@@ -1061,10 +1061,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Crispy Seasoned Chips',
     price: 35,
     tag: 'Special',
-    image: 'ðŸŸ',
+    image: '🍟',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: 'ðŸ¿',
+    shopImage: '🍿',
     shopCuisine: 'Fast Food',
     description: 'Golden crispy chips seasoned with our house spice blend, served with tomato or chilli sauce.',
     prepTime: '5 min',
@@ -1110,14 +1110,14 @@ const FoodSpecialsStrip = ({ navigate }) => {
               price: meal.price,
               originalPrice: meal.originalPrice,
               tag: meal.tag || 'Special',
-              image: meal.image || 'ðŸ±',
+              image: meal.image || '🍱',
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
               ingredients: meal.ingredients || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
-              shopImage: shop.image || 'ðŸª',
+              shopImage: shop.image || '🏪',
               shopCuisine: shop.cuisine || 'Local'
             });
           });
@@ -1150,7 +1150,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
           onClick={() => navigate('/lunch')}
           className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1"
         >
-          See All Food <span aria-hidden="true">â†’</span>
+          See All Food <span aria-hidden="true">→</span>
         </motion.button>
       </div>
 
@@ -1166,11 +1166,11 @@ const FoodSpecialsStrip = ({ navigate }) => {
             onClick={() => setSelectedFood(item)}
             className="snap-start shrink-0 w-[110px] sm:w-[120px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
           >
-            {/* Card â€” no image, just info */}
+            {/* Card — no image, just info */}
             <div className="flex flex-col gap-1 p-2.5 rounded-xl transition-colors">
               {/* Emoji centered */}
               <div className="flex items-center justify-center">
-                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? 'ðŸ±' : item.image}</span>
+                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
               </div>
 
               {/* Name */}
@@ -1354,113 +1354,113 @@ function MobileAppHomepage({
       bgColor: 'bg-rose-500',
       subcategories: [
         { id: 'all', label: 'All Recent', emoji: '✨' },
-        { id: 'property', label: 'Properties', emoji: 'ðŸ¡' },
-        { id: 'service', label: 'Services', emoji: 'ðŸ› ï¸' },
-        { id: 'helper', label: 'Helpers', emoji: 'ðŸ§¹' },
-        { id: 'event', label: 'Events', emoji: 'ðŸŽŸï¸' },
-        { id: 'selling', label: 'Items for Sale', emoji: 'ðŸ·ï¸' }
+        { id: 'property', label: 'Properties', emoji: '🏡' },
+        { id: 'service', label: 'Services', emoji: '🛠️' },
+        { id: 'helper', label: 'Helpers', emoji: '🧹' },
+        { id: 'event', label: 'Events', emoji: '🎟️' },
+        { id: 'selling', label: 'Items for Sale', emoji: '🏷️' }
       ]
     },
     {
       id: 'Property',
       label: 'Property',
-      emoji: 'ðŸ¡',
+      emoji: '🏡',
       icon: House,
       desc: 'Rooms & stays',
       textColor: 'text-emerald-600',
       bgColor: 'bg-emerald-500',
       subcategories: [
-        { id: 'all', label: 'All Properties', emoji: 'ðŸ¡' },
-        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: 'ðŸ ' },
-        { id: 'guesthouse', label: 'Guest House & B&B', emoji: 'ðŸ›Œ' },
-        { id: 'hotel', label: 'Hotels', emoji: 'ðŸ¨' },
-        { id: 'lodge', label: 'Lodges', emoji: 'ðŸ¡' },
-        { id: 'apartment', label: 'Apartment & Complex', emoji: 'ðŸ¢' },
-        { id: 'self_catering', label: 'Self Catering', emoji: 'ðŸ³' },
-        { id: 'resort', label: 'Resort & Holiday Park', emoji: 'ðŸ–ï¸' },
-        { id: 'hourly_room', label: 'Room Per Hour', emoji: 'ðŸšª' }
+        { id: 'all', label: 'All Properties', emoji: '🏡' },
+        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: '🏠' },
+        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌' },
+        { id: 'hotel', label: 'Hotels', emoji: '🏨' },
+        { id: 'lodge', label: 'Lodges', emoji: '🏡' },
+        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
+        { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
+        { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
+        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪' }
       ]
     },
     {
       id: 'Services',
       label: 'Services',
-      emoji: 'ðŸ› ï¸',
+      emoji: '🛠️',
       icon: Wrench,
       desc: 'Book pros',
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Services', emoji: 'ðŸ› ï¸' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: 'ðŸš•' },
-        { id: 'carwash', label: 'Car Wash', emoji: 'ðŸš—' },
-        { id: 'catering', label: 'Catering & Baking', emoji: 'ðŸ½ï¸' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: 'ðŸŒ¿' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: 'ðŸšš' },
-        { id: 'storage', label: 'Booking Storage', emoji: 'ðŸ“¦' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: 'ðŸ”§' },
-        { id: 'others', label: 'Others & General', emoji: 'âœ¨' }
+        { id: 'all', label: 'All Services', emoji: '🛠️' },
+        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗' },
+        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️' },
+        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿' },
+        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚' },
+        { id: 'storage', label: 'Booking Storage', emoji: '📦' },
+        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧' },
+        { id: 'others', label: 'Others & General', emoji: '✨' }
       ]
     },
     {
       id: 'Helper',
       label: 'Helper',
-      emoji: 'ðŸ§¹',
+      emoji: '🧹',
       icon: HandHeart,
       desc: 'Chores & care',
       textColor: 'text-sky-600',
       bgColor: 'bg-sky-500',
       subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: 'ðŸ§¹' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: 'ðŸ§¹' },
-        { id: 'tutor', label: 'Private Tutor', emoji: 'ðŸ“š' },
-        { id: 'chef', label: 'Private Chef', emoji: 'ðŸ‘¨â€ðŸ³' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: 'ðŸ’…' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: 'ðŸ’‰' },
-        { id: 'barber', label: 'Barbershop', emoji: 'ðŸ’ˆ' },
-        { id: 'photography', label: 'Photographer', emoji: 'ðŸ“¸' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: 'ðŸ‘Ÿ' },
-        { id: 'animals', label: 'Animal Care', emoji: 'ðŸ•' }
+        { id: 'all', label: 'All Helpers', emoji: '🧹' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹' },
+        { id: 'tutor', label: 'Private Tutor', emoji: '📚' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅' },
+        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉' },
+        { id: 'barber', label: 'Barbershop', emoji: '💈' },
+        { id: 'photography', label: 'Photographer', emoji: '📸' },
+        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟' },
+        { id: 'animals', label: 'Animal Care', emoji: '🐕' }
       ]
     },
     {
       id: 'Events',
       label: 'Events',
-      emoji: 'ðŸŽŸï¸',
+      emoji: '🎟️',
       icon: CalendarDays,
       desc: 'Shows & vibes',
       textColor: 'text-purple-600',
       bgColor: 'bg-purple-500',
       subcategories: [
-        { id: 'all', label: 'All Events', emoji: 'ðŸŽŸï¸' },
-        { id: 'music', label: 'Music & Concerts', emoji: 'ðŸŽµ' },
-        { id: 'sports', label: 'Sports & Matches', emoji: 'âš½' },
-        { id: 'arts', label: 'Arts & Culture', emoji: 'ðŸŽ¨' },
-        { id: 'community', label: 'Community & Meetups', emoji: 'ðŸ¤' },
-        { id: 'food', label: 'Food & Markets', emoji: 'ðŸ”' },
-        { id: 'outdoors', label: 'Outdoors & Safari', emoji: 'â›º' }
+        { id: 'all', label: 'All Events', emoji: '🎟️' },
+        { id: 'music', label: 'Music & Concerts', emoji: '🎵' },
+        { id: 'sports', label: 'Sports & Matches', emoji: '⚽' },
+        { id: 'arts', label: 'Arts & Culture', emoji: '🎨' },
+        { id: 'community', label: 'Community & Meetups', emoji: '🤝' },
+        { id: 'food', label: 'Food & Markets', emoji: '🍔' },
+        { id: 'outdoors', label: 'Outdoors & Safari', emoji: '⛺' }
       ]
     },
     {
       id: 'Selling',
       label: 'Marketplace',
-      emoji: 'ðŸ·ï¸',
+      emoji: '🏷️',
       icon: Tags,
       desc: 'Buy & sell',
       textColor: 'text-teal-600',
       bgColor: 'bg-teal-500',
       subcategories: [
-        { id: 'all', label: 'All Items', emoji: 'ðŸ·ï¸' },
-        { id: 'furniture', label: 'Furniture', emoji: 'ðŸ›‹ï¸' },
-        { id: 'electronics', label: 'Electronics', emoji: 'ðŸ’»' },
-        { id: 'clothes', label: 'Clothes', emoji: 'ðŸ‘•' },
-        { id: 'universities', label: 'Universities', emoji: 'ðŸŽ“' },
-        { id: 'books', label: 'Books', emoji: 'ðŸ“š' }
+        { id: 'all', label: 'All Items', emoji: '🏷️' },
+        { id: 'furniture', label: 'Furniture', emoji: '🛋️' },
+        { id: 'electronics', label: 'Electronics', emoji: '💻' },
+        { id: 'clothes', label: 'Clothes', emoji: '👕' },
+        { id: 'universities', label: 'Universities', emoji: '🎓' },
+        { id: 'books', label: 'Books', emoji: '📚' }
       ]
     },
     {
       id: 'Lunch',
       label: 'Lunch',
-      emoji: 'ðŸ±',
+      emoji: '🍱',
       icon: UtensilsCrossed,
       desc: 'Food & eats',
       textColor: 'text-orange-600',
@@ -1470,7 +1470,7 @@ function MobileAppHomepage({
     {
       id: 'Matchmaker',
       label: 'Matchmaker',
-      emoji: 'ðŸŽ¯',
+      emoji: '🎯',
       icon: Target,
       desc: 'AI matching',
       textColor: 'text-fuchsia-600',
@@ -1480,7 +1480,7 @@ function MobileAppHomepage({
     {
       id: 'LookingFor',
       label: 'Needs',
-      emoji: 'ðŸ“¢',
+      emoji: '📢',
       icon: Megaphone,
       desc: 'Live requests',
       textColor: 'text-rose-600',
@@ -1531,7 +1531,7 @@ function MobileAppHomepage({
 
   const currentCategoryObj = useMemo(() => tabs.find(t => t.id === activeTab) || tabs[0], [activeTab, tabs]);
 
-  // Which loading flag applies to the currently active tab â€” used to show
+  // Which loading flag applies to the currently active tab — used to show
   // skeleton placeholders instead of a misleading "nothing found" empty
   // state while that category's data is still being fetched.
   const isLoadingCurrentTab = useMemo(() => {
@@ -1618,7 +1618,7 @@ function MobileAppHomepage({
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
-        {/* â”€â”€ LOCATION TOAST: appears briefly once location is resolved, then auto-hides â”€â”€ */}
+        {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
           {showLocationToast && (
             <motion.button
@@ -1632,7 +1632,7 @@ function MobileAppHomepage({
               {geoLoading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400 shrink-0" />
-                  <span>Finding your locationâ€¦</span>
+                  <span>Finding your location…</span>
                 </>
               ) : geoCity ? (
                 <>
@@ -1649,10 +1649,10 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
-        {/* â”€â”€ FOOD SPECIALS STRIP (always visible, right under search) â”€â”€ */}
+        {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
         <FoodSpecialsStrip navigate={navigate} />
 
-        {/* â”€â”€ EXPLORE SECTION (listings-first) â”€â”€ */}
+        {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
 
           {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
@@ -1757,7 +1757,7 @@ function MobileAppHomepage({
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-600">
-                {isLoadingCurrentTab ? 'Loading listings' : `Live Â· ${filteredItems.length}`}
+                {isLoadingCurrentTab ? 'Loading listings' : `Live · ${filteredItems.length}`}
               </span>
             </div>
           </div>
@@ -1799,7 +1799,7 @@ function MobileAppHomepage({
           {/* Empty State */}
           {!isLoadingCurrentTab && filteredItems.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
-              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || 'ðŸ”'}</span>
+              <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
                 No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
               </h3>
@@ -1964,7 +1964,7 @@ function DesktopHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* â”€â”€ HERO: brand intro, rotating campaigns â”€â”€ */}
+      {/* ── HERO: brand intro, rotating campaigns ── */}
       <div className="max-w-7xl mx-auto px-8 pt-6">
         <HomeHero navigate={navigate} />
       </div>
@@ -2094,7 +2094,7 @@ function DesktopHomepage({
           </div>
         )}
 
-        {/* Food Specials Strip â€” Desktop (always visible, right under search) */}
+        {/* Food Specials Strip — Desktop (always visible, right under search) */}
         <div className="mb-6">
           <FoodSpecialsStrip navigate={navigate} />
         </div>
@@ -2106,12 +2106,12 @@ function DesktopHomepage({
               <span className="text-slate-900">Explore </span>
               <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab}</span>
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated Â· South Africa &amp; Beyond</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
             <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
             <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">
-              {isLoadingCurrentTab ? 'Loading listings' : `Live Â· ${getFilteredItems().length}`}
+              {isLoadingCurrentTab ? 'Loading listings' : `Live · ${getFilteredItems().length}`}
             </span>
           </div>
         </div>
@@ -2194,7 +2194,7 @@ function DesktopHomepage({
             <div className="relative mb-6">
               <div className="absolute inset-0 bg-rose-100 rounded-full blur-2xl opacity-60" />
               <div className="relative w-20 h-20 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-900 rounded-3xl flex items-center justify-center border border-slate-200 dark:border-gray-700 shadow-sm">
-                <span className="text-3xl">{currentCategoryObj?.emoji || 'ðŸ”'}</span>
+                <span className="text-3xl">{currentCategoryObj?.emoji || '🔍'}</span>
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">

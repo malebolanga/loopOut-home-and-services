@@ -66,21 +66,31 @@ export default function HelperBookingSheet({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1200] flex items-end sm:items-center justify-center p-0 sm:p-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4"
         onClick={handleClose}
       >
         <motion.div
           key="helper-sheet-content"
-          initial={{ y: '100%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '100%', opacity: 0 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 32, stiffness: 200, mass: 0.95 }}
+          drag="y"
+          dragDirectionLock={true}
+          dragConstraints={{ top: 0, bottom: 0 }}
+          dragElastic={{ top: 0.08, bottom: 0.7 }}
+          dragSnapToOrigin={true}
+          onDragEnd={(_e, info) => {
+            if (info.offset.y > 90 || info.velocity.y > 350) {
+              handleClose();
+            }
+          }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-xl bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+          className="relative z-10 w-full max-w-xl bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col touch-pan-y will-change-transform"
         >
           {/* Mobile Drag Indicator */}
-          <div className="flex justify-center pt-3 pb-1 sm:hidden">
-            <div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700" />
+          <div className="flex flex-col items-center justify-center pt-3 pb-1 sm:hidden cursor-grab active:cursor-grabbing touch-none select-none group">
+            <div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 group-hover:bg-gray-400 dark:group-hover:bg-gray-600 transition-colors" />
           </div>
 
           {/* Sheet Header */}
@@ -884,7 +894,12 @@ export default function HelperBookingSheet({
           </div>
 
           {/* Sheet Footer Navigation */}
-          <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 flex items-center justify-between shrink-0">
+          <div 
+            className="p-4 sm:p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-md flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
+            style={{
+              paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem))'
+            }}
+          >
             {step > 1 ? (
               <button
                 type="button"
@@ -897,13 +912,23 @@ export default function HelperBookingSheet({
               <div />
             )}
 
-            {step < 3 && (
+            {step < 3 ? (
               <button
                 type="button"
                 onClick={handleNext}
                 className="px-7 py-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md hover:opacity-95 active:scale-95 transition-all"
               >
                 Next Step →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleWhatsAppBooking}
+                disabled={isUploading}
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md flex items-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+              >
+                <FaWhatsapp className="text-base" />
+                Book via WhatsApp
               </button>
             )}
           </div>

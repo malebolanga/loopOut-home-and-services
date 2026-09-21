@@ -2329,18 +2329,49 @@ const ServicePage = () => {
       )}
 
       {/* Booking Modal - Full Page Form */}
-      {showBookingModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-lg font-black text-slate-900">Complete your booking</h2>
-                <p className="text-xs text-slate-400 font-medium">{service.name}</p>
+      <AnimatePresence>
+        {showBookingModal && (
+          <motion.div
+            key="services-booking-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={closeBookingModal}
+          >
+            <motion.div
+              key="services-booking-sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 200, mass: 0.95 }}
+              drag="y"
+              dragDirectionLock={true}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0.08, bottom: 0.7 }}
+              dragSnapToOrigin={true}
+              onDragEnd={(_e, info) => {
+                if (info.offset.y > 90 || info.velocity.y > 350) {
+                  closeBookingModal();
+                }
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl max-w-2xl w-full max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl touch-pan-y will-change-transform flex flex-col"
+            >
+              {/* Mobile Drag Indicator */}
+              <div className="flex flex-col items-center justify-center pt-3 pb-1 sm:hidden cursor-grab active:cursor-grabbing touch-none select-none group">
+                <div className="w-12 h-1.5 rounded-full bg-gray-300 dark:bg-gray-700 group-hover:bg-gray-400 dark:group-hover:bg-gray-600 transition-colors" />
               </div>
-              <button onClick={closeBookingModal} className="p-2 hover:bg-slate-100 rounded-full transition-colors group">
-                <XMarkIcon className="w-5 h-5 text-slate-500 group-hover:rotate-90 transition-transform" />
-              </button>
-            </div>
+
+              <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between z-10 shrink-0">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 dark:text-white">Complete your booking</h2>
+                  <p className="text-xs text-slate-400 font-medium">{service.name}</p>
+                </div>
+                <button onClick={closeBookingModal} className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full transition-colors group">
+                  <XMarkIcon className="w-5 h-5 text-slate-500 group-hover:rotate-90 transition-transform" />
+                </button>
+              </div>
 
             <form onSubmit={handleBookingSubmit} className="p-6 space-y-6">
               <BookingProgress />
@@ -3492,31 +3523,39 @@ const ServicePage = () => {
               </div>
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isUploading}
-                className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              <div 
+                className="pt-2 pb-6 space-y-2"
+                style={{
+                  paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem))'
+                }}
               >
-                {isUploading ? (
-                  <>
-                    <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <FaWhatsapp className="text-xl" />
-                    Send booking request via WhatsApp
-                  </>
-                )}
-              </button>
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-rose-500/20 active:scale-95"
+                >
+                  {isUploading ? (
+                    <>
+                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaWhatsapp className="text-xl" />
+                      Send booking request via WhatsApp
+                    </>
+                  )}
+                </button>
 
-              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-                By submitting this form, you agree to our terms of service and privacy policy.
-              </p>
+                <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                  By submitting this form, you agree to our terms of service and privacy policy.
+                </p>
+              </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+    </AnimatePresence>
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
