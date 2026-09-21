@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import OAuth from '../components/OAuth';
-import { FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import { FaSpinner, FaArrowLeft, FaWifi } from 'react-icons/fa';
 import BrandLogo from '../components/BrandLogo';
 import { useDispatch } from 'react-redux';
 import { signInSuccess } from '../redux/user/userSlice';
-import { persistSessionToken } from '../utils/authenticatedFetch';
+import { persistSessionToken, fetchWithRetry } from '../utils/authenticatedFetch';
 
 const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-white';
 
@@ -14,6 +14,7 @@ export default function SignUp() {
   const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '', phone: '', location: '', acceptedTerms: false, otp: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState(''); // 'waking' | ''
   const [devCode, setDevCode] = useState('');
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
@@ -36,42 +37,68 @@ export default function SignUp() {
     setStep(2);
   };
   const signup = async (event) => {
-    event.preventDefault(); setError('');
+    event.preventDefault(); setError(''); setServerStatus('');
     if (!formData.acceptedTerms) return setError('Please accept the Terms of Service and Privacy Policy.');
     try {
       setLoading(true);
       const { confirmPassword, otp, ...payload } = formData;
-      const response = await fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) });
+      // Show 'waking up' hint after 4 s so user knows what's happening on Render cold-start
+      const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
+      const response = await fetchWithRetry(
+        '/api/auth/signup',
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
+        { maxRetries: 4, timeoutMs: 40000 }
+      );
+      clearTimeout(wakeTimer);
+      setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to create your account.');
       setFormData((current) => ({ ...current, email: current.email.trim().toLowerCase(), otp: '' }));
-      if (data.devCode) {
-        setDevCode(data.devCode);
-      }
+      if (data.devCode) setDevCode(data.devCode);
       setStep(3);
-    } catch (requestError) { setError(requestError.message); } finally { setLoading(false); }
+    } catch (requestError) {
+      setServerStatus('');
+      const msg = requestError?.message || '';
+      if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
+        setError('Connection error — please check your internet and try again.');
+      } else {
+        setError(msg || 'Unable to create your account.');
+      }
+    } finally { setLoading(false); }
   };
   const verify = async (event) => {
-    event.preventDefault(); setError('');
+    event.preventDefault(); setError(''); setServerStatus('');
     try {
       setLoading(true);
-      const response = await fetch('/api/auth/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) });
+      const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
+      const response = await fetchWithRetry(
+        '/api/auth/verify-otp',
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) },
+        { maxRetries: 3, timeoutMs: 35000 }
+      );
+      clearTimeout(wakeTimer);
+      setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to verify that code.');
       persistSessionToken(data);
       dispatch(signInSuccess(data.user || data)); navigate('/');
-    } catch (requestError) { setError(requestError.message); } finally { setLoading(false); }
+    } catch (requestError) {
+      setServerStatus('');
+      setError(requestError?.message || 'Verification failed. Please try again.');
+    } finally { setLoading(false); }
   };
   const resend = async () => {
     try {
-      setResending(true); setError('');
-      const response = await fetch('/api/auth/resend-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase() }) });
+      setResending(true); setError(''); setServerStatus('');
+      const response = await fetchWithRetry(
+        '/api/auth/resend-otp',
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase() }) },
+        { maxRetries: 3, timeoutMs: 35000 }
+      );
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to send a new code.');
-      if (data.devCode) {
-        setDevCode(data.devCode);
-      }
-    } catch (requestError) { setError(requestError.message); } finally { setResending(false); }
+      if (data.devCode) setDevCode(data.devCode);
+    } catch (requestError) { setError(requestError?.message || 'Could not resend code.'); } finally { setResending(false); }
   };
   return <div className="relative min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950">
     <div className="w-full max-w-[450px] bg-white/10 backdrop-blur-md p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20 text-white">
@@ -103,6 +130,12 @@ export default function SignUp() {
           </div>
         )}
         <form onSubmit={verify} className="space-y-4"><label className="block text-sm">Verification code<input id="otp" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength="6" className={`${inputClass} mt-1 tracking-[0.4em] text-center`} value={formData.otp} onChange={({ target }) => setFormData((current) => ({ ...current, otp: target.value.replace(/\D/g, '') }))} required /></label><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Verify and continue'}</button></form><button type="button" disabled={resending} onClick={resend} className="w-full mt-4 text-sm underline disabled:opacity-60">{resending ? 'Sending…' : 'Resend code'}</button></>}
+      {serverStatus === 'waking' && (
+        <div className="mt-4 flex items-center gap-2 justify-center p-3 bg-amber-500/20 border border-amber-400/40 rounded-xl text-amber-200 text-xs">
+          <FaWifi className="animate-pulse text-amber-300" />
+          <span>Server is waking up — this may take up to 30 seconds on first use…</span>
+        </div>
+      )}
       {error && <p role="alert" className="mt-5 p-3 text-center text-sm bg-red-500/25 border border-red-300/40 rounded-xl">{error}</p>}
       <p className="mt-7 text-center text-sm text-gray-200">Already have an account? <Link to="/sign-in" className="font-semibold underline">Sign in</Link></p>
     </div></div>;
