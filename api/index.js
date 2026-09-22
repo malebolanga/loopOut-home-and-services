@@ -111,11 +111,13 @@ app.use(helmet({
             imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://*.tile.openstreetmap.org', 'https://unpkg.com', 'https://cdnjs.cloudflare.com'],
             connectSrc: ["'self'", 'https:', 'wss:', 'ws:', 'https://*.tile.openstreetmap.org', 'https://www.google-analytics.com', 'https://*.google-analytics.com', ...allowedOrigins],
             fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdnjs.cloudflare.com', 'data:'],
-            frameSrc: ["'self'", 'https://*.google.com', 'https://*.googleusercontent.com', 'https://*.firebaseapp.com'],
+            mediaSrc: ["'self'", 'https:', 'blob:', 'data:', 'https://vjs.zencdn.net'],
+            frameSrc: ["'self'", 'https://*.google.com', 'https://accounts.google.com', 'https://*.googleusercontent.com', 'https://*.firebaseapp.com'],
             objectSrc: ["'none'"],
         },
     },
-    crossOriginResourcePolicy: { policy: 'cross-origin' }
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 app.use(mongoSanitize());
 app.use(compression());
