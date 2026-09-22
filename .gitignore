@@ -38,3 +38,9 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Service account & OAuth credentials
+*service-account*.json
+*-firebase-adminsdk-*.json
+client_secret*.json
+firebase-service-account.json

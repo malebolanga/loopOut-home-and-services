@@ -63,11 +63,41 @@ const sendVerificationCode = async (user, subject = 'Your LoopOut verification c
 const firebaseAuth = async () => {
   const { getApps, initializeApp, cert, applicationDefault } = await import('firebase-admin/app');
   const { getAuth } = await import('firebase-admin/auth');
+  const fs = await import('fs');
+  const path = await import('path');
   if (!getApps().length) {
     const rawServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (rawServiceAccount) initializeApp({ credential: cert(JSON.parse(rawServiceAccount)) });
-    else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) initializeApp({ credential: applicationDefault() });
-    else throw new Error('Firebase Admin credentials are not configured.');
+    const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const localSaPath = path.resolve(process.cwd(), 'firebase-service-account.json');
+    const rootSaPath = path.resolve(process.cwd(), '..', 'firebase-service-account.json');
+
+    const loadParsedSa = (sa) => {
+      if (typeof sa.private_key === 'string') {
+        sa.private_key = sa.private_key
+          .replace(/^-----[^\n]+-----/, '-----BEGIN PRIVATE KEY-----')
+          .replace(/-----[^\n]+-----\n?$/, '-----END PRIVATE KEY-----\n')
+          .replace(/\\n/g, '\n');
+      }
+      return sa;
+    };
+
+    if (rawServiceAccount) {
+      const sa = loadParsedSa(JSON.parse(rawServiceAccount));
+      initializeApp({ credential: cert(sa) });
+    } else if (credPath && fs.existsSync(credPath)) {
+      const sa = loadParsedSa(JSON.parse(fs.readFileSync(credPath, 'utf8')));
+      initializeApp({ credential: cert(sa) });
+    } else if (fs.existsSync(localSaPath)) {
+      const sa = loadParsedSa(JSON.parse(fs.readFileSync(localSaPath, 'utf8')));
+      initializeApp({ credential: cert(sa) });
+    } else if (fs.existsSync(rootSaPath)) {
+      const sa = loadParsedSa(JSON.parse(fs.readFileSync(rootSaPath, 'utf8')));
+      initializeApp({ credential: cert(sa) });
+    } else if (credPath) {
+      initializeApp({ credential: applicationDefault() });
+    } else {
+      throw new Error('Firebase Admin credentials are not configured.');
+    }
   }
   return getAuth();
 };
