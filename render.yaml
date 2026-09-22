@@ -30,6 +30,10 @@ services:
         value: "587"
       - key: EMAIL_SECURE
         value: "false"
+      # Required to validate Google ID tokens sent by the web and iOS clients.
+      # Set this to the complete one-line Firebase service-account JSON in Render.
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false
       - key: PAYFAST_MERCHANT_ID
         sync: false
       - key: PAYFAST_MERCHANT_KEY

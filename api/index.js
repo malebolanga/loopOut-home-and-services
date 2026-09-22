@@ -44,7 +44,7 @@ dotenv.config({ path: new URL('./.env', import.meta.url) });
 mongoose.set('bufferCommands', false);
 
 const criticalProductionVariables = ['MONGO', 'JWT_SECRET'];
-const recommendedProductionVariables = ['CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS'];
+const recommendedProductionVariables = ['CLIENT_URL', 'APP_URL', 'BACKEND_URL', 'EMAIL_USER', 'EMAIL_PASS', 'FIREBASE_SERVICE_ACCOUNT_JSON'];
 if (process.env.NODE_ENV === 'production') {
     const missingCritical = criticalProductionVariables.filter((name) => !process.env[name]);
     if (missingCritical.length) throw new Error(`Missing required production environment variables: ${missingCritical.join(', ')}`);

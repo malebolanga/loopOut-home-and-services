@@ -17,6 +17,7 @@ export default function OAuth() {
     try {
       dispatch(signInStart());
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       const auth = getAuth(app);
 
       const result = await signInWithPopup(auth, provider);
@@ -31,15 +32,12 @@ export default function OAuth() {
         body: JSON.stringify({ idToken }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Server error during Google sign-in');
 
-      if (res.ok) {
-        persistSessionToken(data);
-        dispatch(signInSuccess(data));
-        navigate('/');
-      } else {
-        dispatch(signInFailure(data.message || 'Server error during Google sign-in'));
-      }
+      persistSessionToken(data);
+      dispatch(signInSuccess(data));
+      navigate('/');
     } catch (error) {
       console.error('Google Auth Error:', error);
       let errorMessage = 'Could not sign in with Google';
@@ -51,6 +49,8 @@ export default function OAuth() {
         errorMessage = 'Network error. Please check your connection.';
       } else if (error.code === 'auth/unauthorized-domain') {
         errorMessage = 'This domain is not authorized for Google Sign-in. Please add it to the Firebase Console.';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       dispatch(signInFailure(errorMessage));
     }
