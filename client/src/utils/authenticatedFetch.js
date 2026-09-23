@@ -77,6 +77,8 @@ const RETRYABLE_MESSAGES = [
   'timeout',
   'connection reset',
   'connection refused',
+  'connection closed',  // Render free-tier cold-start: ERR_CONNECTION_CLOSED
+  'err_connection',     // Chrome ERR_CONNECTION_* family
   'aborted',
 ];
 

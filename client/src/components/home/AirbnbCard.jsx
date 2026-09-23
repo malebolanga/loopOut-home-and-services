@@ -1,17 +1,40 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Navigation2 } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '../../hooks/useWishlist';
+import useLocationCoords from '../../hooks/useGeolocation';
+import { calculateDistance } from '../../utils/locationUtils';
 
 export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false, showOwner = true }) => {
   const isGuestFavorite = item.rating >= 4.8;
   const wishlistType = type === 'property' ? 'listing' : type;
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
   const owner = typeof (item.userRef || item.creator) === 'object' ? (item.userRef || item.creator) : null;
+
+  // Live GPS distance
+  const { coords: userCoords } = useLocationCoords();
+  const liveDistance = useMemo(() => {
+    // 1. Prioritize real GPS distance if user coordinates and item coordinates exist
+    if (userCoords?.latitude && userCoords?.longitude && item?.latitude && item?.longitude) {
+      return calculateDistance(userCoords.latitude, userCoords.longitude, item.latitude, item.longitude);
+    }
+    // 2. Fall back to pre-computed _distance (from filterByDistanceTier), excluding synthetic non-GPS 5.1 fallback
+    if (item?._distance !== undefined && item._distance !== Infinity && item._distance < 999999 && item._distance !== 5.1) {
+      return item._distance;
+    }
+    return null;
+  }, [item?._distance, item?.latitude, item?.longitude, userCoords]);
+
+  const distanceLabel = useMemo(() => {
+    if (!liveDistance || liveDistance >= 999999) return null;
+    if (liveDistance < 0.5) return 'Near you';
+    if (liveDistance < 1) return `${Math.round(liveDistance * 1000)} m away`;
+    return `${liveDistance < 10 ? liveDistance.toFixed(1) : Math.round(liveDistance)} km away`;
+  }, [liveDistance]);
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
@@ -216,6 +239,13 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
             <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight">
               {getCategoryLabel()}
             </p>
+            {/* GPS Distance badge */}
+            {!hideDistance && distanceLabel && (
+              <span className="inline-flex items-center gap-0.5 mt-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                <Navigation2 className="w-2.5 h-2.5 shrink-0" />
+                {distanceLabel}
+              </span>
+            )}
           </div>
           <div className="flex flex-col items-end gap-3 shrink-0">
             {/* Rating on right */}
@@ -244,11 +274,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           </div>
         </div>
 
-        {item._distance && item._distance !== Infinity && !hideDistance && (
-          <p className="text-gray-500 dark:text-white text-[12px] leading-tight">
-            {item._distance < 1 ? 'Near you' : `${Math.round(item._distance)} km away`}
-          </p>
-        )}
+        {/* Legacy _distance display removed — now shown via distanceLabel above */}
 
         <div className="flex items-baseline gap-1 mt-1">
           <span className={`font-semibold text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>{formatPrice()}</span>

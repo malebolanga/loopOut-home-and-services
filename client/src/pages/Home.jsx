@@ -808,6 +808,39 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     </div>
                   </div>
 
+                  {/* Shop Location Card */}
+                  <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
+                    <span className="shrink-0 w-8 h-8 rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700/60 flex items-center justify-center text-rose-500 shadow-xs mt-0.5">
+                      <MapPin className="w-4 h-4" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                          Shop Location
+                        </p>
+                        {item.shopDistance && (
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            📍 {item.shopDistance}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
+                        {item.shopAddress || 'Polokwane, Limpopo'}
+                      </p>
+                    </div>
+                    {(item.shopAddress || item.shopName) && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((item.shopAddress || item.shopName) + ', South Africa')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="shrink-0 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-blue-200 dark:border-blue-700 hover:bg-blue-50 transition-colors shadow-2xs"
+                      >
+                        Map
+                      </a>
+                    )}
+                  </div>
+
                   {/* Description */}
                   {item.description && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
@@ -860,12 +893,23 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                 className="px-6 pt-14 pb-6"
               >
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center gap-3 mb-3">
                   <span className="text-3xl">{emoji}</span>
                   <div>
                     <p className="font-black text-gray-900 dark:text-white text-base leading-tight">{item.name}</p>
                     <p className="text-[11px] text-gray-400">{item.shopName} · R{item.price} each</p>
                   </div>
+                </div>
+
+                {/* Shop Location Pill in Order Form */}
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 mb-5 text-xs text-gray-600 dark:text-gray-300">
+                  <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span className="truncate font-semibold">{item.shopAddress || `${item.shopName}, Polokwane`}</span>
+                  {item.shopDistance && (
+                    <span className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      {item.shopDistance}
+                    </span>
+                  )}
                 </div>
 
                 {orderStatus === 'success' ? (
@@ -976,6 +1020,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'Urban Grill',
     shopImage: '🥙',
     shopCuisine: 'Grill & Flame',
+    shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
+    shopDistance: '1.2 km away',
     description: 'Slow-cooked pork ribs glazed with our signature smoky BBQ sauce, served with grilled corn and fries.',
     prepTime: '25 min',
     calories: '820 kcal',
@@ -991,6 +1037,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: "Mama's Kitchen",
     shopImage: '🍛',
     shopCuisine: 'Local Favourites',
+    shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
+    shopDistance: '800 m away',
     description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
     prepTime: '30 min',
     calories: '650 kcal',
@@ -1006,6 +1054,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'The Green Table',
     shopImage: '🥗',
     shopCuisine: 'Healthy & Fresh',
+    shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
+    shopDistance: '2.5 km away',
     description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
     prepTime: '10 min',
     calories: '420 kcal',
@@ -1021,6 +1071,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'Mapho Kitchen',
     shopImage: '🏪',
     shopCuisine: 'Traditional',
+    shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
+    shopDistance: '4.8 km away',
     description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
     prepTime: '20 min',
     calories: '720 kcal',
@@ -1036,6 +1088,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'Lungile & Son',
     shopImage: '🥙',
     shopCuisine: 'Street Food',
+    shopAddress: 'Stand 204, Extension 44, Polokwane',
+    shopDistance: '3.1 km away',
     description: 'Quarter loaf loaded with Russian sausage, chips, egg, atchar and your choice of sauce.',
     prepTime: '10 min',
     calories: '580 kcal',
@@ -1051,6 +1105,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'Kota Joint',
     shopImage: '🥪',
     shopCuisine: 'Fast Food',
+    shopAddress: '78 Biccard Street, Polokwane Central',
+    shopDistance: '950 m away',
     description: 'Freshly hollowed quarter loaf packed with polony, cheese, chips and tangy chutney.',
     prepTime: '8 min',
     calories: '540 kcal',
@@ -1066,6 +1122,8 @@ const FALLBACK_FOOD_SPECIALS = [
     shopName: 'Lungile & Son',
     shopImage: '🍿',
     shopCuisine: 'Fast Food',
+    shopAddress: 'Stand 204, Extension 44, Polokwane',
+    shopDistance: '3.1 km away',
     description: 'Golden crispy chips seasoned with our house spice blend, served with tomato or chilli sauce.',
     prepTime: '5 min',
     calories: '310 kcal',
@@ -1118,7 +1176,10 @@ const FoodSpecialsStrip = ({ navigate }) => {
               shopId: shop.id || shop._id,
               shopName: shop.name,
               shopImage: shop.image || '🏪',
-              shopCuisine: shop.cuisine || 'Local'
+              shopCuisine: shop.cuisine || 'Local',
+              shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
+              shopDistance: shop.distance || '',
+              shopPhone: shop.phone || shop.whatsapp || ''
             });
           });
         });

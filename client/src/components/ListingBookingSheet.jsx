@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -25,6 +25,9 @@ import {
 } from 'react-icons/fa';
 import { MdChildCare, MdDirectionsBus } from 'react-icons/md';
 import { pushPhoneNotification } from './PhoneNotificationManager';
+import useLocationCoords from '../hooks/useGeolocation';
+import { calculateDistance } from '../utils/locationUtils';
+
 
 
 // ─── Service Config Map ───────────────────────────────────────────────────────
@@ -535,6 +538,26 @@ export default function ListingBookingSheet({
   const config = isServiceMode ? serviceConfig : DEFAULT_CONFIG;
   const accentCls = ACCENT_CLASSES[config.accent] || ACCENT_CLASSES.rose;
 
+  // ── GPS distance to listing ─────────────────────────────────────────────────
+  const { coords: userCoords } = useLocationCoords();
+  const liveDistance = useMemo(() => {
+    if (!userCoords?.latitude || !userCoords?.longitude) return null;
+    if (!listing?.latitude || !listing?.longitude) return null;
+    return calculateDistance(userCoords.latitude, userCoords.longitude, listing.latitude, listing.longitude);
+  }, [userCoords, listing?.latitude, listing?.longitude]);
+
+  const distanceLabel = useMemo(() => {
+    if (liveDistance === null) return null;
+    if (liveDistance < 0.5) return 'Near you';
+    if (liveDistance < 1) return `${Math.round(liveDistance * 1000)} m away`;
+    return `${liveDistance < 10 ? liveDistance.toFixed(1) : Math.round(liveDistance)} km away`;
+  }, [liveDistance]);
+
+  // Label for location section based on service type
+  const isMenuService = config.extras?.includes('numberOfGuests') || ['chef', 'catering', 'baker'].some(t => listing?.type?.toLowerCase?.()?.includes(t) || listing?.helperType?.toLowerCase?.()?.includes(t)) || (listing?.meals?.length > 0);
+  const locationSectionLabel = isMenuService ? 'Menu / Service Location' : 'Service Location';
+  const displayAddress = listing?.address || listing?.location || listing?.city || listing?.near || '';
+
   useEffect(() => {
     if (isOpen) {
       setStep(1);
@@ -574,7 +597,8 @@ export default function ListingBookingSheet({
   const calculateTotalPrice = () => {
     const svc = listing?.serviceList?.find(s => s.name === bookingDetails.selectedUnit);
     const room = listing?.roomTypes?.find(r => r.name === bookingDetails.selectedUnit);
-    const unitPrice = svc?.price ? Number(svc.price) : room?.price ? Number(room.price) : (listing?.regularPrice || 0);
+    const meal = listing?.meals?.find(m => m.name === bookingDetails.selectedUnit);
+    const unitPrice = svc?.price ? Number(svc.price) : room?.price ? Number(room.price) : meal?.price ? Number(meal.price) : (listing?.regularPrice || 0);
     if (isDailyStay) {
       if (days === 0) return 0;
       const extra = bookingDetails.breakfast ? 150 * days * Number(bookingDetails.guests) : 0;
@@ -812,8 +836,9 @@ export default function ListingBookingSheet({
 
   const serviceList = listing?.serviceList || [];
   const roomTypes = listing?.roomTypes || [];
-  const hasOptions = serviceList.length > 0 || roomTypes.length > 0;
-  const optionItems = serviceList.length > 0 ? serviceList : roomTypes;
+  const meals = listing?.meals || [];
+  const hasOptions = serviceList.length > 0 || roomTypes.length > 0 || meals.length > 0;
+  const optionItems = serviceList.length > 0 ? serviceList : roomTypes.length > 0 ? roomTypes : meals;
 
   const stepLabels = isServiceMode
     ? ['Contact & Schedule', 'Package & Extras', 'Summary & Book']
@@ -882,9 +907,17 @@ export default function ListingBookingSheet({
                   <h2 className="text-sm font-black text-gray-900 dark:text-white leading-tight truncate max-w-[200px] sm:max-w-xs">
                     {isServiceMode ? `${config.label} Booking` : `Reserve`} · {listing.name}
                   </h2>
-                  <p className="text-[11px] text-gray-400 font-semibold">
-                    Step {step} of 3 · {stepLabels[step - 1]}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[11px] text-gray-400 font-semibold">
+                      Step {step} of 3 · {stepLabels[step - 1]}
+                    </p>
+                    {distanceLabel && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                        <FaMapMarkerAlt className="w-2 h-2" />
+                        {distanceLabel}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -906,10 +939,48 @@ export default function ListingBookingSheet({
                 {isServiceMode && (
                   <div className={`rounded-2xl p-4 bg-gradient-to-r ${config.color} text-white flex items-center gap-3 shadow-md`}>
                     <span className="text-3xl">{config.emoji}</span>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <div className="font-black text-sm">{config.label} Booking</div>
                       <div className="text-xs opacity-80">{listing.name} · R{listing?.regularPrice?.toLocaleString()} base rate</div>
                     </div>
+                    {distanceLabel && (
+                      <span className="shrink-0 text-[10px] font-black bg-white/20 backdrop-blur-sm px-2 py-1 rounded-xl border border-white/30">
+                        📍 {distanceLabel}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Location card — address of listing/service */}
+                {displayAddress && (
+                  <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 p-3.5 flex items-start gap-3">
+                    <span className="shrink-0 w-8 h-8 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
+                      <FaMapMarkerAlt className="w-3.5 h-3.5 text-rose-500" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-0.5">
+                        {isMenuService ? locationSectionLabel : (isDailyStay ? 'Property Location' : isRent ? 'Property Address' : 'Service Address')}
+                      </p>
+                      <p className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
+                        {displayAddress}
+                      </p>
+                      {distanceLabel && (
+                        <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          📍 {distanceLabel}
+                        </p>
+                      )}
+                    </div>
+                    {displayAddress && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="shrink-0 text-[9px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-1 rounded-xl border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors"
+                      >
+                        Map
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -1261,6 +1332,17 @@ export default function ListingBookingSheet({
                     <span>Service / Property</span>
                     <span className="text-white font-black truncate max-w-[180px]">{listing?.name}</span>
                   </div>
+
+                  {displayAddress && (
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
+                      <span>{isMenuService ? 'Menu / Location' : 'Location'}</span>
+                      <span className="text-white font-black truncate max-w-[200px] flex items-center gap-1">
+                        <FaMapMarkerAlt className="w-3 h-3 text-rose-400 shrink-0" />
+                        <span className="truncate">{displayAddress}</span>
+                        {distanceLabel && <span className="text-emerald-400 font-bold shrink-0">({distanceLabel})</span>}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
                     <span>{isServiceMode ? 'Client' : 'Guest'}</span>

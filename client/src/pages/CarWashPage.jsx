@@ -621,8 +621,8 @@ export default function CarWashPage() {
                 </div>
                 <span>·</span>
                 <div className="flex items-center gap-1">
-                  <FaMapMarkerAlt />
-                  <span>{carWash.address || 'Mobile service area'}</span>
+                  <FaMapMarkerAlt className="text-rose-500 shrink-0" />
+                  <span className="font-semibold text-gray-900 dark:text-white">{carWash.address || 'Mobile service area'}</span>
                 </div>
               </div>
             </div>

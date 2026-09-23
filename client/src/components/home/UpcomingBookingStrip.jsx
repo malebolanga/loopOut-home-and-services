@@ -27,13 +27,13 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 // ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
 export const FALLBACK_FOOD_SPECIALS = [
-  { id: 'special-1', name: 'Flame BBQ Ribs',         price: 145, tag: 'Chef Special',  image: '🍖', shopId: 'urban-grill',   shopName: 'Urban Grill',      shopImage: '🥙', shopCuisine: 'Grill & Flame' },
-  { id: 'special-2', name: 'Beef Stew & Pap',         price: 115, tag: 'Special',       image: '🥘', shopId: 'mamas-kitchen', shopName: "Mama's Kitchen",   shopImage: '🍛', shopCuisine: 'Local Favourites' },
-  { id: 'special-3', name: 'Chicken Caesar Salad',   price: 105, tag: 'Fresh Special', image: '🥗', shopId: 'green-table',   shopName: 'The Green Table',  shopImage: '🥗', shopCuisine: 'Healthy & Fresh' },
-  { id: 'special-4', name: 'Steak & Chakalaka Pap',  price:  99, tag: 'Special',       image: '🥩', shopId: 'mapho',         shopName: 'Mapho Kitchen',    shopImage: '🏪', shopCuisine: 'Traditional' },
-  { id: 'special-5', name: 'Special Dagwood Kota',   price:  55, tag: 'Popular',       image: '🥪', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🥙', shopCuisine: 'Street Food' },
-  { id: 'special-6', name: 'Loaded Kota Special',    price:  50, tag: 'Special',       image: '🥪', shopId: 'kota-joint',    shopName: 'Kota Joint',       shopImage: '🥪', shopCuisine: 'Fast Food' },
-  { id: 'special-7', name: 'Crispy Seasoned Chips',  price:  35, tag: 'Special',       image: '🍟', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🍿', shopCuisine: 'Fast Food' },
+  { id: 'special-1', name: 'Flame BBQ Ribs',         price: 145, tag: 'Chef Special',  image: '🍖', shopId: 'urban-grill',   shopName: 'Urban Grill',      shopImage: '🥙', shopCuisine: 'Grill & Flame', shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane', shopDistance: '1.2 km away' },
+  { id: 'special-2', name: 'Beef Stew & Pap',         price: 115, tag: 'Special',       image: '🥘', shopId: 'mamas-kitchen', shopName: "Mama's Kitchen",   shopImage: '🍛', shopCuisine: 'Local Favourites', shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central', shopDistance: '800 m away' },
+  { id: 'special-3', name: 'Chicken Caesar Salad',   price: 105, tag: 'Fresh Special', image: '🥗', shopId: 'green-table',   shopName: 'The Green Table',  shopImage: '🥗', shopCuisine: 'Healthy & Fresh', shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane', shopDistance: '2.5 km away' },
+  { id: 'special-4', name: 'Steak & Chakalaka Pap',  price:  99, tag: 'Special',       image: '🥩', shopId: 'mapho',         shopName: 'Mapho Kitchen',    shopImage: '🏪', shopCuisine: 'Traditional', shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane', shopDistance: '4.8 km away' },
+  { id: 'special-5', name: 'Special Dagwood Kota',   price:  55, tag: 'Popular',       image: '🥪', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🥙', shopCuisine: 'Street Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away' },
+  { id: 'special-6', name: 'Loaded Kota Special',    price:  50, tag: 'Special',       image: '🥪', shopId: 'kota-joint',    shopName: 'Kota Joint',       shopImage: '🥪', shopCuisine: 'Fast Food', shopAddress: '78 Biccard Street, Polokwane Central', shopDistance: '950 m away' },
+  { id: 'special-7', name: 'Crispy Seasoned Chips',  price:  35, tag: 'Special',       image: '🍟', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🍿', shopCuisine: 'Fast Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away' },
 ];
 
 export const FoodSpecialsStrip = ({ navigate }) => {
@@ -58,7 +58,7 @@ export const FoodSpecialsStrip = ({ navigate }) => {
             return aSpec && !bSpec ? -1 : !aSpec && bSpec ? 1 : 0;
           });
           sorted.slice(0, 2).forEach((meal) => {
-            collected.push({ id: meal.id, name: meal.name, price: meal.price, tag: meal.tag || 'Special', image: meal.image || '🍱', shopId: shop.id || shop._id, shopName: shop.name, shopImage: shop.image || '🏪', shopCuisine: shop.cuisine || 'Local' });
+            collected.push({ id: meal.id, name: meal.name, price: meal.price, tag: meal.tag || 'Special', image: meal.image || '🍱', shopId: shop.id || shop._id, shopName: shop.name, shopImage: shop.image || '🏪', shopCuisine: shop.cuisine || 'Local', shopAddress: shop.address || shop.location || 'Polokwane, Limpopo', shopDistance: shop.distance || '' });
           });
         });
         if (isMounted && collected.length > 0) setFoodItems(collected);

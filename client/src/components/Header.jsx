@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import BrandLogo, { BrandIcon } from './BrandLogo';
 import ImageWithFallback from './ImageWithFallback';
 import { motion, AnimatePresence } from 'framer-motion';
-import { authenticatedFetch, clearPersistedSessionToken } from '../utils/authenticatedFetch';
+import { authenticatedFetch, authenticatedFetchWithRetry, clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
 import { pushPhoneNotification } from './PhoneNotificationManager';
 
@@ -253,10 +253,11 @@ export default function Header() {
     if (!currentUser) return;
 
     try {
-      const res = await authenticatedFetch('/api/notifications', {
-        headers: { 'Content-Type': 'application/json' },
-        signal
-      });
+      const res = await authenticatedFetchWithRetry(
+        '/api/notifications',
+        { headers: { 'Content-Type': 'application/json' }, signal },
+        { maxRetries: 3, timeoutMs: 40000 }
+      );
 
       // Silently ignore auth errors, rate limit states, and server-not-ready states
       if (res.status === 401 || res.status === 403 || res.status === 429 || res.status === 503) return;
@@ -294,9 +295,11 @@ export default function Header() {
         prevUnreadCountRef.current = newUnreadCount;
       }
     } catch (error) {
-      // Ignore AbortError — this is expected on component unmount
+      // Ignore AbortError (unmount) and transient network errors (Render cold-start)
       if (error.name === 'AbortError') return;
-      console.error('Error fetching notifications:', error);
+      const msg = error?.message?.toLowerCase() || '';
+      const isTransient = msg.includes('failed to fetch') || msg.includes('connection') || msg.includes('network');
+      if (!isTransient) console.error('Error fetching notifications:', error);
     }
   }, [currentUser?._id, playNotificationChime]);
 
@@ -310,8 +313,8 @@ export default function Header() {
     }
     try {
       const [userRes, hostRes] = await Promise.allSettled([
-        authenticatedFetch(`/api/bookings/user/${currentUser._id}`, { signal }),
-        authenticatedFetch(`/api/bookings/host/${currentUser._id}`, { signal })
+        authenticatedFetchWithRetry(`/api/bookings/user/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 }),
+        authenticatedFetchWithRetry(`/api/bookings/host/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 })
       ]);
 
       let confirmedCount = 0;
