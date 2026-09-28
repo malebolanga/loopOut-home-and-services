@@ -1314,10 +1314,10 @@ const FoodSpecialsStrip = ({ navigate }) => {
             transition={{ delay: i * 0.04 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedFood(item)}
-            className="snap-start shrink-0 w-[112px] sm:w-[124px] cursor-pointer flex flex-col bg-transparent border-0 shadow-none rounded-none group"
+            className="snap-start shrink-0 w-[112px] sm:w-[124px] cursor-pointer flex flex-col bg-transparent  shadow-none rounded-none"
           >
             {/* Card with tag pill, emoji, name, shop, and price */}
-            <div className="flex flex-col gap-1 p-2 rounded-xl transition-all bg-gray-50/70 dark:bg-gray-900/40 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 border border-gray-100 dark:border-gray-800/80">
+            <div className="flex flex-col gap-1 p-2 rounded-xl transition-all bg-gray-50/70 dark:bg-gray-900/40 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 dark:border-gray-800/80">
               {/* Badge: Hot Food, Popular, Favorite */}
               {item.tag && (
                 <div className="flex items-center justify-center">
