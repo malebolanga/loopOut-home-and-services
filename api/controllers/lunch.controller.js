@@ -108,7 +108,7 @@ export const getOrders = async (req, res, next) => {
 export const createOrder = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
-    const { shopId, items, customerPhone, customerName, orderComments, scheduledFor } = req.body;
+    const { shopId, items, customerPhone, customerName, orderComments, scheduledFor, fulfilment, deliveryAddress, deliveryNotes } = req.body;
     if (!validId(shopId) || !Array.isArray(items) || !items.length) return res.status(400).json({ success: false, message: 'Choose a shop and at least one meal.' });
     const shop = await Shop.findById(shopId); if (!shop || !shop.isOpen) return res.status(409).json({ success: false, message: 'This shop is not accepting orders.' });
     const normalizedItems = items.map((item) => {
@@ -119,10 +119,13 @@ export const createOrder = async (req, res, next) => {
     });
     if (normalizedItems.some((item) => !item)) return res.status(409).json({ success: false, message: 'One or more meals are unavailable. Refresh your basket and try again.' });
     const phone = cleanText(customerPhone, 30); if (!phone) return res.status(400).json({ success: false, message: 'A contact phone number is required.' });
+    const requestedFulfilment = fulfilment === 'delivery' ? 'delivery' : 'pickup';
+    const cleanDeliveryAddress = cleanText(deliveryAddress, 180);
+    if (requestedFulfilment === 'delivery' && !cleanDeliveryAddress) return res.status(400).json({ success: false, message: 'A delivery address is required for delivery orders.' });
     const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const requestedTime = scheduledFor ? new Date(scheduledFor) : null;
     if (requestedTime && (Number.isNaN(requestedTime.getTime()) || requestedTime <= new Date())) return res.status(400).json({ success: false, message: 'Choose a future collection time.' });
-    const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: 'pickup', orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: 'Pay at Counter', status: 'Pending' });
+    const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: requestedFulfilment, deliveryAddress: cleanDeliveryAddress, deliveryNotes: cleanText(deliveryNotes, 500), orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: requestedFulfilment === 'delivery' ? 'Delivery payment pending' : 'Pay at Counter', status: 'Pending' });
     await Promise.allSettled([createNotification(userId(req), 'Food order received', `Your order #${order.orderCode} has been sent to ${shop.name}.`, { orderId: order._id, status: order.status }), createNotification(shop.ownerId, 'New food order', `Order #${order.orderCode} is waiting for your confirmation.`, { orderId: order._id, status: order.status })]);
     return res.status(201).json(format(order));
   } catch (error) { return next(error); }

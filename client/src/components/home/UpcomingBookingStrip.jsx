@@ -27,12 +27,12 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 // ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
 export const FALLBACK_FOOD_SPECIALS = [
-  { id: 'special-1', name: 'Flame BBQ Ribs',         price: 145, tag: 'Chef Special',  image: '🍖', shopId: 'urban-grill',   shopName: 'Urban Grill',      shopImage: '🥙', shopCuisine: 'Grill & Flame', shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane', shopDistance: '1.2 km away' },
-  { id: 'special-2', name: 'Beef Stew & Pap',         price: 115, tag: 'Special',       image: '🥘', shopId: 'mamas-kitchen', shopName: "Mama's Kitchen",   shopImage: '🍛', shopCuisine: 'Local Favourites', shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central', shopDistance: '800 m away' },
-  { id: 'special-3', name: 'Chicken Caesar Salad',   price: 105, tag: 'Fresh Special', image: '🥗', shopId: 'green-table',   shopName: 'The Green Table',  shopImage: '🥗', shopCuisine: 'Healthy & Fresh', shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane', shopDistance: '2.5 km away' },
-  { id: 'special-4', name: 'Steak & Chakalaka Pap',  price:  99, tag: 'Special',       image: '🥩', shopId: 'mapho',         shopName: 'Mapho Kitchen',    shopImage: '🏪', shopCuisine: 'Traditional', shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane', shopDistance: '4.8 km away' },
+  { id: 'special-1', name: 'Flame BBQ Ribs',         price: 145, tag: 'Hot Food',      image: '🍖', shopId: 'urban-grill',   shopName: 'Urban Grill',      shopImage: '🥙', shopCuisine: 'Grill & Flame', shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane', shopDistance: '1.2 km away' },
   { id: 'special-5', name: 'Special Dagwood Kota',   price:  55, tag: 'Popular',       image: '🥪', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🥙', shopCuisine: 'Street Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away' },
-  { id: 'special-6', name: 'Loaded Kota Special',    price:  50, tag: 'Special',       image: '🥪', shopId: 'kota-joint',    shopName: 'Kota Joint',       shopImage: '🥪', shopCuisine: 'Fast Food', shopAddress: '78 Biccard Street, Polokwane Central', shopDistance: '950 m away' },
+  { id: 'special-2', name: 'Beef Stew & Pap',         price: 115, tag: 'Favorite',      image: '🥘', shopId: 'mamas-kitchen', shopName: "Mama's Kitchen",   shopImage: '🍛', shopCuisine: 'Local Favourites', shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central', shopDistance: '800 m away' },
+  { id: 'special-4', name: 'Steak & Chakalaka Pap',  price:  99, tag: 'Hot Food',      image: '🥩', shopId: 'mapho',         shopName: 'Mapho Kitchen',    shopImage: '🏪', shopCuisine: 'Traditional', shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane', shopDistance: '4.8 km away' },
+  { id: 'special-6', name: 'Loaded Kota Special',    price:  50, tag: 'Popular',       image: '🥪', shopId: 'kota-joint',    shopName: 'Kota Joint',       shopImage: '🥪', shopCuisine: 'Fast Food', shopAddress: '78 Biccard Street, Polokwane Central', shopDistance: '950 m away' },
+  { id: 'special-3', name: 'Chicken Caesar Salad',   price: 105, tag: 'Favorite',      image: '🥗', shopId: 'green-table',   shopName: 'The Green Table',  shopImage: '🥗', shopCuisine: 'Healthy & Fresh', shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane', shopDistance: '2.5 km away' },
   { id: 'special-7', name: 'Crispy Seasoned Chips',  price:  35, tag: 'Special',       image: '🍟', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🍿', shopCuisine: 'Fast Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away' },
 ];
 
@@ -69,8 +69,8 @@ export const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-6 -mx-4">
-      <div className="flex items-center justify-between px-4 mb-3">
+    <section className="mb-6 -mx-4 pt-2.5 sm:pt-3">
+      <div className="flex items-center justify-between px-4 mb-3 pt-1">
         <div className="flex items-center gap-2">
           <UtensilsCrossed className="w-4 h-4 text-amber-500" />
           <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>

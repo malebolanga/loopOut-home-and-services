@@ -676,33 +676,67 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 const CommunityNeedsSection = () => null;
 
 // ─── Food Detail Modal ────────────────────────────────────────────────────────
+const FOOD_INGREDIENT_ICONS = {
+  // Chips & fries
+  chips: '🍟', fries: '🍟',
+  // Dairy & proteins
+  cheese: '🧀', egg: '🥚', eggs: '🥚',
+  // Sausages (SA street food)
+  vienna: '🌭', russian: '🌭', sausage: '🌭', wors: '🌭', boerewors: '🌭',
+  // Meats
+  polony: '🥓', chicken: '🍗', beef: '🥩', steak: '🥩', ribs: '🍖', pork: '🍖', lamb: '🍖', mince: '🥩',
+  // Breads & carbs
+  bread: '🍞', loaf: '🍞', roll: '🍞', pap: '🍚', rice: '🍚', corn: '🌽', potato: '🥔', potatoes: '🥔',
+  // Vegetables & condiments
+  tomato: '🍅', onion: '🧅', atchar: '🥭', chutney: '🥭', sauce: '🥫', gravy: '🍲', chakalaka: '🥫',
+  coleslaw: '🥗', salad: '🥗', lettuce: '🥬', cabbage: '🥬', spinach: '🥬',
+  // Flavour / other
+  bbq: '🔥', spice: '🌶️', herb: '🌿', oil: '🫙', butter: '🧈', cream: '🥛',
+  // Misc
+  dressing: '🫙', croutons: '🍞', parmesan: '🧀',
+};
+
+const foodIngredientIcon = (ingredient = '') => {
+  const normalized = ingredient.toLowerCase();
+  return Object.entries(FOOD_INGREDIENT_ICONS).find(([word]) => normalized.includes(word))?.[1] || '🍽️';
+};
+
 const FoodDetailModal = ({ item, onClose, navigate }) => {
   const [showOrderForm, setShowOrderForm] = useState(false);
-  const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '' });
+  const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '', fulfilment: 'pickup', deliveryAddress: '' });
   const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
+  const [gpsRequested, setGpsRequested] = useState(false);
+  const { coords, city: gpsCity, error: gpsError, loading: gpsLoading, requestLocation } = useLocationCoords();
+
+  useEffect(() => {
+    if (!gpsRequested || !coords) return;
+    const coordinates = `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+    setOrderForm((form) => ({
+      ...form,
+      deliveryAddress: form.deliveryAddress || `${gpsCity || 'Current GPS location'} (${coordinates})`,
+    }));
+  }, [coords, gpsCity, gpsRequested]);
 
   if (!item) return null;
   const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
-    if (!orderForm.name.trim() || !orderForm.phone.trim()) return;
+    if (!orderForm.name.trim() || !orderForm.phone.trim() || (orderForm.fulfilment === 'delivery' && !orderForm.deliveryAddress.trim())) return;
     setOrderStatus('submitting');
     try {
-      const res = await fetch('/api/lunch/orders', {
+      const res = await authenticatedFetch('/api/lunch/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           shopId: item.shopId,
-          shopName: item.shopName,
-          mealId: item.id,
-          mealName: item.name,
-          mealPrice: item.price,
-          quantity: orderForm.qty,
+          items: [{ id: item.id, quantity: orderForm.qty }],
           customerName: orderForm.name.trim(),
           customerPhone: orderForm.phone.trim(),
-          notes: orderForm.notes.trim(),
-          totalAmount: item.price * orderForm.qty,
+          fulfilment: orderForm.fulfilment,
+          deliveryAddress: orderForm.deliveryAddress.trim(),
+          deliveryNotes: orderForm.notes.trim(),
+          orderComments: orderForm.notes.trim(),
         }),
       });
       if (res.ok) {
@@ -852,8 +886,8 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Ingredients</p>
                       <div className="flex flex-wrap gap-1.5">
                         {item.ingredients.map((ing, idx) => (
-                          <span key={idx} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                            {ing}
+                          <span key={idx} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+                            <span aria-hidden="true">{foodIngredientIcon(ing)}</span>{ing}
                           </span>
                         ))}
                       </div>
@@ -973,6 +1007,52 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       />
                     </div>
 
+                    {/* Collection or delivery */}
+                    <div>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">How would you like your food?</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { value: 'pickup', icon: '🏪', label: 'Pick up' },
+                          { value: 'delivery', icon: '🛵', label: 'Delivery' },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setOrderForm(f => ({ ...f, fulfilment: option.value }))}
+                            className={`py-2.5 rounded-xl border text-xs font-black transition-colors ${orderForm.fulfilment === option.value ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200' : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}
+                          >
+                            {option.icon} {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {orderForm.fulfilment === 'delivery' && (
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Delivery address</label>
+                          <button
+                            type="button"
+                            onClick={() => { setGpsRequested(true); requestLocation(); }}
+                            className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400"
+                          >
+                            {gpsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                            Use my GPS
+                          </button>
+                        </div>
+                        <textarea
+                          required
+                          rows={2}
+                          placeholder="Street address, suburb and city"
+                          value={orderForm.deliveryAddress}
+                          onChange={e => setOrderForm(f => ({ ...f, deliveryAddress: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                        />
+                        {gpsRequested && gpsError && <p className="mt-1 text-[10px] font-semibold text-rose-500">GPS was unavailable. Please enter your address.</p>}
+                        {gpsRequested && coords && <p className="mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">GPS location added — you can still edit the address.</p>}
+                      </div>
+                    )}
+
                     {/* Notes */}
                     <div>
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Special Requests <span className="normal-case font-normal">(optional)</span></label>
@@ -1014,7 +1094,7 @@ const FALLBACK_FOOD_SPECIALS = [
     id: 'special-1',
     name: 'Flame BBQ Ribs',
     price: 145,
-    tag: 'Chef Special',
+    tag: 'Hot Food',
     image: '🍖',
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
@@ -1022,61 +1102,10 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Grill & Flame',
     shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
     shopDistance: '1.2 km away',
-    description: 'Slow-cooked pork ribs glazed with our signature smoky BBQ sauce, served with grilled corn and fries.',
+    description: 'Slow-cooked pork ribs glazed with our signature spicy smoky BBQ sauce, served with grilled corn and fries.',
     prepTime: '25 min',
     calories: '820 kcal',
     ingredients: ['Pork ribs', 'BBQ sauce', 'Corn', 'Fries', 'Coleslaw']
-  },
-  {
-    id: 'special-2',
-    name: 'Beef Stew & Pap',
-    price: 115,
-    tag: 'Special',
-    image: '🥘',
-    shopId: 'mamas-kitchen',
-    shopName: "Mama's Kitchen",
-    shopImage: '🍛',
-    shopCuisine: 'Local Favourites',
-    shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
-    shopDistance: '800 m away',
-    description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
-    prepTime: '30 min',
-    calories: '650 kcal',
-    ingredients: ['Beef', 'Tomato gravy', 'Potatoes', 'Carrots', 'Pap']
-  },
-  {
-    id: 'special-3',
-    name: 'Chicken Caesar Salad',
-    price: 105,
-    tag: 'Fresh Special',
-    image: '🥗',
-    shopId: 'green-table',
-    shopName: 'The Green Table',
-    shopImage: '🥗',
-    shopCuisine: 'Healthy & Fresh',
-    shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
-    shopDistance: '2.5 km away',
-    description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
-    prepTime: '10 min',
-    calories: '420 kcal',
-    ingredients: ['Grilled chicken', 'Romaine lettuce', 'Parmesan', 'Croutons', 'Caesar dressing']
-  },
-  {
-    id: 'special-4',
-    name: 'Steak & Chakalaka Pap',
-    price: 99,
-    tag: 'Special',
-    image: '🥩',
-    shopId: 'mapho',
-    shopName: 'Mapho Kitchen',
-    shopImage: '🏪',
-    shopCuisine: 'Traditional',
-    shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
-    shopDistance: '4.8 km away',
-    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
-    prepTime: '20 min',
-    calories: '720 kcal',
-    ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
   },
   {
     id: 'special-5',
@@ -1096,10 +1125,44 @@ const FALLBACK_FOOD_SPECIALS = [
     ingredients: ['Quarter loaf', 'Russian', 'Chips', 'Egg', 'Atchar', 'Sauce']
   },
   {
+    id: 'special-2',
+    name: 'Beef Stew & Pap',
+    price: 115,
+    tag: 'Favorite',
+    image: '🥘',
+    shopId: 'mamas-kitchen',
+    shopName: "Mama's Kitchen",
+    shopImage: '🍛',
+    shopCuisine: 'Local Favourites',
+    shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
+    shopDistance: '800 m away',
+    description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
+    prepTime: '30 min',
+    calories: '650 kcal',
+    ingredients: ['Beef', 'Tomato gravy', 'Potatoes', 'Carrots', 'Pap']
+  },
+  {
+    id: 'special-4',
+    name: 'Steak & Chakalaka Pap',
+    price: 99,
+    tag: 'Hot Food',
+    image: '🥩',
+    shopId: 'mapho',
+    shopName: 'Mapho Kitchen',
+    shopImage: '🏪',
+    shopCuisine: 'Traditional',
+    shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
+    shopDistance: '4.8 km away',
+    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
+    prepTime: '20 min',
+    calories: '720 kcal',
+    ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
+  },
+  {
     id: 'special-6',
     name: 'Loaded Kota Special',
     price: 50,
-    tag: 'Special',
+    tag: 'Popular',
     image: '🥪',
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
@@ -1111,6 +1174,23 @@ const FALLBACK_FOOD_SPECIALS = [
     prepTime: '8 min',
     calories: '540 kcal',
     ingredients: ['Quarter loaf', 'Polony', 'Cheese', 'Chips', 'Chutney']
+  },
+  {
+    id: 'special-3',
+    name: 'Chicken Caesar Salad',
+    price: 105,
+    tag: 'Favorite',
+    image: '🥗',
+    shopId: 'green-table',
+    shopName: 'The Green Table',
+    shopImage: '🥗',
+    shopCuisine: 'Healthy & Fresh',
+    shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
+    shopDistance: '2.5 km away',
+    description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
+    prepTime: '10 min',
+    calories: '420 kcal',
+    ingredients: ['Grilled chicken', 'Romaine lettuce', 'Parmesan', 'Croutons', 'Caesar dressing']
   },
   {
     id: 'special-7',
@@ -1130,6 +1210,16 @@ const FALLBACK_FOOD_SPECIALS = [
     ingredients: ['Potatoes', 'Vegetable oil', 'House spice blend', 'Sauce of choice']
   }
 ];
+
+// Helper to prioritize: 1. Hot Food, 2. Popular, 3. Favorite, 4. Special
+const getFoodPriorityRank = (tag = '', name = '') => {
+  const combined = `${tag} ${name}`.toLowerCase();
+  if (combined.includes('hot') || combined.includes('flame') || combined.includes('spicy') || combined.includes('fire')) return 1;
+  if (combined.includes('popular')) return 2;
+  if (combined.includes('fav')) return 3;
+  if (combined.includes('chef') || combined.includes('special')) return 4;
+  return 5;
+};
 
 const FoodSpecialsStrip = ({ navigate }) => {
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
@@ -1151,13 +1241,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
           const available = shop.meals.filter((m) => m.isAvailable !== false);
           if (!available.length) return;
 
-          // Prioritize meals marked special, popular, chef special, or hot
+          // Inside shop: sort Hot Food first, Popular second, Favorite third
           const sorted = [...available].sort((a, b) => {
-            const aSpec = /(special|popular|hot|chef)/i.test(a.tag || '');
-            const bSpec = /(special|popular|hot|chef)/i.test(b.tag || '');
-            if (aSpec && !bSpec) return -1;
-            if (!aSpec && bSpec) return 1;
-            return 0;
+            return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
           });
 
           // Take up to 2 items per shop to present a diverse range of foods across different shops
@@ -1167,7 +1253,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
               name: meal.name,
               price: meal.price,
               originalPrice: meal.originalPrice,
-              tag: meal.tag || 'Special',
+              tag: meal.tag || (getFoodPriorityRank('', meal.name) === 1 ? 'Hot Food' : 'Special'),
               image: meal.image || '🍱',
               description: meal.description || '',
               prepTime: meal.prepTime || null,
@@ -1184,6 +1270,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
           });
         });
 
+        // Globally sort so Hot Food is 1st, Popular is 2nd, Favorite is 3rd
+        collected.sort((a, b) => getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name));
+
         if (isMounted && collected.length > 0) {
           setFoodItems(collected);
         }
@@ -1199,9 +1288,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-4 -mx-4">
+    <section className="mb-4 -mx-4 pt-2.5 sm:pt-3">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 mb-1">
+      <div className="flex items-center justify-between px-4 mb-2 pt-1">
         <div className="flex items-center gap-2">
           <UtensilsCrossed className="w-4 h-4 text-amber-500" />
           <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
@@ -1225,13 +1314,36 @@ const FoodSpecialsStrip = ({ navigate }) => {
             transition={{ delay: i * 0.04 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedFood(item)}
-            className="snap-start shrink-0 w-[110px] sm:w-[120px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
+            className="snap-start shrink-0 w-[112px] sm:w-[124px] cursor-pointer flex flex-col bg-transparent border-0 shadow-none rounded-none group"
           >
-            {/* Card — no image, just info */}
-            <div className="flex flex-col gap-1 p-2.5 rounded-xl transition-colors">
+            {/* Card with tag pill, emoji, name, shop, and price */}
+            <div className="flex flex-col gap-1 p-2 rounded-xl transition-all bg-gray-50/70 dark:bg-gray-900/40 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 border border-gray-100 dark:border-gray-800/80">
+              {/* Badge: Hot Food, Popular, Favorite */}
+              {item.tag && (
+                <div className="flex items-center justify-center">
+                  <span className={`text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    /hot/i.test(item.tag || '')
+                      ? 'bg-rose-500 text-white shadow-2xs'
+                      : /popular/i.test(item.tag || '')
+                      ? 'bg-amber-500 text-white shadow-2xs'
+                      : /fav/i.test(item.tag || '')
+                      ? 'bg-pink-500 text-white shadow-2xs'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  }`}>
+                    {/hot/i.test(item.tag || '')
+                      ? '🔥 Hot Food'
+                      : /popular/i.test(item.tag || '')
+                      ? '⭐ Popular'
+                      : /fav/i.test(item.tag || '')
+                      ? '❤️ Favorite'
+                      : item.tag}
+                  </span>
+                </div>
+              )}
+
               {/* Emoji centered */}
-              <div className="flex items-center justify-center">
-                <span className="text-2xl">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
+              <div className="flex items-center justify-center py-1">
+                <span className="text-2xl group-hover:scale-110 transition-transform">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
               </div>
 
               {/* Name */}
@@ -1244,8 +1356,8 @@ const FoodSpecialsStrip = ({ navigate }) => {
                 {item.shopName}
               </p>
 
-              {/* Price only */}
-              <div className="flex items-center mt-0.5">
+              {/* Price */}
+              <div className="flex items-center justify-between mt-0.5">
                 <span className="font-black text-gray-900 dark:text-white text-[11px]">R{item.price}</span>
               </div>
             </div>
@@ -1675,7 +1787,7 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 pt-2 pb-4 w-full">
+      <main className="px-4 pt-3.5 sm:pt-5 pb-4 w-full">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Hero banner intentionally hidden on mobile/small screens */}
 

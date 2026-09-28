@@ -1257,9 +1257,9 @@ export default function Header() {
     </AnimatePresence>
 
       {!isHeaderHidden && (
-        <>
+        <div className="app-safe-top pt-1" aria-hidden="true">
           <div className="h-20 md:h-24"></div>
-        </>
+        </div>
       )}
     </>
   );

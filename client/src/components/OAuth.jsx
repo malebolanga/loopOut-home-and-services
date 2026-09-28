@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
 import { app } from '../firebase';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,8 +13,12 @@ export default function OAuth() {
   const { loading } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // Prevent duplicate popup launches (double-click / re-render) that trigger Firebase rate-limiting
+  const isSigningIn = useRef(false);
 
   const handleGoogleClick = async () => {
+    if (isSigningIn.current || loading) return;   // already in-flight — bail out
+    isSigningIn.current = true;
     try {
       dispatch(signInStart());
       const provider = new GoogleAuthProvider();
@@ -41,7 +46,9 @@ export default function OAuth() {
     } catch (error) {
       console.error('Google Auth Error:', error);
       let errorMessage = 'Could not sign in with Google';
-      if (error.code === 'auth/operation-not-allowed') {
+      if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many sign-in attempts. Please wait a few minutes and try again.';
+      } else if (error.code === 'auth/operation-not-allowed') {
         errorMessage = 'Google Sign-In is not enabled in the Firebase Console. Please enable Google under Authentication > Sign-in method.';
       } else if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in popup was closed before completion.';
@@ -53,6 +60,8 @@ export default function OAuth() {
         errorMessage = error.message;
       }
       dispatch(signInFailure(errorMessage));
+    } finally {
+      isSigningIn.current = false;
     }
   };
 

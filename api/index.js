@@ -66,6 +66,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -124,7 +125,19 @@ app.use(compression());
 const isProduction = process.env.NODE_ENV === 'production';
 const apiLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: isProduction ? 500 : 2000, message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' }, standardHeaders: true, legacyHeaders: false });
 const messagesLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: 500, message: { success: false, message: 'Too many message requests, please slow down.' }, standardHeaders: true, legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: isProduction ? 10 : 1000, message: { success: false, message: 'Too many sign-in attempts. Please wait a few minutes and try again.' }, standardHeaders: true, legacyHeaders: false });
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: isProduction ? 100 : 1000,
+  skipSuccessfulRequests: true,
+  skip: (req) => {
+    const p = (req.path || '').toLowerCase();
+    const url = (req.originalUrl || '').toLowerCase();
+    return p.includes('validate-token') || p.includes('signout') || url.includes('validate-token') || url.includes('signout');
+  },
+  message: { success: false, message: 'Too many sign-in attempts. Please wait a few minutes and try again.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 app.use('/api/auth/', authLimiter); app.use('/api/messages', messagesLimiter); app.use('/api/', apiLimiter);
 app.use((req, res, next) => { const start = Date.now(); res.on('finish', () => console.log(`[API] ${req.method} ${req.url} - ${res.statusCode} (${Date.now() - start}ms)`)); next(); });
 app.use('/api/user', userRouter); app.use('/api/auth', authRouter); app.use('/api/listing', listingRouter); app.use('/api/comments', commentRouter); app.use('/api/comment', commentRouter); app.use('/api/helper', helperRouter); app.use('/api/event', eventRouter); app.use('/api/carwash', carwashRoutes); app.use('/api/service-comments', serviceCommentRouter); app.use('/api/service-comment', serviceCommentRouter); app.use('/api/trips', tripRouter); app.use('/api/helper-comments', helperCommentRouter); app.use('/api/helper-comment', helperCommentRouter); app.use('/api/event-comments', eventCommentRouter); app.use('/api/event-comment', eventCommentRouter); app.use('/api/service', serviceRouter); app.use('/api/notifications', notificationRoute); app.use('/api/messages', messageRouter); app.use('/api/payment', paymentRouter); app.use('/api/promotion', promotionRouter); app.use('/api/wishlist', wishlistRouter); app.use('/api/explore', exploreRouter); app.use('/api/bookings', bookingRouter); app.use('/api/looking-for', lookingForRouter); app.use('/api/ai-help', aiHelpRouter); app.use('/api/loopbot', aiHelpRouter); app.use('/api/verification', verificationRouter); app.use('/api/sos', sosRouter); app.use('/api/ai', aiRouter); app.use('/api/sell', sellRouter); app.use('/api/stats', statsRouter); app.use('/api/lunch', lunchRouter); app.use('/api/uploads', uploadRouter); app.use('/uploads', express.static(path.resolve(__dirname, '../client/public/uploads')));
