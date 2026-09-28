@@ -8,7 +8,8 @@ const mealSchema = new mongoose.Schema({
   tag: { type: String, default: 'Popular' },
   image: { type: String, default: '🍱' },
   isAvailable: { type: Boolean, default: true },
-  addOns: [{ name: String, price: Number }]
+  addOns: [{ name: String, price: Number }],
+  sides: { type: [String], default: [] }
 }, { _id: false });
 
 const reviewSchema = new mongoose.Schema({

@@ -298,6 +298,10 @@ const AnimatedRoutes = () => {
         <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
         <Route path="/newsroom" element={<PageTransition><Newsroom /></PageTransition>} />
         <Route path="/recently-viewed" element={<PageTransition><RecentlyViewedPage /></PageTransition>} />
+        <Route path="/food" element={<PageTransition><LunchComingSoon /></PageTransition>} />
+        <Route path="/food/register" element={<PageTransition><LunchComingSoon /></PageTransition>} />
+        <Route path="/lunch" element={<PageTransition><LunchComingSoon /></PageTransition>} />
+        <Route path="/lunch/register" element={<PageTransition><LunchComingSoon /></PageTransition>} />
 
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>
@@ -308,7 +312,6 @@ const AnimatedRoutes = () => {
           <Route path="/matchmaker" element={<PageTransition><Matchmaker /></PageTransition>} />
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
           <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
-          <Route path="/lunch" element={<PageTransition><LunchComingSoon /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
           <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />

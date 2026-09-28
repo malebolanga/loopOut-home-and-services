@@ -19,7 +19,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -61,7 +61,9 @@ import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 
 import {
   DISTANCE_TIERS,
-  filterByDistanceTier
+  filterByDistanceTier,
+  calculateDistance,
+  POLOKWANE_COORDS
 } from '../utils/locationUtils';
 
 // --- Constants ---
@@ -675,30 +677,191 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
 
 const CommunityNeedsSection = () => null;
 
-// ─── Food Detail Modal ────────────────────────────────────────────────────────
+// ─── Food Detail Modal & Ingredient Detection ──────────────────────────────────
 const FOOD_INGREDIENT_ICONS = {
-  // Chips & fries
-  chips: '🍟', fries: '🍟',
-  // Dairy & proteins
-  cheese: '🧀', egg: '🥚', eggs: '🥚',
-  // Sausages (SA street food)
-  vienna: '🌭', russian: '🌭', sausage: '🌭', wors: '🌭', boerewors: '🌭',
-  // Meats
-  polony: '🥓', chicken: '🍗', beef: '🥩', steak: '🥩', ribs: '🍖', pork: '🍖', lamb: '🍖', mince: '🥩',
-  // Breads & carbs
-  bread: '🍞', loaf: '🍞', roll: '🍞', pap: '🍚', rice: '🍚', corn: '🌽', potato: '🥔', potatoes: '🥔',
-  // Vegetables & condiments
-  tomato: '🍅', onion: '🧅', atchar: '🥭', chutney: '🥭', sauce: '🥫', gravy: '🍲', chakalaka: '🥫',
-  coleslaw: '🥗', salad: '🥗', lettuce: '🥬', cabbage: '🥬', spinach: '🥬',
-  // Flavour / other
-  bbq: '🔥', spice: '🌶️', herb: '🌿', oil: '🫙', butter: '🧈', cream: '🥛',
-  // Misc
-  dressing: '🫙', croutons: '🍞', parmesan: '🧀',
+  'sweet potato': '🍠',
+  'sweet potatoes': '🍠',
+  sweetpotato: '🍠',
+  sweetpotatoes: '🍠',
+  potato: '🥔',
+  potatoes: '🥔',
+  spud: '🥔',
+  spuds: '🥔',
+  spinach: '🥬',
+  morogo: '🥬',
+  marog: '🥬',
+  beets: '🥗',
+  beetroot: '🥗',
+  beet: '🥗',
+  cabbage: '🥬',
+  pumpkin: '🎃',
+  butternut: '🎃',
+  squash: '🎃',
+  chakalaka: '🌶️',
+  chaka: '🌶️',
+  chips: '🍟',
+  fries: '🍟',
+  cheese: '🧀',
+  egg: '🥚',
+  eggs: '🥚',
+  vienna: '🌭',
+  russian: '🌭',
+  sausage: '🌭',
+  wors: '🌭',
+  boerewors: '🌭',
+  polony: '🥓',
+  chicken: '🍗',
+  beef: '🥩',
+  steak: '🥩',
+  ribs: '🍖',
+  pork: '🍖',
+  lamb: '🍖',
+  mince: '🥩',
+  bread: '🍞',
+  loaf: '🍞',
+  roll: '🍞',
+  pap: '🍚',
+  rice: '🍚',
+  corn: '🌽',
+  tomato: '🍅',
+  onion: '🧅',
+  atchar: '🥭',
+  chutney: '🥭',
+  sauce: '🥫',
+  gravy: '🍲',
+  coleslaw: '🥗',
+  salad: '🥗',
+  lettuce: '🥬',
+  bbq: '🔥',
+  spice: '🌶️',
+  herb: '🌿',
+  oil: '🫙',
+  butter: '🧈',
+  cream: '🥛',
+  dressing: '🫙',
+  croutons: '🍞',
+  parmesan: '🧀',
+};
+
+const FOOD_INGREDIENT_ITEMS = [
+  { id: 'sweet_potato', words: ['sweet potato', 'sweet potatoes', 'sweetpotato', 'sweetpotatoes'], name: 'Sweet Potato', icon: '🍠', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 border-orange-200 dark:border-orange-800' },
+  { id: 'potato', words: ['potato', 'potatoes', 'spud', 'spuds'], name: 'Potatoes', icon: '🥔', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 border-amber-200 dark:border-amber-800' },
+  { id: 'spinach', words: ['spinach', 'morogo', 'marog'], name: 'Spinach', icon: '🥬', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800' },
+  { id: 'beets', words: ['beet', 'beets', 'beetroot', 'beetroots'], name: 'Beets', icon: '🥗', bg: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200 border-rose-200 dark:border-rose-800' },
+  { id: 'cabbage', words: ['cabbage'], name: 'Cabbage', icon: '🥬', bg: 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-200 border-green-200 dark:border-green-800' },
+  { id: 'pumpkin', words: ['pumpkin', 'butternut', 'squash'], name: 'Pumpkin', icon: '🎃', bg: 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200 border-amber-300 dark:border-amber-800' },
+  { id: 'chakalaka', words: ['chakalaka', 'chaka', 'chakalac'], name: 'Chakalaka', icon: '🌶️', bg: 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 border-red-200 dark:border-red-800' },
+  { id: 'pap', words: ['pap', 'sadza', 'phutu'], name: 'Pap', icon: '🍚', bg: 'bg-stone-100 text-stone-800 dark:bg-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-700' },
+  { id: 'beef', words: ['beef', 'steak', 'mince'], name: 'Beef', icon: '🥩', bg: 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 border-red-200 dark:border-red-800' },
+  { id: 'chicken', words: ['chicken', 'wings'], name: 'Chicken', icon: '🍗', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 border-amber-200 dark:border-amber-800' },
+  { id: 'wors', words: ['wors', 'boerewors', 'sausage', 'russian', 'vienna'], name: 'Wors / Sausage', icon: '🌭', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 border-orange-200 dark:border-orange-800' },
+  { id: 'cheese', words: ['cheese'], name: 'Cheese', icon: '🧀', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/60 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800' },
+  { id: 'egg', words: ['egg', 'eggs'], name: 'Egg', icon: '🥚', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 border-amber-200 dark:border-amber-800' },
+  { id: 'chips', words: ['chips', 'fries'], name: 'Chips', icon: '🍟', bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/60 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800' },
+  { id: 'atchar', words: ['atchar', 'achar'], name: 'Atchar', icon: '🥭', bg: 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200 border-orange-200 dark:border-orange-800' },
+  { id: 'gravy', words: ['gravy', 'sauce'], name: 'Gravy / Sauce', icon: '🍲', bg: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 border-amber-200 dark:border-amber-800' },
+  { id: 'salad', words: ['salad', 'lettuce'], name: 'Salad', icon: '🥗', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800' },
+];
+
+const POPULAR_REQUEST_SUGGESTIONS = [
+  { id: 'potato', name: 'Potatoes', icon: '🥔' },
+  { id: 'sweet_potato', name: 'Sweet Potato', icon: '🍠' },
+  { id: 'spinach', name: 'Spinach', icon: '🥬' },
+  { id: 'beets', name: 'Beets', icon: '🥗' },
+  { id: 'cabbage', name: 'Cabbage', icon: '🥬' },
+  { id: 'pumpkin', name: 'Pumpkin', icon: '🎃' },
+  { id: 'chakalaka', name: 'Chakalaka', icon: '🌶️' },
+];
+
+const detectFoodItemsInText = (text = '') => {
+  if (!text || typeof text !== 'string') return [];
+  const normalized = ` ${text.toLowerCase()} `;
+  const detected = [];
+
+  // Check sweet potato first to avoid false matching as plain potato
+  const hasSweetPotato = /\bsweet\s*potato(es)?\b/i.test(normalized);
+  if (hasSweetPotato) {
+    const sp = FOOD_INGREDIENT_ITEMS.find((it) => it.id === 'sweet_potato');
+    if (sp) detected.push(sp);
+  }
+
+  // Remove sweet potato from text when checking regular potato
+  const textWithoutSweetPotato = normalized.replace(/\bsweet\s*potato(es)?\b/gi, ' ');
+  const hasPotato = /\b(potato|potatoes|spud|spuds)\b/i.test(textWithoutSweetPotato);
+  if (hasPotato) {
+    const pot = FOOD_INGREDIENT_ITEMS.find((it) => it.id === 'potato');
+    if (pot) detected.push(pot);
+  }
+
+  // Check the rest of items
+  FOOD_INGREDIENT_ITEMS.forEach((item) => {
+    if (item.id === 'sweet_potato' || item.id === 'potato') return;
+    const matched = item.words.some((w) => {
+      const regex = new RegExp(`\\b${w}\\b`, 'i');
+      return regex.test(normalized);
+    });
+    if (matched) detected.push(item);
+  });
+
+  return detected;
 };
 
 const foodIngredientIcon = (ingredient = '') => {
   const normalized = ingredient.toLowerCase();
-  return Object.entries(FOOD_INGREDIENT_ICONS).find(([word]) => normalized.includes(word))?.[1] || '🍽️';
+  const entry = Object.entries(FOOD_INGREDIENT_ICONS)
+    .sort(([a], [b]) => b.length - a.length)
+    .find(([word]) => normalized.includes(word));
+  return entry?.[1] || '🍽️';
+};
+
+const KNOWN_SHOP_COORDINATES = {
+  'urban-grill': { latitude: -23.8828, longitude: 29.4674 },
+  'mamas-kitchen': { latitude: -23.9056, longitude: 29.4589 },
+  'kota-joint': { latitude: -23.9082, longitude: 29.4556 },
+  'green-table': { latitude: -23.8966, longitude: 29.4856 },
+  'lungile-food': { latitude: -23.9432, longitude: 29.4185 },
+  'mapho': { latitude: -23.8564, longitude: 29.3951 },
+};
+
+const resolveShopCoords = (item = {}) => {
+  if (item.latitude && item.longitude) {
+    return { latitude: Number(item.latitude), longitude: Number(item.longitude) };
+  }
+  if (item.shopId && KNOWN_SHOP_COORDINATES[item.shopId]) {
+    return KNOWN_SHOP_COORDINATES[item.shopId];
+  }
+  const addr = (item.shopAddress || item.address || item.shopName || '').toLowerCase();
+  if (addr.includes('cycad')) return { latitude: -23.8828, longitude: 29.4674 };
+  if (addr.includes('savannah')) return { latitude: -23.8966, longitude: 29.4856 };
+  if (addr.includes('seshego')) return { latitude: -23.8564, longitude: 29.3951 };
+  if (addr.includes('biccard')) return { latitude: -23.9082, longitude: 29.4556 };
+  if (addr.includes('extension 44') || addr.includes('ext 44')) return { latitude: -23.9432, longitude: 29.4185 };
+  if (addr.includes('market') || addr.includes('central')) return { latitude: -23.9056, longitude: 29.4589 };
+  if (addr.includes('mall of the north')) return { latitude: -23.8736, longitude: 29.5086 };
+  return POLOKWANE_COORDS;
+};
+
+const getAccurateDistanceLabel = (item, userCoords) => {
+  if (!item) return null;
+  const shopCoords = resolveShopCoords(item);
+
+  if (userCoords && typeof userCoords.latitude === 'number' && typeof userCoords.longitude === 'number') {
+    const dist = calculateDistance(userCoords.latitude, userCoords.longitude, shopCoords.latitude, shopCoords.longitude);
+    if (Number.isFinite(dist)) {
+      if (dist < 0.1) return 'Under 100 m';
+      if (dist < 1) return `${Math.round(dist * 1000)} m away`;
+      return `${dist.toFixed(1)} km away`;
+    }
+  }
+
+  // Fallback: estimate physical distance from Polokwane center so it's not a fake hardcoded static 1.5 km
+  const distFromCenter = calculateDistance(POLOKWANE_COORDS.latitude, POLOKWANE_COORDS.longitude, shopCoords.latitude, shopCoords.longitude);
+  if (Number.isFinite(distFromCenter)) {
+    if (distFromCenter < 0.2) return 'Central Polokwane (~200 m)';
+    if (distFromCenter < 1) return `~${Math.round(distFromCenter * 1000)} m away`;
+    return `~${distFromCenter.toFixed(1)} km away`;
+  }
+  return item.shopDistance || null;
 };
 
 const FoodDetailModal = ({ item, onClose, navigate }) => {
@@ -707,6 +870,10 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
   const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
   const [gpsRequested, setGpsRequested] = useState(false);
   const { coords, city: gpsCity, error: gpsError, loading: gpsLoading, requestLocation } = useLocationCoords();
+
+  const accurateDistance = useMemo(() => getAccurateDistanceLabel(item, coords), [item, coords]);
+  const detectedDescFoods = useMemo(() => detectFoodItemsInText(item?.description), [item?.description]);
+  const detectedNotesFoods = useMemo(() => detectFoodItemsInText(orderForm.notes), [orderForm.notes]);
 
   useEffect(() => {
     if (!gpsRequested || !coords) return;
@@ -852,15 +1019,26 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                         <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
                           Shop Location
                         </p>
-                        {item.shopDistance && (
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                            📍 {item.shopDistance}
+                        {accurateDistance && (
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                            <Navigation className="w-3 h-3 text-emerald-500 shrink-0" />
+                            {accurateDistance}
                           </span>
                         )}
                       </div>
                       <p className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
                         {item.shopAddress || 'Polokwane, Limpopo'}
                       </p>
+                      {!coords && (
+                        <button
+                          type="button"
+                          onClick={requestLocation}
+                          className="text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:underline mt-1 flex items-center gap-1"
+                        >
+                          <MapPin className="w-2.5 h-2.5 shrink-0" />
+                          <span>{gpsLoading ? 'Locating...' : 'Enable live GPS distance'}</span>
+                        </button>
+                      )}
                     </div>
                     {(item.shopAddress || item.shopName) && (
                       <a
@@ -875,9 +1053,27 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                     )}
                   </div>
 
-                  {/* Description */}
+                  {/* Description & Detected Food Badges */}
                   {item.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
+                    <div className="flex flex-col gap-1.5">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
+                      {detectedDescFoods.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400 mr-0.5">
+                            Detected in meal:
+                          </span>
+                          {detectedDescFoods.map((f) => (
+                            <span
+                              key={f.id}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-black border shadow-2xs ${f.bg}`}
+                            >
+                              <span className="text-sm select-none">{f.icon}</span>
+                              <span>{f.name}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Ingredients */}
@@ -909,7 +1105,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
 
                   {/* Browse all — small text link */}
                   <button
-                    onClick={() => { onClose(); navigate('/lunch'); }}
+                    onClick={() => { onClose(); navigate('/food'); }}
                     className="text-center text-[11px] font-black text-amber-500 hover:text-amber-600 dark:text-amber-400 uppercase tracking-wider pb-2 transition-colors"
                   >
                     Browse all food →
@@ -935,13 +1131,32 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                   </div>
                 </div>
 
+                {/* Item description snippet with detected items */}
+                {item.description && (
+                  <div className="mb-3 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                    <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">{item.description}</p>
+                    {detectedDescFoods.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {detectedDescFoods.map((f) => (
+                          <span key={f.id} className={`inline-flex items-center gap-1 text-[9.5px] font-black px-1.5 py-0.5 rounded-md border ${f.bg}`}>
+                            <span>{f.icon}</span> {f.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Shop Location Pill in Order Form */}
-                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 mb-5 text-xs text-gray-600 dark:text-gray-300">
-                  <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                  <span className="truncate font-semibold">{item.shopAddress || `${item.shopName}, Polokwane`}</span>
-                  {item.shopDistance && (
-                    <span className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
-                      {item.shopDistance}
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 mb-4 text-xs text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                    <span className="truncate font-semibold">{item.shopAddress || `${item.shopName}, Polokwane`}</span>
+                  </div>
+                  {accurateDistance && (
+                    <span className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                      <Navigation className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                      {accurateDistance}
                     </span>
                   )}
                 </div>
@@ -1053,16 +1268,83 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
                       </div>
                     )}
 
-                    {/* Notes */}
+                    {/* Notes / Special Requests with Dynamic Food Detection */}
                     <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Special Requests <span className="normal-case font-normal">(optional)</span></label>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                          Special Requests <span className="normal-case font-normal">(optional)</span>
+                        </label>
+                        {detectedNotesFoods.length > 0 && (
+                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                            ✨ {detectedNotesFoods.length} detected
+                          </span>
+                        )}
+                      </div>
+
                       <textarea
                         rows={2}
-                        placeholder="e.g. No onions, extra sauce…"
+                        placeholder="e.g. Add spinach, sweet potato, beets, chakalaka, no onions..."
                         value={orderForm.notes}
                         onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
                         className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
                       />
+
+                      {/* Live Detected Food Icons in User Request */}
+                      {detectedNotesFoods.length > 0 && (
+                        <div className="mt-2 p-2.5 rounded-2xl bg-gradient-to-r from-amber-50/90 to-orange-50/70 dark:from-gray-900 dark:to-gray-800 border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
+                          <p className="text-[9.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1">
+                            <span>✨</span> Detected in your request:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {detectedNotesFoods.map((food) => (
+                              <span
+                                key={food.id}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black shadow-2xs border ${food.bg}`}
+                              >
+                                <span className="text-base select-none">{food.icon}</span>
+                                <span>{food.name}</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quick Add Suggestions Chips */}
+                      <div className="mt-2.5">
+                        <p className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
+                          Quick add sides & ingredients:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {POPULAR_REQUEST_SUGGESTIONS.map((sug) => {
+                            const isIncluded = detectedNotesFoods.some((d) => d.id === sug.id);
+                            return (
+                              <button
+                                key={sug.id}
+                                type="button"
+                                onClick={() => {
+                                  setOrderForm((f) => {
+                                    const trimmed = f.notes.trim();
+                                    const addition = sug.name;
+                                    if (trimmed.toLowerCase().includes(sug.name.toLowerCase())) return f;
+                                    return {
+                                      ...f,
+                                      notes: trimmed ? `${trimmed}, ${addition}` : addition,
+                                    };
+                                  });
+                                }}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95 ${
+                                  isIncluded
+                                    ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 shadow-2xs'
+                                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                }`}
+                              >
+                                <span className="text-sm select-none">{sug.icon}</span>
+                                <span>{isIncluded ? `✓ ${sug.name}` : `+ ${sug.name}`}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
 
                     {orderStatus === 'error' && (
@@ -1102,10 +1384,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Grill & Flame',
     shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
     shopDistance: '1.2 km away',
-    description: 'Slow-cooked pork ribs glazed with our signature spicy smoky BBQ sauce, served with grilled corn and fries.',
+    latitude: -23.8828,
+    longitude: 29.4674,
+    description: 'Slow-cooked pork ribs glazed with our signature spicy smoky BBQ sauce, served with crispy potatoes and sweet potato wedges.',
     prepTime: '25 min',
     calories: '820 kcal',
-    ingredients: ['Pork ribs', 'BBQ sauce', 'Corn', 'Fries', 'Coleslaw']
+    ingredients: ['Pork ribs', 'BBQ sauce', 'Potatoes', 'Sweet potato', 'Cabbage coleslaw']
   },
   {
     id: 'special-5',
@@ -1119,10 +1403,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Street Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
-    description: 'Quarter loaf loaded with Russian sausage, chips, egg, atchar and your choice of sauce.',
+    latitude: -23.9432,
+    longitude: 29.4185,
+    description: 'Quarter loaf loaded with Russian sausage, seasoned potatoes, egg, atchar and spicy chakalaka sauce.',
     prepTime: '10 min',
     calories: '580 kcal',
-    ingredients: ['Quarter loaf', 'Russian', 'Chips', 'Egg', 'Atchar', 'Sauce']
+    ingredients: ['Quarter loaf', 'Russian', 'Potatoes', 'Egg', 'Atchar', 'Chakalaka']
   },
   {
     id: 'special-2',
@@ -1136,10 +1422,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Local Favourites',
     shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
     shopDistance: '800 m away',
-    description: 'Rich, slow-simmered beef stew with potatoes and carrots in a tomato gravy, served with creamy pap.',
+    latitude: -23.9056,
+    longitude: 29.4589,
+    description: 'Rich, slow-simmered beef stew with tender potatoes, sweet potato, spinach, and beets in a rich tomato gravy, served with hot pap.',
     prepTime: '30 min',
     calories: '650 kcal',
-    ingredients: ['Beef', 'Tomato gravy', 'Potatoes', 'Carrots', 'Pap']
+    ingredients: ['Beef', 'Potatoes', 'Sweet potato', 'Spinach', 'Beets', 'Pap']
   },
   {
     id: 'special-4',
@@ -1153,10 +1441,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Traditional',
     shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
     shopDistance: '4.8 km away',
-    description: 'Flame-grilled rump steak served alongside spicy chakalaka and smooth pap — a true South African classic.',
+    latitude: -23.8564,
+    longitude: 29.3951,
+    description: 'Flame-grilled rump steak served alongside spicy chakalaka, braised pumpkin, cabbage, and smooth pap.',
     prepTime: '20 min',
     calories: '720 kcal',
-    ingredients: ['Rump steak', 'Chakalaka', 'Pap', 'Onion gravy']
+    ingredients: ['Rump steak', 'Chakalaka', 'Pumpkin', 'Cabbage', 'Pap', 'Onion gravy']
   },
   {
     id: 'special-6',
@@ -1170,10 +1460,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Fast Food',
     shopAddress: '78 Biccard Street, Polokwane Central',
     shopDistance: '950 m away',
-    description: 'Freshly hollowed quarter loaf packed with polony, cheese, chips and tangy chutney.',
+    latitude: -23.9082,
+    longitude: 29.4556,
+    description: 'Freshly hollowed quarter loaf packed with polony, cheese, potatoes chips and fiery chakalaka.',
     prepTime: '8 min',
     calories: '540 kcal',
-    ingredients: ['Quarter loaf', 'Polony', 'Cheese', 'Chips', 'Chutney']
+    ingredients: ['Quarter loaf', 'Polony', 'Cheese', 'Potatoes', 'Chakalaka']
   },
   {
     id: 'special-3',
@@ -1187,10 +1479,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Healthy & Fresh',
     shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
     shopDistance: '2.5 km away',
-    description: 'Grilled chicken breast on crisp romaine lettuce with parmesan, croutons and classic Caesar dressing.',
+    latitude: -23.8966,
+    longitude: 29.4856,
+    description: 'Grilled chicken breast with fresh spinach, beets, and crisp cabbage tossed with parmesan, croutons and dressing.',
     prepTime: '10 min',
     calories: '420 kcal',
-    ingredients: ['Grilled chicken', 'Romaine lettuce', 'Parmesan', 'Croutons', 'Caesar dressing']
+    ingredients: ['Grilled chicken', 'Spinach', 'Beets', 'Cabbage', 'Parmesan', 'Croutons']
   },
   {
     id: 'special-7',
@@ -1204,10 +1498,12 @@ const FALLBACK_FOOD_SPECIALS = [
     shopCuisine: 'Fast Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
-    description: 'Golden crispy chips seasoned with our house spice blend, served with tomato or chilli sauce.',
+    latitude: -23.9432,
+    longitude: 29.4185,
+    description: 'Golden crispy potatoes and sweet potato chips seasoned with our house spice blend, served with chilli sauce.',
     prepTime: '5 min',
     calories: '310 kcal',
-    ingredients: ['Potatoes', 'Vegetable oil', 'House spice blend', 'Sauce of choice']
+    ingredients: ['Potatoes', 'Sweet potato', 'House spice blend', 'Sauce of choice']
   }
 ];
 
@@ -1225,6 +1521,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
+  const { coords } = useLocationCoords();
 
   useEffect(() => {
     let isMounted = true;
@@ -1265,7 +1562,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
               shopCuisine: shop.cuisine || 'Local',
               shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
               shopDistance: shop.distance || '',
-              shopPhone: shop.phone || shop.whatsapp || ''
+              shopPhone: shop.phone || shop.whatsapp || '',
+              latitude: shop.latitude || null,
+              longitude: shop.longitude || null
             });
           });
         });
@@ -1288,78 +1587,92 @@ const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-4 -mx-4 pt-2.5 sm:pt-3">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 mb-2 pt-1">
-        <div className="flex items-center gap-2">
-          <UtensilsCrossed className="w-4 h-4 text-amber-500" />
-          <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
+    <section className="mb-6">
+      {/* ── Header: Made For You • Fresh & Fast, and See All ── */}
+      <div className="flex items-center justify-between mb-3 px-0.5">
+        <div>
+          <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span>Made For You</span>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 font-mono tracking-normal">• Fresh &amp; Fast</span>
+          </h3>
         </div>
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/lunch')}
-          className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1"
-        >
-          See All Food <span aria-hidden="true">→</span>
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/food/register')}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Register Place</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/food')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-black uppercase tracking-wider  dark:border-gray-700 transition-all cursor-pointer shadow-xs"
+          >
+            <span>See All</span>
+            <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
+          </motion.button>
+        </div>
       </div>
 
-      {/* Horizontal food strip */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
+      {/* ── Horizontal Carousel: Spotify-style Food Cards ── */}
+      <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide pb-2 pt-1 flex gap-2.5 sm:gap-3 snap-x snap-mandatory">
         {foodItems.map((item, i) => (
           <motion.div
-            key={`${item.shopId}-${item.id || i}`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.04 }}
+            key={`carousel-${item.shopId}-${item.id || i}`}
+            whileHover={{ y: -4 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setSelectedFood(item)}
-            className="snap-start shrink-0 w-[112px] sm:w-[124px] cursor-pointer flex flex-col bg-transparent  shadow-none rounded-none"
+            className="snap-start shrink-0 w-[124px] sm:w-[142px]  hover:bg-gray-50 dark:hover:bg-gray-850 p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative  hover:shadow-md  dark:border-gray-800 flex flex-col"
           >
-            {/* Card with tag pill, emoji, name, shop, and price */}
-            <div className="flex flex-col gap-1 p-2 rounded-xl transition-all bg-gray-50/70 dark:bg-gray-900/40 hover:bg-gray-100/80 dark:hover:bg-gray-800/60 dark:border-gray-800/80">
-              {/* Badge: Hot Food, Popular, Favorite */}
+            {/* Square cover artwork */}
+            <div className="aspect-square w-full rounded-lg  relative overflow-hidden flex items-center justify-center mb-2 border-gray-100/80 dark:border-gray-700/50">
+              <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
+                {(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}
+              </span>
+
+              {/* Curated Tag Badge */}
               {item.tag && (
-                <div className="flex items-center justify-center">
-                  <span className={`text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
-                    /hot/i.test(item.tag || '')
-                      ? 'bg-rose-500 text-white shadow-2xs'
-                      : /popular/i.test(item.tag || '')
-                      ? 'bg-amber-500 text-white shadow-2xs'
-                      : /fav/i.test(item.tag || '')
-                      ? 'bg-pink-500 text-white shadow-2xs'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                  }`}>
-                    {/hot/i.test(item.tag || '')
-                      ? '🔥 Hot Food'
-                      : /popular/i.test(item.tag || '')
-                      ? '⭐ Popular'
-                      : /fav/i.test(item.tag || '')
-                      ? '❤️ Favorite'
-                      : item.tag}
-                  </span>
-                </div>
+                <span className={`absolute top-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shadow-xs ${
+                  /hot/i.test(item.tag || '')
+                    ? 'bg-rose-600 text-white'
+                    : /popular/i.test(item.tag || '')
+                    ? 'bg-amber-500 text-white'
+                    : /fav/i.test(item.tag || '')
+                    ? 'bg-pink-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                }`}>
+                  {/hot/i.test(item.tag || '') ? '🔥 Hot' : /popular/i.test(item.tag || '') ? '⭐ Top' : /fav/i.test(item.tag || '') ? '❤️ Fav' : item.tag}
+                </span>
               )}
 
-              {/* Emoji centered */}
-              <div className="flex items-center justify-center py-1">
-                <span className="text-2xl group-hover:scale-110 transition-transform">{(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}</span>
+              {/* Floating Spotify Green Action Button on cover bottom-right */}
+              <div className="w-8 h-8 rounded-full bg-[#1ed760] text-black shadow-lg shadow-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-200 absolute right-1.5 bottom-1.5 hover:scale-110 active:scale-95">
+                <Play className="w-3.5 h-3.5 fill-black ml-0.5" />
               </div>
+            </div>
 
-              {/* Name */}
-              <p className="font-bold text-gray-900 dark:text-white truncate text-[11px] leading-tight group-hover:text-amber-600 transition-colors">
-                {item.name}
-              </p>
+            {/* Title */}
+            <p className="font-extrabold text-gray-900 dark:text-white truncate text-xs leading-tight group-hover:underline">
+              {item.name}
+            </p>
 
-              {/* Shop */}
-              <p className="text-gray-400 dark:text-gray-500 text-[9.5px] truncate leading-tight">
-                {item.shopName}
-              </p>
+            {/* Subtitle / Shop */}
+            <p className="text-gray-400 dark:text-gray-500 text-[10px] truncate leading-tight mt-0.5">
+              {item.shopName}
+            </p>
 
-              {/* Price */}
-              <div className="flex items-center justify-between mt-0.5">
-                <span className="font-black text-gray-900 dark:text-white text-[11px]">R{item.price}</span>
-              </div>
+            {/* Price & GPS distance */}
+            <div className="flex items-center justify-between  border-gray-100 dark:border-gray-800">
+              <span className="font-black text-gray-900 dark:text-white text-xs">R{item.price}</span>
+              {getAccurateDistanceLabel(item, coords) && (
+                <span className="text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[65px]">
+                  📍 {getAccurateDistanceLabel(item, coords)}
+                </span>
+              )}
             </div>
           </motion.div>
         ))}
@@ -1632,13 +1945,13 @@ function MobileAppHomepage({
     },
     {
       id: 'Lunch',
-      label: 'Lunch',
+      label: 'Food & Lunch',
       emoji: '🍱',
       icon: UtensilsCrossed,
       desc: 'Food & eats',
       textColor: 'text-orange-600',
       bgColor: 'bg-orange-500',
-      route: '/lunch'
+      route: '/food'
     },
     {
       id: 'Matchmaker',

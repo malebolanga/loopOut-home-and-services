@@ -672,6 +672,23 @@ export default function LunchComingSoon() {
     }
   }, [currentUser?._id]);
 
+  // Handle direct navigation to register route or action parameter
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const isRegister = 
+      location.pathname.endsWith('/register') || 
+      searchParams.get('action') === 'register' || 
+      searchParams.get('register') === 'true';
+
+    if (isRegister) {
+      if (currentUser) {
+        setShowAddShopModal(true);
+      } else {
+        navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search));
+      }
+    }
+  }, [location.pathname, location.search, currentUser, navigate]);
+
   // Selected active shop
   const currentShop = useMemo(() => {
     return shops.find((s) => s.id === selectedShopId) || shops[0] || null;
@@ -1067,34 +1084,50 @@ export default function LunchComingSoon() {
           </div>
 
           {/* View Mode Toggle: Customer vs Food Manager Dashboard */}
-          <div className="flex items-center gap-2 rounded-full bg-amber-100/80 p-1.5 ring-1 ring-amber-300/40">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => setViewTab('customer')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
-                viewTab === 'customer'
-                  ? 'bg-amber-600 text-white shadow'
-                  : 'text-amber-900 hover:bg-amber-200/50'
-              }`}
+              onClick={() => {
+                if (currentUser) {
+                  setShowAddShopModal(true);
+                } else {
+                  navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search));
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2 text-xs font-black text-white shadow-sm hover:from-amber-600 hover:to-orange-600 transition cursor-pointer"
             >
-              <ShoppingBag className="h-4 w-4" /> Customer Ordering
+              <PlusCircle className="h-4 w-4" /> Register Place
             </button>
-            <button
-              type="button"
-              onClick={() => setViewTab('dashboard')}
-              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
-                viewTab === 'dashboard'
-                  ? 'bg-amber-600 text-white shadow'
-                  : 'text-amber-900 hover:bg-amber-200/50'
-              }`}
-            >
-              <ChefHat className="h-4 w-4" /> Food Manager Dashboard
-              {isShopOwner && activeShopOrders.length > 0 && (
-                <span className="ml-1 rounded-full bg-amber-950 px-2 py-0.5 text-[10px] text-amber-300">
-                  {activeShopOrders.length}
-                </span>
-              )}
-            </button>
+
+            <div className="flex items-center gap-2 rounded-full bg-amber-100/80 p-1.5 ring-1 ring-amber-300/40">
+              <button
+                type="button"
+                onClick={() => setViewTab('customer')}
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
+                  viewTab === 'customer'
+                    ? 'bg-amber-600 text-white shadow'
+                    : 'text-amber-900 hover:bg-amber-200/50'
+                }`}
+              >
+                <ShoppingBag className="h-4 w-4" /> Customer Ordering
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewTab('dashboard')}
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
+                  viewTab === 'dashboard'
+                    ? 'bg-amber-600 text-white shadow'
+                    : 'text-amber-900 hover:bg-amber-200/50'
+                }`}
+              >
+                <ChefHat className="h-4 w-4" /> Food Manager Dashboard
+                {isShopOwner && activeShopOrders.length > 0 && (
+                  <span className="ml-1 rounded-full bg-amber-950 px-2 py-0.5 text-[10px] text-amber-300">
+                    {activeShopOrders.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
