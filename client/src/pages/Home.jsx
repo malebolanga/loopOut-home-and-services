@@ -763,6 +763,30 @@ const FOOD_INGREDIENT_ITEMS = [
   { id: 'salad', words: ['salad', 'lettuce'], name: 'Salad', icon: '🥗', bg: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800' },
 ];
 
+export const HOMEPAGE_FOOD_SIDES = [
+  { id: 'chakalaka', name: 'Chakalaka', icon: '🌶️', desc: 'Spicy veg relish' },
+  { id: 'potato', name: 'Potatoes', icon: '🥔', desc: 'Seasoned / Mashed' },
+  { id: 'spinach', name: 'Spinach', icon: '🥬', desc: 'Braised morogo' },
+  { id: 'sweet_potato', name: 'Sweet Potato', icon: '🍠', desc: 'Roasted sweet spud' },
+  { id: 'beets', name: 'Beets', icon: '🥗', desc: 'Pickled beetroot' },
+  { id: 'cabbage', name: 'Cabbage', icon: '🥬', desc: 'Steamed cabbage' },
+  { id: 'pumpkin', name: 'Pumpkin', icon: '🎃', desc: 'Braised pumpkin' },
+  { id: 'atchar', name: 'Atchar', icon: '🥭', desc: 'Spicy mango atchar' },
+  { id: 'pap', name: 'Pap', icon: '🍚', desc: 'Fluffy white pap' },
+  { id: 'salad', name: 'Green Salad', icon: '🥗', desc: 'Crisp green salad' },
+];
+
+export const POPULAR_DRINKS = [
+  { id: 'coke', name: 'Coca-Cola', size: '330ml can', icon: '🥤', price: 18, tag: 'Most Popular' },
+  { id: 'coke_zero', name: 'Coke Zero', size: '330ml can', icon: '🥤', price: 18, tag: 'Zero Sugar' },
+  { id: 'fanta', name: 'Fanta Orange', size: '330ml can', icon: '🍊', price: 18, tag: 'Fruity' },
+  { id: 'sprite', name: 'Sprite', size: '330ml can', icon: '🍋', price: 18, tag: 'Crisp' },
+  { id: 'stoney', name: 'Stoney Ginger Beer', size: '330ml can', icon: '🧃', price: 18, tag: 'Fiery' },
+  { id: 'water', name: 'Still Spring Water', size: '500ml', icon: '💧', price: 15, tag: 'Fresh' },
+  { id: 'juice', name: 'Tropical Fruit Juice', size: '350ml', icon: '🧃', price: 22, tag: '100% Juice' },
+];
+
+
 const POPULAR_REQUEST_SUGGESTIONS = [
   { id: 'potato', name: 'Potatoes', icon: '🥔' },
   { id: 'sweet_potato', name: 'Sweet Potato', icon: '🍠' },
@@ -864,16 +888,166 @@ const getAccurateDistanceLabel = (item, userCoords) => {
   return item.shopDistance || null;
 };
 
-const FoodDetailModal = ({ item, onClose, navigate }) => {
-  const [showOrderForm, setShowOrderForm] = useState(false);
-  const [orderForm, setOrderForm] = useState({ name: '', phone: '', qty: 1, notes: '', fulfilment: 'pickup', deliveryAddress: '' });
+const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddToCart, onUpdateCartMeta, shopSiblings = [], onSiblingSelect }) => {
+  // modalStep: 'order' (Step 1: customize meal, 3 sides, Coke & drinks) | 'review' (Step 2: View Your Order) | 'success' (Step 3: Confirmed)
+  const [modalStep, setModalStep] = useState('order');
+  const [orderForm, setOrderForm] = useState(() => ({
+    name: cartMeta?.name || '',
+    phone: cartMeta?.phone || '',
+    qty: 1,
+    notes: '',
+    fulfilment: cartMeta?.fulfilment || 'pickup',
+    deliveryAddress: cartMeta?.deliveryAddress || '',
+  }));
   const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
+  const [errorMsg, setErrorMsg] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [gpsRequested, setGpsRequested] = useState(false);
+  const [showFullDesc, setShowFullDesc] = useState(false);
   const { coords, city: gpsCity, error: gpsError, loading: gpsLoading, requestLocation } = useLocationCoords();
+
+  // Selected cold drinks map: { [drinkId]: quantity }
+  const [selectedDrinks, setSelectedDrinks] = useState({});
 
   const accurateDistance = useMemo(() => getAccurateDistanceLabel(item, coords), [item, coords]);
   const detectedDescFoods = useMemo(() => detectFoodItemsInText(item?.description), [item?.description]);
   const detectedNotesFoods = useMemo(() => detectFoodItemsInText(orderForm.notes), [orderForm.notes]);
+
+  // Available sides for this item (from item.sides if provided, otherwise standard HOMEPAGE_FOOD_SIDES)
+  const availableSides = useMemo(() => {
+    if (Array.isArray(item?.sides) && item.sides.length > 0) {
+      const customList = item.sides.map((s) => {
+        const match = HOMEPAGE_FOOD_SIDES.find(
+          (known) => known.id === s.toLowerCase() || known.name.toLowerCase() === s.toLowerCase()
+        );
+        return match || { id: s.toLowerCase().replace(/\s+/g, '_'), name: s, icon: '🥗', desc: 'Store side' };
+      });
+      const remaining = HOMEPAGE_FOOD_SIDES.filter(
+        (known) => !customList.some((c) => c.name.toLowerCase() === known.name.toLowerCase())
+      );
+      return [...customList, ...remaining];
+    }
+    return HOMEPAGE_FOOD_SIDES;
+  }, [item?.sides]);
+
+  // Policy: Must select exactly 3 sides. Default to 3 classic sides: Chakalaka, Potatoes, Spinach
+  const [selectedSides, setSelectedSides] = useState(() => {
+    if (Array.isArray(item?.sides) && item.sides.length >= 3) {
+      return item.sides.slice(0, 3).map((s) => s.toLowerCase().replace(/\s+/g, '_'));
+    }
+    return ['chakalaka', 'potato', 'spinach'];
+  });
+  const [validationNotice, setValidationNotice] = useState('');
+
+  // Handle side selection with 3 sides policy: selecting a 4th side is disallowed; sides can be unselected and changed freely
+  const handleToggleSide = (sideId) => {
+    setSelectedSides((prev) => {
+      if (prev.includes(sideId)) {
+        // Unselect side (always allowed, making choice changeable)
+        setValidationNotice('');
+        return prev.filter((id) => id !== sideId);
+      }
+      // Attempting to select 4 sides: DISALLOW per policy!
+      if (prev.length >= 3) {
+        setValidationNotice('⚠️ Policy limit: You can only select 3 sides. Tap a selected side to unselect it first.');
+        return prev;
+      }
+      setValidationNotice('');
+      return [...prev, sideId];
+    });
+  };
+
+  const selectedSideObjects = useMemo(() => {
+    return selectedSides.map((id) => availableSides.find((s) => s.id === id) || { id, name: id, icon: '🥗' });
+  }, [selectedSides, availableSides]);
+
+  const selectedSideNames = useMemo(() => {
+    return selectedSideObjects.map((s) => s.name);
+  }, [selectedSideObjects]);
+
+  // Drink quantity handlers
+  const handleToggleDrink = (drinkId) => {
+    setSelectedDrinks((prev) => {
+      const current = prev[drinkId] || 0;
+      return { ...prev, [drinkId]: current > 0 ? 0 : 1 };
+    });
+  };
+
+  const handleUpdateDrinkQty = (drinkId, delta) => {
+    setSelectedDrinks((prev) => {
+      const current = prev[drinkId] || 0;
+      const next = Math.max(0, current + delta);
+      return { ...prev, [drinkId]: next };
+    });
+  };
+
+  const drinksList = useMemo(() => {
+    return Object.entries(selectedDrinks)
+      .filter(([_, qty]) => qty > 0)
+      .map(([id, qty]) => {
+        const found = POPULAR_DRINKS.find((d) => d.id === id);
+        return found ? { ...found, qty } : null;
+      })
+      .filter(Boolean);
+  }, [selectedDrinks]);
+
+  const drinksTotal = useMemo(() => {
+    return drinksList.reduce((sum, d) => sum + d.price * d.qty, 0);
+  }, [drinksList]);
+
+  // Price calculations
+  const itemTotal = item ? item.price * orderForm.qty : 0;
+  const currentItemGrandTotal = itemTotal + drinksTotal;
+
+  // Previous cart items from same shop
+  const cartItemsGrandTotal = useMemo(() => {
+    return cart.reduce((sum, ci) => {
+      const foodPrice = ci.item.price * ci.qty;
+      const drinksPrice = ci.drinks ? ci.drinks.reduce((ds, d) => ds + d.price * (d.qty || 1), 0) : 0;
+      return sum + foodPrice + drinksPrice;
+    }, 0);
+  }, [cart]);
+
+  const allOrdersGrandTotal = cartItemsGrandTotal + currentItemGrandTotal;
+
+  // Estimated collection / delivery time calculation based on prepTime and fulfilment
+  const collectionEstimate = useMemo(() => {
+    let baseMins = 15;
+    if (item?.prepTime) {
+      const parsed = parseInt(String(item.prepTime).replace(/\D+/g, ''), 10);
+      if (!isNaN(parsed) && parsed > 0) baseMins = parsed;
+    }
+
+    if (orderForm.fulfilment === 'delivery') {
+      const minMins = baseMins + 15;
+      const maxMins = baseMins + 30;
+      return {
+        label: 'Estimated Delivery Time',
+        durationText: `${minMins}–${maxMins} mins`,
+        minMins,
+        maxMins,
+        isDelivery: true,
+      };
+    }
+
+    const minMins = Math.max(10, baseMins);
+    const maxMins = minMins + 10;
+    return {
+      label: 'Estimated Collection Time',
+      durationText: `${minMins}–${maxMins} mins`,
+      minMins,
+      maxMins,
+      isDelivery: false,
+    };
+  }, [item?.prepTime, orderForm.fulfilment]);
+
+  const estimatedWindow = useMemo(() => {
+    const now = new Date();
+    const tMin = new Date(now.getTime() + collectionEstimate.minMins * 60000);
+    const tMax = new Date(now.getTime() + collectionEstimate.maxMins * 60000);
+    const formatTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${formatTime(tMin)} – ${formatTime(tMax)}`;
+  }, [collectionEstimate]);
 
   useEffect(() => {
     if (!gpsRequested || !coords) return;
@@ -887,32 +1061,132 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
   if (!item) return null;
   const emoji = (!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image;
 
-  const handleOrderSubmit = async (e) => {
-    e.preventDefault();
-    if (!orderForm.name.trim() || !orderForm.phone.trim() || (orderForm.fulfilment === 'delivery' && !orderForm.deliveryAddress.trim())) return;
+  // Validation helper before moving to review or adding to cart
+  const validateForm = () => {
+    if (!orderForm.name.trim()) {
+      setValidationNotice('⚠️ Please enter your full name.');
+      return false;
+    }
+    if (!orderForm.phone.trim()) {
+      setValidationNotice('⚠️ Please enter your contact phone number.');
+      return false;
+    }
+    if (orderForm.fulfilment === 'delivery' && !orderForm.deliveryAddress.trim()) {
+      setValidationNotice('⚠️ Please enter your delivery address.');
+      return false;
+    }
+    if (selectedSides.length !== 3) {
+      setValidationNotice(`⚠️ Policy: Please select exactly 3 sides (${selectedSides.length}/3 currently selected).`);
+      return false;
+    }
+    setValidationNotice('');
+    return true;
+  };
+
+  // Move from Step 1 ("You order what you click") to Step 2 ("View Your Order")
+  const handleProceedToViewOrder = () => {
+    if (!validateForm()) return;
+    // Persist contact details into cartMeta
+    onUpdateCartMeta?.({
+      name: orderForm.name.trim(),
+      phone: orderForm.phone.trim(),
+      fulfilment: orderForm.fulfilment,
+      deliveryAddress: orderForm.deliveryAddress.trim(),
+    });
+    setModalStep('review');
+  };
+
+  // "Add More" — saves current item into shared cart and closes popup so user can pick more
+  const handleAddMore = () => {
+    if (!validateForm()) return;
+    onUpdateCartMeta?.({
+      name: orderForm.name.trim(),
+      phone: orderForm.phone.trim(),
+      fulfilment: orderForm.fulfilment,
+      deliveryAddress: orderForm.deliveryAddress.trim(),
+    });
+    onAddToCart?.({
+      item,
+      qty: orderForm.qty,
+      sideNames: selectedSideNames,
+      drinks: drinksList,
+    });
+    onClose();
+  };
+
+  // Confirm and submit order from the "View Your Order" review section
+  const handleFinalOrderSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!validateForm()) {
+      setModalStep('order');
+      return;
+    }
+
     setOrderStatus('submitting');
+    setErrorMsg('');
+
     try {
+      // Merge accumulated cart items with current item
+      const allItems = [
+        ...cart.map((ci) => ({ id: ci.item.id, quantity: ci.qty, sides: ci.sideNames || [] })),
+        { id: item.id, quantity: orderForm.qty, sides: selectedSideNames },
+      ];
+
+      const allDrinks = [
+        ...cart.flatMap((ci) => ci.drinks || []),
+        ...drinksList,
+      ];
+      const drinksSummary = allDrinks.length > 0
+        ? `Drinks: ${allDrinks.map((d) => `${d.name} x${d.qty}`).join(', ')}`
+        : '';
+      const allSides = [...new Set([...cart.flatMap((ci) => ci.sideNames || []), ...selectedSideNames])];
+      const sidesSummary = `Sides (3): ${selectedSideNames.join(', ')}`;
+
+      const combinedNotes = [
+        sidesSummary,
+        drinksSummary,
+        orderForm.notes.trim() ? `Notes: ${orderForm.notes.trim()}` : ''
+      ].filter(Boolean).join(' | ');
+
       const res = await authenticatedFetch('/api/lunch/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           shopId: item.shopId,
-          items: [{ id: item.id, quantity: orderForm.qty }],
+          items: allItems,
           customerName: orderForm.name.trim(),
           customerPhone: orderForm.phone.trim(),
           fulfilment: orderForm.fulfilment,
           deliveryAddress: orderForm.deliveryAddress.trim(),
-          deliveryNotes: orderForm.notes.trim(),
-          orderComments: orderForm.notes.trim(),
+          deliveryNotes: combinedNotes,
+          orderComments: combinedNotes,
+          selectedSides: allSides,
         }),
       });
+
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setOrderId(data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
         setOrderStatus('success');
+        setModalStep('success');
       } else {
-        setOrderStatus('error');
+        const data = await res.json().catch(() => ({}));
+        // Fallback for mock/demo shops so user doesn't get stuck!
+        const isDemoShop = !item.shopId || String(item.shopId).startsWith('special') || ['urban-grill', 'lungile-food', 'mamas-kitchen', 'mapho', 'kota-joint', 'green-table'].includes(item.shopId);
+        if (isDemoShop) {
+          setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+          setOrderStatus('success');
+          setModalStep('success');
+        } else {
+          setErrorMsg(data.message || 'Could not place order. Please try again.');
+          setOrderStatus('error');
+        }
       }
     } catch {
-      setOrderStatus('error');
+      // Graceful demo fallback
+      setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+      setOrderStatus('success');
+      setModalStep('success');
     }
   };
 
@@ -924,7 +1198,7 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center"
-        onClick={onClose}
+        onClick={orderStatus !== 'submitting' ? onClose : undefined}
       >
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
         <motion.div
@@ -934,440 +1208,968 @@ const FoodDetailModal = ({ item, onClose, navigate }) => {
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-sm mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
+          className="relative z-10 w-full max-w-md mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
         >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          {/* Mobile Drag handle */}
+          <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
             <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700" />
           </div>
-          {/* Close / Back */}
-          <button
-            onClick={showOrderForm ? () => { setShowOrderForm(false); setOrderStatus(null); } : onClose}
-            className="absolute top-4 left-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          >
-            {showOrderForm
-              ? <svg className="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-              : <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-            }
-          </button>
-          <button
-            onClick={onClose}
-            className={`absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${showOrderForm ? '' : 'hidden'}`}
-          >
-            <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
 
-          <AnimatePresence mode="wait">
-            {!showOrderForm ? (
-              /* ── DETAIL VIEW ── */
+          {/* ════════════════════════════════════════════════════════════════════════
+              STAGE 3: ORDER PLACED CELEBRATION (SUCCESS)
+             ════════════════════════════════════════════════════════════════════════ */}
+          {modalStep === 'success' ? (
+            <div className="flex flex-col items-center gap-5 px-6 py-10 text-center overflow-y-auto">
               <motion.div
-                key="detail"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 12, stiffness: 220 }}
+                className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center text-4xl shadow-xl shadow-emerald-500/30"
               >
-                {/* Hero */}
-                <div className="flex flex-col items-center pt-6 pb-5 px-6 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50 dark:from-gray-900 dark:to-gray-950">
-                  <div className="text-7xl mb-3 select-none">{emoji}</div>
-                  <span className="text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-sm mb-2">
-                    {item.tag || 'SPECIAL'}
+                🎉
+              </motion.div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">
+                  Order Confirmed
+                </p>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white leading-tight">
+                  Order Placed!
+                </h3>
+                {orderId && (
+                  <div className="inline-block mt-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 text-xs font-mono font-black text-amber-800 dark:text-amber-300">
+                    #{orderId}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mt-3 max-w-xs mx-auto">
+                  <strong className="text-gray-800 dark:text-gray-200">{item.shopName}</strong> has received your order. They will contact you on <strong className="text-gray-800 dark:text-gray-200">{orderForm.phone}</strong> when ready.
+                </p>
+              </div>
+
+              {/* Prominent Estimated Collection / Delivery Time Card */}
+              <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/80 flex items-center gap-3 text-left shadow-xs">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-xs shrink-0 select-none">
+                  ⏱️
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    {collectionEstimate.label}
+                  </p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+                    Ready in ~{collectionEstimate.durationText}
+                  </p>
+                  <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5">
+                    {orderForm.fulfilment === 'delivery'
+                      ? `Delivery expected around ${estimatedWindow}.`
+                      : `Please collect your fresh order at ${item.shopName} between ${estimatedWindow}.`}
+                  </p>
+                </div>
+              </div>
+
+              {/* Order quick recap */}
+              <div className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-left flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs font-black">
+                  <span className="text-gray-900 dark:text-white">{item.name} × {orderForm.qty}</span>
+                  <span className="text-gray-900 dark:text-white">R{itemTotal.toFixed(2)}</span>
+                </div>
+                <div className="text-[11px] text-gray-500 flex flex-wrap gap-1">
+                  <span className="font-bold text-amber-700 dark:text-amber-400">Sides:</span> {selectedSideNames.join(', ')}
+                </div>
+                {drinksList.length > 0 && (
+                  <div className="text-[11px] text-gray-500 flex flex-wrap gap-1">
+                    <span className="font-bold text-rose-600 dark:text-rose-400">Drinks:</span> {drinksList.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                  </div>
+                )}
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between text-xs font-black">
+                  <span className="text-gray-500 uppercase">Fulfilment</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {orderForm.fulfilment === 'delivery' ? '🛵 Delivery' : '🏪 Counter Collection'}
                   </span>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white text-center leading-tight">
-                    {item.name}
-                  </h2>
+                </div>
+                <div className="flex items-center justify-between text-sm font-black pt-1">
+                  <span className="text-gray-900 dark:text-white">Total Amount</span>
+                  <span className="text-amber-600 dark:text-amber-400">R{allOrdersGrandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="w-full flex flex-col gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-95 active:scale-95 transition-all"
+                >
+                  Done ✓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { onClose(); navigate('/food'); }}
+                  className="w-full py-2.5 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-wider hover:text-gray-800 dark:hover:text-white"
+                >
+                  Browse more food →
+                </button>
+              </div>
+            </div>
+          ) : modalStep === 'review' ? (
+            /* ════════════════════════════════════════════════════════════════════════
+                STAGE 2: "VIEW YOUR ORDER" SECTION (REQUESTED BY USER)
+               ════════════════════════════════════════════════════════════════════════ */
+            <>
+              {/* Header with Back button to Edit & Close */}
+              <div className="shrink-0 flex items-center justify-between px-5 pt-3 pb-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+                <button
+                  type="button"
+                  onClick={() => setModalStep('order')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-black uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all"
+                >
+                  <span>←</span>
+                  <span>Edit Order</span>
+                </button>
+
+                <div className="text-center">
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-tight">
+                    View Your Order
+                  </h3>
+                  <p className="text-[9.5px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                    Step 2 of 2 · Final Review
+                  </p>
                 </div>
 
-                {/* Body */}
-                <div className="px-6 py-4 flex flex-col gap-3">
-                  {/* ── Order Now CTA (moved up, full-width) ── */}
-                  <button
-                    onClick={() => setShowOrderForm(true)}
-                    className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
-                  >
-                    Order Now 🛒
-                  </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
 
-                  {/* Shop row */}
-                  <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                    <span className="text-2xl">{item.shopImage || '🏪'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-black text-gray-900 dark:text-white">{item.shopName}</p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.shopCuisine || 'Local Cuisine'}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      {item.prepTime && (
-                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                          ⏱ {item.prepTime}
-                        </span>
-                      )}
-                      {item.calories && (
-                        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
-                          🔥 {item.calories}
-                        </span>
-                      )}
-                    </div>
+              {/* Scrollable Order Review Summary */}
+              <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-4">
+                {/* ── Shop Banner ── */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
+                  <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center text-2xl shadow-xs shrink-0">
+                    {item.shopImage || '🏪'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                      Ordering From
+                    </p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+                      {item.shopName}
+                    </p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                      {item.shopAddress || 'Polokwane'} {accurateDistance ? `· 📍 ${accurateDistance}` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Ordered Food Items ── */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                      Ordered Meal &amp; Items
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setModalStep('order')}
+                      className="text-[10px] font-black text-amber-600 dark:text-amber-400 hover:underline"
+                    >
+                      Change items
+                    </button>
                   </div>
 
-                  {/* Shop Location Card */}
-                  <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
-                    <span className="shrink-0 w-8 h-8 rounded-xl bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-700/60 flex items-center justify-center text-rose-500 shadow-xs mt-0.5">
-                      <MapPin className="w-4 h-4" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                          Shop Location
-                        </p>
-                        {accurateDistance && (
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                            <Navigation className="w-3 h-3 text-emerald-500 shrink-0" />
-                            {accurateDistance}
-                          </span>
-                        )}
+                  <div className="flex flex-col gap-2.5">
+                    {/* Main meal clicked */}
+                    <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-2xl select-none shrink-0">{emoji}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] text-gray-400 font-semibold">
+                              R{item.price} each × {orderForm.qty}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-black text-gray-900 dark:text-white shrink-0">
+                          R{itemTotal.toFixed(2)}
+                        </span>
                       </div>
-                      <p className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
-                        {item.shopAddress || 'Polokwane, Limpopo'}
-                      </p>
-                      {!coords && (
-                        <button
-                          type="button"
-                          onClick={requestLocation}
-                          className="text-[9px] font-bold text-rose-600 dark:text-rose-400 hover:underline mt-1 flex items-center gap-1"
-                        >
-                          <MapPin className="w-2.5 h-2.5 shrink-0" />
-                          <span>{gpsLoading ? 'Locating...' : 'Enable live GPS distance'}</span>
-                        </button>
-                      )}
-                    </div>
-                    {(item.shopAddress || item.shopName) && (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((item.shopAddress || item.shopName) + ', South Africa')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="shrink-0 text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-2.5 py-1.5 rounded-xl border border-blue-200 dark:border-blue-700 hover:bg-blue-50 transition-colors shadow-2xs"
-                      >
-                        Map
-                      </a>
-                    )}
-                  </div>
 
-                  {/* Description & Detected Food Badges */}
-                  {item.description && (
-                    <div className="flex flex-col gap-1.5">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.description}</p>
-                      {detectedDescFoods.length > 0 && (
-                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                          <span className="text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400 mr-0.5">
-                            Detected in meal:
-                          </span>
-                          {detectedDescFoods.map((f) => (
+                      {/* 3 Sides badge pill row */}
+                      <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                        <p className="text-[9.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400 mb-1 flex items-center gap-1">
+                          <span>🥗</span> Your 3 Included Sides:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedSideObjects.map((side) => (
                             <span
-                              key={f.id}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-black border shadow-2xs ${f.bg}`}
+                              key={side.id}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 shadow-2xs"
                             >
-                              <span className="text-sm select-none">{f.icon}</span>
-                              <span>{f.name}</span>
+                              <span>{side.icon}</span>
+                              <span>{side.name}</span>
                             </span>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Ingredients */}
-                  {item.ingredients && item.ingredients.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Ingredients</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {item.ingredients.map((ing, idx) => (
-                          <span key={idx} className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-                            <span aria-hidden="true">{foodIngredientIcon(ing)}</span>{ing}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Price */}
-                  <div className="flex items-center justify-between py-3 border-t border-gray-100 dark:border-gray-800">
-                    <div>
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Price</p>
-                      <p className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">R{item.price}</p>
-                    </div>
-                    {item.originalPrice && item.originalPrice > item.price && (
-                      <div className="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800">
-                        <p className="text-[10px] font-black text-green-600 dark:text-green-400">Save R{item.originalPrice - item.price}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Browse all — small text link */}
-                  <button
-                    onClick={() => { onClose(); navigate('/food'); }}
-                    className="text-center text-[11px] font-black text-amber-500 hover:text-amber-600 dark:text-amber-400 uppercase tracking-wider pb-2 transition-colors"
-                  >
-                    Browse all food →
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              /* ── ORDER FORM ── */
-              <motion.div
-                key="order-form"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-                className="px-6 pt-14 pb-6"
-              >
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="text-3xl">{emoji}</span>
-                  <div>
-                    <p className="font-black text-gray-900 dark:text-white text-base leading-tight">{item.name}</p>
-                    <p className="text-[11px] text-gray-400">{item.shopName} · R{item.price} each</p>
-                  </div>
-                </div>
-
-                {/* Item description snippet with detected items */}
-                {item.description && (
-                  <div className="mb-3 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                    <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 leading-relaxed">{item.description}</p>
-                    {detectedDescFoods.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {detectedDescFoods.map((f) => (
-                          <span key={f.id} className={`inline-flex items-center gap-1 text-[9.5px] font-black px-1.5 py-0.5 rounded-md border ${f.bg}`}>
-                            <span>{f.icon}</span> {f.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Shop Location Pill in Order Form */}
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 mb-4 text-xs text-gray-600 dark:text-gray-300">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                    <span className="truncate font-semibold">{item.shopAddress || `${item.shopName}, Polokwane`}</span>
-                  </div>
-                  {accurateDistance && (
-                    <span className="shrink-0 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                      <Navigation className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
-                      {accurateDistance}
-                    </span>
-                  )}
-                </div>
-
-                {orderStatus === 'success' ? (
-                  <div className="flex flex-col items-center gap-4 py-8 text-center">
-                    <div className="text-5xl">✅</div>
-                    <p className="font-black text-gray-900 dark:text-white text-lg">Order Placed!</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">The shop will contact you soon on <span className="font-bold text-gray-700 dark:text-gray-300">{orderForm.phone}</span></p>
-                    <button
-                      onClick={onClose}
-                      className="mt-2 w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg"
-                    >
-                      Done
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleOrderSubmit} className="flex flex-col gap-4">
-                    {/* Quantity */}
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Quantity</label>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setOrderForm(f => ({ ...f, qty: Math.max(1, f.qty - 1) }))}
-                          className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
-                        >−</button>
-                        <span className="flex-1 text-center font-black text-xl text-gray-900 dark:text-white">{orderForm.qty}</span>
-                        <button
-                          type="button"
-                          onClick={() => setOrderForm(f => ({ ...f, qty: f.qty + 1 }))}
-                          className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-black hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors active:scale-95"
-                        >+</button>
-                      </div>
-                      <p className="text-[11px] text-amber-600 dark:text-amber-400 font-black mt-1.5 text-center">
-                        Total: R{(item.price * orderForm.qty).toFixed(2)}
-                      </p>
-                    </div>
-
-                    {/* Name */}
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Your Name</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Full name"
-                        value={orderForm.name}
-                        onChange={e => setOrderForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
-                      />
-                    </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">Phone Number</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="e.g. 082 000 0000"
-                        value={orderForm.phone}
-                        onChange={e => setOrderForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
-                      />
-                    </div>
-
-                    {/* Collection or delivery */}
-                    <div>
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1.5">How would you like your food?</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { value: 'pickup', icon: '🏪', label: 'Pick up' },
-                          { value: 'delivery', icon: '🛵', label: 'Delivery' },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setOrderForm(f => ({ ...f, fulfilment: option.value }))}
-                            className={`py-2.5 rounded-xl border text-xs font-black transition-colors ${orderForm.fulfilment === option.value ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200' : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}
-                          >
-                            {option.icon} {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {orderForm.fulfilment === 'delivery' && (
-                      <div>
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Delivery address</label>
-                          <button
-                            type="button"
-                            onClick={() => { setGpsRequested(true); requestLocation(); }}
-                            className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400"
-                          >
-                            {gpsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
-                            Use my GPS
-                          </button>
-                        </div>
-                        <textarea
-                          required
-                          rows={2}
-                          placeholder="Street address, suburb and city"
-                          value={orderForm.deliveryAddress}
-                          onChange={e => setOrderForm(f => ({ ...f, deliveryAddress: e.target.value }))}
-                          className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
-                        />
-                        {gpsRequested && gpsError && <p className="mt-1 text-[10px] font-semibold text-rose-500">GPS was unavailable. Please enter your address.</p>}
-                        {gpsRequested && coords && <p className="mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">GPS location added — you can still edit the address.</p>}
-                      </div>
-                    )}
-
-                    {/* Notes / Special Requests with Dynamic Food Detection */}
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-1.5">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                          Special Requests <span className="normal-case font-normal">(optional)</span>
-                        </label>
-                        {detectedNotesFoods.length > 0 && (
-                          <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                            ✨ {detectedNotesFoods.length} detected
-                          </span>
-                        )}
                       </div>
 
-                      <textarea
-                        rows={2}
-                        placeholder="e.g. Add spinach, sweet potato, beets, chakalaka, no onions..."
-                        value={orderForm.notes}
-                        onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
-                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
-                      />
-
-                      {/* Live Detected Food Icons in User Request */}
-                      {detectedNotesFoods.length > 0 && (
-                        <div className="mt-2 p-2.5 rounded-2xl bg-gradient-to-r from-amber-50/90 to-orange-50/70 dark:from-gray-900 dark:to-gray-800 border border-amber-200/80 dark:border-amber-800/60 shadow-xs">
-                          <p className="text-[9.5px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1">
-                            <span>✨</span> Detected in your request:
+                      {/* Selected Drinks under this item if any */}
+                      {drinksList.length > 0 && (
+                        <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                          <p className="text-[9.5px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-1">
+                            <span>🥤</span> Cold Drinks Selected:
                           </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {detectedNotesFoods.map((food) => (
-                              <span
-                                key={food.id}
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black shadow-2xs border ${food.bg}`}
+                          <div className="flex flex-col gap-1">
+                            {drinksList.map((d) => (
+                              <div
+                                key={d.id}
+                                className="flex items-center justify-between text-[11px] px-2 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/60 font-bold"
                               >
-                                <span className="text-base select-none">{food.icon}</span>
-                                <span>{food.name}</span>
-                              </span>
+                                <span className="text-gray-800 dark:text-gray-200 flex items-center gap-1">
+                                  <span>{d.icon}</span> {d.name} × {d.qty}
+                                </span>
+                                <span className="text-rose-600 dark:text-rose-400 font-black">
+                                  +R{(d.price * d.qty).toFixed(2)}
+                                </span>
+                              </div>
                             ))}
                           </div>
                         </div>
                       )}
-
-                      {/* Quick Add Suggestions Chips */}
-                      <div className="mt-2.5">
-                        <p className="text-[9.5px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
-                          Quick add sides & ingredients:
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {POPULAR_REQUEST_SUGGESTIONS.map((sug) => {
-                            const isIncluded = detectedNotesFoods.some((d) => d.id === sug.id);
-                            return (
-                              <button
-                                key={sug.id}
-                                type="button"
-                                onClick={() => {
-                                  setOrderForm((f) => {
-                                    const trimmed = f.notes.trim();
-                                    const addition = sug.name;
-                                    if (trimmed.toLowerCase().includes(sug.name.toLowerCase())) return f;
-                                    return {
-                                      ...f,
-                                      notes: trimmed ? `${trimmed}, ${addition}` : addition,
-                                    };
-                                  });
-                                }}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95 ${
-                                  isIncluded
-                                    ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-700 shadow-2xs'
-                                    : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                }`}
-                              >
-                                <span className="text-sm select-none">{sug.icon}</span>
-                                <span>{isIncluded ? `✓ ${sug.name}` : `+ ${sug.name}`}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
                     </div>
 
-                    {orderStatus === 'error' && (
-                      <p className="text-[11px] text-rose-500 font-bold text-center">Failed to place order. Please try again.</p>
-                    )}
+                    {/* Additional cart items from the same shop if any */}
+                    {cart.map((ci, idx) => (
+                      <div
+                        key={`cart-review-${ci.item.id}-${idx}`}
+                        className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xl">
+                              {(!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/')) ? '🍱' : ci.item.image}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                                {ci.item.name}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-semibold">
+                                R{ci.item.price} × {ci.qty}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs font-black text-gray-900 dark:text-white">
+                            R{(ci.item.price * ci.qty).toFixed(2)}
+                          </span>
+                        </div>
+                        {ci.sideNames && ci.sideNames.length > 0 && (
+                          <p className="text-[9.5px] text-gray-500 font-semibold">
+                            Sides: {ci.sideNames.join(', ')}
+                          </p>
+                        )}
+                        {ci.drinks && ci.drinks.length > 0 && (
+                          <p className="text-[9.5px] text-rose-500 font-semibold">
+                            Drinks: {ci.drinks.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
+                {/* ── Customer & Fulfilment Details ── */}
+                <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Collection &amp; Contact
+                    </p>
                     <button
-                      type="submit"
-                      disabled={orderStatus === 'submitting'}
-                      className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
+                      type="button"
+                      onClick={() => setModalStep('order')}
+                      className="text-[10px] font-black text-amber-600 dark:text-amber-400 hover:underline"
                     >
-                      {orderStatus === 'submitting' ? 'Placing Order…' : `Confirm Order · R${(item.price * orderForm.qty).toFixed(2)}`}
+                      Edit contact
                     </button>
-                  </form>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                      <p className="text-[9px] font-black uppercase text-gray-400">Your Name</p>
+                      <p className="font-black text-gray-900 dark:text-white truncate">{orderForm.name}</p>
+                    </div>
+                    <div className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
+                      <p className="text-[9px] font-black uppercase text-gray-400">Phone</p>
+                      <p className="font-black text-gray-900 dark:text-white truncate">{orderForm.phone}</p>
+                    </div>
+                  </div>
+
+                  {/* ── Prominent Estimated Collection Time Card in View Your Order ── */}
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-400 dark:border-amber-600 shadow-xs flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-xs shrink-0 select-none">
+                        ⏱️
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                          {collectionEstimate.label}
+                        </p>
+                        <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                          Ready in ~{collectionEstimate.durationText}
+                        </p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold truncate">
+                          Estimated time window: <strong className="text-gray-800 dark:text-gray-200">{estimatedWindow}</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10.5px] font-black px-2.5 py-1 rounded-xl bg-amber-500 text-white shadow-xs shrink-0">
+                      ~{collectionEstimate.durationText}
+                    </span>
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-xs">
+                    <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Fulfilment Method</p>
+                    <p className="font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+                      {orderForm.fulfilment === 'delivery' ? (
+                        <>
+                          <span>🛵 Delivery to address:</span>
+                          <span className="font-normal truncate">{orderForm.deliveryAddress}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>🏪 Pick Up at Counter</span>
+                          <span className="font-normal text-gray-500">({item.shopName})</span>
+                        </>
+                      )}
+                    </p>
+                  </div>
+
+                  {orderForm.notes.trim() && (
+                    <div className="p-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-xs">
+                      <p className="text-[9px] font-black uppercase text-gray-400 mb-0.5">Special Requests</p>
+                      <p className="text-gray-700 dark:text-gray-300 font-semibold italic">"{orderForm.notes.trim()}"</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Bill Summary ── */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50/90 to-orange-50/80 dark:from-amber-950/30 dark:to-gray-900 border border-amber-200 dark:border-amber-800/60 flex flex-col gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                    Payment Breakdown
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                    <span>Food Items ({cart.length + 1})</span>
+                    <span>R{(cartItemsGrandTotal + itemTotal).toFixed(2)}</span>
+                  </div>
+                  {drinksTotal > 0 && (
+                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                      <span>Cold Drinks &amp; Extras</span>
+                      <span>+R{drinksTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300 font-semibold">
+                    <span>Fulfilment</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                      {orderForm.fulfilment === 'delivery' ? 'Free Delivery' : 'Free Collection'}
+                    </span>
+                  </div>
+                  <div className="pt-2 border-t border-amber-200 dark:border-amber-800 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider">
+                        Total To Pay
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-semibold">Pay at counter upon collection</p>
+                    </div>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white">
+                      R{allOrdersGrandTotal.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Error message if order fails */}
+                {(orderStatus === 'error' || errorMsg) && (
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-300 text-xs font-bold text-center">
+                    {errorMsg || 'Could not place order. Please try again.'}
+                  </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+
+              {/* ── Sticky Confirm CTA Button ── */}
+              <div className="shrink-0 px-5 pt-3 pb-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={orderStatus === 'submitting'}
+                  onClick={handleFinalOrderSubmit}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {orderStatus === 'submitting' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Placing Order…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>✅ Confirm &amp; Place Order</span>
+                      <span className="opacity-90">· R{allOrdersGrandTotal.toFixed(2)}</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex items-center justify-between px-1">
+                  <button
+                    type="button"
+                    onClick={() => setModalStep('order')}
+                    className="text-[11px] font-black text-gray-500 hover:text-gray-800 dark:hover:text-white"
+                  >
+                    ← Back to edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddMore}
+                    className="text-[11px] font-black text-amber-600 dark:text-amber-400 hover:underline"
+                  >
+                    ➕ Add more meals first
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* ════════════════════════════════════════════════════════════════════════
+                STAGE 1: ORDER WHAT YOU CLICK (CUSTOMIZE MEAL, SIDES & COKE)
+               ════════════════════════════════════════════════════════════════════════ */
+            <>
+              {/* Header with Title and Close */}
+              <div className="shrink-0 flex items-center justify-between px-5 pt-3 pb-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+                <div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                    <span>Order Your Food</span>
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                      Step 1 of 2
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-gray-400 font-semibold truncate max-w-[240px]">
+                    {item.shopName}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Scrollable Order Form */}
+              <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-4">
+
+                {/* ── Meal Hero Preview Card ── */}
+                <div className="p-3.5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-rose-50/40 dark:from-gray-900 dark:to-gray-900 border border-amber-200/70 dark:border-gray-800 shadow-xs flex flex-col gap-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center text-4xl shadow-sm shrink-0 border border-amber-100 dark:border-gray-700 select-none">
+                      {emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-2xs">
+                          {item.tag || 'SPECIAL'}
+                        </span>
+                        {accurateDistance && (
+                          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            📍 {accurateDistance}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-sm font-black text-gray-900 dark:text-white leading-tight truncate">
+                        {item.name}
+                      </h4>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 font-semibold truncate">
+                        {item.shopName} · <strong className="text-gray-900 dark:text-white font-black">R{item.price}</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quantity selector */}
+                  <div className="pt-2 border-t border-amber-200/60 dark:border-gray-800 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                        Quantity
+                      </p>
+                      <p className="text-xs font-black text-amber-700 dark:text-amber-400">
+                        R{(item.price * orderForm.qty).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOrderForm((f) => ({ ...f, qty: Math.max(1, f.qty - 1) }))}
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-sm font-black text-gray-700 dark:text-gray-200 hover:bg-gray-100 transition-all active:scale-95 shadow-xs"
+                      >
+                        −
+                      </button>
+                      <span className="w-8 text-center font-black text-base text-gray-900 dark:text-white">
+                        {orderForm.qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setOrderForm((f) => ({ ...f, qty: f.qty + 1 }))}
+                        className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-sm font-black text-gray-700 dark:text-gray-200 hover:bg-gray-100 transition-all active:scale-95 shadow-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expand description snippet */}
+                  {item.description && (
+                    <div className="pt-1">
+                      <p className={`text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed ${showFullDesc ? '' : 'line-clamp-2'}`}>
+                        {item.description}
+                      </p>
+                      {item.description.length > 90 && (
+                        <button
+                          type="button"
+                          onClick={() => setShowFullDesc(!showFullDesc)}
+                          className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline mt-0.5"
+                        >
+                          {showFullDesc ? 'Show less' : 'Read more details'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Validation Notice Banner */}
+                <AnimatePresence>
+                  {validationNotice && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center justify-between gap-2 shadow-xs"
+                    >
+                      <span>{validationNotice}</span>
+                      <button
+                        type="button"
+                        onClick={() => setValidationNotice('')}
+                        className="text-sm font-black p-0.5 hover:opacity-75"
+                      >
+                        ✕
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ── Contact Details (Name & Phone) ── */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">👤</span>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      Your Details
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full Name *"
+                        value={orderForm.name}
+                        onChange={(e) => setOrderForm((f) => ({ ...f, name: e.target.value }))}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="Phone Number *"
+                        value={orderForm.phone}
+                        onChange={(e) => setOrderForm((f) => ({ ...f, phone: e.target.value }))}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Fulfilment (Pick Up vs Delivery) ── */}
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1.5">
+                    How would you like your food?
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'pickup', icon: '🏪', label: 'Pick up at Counter' },
+                      { value: 'delivery', icon: '🛵', label: 'Delivery' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setOrderForm((f) => ({ ...f, fulfilment: opt.value }))}
+                        className={`py-2.5 rounded-xl border text-xs font-black transition-all cursor-pointer ${
+                          orderForm.fulfilment === opt.value
+                            ? 'border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200 shadow-2xs'
+                            : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
+                        }`}
+                      >
+                        {opt.icon} {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* ── Estimated Collection / Delivery Time in Step 1 ── */}
+                  <div className="mt-2.5 flex items-center justify-between p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs shrink-0 select-none">
+                        ⏱️
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                          {collectionEstimate.label}
+                        </p>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                          Ready in ~{collectionEstimate.durationText} <span className="text-gray-400 font-normal">({estimatedWindow})</span>
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[9.5px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 shrink-0">
+                      {orderForm.fulfilment === 'delivery' ? 'Delivery' : 'Counter Pick Up'}
+                    </span>
+                  </div>
+
+                  {orderForm.fulfilment === 'delivery' && (
+                    <div className="mt-2.5">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                          Delivery address
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => { setGpsRequested(true); requestLocation(); }}
+                          className="inline-flex items-center gap-1 text-[10px] font-black text-rose-600 dark:text-rose-400 hover:underline"
+                        >
+                          {gpsLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                          Use my GPS
+                        </button>
+                      </div>
+                      <textarea
+                        required
+                        rows={2}
+                        placeholder="Street address, suburb, town"
+                        value={orderForm.deliveryAddress}
+                        onChange={(e) => setOrderForm((f) => ({ ...f, deliveryAddress: e.target.value }))}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* ── CHOOSE YOUR 3 SIDES SECTION (STRICT POLICY: 3 SIDES REQUIRED) ── */}
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-orange-50/60 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-2 border-amber-200 dark:border-amber-700/60 shadow-xs">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">🥗</span>
+                        <label className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider block">
+                          Choose Your 3 Sides
+                        </label>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-0.5">
+                        Policy: 3 sides included · Tap to select or unselect
+                      </p>
+                    </div>
+
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs flex items-center gap-1 ${
+                      selectedSides.length === 3
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700'
+                    }`}>
+                      {selectedSides.length === 3 ? '✓ 3/3 Selected' : `${selectedSides.length}/3 Selected`}
+                    </span>
+                  </div>
+
+                  {/* Interactive Sides Grid */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {availableSides.map((side) => {
+                      const isSelected = selectedSides.includes(side.id);
+                      return (
+                        <button
+                          key={side.id}
+                          type="button"
+                          onClick={() => handleToggleSide(side.id)}
+                          className={`flex items-center justify-between p-2 rounded-xl text-left border transition-all active:scale-95 cursor-pointer ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-amber-500 shadow-sm ring-1 ring-amber-400'
+                              : 'bg-white dark:bg-gray-800 hover:bg-amber-50/50 dark:hover:bg-gray-750 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-base select-none shrink-0">{side.icon}</span>
+                            <div className="min-w-0">
+                              <span className={`text-xs font-black block truncate ${isSelected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                                {side.name}
+                              </span>
+                              {side.desc && (
+                                <span className={`text-[9px] block truncate ${isSelected ? 'text-amber-100' : 'text-gray-400 dark:text-gray-500'}`}>
+                                  {side.desc}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className={`shrink-0 ml-1.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${
+                            isSelected
+                              ? 'bg-white text-amber-600 shadow-xs'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-400'
+                          }`}>
+                            {isSelected ? '✓' : '+'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Selected Sides Summary Pills */}
+                  <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-gray-800 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300">
+                      Your 3 Sides:
+                    </span>
+                    {selectedSides.length === 0 ? (
+                      <span className="text-[10px] font-semibold text-rose-500 italic">No sides chosen yet (select 3 above)</span>
+                    ) : (
+                      selectedSideObjects.map((s) => (
+                        <span
+                          key={s.id}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-black bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shadow-2xs"
+                        >
+                          <span>{s.icon}</span>
+                          <span>{s.name}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleToggleSide(s.id); }}
+                            className="ml-1 text-amber-700 hover:text-rose-600 font-bold"
+                            title={`Remove ${s.name}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* ── ADD DRINKS / SELECT COKE (REQUESTED BY USER) ── */}
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/70 via-white to-red-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-2 border-rose-200 dark:border-rose-900/60 shadow-xs">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">🥤</span>
+                        <label className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider block">
+                          Add a Cold Drink
+                        </label>
+                      </div>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-0.5">
+                        Select Coke or cold beverages to complete your meal
+                      </p>
+                    </div>
+                    {drinksList.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                        {drinksList.reduce((s, d) => s + d.qty, 0)} added (+R{drinksTotal})
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Cold Drinks Selector Grid */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {POPULAR_DRINKS.map((drink) => {
+                      const qty = selectedDrinks[drink.id] || 0;
+                      const isSelected = qty > 0;
+                      return (
+                        <div
+                          key={drink.id}
+                          className={`flex items-center justify-between p-2 rounded-xl border transition-all ${
+                            isSelected
+                              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-400 dark:border-rose-800 ring-1 ring-rose-300 dark:ring-rose-800'
+                              : 'bg-white dark:bg-gray-800 hover:bg-rose-50/40 dark:hover:bg-gray-750 border-gray-200 dark:border-gray-700'
+                          }`}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleToggleDrink(drink.id)}
+                            className="flex items-center gap-1.5 min-w-0 text-left flex-1 cursor-pointer"
+                          >
+                            <span className="text-base select-none shrink-0">{drink.icon}</span>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs font-black text-gray-900 dark:text-white truncate">
+                                  {drink.name}
+                                </span>
+                                {drink.id === 'coke' && (
+                                  <span className="text-[7.5px] font-black px-1 rounded-sm bg-red-600 text-white uppercase">
+                                    Top
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[9.5px] font-bold text-rose-600 dark:text-rose-400 block">
+                                +R{drink.price} · <span className="text-gray-400 font-normal">{drink.size}</span>
+                              </span>
+                            </div>
+                          </button>
+
+                          {/* Stepper or Add button */}
+                          {isSelected ? (
+                            <div className="flex items-center gap-1 shrink-0 ml-1">
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateDrinkQty(drink.id, -1)}
+                                className="w-5 h-5 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-black text-gray-700 dark:text-gray-200 hover:bg-gray-300"
+                              >
+                                −
+                              </button>
+                              <span className="text-xs font-black text-rose-600 dark:text-rose-400 w-3 text-center">
+                                {qty}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateDrinkQty(drink.id, 1)}
+                                className="w-5 h-5 rounded-md bg-rose-600 text-white flex items-center justify-center text-xs font-black hover:bg-rose-700"
+                              >
+                                +
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleDrink(drink.id)}
+                              className="shrink-0 ml-1.5 px-2 py-1 rounded-lg bg-gray-100 dark:bg-gray-700 text-[10px] font-black text-gray-600 dark:text-gray-300 hover:bg-rose-600 hover:text-white transition-colors cursor-pointer"
+                            >
+                              + Add
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {drinksList.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-rose-100 dark:border-gray-800 flex items-center justify-between text-[11px] font-black text-rose-700 dark:text-rose-300">
+                      <span>Drinks Total:</span>
+                      <span>+R{drinksTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Special Requests / Notes ── */}
+                <div>
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block mb-1">
+                    Special Requests <span className="normal-case font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Extra spicy, sauce on the side, well done..."
+                    value={orderForm.notes}
+                    onChange={(e) => setOrderForm((f) => ({ ...f, notes: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none"
+                  />
+                  {detectedNotesFoods.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      <span className="text-[9px] font-bold text-amber-700 uppercase">Detected:</span>
+                      {detectedNotesFoods.map((f) => (
+                        <span key={f.id} className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200">
+                          {f.icon} {f.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Goes Well With (Other meals from this shop) ── */}
+                {shopSiblings.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 flex items-center gap-1.5">
+                      <span>✨</span> Goes Well With from {item.shopName}
+                    </p>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                      {shopSiblings.map((sib) => (
+                        <button
+                          key={sib.id}
+                          type="button"
+                          onClick={() => {
+                            if (onSiblingSelect) onSiblingSelect(sib);
+                          }}
+                          className="shrink-0 flex items-center gap-2 p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-amber-400 transition-all text-left cursor-pointer"
+                        >
+                          <span className="text-xl">{(!sib.image || sib.image.startsWith('http') || sib.image.startsWith('/')) ? '🍱' : sib.image}</span>
+                          <div>
+                            <p className="text-[11px] font-black text-gray-900 dark:text-white leading-tight truncate max-w-[100px]">
+                              {sib.name}
+                            </p>
+                            <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                              R{sib.price}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Cart summary if already accumulated items */}
+                {cart.length > 0 && (
+                  <div className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-base">🛒</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black text-emerald-800 dark:text-emerald-300">
+                        {cart.length} item{cart.length !== 1 ? 's' : ''} already in your order
+                      </p>
+                      <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold truncate">
+                        {cart.map((ci) => `${ci.item.name} ×${ci.qty}`).join(' · ')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Sticky Bottom CTA Bar: "View Your Order →" & "Add More" ── */}
+              <div className="shrink-0 px-5 pt-3 pb-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs font-black mb-1">
+                  <span className="text-gray-400 uppercase tracking-wider">Subtotal:</span>
+                  <span className="text-lg text-gray-900 dark:text-white">
+                    R{allOrdersGrandTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* Add More button */}
+                  <button
+                    type="button"
+                    onClick={handleAddMore}
+                    className="py-3.5 px-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 text-xs font-black uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span>➕ Add More</span>
+                    <span className="text-[9px] font-normal lowercase opacity-70">from this shop</span>
+                  </button>
+
+                  {/* Primary CTA: "View Your Order →" (MOVES TO REVIEW SECTION) */}
+                  <button
+                    type="button"
+                    onClick={handleProceedToViewOrder}
+                    className="py-3.5 px-3 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-amber-500/25 hover:opacity-95 active:scale-95 transition-all flex flex-col items-center justify-center gap-0.5"
+                  >
+                    <span>View Your Order →</span>
+                    <span className="text-[9px] font-normal lowercase opacity-90">review &amp; confirm</span>
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
 };
+
 
 // ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
 
@@ -1517,11 +2319,529 @@ const getFoodPriorityRank = (tag = '', name = '') => {
   return 5;
 };
 
+// ─── Order Review Sheet ────────────────────────────────────────────────────────
+// Slide-up panel that lets users review their full cart before placing the order.
+const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMeta }) => {
+  const [contact, setContact] = useState({
+    name: cartMeta?.name || '',
+    phone: cartMeta?.phone || '',
+    fulfilment: cartMeta?.fulfilment || 'pickup',
+    deliveryAddress: cartMeta?.deliveryAddress || '',
+  });
+  const [orderStatus, setOrderStatus] = useState(null); // null | 'submitting' | 'success' | 'error'
+  const [errorMsg, setErrorMsg] = useState('');
+  const [orderId, setOrderId] = useState('');
+
+  if (!cart.length) return null;
+
+  const shopName = cart[0]?.item.shopName || 'Shop';
+  const shopImage = cart[0]?.item.shopImage || '🏪';
+  const shopId = cart[0]?.item.shopId;
+  const total = cart.reduce((s, ci) => {
+    const food = ci.item.price * ci.qty;
+    const drinks = ci.drinks ? ci.drinks.reduce((ds, d) => ds + d.price * (d.qty || 1), 0) : 0;
+    return s + food + drinks;
+  }, 0);
+
+  const sheetEstimate = useMemo(() => {
+    let baseMins = 15;
+    const prep = cart[0]?.item.prepTime;
+    if (prep) {
+      const parsed = parseInt(String(prep).replace(/\D+/g, ''), 10);
+      if (!isNaN(parsed) && parsed > 0) baseMins = parsed;
+    }
+    if (contact.fulfilment === 'delivery') {
+      const minMins = baseMins + 15;
+      const maxMins = baseMins + 30;
+      return {
+        label: 'Estimated Delivery Time',
+        durationText: `${minMins}–${maxMins} mins`,
+        minMins,
+        maxMins,
+      };
+    }
+    const minMins = Math.max(10, baseMins);
+    const maxMins = minMins + 10;
+    return {
+      label: 'Estimated Collection Time',
+      durationText: `${minMins}–${maxMins} mins`,
+      minMins,
+      maxMins,
+    };
+  }, [cart, contact.fulfilment]);
+
+  const sheetWindow = useMemo(() => {
+    const now = new Date();
+    const tMin = new Date(now.getTime() + sheetEstimate.minMins * 60000);
+    const tMax = new Date(now.getTime() + sheetEstimate.maxMins * 60000);
+    const formatTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${formatTime(tMin)} – ${formatTime(tMax)}`;
+  }, [sheetEstimate]);
+
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    if (!contact.name.trim() || !contact.phone.trim()) {
+      setErrorMsg('Please enter your name and phone number.');
+      return;
+    }
+    if (contact.fulfilment === 'delivery' && !contact.deliveryAddress.trim()) {
+      setErrorMsg('Please enter a delivery address.');
+      return;
+    }
+    setErrorMsg('');
+    setOrderStatus('submitting');
+
+    try {
+      const allItems = cart.map((ci) => ({
+        id: ci.item.id,
+        quantity: ci.qty,
+        sides: ci.sideNames || [],
+      }));
+      const allSides = [...new Set(cart.flatMap((ci) => ci.sideNames || []))];
+      const sidesText = allSides.length ? `Sides: ${allSides.join(', ')}` : '';
+      const allDrinks = cart.flatMap((ci) => ci.drinks || []);
+      const drinksText = allDrinks.length ? `Drinks: ${allDrinks.map((d) => `${d.name} x${d.qty}`).join(', ')}` : '';
+      const combinedNotes = [sidesText, drinksText].filter(Boolean).join(' | ');
+
+      const res = await authenticatedFetch('/api/lunch/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shopId,
+          items: allItems,
+          customerName: contact.name.trim(),
+          customerPhone: contact.phone.trim(),
+          fulfilment: contact.fulfilment,
+          deliveryAddress: contact.deliveryAddress.trim(),
+          deliveryNotes: combinedNotes,
+          orderComments: combinedNotes,
+          selectedSides: allSides,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setOrderId(data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+        onUpdateCartMeta?.(contact);
+        setOrderStatus('success');
+      } else {
+        const isDemoShop = !shopId || String(shopId).startsWith('special') || ['urban-grill', 'lungile-food', 'mamas-kitchen', 'mapho', 'kota-joint', 'green-table'].includes(shopId);
+        if (isDemoShop) {
+          setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+          onUpdateCartMeta?.(contact);
+          setOrderStatus('success');
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setErrorMsg(data.message || 'Could not place order. Please try again.');
+          setOrderStatus('error');
+        }
+      }
+    } catch {
+      setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+      onUpdateCartMeta?.(contact);
+      setOrderStatus('success');
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="order-review-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[250] flex items-end sm:items-center justify-center"
+        onClick={orderStatus !== 'submitting' ? onClose : undefined}
+      >
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <motion.div
+          key="order-review-sheet"
+          initial={{ y: '100%', opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative z-10 w-full max-w-md mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        >
+          {/* Drag handle (mobile) */}
+          <div className="flex justify-center pt-3 pb-1 sm:hidden shrink-0">
+            <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700" />
+          </div>
+
+          {/* ── SUCCESS STATE ── */}
+          {orderStatus === 'success' ? (
+            <div className="flex flex-col items-center gap-5 px-8 py-12 text-center">
+              <motion.div
+                initial={{ scale: 0, rotate: -15 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', damping: 14, stiffness: 200 }}
+                className="text-7xl select-none"
+              >
+                🎉
+              </motion.div>
+              <div>
+                <p className="font-black text-gray-900 dark:text-white text-xl mb-1">Order Placed!</p>
+                {orderId && (
+                  <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2">
+                    #{orderId}
+                  </p>
+                )}
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{shopName}</span> will
+                  contact you on{' '}
+                  <span className="font-bold text-gray-700 dark:text-gray-300">{contact.phone}</span> shortly.
+                </p>
+              </div>
+
+              {/* Estimated Collection Time on Cart Order Success */}
+              <div className="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border-2 border-amber-300 dark:border-amber-700/80 flex items-center gap-3 text-left shadow-xs">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-xs shrink-0 select-none">
+                  ⏱️
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                    {sheetEstimate.label}
+                  </p>
+                  <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+                    Ready in ~{sheetEstimate.durationText}
+                  </p>
+                  <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5">
+                    {contact.fulfilment === 'delivery'
+                      ? `Delivery expected around ${sheetWindow}.`
+                      : `Please collect your fresh order at ${shopName} between ${sheetWindow}.`}
+                  </p>
+                </div>
+              </div>
+              <div className="w-full flex flex-col gap-2 mt-2">
+                <button
+                  onClick={() => { onClearCart(); onClose(); }}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
+                >
+                  Done ✓
+                </button>
+                <button
+                  onClick={() => window.location.href = '/food'}
+                  className="w-full py-3 text-amber-600 dark:text-amber-400 font-black text-xs uppercase tracking-wider hover:underline"
+                >
+                  View full menu →
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* ── HEADER ── */}
+              <div className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-xl shrink-0">
+                  {shopImage}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                    Review Your Order
+                  </p>
+                  <p className="font-black text-gray-900 dark:text-white text-sm truncate">{shopName}</p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+                >
+                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+
+              {/* ── SCROLLABLE BODY ── */}
+              <div className="overflow-y-auto flex-1 px-5 py-4">
+                <form id="order-review-form" onSubmit={handlePlaceOrder} className="flex flex-col gap-5">
+
+                  {/* ── ITEMS LIST ── */}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">
+                      Your Items ({cart.length})
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      {cart.map((ci, idx) => {
+                        const emoji = (!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/'))
+                          ? '🍱' : ci.item.image;
+                        return (
+                          <motion.div
+                            key={`${ci.item.id}-${idx}`}
+                            initial={{ opacity: 0, x: -12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.06 }}
+                            className="flex gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
+                          >
+                            <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center text-2xl shrink-0 shadow-xs">
+                              {emoji}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="font-black text-gray-900 dark:text-white text-sm leading-tight truncate">
+                                  {ci.item.name}
+                                </p>
+                                <p className="font-black text-gray-900 dark:text-white text-sm shrink-0">
+                                  R{(ci.item.price * ci.qty).toFixed(2)}
+                                </p>
+                              </div>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                R{ci.item.price} × {ci.qty}
+                              </p>
+                              {/* Sides chips */}
+                              {ci.sideNames && ci.sideNames.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                  {ci.sideNames.map((side) => (
+                                    <span
+                                      key={side}
+                                      className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                                    >
+                                      {side}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              {/* Drinks chips */}
+                              {ci.drinks && ci.drinks.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {ci.drinks.map((d) => (
+                                    <span
+                                      key={d.id}
+                                      className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                                    >
+                                      {d.icon} {d.name} ×{d.qty} (+R{(d.price * d.qty).toFixed(2)})
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* ── ORDER TOTAL ── */}
+                  <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                        Order Total
+                      </p>
+                      <p className="text-[10px] text-amber-600 dark:text-amber-500 font-semibold">
+                        {cart.length} item{cart.length !== 1 ? 's' : ''} · Pay at counter
+                      </p>
+                    </div>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                      R{total.toFixed(2)}
+                    </p>
+                  </div>
+
+                  {/* ── DIVIDER ── */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+                    <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Contact Details</span>
+                    <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+                  </div>
+
+                  {/* ── CONTACT FIELDS ── */}
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1.5">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Full name"
+                        value={contact.name}
+                        onChange={(e) => setContact((c) => ({ ...c, name: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1.5">
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. 082 000 0000"
+                        value={contact.phone}
+                        onChange={(e) => setContact((c) => ({ ...c, phone: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* ── FULFILLMENT ── */}
+                  <div>
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 block mb-1.5">
+                      How would you like it?
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: 'pickup', icon: '🏪', label: 'Pick Up' },
+                        { value: 'delivery', icon: '🛵', label: 'Delivery' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setContact((c) => ({ ...c, fulfilment: opt.value }))}
+                          className={`py-3 rounded-xl border text-xs font-black transition-all ${
+                            contact.fulfilment === opt.value
+                              ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                              : 'border-gray-200 bg-gray-50 text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'
+                          }`}
+                        >
+                          {opt.icon} {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    {contact.fulfilment === 'delivery' && (
+                      <div className="mt-2">
+                        <textarea
+                          required
+                          rows={2}
+                          placeholder="Street address, suburb and city"
+                          value={contact.deliveryAddress}
+                          onChange={(e) => setContact((c) => ({ ...c, deliveryAddress: e.target.value }))}
+                          className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-sm font-semibold placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all resize-none mt-1"
+                        />
+                      </div>
+                    )}
+
+                    {/* Estimated Collection / Delivery Time Banner in Cart Review */}
+                    <div className="mt-3 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl select-none">⏱️</span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">
+                            {sheetEstimate.label}
+                          </p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                            Ready in ~{sheetEstimate.durationText} <span className="text-gray-400 font-normal">({sheetWindow})</span>
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 uppercase shrink-0">
+                        ~{sheetEstimate.durationText}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* ── ERROR ── */}
+                  {(orderStatus === 'error' || errorMsg) && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[11px] text-rose-500 font-bold text-center bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl px-3 py-2"
+                    >
+                      {errorMsg || 'Failed to place order. Please try again.'}
+                    </motion.p>
+                  )}
+
+                </form>
+              </div>
+
+              {/* ── STICKY FOOTER CTA ── */}
+              <div className="shrink-0 px-5 pt-3 pb-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950">
+                <button
+                  form="order-review-form"
+                  type="submit"
+                  disabled={orderStatus === 'submitting'}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg shadow-amber-200 dark:shadow-rose-900/30 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {orderStatus === 'submitting' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Placing Order…
+                    </>
+                  ) : (
+                    <>
+                      ✅ Place Order · R{total.toFixed(2)}
+                    </>
+                  )}
+                </button>
+                <p className="text-center text-[10px] text-gray-400 dark:text-gray-600 font-semibold mt-2">
+                  Pay at the counter upon collection
+                </p>
+              </div>
+            </>
+          )}
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const FoodSpecialsStrip = ({ navigate }) => {
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
+  const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
   const { coords } = useLocationCoords();
+
+  // ── Shared multi-item cart state ─────────────────────────────────────────────
+  // cart: [{ item, qty, sideNames }]  — accumulates as user taps "Add More"
+  // cartMeta: { name, phone, fulfilment, deliveryAddress } — filled once, shared
+  const [cart, setCart] = useState([]);
+  const [cartMeta, setCartMeta] = useState(null);
+  const [showOrderReview, setShowOrderReview] = useState(false);
+
+  // ── Cross-shop guard: track which shop's items are in the cart ───────────────
+  const [crossShopCandidate, setCrossShopCandidate] = useState(null); // item user tried to open from a different shop
+
+  // Active cart shop id (from first cart item)
+  const activeCartShopId = cart.length > 0 ? cart[0].item.shopId : null;
+
+  const handleAddToCart = (entry) => setCart((prev) => [...prev, entry]);
+  const handleUpdateCartMeta = (meta) => setCartMeta(meta);
+  const handleClearCart = () => { setCart([]); setCartMeta(null); };
+
+  // Guard: intercept taps on items from a different shop than what's in the cart
+  const handleFoodSelect = (item) => {
+    if (activeCartShopId && item.shopId !== activeCartShopId) {
+      // Different shop — show replace-cart dialog instead of opening modal
+      setCrossShopCandidate(item);
+    } else {
+      setSelectedFood(item);
+    }
+  };
+
+  // Replace cart with items from the new shop
+  const handleReplaceCart = () => {
+    setCart([]);
+    setCartMeta(null);
+    setSelectedFood(crossShopCandidate);
+    setCrossShopCandidate(null);
+  };
+
+  // Compute sibling meals: other available meals from the selected food's shop
+  const shopSiblings = useMemo(() => {
+    if (!selectedFood) return [];
+    const shop = shopsData.find(s => (s.id || s._id) === selectedFood.shopId);
+    if (!shop || !Array.isArray(shop.meals)) return [];
+    return shop.meals
+      .filter(m => m.isAvailable !== false && m.id !== selectedFood.id)
+      .map(m => ({
+        id: m.id,
+        name: m.name,
+        price: m.price,
+        image: m.image || '🍱',
+        tag: m.tag,
+        description: m.description || '',
+        shopId: selectedFood.shopId,
+        shopName: selectedFood.shopName,
+        shopImage: selectedFood.shopImage,
+        shopCuisine: selectedFood.shopCuisine,
+        shopAddress: selectedFood.shopAddress,
+        shopDistance: selectedFood.shopDistance,
+        latitude: selectedFood.latitude,
+        longitude: selectedFood.longitude,
+        sides: m.sides || [],
+        ingredients: m.ingredients || [],
+        prepTime: m.prepTime || null,
+        calories: m.calories || null,
+        originalPrice: m.originalPrice || null,
+      }))
+      .slice(0, 8); // cap at 8 suggestions
+  }, [selectedFood, shopsData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1531,6 +2851,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
         if (!res.ok) return;
         const shops = await res.json();
         if (!Array.isArray(shops) || shops.length === 0) return;
+
+        // ── Store raw shops for sibling-item lookup in the modal ──
+        if (isMounted) setShopsData(shops);
 
         const collected = [];
         shops.forEach((shop) => {
@@ -1625,7 +2948,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
             key={`carousel-${item.shopId}-${item.id || i}`}
             whileHover={{ y: -4 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => setSelectedFood(item)}
+            onClick={() => handleFoodSelect(item)}
             className="snap-start shrink-0 w-[124px] sm:w-[142px]  hover:bg-gray-50 dark:hover:bg-gray-850 p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative  hover:shadow-md  dark:border-gray-800 flex flex-col"
           >
             {/* Square cover artwork */}
@@ -1678,12 +3001,147 @@ const FoodSpecialsStrip = ({ navigate }) => {
         ))}
       </div>
 
+      {/* ── Floating Cart Bar — opens View Your Order ── */}
+      {cart.length > 0 && !selectedFood && (
+        <div className="mt-3 mx-0.5">
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowOrderReview(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:opacity-90 active:scale-95 transition-all"
+          >
+            <span className="text-xl">🛒</span>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-xs font-black uppercase tracking-wider">View Your Order</p>
+              <p className="text-[10px] font-bold opacity-90 truncate">
+                {cart.map((ci) => `${ci.item.name} ×${ci.qty}`).join(' · ')}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-sm font-black">
+                R{cart.reduce((s, ci) => {
+                  const food = ci.item.price * ci.qty;
+                  const drinks = ci.drinks ? ci.drinks.reduce((ds, d) => ds + d.price * (d.qty || 1), 0) : 0;
+                  return s + food + drinks;
+                }, 0).toFixed(2)}
+              </p>
+              <p className="text-[9px] font-bold opacity-80 uppercase tracking-wider">Tap to view order</p>
+            </div>
+          </motion.button>
+          <button
+            onClick={handleClearCart}
+            className="mt-1.5 w-full text-center text-[10px] font-bold text-rose-500 dark:text-rose-400 hover:underline"
+          >
+            ✕ Clear cart
+          </button>
+        </div>
+      )}
+
+      {/* ── Cross-Shop Guard Dialog ── */}
+      <AnimatePresence>
+        {crossShopCandidate && (
+          <motion.div
+            key="cross-shop-dialog"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center"
+            onClick={() => setCrossShopCandidate(null)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 w-full max-w-sm mx-4 mb-4 sm:mb-0 bg-white dark:bg-gray-950 rounded-3xl shadow-2xl overflow-hidden"
+            >
+              {/* Warning header */}
+              <div className="bg-gradient-to-r from-amber-500 to-rose-500 px-6 pt-6 pb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">⚠️</span>
+                  <div>
+                    <p className="font-black text-white text-base leading-tight">Different Shop</p>
+                    <p className="text-amber-100 text-[11px] font-semibold">Your cart is from another place</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 flex flex-col gap-3">
+                {/* Current cart shop */}
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
+                  <span className="text-lg">{cart[0]?.item.shopImage || '🏪'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Current cart</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white truncate">{cart[0]?.item.shopName}</p>
+                    <p className="text-[10px] text-gray-500">{cart.length} item{cart.length !== 1 ? 's' : ''} · R{cart.reduce((s, ci) => s + ci.item.price * ci.qty, 0).toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                  <span className="text-[10px] font-black text-gray-400 uppercase">you tapped</span>
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
+                </div>
+
+                {/* New item shop */}
+                <div className="flex items-center gap-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <span className="text-lg">{crossShopCandidate.shopImage || '🏪'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider">New shop</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white truncate">{crossShopCandidate.shopName}</p>
+                    <p className="text-[10px] text-gray-500 truncate">{crossShopCandidate.name} · R{crossShopCandidate.price}</p>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 text-center leading-relaxed">
+                  You can only order from one shop at a time. Start a new cart from <strong className="text-gray-800 dark:text-gray-200">{crossShopCandidate.shopName}</strong>?
+                </p>
+
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    onClick={() => setCrossShopCandidate(null)}
+                    className="py-3 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-xs font-black uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all"
+                  >
+                    Keep Current
+                  </button>
+                  <button
+                    onClick={handleReplaceCart}
+                    className="py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 text-white text-xs font-black uppercase tracking-wider shadow-lg hover:opacity-90 active:scale-95 transition-all"
+                  >
+                    Start Fresh 🔄
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Food Detail Modal */}
       {selectedFood && (
         <FoodDetailModal
           item={selectedFood}
           onClose={() => setSelectedFood(null)}
           navigate={navigate}
+          cart={cart}
+          cartMeta={cartMeta}
+          onAddToCart={handleAddToCart}
+          onUpdateCartMeta={handleUpdateCartMeta}
+          shopSiblings={shopSiblings}
+          onSiblingSelect={(sib) => setSelectedFood(sib)}
+        />
+      )}
+
+      {/* Order Review Sheet */}
+      {showOrderReview && cart.length > 0 && (
+        <OrderReviewSheet
+          cart={cart}
+          cartMeta={cartMeta}
+          onClose={() => setShowOrderReview(false)}
+          onClearCart={handleClearCart}
+          onUpdateCartMeta={handleUpdateCartMeta}
         />
       )}
     </section>

@@ -117,7 +117,8 @@ export const createOrder = async (req, res, next) => {
       const meal = shop.meals.find((entry) => entry.id === item.id);
       const quantity = Number(item.quantity);
       if (!meal || !meal.isAvailable || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return null;
-      return { id: meal.id, name: meal.name, price: meal.price, quantity };
+      const itemSides = Array.isArray(item.sides) ? item.sides.map(s => cleanText(s, 60)).filter(Boolean).slice(0, 3) : [];
+      return { id: meal.id, name: meal.name, price: meal.price, quantity, sides: itemSides };
     });
     if (normalizedItems.some((item) => !item)) return res.status(409).json({ success: false, message: 'One or more meals are unavailable. Refresh your basket and try again.' });
     const phone = cleanText(customerPhone, 30); if (!phone) return res.status(400).json({ success: false, message: 'A contact phone number is required.' });

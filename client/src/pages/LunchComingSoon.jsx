@@ -1,24 +1,24 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Bike, 
-  CheckCircle2, 
-  Clock3, 
-  MapPin, 
-  Minus, 
-  Plus, 
-  ShoppingBag, 
-  Store, 
-  UtensilsCrossed, 
-  Users, 
-  PlusCircle, 
-  ChefHat, 
-  Phone, 
-  ShieldCheck, 
-  CreditCard, 
-  Bell, 
-  Sparkles, 
+import {
+  ArrowLeft,
+  Bike,
+  CheckCircle2,
+  Clock3,
+  MapPin,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Store,
+  UtensilsCrossed,
+  Users,
+  PlusCircle,
+  ChefHat,
+  Phone,
+  ShieldCheck,
+  CreditCard,
+  Bell,
+  Sparkles,
   X,
   Building2,
   Calendar,
@@ -33,21 +33,21 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { 
-  subscribeToShops, 
-  subscribeToOrders, 
-  createLunchOrder, 
-  createShop, 
-  addMealToShop, 
-  updateOrderStatus, 
+import {
+  subscribeToShops,
+  subscribeToOrders,
+  createLunchOrder,
+  createShop,
+  addMealToShop,
+  updateOrderStatus,
   createTableBooking,
   updateShop,
   updateMealInShop,
   deleteMealFromShop,
   rateShop
 } from '../services/lunchService';
-import { 
-  FOOD_EMOJIS, 
+import {
+  FOOD_EMOJIS,
   generateVendorMealAI
 } from '../utils/aiLunchAssistant';
 
@@ -58,6 +58,19 @@ const PRESET_MOODS = [
   { id: 'budget', label: '💰 Under R100' },
   { id: 'healthy', label: '🥗 Healthy & Fresh' },
   { id: 'comfort', label: '🍲 Comfort Food' },
+];
+
+export const VENDOR_DEFAULT_SIDES = [
+  'Chakalaka',
+  'Potatoes',
+  'Spinach',
+  'Sweet Potato',
+  'Beets',
+  'Cabbage',
+  'Pumpkin',
+  'Atchar',
+  'Pap',
+  'Salad'
 ];
 
 const SHOP_THEMES = [
@@ -457,7 +470,8 @@ export default function LunchComingSoon() {
     description: '',
     price: '',
     tag: 'Popular',
-    image: '🍱'
+    image: '🍱',
+    sides: [...VENDOR_DEFAULT_SIDES]
   });
 
   // Edit states
@@ -487,7 +501,8 @@ export default function LunchComingSoon() {
     description: '',
     price: '',
     tag: 'Popular',
-    image: '🍱'
+    image: '🍱',
+    sides: [...VENDOR_DEFAULT_SIDES]
   });
 
   // Selected Order for Receipt Modal
@@ -675,9 +690,9 @@ export default function LunchComingSoon() {
   // Handle direct navigation to register route or action parameter
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
-    const isRegister = 
-      location.pathname.endsWith('/register') || 
-      searchParams.get('action') === 'register' || 
+    const isRegister =
+      location.pathname.endsWith('/register') ||
+      searchParams.get('action') === 'register' ||
       searchParams.get('register') === 'true';
 
     if (isRegister) {
@@ -929,9 +944,8 @@ export default function LunchComingSoon() {
 
       setNotice({
         type: 'success',
-        message: `Order #${created.orderCode} placed successfully! ${
-          'Pay at the store counter upon pickup.'
-        }`
+        message: `Order #${created.orderCode} placed successfully! ${'Pay at the store counter upon pickup.'
+          }`
       });
     } catch (err) {
       console.error("Order error:", err);
@@ -980,9 +994,9 @@ export default function LunchComingSoon() {
       setNewShopForm({ name: '', cuisine: '', distance: '1.5 km', time: '20–30 min', image: '🥙', address: '', phone: '', whatsapp: '' });
     } catch (err) {
       console.error("Create shop error:", err);
-      setNotice({ 
-        type: 'error', 
-        message: err.message || `A shop with the name "${newShopForm.name}" already exists.` 
+      setNotice({
+        type: 'error',
+        message: err.message || `A shop with the name "${newShopForm.name}" already exists.`
       });
     }
   };
@@ -994,7 +1008,7 @@ export default function LunchComingSoon() {
     try {
       await addMealToShop(selectedShopId, newMealForm);
       setShowAddMealModal(false);
-      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱' });
+      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [...VENDOR_DEFAULT_SIDES] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
@@ -1063,7 +1077,7 @@ export default function LunchComingSoon() {
   return (
     <main className="app-safe-top min-h-screen app-safe-content-bottom pb-36 sm:pb-8 bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
       <div className="mx-auto max-w-6xl w-full">
-        
+
         {/* Top Bar Navigation */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-200/60 pb-5">
           <div className="flex items-center gap-3">
@@ -1103,22 +1117,20 @@ export default function LunchComingSoon() {
               <button
                 type="button"
                 onClick={() => setViewTab('customer')}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
-                  viewTab === 'customer'
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${viewTab === 'customer'
                     ? 'bg-amber-600 text-white shadow'
                     : 'text-amber-900 hover:bg-amber-200/50'
-                }`}
+                  }`}
               >
                 <ShoppingBag className="h-4 w-4" /> Customer Ordering
               </button>
               <button
                 type="button"
                 onClick={() => setViewTab('dashboard')}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${
-                  viewTab === 'dashboard'
+                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${viewTab === 'dashboard'
                     ? 'bg-amber-600 text-white shadow'
                     : 'text-amber-900 hover:bg-amber-200/50'
-                }`}
+                  }`}
               >
                 <ChefHat className="h-4 w-4" /> Food Manager Dashboard
                 {isShopOwner && activeShopOrders.length > 0 && (
@@ -1138,13 +1150,12 @@ export default function LunchComingSoon() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className={`mt-4 flex items-center justify-between gap-3 rounded-2xl p-4 text-sm font-semibold shadow-sm ring-1 ${
-                notice.type === 'error'
+              className={`mt-4 flex items-center justify-between gap-3 rounded-2xl p-4 text-sm font-semibold shadow-sm ring-1 ${notice.type === 'error'
                   ? 'bg-rose-50 text-rose-900 ring-rose-300'
                   : notice.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-900 ring-emerald-300'
-                  : 'bg-blue-50 text-blue-900 ring-blue-300'
-              }`}
+                    ? 'bg-emerald-50 text-emerald-900 ring-emerald-300'
+                    : 'bg-blue-50 text-blue-900 ring-blue-300'
+                }`}
             >
               <div className="flex items-center gap-3">
                 {notice.type === 'error' ? (
@@ -1205,17 +1216,16 @@ export default function LunchComingSoon() {
                 return (
                   <div
                     key={ord.id || ord._id}
-                    className={`relative rounded-3xl border-2 border-dashed shadow-md transition-all hover:shadow-xl p-5 overflow-hidden font-sans ${theme.bg} ${
-                      isReady
+                    className={`relative rounded-3xl border-2 border-dashed shadow-md transition-all hover:shadow-xl p-5 overflow-hidden font-sans ${theme.bg} ${isReady
                         ? 'border-emerald-500/90 ring-2 ring-emerald-400/50'
                         : overdue
-                        ? 'border-rose-500/90 ring-2 ring-rose-400/50'
-                        : isPreparing
-                        ? 'border-amber-400/90 ring-2 ring-amber-300/40'
-                        : isCompleted
-                        ? 'border-slate-300 dark:border-gray-700 opacity-95'
-                        : theme.border
-                    }`}
+                          ? 'border-rose-500/90 ring-2 ring-rose-400/50'
+                          : isPreparing
+                            ? 'border-amber-400/90 ring-2 ring-amber-300/40'
+                            : isCompleted
+                              ? 'border-slate-300 dark:border-gray-700 opacity-95'
+                              : theme.border
+                      }`}
                   >
                     {/* Overdue Collection Alert Banner for Customer */}
                     {overdue && (
@@ -1360,11 +1370,10 @@ export default function LunchComingSoon() {
                             type="button"
                             onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
                             title="Set status to 1. Received"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                              !isPreparing && !isReady && !isCompleted
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${!isPreparing && !isReady && !isCompleted
                                 ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 border-amber-600'
                                 : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                            }`}
+                              }`}
                           >
                             <span>📝</span>
                             <span className="leading-tight">1. Received</span>
@@ -1376,13 +1385,12 @@ export default function LunchComingSoon() {
                             type="button"
                             onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
                             title="Set status to 2. Preparing Food"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                              isPreparing
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isPreparing
                                 ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse border-amber-600'
                                 : isReady || isCompleted
-                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                            }`}
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                  : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                              }`}
                           >
                             <span>👨‍🍳</span>
                             <span className="leading-tight">2. Prepare</span>
@@ -1394,13 +1402,12 @@ export default function LunchComingSoon() {
                             type="button"
                             onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
                             title="Set status to 3. Ready for Collection"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                              isReady
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isReady
                                 ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce border-emerald-700'
                                 : isCompleted
-                                ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                            }`}
+                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                  : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                              }`}
                           >
                             <span>🛍️</span>
                             <span className="leading-tight">3. Ready</span>
@@ -1412,11 +1419,10 @@ export default function LunchComingSoon() {
                             type="button"
                             onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
                             title="Set status to 4. Completed / Collected"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                              isCompleted
+                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isCompleted
                                 ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400 border-emerald-800'
                                 : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                            }`}
+                              }`}
                           >
                             <span>✅</span>
                             <span className="leading-tight">4. Complete</span>
@@ -1427,45 +1433,41 @@ export default function LunchComingSoon() {
                         /* Regular Customer Stepper */
                         <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-[11px] font-black">
                           {/* Step 1: Received */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                            !isPreparing && !isReady && !isCompleted
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${!isPreparing && !isReady && !isCompleted
                               ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
                               : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                          }`}>
+                            }`}>
                             <span>📝</span>
                             <span className="leading-tight">1. Received</span>
                           </div>
 
                           {/* Step 2: Preparing Food */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                            isPreparing
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isPreparing
                               ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
                               : isReady || isCompleted
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                          }`}>
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                            }`}>
                             <span>👨‍🍳</span>
                             <span className="leading-tight">2. Preparing</span>
                           </div>
 
                           {/* Step 3: Ready for Collection */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                            isReady
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isReady
                               ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
                               : isCompleted
-                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                          }`}>
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                            }`}>
                             <span>🛍️</span>
                             <span className="leading-tight">3. Ready</span>
                           </div>
 
                           {/* Step 4: Collected */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                            isCompleted
+                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isCompleted
                               ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
                               : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                          }`}>
+                            }`}>
                             <span>✅</span>
                             <span className="leading-tight">4. Collected</span>
                           </div>
@@ -1633,9 +1635,8 @@ export default function LunchComingSoon() {
                       return (
                         <div
                           key={ord.id || ord._id}
-                          className={`rounded-2xl border-2 border-dashed ${theme.border} ${theme.bg} p-3.5 shadow-sm relative overflow-hidden ${
-                            isMyOrder ? 'ring-2 ring-amber-500 shadow-md' : ''
-                          }`}
+                          className={`rounded-2xl border-2 border-dashed ${theme.border} ${theme.bg} p-3.5 shadow-sm relative overflow-hidden ${isMyOrder ? 'ring-2 ring-amber-500 shadow-md' : ''
+                            }`}
                         >
                           {isMyOrder && (
                             <div className="absolute top-2 right-2 rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-xs">
@@ -1665,42 +1666,38 @@ export default function LunchComingSoon() {
                           {/* 4-Step Progress Stepper */}
                           <div className="mt-2.5">
                             <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
-                                ord.status === 'Pending'
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Pending'
                                   ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
                                   : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                              }`}>
+                                }`}>
                                 <span>📝</span>
                                 <span className="leading-tight text-[9px]">1. Received</span>
                               </div>
 
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
-                                ord.status === 'Preparing'
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Preparing'
                                   ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
                                   : ord.status === 'Ready for Collection' || ord.status === 'Completed'
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                              }`}>
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                                }`}>
                                 <span>👨‍🍳</span>
                                 <span className="leading-tight text-[9px]">2. Prepare</span>
                               </div>
 
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
-                                ord.status === 'Ready for Collection'
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Ready for Collection'
                                   ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
                                   : ord.status === 'Completed'
-                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                              }`}>
+                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                                }`}>
                                 <span>🛍️</span>
                                 <span className="leading-tight text-[9px]">3. Ready</span>
                               </div>
 
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${
-                                ord.status === 'Completed'
+                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Completed'
                                   ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
                                   : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                              }`}>
+                                }`}>
                                 <span>✅</span>
                                 <span className="leading-tight text-[9px]">4. Done</span>
                               </div>
@@ -1797,70 +1794,68 @@ export default function LunchComingSoon() {
 
                 {/* Horizontal Scrollable Snap Row */}
                 <div className="overflow-hidden">
-                <div
-                  ref={shopSliderRef}
-                  className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {shops.map((item) => {
-                    const shopTheme = getShopTheme(item);
-                    const isSelected = selectedShopId === item.id;
+                  <div
+                    ref={shopSliderRef}
+                    className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {shops.map((item) => {
+                      const shopTheme = getShopTheme(item);
+                      const isSelected = selectedShopId === item.id;
 
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedShopId(item.id)}
-                        className={`snap-start shrink-0 w-[46vw] sm:w-[195px] max-w-[195px] rounded-2xl border p-3 sm:p-4 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden ${
-                          isSelected ? shopTheme.cardActive : shopTheme.cardNormal
-                        }`}
-                      >
-                        {/* Selected accent bar at top */}
-                        {isSelected && (
-                          <span className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl ${shopTheme.accentBg}`} />
-                        )}
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setSelectedShopId(item.id)}
+                          className={`snap-start shrink-0 w-[46vw] sm:w-[195px] max-w-[195px] rounded-2xl border p-3 sm:p-4 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden ${isSelected ? shopTheme.cardActive : shopTheme.cardNormal
+                            }`}
+                        >
+                          {/* Selected accent bar at top */}
+                          {isSelected && (
+                            <span className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl ${shopTheme.accentBg}`} />
+                          )}
 
-                        {/* Icon & Rating */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-3xl filter drop-shadow-sm leading-none">{item.image || '🏪'}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-black flex items-center gap-1 border ${
-                            isSelected ? shopTheme.badge : 'bg-amber-50 text-amber-900 border-amber-200'
-                          }`}>
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                            {item.rating || '4.8'}
-                          </span>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                          <span className="block text-sm font-black text-gray-900 dark:text-white tracking-tight leading-snug line-clamp-2">
-                            {item.name}
-                          </span>
-                          <div className="pt-0.5">
-                            <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[10px] font-bold text-amber-900 truncate max-w-full">
-                              {item.cuisine || 'Local Favorite'}
+                          {/* Icon & Rating */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-3xl filter drop-shadow-sm leading-none">{item.image || '🏪'}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-black flex items-center gap-1 border ${isSelected ? shopTheme.badge : 'bg-amber-50 text-amber-900 border-amber-200'
+                              }`}>
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              {item.rating || '4.8'}
                             </span>
                           </div>
-                          <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-white pt-0.5">
-                            <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
-                            <span className="truncate">{item.distance || '1.0 km'}</span>
-                          </p>
-                          {/* Open / Closed status */}
-                          <span className={`inline-flex items-center gap-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${ item.isOpen !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700' }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${ item.isOpen !== false ? 'bg-emerald-500 animate-pulse' : 'bg-red-500' }`} />
-                            {item.isOpen !== false ? 'Open' : 'Closed'}
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  })}
 
-                  {/* Empty state */}
-                  {shops.length === 0 && (
-                    <div className="flex items-center justify-center w-full py-10 text-sm text-gray-400 font-medium">
-                      No shops registered yet. Be the first to add one!
-                    </div>
-                  )}
-                </div>
+                          <div className="mt-3 space-y-1">
+                            <span className="block text-sm font-black text-gray-900 dark:text-white tracking-tight leading-snug line-clamp-2">
+                              {item.name}
+                            </span>
+                            <div className="pt-0.5">
+                              <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[10px] font-bold text-amber-900 truncate max-w-full">
+                                {item.cuisine || 'Local Favorite'}
+                              </span>
+                            </div>
+                            <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-white pt-0.5">
+                              <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
+                              <span className="truncate">{item.distance || '1.0 km'}</span>
+                            </p>
+                            {/* Open / Closed status */}
+                            <span className={`inline-flex items-center gap-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${item.isOpen !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${item.isOpen !== false ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                              {item.isOpen !== false ? 'Open' : 'Closed'}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+
+                    {/* Empty state */}
+                    {shops.length === 0 && (
+                      <div className="flex items-center justify-center w-full py-10 text-sm text-gray-400 font-medium">
+                        No shops registered yet. Be the first to add one!
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Dot indicators */}
@@ -1871,11 +1866,10 @@ export default function LunchComingSoon() {
                         key={s.id}
                         type="button"
                         onClick={() => setSelectedShopId(s.id)}
-                        className={`rounded-full transition-all duration-200 cursor-pointer ${
-                          selectedShopId === s.id
+                        className={`rounded-full transition-all duration-200 cursor-pointer ${selectedShopId === s.id
                             ? 'w-5 h-2 bg-amber-500'
                             : 'w-2 h-2 bg-amber-200 hover:bg-amber-300'
-                        }`}
+                          }`}
                         aria-label={`Select ${s.name}`}
                       />
                     ))}
@@ -1886,7 +1880,7 @@ export default function LunchComingSoon() {
               {/* Selected Restaurant Hero & Meals Details */}
               {currentShop && (
                 <article className="mt-6 rounded-3xl bg-white dark:bg-gray-900 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
-                  
+
                   {/* Shop Theme Header Banner with Live Food & Culinary Background */}
                   <div className={`relative overflow-hidden rounded-none sm:rounded-3xl bg-gradient-to-r ${activeTheme.heroBg} p-5 sm:p-7 text-center shadow-xl border-b sm:border min-w-0 max-w-full`}>
                     {/* Ambient Glows */}
@@ -1977,11 +1971,10 @@ export default function LunchComingSoon() {
                         </span>
 
                         {/* Open / Closed Status */}
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider border ${
-                          currentShop.isOpen !== false
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider border ${currentShop.isOpen !== false
                             ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/40'
                             : 'bg-red-500/25 text-red-200 border-red-400/40'
-                        }`}>
+                          }`}>
                           <span className={`h-2 w-2 rounded-full ${currentShop.isOpen !== false ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
                           {currentShop.isOpen !== false ? 'Open Now' : 'Closed'}
                         </span>
@@ -2044,22 +2037,20 @@ export default function LunchComingSoon() {
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(false)}
-                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                          !showReviewsTab
+                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${!showReviewsTab
                             ? activeTheme.tabActive
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                        }`}
+                          }`}
                       >
                         <UtensilsCrossed className="h-3.5 w-3.5" /> Food Menu ({currentShop.meals?.length || 0})
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowReviewsTab(true)}
-                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                          showReviewsTab
+                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${showReviewsTab
                             ? activeTheme.tabActive
                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                        }`}
+                          }`}
                       >
                         <Star className="h-3.5 w-3.5 fill-current text-amber-300" />
                         Customer Reviews ({currentShop.reviews?.length || 0})
@@ -2106,9 +2097,8 @@ export default function LunchComingSoon() {
                               visibleMeals.map((meal) => (
                                 <div
                                   key={meal.id}
-                                  className={`snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 transition-all duration-200 overflow-hidden flex flex-col ${
-                                    isCurrentShopClosed ? 'opacity-60 grayscale' : 'hover:ring-amber-200'
-                                  }`}
+                                  className={`snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 transition-all duration-200 overflow-hidden flex flex-col ${isCurrentShopClosed ? 'opacity-60 grayscale' : 'hover:ring-amber-200'
+                                    }`}
                                 >
                                   {/* Meal header */}
                                   <div className="px-4 pt-4 pb-2 flex items-start gap-3">
@@ -2147,7 +2137,8 @@ export default function LunchComingSoon() {
                                                 description: meal.description || '',
                                                 price: meal.price,
                                                 tag: meal.tag || 'Popular',
-                                                image: meal.image || '🍱'
+                                                image: meal.image || '🍱',
+                                                sides: Array.isArray(meal.sides) && meal.sides.length > 0 ? meal.sides : [...VENDOR_DEFAULT_SIDES]
                                               });
                                               setShowEditMealModal(true);
                                             }}
@@ -2165,11 +2156,10 @@ export default function LunchComingSoon() {
                                           <button
                                             type="button"
                                             onClick={() => updateMealInShop(currentShop.id, meal.id, { ...meal, isAvailable: meal.isAvailable === false })}
-                                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-                                              meal.isAvailable === false
+                                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${meal.isAvailable === false
                                                 ? 'bg-red-600 text-white hover:bg-red-700'
                                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                                            }`}
+                                              }`}
                                           >
                                             {meal.isAvailable === false ? 'Restock' : 'Sold out'}
                                           </button>
@@ -2210,11 +2200,10 @@ export default function LunchComingSoon() {
                                 {[1, 2, 3, 4, 5].map((star) => (
                                   <Star
                                     key={star}
-                                    className={`h-4 w-4 ${
-                                      star <= Math.round(parseFloat(currentShop.rating || 5))
+                                    className={`h-4 w-4 ${star <= Math.round(parseFloat(currentShop.rating || 5))
                                         ? 'fill-amber-400 text-amber-400'
                                         : 'text-gray-300'
-                                    }`}
+                                      }`}
                                   />
                                 ))}
                               </div>
@@ -2275,72 +2264,72 @@ export default function LunchComingSoon() {
                         </p>
                       )}
                       <fieldset disabled={isCurrentShopClosed} className={isCurrentShopClosed ? 'opacity-60 grayscale' : ''}>
-                      <div className="rounded-2xl bg-amber-50/60 p-4 border border-amber-200/50">
-                        <p className="text-sm font-semibold text-amber-900">
-                          Reserve a dining table at <span className="font-extrabold">{currentShop.name}</span>.
-                        </p>
-                      </div>
+                        <div className="rounded-2xl bg-amber-50/60 p-4 border border-amber-200/50">
+                          <p className="text-sm font-semibold text-amber-900">
+                            Reserve a dining table at <span className="font-extrabold">{currentShop.name}</span>.
+                          </p>
+                        </div>
 
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                          Your Name
-                          <input
-                            required
-                            value={booking.name}
-                            onChange={(e) => setBooking({ ...booking, name: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                            placeholder="Full name"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                          Contact Phone
-                          <input
-                            required
-                            type="tel"
-                            value={booking.phone}
-                            onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                            placeholder="+27 82 123 4567"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                          Date
-                          <input
-                            required
-                            type="date"
-                            value={booking.date}
-                            onChange={(e) => setBooking({ ...booking, date: e.target.value })}
-                            className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                          />
-                        </label>
-                        <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                          Time & Guests
-                          <div className="flex gap-2 mt-1.5">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
+                            Your Name
                             <input
-                              type="time"
-                              value={booking.time}
-                              onChange={(e) => setBooking({ ...booking, time: e.target.value })}
-                              className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              required
+                              value={booking.name}
+                              onChange={(e) => setBooking({ ...booking, name: e.target.value })}
+                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              placeholder="Full name"
                             />
-                            <select
-                              value={booking.guests}
-                              onChange={(e) => setBooking({ ...booking, guests: e.target.value })}
-                              className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                            >
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((num) => (
-                                <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </label>
-                      </div>
+                          </label>
+                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
+                            Contact Phone
+                            <input
+                              required
+                              type="tel"
+                              value={booking.phone}
+                              onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
+                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              placeholder="+27 82 123 4567"
+                            />
+                          </label>
+                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
+                            Date
+                            <input
+                              required
+                              type="date"
+                              value={booking.date}
+                              onChange={(e) => setBooking({ ...booking, date: e.target.value })}
+                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                            />
+                          </label>
+                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
+                            Time & Guests
+                            <div className="flex gap-2 mt-1.5">
+                              <input
+                                type="time"
+                                value={booking.time}
+                                onChange={(e) => setBooking({ ...booking, time: e.target.value })}
+                                className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              />
+                              <select
+                                value={booking.guests}
+                                onChange={(e) => setBooking({ ...booking, guests: e.target.value })}
+                                className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
+                              >
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((num) => (
+                                  <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </label>
+                        </div>
 
-                      <button
-                        type="submit"
-                        className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white"
-                      >
-                        Request Table Booking
-                      </button>
+                        <button
+                          type="submit"
+                          className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white"
+                        >
+                          Request Table Booking
+                        </button>
                       </fieldset>
                     </form>
                   )}
@@ -2445,21 +2434,20 @@ export default function LunchComingSoon() {
                   <button
                     type="button"
                     onClick={() => handleToggleShopOpen(dashboardShop)}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black shadow transition cursor-pointer border-2 ${
-                      dashboardShop.isOpen !== false
+                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black shadow transition cursor-pointer border-2 ${dashboardShop.isOpen !== false
                         ? 'bg-emerald-500 border-emerald-400 text-white hover:bg-emerald-600'
                         : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
-                    }`}
+                      }`}
                     title={dashboardShop.isOpen !== false ? 'Click to CLOSE shop' : 'Click to OPEN shop'}
                   >
-                    <span className={`h-2 w-2 rounded-full ${ dashboardShop.isOpen !== false ? 'bg-white dark:bg-gray-900 animate-pulse' : 'bg-gray-500'}`} />
+                    <span className={`h-2 w-2 rounded-full ${dashboardShop.isOpen !== false ? 'bg-white dark:bg-gray-900 animate-pulse' : 'bg-gray-500'}`} />
                     {dashboardShop.isOpen !== false ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
                   </button>
                 )}
 
                 <button
                   type="button"
-                      onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
+                  onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
                   className="rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-gray-950 shadow transition hover:bg-amber-300"
                 >
                   + {isShopOwner ? 'Add Another Shop' : 'Register My Shop'}
@@ -2507,11 +2495,10 @@ export default function LunchComingSoon() {
                       key={s.id}
                       type="button"
                       onClick={() => setSelectedShopId(s.id)}
-                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition cursor-pointer ${
-                        dashboardShop?.id === s.id
+                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition cursor-pointer ${dashboardShop?.id === s.id
                           ? 'bg-amber-600 text-white shadow'
                           : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white ring-1 ring-gray-200 hover:bg-amber-50'
-                      }`}
+                        }`}
                     >
                       {s.image} {s.name}
                     </button>
@@ -2705,10 +2692,10 @@ export default function LunchComingSoon() {
                                     {ord.status === 'Completed'
                                       ? '✅ Step 4: Completed'
                                       : ord.status === 'Ready for Collection'
-                                      ? '🛍️ Step 3: Ready'
-                                      : ord.status === 'Preparing'
-                                      ? '👨‍🍳 Step 2: Preparing'
-                                      : '📝 Step 1: Received'}
+                                        ? '🛍️ Step 3: Ready'
+                                        : ord.status === 'Preparing'
+                                          ? '👨‍🍳 Step 2: Preparing'
+                                          : '📝 Step 1: Received'}
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-4 gap-1.5 text-center text-xs font-black">
@@ -2717,11 +2704,10 @@ export default function LunchComingSoon() {
                                     type="button"
                                     onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
                                     title="Set status to 1. Received"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
-                                      ord.status === 'Pending'
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Pending'
                                         ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
                                         : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                    }`}
+                                      }`}
                                   >
                                     <span className="text-base">📝</span>
                                     <span className="leading-tight text-[11px]">1. Received</span>
@@ -2733,13 +2719,12 @@ export default function LunchComingSoon() {
                                     type="button"
                                     onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
                                     title="Set status to 2. Preparing Food"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
-                                      ord.status === 'Preparing'
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Preparing'
                                         ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
                                         : ord.status === 'Ready for Collection' || ord.status === 'Completed'
-                                        ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                        : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                    }`}
+                                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                      }`}
                                   >
                                     <span className="text-base">👨‍🍳</span>
                                     <span className="leading-tight text-[11px]">2. Prepare</span>
@@ -2751,13 +2736,12 @@ export default function LunchComingSoon() {
                                     type="button"
                                     onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
                                     title="Set status to 3. Ready for Collection"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
-                                      ord.status === 'Ready for Collection'
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Ready for Collection'
                                         ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
                                         : ord.status === 'Completed'
-                                        ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                        : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                    }`}
+                                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                                      }`}
                                   >
                                     <span className="text-base">🛍️</span>
                                     <span className="leading-tight text-[11px]">3. Ready</span>
@@ -2769,11 +2753,10 @@ export default function LunchComingSoon() {
                                     type="button"
                                     onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
                                     title="Set status to 4. Completed / Collected"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${
-                                      ord.status === 'Completed'
+                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Completed'
                                         ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
                                         : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                    }`}
+                                      }`}
                                   >
                                     <span className="text-base">✅</span>
                                     <span className="leading-tight text-[11px]">4. Complete</span>
@@ -2900,7 +2883,7 @@ export default function LunchComingSoon() {
                                   <span className="text-emerald-700 dark:text-emerald-400">{formatPrice(ord.total)}</span>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-emerald-100 dark:border-gray-800">
                                 <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100/60 px-2 py-1 rounded-lg">
                                   Collected
@@ -2977,17 +2960,16 @@ export default function LunchComingSoon() {
                     {shopInsights.map((insight) => (
                       <div
                         key={insight.title}
-                        className={`rounded-2xl border p-4 ${
-                          insight.tone === 'emerald'
+                        className={`rounded-2xl border p-4 ${insight.tone === 'emerald'
                             ? 'border-emerald-200 bg-emerald-50'
                             : insight.tone === 'rose'
-                            ? 'border-rose-200 bg-rose-50'
-                            : insight.tone === 'violet'
-                            ? 'border-violet-200 bg-violet-50'
-                            : insight.tone === 'sky'
-                            ? 'border-sky-200 bg-sky-50'
-                            : 'border-amber-200 bg-amber-50'
-                        }`}
+                              ? 'border-rose-200 bg-rose-50'
+                              : insight.tone === 'violet'
+                                ? 'border-violet-200 bg-violet-50'
+                                : insight.tone === 'sky'
+                                  ? 'border-sky-200 bg-sky-50'
+                                  : 'border-amber-200 bg-amber-50'
+                          }`}
                       >
                         <div className="flex items-start gap-2">
                           <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-gray-700 dark:text-white" />
@@ -3289,10 +3271,10 @@ export default function LunchComingSoon() {
                     {activeReceiptOrder.status === 'Completed'
                       ? 'Step 4 of 4: Collected ✅'
                       : activeReceiptOrder.status === 'Ready for Collection'
-                      ? 'Step 3 of 4: Ready for Collection'
-                      : activeReceiptOrder.status === 'Preparing'
-                      ? 'Step 2 of 4: Preparing Food'
-                      : 'Step 1 of 4: Order Received'}
+                        ? 'Step 3 of 4: Ready for Collection'
+                        : activeReceiptOrder.status === 'Preparing'
+                          ? 'Step 2 of 4: Preparing Food'
+                          : 'Step 1 of 4: Order Received'}
                   </span>
                 </div>
 
@@ -3304,11 +3286,10 @@ export default function LunchComingSoon() {
                       type="button"
                       onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Pending')}
                       title="Set status to 1. Received"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                        activeReceiptOrder.status === 'Pending'
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Pending'
                           ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
                           : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm">📝</span>
                       <span className="leading-tight text-[10px]">1. Received</span>
@@ -3320,13 +3301,12 @@ export default function LunchComingSoon() {
                       type="button"
                       onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Preparing')}
                       title="Set status to 2. Preparing Food"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                        activeReceiptOrder.status === 'Preparing'
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Preparing'
                           ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
                           : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
-                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                      }`}
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                            : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                        }`}
                     >
                       <span className="text-sm">👨‍🍳</span>
                       <span className="leading-tight text-[10px]">2. Prepare</span>
@@ -3338,13 +3318,12 @@ export default function LunchComingSoon() {
                       type="button"
                       onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Ready for Collection')}
                       title="Set status to 3. Ready for Collection"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                        activeReceiptOrder.status === 'Ready for Collection'
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Ready for Collection'
                           ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
                           : activeReceiptOrder.status === 'Completed'
-                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                      }`}
+                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                            : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                        }`}
                     >
                       <span className="text-sm">🛍️</span>
                       <span className="leading-tight text-[10px]">3. Ready</span>
@@ -3356,11 +3335,10 @@ export default function LunchComingSoon() {
                       type="button"
                       onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Completed')}
                       title="Set status to 4. Completed / Collected"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${
-                        activeReceiptOrder.status === 'Completed'
+                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Completed'
                           ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
                           : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                      }`}
+                        }`}
                     >
                       <span className="text-sm">✅</span>
                       <span className="leading-tight text-[10px]">4. Complete</span>
@@ -3370,42 +3348,38 @@ export default function LunchComingSoon() {
                 ) : (
                   /* Customer: Visual Stepper */
                   <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                      activeReceiptOrder.status === 'Pending'
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Pending'
                         ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
                         : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                    }`}>
+                      }`}>
                       <span>📝</span>
                       <span className="leading-tight">1. Received</span>
                     </div>
 
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                      activeReceiptOrder.status === 'Preparing'
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Preparing'
                         ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
                         : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                    }`}>
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                      }`}>
                       <span>👨‍🍳</span>
                       <span className="leading-tight">2. Preparing</span>
                     </div>
 
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                      activeReceiptOrder.status === 'Ready for Collection'
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Ready for Collection'
                         ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
                         : activeReceiptOrder.status === 'Completed'
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                    }`}>
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
+                      }`}>
                       <span>🛍️</span>
                       <span className="leading-tight">3. Ready</span>
                     </div>
 
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${
-                      activeReceiptOrder.status === 'Completed'
+                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Completed'
                         ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                    }`}>
+                      }`}>
                       <span>✅</span>
                       <span className="leading-tight">4. Collected</span>
                     </div>
@@ -3630,11 +3604,10 @@ export default function LunchComingSoon() {
                       key={cat}
                       type="button"
                       onClick={() => setNewShopForm({ ...newShopForm, cuisine: cat })}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
-                        newShopForm.cuisine === cat
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${newShopForm.cuisine === cat
                           ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
                           : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
-                      }`}
+                        }`}
                     >
                       {cat}
                     </button>
@@ -3780,9 +3753,8 @@ export default function LunchComingSoon() {
                             const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
                             setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
                           }}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
-                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
-                          }`}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
+                            }`}
                         >
                           {day}
                         </button>
@@ -3799,14 +3771,12 @@ export default function LunchComingSoon() {
                   <button
                     type="button"
                     onClick={() => setNewShopForm(prev => ({ ...prev, isOpen: !prev.isOpen }))}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 cursor-pointer ${
-                      newShopForm.isOpen ? 'bg-emerald-500' : 'bg-gray-300'
-                    }`}
+                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 cursor-pointer ${newShopForm.isOpen ? 'bg-emerald-500' : 'bg-gray-300'
+                      }`}
                   >
-                    <span className={`inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-900 shadow-md transition-transform duration-300 ${
-                      newShopForm.isOpen ? 'translate-x-8' : 'translate-x-1'
-                    }`} />
-                    <span className={`absolute text-[9px] font-black ${ newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500 dark:text-white'}`}>
+                    <span className={`inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-900 shadow-md transition-transform duration-300 ${newShopForm.isOpen ? 'translate-x-8' : 'translate-x-1'
+                      }`} />
+                    <span className={`absolute text-[9px] font-black ${newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500 dark:text-white'}`}>
                       {newShopForm.isOpen ? 'ON' : 'OFF'}
                     </span>
                   </button>
@@ -3985,11 +3955,10 @@ export default function LunchComingSoon() {
                       key={cat}
                       type="button"
                       onClick={() => setEditShopForm({ ...editShopForm, cuisine: cat })}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${
-                        editShopForm.cuisine === cat
+                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${editShopForm.cuisine === cat
                           ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
                           : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
-                      }`}
+                        }`}
                     >
                       {cat}
                     </button>
@@ -4132,9 +4101,8 @@ export default function LunchComingSoon() {
                             const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
                             setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
                           }}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
-                            isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
-                          }`}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
+                            }`}
                         >
                           {day}
                         </button>
@@ -4265,6 +4233,48 @@ export default function LunchComingSoon() {
                 </div>
               </div>
 
+              {/* Available Sides for this Meal */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-gray-700 dark:text-white block">
+                    Available Sides for this Meal (Customer selects 3 sides)
+                  </label>
+                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">
+                    {editMealForm.sides?.length || 0} offered
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
+                  Tap to add/remove sides offered for this meal:
+                </p>
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-28 overflow-y-auto">
+                  {VENDOR_DEFAULT_SIDES.map((side) => {
+                    const isChecked = (editMealForm.sides || []).includes(side);
+                    return (
+                      <button
+                        key={side}
+                        type="button"
+                        onClick={() => {
+                          setEditMealForm((prev) => {
+                            const currentSides = prev.sides || [];
+                            const updated = currentSides.includes(side)
+                              ? currentSides.filter((s) => s !== side)
+                              : [...currentSides, side];
+                            return { ...prev, sides: updated };
+                          });
+                        }}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
+                          isChecked
+                            ? 'bg-amber-500 text-white border-amber-600'
+                            : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
+                        }`}
+                      >
+                        {side}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow hover:bg-amber-600 transition"
@@ -4313,9 +4323,8 @@ export default function LunchComingSoon() {
                       className="p-1 transition transform hover:scale-125 focus:outline-none"
                     >
                       <Star
-                        className={`h-7 w-7 ${
-                          star <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                        }`}
+                        className={`h-7 w-7 ${star <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
+                          }`}
                       />
                     </button>
                   ))}
@@ -4336,9 +4345,8 @@ export default function LunchComingSoon() {
                       className="p-1 transition transform hover:scale-125 focus:outline-none"
                     >
                       <Star
-                        className={`h-7 w-7 ${
-                          star <= foodRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                        }`}
+                        className={`h-7 w-7 ${star <= foodRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
+                          }`}
                       />
                     </button>
                   ))}
