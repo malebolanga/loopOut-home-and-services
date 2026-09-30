@@ -19,7 +19,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -40,6 +40,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { isNativeApp } from '../utils/nativeApp';
 
 
 import {
@@ -1164,9 +1165,50 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
         }),
       });
 
+      const recordLocalOrder = (finalCode) => {
+        try {
+          const newOrderRecord = {
+            id: finalCode,
+            _id: finalCode,
+            orderCode: finalCode,
+            shopId: item.shopId,
+            shopName: item.shopName || 'Local Kitchen',
+            shopImage: item.shopImage || '🍲',
+            shopPhone: item.shopPhone || '',
+            items: [
+              ...cart.map((ci) => ({
+                name: ci.item.name,
+                qty: ci.qty,
+                price: ci.item.price * ci.qty,
+                sides: ci.sideNames || [],
+                drinks: ci.drinks || [],
+              })),
+              {
+                name: item.name,
+                qty: orderForm.qty,
+                price: itemTotal,
+                sides: selectedSideNames,
+                drinks: drinksList,
+              },
+            ],
+            fulfilment: orderForm.fulfilment,
+            deliveryAddress: orderForm.deliveryAddress.trim(),
+            totalAmount: allOrdersGrandTotal,
+            status: 'received',
+            createdAt: new Date().toISOString(),
+          };
+          const existing = JSON.parse(localStorage.getItem('loopout_food_orders') || '[]');
+          localStorage.setItem('loopout_food_orders', JSON.stringify([newOrderRecord, ...existing.slice(0, 49)]));
+        } catch {
+          // ignore
+        }
+      };
+
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
-        setOrderId(data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+        const code = data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
+        setOrderId(code);
+        recordLocalOrder(code);
         setOrderStatus('success');
         setModalStep('success');
       } else {
@@ -1174,7 +1216,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
         // Fallback for mock/demo shops so user doesn't get stuck!
         const isDemoShop = !item.shopId || String(item.shopId).startsWith('special') || ['urban-grill', 'lungile-food', 'mamas-kitchen', 'mapho', 'kota-joint', 'green-table'].includes(item.shopId);
         if (isDemoShop) {
-          setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+          const code = `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
+          setOrderId(code);
+          recordLocalOrder(code);
           setOrderStatus('success');
           setModalStep('success');
         } else {
@@ -1184,7 +1228,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
       }
     } catch {
       // Graceful demo fallback
-      setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+      const code = `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
+      setOrderId(code);
+      recordLocalOrder(code);
       setOrderStatus('success');
       setModalStep('success');
     }
@@ -1294,15 +1340,25 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
               <div className="w-full flex flex-col gap-2 pt-2">
                 <button
                   type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate('/my-orders');
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-95 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Track Live Order &amp; Receipt 📋</span>
+                </button>
+                <button
+                  type="button"
                   onClick={onClose}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black rounded-2xl text-sm uppercase tracking-wider shadow-lg hover:opacity-95 active:scale-95 transition-all"
+                  className="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-black rounded-2xl text-xs uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all"
                 >
                   Done ✓
                 </button>
                 <button
                   type="button"
                   onClick={() => { onClose(); navigate('/food'); }}
-                  className="w-full py-2.5 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-wider hover:text-gray-800 dark:hover:text-white"
+                  className="w-full py-2 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-wider hover:text-gray-800 dark:hover:text-white"
                 >
                   Browse more food →
                 </button>
@@ -2391,7 +2447,7 @@ const getFoodPriorityRank = (tag = '', name = '') => {
 
 // ─── Order Review Sheet ────────────────────────────────────────────────────────
 // Slide-up panel that lets users review their full cart before placing the order.
-const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMeta }) => {
+const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMeta, onRemoveItem }) => {
   const [contact, setContact] = useState({
     name: cartMeta?.name || '',
     phone: cartMeta?.phone || '',
@@ -2610,12 +2666,23 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                   </p>
                   <p className="font-black text-gray-900 dark:text-white text-sm truncate">{shopName}</p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
-                >
-                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {onClearCart && (
+                    <button
+                      type="button"
+                      onClick={() => { onClearCart(); onClose(); }}
+                      className="text-[10px] font-bold text-rose-500 hover:text-rose-600 dark:text-rose-400 px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <button
+                    onClick={onClose}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
               </div>
 
               {/* ── SCROLLABLE BODY ── */}
@@ -2647,9 +2714,22 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                                 <p className="font-black text-gray-900 dark:text-white text-sm leading-tight truncate">
                                   {ci.item.name}
                                 </p>
-                                <p className="font-black text-gray-900 dark:text-white text-sm shrink-0">
-                                  R{(ci.item.price * ci.qty).toFixed(2)}
-                                </p>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <p className="font-black text-gray-900 dark:text-white text-sm">
+                                    R{(ci.item.price * ci.qty).toFixed(2)}
+                                  </p>
+                                  {onRemoveItem && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onRemoveItem(idx)}
+                                      aria-label={`Remove ${ci.item.name}`}
+                                      title="Remove item"
+                                      className="text-gray-400 hover:text-rose-500 p-0.5 rounded transition-colors"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                               <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                                 R{ci.item.price} × {ci.qty}
@@ -2848,11 +2928,53 @@ const FoodSpecialsStrip = ({ navigate }) => {
   const { coords } = useLocationCoords();
 
   // ── Shared multi-item cart state ─────────────────────────────────────────────
-  // cart: [{ item, qty, sideNames }]  — accumulates as user taps "Add More"
+  // cart: [{ item, qty, sideNames, drinks }]  — accumulates as user taps "Add More"
   // cartMeta: { name, phone, fulfilment, deliveryAddress } — filled once, shared
-  const [cart, setCart] = useState([]);
-  const [cartMeta, setCartMeta] = useState(null);
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem('loopout_food_basket');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [cartMeta, setCartMeta] = useState(() => {
+    try {
+      const saved = localStorage.getItem('loopout_food_basket_meta');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [showOrderReview, setShowOrderReview] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (cart.length > 0) {
+        localStorage.setItem('loopout_food_basket', JSON.stringify(cart));
+      } else {
+        localStorage.removeItem('loopout_food_basket');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cart]);
+
+  useEffect(() => {
+    try {
+      if (cartMeta) {
+        localStorage.setItem('loopout_food_basket_meta', JSON.stringify(cartMeta));
+      } else {
+        localStorage.removeItem('loopout_food_basket_meta');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [cartMeta]);
+
+  const totalCartItems = useMemo(() => {
+    return cart.reduce((sum, ci) => sum + (Number(ci.qty) || 1), 0);
+  }, [cart]);
 
   // ── Cross-shop guard: track which shop's items are in the cart ───────────────
   const [crossShopCandidate, setCrossShopCandidate] = useState(null); // item user tried to open from a different shop
@@ -2862,7 +2984,26 @@ const FoodSpecialsStrip = ({ navigate }) => {
 
   const handleAddToCart = (entry) => setCart((prev) => [...prev, entry]);
   const handleUpdateCartMeta = (meta) => setCartMeta(meta);
-  const handleClearCart = () => { setCart([]); setCartMeta(null); };
+  const handleClearCart = () => {
+    setCart([]);
+    setCartMeta(null);
+    try {
+      localStorage.removeItem('loopout_food_basket');
+      localStorage.removeItem('loopout_food_basket_meta');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemoveItem = (index) => {
+    setCart((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        setShowOrderReview(false);
+      }
+      return next;
+    });
+  };
 
   // Guard: intercept taps on items from a different shop than what's in the cart
   const handleFoodSelect = (item) => {
@@ -2989,12 +3130,21 @@ const FoodSpecialsStrip = ({ navigate }) => {
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 font-mono tracking-normal">• Fresh &amp; Fast</span>
           </h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/my-orders')}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500 text-white text-xs font-black hover:bg-amber-600 transition cursor-pointer shadow-xs"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>My Orders</span>
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food/register')}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Register Place</span>
@@ -3003,7 +3153,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-black uppercase tracking-wider  dark:border-gray-700 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-black uppercase tracking-wider dark:border-gray-700 transition-all cursor-pointer shadow-xs"
           >
             <span>See All</span>
             <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
@@ -3071,41 +3221,6 @@ const FoodSpecialsStrip = ({ navigate }) => {
         ))}
       </div>
 
-      {/* ── Floating Cart Bar — opens View Your Order ── */}
-      {cart.length > 0 && !selectedFood && (
-        <div className="mt-3 mx-0.5">
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setShowOrderReview(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:opacity-90 active:scale-95 transition-all"
-          >
-            <span className="text-xl">🛒</span>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-xs font-black uppercase tracking-wider">View Your Order</p>
-              <p className="text-[10px] font-bold opacity-90 truncate">
-                {cart.map((ci) => `${ci.item.name} ×${ci.qty}`).join(' · ')}
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-sm font-black">
-                R{cart.reduce((s, ci) => {
-                  const food = ci.item.price * ci.qty;
-                  const drinks = ci.drinks ? ci.drinks.reduce((ds, d) => ds + d.price * (d.qty || 1), 0) : 0;
-                  return s + food + drinks;
-                }, 0).toFixed(2)}
-              </p>
-              <p className="text-[9px] font-bold opacity-80 uppercase tracking-wider">Tap to view order</p>
-            </div>
-          </motion.button>
-          <button
-            onClick={handleClearCart}
-            className="mt-1.5 w-full text-center text-[10px] font-bold text-rose-500 dark:text-rose-400 hover:underline"
-          >
-            ✕ Clear cart
-          </button>
-        </div>
-      )}
 
       {/* ── Cross-Shop Guard Dialog ── */}
       <AnimatePresence>
@@ -3212,8 +3327,45 @@ const FoodSpecialsStrip = ({ navigate }) => {
           onClose={() => setShowOrderReview(false)}
           onClearCart={handleClearCart}
           onUpdateCartMeta={handleUpdateCartMeta}
+          onRemoveItem={handleRemoveItem}
         />
       )}
+
+      {/* ── Floating Food Basket Button (Appears only when there's an order, directly on top of the AI button on the home page) ── */}
+      <AnimatePresence>
+        {cart.length > 0 && !selectedFood && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0, y: 20 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 20 }}
+            className={`fixed ${
+              isNativeApp() ? 'bottom-[14.75rem]' : 'bottom-[9.75rem]'
+            } right-4 sm:bottom-24 sm:right-8 z-50`}
+          >
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => setShowOrderReview(true)}
+              aria-label={`Open Food Basket (${totalCartItems} item${totalCartItems === 1 ? '' : 's'})`}
+              title={`Food Basket: ${totalCartItems} item${totalCartItems === 1 ? '' : 's'}`}
+              className="relative h-[3.25rem] w-[3.25rem] rounded-full bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 p-[2px] shadow-[0_8px_24px_rgba(245,158,11,0.45)] flex items-center justify-center group focus:outline-none sm:h-14 sm:w-14 cursor-pointer"
+            >
+              <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-95">
+                <div className="absolute inset-0 bg-gradient-to-tr from-amber-500/30 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <ShoppingBag className="h-6 w-6 text-amber-400 stroke-[2.2] transition-transform duration-300 group-hover:rotate-6 sm:h-7 sm:w-7" />
+                <div className="absolute bottom-2 right-2 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full" />
+              </div>
+
+              {/* Items Counter Badge */}
+              <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[10px] sm:text-[11px] font-black min-w-[1.35rem] h-[1.35rem] px-1 rounded-full flex items-center justify-center border-2 border-white shadow-md animate-pulse">
+                {totalCartItems}
+              </span>
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };

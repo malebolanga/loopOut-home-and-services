@@ -138,6 +138,7 @@ const Matchmaker = lazy(() => import('./pages/Matchmaker'));
 const Radar = lazy(() => import('./pages/Radar'));
 const QuickBook = lazy(() => import('./pages/QuickBook'));
 const LunchComingSoon = lazy(() => import('./pages/LunchComingSoon'));
+const MyFoodOrders = lazy(() => import('./pages/MyFoodOrders'));
 const Splitter = lazy(() => import('./pages/Splitter'));
 
 // Photography Helper Page
@@ -302,6 +303,9 @@ const AnimatedRoutes = () => {
         <Route path="/food/register" element={<PageTransition><LunchComingSoon /></PageTransition>} />
         <Route path="/lunch" element={<PageTransition><LunchComingSoon /></PageTransition>} />
         <Route path="/lunch/register" element={<PageTransition><LunchComingSoon /></PageTransition>} />
+        <Route path="/my-orders" element={<PageTransition><MyFoodOrders /></PageTransition>} />
+        <Route path="/my-food-orders" element={<PageTransition><MyFoodOrders /></PageTransition>} />
+        <Route path="/food/orders" element={<PageTransition><MyFoodOrders /></PageTransition>} />
 
         {/* Private Routes */}
         <Route element={<PrivateRoute />}>

@@ -29,8 +29,14 @@ import {
   TrendingUp,
   Lightbulb,
   ListPlus,
-  Search
+  Search,
+  Edit3,
+  Trash2,
+  Filter,
+  Check,
+  ExternalLink
 } from 'lucide-react';
+import { FaWhatsapp, FaPhone } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -405,8 +411,18 @@ export default function LunchComingSoon() {
     }
   };
 
-  // Main navigation view: 'customer' or 'dashboard'
-  const [viewTab, setViewTab] = useState('customer');
+  // ── 3 Primary Navigation Tabs: 'orders' (Customer Order Food Manager) | 'my-menu' (Your Menus) | 'other-shops' (Other Shops & Menus)
+  const [activeTab, setActiveTab] = useState(() => {
+    if (location.state?.tab) return location.state.tab;
+    if (location.state?.selectedShopId) return 'other-shops';
+    return 'explore'; // Default: Customer-first food browsing & ordering!
+  });
+
+  // Filter & Search states for orders & menus
+  const [orderFilterTab, setOrderFilterTab] = useState('all'); // 'all' | 'pending' | 'preparing' | 'ready' | 'completed'
+  const [orderSearchText, setOrderSearchText] = useState('');
+  const [myMenuSearchText, setMyMenuSearchText] = useState('');
+  const [myMenuTagFilter, setMyMenuTagFilter] = useState('All');
 
   // Customer state
   const [orderMode, setOrderMode] = useState('order'); // 'order' or 'table'
@@ -735,17 +751,35 @@ export default function LunchComingSoon() {
   // Shops that belong to the currently logged-in user
   const myShops = useMemo(() => {
     if (!currentUser) return [];
-    const uid = currentUser._id || currentUser.id || 'guest';
-    return shops.filter((s) => s.ownerId === uid);
-  }, [shops, currentUser?._id]);
+    const uid = String(currentUser._id || currentUser.id || 'guest');
+    return shops.filter((s) => String(s.ownerId || '') === uid);
+  }, [shops, currentUser]);
 
   // Whether the current user owns at least one shop
   const isShopOwner = myShops.length > 0;
 
-  // The shop selected on the dashboard (only owner's shops are valid here)
+  // The shop selected on the dashboard (only owner's shops if owner, else fallback to selected or first shop)
   const dashboardShop = useMemo(() => {
-    return myShops.find((s) => s.id === selectedShopId) || myShops[0] || null;
-  }, [myShops, selectedShopId]);
+    if (myShops.length > 0) {
+      return myShops.find((s) => (s.id || s._id) === selectedShopId) || myShops[0];
+    }
+    return shops.find((s) => (s.id || s._id) === selectedShopId) || shops[0] || null;
+  }, [myShops, selectedShopId, shops]);
+
+  // Whether the current user is the owner/manager of the active dashboard shop
+  const isCurrentShopOwner = useMemo(() => {
+    if (!currentUser || !dashboardShop) return false;
+    const uid = String(currentUser._id || currentUser.id || '');
+    return Boolean(uid && (String(dashboardShop.ownerId || '') === uid || currentUser.isAdmin || currentUser.role === 'admin'));
+  }, [currentUser, dashboardShop]);
+
+  // Other shops (excluding the current user's active dashboard shop)
+  const otherShops = useMemo(() => {
+    if (!dashboardShop) return shops;
+    const shopIdStr = String(dashboardShop.id || dashboardShop._id || '');
+    const filtered = shops.filter((s) => String(s.id || s._id || '') !== shopIdStr);
+    return filtered.length > 0 ? filtered : shops;
+  }, [shops, dashboardShop]);
 
   // Filter active (uncompleted) orders for customer view receipt section
   const myCustomerOrders = useMemo(() => {
@@ -769,11 +803,59 @@ export default function LunchComingSoon() {
     });
   }, [orders, currentUser]);
 
-  // All orders for the current dashboard shop (only owner's shop)
+  // All orders for the current dashboard shop
   const activeShopOrders = useMemo(() => {
     if (!dashboardShop) return [];
-    return orders.filter((o) => o.shopId === dashboardShop.id);
+    const shopIdStr = String(dashboardShop.id || dashboardShop._id || '');
+    return orders.filter((o) => String(o.shopId || '') === shopIdStr);
   }, [orders, dashboardShop]);
+
+  const pendingOrders = useMemo(() => activeShopOrders.filter((o) => o.status === 'Pending'), [activeShopOrders]);
+  const preparingOrders = useMemo(() => activeShopOrders.filter((o) => o.status === 'Preparing'), [activeShopOrders]);
+  const readyOrders = useMemo(() => activeShopOrders.filter((o) => o.status === 'Ready for Collection'), [activeShopOrders]);
+  const completedOrders = useMemo(() => activeShopOrders.filter((o) => o.status === 'Completed'), [activeShopOrders]);
+
+  const pendingOrdersCount = pendingOrders.length;
+  const preparingOrdersCount = preparingOrders.length;
+  const readyOrdersCount = readyOrders.length;
+  const completedOrdersCount = completedOrders.length;
+
+  const filteredShopOrders = useMemo(() => {
+    let list = activeShopOrders;
+    if (orderFilterTab === 'pending') {
+      list = pendingOrders;
+    } else if (orderFilterTab === 'preparing') {
+      list = preparingOrders;
+    } else if (orderFilterTab === 'ready') {
+      list = readyOrders;
+    } else if (orderFilterTab === 'completed') {
+      list = completedOrders;
+    }
+    if (orderSearchText.trim()) {
+      const q = orderSearchText.toLowerCase();
+      list = list.filter((o) =>
+        (o.orderCode || '').toLowerCase().includes(q) ||
+        (o.customerName || '').toLowerCase().includes(q) ||
+        (o.customerPhone || '').toLowerCase().includes(q) ||
+        (o.items || []).some((it) => (it.name || '').toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [activeShopOrders, orderFilterTab, orderSearchText, pendingOrders, preparingOrders, readyOrders, completedOrders]);
+
+  const myMenuTags = useMemo(() => {
+    const tags = new Set((dashboardShop?.meals || []).map((m) => m.tag).filter(Boolean));
+    return ['All', ...tags];
+  }, [dashboardShop]);
+
+  const visibleMyMeals = useMemo(() => {
+    const search = myMenuSearchText.trim().toLowerCase();
+    return (dashboardShop?.meals || []).filter((meal) => {
+      const matchesTag = myMenuTagFilter === 'All' || meal.tag === myMenuTagFilter;
+      const matchesSearch = !search || `${meal.name || ''} ${meal.description || ''} ${meal.tag || ''}`.toLowerCase().includes(search);
+      return matchesTag && matchesSearch;
+    });
+  }, [dashboardShop, myMenuSearchText, myMenuTagFilter]);
 
   // Live kitchen queue for shop owner (uncompleted orders)
   const liveKitchenQueue = useMemo(() => {
@@ -787,9 +869,7 @@ export default function LunchComingSoon() {
   }, [orders, currentShop]);
 
   // Completed orders history for shop owner
-  const completedStoreOrders = useMemo(() => {
-    return activeShopOrders.filter((o) => o.status === 'Completed');
-  }, [activeShopOrders]);
+  const completedStoreOrders = completedOrders;
 
   // 1-Hour Preparation Rush Orders for Chef & Store Owner
   const rushOrdersCount = useMemo(() => {
@@ -1004,14 +1084,29 @@ export default function LunchComingSoon() {
   // Handle Add Meal Modal Submit
   const handleAddMealSubmit = async (e) => {
     e.preventDefault();
-    if (!newMealForm.name || !newMealForm.price || !selectedShopId) return;
+    const targetShopId = dashboardShop ? (dashboardShop.id || dashboardShop._id) : selectedShopId;
+    if (!newMealForm.name || !newMealForm.price || !targetShopId) return;
     try {
-      await addMealToShop(selectedShopId, newMealForm);
+      const added = await addMealToShop(targetShopId, newMealForm);
+      if (added) {
+        setShops((prev) =>
+          prev.map((s) => {
+            if ((s.id || s._id) === targetShopId) {
+              return {
+                ...s,
+                meals: [...(s.meals || []), added]
+              };
+            }
+            return s;
+          })
+        );
+      }
       setShowAddMealModal(false);
       setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [...VENDOR_DEFAULT_SIDES] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
+      setNotice({ type: 'error', message: err.message || 'Error adding meal' });
     }
   };
 
@@ -1021,6 +1116,9 @@ export default function LunchComingSoon() {
     if (!editShopForm.name || !editShopForm.id) return;
     try {
       await updateShop(editShopForm.id, editShopForm);
+      setShops((prev) =>
+        prev.map((s) => (s.id || s._id) === editShopForm.id ? { ...s, ...editShopForm } : s)
+      );
       setShowEditShopModal(false);
       setNotice({ type: 'success', message: `Shop "${editShopForm.name}" updated successfully!` });
     } catch (err) {
@@ -1032,9 +1130,23 @@ export default function LunchComingSoon() {
   // Handle Edit Meal Submit
   const handleEditMealSubmit = async (e) => {
     e.preventDefault();
-    if (!editMealForm.name || !editMealForm.id || !selectedShopId) return;
+    const targetShopId = dashboardShop ? (dashboardShop.id || dashboardShop._id) : selectedShopId;
+    if (!editMealForm.name || !editMealForm.id || !targetShopId) return;
     try {
-      await updateMealInShop(selectedShopId, editMealForm.id, editMealForm);
+      await updateMealInShop(targetShopId, editMealForm.id, editMealForm);
+      setShops((prev) =>
+        prev.map((s) => {
+          if ((s.id || s._id) === targetShopId) {
+            return {
+              ...s,
+              meals: (s.meals || []).map((m) =>
+                m.id === editMealForm.id ? { ...m, ...editMealForm } : m
+              )
+            };
+          }
+          return s;
+        })
+      );
       setShowEditMealModal(false);
       setNotice({ type: 'success', message: `Meal "${editMealForm.name}" updated successfully!` });
     } catch (err) {
@@ -1046,8 +1158,20 @@ export default function LunchComingSoon() {
   // Handle Delete Meal
   const handleDeleteMeal = async (mealId, mealName) => {
     if (!window.confirm(`Are you sure you want to delete "${mealName}" from the menu?`)) return;
+    const targetShopId = dashboardShop ? (dashboardShop.id || dashboardShop._id) : selectedShopId;
     try {
-      await deleteMealFromShop(selectedShopId, mealId);
+      await deleteMealFromShop(targetShopId, mealId);
+      setShops((prev) =>
+        prev.map((s) => {
+          if ((s.id || s._id) === targetShopId) {
+            return {
+              ...s,
+              meals: (s.meals || []).filter((m) => m.id !== mealId)
+            };
+          }
+          return s;
+        })
+      );
       setNotice({ type: 'success', message: `Meal "${mealName}" deleted from menu.` });
     } catch (err) {
       console.error("Delete meal error:", err);
@@ -1055,13 +1179,61 @@ export default function LunchComingSoon() {
     }
   };
 
+  // Toggle meal availability (In Stock / Sold Out)
+  const handleToggleMealAvailability = async (meal) => {
+    if (!dashboardShop || !meal) return;
+    const newIsAvailable = meal.isAvailable === false;
+    const shopId = dashboardShop.id || dashboardShop._id;
+    try {
+      await updateMealInShop(shopId, meal.id, {
+        isAvailable: newIsAvailable
+      });
+      setShops((prev) =>
+        prev.map((s) => {
+          if ((s.id || s._id) === shopId) {
+            return {
+              ...s,
+              meals: (s.meals || []).map((m) =>
+                m.id === meal.id ? { ...m, isAvailable: newIsAvailable } : m
+              )
+            };
+          }
+          return s;
+        })
+      );
+      setNotice({
+        type: 'success',
+        message: `Meal "${meal.name}" marked as ${newIsAvailable ? 'Available' : 'Sold Out'}.`
+      });
+    } catch (err) {
+      console.error('Toggle meal availability error:', err);
+      setNotice({ type: 'error', message: 'Failed to update meal availability.' });
+    }
+  };
+
   // Toggle shop Open / Closed
   const handleToggleShopOpen = async (shop) => {
     if (!shop) return;
+    const uid = String(currentUser?._id || currentUser?.id || '');
+    const isOwnerOfShop = Boolean(
+      uid && (String(shop.ownerId || '') === uid || currentUser?.isAdmin || currentUser?.role === 'admin')
+    );
+    if (!isOwnerOfShop) {
+      setNotice({
+        type: 'error',
+        message: `You do not manage "${shop.name || 'this shop'}". Only the registered owner can change its open/closed status.`
+      });
+      return;
+    }
+
+    const shopId = shop.id || shop._id;
     // Existing shops without an explicit value are treated as open by the UI.
     const newIsOpen = shop.isOpen === false;
     try {
-      await updateShop(shop.id, { isOpen: newIsOpen });
+      await updateShop(shopId, { isOpen: newIsOpen });
+      setShops((prev) =>
+        prev.map((s) => ((s.id || s._id) === shopId ? { ...s, isOpen: newIsOpen } : s))
+      );
       setNotice({
         type: 'success',
         message: newIsOpen
@@ -1070,3336 +1242,1557 @@ export default function LunchComingSoon() {
       });
     } catch (err) {
       console.error('Toggle open error:', err);
-      setNotice({ type: 'error', message: 'Failed to update shop status. Please try again.' });
+      setNotice({ type: 'error', message: err.message || 'Failed to update shop status. Please try again.' });
     }
   };
 
   return (
-    <main className="app-safe-top min-h-screen app-safe-content-bottom pb-36 sm:pb-8 bg-gradient-to-b from-amber-50/80 via-orange-50/30 to-slate-50 px-3 py-6 sm:px-8 w-full max-w-full overflow-x-hidden">
-      <div className="mx-auto max-w-6xl w-full">
+    <main className="app-safe-top min-h-screen app-safe-content-bottom pb-36 sm:pb-8 bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden">
+      <div className="mx-auto max-w-5xl w-full">
 
-        {/* Top Bar Navigation */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-200/60 pb-5">
+        {/* ── CLEAN HEADER ── */}
+        <div className="flex items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-gray-900 px-4 py-2 text-sm font-bold text-gray-700 dark:text-white shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-amber-600"
+              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
             >
-              <ArrowLeft className="h-4 w-4" /> Back
+              <ArrowLeft className="h-4 w-4" />
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-3xl flex items-center gap-2">
-                <UtensilsCrossed className="h-7 w-7 text-amber-600" />
-                Lunch & Food Hub
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <UtensilsCrossed className="h-5 w-5 text-amber-500" />
+                Food Hub
               </h1>
-              <p className="text-xs text-gray-500 dark:text-white font-medium">Order food, book tables & manage store orders</p>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Browse menus · Order food · Track orders</p>
             </div>
           </div>
-
-          {/* View Mode Toggle: Customer vs Food Manager Dashboard */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (currentUser) {
-                  setShowAddShopModal(true);
-                } else {
-                  navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search));
-                }
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2 text-xs font-black text-white shadow-sm hover:from-amber-600 hover:to-orange-600 transition cursor-pointer"
-            >
-              <PlusCircle className="h-4 w-4" /> Register Place
-            </button>
-
-            <div className="flex items-center gap-2 rounded-full bg-amber-100/80 p-1.5 ring-1 ring-amber-300/40">
-              <button
-                type="button"
-                onClick={() => setViewTab('customer')}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${viewTab === 'customer'
-                    ? 'bg-amber-600 text-white shadow'
-                    : 'text-amber-900 hover:bg-amber-200/50'
-                  }`}
-              >
-                <ShoppingBag className="h-4 w-4" /> Customer Ordering
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewTab('dashboard')}
-                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-black transition ${viewTab === 'dashboard'
-                    ? 'bg-amber-600 text-white shadow'
-                    : 'text-amber-900 hover:bg-amber-200/50'
-                  }`}
-              >
-                <ChefHat className="h-4 w-4" /> Food Manager Dashboard
-                {isShopOwner && activeShopOrders.length > 0 && (
-                  <span className="ml-1 rounded-full bg-amber-950 px-2 py-0.5 text-[10px] text-amber-300">
-                    {activeShopOrders.length}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (currentUser) setShowAddShopModal(true);
+              else navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname));
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+          >
+            <PlusCircle className="h-3.5 w-3.5" /> Register Shop
+          </button>
         </div>
 
-        {/* Global Alert / Notice Banner */}
+        {/* ── NOTICE BANNER ── */}
         <AnimatePresence>
           {notice && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`mt-4 flex items-center justify-between gap-3 rounded-2xl p-4 text-sm font-semibold shadow-sm ring-1 ${notice.type === 'error'
-                  ? 'bg-rose-50 text-rose-900 ring-rose-300'
+              exit={{ opacity: 0, y: -8 }}
+              className={`mb-4 flex items-center justify-between gap-3 rounded-xl p-3 text-sm font-medium shadow-sm ring-1 ${
+                notice.type === 'error'
+                  ? 'bg-red-50 text-red-800 ring-red-200 dark:bg-red-950 dark:text-red-200 dark:ring-red-800'
                   : notice.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-900 ring-emerald-300'
-                    : 'bg-blue-50 text-blue-900 ring-blue-300'
-                }`}
+                    ? 'bg-emerald-50 text-emerald-800 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:ring-emerald-800'
+                    : 'bg-blue-50 text-blue-800 ring-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:ring-blue-800'
+              }`}
             >
-              <div className="flex items-center gap-3">
-                {notice.type === 'error' ? (
-                  <AlertCircle className="h-5 w-5 shrink-0 text-rose-600" />
-                ) : (
-                  <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-                )}
+              <div className="flex items-center gap-2">
+                {notice.type === 'error' ? <AlertCircle className="h-4 w-4 shrink-0" /> : <CheckCircle2 className="h-4 w-4 shrink-0" />}
                 <span>{notice.message}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setNotice(null)}
-                className="rounded-full p-1 hover:bg-black/5"
-              >
-                <X className="h-4 w-4" />
+              <button type="button" onClick={() => setNotice(null)} className="rounded-full p-1 hover:bg-black/5 dark:hover:bg-white/10">
+                <X className="h-3.5 w-3.5" />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Customer Receipts & Orders Section (Only Active Uncompleted Orders) */}
-        {myCustomerOrders.length > 0 && (
-          <div className="mt-5 space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <h3 className="text-sm font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 flex items-center gap-2">
-                <span className="text-lg">🧾</span>
-                <span>My Live Receipts & Orders</span>
-                <span className="ml-1 rounded-full bg-amber-200 dark:bg-amber-900/60 px-2.5 py-0.5 text-xs font-black text-amber-900 dark:text-amber-200">
-                  {myCustomerOrders.length} In Progress
+        {/* ── TAB NAVIGATION ── */}
+        <div className="flex items-center gap-1.5 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 mb-5 overflow-x-auto">
+          {[
+            { key: 'explore', label: 'Browse Food', icon: <Store className="h-4 w-4" /> },
+            { key: 'orders', label: 'My Orders', icon: <ShoppingBag className="h-4 w-4" />, badge: myCustomerOrders.length || null },
+            ...(isShopOwner ? [{ key: 'my-shop', label: 'My Shop', icon: <ChefHat className="h-4 w-4" />, badge: liveKitchenQueue.length || null }] : [])
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-semibold transition whitespace-nowrap ${
+                activeTab === tab.key
+                  ? 'bg-amber-500 text-white shadow-md'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+              {tab.badge > 0 && (
+                <span className={`ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+                  activeTab === tab.key ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200'
+                }`}>
+                  {tab.badge}
                 </span>
-              </h3>
-              {myCustomerOrders.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllCustomerReceipts(prev => !prev)}
-                  className="text-xs font-extrabold text-amber-800 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-300 underline flex items-center gap-1 cursor-pointer"
-                >
-                  {showAllCustomerReceipts ? '▲ Show Less Receipts' : `▼ View More Active Receipts (${myCustomerOrders.length})`}
-                </button>
               )}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {(showAllCustomerReceipts ? myCustomerOrders : myCustomerOrders.slice(0, 2)).map((ord) => {
-                const isReady = ord.status === 'Ready for Collection';
-                const isPreparing = ord.status === 'Preparing';
-                const isCompleted = ord.status === 'Completed';
-                const theme = getReceiptTheme(ord);
-                const overdue = isCollectionOverdue(ord);
-                const timing = formatCollectionDateTime(ord);
-
-                // Find primary food visual for top header
-                const firstVisual = getItemVisual(ord.items?.[0] || { name: ord.shopName, image: ord.shopImage });
-                const isOwnerOfThisOrder = Boolean(
-                  currentUser && myShops.some(s => s.id === ord.shopId || s._id === ord.shopId)
-                );
-
-                return (
-                  <div
-                    key={ord.id || ord._id}
-                    className={`relative rounded-3xl border-2 border-dashed shadow-md transition-all hover:shadow-xl p-5 overflow-hidden font-sans ${theme.bg} ${isReady
-                        ? 'border-emerald-500/90 ring-2 ring-emerald-400/50'
-                        : overdue
-                          ? 'border-rose-500/90 ring-2 ring-rose-400/50'
-                          : isPreparing
-                            ? 'border-amber-400/90 ring-2 ring-amber-300/40'
-                            : isCompleted
-                              ? 'border-slate-300 dark:border-gray-700 opacity-95'
-                              : theme.border
-                      }`}
-                  >
-                    {/* Overdue Collection Alert Banner for Customer */}
-                    {overdue && (
-                      <div className="mb-3 rounded-2xl bg-rose-500 text-white p-2.5 text-xs font-black flex items-center justify-between shadow-xs animate-pulse">
-                        <span className="flex items-center gap-1.5">
-                          <span>🔔</span>
-                          <span>COLLECTION OVERDUE — Your fresh food is waiting at the counter!</span>
-                        </span>
-                        <span className="bg-white text-rose-700 px-2 py-0.5 rounded-lg text-[10px] uppercase">
-                          Collect Now
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Simulated Receipt Barcode Header */}
-                    <div className="flex items-center justify-between border-b-2 border-dashed border-gray-200/80 dark:border-gray-800 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        {firstVisual.isImage ? (
-                          <img
-                            src={firstVisual.src}
-                            alt={ord.shopName}
-                            className="w-12 h-12 object-cover rounded-2xl shadow-xs border border-white/60 dark:border-gray-700 shrink-0"
-                          />
-                        ) : (
-                          <span className="text-3xl p-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xs border border-gray-100 dark:border-gray-700 shrink-0">
-                            {firstVisual.emoji || ord.shopImage || '🍱'}
-                          </span>
-                        )}
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400 block">
-                            OFFICIAL STORE RECEIPT
-                          </span>
-                          <h4 className="font-black text-gray-950 dark:text-white text-base leading-tight">
-                            {ord.shopName}
-                          </h4>
-                          <span className="text-[10px] text-gray-400 font-semibold block mt-0.5">
-                            Ref #{String(ord.orderCode || '0000').slice(-4)}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] font-bold text-gray-400 block uppercase tracking-wider">Matching Code</span>
-                        <span className={`inline-block font-mono font-black text-sm text-white bg-gradient-to-r ${theme.codeBg} px-3 py-1 rounded-xl shadow-xs`}>
-                          {ord.orderCode}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* PROMINENT COLLECTION DATE & TIME BANNER */}
-                    <div className="my-3 rounded-2xl bg-white/80 dark:bg-gray-800/80 border border-amber-300/80 dark:border-amber-600/50 p-3 flex flex-wrap items-center justify-between gap-2 text-xs shadow-2xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-black text-base shrink-0">
-                          📅
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
-                            {timing.label} (Date & Time)
-                          </span>
-                          <p className="font-black text-gray-950 dark:text-white text-xs">
-                            {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black text-sm">{timing.timeStr}</strong>
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right pl-2 border-l border-gray-200 dark:border-gray-700">
-                        <span className="text-[9px] text-gray-400 font-bold block uppercase">Order Placed</span>
-                        <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono block">
-                          {timing.placedStr}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Receipt Itemized List with Pictures */}
-                    <div className="my-3 space-y-2 rounded-2xl bg-white/70 dark:bg-gray-800/60 p-3.5 text-xs shadow-2xs border border-gray-100 dark:border-gray-700/60">
-                      <div className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1 flex items-center justify-between">
-                        <span>Ordered Food Items:</span>
-                        <span>{ord.items?.length || 0} item{ord.items?.length === 1 ? '' : 's'}</span>
-                      </div>
-
-                      {ord.items?.map((it, idx) => {
-                        const itemVisual = getItemVisual(it);
-                        return (
-                          <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-gray-100 py-1 border-b border-dashed border-gray-100 dark:border-gray-700/50 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              {itemVisual.isImage ? (
-                                <img
-                                  src={itemVisual.src}
-                                  alt={it.name}
-                                  className="w-8 h-8 object-cover rounded-xl shadow-2xs shrink-0"
-                                />
-                              ) : (
-                                <span className="text-lg p-1 bg-amber-50 dark:bg-gray-700 rounded-lg shadow-2xs shrink-0">
-                                  {itemVisual.emoji}
-                                </span>
-                              )}
-                              <div className="min-w-0 flex-1 truncate">
-                                <p className="font-bold text-gray-900 dark:text-white truncate">
-                                  <span className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</span>
-                                  {it.name}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="font-mono font-bold text-gray-900 dark:text-white shrink-0">
-                              {formatPrice(it.price * it.quantity)}
-                            </span>
-                          </div>
-                        );
-                      })}
-
-                      <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-2.5 mt-2 flex justify-between items-center">
-                        <span className="text-xs font-black uppercase text-gray-600 dark:text-gray-400">Total Amount</span>
-                        <span className="text-base font-black font-mono text-amber-700 dark:text-amber-400">{formatPrice(ord.total)}</span>
-                      </div>
-                    </div>
-
-                    {/* Fulfillment & Payment Stamp */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-gray-600 dark:text-gray-300 py-1">
-                      <span className="capitalize flex items-center gap-1">
-                        📦 {ord.fulfilment === 'pickup' ? 'Counter Pickup' : 'Delivery to Door'}
-                      </span>
-                      <span className="text-amber-900 dark:text-amber-200 font-extrabold text-[11px] bg-amber-100/90 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300/80 dark:border-amber-700">
-                        💵 {ord.paymentStatus || ord.paymentMethod || 'Pay at Counter on Pickup'}
-                      </span>
-                    </div>
-
-                    {/* Live 4-Step Order Progression Tracker */}
-                    <div className="mt-3 pt-2.5 border-t-2 border-dashed border-gray-200/80 dark:border-gray-800">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          {isOwnerOfThisOrder && <span>👑</span>}
-                          <span>{isOwnerOfThisOrder ? 'Owner Order Progress (Tap to update):' : 'Order Progress:'}</span>
-                        </span>
-                        <span className="font-extrabold text-amber-700 dark:text-amber-400">
-                          {isCompleted ? 'Step 4 of 4: Collected ✅' : isReady ? 'Step 3 of 4: Ready for Collection' : isPreparing ? 'Step 2 of 4: Preparing Food' : 'Step 1 of 4: Order Received'}
-                        </span>
-                      </div>
-
-                      {isOwnerOfThisOrder ? (
-                        /* Shop Owner: Interactive Clickable Step Buttons */
-                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-[11px] font-black">
-                          {/* Step 1: Received */}
-                          <button
-                            type="button"
-                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
-                            title="Set status to 1. Received"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${!isPreparing && !isReady && !isCompleted
-                                ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 border-amber-600'
-                                : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                              }`}
-                          >
-                            <span>📝</span>
-                            <span className="leading-tight">1. Received</span>
-                            {!isPreparing && !isReady && !isCompleted && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Current</span>}
-                          </button>
-
-                          {/* Step 2: Prepare */}
-                          <button
-                            type="button"
-                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                            title="Set status to 2. Preparing Food"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isPreparing
-                                ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse border-amber-600'
-                                : isReady || isCompleted
-                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                  : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                              }`}
-                          >
-                            <span>👨‍🍳</span>
-                            <span className="leading-tight">2. Prepare</span>
-                            {isPreparing && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Cooking</span>}
-                          </button>
-
-                          {/* Step 3: Ready */}
-                          <button
-                            type="button"
-                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                            title="Set status to 3. Ready for Collection"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isReady
-                                ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce border-emerald-700'
-                                : isCompleted
-                                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                  : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                              }`}
-                          >
-                            <span>🛍️</span>
-                            <span className="leading-tight">3. Ready</span>
-                            {isReady && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Waiting</span>}
-                          </button>
-
-                          {/* Step 4: Complete */}
-                          <button
-                            type="button"
-                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                            title="Set status to 4. Completed / Collected"
-                            className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${isCompleted
-                                ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400 border-emerald-800'
-                                : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-850 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                              }`}
-                          >
-                            <span>✅</span>
-                            <span className="leading-tight">4. Complete</span>
-                            {isCompleted && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Done</span>}
-                          </button>
-                        </div>
-                      ) : (
-                        /* Regular Customer Stepper */
-                        <div className="grid grid-cols-4 gap-1 text-center text-[10px] sm:text-[11px] font-black">
-                          {/* Step 1: Received */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${!isPreparing && !isReady && !isCompleted
-                              ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
-                              : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                            }`}>
-                            <span>📝</span>
-                            <span className="leading-tight">1. Received</span>
-                          </div>
-
-                          {/* Step 2: Preparing Food */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isPreparing
-                              ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
-                              : isReady || isCompleted
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                            }`}>
-                            <span>👨‍🍳</span>
-                            <span className="leading-tight">2. Preparing</span>
-                          </div>
-
-                          {/* Step 3: Ready for Collection */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isReady
-                              ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
-                              : isCompleted
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                            }`}>
-                            <span>🛍️</span>
-                            <span className="leading-tight">3. Ready</span>
-                          </div>
-
-                          {/* Step 4: Collected */}
-                          <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${isCompleted
-                              ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
-                              : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                            }`}>
-                            <span>✅</span>
-                            <span className="leading-tight">4. Collected</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* User / Owner Collection Confirmation Button */}
-                      {isReady && (
-                        <div className="mt-2.5">
-                          <button
-                            type="button"
-                            onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                            className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-2.5 px-3 text-xs font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
-                          >
-                            <span>✅</span>
-                            <span>{isOwnerOfThisOrder ? 'Confirm Customer Collected (Step 4)' : 'I Have Collected My Order (Press to Confirm)'}</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Receipt Actions */}
-                    <div className="mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setActiveReceiptOrder(ord)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-2 text-xs font-black shadow-xs transition active:scale-95 cursor-pointer"
-                      >
-                        <ShoppingBag className="h-3.5 w-3.5" /> View / Show Full Receipt
-                      </button>
-
-                      {isCompleted && !ord.isRated && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRatingTargetOrder(ord);
-                            setShowRateModal(true);
-                          }}
-                          className="inline-flex items-center gap-1 rounded-xl bg-gray-900 hover:bg-gray-800 text-amber-300 px-3 py-2 text-xs font-black shadow-xs transition"
-                        >
-                          <Star className="h-3.5 w-3.5 fill-current" /> Rate Shop
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* View More Active Receipts Toggle */}
-            {myCustomerOrders.length > 2 && (
-              <div className="text-center pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAllCustomerReceipts(prev => !prev)}
-                  className="rounded-full bg-white dark:bg-gray-900 border border-amber-300 px-4 py-2 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-50 transition shadow-xs cursor-pointer"
-                >
-                  {showAllCustomerReceipts ? '▲ Show Less Active Receipts' : `▼ View More Active Receipts (${myCustomerOrders.length - 2} more)`}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Discrete Archive for Past Completed Receipts (Customer History) */}
-        {myCompletedCustomerOrders.length > 0 && (
-          <div className="mt-4 rounded-2xl border border-gray-200/80 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-4 shadow-2xs">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                <span className="text-base">📁</span>
-                <span className="text-xs font-black uppercase tracking-wide">
-                  Past Completed Receipts Archive ({myCompletedCustomerOrders.length})
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPastCustomerReceipts(prev => !prev)}
-                className="text-xs font-black text-amber-800 dark:text-amber-400 hover:underline cursor-pointer"
-              >
-                {showPastCustomerReceipts ? '▲ Hide Past Receipts' : `▼ View Past Receipts (${myCompletedCustomerOrders.length})`}
-              </button>
-            </div>
-
-            {showPastCustomerReceipts && (
-              <div className="mt-3.5 grid gap-3 sm:grid-cols-2 border-t border-gray-100 dark:border-gray-800 pt-3">
-                {myCompletedCustomerOrders.map((ord) => {
-                  const compTiming = formatCollectionDateTime(ord);
-                  return (
-                    <div
-                      key={ord.id || ord._id}
-                      className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/30 to-white dark:from-gray-900 dark:to-gray-850 p-3.5 shadow-2xs flex items-center justify-between gap-3"
-                    >
-                      <div>
-                        <span className="font-black text-xs text-gray-900 dark:text-white block">{ord.shopName}</span>
-                        <span className="text-[11px] text-gray-500 block mt-0.5">
-                          Code: <strong className="font-mono text-emerald-700 dark:text-emerald-400">{ord.orderCode}</strong> · {formatPrice(ord.total)}
-                        </span>
-                        <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-0.5">
-                          ✅ Collected {compTiming.dateStr} {ord.isRated ? '· ⭐ Rated' : ''}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {!ord.isRated && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRatingTargetOrder(ord);
-                              setShowRateModal(true);
-                            }}
-                            className="rounded-xl bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1.5 text-[11px] font-black shadow-2xs transition cursor-pointer"
-                          >
-                            ⭐ Rate
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setActiveReceiptOrder(ord)}
-                          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-100 text-gray-800 dark:text-gray-200 px-2.5 py-1.5 text-[11px] font-black shadow-2xs transition cursor-pointer"
-                        >
-                          🧾 View
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB CONTENT: CUSTOMER VIEW */}
-        {viewTab === 'customer' && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_340px] min-w-0">
-            <section className="min-w-0 overflow-hidden">
-              {/* TOP PROMINENT LIVE KITCHEN QUEUE BOARD (VISIBLE TO EVERYONE) */}
-              {activeKitchenOrders.length > 0 && (
-                <div className="mt-4 rounded-3xl border-2 border-dashed border-amber-300 dark:border-amber-750 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-500/5 dark:from-amber-950/50 dark:to-gray-900 p-5 shadow-md">
-                  <div className="flex items-center justify-between flex-wrap gap-2 mb-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-2xl p-2 rounded-2xl bg-amber-500 text-white shadow-xs">🍳</span>
-                      <div>
-                        <h3 className="text-base sm:text-lg font-black text-gray-950 dark:text-white uppercase tracking-tight flex items-center gap-2">
-                          <span>Live Kitchen Queue — {currentShop?.name}</span>
-                          <span className="rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-xs font-mono font-bold animate-pulse shadow-xs">
-                            {activeKitchenOrders.length} In Progress
-                          </span>
-                        </h3>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 font-semibold mt-0.5">
-                          Real-time status of meals being prepared & packed right now.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {activeKitchenOrders.slice(0, 4).map((ord) => {
-                      const theme = getReceiptTheme(ord);
-                      const timing = formatCollectionDateTime(ord);
-                      const isMyOrder = currentUser && (
-                        String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '') ||
-                        (currentUser.phone && ord.customerPhone === currentUser.phone)
-                      );
-                      const isOwner = Boolean(currentUser && myShops.some(s => s.id === ord.shopId || s._id === ord.shopId));
-
-                      return (
-                        <div
-                          key={ord.id || ord._id}
-                          className={`rounded-2xl border-2 border-dashed ${theme.border} ${theme.bg} p-3.5 shadow-sm relative overflow-hidden ${isMyOrder ? 'ring-2 ring-amber-500 shadow-md' : ''
-                            }`}
-                        >
-                          {isMyOrder && (
-                            <div className="absolute top-2 right-2 rounded-full bg-amber-500 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-xs">
-                              ⭐ Your Order
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between border-b border-gray-200/70 dark:border-gray-700/60 pb-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xl p-1 bg-white dark:bg-gray-800 rounded-xl shadow-2xs">
-                                {ord.shopImage || '🍱'}
-                              </span>
-                              <div>
-                                <span className="text-[9px] font-bold text-gray-400 block uppercase">Matching Code</span>
-                                <span className="font-mono font-black text-xs text-gray-950 dark:text-white">
-                                  {ord.orderCode}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right mr-16 sm:mr-0">
-                              <span className="text-[9px] font-bold text-gray-400 block uppercase">Est. Collection</span>
-                              <span className="text-xs font-black text-amber-700 dark:text-amber-400">
-                                {timing.timeStr}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* 4-Step Progress Stepper */}
-                          <div className="mt-2.5">
-                            <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Pending'
-                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
-                                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                }`}>
-                                <span>📝</span>
-                                <span className="leading-tight text-[9px]">1. Received</span>
-                              </div>
-
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Preparing'
-                                  ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
-                                  : ord.status === 'Ready for Collection' || ord.status === 'Completed'
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                                }`}>
-                                <span>👨‍🍳</span>
-                                <span className="leading-tight text-[9px]">2. Prepare</span>
-                              </div>
-
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Ready for Collection'
-                                  ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
-                                  : ord.status === 'Completed'
-                                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                                }`}>
-                                <span>🛍️</span>
-                                <span className="leading-tight text-[9px]">3. Ready</span>
-                              </div>
-
-                              <div className={`rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${ord.status === 'Completed'
-                                  ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
-                                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                                }`}>
-                                <span>✅</span>
-                                <span className="leading-tight text-[9px]">4. Done</span>
-                              </div>
-                            </div>
-
-                            {/* Customer confirmation button */}
-                            {isMyOrder && ord.status === 'Ready for Collection' && (
-                              <button
-                                type="button"
-                                onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                className="mt-2 w-full rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-2 px-3 text-xs font-black text-white shadow-sm hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 animate-pulse"
-                              >
-                                <span>✅</span> <span>I Have Collected My Meal</span>
-                              </button>
-                            )}
-
-                            {/* Owner quick status controls */}
-                            {isOwner && (
-                              <div className="mt-2 flex items-center justify-end gap-1">
-                                {ord.status === 'Pending' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                                    className="rounded-lg bg-amber-500 hover:bg-amber-600 px-2.5 py-1 text-[11px] font-black text-white shadow cursor-pointer"
-                                  >
-                                    👨‍🍳 Start Preparing
-                                  </button>
-                                )}
-                                {ord.status === 'Preparing' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-2.5 py-1 text-[11px] font-black text-white shadow animate-pulse cursor-pointer"
-                                  >
-                                    🛍️ Mark Ready
-                                  </button>
-                                )}
-                                {ord.status === 'Ready for Collection' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                    className="rounded-lg bg-gray-900 hover:bg-gray-800 px-2.5 py-1 text-[11px] font-black text-white shadow cursor-pointer"
-                                  >
-                                    ✅ Confirm Collected
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-
-
-              {/* Shop List Cards Selector — Horizontal Side-Slide */}
-              <div className="mt-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-black uppercase tracking-wider text-gray-700 dark:text-white">Select Restaurant / Shop</h2>
-                  <div className="flex items-center gap-2">
-                    {/* Left / Right scroll arrows */}
-                    {shops.length > 2 && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => scrollShops(-1)}
-                          className="h-7 w-7 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 transition shadow-sm cursor-pointer"
-                          aria-label="Scroll shops left"
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => scrollShops(1)}
-                          className="h-7 w-7 flex items-center justify-center rounded-full bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 transition shadow-sm cursor-pointer"
-                          aria-label="Scroll shops right"
-                        >
-                          <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setShowAddShopModal(true)}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                    >
-                      <PlusCircle className="h-3.5 w-3.5" /> Register / Upload Shop
-                    </button>
-                  </div>
-                </div>
-
-                {/* Horizontal Scrollable Snap Row */}
-                <div className="overflow-hidden">
-                  <div
-                    ref={shopSliderRef}
-                    className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {shops.map((item) => {
-                      const shopTheme = getShopTheme(item);
-                      const isSelected = selectedShopId === item.id;
-
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => setSelectedShopId(item.id)}
-                          className={`snap-start shrink-0 w-[46vw] sm:w-[195px] max-w-[195px] rounded-2xl border p-3 sm:p-4 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden ${isSelected ? shopTheme.cardActive : shopTheme.cardNormal
-                            }`}
-                        >
-                          {/* Selected accent bar at top */}
-                          {isSelected && (
-                            <span className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl ${shopTheme.accentBg}`} />
-                          )}
-
-                          {/* Icon & Rating */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-3xl filter drop-shadow-sm leading-none">{item.image || '🏪'}</span>
-                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-black flex items-center gap-1 border ${isSelected ? shopTheme.badge : 'bg-amber-50 text-amber-900 border-amber-200'
-                              }`}>
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                              {item.rating || '4.8'}
-                            </span>
-                          </div>
-
-                          <div className="mt-3 space-y-1">
-                            <span className="block text-sm font-black text-gray-900 dark:text-white tracking-tight leading-snug line-clamp-2">
-                              {item.name}
-                            </span>
-                            <div className="pt-0.5">
-                              <span className="inline-block rounded-md bg-amber-100/70 border border-amber-300/60 px-2 py-0.5 text-[10px] font-bold text-amber-900 truncate max-w-full">
-                                {item.cuisine || 'Local Favorite'}
-                              </span>
-                            </div>
-                            <p className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 dark:text-white pt-0.5">
-                              <MapPin className="h-3 w-3 text-amber-600 shrink-0" />
-                              <span className="truncate">{item.distance || '1.0 km'}</span>
-                            </p>
-                            {/* Open / Closed status */}
-                            <span className={`inline-flex items-center gap-1 mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${item.isOpen !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>
-                              <span className={`h-1.5 w-1.5 rounded-full ${item.isOpen !== false ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                              {item.isOpen !== false ? 'Open' : 'Closed'}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-
-                    {/* Empty state */}
-                    {shops.length === 0 && (
-                      <div className="flex items-center justify-center w-full py-10 text-sm text-gray-400 font-medium">
-                        No shops registered yet. Be the first to add one!
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Dot indicators */}
-                {shops.length > 1 && (
-                  <div className="flex items-center justify-center gap-1.5 mt-2">
-                    {shops.map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setSelectedShopId(s.id)}
-                        className={`rounded-full transition-all duration-200 cursor-pointer ${selectedShopId === s.id
-                            ? 'w-5 h-2 bg-amber-500'
-                            : 'w-2 h-2 bg-amber-200 hover:bg-amber-300'
-                          }`}
-                        aria-label={`Select ${s.name}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Selected Restaurant Hero & Meals Details */}
-              {currentShop && (
-                <article className="mt-6 rounded-3xl bg-white dark:bg-gray-900 shadow-md ring-1 ring-gray-100 min-w-0 max-w-full overflow-hidden">
-
-                  {/* Shop Theme Header Banner with Live Food & Culinary Background */}
-                  <div className={`relative overflow-hidden rounded-none sm:rounded-3xl bg-gradient-to-r ${activeTheme.heroBg} p-5 sm:p-7 text-center shadow-xl border-b sm:border min-w-0 max-w-full`}>
-                    {/* Ambient Glows */}
-                    <div className={`absolute -top-16 -right-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
-                    <div className={`absolute -bottom-16 -left-16 w-64 h-64 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
-
-                    {/* Decorative Culinary Background Art (Forks, Plates, Cups, Fresh Meals) */}
-                    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none opacity-20 sm:opacity-25" aria-hidden="true">
-                      {/* Floating Food & Cutlery Icons */}
-                      <span className="absolute -top-3 -left-3 text-6xl sm:text-7xl transform -rotate-12 filter drop-shadow">🍽️</span>
-                      <span className="absolute top-2 left-1/4 text-4xl sm:text-5xl transform rotate-45 filter drop-shadow">🍴</span>
-                      <span className="absolute bottom-2 left-6 text-5xl sm:text-6xl transform -rotate-6 filter drop-shadow">☕</span>
-                      <span className="absolute -bottom-4 left-1/3 text-6xl sm:text-7xl transform rotate-12 filter drop-shadow">🍕</span>
-                      <span className="absolute top-3 right-1/4 text-4xl sm:text-5xl transform -rotate-12 filter drop-shadow">🥤</span>
-                      <span className="absolute -top-3 -right-3 text-6xl sm:text-7xl transform rotate-12 filter drop-shadow">🥘</span>
-                      <span className="absolute bottom-3 right-8 text-5xl sm:text-6xl transform rotate-45 filter drop-shadow">🍔</span>
-                      <span className="absolute top-1/2 right-2 text-4xl sm:text-5xl transform -rotate-45 filter drop-shadow">🥗</span>
-                      <span className="absolute top-1/3 left-2 text-4xl sm:text-5xl transform rotate-12 filter drop-shadow">🍳</span>
-
-                      {/* Cutlery & Plate Subtle Pattern Mesh */}
-                      <svg className="absolute inset-0 w-full h-full opacity-35" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-                        <defs>
-                          <pattern id="culinaryPattern" width="70" height="70" patternUnits="userSpaceOnUse">
-                            {/* Plate */}
-                            <circle cx="35" cy="35" r="16" fill="none" stroke="white" strokeWidth="1.2" strokeDasharray="3 3" />
-                            <circle cx="35" cy="35" r="10" fill="none" stroke="white" strokeWidth="0.8" />
-                            {/* Fork */}
-                            <path d="M12 20 L12 50 M9 20 L15 20 M9 26 L15 26" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-                            {/* Knife / Spoon */}
-                            <path d="M58 20 L58 50 M56 20 Q58 14 60 20 L58 30" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-                            {/* Cup */}
-                            <path d="M30 6 L40 6 L38 16 L32 16 Z M40 8 Q44 10 40 14" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" />
-                          </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#culinaryPattern)" />
-                      </svg>
-                    </div>
-
-                    {/* Action Bar (Edit Shop & Add Menu Item) - Responsive flex bar */}
-                    {currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
-                      <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditShopForm({
-                              id: currentShop.id || currentShop._id,
-                              name: currentShop.name,
-                              cuisine: currentShop.cuisine,
-                              distance: currentShop.distance,
-                              time: currentShop.time,
-                              image: currentShop.image,
-                              address: currentShop.address || '',
-                              phone: currentShop.phone || '',
-                              whatsapp: currentShop.whatsapp || '',
-                              operatingHours: currentShop.operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
-                              isOpen: currentShop.isOpen !== false
-                            });
-                            setShowEditShopModal(true);
-                          }}
-                          className="rounded-full bg-white/15 backdrop-blur-md px-3 py-1 text-[11px] font-black text-white hover:bg-white/25 transition cursor-pointer border border-white/20 shrink-0"
-                        >
-                          Edit Shop
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setShowAddMealModal(true)}
-                          className="rounded-full bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-black text-gray-950 hover:bg-amber-100 transition cursor-pointer shadow-sm shrink-0"
-                        >
-                          + Add Menu Item
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Centered Avatar, Big Bold Title & Cuisine */}
-                    <div className="relative z-0 max-w-xl mx-auto space-y-2 min-w-0">
-                      <span className="text-5xl sm:text-7xl block mx-auto text-center filter drop-shadow-md">
-                        {currentShop.image || '🏪'}
-                      </span>
-
-                      <h2 className="text-2xl sm:text-4xl font-black text-center text-white tracking-tight leading-tight break-words max-w-full">
-                        {currentShop.name}
-                      </h2>
-
-                      <div className="flex flex-wrap items-center justify-center gap-2 pt-0.5">
-                        <span className="inline-flex max-w-full items-center rounded-full bg-white/10 backdrop-blur-md px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-amber-200 border border-white/15">
-                          {currentShop.cuisine}
-                        </span>
-
-                        {/* Open / Closed Status */}
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-black uppercase tracking-wider border ${currentShop.isOpen !== false
-                            ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/40'
-                            : 'bg-red-500/25 text-red-200 border-red-400/40'
-                          }`}>
-                          <span className={`h-2 w-2 rounded-full ${currentShop.isOpen !== false ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-                          {currentShop.isOpen !== false ? 'Open Now' : 'Closed'}
-                        </span>
-
-                        {currentShop.operatingHours?.openTime && currentShop.operatingHours?.closeTime && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 px-3.5 py-1 text-xs font-semibold text-gray-100 backdrop-blur-md">
-                            <Clock3 className="h-3.5 w-3.5 text-amber-300" />
-                            {currentShop.operatingHours.openTime}–{currentShop.operatingHours.closeTime}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Centered Rating, Address & Delivery Time */}
-                      <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 text-xs sm:text-sm text-gray-200 font-medium max-w-full overflow-hidden">
-                        <span className="inline-flex items-center gap-1 font-extrabold text-amber-300 bg-amber-500/20 px-2.5 py-1 rounded-full border border-amber-400/30 shrink-0">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                          {currentShop.rating || '5.0'} ({currentShop.reviews?.length || 0})
-                        </span>
-                        <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm max-w-full truncate">
-                          <MapPin className="h-3.5 w-3.5 text-amber-300 shrink-0" />
-                          <span className="truncate">{currentShop.address || currentShop.distance}</span>
-                        </span>
-                        <span className="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm shrink-0">
-                          <Clock3 className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
-                          {currentShop.time}
-                        </span>
-                      </div>
-
-                      {/* Contact Person & Phone */}
-                      {(currentShop.ownerName || currentShop.phone) && (
-                        <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
-                          {currentShop.ownerName && (
-                            <button
-                              type="button"
-                              onClick={() => setShowContactCard(true)}
-                              className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold text-white/90 border border-white/15 transition cursor-pointer"
-                            >
-                              <Users className="h-3.5 w-3.5 text-amber-300 shrink-0" />
-                              {currentShop.ownerName}
-                              <span className="text-white/50 text-[10px] ml-0.5">· tap</span>
-                            </button>
-                          )}
-                          {currentShop.phone && (
-                            <a
-                              href={`tel:${currentShop.phone}`}
-                              className="inline-flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-emerald-200 border border-emerald-400/30 transition cursor-pointer"
-                            >
-                              <Phone className="h-3.5 w-3.5 shrink-0" />
-                              {currentShop.phone}
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Menu vs Reviews View Switcher Tabs */}
-                  <div className="mt-5 px-3.5 sm:px-0 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-3 min-w-0 max-w-full">
-                    <div className="flex flex-wrap items-center gap-2 max-w-full">
-                      <button
-                        type="button"
-                        onClick={() => setShowReviewsTab(false)}
-                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${!showReviewsTab
-                            ? activeTheme.tabActive
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                          }`}
-                      >
-                        <UtensilsCrossed className="h-3.5 w-3.5" /> Food Menu ({currentShop.meals?.length || 0})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowReviewsTab(true)}
-                        className={`rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs font-black transition cursor-pointer flex items-center gap-1.5 shrink-0 ${showReviewsTab
-                            ? activeTheme.tabActive
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                          }`}
-                      >
-                        <Star className="h-3.5 w-3.5 fill-current text-amber-300" />
-                        Customer Reviews ({currentShop.reviews?.length || 0})
-                      </button>
-                    </div>
-                  </div>
-
-                  {!showReviewsTab && orderMode === 'order' ? (
-                    <>
-                      <p className="mt-4 px-3.5 sm:px-0 text-xs font-bold text-gray-600 dark:text-white"><Store className="inline h-4 w-4 text-amber-600" /> Pickup only — pay at the counter. Delivery and online payment are not available yet.</p>
-
-                      {/* Meals Menu — Horizontal Side-Slide */}
-                      <div className="mt-5">
-                        {/* Arrow controls */}
-                        {currentShop.meals && currentShop.meals.length > 2 && (
-                          <div className="flex items-center justify-end gap-1 mb-2">
-                            <button
-                              type="button"
-                              onClick={() => scrollMenu(-1)}
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
-                              aria-label="Scroll menu left"
-                            >
-                              <ArrowLeft className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => scrollMenu(1)}
-                              className="h-7 w-7 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800 transition shadow-sm cursor-pointer"
-                              aria-label="Scroll menu right"
-                            >
-                              <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Horizontal snap scroll row — hidden overflow container prevents page bleed */}
-                        <div className="overflow-hidden">
-                          <div
-                            ref={menuSliderRef}
-                            className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x snap-mandatory"
-                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                          >
-                            {visibleMeals.length > 0 ? (
-                              visibleMeals.map((meal) => (
-                                <div
-                                  key={meal.id}
-                                  className={`snap-start shrink-0 w-[78vw] sm:w-[230px] max-w-[290px] rounded-2xl bg-gradient-to-b from-white to-gray-50 ring-1 ring-gray-100 transition-all duration-200 overflow-hidden flex flex-col ${isCurrentShopClosed ? 'opacity-60 grayscale' : 'hover:ring-amber-200'
-                                    }`}
-                                >
-                                  {/* Meal header */}
-                                  <div className="px-4 pt-4 pb-2 flex items-start gap-3">
-                                    <span className="text-4xl leading-none shrink-0 p-1">{meal.image || '🍱'}</span>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex flex-wrap items-center gap-1.5">
-                                        <h3 className="font-black text-gray-900 dark:text-white text-sm leading-snug line-clamp-2">{meal.name}</h3>
-                                      </div>
-                                      {meal.tag && (
-                                        <span className="inline-block mt-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-800">
-                                          {meal.tag}
-                                        </span>
-                                      )}
-                                      {meal.isAvailable === false && (
-                                        <span className="inline-block mt-1 ml-1 rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-black uppercase text-gray-600 dark:text-white">
-                                          Sold out
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <p className="px-4 text-xs text-gray-500 dark:text-white leading-relaxed line-clamp-2 flex-1">{meal.description}</p>
-
-                                  {/* Price + actions footer */}
-                                  <div className="px-4 pb-4 pt-3 flex items-center justify-between border-t border-gray-100 dark:border-gray-800 mt-3">
-                                    <span className="text-sm font-extrabold text-amber-700">{formatPrice(meal.price)}</span>
-                                    <div className="flex items-center gap-1.5">
-                                      {currentShop && currentUser && currentShop.ownerId === (currentUser._id || currentUser.id) && (
-                                        <>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              setEditMealForm({
-                                                id: meal.id,
-                                                name: meal.name,
-                                                description: meal.description || '',
-                                                price: meal.price,
-                                                tag: meal.tag || 'Popular',
-                                                image: meal.image || '🍱',
-                                                sides: Array.isArray(meal.sides) && meal.sides.length > 0 ? meal.sides : [...VENDOR_DEFAULT_SIDES]
-                                              });
-                                              setShowEditMealModal(true);
-                                            }}
-                                            className="rounded-full bg-slate-100 dark:bg-gray-800 px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-white hover:bg-slate-200 transition cursor-pointer"
-                                          >
-                                            Edit
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => handleDeleteMeal(meal.id, meal.name)}
-                                            className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700 hover:bg-rose-100 transition cursor-pointer"
-                                          >
-                                            Del
-                                          </button>
-                                          <button
-                                            type="button"
-                                            onClick={() => updateMealInShop(currentShop.id, meal.id, { ...meal, isAvailable: meal.isAvailable === false })}
-                                            className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition ${meal.isAvailable === false
-                                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                                              }`}
-                                          >
-                                            {meal.isAvailable === false ? 'Restock' : 'Sold out'}
-                                          </button>
-                                        </>
-                                      )}
-                                      <button
-                                        type="button"
-                                        disabled={isCurrentShopClosed || meal.isAvailable === false}
-                                        onClick={() => addToCart(meal)}
-                                        className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-400 text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 shrink-0 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white disabled:shadow-none"
-                                        aria-label={meal.isAvailable === false ? `${meal.name} is sold out` : `Add ${meal.name}`}
-                                      >
-                                        <Plus className="h-5 w-5" />
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="p-8 text-center text-sm text-gray-500 dark:text-white w-full">
-                                No menu items match your search. Try another word or category.
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : showReviewsTab ? (
-                    /* Customer Reviews Section */
-                    <div className="mt-5 space-y-4">
-                      {/* Rating Breakdown Banner */}
-                      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 p-5 ring-1 ring-amber-200">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-4xl font-black text-amber-900">{currentShop.rating || '5.0'}</span>
-                            <div>
-                              <div className="flex text-amber-400">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-4 w-4 ${star <= Math.round(parseFloat(currentShop.rating || 5))
-                                        ? 'fill-amber-400 text-amber-400'
-                                        : 'text-gray-300'
-                                      }`}
-                                  />
-                                ))}
-                              </div>
-                              <p className="text-xs text-gray-600 dark:text-white font-bold mt-0.5">
-                                Based on {currentShop.reviews?.length || 0} customer reviews
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <p className="text-xs text-amber-800 font-medium max-w-xs">
-                          Ratings are submitted by verified customers after completing their food orders.
-                        </p>
-                      </div>
-
-                      {/* List of Reviews */}
-                      {currentShop.reviews && currentShop.reviews.length > 0 ? (
-                        <div className="space-y-3 mt-4">
-                          {currentShop.reviews.map((rev, idx) => (
-                            <div key={rev.id || idx} className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 p-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-800 font-black text-xs">
-                                    {(rev.userName || 'C')[0].toUpperCase()}
-                                  </div>
-                                  <div>
-                                    <span className="text-xs font-bold text-gray-900 dark:text-white block">{rev.userName || 'Customer'}</span>
-                                    <span className="text-[10px] text-gray-400 block">
-                                      {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : 'Recent order'}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-1 text-amber-500 bg-white dark:bg-gray-900 px-2 py-1 rounded-full border text-xs font-black">
-                                  <Star className="h-3.5 w-3.5 fill-current" />
-                                  {rev.shopRating || 5}/5
-                                </div>
-                              </div>
-                              {rev.comment && (
-                                <p className="text-xs text-gray-700 dark:text-white leading-relaxed italic bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-                                  "{rev.comment}"
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-8 text-center text-sm text-gray-500 dark:text-white rounded-2xl border border-dashed border-gray-200 dark:border-gray-800">
-                          <MessageSquare className="h-8 w-8 mx-auto text-amber-400 mb-2 opacity-60" />
-                          No customer reviews submitted yet for this store. Place an order to leave the first review!
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    /* Table Booking Form */
-                    <form onSubmit={handleTableBooking} className="mt-6 space-y-4">
-                      {isCurrentShopClosed && (
-                        <p className="rounded-2xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-center text-sm font-bold text-gray-500 dark:text-white">
-                          This shop is closed. Table bookings are unavailable.
-                        </p>
-                      )}
-                      <fieldset disabled={isCurrentShopClosed} className={isCurrentShopClosed ? 'opacity-60 grayscale' : ''}>
-                        <div className="rounded-2xl bg-amber-50/60 p-4 border border-amber-200/50">
-                          <p className="text-sm font-semibold text-amber-900">
-                            Reserve a dining table at <span className="font-extrabold">{currentShop.name}</span>.
-                          </p>
-                        </div>
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                            Your Name
-                            <input
-                              required
-                              value={booking.name}
-                              onChange={(e) => setBooking({ ...booking, name: e.target.value })}
-                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                              placeholder="Full name"
-                            />
-                          </label>
-                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                            Contact Phone
-                            <input
-                              required
-                              type="tel"
-                              value={booking.phone}
-                              onChange={(e) => setBooking({ ...booking, phone: e.target.value })}
-                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                              placeholder="+27 82 123 4567"
-                            />
-                          </label>
-                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                            Date
-                            <input
-                              required
-                              type="date"
-                              value={booking.date}
-                              onChange={(e) => setBooking({ ...booking, date: e.target.value })}
-                              className="mt-1.5 w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                            />
-                          </label>
-                          <label className="text-xs font-bold text-gray-700 dark:text-white uppercase tracking-wider">
-                            Time & Guests
-                            <div className="flex gap-2 mt-1.5">
-                              <input
-                                type="time"
-                                value={booking.time}
-                                onChange={(e) => setBooking({ ...booking, time: e.target.value })}
-                                className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                              />
-                              <select
-                                value={booking.guests}
-                                onChange={(e) => setBooking({ ...booking, guests: e.target.value })}
-                                className="w-1/2 rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 font-medium outline-none focus:ring-2 focus:ring-amber-400"
-                              >
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 10, 12].map((num) => (
-                                  <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </label>
-                        </div>
-
-                        <button
-                          type="submit"
-                          className="mt-4 w-full rounded-2xl bg-gray-950 px-5 py-3.5 text-sm font-black text-white transition hover:bg-gray-800 shadow disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white"
-                        >
-                          Request Table Booking
-                        </button>
-                      </fieldset>
-                    </form>
-                  )}
-                </article>
-              )}
-            </section>
-
-            {/* Right Sidebar: Order Cart */}
-            <aside className="h-fit rounded-3xl bg-white dark:bg-gray-900 p-5 shadow-sm ring-1 ring-gray-100 lg:sticky lg:top-6">
-              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-amber-600" /> Order Summary
+            </button>
+          ))}
+        </div>
+
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* TAB: BROWSE FOOD (explore / other-shops)             */}
+        {/* ══════════════════════════════════════════════════════ */}
+        {(activeTab === 'explore' || activeTab === 'other-shops') && (
+          <div className="space-y-5">
+
+            {/* Shop Selector — Horizontal scroll */}
+            {shops.length > 0 && (
+              <div>
+                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2.5 flex items-center gap-2">
+                  <Store className="h-4 w-4 text-amber-500" /> Restaurants & Food Shops
+                  <span className="text-[10px] font-medium text-gray-400">({shops.length})</span>
                 </h2>
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-                  {cart.reduce((sum, i) => sum + i.quantity, 0)} items
-                </span>
-              </div>
-
-              {cart.length > 0 ? (
-                <>
-                  <div className="mt-4 space-y-3 max-h-72 overflow-y-auto pr-1">
-                    {cart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between gap-2 border-b border-gray-50 pb-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-black text-gray-900 dark:text-white">{item.name}</p>
-                          <p className="text-xs text-amber-700 font-bold">{formatPrice(item.price)}</p>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
-                          <button
-                            type="button"
-                            disabled={isCurrentShopClosed}
-                            onClick={() => updateQuantity(item.id, -1)}
-                            className="rounded-full bg-white dark:bg-gray-900 p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="w-5 text-center text-xs font-black">{item.quantity}</span>
-                          <button
-                            type="button"
-                            disabled={isCurrentShopClosed}
-                            onClick={() => updateQuantity(item.id, 1)}
-                            className="rounded-full bg-white dark:bg-gray-900 p-1 hover:bg-gray-200 shadow-xs disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-5 space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4 text-sm font-bold text-gray-700 dark:text-white">
-                    <div className="flex justify-between text-xs text-gray-500 dark:text-white">
-                      <span>Fulfillment</span>
-                      <span className="capitalize font-bold text-gray-900 dark:text-white">{fulfilment}</span>
-                    </div>
-                    <div className="flex justify-between text-base font-black text-gray-900 dark:text-white border-t border-dashed pt-2">
-                      <span>Total Amount</span>
-                      <span className="text-amber-600">{formatPrice(totalCartPrice)}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    disabled={isCurrentShopClosed}
-                    onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
-                    className="mt-5 w-full rounded-2xl bg-amber-400 px-4 py-3.5 text-sm font-black text-gray-950 shadow transition hover:bg-amber-300 active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:text-white disabled:shadow-none"
-                  >
-                    {isCurrentShopClosed ? 'Shop is Closed' : currentUser ? 'Proceed to Checkout' : 'Sign in to order'}
-                  </button>
-                </>
-              ) : (
-                <div className="py-10 text-center">
-                  <UtensilsCrossed className="mx-auto h-8 w-8 text-amber-300" />
-                  <p className="mt-2 text-sm font-bold text-gray-800 dark:text-white">Your cart is empty</p>
-                  <p className="text-xs text-gray-400 mt-1">Select delicious meals from the menu to build your order.</p>
-                </div>
-              )}
-            </aside>
-          </div>
-        )}
-
-        {/* TAB CONTENT: FOOD MANAGER / SHOP OWNER DASHBOARD */}
-        {viewTab === 'dashboard' && (
-          <div className="mt-6 space-y-6">
-            {/* Dashboard Header Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl bg-gradient-to-r from-gray-900 via-gray-800 to-amber-950 p-6 text-white shadow-lg">
-              <div>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
-                  <ChefHat className="h-3.5 w-3.5" /> Food Manager Dashboard
-                </span>
-                <h2 className="mt-2 text-2xl font-black text-white">Live Store Orders & Kitchen Queue</h2>
-                <p className="mt-1 text-xs text-amber-200/80">
-                  {isShopOwner
-                    ? `Manage incoming orders for your ${myShops.length} registered shop${myShops.length > 1 ? 's' : ''}.`
-                    : 'Register your food shop to start receiving and managing orders.'}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Shop Open / Closed Toggle */}
-                {isShopOwner && dashboardShop && (
-                  <button
-                    type="button"
-                    onClick={() => handleToggleShopOpen(dashboardShop)}
-                    className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black shadow transition cursor-pointer border-2 ${dashboardShop.isOpen !== false
-                        ? 'bg-emerald-500 border-emerald-400 text-white hover:bg-emerald-600'
-                        : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
-                      }`}
-                    title={dashboardShop.isOpen !== false ? 'Click to CLOSE shop' : 'Click to OPEN shop'}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${dashboardShop.isOpen !== false ? 'bg-white dark:bg-gray-900 animate-pulse' : 'bg-gray-500'}`} />
-                    {dashboardShop.isOpen !== false ? '🟢 Shop is OPEN' : '🔴 Shop is CLOSED'}
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
-                  className="rounded-xl bg-amber-400 px-4 py-2.5 text-xs font-black text-gray-950 shadow transition hover:bg-amber-300"
+                <div
+                  ref={shopSliderRef}
+                  className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
-                  + {isShopOwner ? 'Add Another Shop' : 'Register My Shop'}
-                </button>
-                {isShopOwner && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAddMealModal(true)}
-                    className="rounded-xl bg-white/10 px-4 py-2.5 text-xs font-black text-white border border-white/20 transition hover:bg-white/20"
-                  >
-                    + Add Meal
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* No shop registered — prompt to register */}
-            {!isShopOwner ? (
-              <div className="rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50/60 p-12 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                  <Store className="h-8 w-8 text-amber-600" />
-                </div>
-                <h3 className="mt-4 text-xl font-black text-gray-900 dark:text-white">You haven't registered a food shop yet</h3>
-                <p className="mt-2 text-sm text-gray-600 dark:text-white max-w-sm mx-auto">
-                  Register your restaurant or food shop to appear on the customer ordering page and start managing live kitchen orders.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowAddShopModal(true)}
-                  className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-black text-white shadow-md hover:bg-amber-600 transition"
-                >
-                  <PlusCircle className="h-4 w-4" /> Register My Food Shop
-                </button>
-                <p className="mt-3 text-xs text-gray-400">
-                  Your shop will be visible to customers immediately after registration.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Owner's Shop Selector for Dashboard */}
-                <div className="flex items-center gap-3 overflow-x-auto pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-white shrink-0">My Shops:</span>
-                  {myShops.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setSelectedShopId(s.id)}
-                      className={`rounded-full px-4 py-2 text-xs font-black shrink-0 transition cursor-pointer ${dashboardShop?.id === s.id
-                          ? 'bg-amber-600 text-white shadow'
-                          : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-white ring-1 ring-gray-200 hover:bg-amber-50'
-                        }`}
-                    >
-                      {s.image} {s.name}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 🍳 TOP PROMINENT LIVE KITCHEN QUEUE SECTION FOR CHEF & STORE OWNER */}
-                <div className="space-y-4 mt-2">
-                  {/* 1-Hour Kitchen Rush Alert for Chef & Store Owner */}
-                  {rushOrdersCount > 0 && (
-                    <div className="rounded-3xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 p-5 text-white shadow-xl flex flex-wrap items-center justify-between gap-3 border border-red-400/50 animate-pulse">
-                      <div className="flex items-center gap-3.5">
-                        <span className="text-3xl p-2.5 bg-white/20 rounded-2xl">🚨</span>
-                        <div>
-                          <h4 className="text-base font-black uppercase tracking-wider">1-HOUR KITCHEN PREPARATION RUSH</h4>
-                          <p className="text-xs text-white/95 mt-0.5">
-                            You have <strong className="underline text-sm font-black">{rushOrdersCount} order(s)</strong> due for collection within 1 hour! Chef & Store Owner please prepare the food now.
-                          </p>
-                        </div>
-                      </div>
-                      <span className="shrink-0 bg-white text-rose-700 px-4 py-2 rounded-xl font-mono font-black text-xs uppercase shadow-sm">
-                        ⚡ Cook Food Now
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b-2 border-amber-200/80 dark:border-gray-800">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl p-2.5 rounded-2xl bg-amber-500 text-white shadow-xs">🍳</span>
-                      <div>
-                        <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-gray-950 dark:text-white flex items-center gap-2.5">
-                          <span>Live Kitchen Queue</span>
-                          <span className="text-sm font-bold text-amber-700 dark:text-amber-400">· {dashboardShop?.name || 'My Shop'}</span>
-                          <span className="rounded-full bg-amber-500 text-white px-3 py-0.5 text-xs font-black shadow-xs animate-pulse">
-                            {liveKitchenQueue.length} Active Orders
-                          </span>
-                        </h3>
-                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-0.5">
-                          Chefs & store owners: Tap any of the 4 step buttons below to update order progress live.
-                        </p>
-                      </div>
-                    </div>
-                    {liveKitchenQueue.length > 4 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowAllKitchenQueue(prev => !prev)}
-                        className="text-xs font-black text-amber-700 dark:text-amber-400 hover:text-amber-800 underline cursor-pointer"
-                      >
-                        {showAllKitchenQueue ? '▲ Show Less' : `▼ View More (${liveKitchenQueue.length - 4} more)`}
-                      </button>
-                    )}
-                  </div>
-
-                  {liveKitchenQueue.length > 0 ? (
-                    <>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {(showAllKitchenQueue ? liveKitchenQueue : liveKitchenQueue.slice(0, 4)).map((ord) => {
-                          const isRush = isOneHourPrepRush(ord);
-                          const theme = getReceiptTheme(ord);
-                          const timing = formatCollectionDateTime(ord);
-
-                          return (
-                            <div
-                              key={ord.id || ord._id}
-                              className={`rounded-3xl border-2 border-dashed ${isRush ? 'border-red-500/90 ring-2 ring-red-400/50' : theme.border} ${theme.bg} p-5 shadow-sm transition hover:shadow-md`}
-                            >
-                              {/* 1-Hour Prep Alert on Individual Card */}
-                              {isRush && (
-                                <div className="mb-3 rounded-2xl bg-red-600 text-white px-3 py-1.5 text-xs font-black flex items-center justify-between shadow-2xs animate-pulse">
-                                  <span className="flex items-center gap-1.5">
-                                    <span>🚨</span>
-                                    <span>PREPARE MEAL NOW (Collection in ≤ 1 hour)</span>
-                                  </span>
-                                  <span className="bg-white text-red-700 px-2 py-0.5 rounded-md text-[10px] uppercase">
-                                    Rush
-                                  </span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-                                <div className="flex items-center gap-2">
-                                  <span className="rounded-2xl bg-amber-100 dark:bg-gray-800 p-2 text-xl font-bold shadow-2xs">{ord.shopImage || '🍱'}</span>
-                                  <div>
-                                    <p className="text-sm font-black text-gray-900 dark:text-white">{ord.customerName}</p>
-                                    <p className="text-xs font-semibold text-gray-500 dark:text-white flex items-center gap-1">
-                                      <Phone className="h-3 w-3 text-amber-600" /> {ord.customerPhone || 'No contact provided'}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                {/* Order Matching Verification Code */}
-                                <div className="text-right">
-                                  <span className="text-[10px] font-bold text-gray-400 block uppercase">Verification Code</span>
-                                  <span className={`rounded-lg bg-gradient-to-r ${theme.codeBg} px-2.5 py-1 text-xs font-black text-white shadow-xs font-mono`}>
-                                    {ord.orderCode}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Collection Date & Time Banner for Chef / Kitchen Queue */}
-                              <div className="my-2.5 rounded-2xl bg-white/80 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 p-2.5 flex items-center justify-between gap-2 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-base p-1 bg-amber-100 dark:bg-gray-700 rounded-lg shrink-0">📅</span>
-                                  <div>
-                                    <span className="text-[10px] font-black uppercase text-amber-800 dark:text-amber-300 block">
-                                      {timing.label} (Date & Time)
-                                    </span>
-                                    <span className="font-black text-gray-900 dark:text-white text-xs">
-                                      {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black">{timing.timeStr}</strong>
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <span className="text-[9px] text-gray-400 font-bold block uppercase">Placed</span>
-                                  <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono">
-                                    {timing.placedStr}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Items List with Pictures */}
-                              <div className="my-3 space-y-1.5 rounded-2xl bg-white/70 dark:bg-gray-800/60 p-3 text-xs shadow-2xs border border-gray-100 dark:border-gray-700/60">
-                                <div className="font-bold text-gray-600 dark:text-white mb-1 flex items-center justify-between">
-                                  <span>Ordered Items:</span>
-                                  <span className="text-[10px] text-gray-400">{ord.items?.length || 0} item(s)</span>
-                                </div>
-                                {ord.items?.map((it, idx) => {
-                                  const itemVisual = getItemVisual(it);
-                                  return (
-                                    <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-white py-0.5">
-                                      <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
-                                        {itemVisual.isImage ? (
-                                          <img
-                                            src={itemVisual.src}
-                                            alt={it.name}
-                                            className="w-7 h-7 object-cover rounded-lg shadow-2xs shrink-0"
-                                          />
-                                        ) : (
-                                          <span className="text-base p-0.5 bg-amber-50 dark:bg-gray-700 rounded-md shrink-0">
-                                            {itemVisual.emoji}
-                                          </span>
-                                        )}
-                                        <span className="truncate">
-                                          <strong className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</strong>
-                                          {it.name}
-                                        </span>
-                                      </div>
-                                      <span className="font-mono font-bold shrink-0">{formatPrice(it.price * it.quantity)}</span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* Payment & Delivery Info */}
-                              <div className="flex flex-wrap justify-between gap-2 text-xs font-bold text-gray-600 dark:text-white border-t border-gray-100 dark:border-gray-800 pt-3">
-                                <div>
-                                  <span className="text-gray-400 block text-[10px] uppercase">Payment</span>
-                                  <span className="text-amber-800 font-extrabold">{ord.paymentStatus || ord.paymentMethod}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400 block text-[10px] uppercase">Fulfillment</span>
-                                  <span className="capitalize">{ord.fulfilment}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-400 block text-[10px] uppercase">Total</span>
-                                  <span className="text-gray-900 dark:text-white font-black">{formatPrice(ord.total)}</span>
-                                </div>
-                              </div>
-
-                              {ord.fulfilment === 'delivery' && ord.deliveryAddress && (
-                                <div className="mt-2 rounded-lg bg-orange-50 p-2.5 text-xs text-orange-950 border border-orange-200">
-                                  <span className="font-bold">Delivery Address:</span> {ord.deliveryAddress}
-                                  {ord.deliveryNotes && <p className="text-[11px] text-orange-800 mt-0.5">Notes: {ord.deliveryNotes}</p>}
-                                </div>
-                              )}
-
-                              {ord.orderComments && (
-                                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-950">
-                                  <span className="font-bold">Order Comments:</span> {ord.orderComments}
-                                </div>
-                              )}
-
-                              {/* Owner Interactive 4-Step Order Progress Buttons */}
-                              <div className="mt-3.5 pt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                                <div className="text-[11px] font-black uppercase tracking-wider text-gray-700 dark:text-gray-200 mb-2 flex items-center justify-between">
-                                  <span className="flex items-center gap-1.5">
-                                    <span>👑</span>
-                                    <span>Order Progress (Tap any button to update):</span>
-                                  </span>
-                                  <span className="font-extrabold text-xs text-amber-700 dark:text-amber-400">
-                                    {ord.status === 'Completed'
-                                      ? '✅ Step 4: Completed'
-                                      : ord.status === 'Ready for Collection'
-                                        ? '🛍️ Step 3: Ready'
-                                        : ord.status === 'Preparing'
-                                          ? '👨‍🍳 Step 2: Preparing'
-                                          : '📝 Step 1: Received'}
-                                  </span>
-                                </div>
-                                <div className="grid grid-cols-4 gap-1.5 text-center text-xs font-black">
-                                  {/* Step 1: Received */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Pending')}
-                                    title="Set status to 1. Received"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Pending'
-                                        ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
-                                        : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                      }`}
-                                  >
-                                    <span className="text-base">📝</span>
-                                    <span className="leading-tight text-[11px]">1. Received</span>
-                                    {ord.status === 'Pending' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Current</span>}
-                                  </button>
-
-                                  {/* Step 2: Prepare */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                                    title="Set status to 2. Preparing Food"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Preparing'
-                                        ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
-                                        : ord.status === 'Ready for Collection' || ord.status === 'Completed'
-                                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                      }`}
-                                  >
-                                    <span className="text-base">👨‍🍳</span>
-                                    <span className="leading-tight text-[11px]">2. Prepare</span>
-                                    {ord.status === 'Preparing' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Cooking</span>}
-                                  </button>
-
-                                  {/* Step 3: Ready */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                                    title="Set status to 3. Ready for Collection"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Ready for Collection'
-                                        ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
-                                        : ord.status === 'Completed'
-                                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                      }`}
-                                  >
-                                    <span className="text-base">🛍️</span>
-                                    <span className="leading-tight text-[11px]">3. Ready</span>
-                                    {ord.status === 'Ready for Collection' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Waiting</span>}
-                                  </button>
-
-                                  {/* Step 4: Complete */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                    title="Set status to 4. Completed / Collected"
-                                    className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 border ${ord.status === 'Completed'
-                                        ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
-                                        : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                                      }`}
-                                  >
-                                    <span className="text-base">✅</span>
-                                    <span className="leading-tight text-[11px]">4. Complete</span>
-                                    {ord.status === 'Completed' && <span className="text-[9px] uppercase font-black bg-white/30 px-1 rounded-sm">Done</span>}
-                                  </button>
-                                </div>
-                              </div>
-
-                              {/* Order Action Buttons with Quick Next Step */}
-                              <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center justify-between gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setActiveReceiptOrder(ord)}
-                                  className="rounded-xl border border-amber-300 bg-amber-50 dark:bg-gray-800 px-3 py-1.5 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-100 cursor-pointer"
-                                >
-                                  🧾 View Receipt
-                                </button>
-
-                                <div className="flex items-center gap-1.5">
-                                  {ord.status === 'Pending' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Preparing')}
-                                      className="rounded-xl bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-black text-white shadow cursor-pointer transition active:scale-95 flex items-center gap-1"
-                                    >
-                                      <span>👨‍🍳</span> <span>Start Preparing Meal</span>
-                                    </button>
-                                  )}
-                                  {ord.status === 'Preparing' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Ready for Collection')}
-                                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-black text-white shadow animate-pulse cursor-pointer transition active:scale-95 flex items-center gap-1"
-                                    >
-                                      <span>🛍️</span> <span>Mark Ready for Collection</span>
-                                    </button>
-                                  )}
-                                  {ord.status === 'Ready for Collection' && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleStatusUpdate(ord.id || ord._id, 'Completed')}
-                                      className="rounded-xl bg-gray-900 hover:bg-gray-800 px-3 py-2 text-xs font-black text-white shadow cursor-pointer transition active:scale-95 flex items-center gap-1"
-                                    >
-                                      <span>✅</span> <span>Confirm Order Collected</span>
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {liveKitchenQueue.length > 4 && (
-                        <div className="text-center pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowAllKitchenQueue(prev => !prev)}
-                            className="rounded-2xl border border-amber-300 bg-amber-50/80 dark:bg-gray-800 px-6 py-2.5 text-xs font-black text-amber-900 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer shadow-2xs"
-                          >
-                            {showAllKitchenQueue ? '▲ Show Less Orders' : `▼ View More Kitchen Orders (${liveKitchenQueue.length - 4} more)`}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="rounded-3xl border border-dashed border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-white">
-                      No active orders in the kitchen queue for {dashboardShop?.name || 'this shop'}.
-                    </div>
-                  )}
-                </div>
-
-                {/* Completed Orders History Section on Dashboard */}
-                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 space-y-4">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-gray-800 dark:text-white flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                      <span>Completed & Paid Store Orders ({completedStoreOrders.length})</span>
-                    </h3>
-                    <div className="flex items-center gap-3">
-                      {completedStoreOrders.length > 0 && (
-                        <span className="text-xs font-black text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">
-                          Total Revenue: {formatPrice(completedStoreOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
-                        </span>
-                      )}
-                      {completedStoreOrders.length > 6 && (
-                        <button
-                          type="button"
-                          onClick={() => setShowAllCompletedOrders(prev => !prev)}
-                          className="text-xs font-black text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 underline cursor-pointer"
-                        >
-                          {showAllCompletedOrders ? '▲ Show Less' : `▼ View More (${completedStoreOrders.length - 6} more)`}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {completedStoreOrders.length > 0 ? (
-                    <>
-                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                        {(showAllCompletedOrders ? completedStoreOrders : completedStoreOrders.slice(0, 6)).map((ord) => {
-                          const compTiming = formatCollectionDateTime(ord);
-                          return (
-                            <div
-                              key={ord.id || ord._id}
-                              className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 p-4 shadow-xs"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-black text-gray-900 dark:text-white">{ord.customerName}</span>
-                                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-800">
-                                  ✅ Code: {ord.orderCode}
-                                </span>
-                              </div>
-
-                              <div className="my-1.5 rounded-xl bg-white/80 dark:bg-gray-800/80 p-2 text-[10px] text-gray-600 dark:text-gray-300 border border-emerald-100 dark:border-gray-800 flex justify-between items-center">
-                                <span>📅 <strong>Collected:</strong> {compTiming.dateStr}</span>
-                                <span className="font-mono font-bold text-emerald-800 dark:text-emerald-300">{compTiming.timeStr}</span>
-                              </div>
-
-                              <div className="text-[11px] text-gray-600 dark:text-white space-y-1 my-2">
-                                <div><span className="font-bold text-gray-700 dark:text-white">Items:</span> {ord.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}</div>
-                                <div className="flex justify-between font-extrabold text-gray-900 dark:text-white border-t pt-1 mt-1">
-                                  <span>Total Paid:</span>
-                                  <span className="text-emerald-700 dark:text-emerald-400">{formatPrice(ord.total)}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-emerald-100 dark:border-gray-800">
-                                <span className="text-[10px] text-emerald-800 font-bold bg-emerald-100/60 px-2 py-1 rounded-lg">
-                                  Collected
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => setActiveReceiptOrder(ord)}
-                                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 text-[11px] font-black shadow-2xs transition cursor-pointer"
-                                >
-                                  🧾 View Receipt
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {completedStoreOrders.length > 6 && (
-                        <div className="text-center pt-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowAllCompletedOrders(prev => !prev)}
-                            className="rounded-2xl border border-emerald-300 bg-emerald-50/80 dark:bg-gray-800 px-6 py-2.5 text-xs font-black text-emerald-900 dark:text-emerald-300 hover:bg-emerald-100 transition cursor-pointer shadow-2xs"
-                          >
-                            {showAllCompletedOrders ? '▲ Show Less Completed Orders' : `▼ View More Completed Orders (${completedStoreOrders.length - 6} more)`}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-xs text-gray-400">
-                      No completed orders yet. Completed orders will be archived here automatically.
-                    </div>
-                  )}
-                </div>
-
-                {/* Revenue Summary Section */}
-                <section aria-label="Revenue summary" className="grid gap-3 sm:grid-cols-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
-                  {[
-                    { label: 'Today', value: revenueSummary.daily, detail: 'Completed today', tone: 'border-emerald-200 bg-emerald-50 text-emerald-800' },
-                    { label: 'This week', value: revenueSummary.weekly, detail: 'Mon–Sun', tone: 'border-sky-200 bg-sky-50 text-sky-800' },
-                    { label: 'This month', value: revenueSummary.monthly, detail: 'Current calendar month', tone: 'border-violet-200 bg-violet-50 text-violet-800' }
-                  ].map((period) => (
-                    <div key={period.label} className={`rounded-2xl border p-4 shadow-sm ${period.tone}`}>
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-75">{period.label}'s revenue</p>
-                      <p className="mt-1 text-2xl font-black">{formatPrice(period.value)}</p>
-                      <p className="mt-1 text-xs font-semibold opacity-75">{period.detail}</p>
-                    </div>
-                  ))}
-                </section>
-
-                {/* Shop Improvement Advice Section */}
-                <section aria-label="Shop improvement advice" className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-emerald-50 p-5 shadow-sm mt-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="rounded-2xl bg-amber-100 p-2.5 text-amber-700">
-                        <Lightbulb className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-black text-gray-900 dark:text-white">Growth advice for {dashboardShop?.name}</h3>
-                        <p className="mt-0.5 text-xs text-gray-600 dark:text-white">Based on your menu, completed orders and customer feedback.</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddMealModal(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-gray-950 px-3 py-2 text-xs font-black text-white transition hover:bg-gray-800 cursor-pointer"
-                    >
-                      <ListPlus className="h-3.5 w-3.5" /> Add a menu item
-                    </button>
-                  </div>
-
-                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    {shopInsights.map((insight) => (
-                      <div
-                        key={insight.title}
-                        className={`rounded-2xl border p-4 ${insight.tone === 'emerald'
-                            ? 'border-emerald-200 bg-emerald-50'
-                            : insight.tone === 'rose'
-                              ? 'border-rose-200 bg-rose-50'
-                              : insight.tone === 'violet'
-                                ? 'border-violet-200 bg-violet-50'
-                                : insight.tone === 'sky'
-                                  ? 'border-sky-200 bg-sky-50'
-                                  : 'border-amber-200 bg-amber-50'
-                          }`}
-                      >
-                        <div className="flex items-start gap-2">
-                          <TrendingUp className="mt-0.5 h-4 w-4 shrink-0 text-gray-700 dark:text-white" />
-                          <div>
-                            <p className="text-sm font-black text-gray-900 dark:text-white">{insight.title}</p>
-                            <p className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-white">{insight.detail}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </>
-            )}
-          </div>
-        )}
-
-
-      </div>
-
-      {/* CHECKOUT MODAL */}
-      {showCheckoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs overflow-y-auto">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl ring-1 ring-gray-200 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5 text-amber-600" /> Complete Food Order
-              </h3>
-              <button type="button" onClick={() => setShowCheckoutModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handlePlaceOrder} className={`mt-4 space-y-4 ${isCurrentShopClosed ? 'opacity-60 grayscale' : ''}`}>
-              {isCurrentShopClosed && (
-                <p className="rounded-2xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-center text-sm font-bold text-gray-500 dark:text-white">
-                  This shop has closed and is not accepting orders.
-                </p>
-              )}
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-950"><Store className="inline h-4 w-4 text-amber-600" /> Payment is made at the counter when you collect your order.</div>
-
-              {/* Customer Contact Details */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Your Full Name</label>
-                  <input
-                    required
-                    value={checkoutData.customerName}
-                    onChange={(e) => setCheckoutData({ ...checkoutData, customerName: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="Customer Name"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Contact Phone Number *</label>
-                  <input
-                    required
-                    type="tel"
-                    value={checkoutData.customerPhone}
-                    onChange={(e) => setCheckoutData({ ...checkoutData, customerPhone: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="+27 82 000 0000"
-                  />
-                </div>
-              </div>
-
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Order Comments</label>
-                <textarea
-                  value={checkoutData.orderComments}
-                  onChange={(e) => setCheckoutData({ ...checkoutData, orderComments: e.target.value })}
-                  rows={3}
-                  className="w-full resize-y rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="Add any special requests, allergies, or extra instructions for your food order..."
-                />
-                <p className="mt-1 text-[11px] text-amber-900">Allergy notes are passed to the shop but cannot guarantee an allergen-free meal. Contact the shop directly for severe allergies.</p>
-              </div>
-
-              {/* Collection timing is intentionally prominent: it is part of every pickup order. */}
-              <section className="rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 via-white to-orange-50 p-4 dark:border-amber-800 dark:from-amber-950/30 dark:via-gray-900 dark:to-gray-900">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-amber-500 p-2 text-white shadow-sm"><Clock3 className="h-5 w-5" /></div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <label className="text-sm font-black text-amber-950 dark:text-amber-200">Collection time</label>
-                      <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">Pickup order</span>
-                    </div>
-                    <p className="mt-1 text-xs leading-5 text-amber-900/80 dark:text-amber-100/80">Tell the shop when you plan to collect your food.</p>
-
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setCheckoutData({ ...checkoutData, scheduledFor: '' })}
-                        className={`rounded-xl border-2 px-3 py-3 text-left transition ${!checkoutData.scheduledFor ? 'border-amber-500 bg-amber-500 text-white shadow-sm' : 'border-amber-200 bg-white text-amber-950 hover:border-amber-400 dark:border-amber-800 dark:bg-gray-800 dark:text-amber-100'}`}
-                      >
-                        <span className="block text-xs font-black">Collect ASAP</span>
-                        <span className={`mt-0.5 block text-[10px] ${!checkoutData.scheduledFor ? 'text-amber-50' : 'text-amber-700 dark:text-amber-300'}`}>Ready in about 25 min</span>
-                      </button>
-                      <div className={`rounded-xl border-2 px-3 py-2.5 transition ${checkoutData.scheduledFor ? 'border-purple-500 bg-purple-600 text-white shadow-sm' : 'border-amber-200 bg-white text-amber-950 dark:border-amber-800 dark:bg-gray-800 dark:text-amber-100'}`}>
-                        <label htmlFor="collection-time" className="block text-xs font-black">Choose a time</label>
-                        <input
-                          id="collection-time"
-                          aria-label="Collection date and time"
-                          type="datetime-local"
-                          min={new Date().toISOString().slice(0, 16)}
-                          value={checkoutData.scheduledFor}
-                          onChange={(e) => setCheckoutData({ ...checkoutData, scheduledFor: e.target.value })}
-                          className={`mt-1 w-full bg-transparent text-[10px] font-bold outline-none ${checkoutData.scheduledFor ? 'text-white [color-scheme:dark]' : 'text-amber-800 dark:text-amber-200 [color-scheme:light] dark:[color-scheme:dark]'}`}
-                        />
-                      </div>
-                    </div>
-                    <p className="mt-3 rounded-lg bg-white/70 px-3 py-2 text-[11px] font-semibold text-amber-900 dark:bg-black/20 dark:text-amber-100">
-                      {checkoutData.scheduledFor
-                        ? `Collection scheduled for ${new Date(checkoutData.scheduledFor).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })}.`
-                        : 'Your estimated collection time will be shown on your receipt after ordering.'}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <div className="rounded-2xl bg-amber-50 p-4 border border-amber-200">
-                <div className="flex justify-between text-sm font-black text-amber-950">
-                  <span>Total to Pay:</span>
-                  <span>{formatPrice(totalCartPrice)}</span>
-                </div>
-                <p className="mt-1 text-[11px] text-amber-800">
-                  Payment will be made directly at the store counter upon order collection.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isCurrentShopClosed}
-                className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 py-3.5 text-sm font-black text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition cursor-pointer active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span>Confirm Order & Get Code</span>
-                <span>→</span>
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ORDER RECEIPT & MATCHING CODE MODAL */}
-      {activeReceiptOrder && (() => {
-        const theme = getReceiptTheme(activeReceiptOrder);
-        const overdue = isCollectionOverdue(activeReceiptOrder);
-        const timing = formatCollectionDateTime(activeReceiptOrder);
-        const firstVisual = getItemVisual(activeReceiptOrder.items?.[0] || { name: activeReceiptOrder.shopName, image: activeReceiptOrder.shopImage });
-        const isOwnerOfActive = Boolean(
-          currentUser && (
-            myShops.some(s => s.id === activeReceiptOrder.shopId || s._id === activeReceiptOrder.shopId) ||
-            (currentShop && currentShop.ownerId === (currentUser._id || currentUser.id)) ||
-            (dashboardShop && dashboardShop.ownerId === (currentUser._id || currentUser.id))
-          )
-        );
-
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className={`w-full max-w-md rounded-3xl ${theme.bg} p-6 shadow-2xl border-2 border-dashed ${theme.border} max-h-[90vh] overflow-y-auto font-sans`}
-            >
-              {/* Overdue Banner if applicable */}
-              {overdue && (
-                <div className="mb-4 rounded-2xl bg-rose-500 text-white p-3 text-xs font-black flex items-center justify-between shadow-xs animate-pulse">
-                  <span className="flex items-center gap-1.5">
-                    <span>🔔</span>
-                    <span>COLLECTION OVERDUE — Ready for pickup!</span>
-                  </span>
-                  <span className="bg-white text-rose-700 px-2 py-0.5 rounded-lg text-[10px] uppercase">
-                    Waiting
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center">
-                {firstVisual.isImage ? (
-                  <img
-                    src={firstVisual.src}
-                    alt={activeReceiptOrder.shopName}
-                    className="mx-auto h-16 w-16 object-cover rounded-3xl shadow-md border-2 border-white dark:border-gray-700"
-                  />
-                ) : (
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-white dark:bg-gray-800 text-3xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    {firstVisual.emoji || activeReceiptOrder.shopImage || '🍱'}
-                  </div>
-                )}
-                <h3 className="mt-3 text-xl font-black text-gray-950 dark:text-white">Official Food Receipt</h3>
-                <p className="text-xs text-gray-500 dark:text-white mt-0.5 font-bold">
-                  {activeReceiptOrder.shopName} · #{String(activeReceiptOrder.orderCode || '0000').slice(-4)}
-                </p>
-              </div>
-
-              {/* Verification Matching Code Card */}
-              <div className={`my-3.5 rounded-2xl bg-gradient-to-r ${theme.codeBg} p-4 text-center text-white shadow-md`}>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">
-                  Verification Matching Code
-                </span>
-                <span className="mt-1 text-3xl font-black tracking-widest block font-mono">
-                  {activeReceiptOrder.orderCode}
-                </span>
-                <p className="text-[11px] text-white/90 mt-1">
-                  Present this code at the counter for fast collection.
-                </p>
-              </div>
-
-              {/* PROMINENT COLLECTION DATE & TIME BOX */}
-              <div className="my-3 rounded-2xl bg-white/90 dark:bg-gray-800/90 border border-amber-300 dark:border-amber-600/60 p-3.5 flex flex-wrap items-center justify-between gap-2 text-xs shadow-xs">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 text-lg font-black shrink-0">
-                    📅
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
-                      {timing.label} (Date & Time)
-                    </span>
-                    <p className="font-black text-gray-950 dark:text-white text-xs">
-                      {timing.dateStr} at <strong className="text-amber-700 dark:text-amber-400 font-black text-sm">{timing.timeStr}</strong>
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right pl-3 border-l border-gray-200 dark:border-gray-700">
-                  <span className="text-[9px] text-gray-400 font-bold block uppercase">Order Placed</span>
-                  <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300 font-mono block">
-                    {timing.placedStr}
-                  </span>
-                </div>
-              </div>
-
-              {/* Itemized Food Breakdown with Pictures */}
-              <div className="space-y-2 rounded-2xl bg-white/80 dark:bg-gray-800/80 p-3.5 text-xs shadow-2xs border border-gray-100 dark:border-gray-700">
-                <div className="text-[10px] font-extrabold uppercase text-gray-400 tracking-wider mb-1 flex justify-between">
-                  <span>Ordered Meal Items:</span>
-                  <span>{activeReceiptOrder.items?.length || 0} item(s)</span>
-                </div>
-                {activeReceiptOrder.items?.map((it, idx) => {
-                  const itVisual = getItemVisual(it);
-                  return (
-                    <div key={idx} className="flex justify-between items-center gap-2 text-gray-800 dark:text-gray-100 py-1 border-b border-dashed border-gray-100 dark:border-gray-700/50 last:border-0">
-                      <div className="flex items-center gap-2 min-w-0 flex-1 truncate">
-                        {itVisual.isImage ? (
-                          <img src={itVisual.src} alt={it.name} className="w-8 h-8 object-cover rounded-xl shadow-2xs shrink-0" />
-                        ) : (
-                          <span className="text-xl p-1 bg-amber-50 dark:bg-gray-700 rounded-lg shrink-0">
-                            {itVisual.emoji}
-                          </span>
-                        )}
-                        <span className="truncate">
-                          <strong className="text-amber-800 dark:text-amber-300 font-extrabold mr-1">{it.quantity}x</strong>
-                          {it.name}
-                        </span>
-                      </div>
-                      <span className="font-mono font-bold shrink-0">{formatPrice(it.price * it.quantity)}</span>
-                    </div>
-                  );
-                })}
-
-                <div className="border-t-2 border-dashed border-gray-200 dark:border-gray-700 pt-2 mt-2 flex justify-between items-center text-sm font-black">
-                  <span className="text-gray-700 dark:text-gray-300">Total Charged:</span>
-                  <span className="text-amber-700 dark:text-amber-400 font-mono text-base">{formatPrice(activeReceiptOrder.total)}</span>
-                </div>
-              </div>
-
-              <div className="mt-3 space-y-1.5 text-xs text-gray-700 dark:text-white border-t border-dashed border-gray-200 dark:border-gray-700 pt-3">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-500 dark:text-white">Customer:</span>
-                  <span className="font-bold text-gray-900 dark:text-white">{activeReceiptOrder.customerName} ({activeReceiptOrder.customerPhone || 'N/A'})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-500 dark:text-white">Fulfillment:</span>
-                  <span className="font-bold capitalize">{activeReceiptOrder.fulfilment === 'pickup' ? 'Counter Pickup' : 'Delivery to Door'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-semibold text-gray-500 dark:text-white">Payment Method:</span>
-                  <span className="font-bold text-amber-800 dark:text-amber-300">{activeReceiptOrder.paymentStatus || activeReceiptOrder.paymentMethod || 'Pay at Counter on Pickup'}</span>
-                </div>
-                {activeReceiptOrder.orderComments && (
-                  <div className="mt-2 rounded-xl bg-amber-50 dark:bg-gray-800 p-2 text-[11px] text-amber-950 dark:text-amber-200 border border-amber-200 dark:border-gray-700">
-                    <strong>Comments:</strong> {activeReceiptOrder.orderComments}
-                  </div>
-                )}
-              </div>
-
-              {/* Live 4-Step Order Progression Tracker */}
-              <div className="mt-3 pt-2.5 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
-                <div className="text-[10px] font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1">
-                    {isOwnerOfActive && <span>👑</span>}
-                    <span>{isOwnerOfActive ? 'Owner Order Progress (Tap to update):' : 'Order Status:'}</span>
-                  </span>
-                  <span className="font-extrabold text-amber-700 dark:text-amber-400">
-                    {activeReceiptOrder.status === 'Completed'
-                      ? 'Step 4 of 4: Collected ✅'
-                      : activeReceiptOrder.status === 'Ready for Collection'
-                        ? 'Step 3 of 4: Ready for Collection'
-                        : activeReceiptOrder.status === 'Preparing'
-                          ? 'Step 2 of 4: Preparing Food'
-                          : 'Step 1 of 4: Order Received'}
-                  </span>
-                </div>
-
-                {isOwnerOfActive ? (
-                  /* Shop Owner: Interactive Step Buttons */
-                  <div className="grid grid-cols-4 gap-1.5 text-center text-xs font-black">
-                    {/* Step 1: Received */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Pending')}
-                      title="Set status to 1. Received"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Pending'
-                          ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 border-amber-600'
-                          : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                        }`}
-                    >
-                      <span className="text-sm">📝</span>
-                      <span className="leading-tight text-[10px]">1. Received</span>
-                      {activeReceiptOrder.status === 'Pending' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Current</span>}
-                    </button>
-
-                    {/* Step 2: Prepare */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Preparing')}
-                      title="Set status to 2. Preparing Food"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Preparing'
-                          ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 animate-pulse border-amber-600'
-                          : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
-                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                            : 'bg-white hover:bg-amber-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                        }`}
-                    >
-                      <span className="text-sm">👨‍🍳</span>
-                      <span className="leading-tight text-[10px]">2. Prepare</span>
-                      {activeReceiptOrder.status === 'Preparing' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Cooking</span>}
-                    </button>
-
-                    {/* Step 3: Ready */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Ready for Collection')}
-                      title="Set status to 3. Ready for Collection"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Ready for Collection'
-                          ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-400 animate-bounce border-emerald-700'
-                          : activeReceiptOrder.status === 'Completed'
-                            ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                            : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                        }`}
-                    >
-                      <span className="text-sm">🛍️</span>
-                      <span className="leading-tight text-[10px]">3. Ready</span>
-                      {activeReceiptOrder.status === 'Ready for Collection' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Waiting</span>}
-                    </button>
-
-                    {/* Step 4: Complete */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Completed')}
-                      title="Set status to 4. Completed / Collected"
-                      className={`rounded-xl p-2 transition flex flex-col items-center justify-center gap-0.5 cursor-pointer active:scale-95 border ${activeReceiptOrder.status === 'Completed'
-                          ? 'bg-emerald-700 text-white shadow-md ring-2 ring-emerald-400 border-emerald-800'
-                          : 'bg-white hover:bg-emerald-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700'
-                        }`}
-                    >
-                      <span className="text-sm">✅</span>
-                      <span className="leading-tight text-[10px]">4. Complete</span>
-                      {activeReceiptOrder.status === 'Completed' && <span className="text-[8px] uppercase font-bold bg-white/30 px-1 rounded-sm">Done</span>}
-                    </button>
-                  </div>
-                ) : (
-                  /* Customer: Visual Stepper */
-                  <div className="grid grid-cols-4 gap-1 text-center text-[10px] font-black">
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Pending'
-                        ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300'
-                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                      }`}>
-                      <span>📝</span>
-                      <span className="leading-tight">1. Received</span>
-                    </div>
-
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Preparing'
-                        ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300 animate-pulse'
-                        : activeReceiptOrder.status === 'Ready for Collection' || activeReceiptOrder.status === 'Completed'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                      <span>👨‍🍳</span>
-                      <span className="leading-tight">2. Preparing</span>
-                    </div>
-
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Ready for Collection'
-                        ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-400 animate-bounce'
-                        : activeReceiptOrder.status === 'Completed'
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                      <span>🛍️</span>
-                      <span className="leading-tight">3. Ready</span>
-                    </div>
-
-                    <div className={`rounded-xl p-1.5 transition flex flex-col items-center justify-center gap-0.5 ${activeReceiptOrder.status === 'Completed'
-                        ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
-                      }`}>
-                      <span>✅</span>
-                      <span className="leading-tight">4. Collected</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Confirm Collection Button when Ready */}
-                {activeReceiptOrder.status === 'Ready for Collection' && (
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => handleStatusUpdate(activeReceiptOrder.id || activeReceiptOrder._id, 'Completed')}
-                      className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 py-3 px-4 text-xs font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-2 cursor-pointer active:scale-95 animate-pulse"
-                    >
-                      <span>✅</span>
-                      <span>{isOwnerOfActive ? 'Confirm Customer Collected Order (Step 4)' : 'I Have Collected My Meal (Press to Confirm)'}</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Rating Trigger inside Receipt */}
-              <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
-                {activeReceiptOrder.isRated ? (
-                  <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 p-3 text-center text-xs font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between gap-2">
-                    <span>⭐ Thank you! Rated & archived to Dashboard.</span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveReceiptOrder(null)}
-                      className="text-[11px] font-black underline text-emerald-700 hover:text-emerald-900 cursor-pointer"
-                    >
-                      Close
-                    </button>
-                  </div>
-                ) : activeReceiptOrder.status !== 'Completed' ? (
-                  <div className="rounded-xl bg-white/70 dark:bg-gray-800 p-2.5 text-center text-xs font-bold text-gray-700 dark:text-white border border-gray-200 dark:border-gray-700">
-                    Ratings unlock after your order is collected.
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRatingTargetOrder(activeReceiptOrder);
-                      setShowRateModal(true);
-                    }}
-                    className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow-sm hover:bg-amber-600 transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Star className="h-4 w-4 fill-current" /> Rate Shop & Food Service
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setActiveReceiptOrder(null)}
-                className="mt-3 w-full rounded-2xl bg-gray-950 py-3 text-sm font-black text-white hover:bg-gray-800 transition cursor-pointer"
-              >
-                {activeReceiptOrder.status === 'Completed'
-                  ? '✅ Done — Archive Receipt to History & Close'
-                  : 'Done & Close Receipt'}
-              </button>
-            </motion.div>
-          </div>
-        );
-      })()}
-
-      {/* CONTACT CARD MODAL */}
-      <AnimatePresence>
-        {showContactCard && currentShop && (
-          <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4"
-            onClick={() => setShowContactCard(false)}
-          >
-            <motion.div
-              initial={{ y: 80, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 80, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full sm:max-w-sm bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
-            >
-              {/* Header gradient banner */}
-              <div className={`relative bg-gradient-to-br ${activeTheme.heroBg} p-6 text-center overflow-hidden`}>
-                <div className={`absolute -top-10 -right-10 w-40 h-40 ${activeTheme.heroGlow} rounded-full blur-3xl pointer-events-none`} />
-                {/* Close pill */}
-                <button
-                  type="button"
-                  onClick={() => setShowContactCard(false)}
-                  className="absolute top-3 right-3 rounded-full bg-white/15 p-1.5 hover:bg-white/30 transition cursor-pointer"
-                >
-                  <X className="h-4 w-4 text-white" />
-                </button>
-
-                {/* Avatar */}
-                <div className="relative z-10">
-                  <div className="mx-auto h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-2 border-white/30 shadow-lg">
-                    <span className="text-3xl">{currentShop.image || '🏪'}</span>
-                  </div>
-                  <h3 className="mt-3 text-lg font-black text-white tracking-tight">
-                    {currentShop.ownerName || 'Shop Contact'}
-                  </h3>
-                  <p className="text-xs text-white/70 font-medium mt-0.5">
-                    {currentShop.name} · Store Manager
-                  </p>
-                  {/* Rating badge */}
-                  <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-500/20 border border-amber-400/30 rounded-full px-3 py-1">
-                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-black text-amber-300">
-                      {currentShop.rating || '5.0'} rating · {currentShop.reviews?.length || 0} reviews
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Info rows */}
-              <div className="p-5 space-y-3">
-
-                {/* Phone — tap to call */}
-                {currentShop.phone && (
-                  <a
-                    href={`tel:${currentShop.phone}`}
-                    className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 hover:bg-amber-50 border border-gray-100 dark:border-gray-800 hover:border-amber-200 px-4 py-3.5 transition group cursor-pointer"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 group-hover:bg-amber-200 transition">
-                      <Phone className="h-5 w-5 text-amber-700" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Phone · Tap to Call</p>
-                      <p className="text-sm font-black text-gray-900 dark:text-white truncate">{currentShop.phone}</p>
-                    </div>
-                    <ArrowLeft className="h-4 w-4 text-amber-400 rotate-180 ml-auto shrink-0" />
-                  </a>
-                )}
-
-                {/* WhatsApp */}
-                {(currentShop.whatsapp || currentShop.phone) && (
-                  <a
-                    href={`https://wa.me/${(currentShop.whatsapp || currentShop.phone).replace(/[^\d]/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-300 px-4 py-3.5 transition group cursor-pointer"
-                  >
-                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 group-hover:bg-emerald-200 transition">
-                      <span className="text-xl">💬</span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">WhatsApp · Tap to Chat</p>
-                      <p className="text-sm font-black text-emerald-900 truncate">
-                        {currentShop.whatsapp || currentShop.phone}
-                      </p>
-                    </div>
-                    <ArrowLeft className="h-4 w-4 text-emerald-400 rotate-180 ml-auto shrink-0" />
-                  </a>
-                )}
-
-                {/* Location */}
-                {(currentShop.address || currentShop.distance) && (
-                  <div className="flex items-center gap-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 px-4 py-3.5">
-                    <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
-                      <MapPin className="h-5 w-5 text-rose-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Location</p>
-                      <p className="text-sm font-black text-gray-900 dark:text-white truncate">
-                        {currentShop.address || currentShop.distance}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Bottom safe area for mobile */}
-              <div className="px-5 pb-6">
-                <button
-                  type="button"
-                  onClick={() => setShowContactCard(false)}
-                  className="w-full rounded-2xl bg-gray-950 py-3.5 text-sm font-black text-white hover:bg-gray-800 transition cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* UPLOAD / REGISTER SHOP MODAL */}
-      {showAddShopModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-amber-600" /> Upload New Shop
-              </h3>
-              <button type="button" onClick={() => setShowAddShopModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateShopSubmit} className="mt-4 space-y-3">
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Name *</label>
-                <input
-                  required
-                  value={newShopForm.name}
-                  onChange={(e) => setNewShopForm({ ...newShopForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="e.g. Mama's Tasty Bites"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Type / Category *</label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setNewShopForm({ ...newShopForm, cuisine: cat })}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${newShopForm.cuisine === cat
-                          ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                          : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
-                        }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Custom Type</label>
-                    <input
-                      value={newShopForm.cuisine}
-                      onChange={(e) => setNewShopForm({ ...newShopForm, cuisine: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Selected or custom type"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Cover Icon (Emoji)</label>
-                    <input
-                      value={newShopForm.image}
-                      onChange={(e) => setNewShopForm({ ...newShopForm, image: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Cover Emoji 🥙, 🍺, 🍔"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Tap Cover Emoji Picker for Shop */}
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-24 overflow-y-auto">
-                  {FOOD_EMOJIS.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setNewShopForm(prev => ({ ...prev, image: item.emoji }))}
-                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${newShopForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
-                      title={item.name}
-                    >
-                      {item.emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Address / Location</label>
-                <input
-                  value={newShopForm.address}
-                  onChange={(e) => setNewShopForm({ ...newShopForm, address: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="12 Main Street, Central"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Distance Estimate</label>
-                  <input
-                    value={newShopForm.distance}
-                    onChange={(e) => setNewShopForm({ ...newShopForm, distance: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="1.5 km"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Prep Time</label>
-                  <input
-                    value={newShopForm.time}
-                    onChange={(e) => setNewShopForm({ ...newShopForm, time: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="20–30 min"
-                  />
-                </div>
-              </div>
-
-              {/* Phone & WhatsApp */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 dark:text-white block">Contact Numbers</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
-                    <input
-                      type="tel"
-                      value={newShopForm.phone}
-                      onChange={(e) => setNewShopForm({ ...newShopForm, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Call number"
-                    />
-                  </div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none">💬</span>
-                    <input
-                      type="tel"
-                      value={newShopForm.whatsapp}
-                      onChange={(e) => setNewShopForm({ ...newShopForm, whatsapp: e.target.value })}
-                      className="w-full rounded-xl border border-emerald-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
-                      placeholder="WhatsApp number"
-                    />
-                  </div>
-                </div>
-                <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
-              </div>
-
-              {/* Operating Hours */}
-              <div className="space-y-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                <label className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock3 className="h-3.5 w-3.5" /> Operating Hours
-                </label>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Opening Time</label>
-                    <input
-                      type="time"
-                      value={newShopForm.operatingHours?.openTime || '08:00'}
-                      onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Closing Time</label>
-                    <input
-                      type="time"
-                      value={newShopForm.operatingHours?.closeTime || '20:00'}
-                      onChange={(e) => setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1.5">Open Days</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
-                      const isSelected = (newShopForm.operatingHours?.days || []).includes(day);
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => {
-                            const days = newShopForm.operatingHours?.days || [];
-                            const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
-                            setNewShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
-                          }}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
-                            }`}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-1 border-t border-amber-200">
-                  <div>
-                    <span className="text-xs font-black text-gray-800 dark:text-white">Shop Status on Launch</span>
-                    <p className="text-[10px] text-gray-500 dark:text-white">You can change this anytime in dashboard</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNewShopForm(prev => ({ ...prev, isOpen: !prev.isOpen }))}
-                    className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors duration-300 cursor-pointer ${newShopForm.isOpen ? 'bg-emerald-500' : 'bg-gray-300'
-                      }`}
-                  >
-                    <span className={`inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-900 shadow-md transition-transform duration-300 ${newShopForm.isOpen ? 'translate-x-8' : 'translate-x-1'
-                      }`} />
-                    <span className={`absolute text-[9px] font-black ${newShopForm.isOpen ? 'left-1.5 text-white' : 'right-1.5 text-gray-500 dark:text-white'}`}>
-                      {newShopForm.isOpen ? 'ON' : 'OFF'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow hover:bg-amber-600 transition"
-              >
-                Register Shop
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ADD MENU ITEM MODAL */}
-      {showAddMealModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <UtensilsCrossed className="h-5 w-5 text-amber-600" /> Add Meal to {currentShop?.name}
-              </h3>
-              <button type="button" onClick={() => setShowAddMealModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddMealSubmit} className="mt-4 space-y-3">
-              {/* Tuck Shop AI Helper Banner */}
-              <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
-                  <span className="text-xs font-black text-amber-900">Tuck Shop AI Assistant</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleAiAutoFillMeal(false)}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-xs cursor-pointer flex items-center gap-1"
-                >
-                  ✨ AI Auto-Fill & Emoji
-                </button>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Meal Name *</label>
-                <input
-                  required
-                  value={newMealForm.name}
-                  onChange={(e) => setNewMealForm({ ...newMealForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="e.g. Deluxe Kota or BBQ Chicken"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Description</label>
-                <textarea
-                  value={newMealForm.description}
-                  onChange={(e) => setNewMealForm({ ...newMealForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="Juicy beef patty with fresh lettuce and sauce"
-                  rows={2}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Price (R) *</label>
-                  <input
-                    required
-                    type="number"
-                    step="0.01"
-                    value={newMealForm.price}
-                    onChange={(e) => setNewMealForm({ ...newMealForm, price: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="99.00"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Badge Tag</label>
-                  <select
-                    value={newMealForm.tag}
-                    onChange={(e) => setNewMealForm({ ...newMealForm, tag: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  >
-                    <option>Popular</option>
-                    <option>New</option>
-                    <option>Chef Special</option>
-                    <option>Vegetarian</option>
-                    <option>Fresh</option>
-                    <option>Drinks</option>
-                    <option>🔥 Hot Seller</option>
-                    <option>👑 Local Classic</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Icon Emoji</label>
-                  <input
-                    value={newMealForm.image}
-                    onChange={(e) => setNewMealForm({ ...newMealForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                    placeholder="🍔, 🌯, 🥗"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Select Emoji Picker */}
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-20 overflow-y-auto">
-                  {FOOD_EMOJIS.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setNewMealForm(prev => ({ ...prev, image: item.emoji }))}
-                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${newMealForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
-                      title={item.name}
-                    >
-                      {item.emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow hover:bg-amber-600 transition"
-              >
-                Add Meal to Menu
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* EDIT SHOP MODAL */}
-      {showEditShopModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-amber-600" /> Edit Shop Details
-              </h3>
-              <button type="button" onClick={() => setShowEditShopModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditShopSubmit} className="mt-4 space-y-3">
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Name *</label>
-                <input
-                  required
-                  value={editShopForm.name}
-                  onChange={(e) => setEditShopForm({ ...editShopForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Shop Type / Category *</label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {['Greedy', 'Local', 'Local Favorite', 'Greedy & Flame', 'Health & Veggie'].map((cat) => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setEditShopForm({ ...editShopForm, cuisine: cat })}
-                      className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition cursor-pointer border ${editShopForm.cuisine === cat
-                          ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
-                          : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white border-gray-200 dark:border-gray-800 hover:bg-amber-50'
-                        }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Custom Type</label>
-                    <input
-                      value={editShopForm.cuisine}
-                      onChange={(e) => setEditShopForm({ ...editShopForm, cuisine: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Selected or custom type"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Cover Icon (Emoji)</label>
-                    <input
-                      value={editShopForm.image}
-                      onChange={(e) => setEditShopForm({ ...editShopForm, image: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Cover Emoji"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Tap Cover Emoji Picker for Edit Shop */}
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Shop Cover Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-24 overflow-y-auto">
-                  {FOOD_EMOJIS.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setEditShopForm(prev => ({ ...prev, image: item.emoji }))}
-                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${editShopForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
-                      title={item.name}
-                    >
-                      {item.emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Address / Location</label>
-                <input
-                  value={editShopForm.address}
-                  onChange={(e) => setEditShopForm({ ...editShopForm, address: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Distance Estimate</label>
-                  <input
-                    value={editShopForm.distance}
-                    onChange={(e) => setEditShopForm({ ...editShopForm, distance: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Prep Time</label>
-                  <input
-                    value={editShopForm.time}
-                    onChange={(e) => setEditShopForm({ ...editShopForm, time: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-              </div>
-
-              {/* Phone & WhatsApp */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-700 dark:text-white block">Contact Numbers</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-amber-500 pointer-events-none" />
-                    <input
-                      type="tel"
-                      value={editShopForm.phone}
-                      onChange={(e) => setEditShopForm({ ...editShopForm, phone: e.target.value })}
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-800 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                      placeholder="Call number"
-                    />
-                  </div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none">💬</span>
-                    <input
-                      type="tel"
-                      value={editShopForm.whatsapp}
-                      onChange={(e) => setEditShopForm({ ...editShopForm, whatsapp: e.target.value })}
-                      className="w-full rounded-xl border border-emerald-200 pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
-                      placeholder="WhatsApp number"
-                    />
-                  </div>
-                </div>
-                <p className="text-[10px] text-gray-400 font-medium">Enter numbers with country code e.g. 27821234567</p>
-              </div>
-
-              {/* Operating Hours – Edit */}
-              <div className="space-y-3 rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                <label className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock3 className="h-3.5 w-3.5" /> Operating Hours
-                </label>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Opening Time</label>
-                    <input
-                      type="time"
-                      value={editShopForm.operatingHours?.openTime || '08:00'}
-                      onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, openTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1">Closing Time</label>
-                    <input
-                      type="time"
-                      value={editShopForm.operatingHours?.closeTime || '20:00'}
-                      onChange={(e) => setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, closeTime: e.target.value } }))}
-                      className="w-full rounded-xl border border-amber-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400 bg-white dark:bg-gray-900"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-gray-600 dark:text-white block mb-1.5">Open Days</label>
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
-                      const isSelected = (editShopForm.operatingHours?.days || []).includes(day);
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => {
-                            const days = editShopForm.operatingHours?.days || [];
-                            const newDays = isSelected ? days.filter(d => d !== day) : [...days, day];
-                            setEditShopForm(prev => ({ ...prev, operatingHours: { ...prev.operatingHours, days: newDays } }));
-                          }}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${isSelected ? 'bg-amber-500 text-white border-amber-600' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
-                            }`}
-                        >
-                          {day}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-slate-900 py-3 text-sm font-black text-white shadow hover:bg-slate-800 transition"
-              >
-                Save Shop Changes
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
-
-      {/* EDIT MEAL MODAL */}
-      {showEditMealModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <UtensilsCrossed className="h-5 w-5 text-amber-600" /> Edit Menu Item
-              </h3>
-              <button type="button" onClick={() => setShowEditMealModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditMealSubmit} className="mt-4 space-y-3">
-              {/* Tuck Shop AI Helper Banner */}
-              <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-600 animate-pulse" />
-                  <span className="text-xs font-black text-amber-900">Tuck Shop AI Assistant</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleAiAutoFillMeal(true)}
-                  className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1.5 text-xs font-black text-white hover:from-amber-600 hover:to-orange-600 transition shadow-xs cursor-pointer flex items-center gap-1"
-                >
-                  ✨ AI Auto-Fill & Emoji
-                </button>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Meal Name *</label>
-                <input
-                  required
-                  value={editMealForm.name}
-                  onChange={(e) => setEditMealForm({ ...editMealForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Description</label>
-                <textarea
-                  value={editMealForm.description}
-                  onChange={(e) => setEditMealForm({ ...editMealForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  rows={2}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Price (R) *</label>
-                  <input
-                    required
-                    type="number"
-                    step="0.01"
-                    value={editMealForm.price}
-                    onChange={(e) => setEditMealForm({ ...editMealForm, price: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Badge Tag</label>
-                  <select
-                    value={editMealForm.tag}
-                    onChange={(e) => setEditMealForm({ ...editMealForm, tag: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  >
-                    <option>Popular</option>
-                    <option>New</option>
-                    <option>Chef Special</option>
-                    <option>Vegetarian</option>
-                    <option>Fresh</option>
-                    <option>Drinks</option>
-                    <option>🔥 Hot Seller</option>
-                    <option>👑 Local Classic</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Icon Emoji</label>
-                  <input
-                    value={editMealForm.image}
-                    onChange={(e) => setEditMealForm({ ...editMealForm, image: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Select Emoji Picker */}
-              <div>
-                <label className="text-[10px] font-bold text-gray-500 dark:text-white uppercase tracking-wider block mb-1">Quick Tap Food Emoji Icon:</label>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-20 overflow-y-auto">
-                  {FOOD_EMOJIS.map((item, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setEditMealForm(prev => ({ ...prev, image: item.emoji }))}
-                      className={`text-lg p-1 rounded-lg hover:bg-amber-100 transition cursor-pointer ${editMealForm.image === item.emoji ? 'bg-amber-200 ring-2 ring-amber-400' : ''}`}
-                      title={item.name}
-                    >
-                      {item.emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Available Sides for this Meal */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-gray-700 dark:text-white block">
-                    Available Sides for this Meal (Customer selects 3 sides)
-                  </label>
-                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-400">
-                    {editMealForm.sides?.length || 0} offered
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
-                  Tap to add/remove sides offered for this meal:
-                </p>
-                <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-800 max-h-28 overflow-y-auto">
-                  {VENDOR_DEFAULT_SIDES.map((side) => {
-                    const isChecked = (editMealForm.sides || []).includes(side);
+                  {shops.map((shop) => {
+                    const isSelected = (shop.id || shop._id) === selectedShopId;
+                    const isClosed = shop.isOpen === false;
                     return (
                       <button
-                        key={side}
+                        key={shop.id || shop._id}
                         type="button"
-                        onClick={() => {
-                          setEditMealForm((prev) => {
-                            const currentSides = prev.sides || [];
-                            const updated = currentSides.includes(side)
-                              ? currentSides.filter((s) => s !== side)
-                              : [...currentSides, side];
-                            return { ...prev, sides: updated };
-                          });
-                        }}
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-black transition cursor-pointer border ${
-                          isChecked
-                            ? 'bg-amber-500 text-white border-amber-600'
-                            : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-white border-gray-200 dark:border-gray-800 hover:border-amber-300'
-                        }`}
+                        onClick={() => setSelectedShopId(shop.id || shop._id)}
+                        className={`relative shrink-0 snap-start flex flex-col items-center gap-1.5 rounded-xl px-4 py-3 min-w-[120px] transition border ${
+                          isSelected
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 ring-2 ring-amber-300 shadow-md'
+                            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-amber-300 shadow-sm'
+                        } ${isClosed ? 'opacity-60' : ''}`}
                       >
-                        {side}
+                        <span className="text-3xl">{shop.image || '🏪'}</span>
+                        <span className={`text-xs font-semibold truncate max-w-[100px] ${isSelected ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                          {shop.name}
+                        </span>
+                        {shop.cuisine && (
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[100px]">{shop.cuisine}</span>
+                        )}
+                        {isClosed && (
+                          <span className="absolute top-1 right-1 text-[8px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-1.5 py-0.5 rounded-full">Closed</span>
+                        )}
+                        {!isClosed && (
+                          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-gray-900" />
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </div>
+            )}
 
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-amber-500 py-3 text-sm font-black text-white shadow hover:bg-amber-600 transition"
-              >
-                Save Meal Changes
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+            {/* Empty state */}
+            {shops.length === 0 && (
+              <div className="text-center py-16">
+                <div className="text-5xl mb-3">🍽️</div>
+                <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No food shops yet</h3>
+                <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Be the first to register your food business and start receiving orders.</p>
+                <button
+                  type="button"
+                  onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow transition"
+                >
+                  <PlusCircle className="h-4 w-4" /> Register Your Shop
+                </button>
+              </div>
+            )}
 
-      {/* RATE SHOP & FOOD SERVICE MODAL */}
-      {showRateModal && ratingTargetOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-              <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
-                <Star className="h-5 w-5 fill-amber-400 text-amber-500" /> Rate Store & Food Experience
-              </h3>
-              <button type="button" onClick={() => setShowRateModal(false)} className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800">
-                <X className="h-5 w-5" />
-              </button>
+            {/* Selected Shop Info Bar */}
+            {currentShop && (
+              <div className="flex items-center justify-between gap-3 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-3xl shrink-0">{currentShop.image || '🏪'}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
+                      {currentShop.cuisine && <span>{currentShop.cuisine}</span>}
+                      {currentShop.distance && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{currentShop.distance}</span>}
+                      {currentShop.time && <span className="flex items-center gap-0.5"><Clock3 className="h-3 w-3" />{currentShop.time}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isCurrentShopClosed ? (
+                    <span className="text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-2.5 py-1 rounded-full">Closed</span>
+                  ) : (
+                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Open
+                    </span>
+                  )}
+                  {(currentShop.phone || currentShop.whatsapp) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowContactCard(true)}
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-amber-500 transition"
+                    >
+                      <Phone className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Active Customer Orders (on browse tab) */}
+            {myCustomerOrders.length > 0 && (
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-amber-500" /> Active Orders
+                  <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">{myCustomerOrders.length}</span>
+                </h3>
+                <div className="space-y-2">
+                  {(showAllCustomerReceipts ? myCustomerOrders : myCustomerOrders.slice(0, 3)).map((order) => {
+                    const statusColors = {
+                      'Pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                      'Preparing': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                      'Ready for Collection': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+                    };
+                    return (
+                      <button
+                        key={order.id || order._id}
+                        type="button"
+                        onClick={() => setActiveReceiptOrder(order)}
+                        className="w-full flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-xl shrink-0">{order.shopImage || '🍱'}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                              #{order.orderCode} · {order.shopName || 'Food Order'}
+                            </p>
+                            <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                              {(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''} · {formatPrice(order.total)}
+                            </p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${statusColors[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                          {order.status}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {myCustomerOrders.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllCustomerReceipts(!showAllCustomerReceipts)}
+                      className="w-full text-center text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 py-1.5"
+                    >
+                      {showAllCustomerReceipts ? 'Show less' : `View all ${myCustomerOrders.length} orders`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Order / Table Mode Toggle */}
+            {currentShop && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOrderMode('order')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    orderMode === 'order'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-800 hover:bg-gray-50'
+                  }`}
+                >
+                  🍔 Order Food
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderMode('table')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    orderMode === 'table'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-800 hover:bg-gray-50'
+                  }`}
+                >
+                  🪑 Book Table
+                </button>
+              </div>
+            )}
+
+            {/* ── MENU GRID (Order Mode) ── */}
+            {currentShop && orderMode === 'order' && (
+              <div>
+                {/* Search & Filter */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={menuSearch}
+                      onChange={(e) => setMenuSearch(e.target.value)}
+                      placeholder="Search menu..."
+                      className="w-full rounded-lg bg-white dark:bg-gray-900 pl-9 pr-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none transition placeholder:text-gray-400"
+                    />
+                  </div>
+                  {menuTags.length > 2 && (
+                    <select
+                      value={menuTagFilter}
+                      onChange={(e) => setMenuTagFilter(e.target.value)}
+                      className="rounded-lg bg-white dark:bg-gray-900 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none"
+                    >
+                      {menuTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+                    </select>
+                  )}
+                </div>
+
+                {/* Menu Items Grid */}
+                {visibleMeals.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {visibleMeals.map((meal) => {
+                      const inCart = cart.find((c) => c.id === meal.id);
+                      const soldOut = meal.isAvailable === false;
+                      const visual = getItemVisual(meal);
+                      return (
+                        <div
+                          key={meal.id}
+                          className={`relative bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 transition hover:shadow-md ${soldOut ? 'opacity-50' : ''}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="shrink-0 h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                              {visual.isImage ? (
+                                <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
+                              ) : (
+                                <span className="text-2xl">{visual.emoji}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{meal.name}</h4>
+                                  {meal.tag && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{meal.tag}</span>
+                                  )}
+                                </div>
+                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatPrice(meal.price)}</span>
+                              </div>
+                              {meal.description && (
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{meal.description}</p>
+                              )}
+                              {meal.sides && meal.sides.length > 0 && (
+                                <p className="text-[10px] text-gray-400 mt-1">Sides: {meal.sides.slice(0, 3).join(', ')}{meal.sides.length > 3 ? '...' : ''}</p>
+                              )}
+                            </div>
+                          </div>
+                          {/* Add to cart */}
+                          <div className="mt-2.5 flex items-center justify-end gap-2">
+                            {soldOut ? (
+                              <span className="text-[10px] font-bold text-red-500">Sold Out</span>
+                            ) : inCart ? (
+                              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-1">
+                                <button type="button" onClick={() => updateQuantity(meal.id, -1)} className="p-1 text-gray-500 hover:text-red-500 transition">
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 min-w-[20px] text-center">{inCart.quantity}</span>
+                                <button type="button" onClick={() => updateQuantity(meal.id, 1)} className="p-1 text-gray-500 hover:text-emerald-500 transition">
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => addToCart(meal)}
+                                disabled={isCurrentShopClosed}
+                                className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition"
+                              >
+                                <Plus className="h-3 w-3" /> Add
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <span className="text-3xl">🍽️</span>
+                    <p className="text-sm text-gray-400 mt-2">{menuSearch ? 'No menu items match your search' : 'No menu items yet'}</p>
+                  </div>
+                )}
+
+                {/* Kitchen Queue (visible to customers) */}
+                {activeKitchenOrders.length > 0 && (
+                  <div className="mt-4 bg-amber-50/80 dark:bg-amber-950/20 rounded-xl p-3.5 ring-1 ring-amber-200/60 dark:ring-amber-800/40">
+                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5 mb-2">
+                      <Clock3 className="h-3.5 w-3.5" /> Kitchen Queue ({activeKitchenOrders.length} order{activeKitchenOrders.length !== 1 ? 's' : ''})
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeKitchenOrders.slice(0, 8).map((o) => (
+                        <span key={o.id || o._id} className="text-[10px] font-mono font-bold bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-md ring-1 ring-gray-200 dark:ring-gray-800">
+                          #{o.orderCode} · {o.status}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shop Reviews Summary */}
+                {currentShop?.reviews?.length > 0 && (
+                  <div className="mt-4 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                    <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5 mb-2">
+                      <Star className="h-3.5 w-3.5 text-amber-500" /> Reviews ({currentShop.reviews.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {currentShop.reviews.slice(0, 3).map((review, i) => (
+                        <div key={i} className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
+                          <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map((s) => (
+                              <Star key={s} className={`h-3 w-3 ${s <= (review.shopRating || review.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
+                            ))}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{review.userName || 'Customer'}</p>
+                            {review.comment && <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{review.comment}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── TABLE BOOKING MODE ── */}
+            {currentShop && orderMode === 'table' && (
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
+                </h3>
+                <form onSubmit={handleTableBooking} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+                      <input
+                        type="date"
+                        value={booking.date}
+                        onChange={(e) => setBooking({...booking, date: e.target.value})}
+                        required
+                        className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Time</label>
+                      <input
+                        type="time"
+                        value={booking.time}
+                        onChange={(e) => setBooking({...booking, time: e.target.value})}
+                        className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Guests</label>
+                      <select
+                        value={booking.guests}
+                        onChange={(e) => setBooking({...booking, guests: e.target.value})}
+                        className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      >
+                        {[1,2,3,4,5,6,7,8,10,12].map((n) => <option key={n} value={n}>{n} {n === 1 ? 'Guest' : 'Guests'}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Your Name</label>
+                      <input
+                        type="text"
+                        value={booking.name}
+                        onChange={(e) => setBooking({...booking, name: e.target.value})}
+                        required
+                        className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isCurrentShopClosed}
+                    className="w-full rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-bold text-white shadow transition"
+                  >
+                    {isCurrentShopClosed ? 'Shop is Closed' : 'Request Table'}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* TAB: MY ORDERS (Customer order history)              */}
+        {/* ══════════════════════════════════════════════════════ */}
+        {activeTab === 'orders' && (
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-amber-500" /> My Orders
+            </h2>
+
+            {/* Active orders */}
+            {myCustomerOrders.length > 0 && (
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active</h3>
+                {myCustomerOrders.map((order) => {
+                  const statusColors = {
+                    'Pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                    'Preparing': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                    'Ready for Collection': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+                  };
+                  const collectionInfo = formatCollectionDateTime(order);
+                  return (
+                    <motion.div
+                      key={order.id || order._id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 cursor-pointer hover:shadow-md transition"
+                      onClick={() => setActiveReceiptOrder(order)}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{order.shopImage || '🍱'}</span>
+                          <div>
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200">#{order.orderCode}</p>
+                            <p className="text-[10px] text-gray-400">{order.shopName}</p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-600'}`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-gray-400">{(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''}</span>
+                        <span className="font-bold text-amber-600">{formatPrice(order.total)}</span>
+                      </div>
+                      <div className="mt-2 text-[10px] text-gray-400 flex items-center gap-1">
+                        <Clock3 className="h-3 w-3" /> {collectionInfo.label}: {collectionInfo.full}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Completed orders */}
+            {myCompletedCustomerOrders.length > 0 && (
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowPastCustomerReceipts(!showPastCustomerReceipts)}
+                  className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-1"
+                >
+                  Completed ({myCompletedCustomerOrders.length})
+                  <span className="text-[10px]">{showPastCustomerReceipts ? '▲' : '▼'}</span>
+                </button>
+                {showPastCustomerReceipts && myCompletedCustomerOrders.map((order) => (
+                  <div
+                    key={order.id || order._id}
+                    className="bg-white dark:bg-gray-900 rounded-xl p-3 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 cursor-pointer hover:shadow-md transition opacity-70"
+                    onClick={() => setActiveReceiptOrder(order)}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{order.shopImage || '🍱'}</span>
+                        <div>
+                          <p className="text-xs font-bold text-gray-700 dark:text-gray-300">#{order.orderCode} · {order.shopName}</p>
+                          <p className="text-[10px] text-gray-400">{(order.items || []).length} items · {formatPrice(order.total)}</p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Done
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No orders */}
+            {myCustomerOrders.length === 0 && myCompletedCustomerOrders.length === 0 && (
+              <div className="text-center py-12">
+                <span className="text-4xl">📋</span>
+                <h3 className="text-sm font-bold text-gray-600 dark:text-gray-400 mt-3">No orders yet</h3>
+                <p className="text-xs text-gray-400 mt-1">Browse food shops and place your first order!</p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('explore')}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow transition"
+                >
+                  <Store className="h-3.5 w-3.5" /> Browse Food
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* TAB: MY SHOP (Vendor Dashboard — orders + menu)      */}
+        {/* ══════════════════════════════════════════════════════ */}
+        {(activeTab === 'my-shop' || activeTab === 'my-menu') && isShopOwner && (
+          <div className="space-y-5">
+
+            {/* Shop Header Card */}
+            <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white shadow-md">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-3xl bg-white/20 p-2 rounded-xl">{dashboardShop?.image || '🏪'}</span>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">Your Shop</p>
+                    <h3 className="text-lg font-bold truncate">{dashboardShop?.name || 'My Shop'}</h3>
+                    {dashboardShop?.cuisine && <p className="text-xs text-amber-100">{dashboardShop.cuisine}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isCurrentShopOwner && dashboardShop && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleShopOpen(dashboardShop)}
+                      className={`text-[10px] font-bold px-3 py-1.5 rounded-full transition ${
+                        dashboardShop.isOpen !== false
+                          ? 'bg-white/20 text-white hover:bg-white/30'
+                          : 'bg-red-600/80 text-white hover:bg-red-700'
+                      }`}
+                    >
+                      {dashboardShop.isOpen !== false ? '🟢 Open' : '🔴 Closed'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (dashboardShop) {
+                        setEditShopForm({
+                          id: dashboardShop.id || dashboardShop._id,
+                          name: dashboardShop.name || '',
+                          cuisine: dashboardShop.cuisine || '',
+                          distance: dashboardShop.distance || '',
+                          time: dashboardShop.time || '',
+                          image: dashboardShop.image || '🏪',
+                          address: dashboardShop.address || '',
+                          phone: dashboardShop.phone || '',
+                          whatsapp: dashboardShop.whatsapp || '',
+                          operatingHours: dashboardShop.operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon','Tue','Wed','Thu','Fri'] },
+                          isOpen: dashboardShop.isOpen !== false
+                        });
+                        setShowEditShopModal(true);
+                      }
+                    }}
+                    className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition"
+                  >
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <form onSubmit={handleRatingSubmit} className="mt-4 space-y-4">
-              <div className="rounded-2xl bg-amber-50 p-4 border border-amber-200 text-center">
-                <span className="text-xs font-bold text-amber-900 block">{ratingTargetOrder.shopName}</span>
-                <span className="text-xs text-amber-700">Order Code: {ratingTargetOrder.orderCode}</span>
-              </div>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {[
+                { label: 'Today', value: formatPrice(revenueSummary.daily), sub: 'Revenue' },
+                { label: 'This Week', value: formatPrice(revenueSummary.weekly), sub: 'Revenue' },
+                { label: 'Queue', value: liveKitchenQueue.length, sub: `order${liveKitchenQueue.length !== 1 ? 's' : ''}` }
+              ].map((stat) => (
+                <div key={stat.label} className="bg-white dark:bg-gray-900 rounded-xl p-3 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{stat.label}</p>
+                  <p className="text-base font-bold text-gray-900 dark:text-white mt-0.5">{stat.value}</p>
+                  <p className="text-[10px] text-gray-400">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
 
-              {/* Shop Service Rating Stars */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1 text-center">
-                  Shop Service Rating ({shopRating} / 5 Stars)
-                </label>
-                <div className="flex items-center justify-center gap-2 py-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setShopRating(star)}
-                      className="p-1 transition transform hover:scale-125 focus:outline-none"
-                    >
-                      <Star
-                        className={`h-7 w-7 ${star <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                          }`}
-                      />
-                    </button>
-                  ))}
+            {/* Kitchen Queue (Live Orders) */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-amber-500" /> Kitchen Queue
+                  {liveKitchenQueue.length > 0 && (
+                    <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-200 text-[10px] font-bold px-2 py-0.5 rounded-full">{liveKitchenQueue.length}</span>
+                  )}
+                </h3>
+                {/* Search */}
+                <div className="relative w-40">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={orderSearchText}
+                    onChange={(e) => setOrderSearchText(e.target.value)}
+                    placeholder="Search orders..."
+                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 pl-7 pr-2 py-1.5 text-[10px] ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                  />
                 </div>
               </div>
 
-              {/* Food & Quality Rating Stars */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1 text-center">
-                  Food & Quality Rating ({foodRating} / 5 Stars)
-                </label>
-                <div className="flex items-center justify-center gap-2 py-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
+              {/* Filter Tabs */}
+              <div className="flex gap-1 mb-3 overflow-x-auto">
+                {[
+                  { key: 'all', label: 'All', count: activeShopOrders.length },
+                  { key: 'pending', label: 'Pending', count: pendingOrdersCount },
+                  { key: 'preparing', label: 'Preparing', count: preparingOrdersCount },
+                  { key: 'ready', label: 'Ready', count: readyOrdersCount },
+                  { key: 'completed', label: 'Done', count: completedOrdersCount }
+                ].map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setOrderFilterTab(f.key)}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition ${
+                      orderFilterTab === f.key
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
+                    }`}
+                  >
+                    {f.label} {f.count > 0 ? `(${f.count})` : ''}
+                  </button>
+                ))}
+              </div>
+
+              {/* Order List */}
+              {filteredShopOrders.length > 0 ? (
+                <div className="space-y-2">
+                  {(showAllKitchenQueue ? filteredShopOrders : filteredShopOrders.slice(0, 8)).map((order) => {
+                    const statusConfig = {
+                      'Pending': { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', next: 'Preparing', label: 'Start Preparing' },
+                      'Preparing': { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', next: 'Ready for Collection', label: 'Mark Ready' },
+                      'Ready for Collection': { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200', next: 'Completed', label: 'Collected' },
+                      'Completed': { color: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', next: null, label: 'Done' }
+                    };
+                    const config = statusConfig[order.status] || statusConfig['Pending'];
+                    return (
+                      <div key={order.id || order._id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                        <div className="flex items-center gap-2.5 min-w-0" onClick={() => setActiveReceiptOrder(order)} style={{ cursor: 'pointer' }}>
+                          <span className="text-lg">{order.shopImage || '🍱'}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
+                              #{order.orderCode} · {order.customerName || 'Customer'}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                              {(order.items || []).map(i => i.name).join(', ')} · {formatPrice(order.total)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${config.color}`}>
+                            {order.status}
+                          </span>
+                          {config.next && isCurrentShopOwner && (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusUpdate(order.id || order._id, config.next)}
+                              className="text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-white px-2.5 py-1 rounded-lg transition"
+                            >
+                              {config.label}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {filteredShopOrders.length > 8 && (
                     <button
-                      key={star}
                       type="button"
-                      onClick={() => setFoodRating(star)}
-                      className="p-1 transition transform hover:scale-125 focus:outline-none"
+                      onClick={() => setShowAllKitchenQueue(!showAllKitchenQueue)}
+                      className="w-full text-center text-xs font-semibold text-amber-600 py-1.5"
                     >
-                      <Star
-                        className={`h-7 w-7 ${star <= foodRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                          }`}
-                      />
+                      {showAllKitchenQueue ? 'Show less' : `View all ${filteredShopOrders.length} orders`}
                     </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <span className="text-2xl">✅</span>
+                  <p className="text-xs text-gray-400 mt-1.5">No orders in queue</p>
+                </div>
+              )}
+            </div>
+
+            {/* Menu Management */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4 text-amber-500" /> Your Menu
+                  <span className="text-[10px] text-gray-400">({(dashboardShop?.meals || []).length} items)</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddMealModal(true)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition"
+                >
+                  <Plus className="h-3 w-3" /> Add Meal
+                </button>
+              </div>
+
+              {/* Search & Tags */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400" />
+                  <input
+                    type="text"
+                    value={myMenuSearchText}
+                    onChange={(e) => setMyMenuSearchText(e.target.value)}
+                    placeholder="Search your menu..."
+                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 pl-8 pr-3 py-1.5 text-[11px] ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                  />
+                </div>
+                {myMenuTags.length > 2 && (
+                  <select
+                    value={myMenuTagFilter}
+                    onChange={(e) => setMyMenuTagFilter(e.target.value)}
+                    className="rounded-lg bg-gray-50 dark:bg-gray-800 px-2 py-1.5 text-[11px] ring-1 ring-gray-200 dark:ring-gray-700"
+                  >
+                    {myMenuTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
+                  </select>
+                )}
+              </div>
+
+              {/* Meal Items */}
+              {visibleMyMeals.length > 0 ? (
+                <div className="space-y-2">
+                  {visibleMyMeals.map((meal) => {
+                    const visual = getItemVisual(meal);
+                    return (
+                      <div key={meal.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="shrink-0 h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                            {visual.isImage ? (
+                              <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
+                            ) : (
+                              <span className="text-xl">{visual.emoji}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{meal.name}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                              <span className="font-bold text-amber-600">{formatPrice(meal.price)}</span>
+                              {meal.tag && <span>· {meal.tag}</span>}
+                              <span className={meal.isAvailable === false ? 'text-red-500 font-bold' : 'text-emerald-500'}>{meal.isAvailable === false ? 'Sold Out' : 'In Stock'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleMealAvailability(meal)}
+                            className={`p-1.5 rounded-lg transition ${meal.isAvailable === false ? 'bg-red-100 text-red-500 hover:bg-red-200' : 'bg-emerald-100 text-emerald-500 hover:bg-emerald-200'}`}
+                            title={meal.isAvailable === false ? 'Mark Available' : 'Mark Sold Out'}
+                          >
+                            {meal.isAvailable === false ? <X className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditMealForm({ ...meal, id: meal.id });
+                              setShowEditMealModal(true);
+                            }}
+                            className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition"
+                          >
+                            <Edit3 className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMeal(meal.id, meal.name)}
+                            className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-red-500 hover:bg-red-50 transition"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <span className="text-2xl">🍽️</span>
+                  <p className="text-xs text-gray-400 mt-1.5">No menu items yet. Add your first meal!</p>
+                </div>
+              )}
+            </div>
+
+            {/* Shop Insights */}
+            {shopInsights.length > 0 && (
+              <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-3">
+                  <Lightbulb className="h-4 w-4 text-amber-500" /> Tips to Grow
+                </h3>
+                <div className="space-y-2">
+                  {shopInsights.map((insight, i) => (
+                    <div key={i} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                      <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{insight.title}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{insight.detail}</p>
+                    </div>
                   ))}
                 </div>
               </div>
+            )}
+          </div>
+        )}
 
-              {/* Optional Comment */}
-              <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-white block mb-1">Your Review / Feedback</label>
-                <textarea
-                  value={ratingComment}
-                  onChange={(e) => setRatingComment(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-400"
-                  placeholder="Tell us about the food quality, speed, or service..."
-                  rows={3}
-                />
+        {/* ══════════════════════════════════════════════════════ */}
+        {/* MODALS                                                */}
+        {/* ══════════════════════════════════════════════════════ */}
+
+        {/* CHECKOUT MODAL */}
+        {showCheckoutModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowCheckoutModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4 text-amber-500" /> Checkout
+                </h3>
+                <button type="button" onClick={() => setShowCheckoutModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
               </div>
+              <form onSubmit={handlePlaceOrder} className="p-4 space-y-4">
+                {/* Cart Items */}
+                <div className="space-y-2">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                          <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <button type="button" onClick={() => updateQuantity(item.id, -1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-red-100 hover:text-red-500">
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="text-xs font-bold min-w-[16px] text-center text-gray-700 dark:text-gray-200">{item.quantity}</span>
+                        <button type="button" onClick={() => updateQuantity(item.id, 1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-emerald-100 hover:text-emerald-500">
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Total</span>
+                    <span className="text-lg font-bold text-amber-600">{formatPrice(totalCartPrice)}</span>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-amber-500 py-3.5 text-sm font-black text-white shadow hover:bg-amber-600 transition flex items-center justify-center gap-2"
-              >
-                <ThumbsUp className="h-4 w-4" /> Submit Rating & Review
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      )}
+                {/* Customer Details */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Your Name</label>
+                    <input
+                      type="text"
+                      value={checkoutData.customerName}
+                      onChange={(e) => setCheckoutData({...checkoutData, customerName: e.target.value})}
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      value={checkoutData.customerPhone}
+                      onChange={(e) => setCheckoutData({...checkoutData, customerPhone: e.target.value})}
+                      required
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                      placeholder="0XX XXX XXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Order Notes (Optional)</label>
+                    <textarea
+                      value={checkoutData.orderComments}
+                      onChange={(e) => setCheckoutData({...checkoutData, orderComments: e.target.value})}
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none"
+                      rows={2}
+                      placeholder="Any special requests..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Schedule for Later (Optional)</label>
+                    <input
+                      type="datetime-local"
+                      value={checkoutData.scheduledFor}
+                      onChange={(e) => setCheckoutData({...checkoutData, scheduledFor: e.target.value})}
+                      className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
 
-      {/* FIXED FLOATING STICKY ORDER BASKET BAR (AT THE BOTTOM OF SCREEN) */}
-      {cart.length > 0 && viewTab === 'customer' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 sm:p-4 bg-gradient-to-t from-slate-950/90 via-slate-950/80 to-transparent backdrop-blur-md safe-area-bottom mobile-booking-bar">
-          <div className="mx-auto max-w-3xl rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 p-3.5 sm:p-4 text-white shadow-2xl ring-2 ring-amber-300 flex items-center justify-between gap-3">
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 flex items-center justify-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5" /> Pay at counter when you collect
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!cart.length || isCurrentShopClosed}
+                  className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed py-3 text-sm font-bold text-white shadow-md transition"
+                >
+                  {isCurrentShopClosed ? 'Shop is Closed' : `Place Order · ${formatPrice(totalCartPrice)}`}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ORDER RECEIPT MODAL */}
+        {activeReceiptOrder && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setActiveReceiptOrder(null)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const ord = activeReceiptOrder;
+                const ordId = ord.id || ord._id;
+                const collectionInfo = formatCollectionDateTime(ord);
+                const statusColors = {
+                  'Pending': 'bg-yellow-100 text-yellow-800',
+                  'Preparing': 'bg-blue-100 text-blue-800',
+                  'Ready for Collection': 'bg-emerald-100 text-emerald-800',
+                  'Completed': 'bg-gray-200 text-gray-600',
+                };
+                const isMyOrder = currentUser && (
+                  String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '') ||
+                  (currentUser.phone && ord.customerPhone === currentUser.phone)
+                );
+                const ownsShopOrder = isCurrentShopOwner && String(ord.shopId || '') === String(dashboardShop?.id || dashboardShop?._id || '');
+
+                return (
+                  <div className="p-5 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Order Receipt</h3>
+                      <button type="button" onClick={() => setActiveReceiptOrder(null)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <X className="h-5 w-5 text-gray-400" />
+                      </button>
+                    </div>
+
+                    {/* Order Code */}
+                    <div className="text-center py-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl text-white">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-100">Order Code</p>
+                      <p className="text-3xl font-black tracking-widest mt-1">{ord.orderCode || '----'}</p>
+                      <p className="text-[10px] text-amber-100 mt-1">Show this code at pickup</p>
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Status</span>
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${statusColors[ord.status] || 'bg-gray-100 text-gray-600'}`}>
+                        {ord.status}
+                      </span>
+                    </div>
+
+                    {/* Shop & Customer */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Restaurant</p>
+                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mt-0.5">{ord.shopName || 'Food Shop'}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Customer</p>
+                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mt-0.5">{ord.customerName || 'Customer'}</p>
+                        {ord.customerPhone && <p className="text-[10px] text-gray-400 font-mono">{ord.customerPhone}</p>}
+                      </div>
+                    </div>
+
+                    {/* Collection */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{collectionInfo.label}</p>
+                      <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mt-0.5">{collectionInfo.full}</p>
+                    </div>
+
+                    {/* Items */}
+                    <div className="space-y-1.5">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Items</p>
+                      {(ord.items || []).map((item, i) => {
+                        const iv = getItemVisual(item);
+                        return (
+                          <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base">{iv.emoji || '🍱'}</span>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.name}</p>
+                                <p className="text-[10px] text-gray-400">× {item.quantity}</p>
+                              </div>
+                            </div>
+                            <span className="text-xs font-bold text-amber-600">{formatPrice((item.price || 0) * (item.quantity || 1))}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Total</span>
+                        <span className="text-lg font-bold text-amber-600">{formatPrice(ord.total)}</span>
+                      </div>
+                    </div>
+
+                    {/* Order Notes */}
+                    {ord.orderComments && (
+                      <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3">
+                        <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Notes</p>
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-0.5">{ord.orderComments}</p>
+                      </div>
+                    )}
+
+                    {/* Status Update Buttons (Shop Owner) */}
+                    {ownsShopOrder && ord.status !== 'Completed' && (
+                      <div className="flex gap-2">
+                        {ord.status === 'Pending' && (
+                          <button type="button" onClick={() => handleStatusUpdate(ordId, 'Preparing')} className="flex-1 rounded-lg bg-blue-500 hover:bg-blue-600 py-2 text-xs font-bold text-white shadow transition">
+                            Start Preparing
+                          </button>
+                        )}
+                        {ord.status === 'Preparing' && (
+                          <button type="button" onClick={() => handleStatusUpdate(ordId, 'Ready for Collection')} className="flex-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 py-2 text-xs font-bold text-white shadow transition">
+                            Mark Ready
+                          </button>
+                        )}
+                        {ord.status === 'Ready for Collection' && (
+                          <button type="button" onClick={() => handleStatusUpdate(ordId, 'Completed')} className="flex-1 rounded-lg bg-gray-700 hover:bg-gray-800 py-2 text-xs font-bold text-white shadow transition">
+                            Confirm Collected
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Rate Button (Customer, Completed) */}
+                    {isMyOrder && ord.status === 'Completed' && !ord.isRated && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRatingTargetOrder(ord);
+                          setShowRateModal(true);
+                        }}
+                        className="w-full rounded-lg bg-amber-500 hover:bg-amber-600 py-2.5 text-xs font-bold text-white shadow transition flex items-center justify-center gap-1.5"
+                      >
+                        <Star className="h-3.5 w-3.5" /> Rate this Order
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </motion.div>
+          </div>
+        )}
+
+        {/* CONTACT CARD MODAL */}
+        {showContactCard && currentShop && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowContactCard(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-amber-500" /> Contact
+                </h3>
+                <button type="button" onClick={() => setShowContactCard(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+              <div className="text-center mb-4">
+                <span className="text-4xl">{currentShop.image || '🏪'}</span>
+                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-2">{currentShop.name}</h4>
+                {currentShop.address && <p className="text-xs text-gray-400 mt-0.5">{currentShop.address}</p>}
+              </div>
+              <div className="space-y-2.5">
+                {currentShop.phone && (
+                  <a
+                    href={`tel:${currentShop.phone}`}
+                    className="flex items-center gap-3 w-full rounded-xl bg-blue-50 dark:bg-blue-950/30 p-3 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition"
+                  >
+                    <FaPhone className="h-4 w-4" />
+                    <div>
+                      <p className="text-xs font-bold">Call</p>
+                      <p className="text-[11px] font-mono">{currentShop.phone}</p>
+                    </div>
+                  </a>
+                )}
+                {currentShop.whatsapp && (
+                  <a
+                    href={`https://wa.me/${(currentShop.whatsapp || '').replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 w-full rounded-xl bg-green-50 dark:bg-green-950/30 p-3 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-950/50 transition"
+                  >
+                    <FaWhatsapp className="h-4 w-4" />
+                    <div>
+                      <p className="text-xs font-bold">WhatsApp</p>
+                      <p className="text-[11px] font-mono">{currentShop.whatsapp}</p>
+                    </div>
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ADD SHOP MODAL */}
+        {showAddShopModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddShopModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-amber-500" /> Register Food Shop
+                </h3>
+                <button type="button" onClick={() => setShowAddShopModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+              <form onSubmit={handleCreateShopSubmit} className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
+                  <input type="text" required value={newShopForm.name} onChange={(e) => setNewShopForm({...newShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Mama's Kitchen" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine Type</label>
+                    <input type="text" value={newShopForm.cuisine} onChange={(e) => setNewShopForm({...newShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Traditional" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Emoji Icon</label>
+                    <select value={newShopForm.image} onChange={(e) => setNewShopForm({...newShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                  <input type="text" value={newShopForm.address} onChange={(e) => setNewShopForm({...newShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="Street address" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
+                    <input type="tel" value={newShopForm.phone} onChange={(e) => setNewShopForm({...newShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="0XX XXX XXXX" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">WhatsApp</label>
+                    <input type="tel" value={newShopForm.whatsapp} onChange={(e) => setNewShopForm({...newShopForm, whatsapp: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="27XX XXX XXXX" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Distance</label>
+                    <input type="text" value={newShopForm.distance} onChange={(e) => setNewShopForm({...newShopForm, distance: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. 1.5 km" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Prep Time</label>
+                    <input type="text" value={newShopForm.time} onChange={(e) => setNewShopForm({...newShopForm, time: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. 20-30 min" />
+                  </div>
+                </div>
+                <button type="submit" className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 py-3 text-sm font-bold text-white shadow-md transition">
+                  Register Shop
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* ADD MEAL MODAL */}
+        {showAddMealModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddMealModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4 text-amber-500" /> Add Menu Item
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => handleAiAutoFillMeal(false)} className="text-[10px] font-bold bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full hover:bg-purple-200 transition flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> AI Fill
+                  </button>
+                  <button type="button" onClick={() => setShowAddMealModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <X className="h-5 w-5 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              <form onSubmit={handleAddMealSubmit} className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Meal Name *</label>
+                  <input type="text" required value={newMealForm.name} onChange={(e) => setNewMealForm({...newMealForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Grilled Chicken Pap" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+                  <textarea value={newMealForm.description} onChange={(e) => setNewMealForm({...newMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} placeholder="Brief description..." />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
+                    <input type="number" required step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tag</label>
+                    <select value={newMealForm.tag} onChange={(e) => setNewMealForm({...newMealForm, tag: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {['Popular', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
+                    <select value={newMealForm.image} onChange={(e) => setNewMealForm({...newMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {/* Sides */}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
+                  <input
+                    type="text"
+                    value={(newMealForm.sides || []).join(', ')}
+                    onChange={(e) => setNewMealForm({...newMealForm, sides: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                    placeholder="Pap, Chakalaka, Salad..."
+                  />
+                </div>
+                <button type="submit" className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 py-3 text-sm font-bold text-white shadow-md transition">
+                  Add to Menu
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* EDIT SHOP MODAL */}
+        {showEditShopModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditShopModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="h-4 w-4 text-amber-500" /> Edit Shop
+                </h3>
+                <button type="button" onClick={() => setShowEditShopModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+              <form onSubmit={handleEditShopSubmit} className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
+                  <input type="text" required value={editShopForm.name} onChange={(e) => setEditShopForm({...editShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine</label>
+                    <input type="text" value={editShopForm.cuisine} onChange={(e) => setEditShopForm({...editShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
+                    <select value={editShopForm.image} onChange={(e) => setEditShopForm({...editShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
+                  <input type="text" value={editShopForm.address} onChange={(e) => setEditShopForm({...editShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
+                    <input type="tel" value={editShopForm.phone} onChange={(e) => setEditShopForm({...editShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">WhatsApp</label>
+                    <input type="tel" value={editShopForm.whatsapp} onChange={(e) => setEditShopForm({...editShopForm, whatsapp: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Distance</label>
+                    <input type="text" value={editShopForm.distance} onChange={(e) => setEditShopForm({...editShopForm, distance: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Prep Time</label>
+                    <input type="text" value={editShopForm.time} onChange={(e) => setEditShopForm({...editShopForm, time: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                </div>
+                <button type="submit" className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 py-3 text-sm font-bold text-white shadow-md transition">
+                  Save Changes
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* EDIT MEAL MODAL */}
+        {showEditMealModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowEditMealModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Edit3 className="h-4 w-4 text-amber-500" /> Edit Meal
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => handleAiAutoFillMeal(true)} className="text-[10px] font-bold bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full hover:bg-purple-200 transition flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> AI Fill
+                  </button>
+                  <button type="button" onClick={() => setShowEditMealModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <X className="h-5 w-5 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+              <form onSubmit={handleEditMealSubmit} className="p-4 space-y-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Meal Name *</label>
+                  <input type="text" required value={editMealForm.name} onChange={(e) => setEditMealForm({...editMealForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
+                  <textarea value={editMealForm.description} onChange={(e) => setEditMealForm({...editMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
+                    <input type="number" required step="0.01" value={editMealForm.price} onChange={(e) => setEditMealForm({...editMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tag</label>
+                    <select value={editMealForm.tag} onChange={(e) => setEditMealForm({...editMealForm, tag: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {['Popular', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
+                    <select value={editMealForm.image} onChange={(e) => setEditMealForm({...editMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
+                  <input
+                    type="text"
+                    value={(editMealForm.sides || []).join(', ')}
+                    onChange={(e) => setEditMealForm({...editMealForm, sides: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none"
+                  />
+                </div>
+                <button type="submit" className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 py-3 text-sm font-bold text-white shadow-md transition">
+                  Save Changes
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* RATE MODAL */}
+        {showRateModal && ratingTargetOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowRateModal(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Star className="h-4 w-4 text-amber-500" /> Rate Your Experience
+                </h3>
+                <button type="button" onClick={() => setShowRateModal(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-5 w-5 text-gray-400" />
+                </button>
+              </div>
+              <form onSubmit={handleRatingSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Shop Rating</label>
+                  <div className="flex gap-1">
+                    {[1,2,3,4,5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setShopRating(s)}
+                        className="p-1 transition hover:scale-110"
+                      >
+                        <Star className={`h-7 w-7 ${s <= shopRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Food Rating</label>
+                  <div className="flex gap-1">
+                    {[1,2,3,4,5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setFoodRating(s)}
+                        className="p-1 transition hover:scale-110"
+                      >
+                        <Star className={`h-7 w-7 ${s <= foodRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Comment (Optional)</label>
+                  <textarea
+                    value={ratingComment}
+                    onChange={(e) => setRatingComment(e.target.value)}
+                    className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none"
+                    rows={3}
+                    placeholder="How was your experience?"
+                  />
+                </div>
+                <button type="submit" className="w-full rounded-xl bg-amber-500 hover:bg-amber-600 py-3 text-sm font-bold text-white shadow-md transition flex items-center justify-center gap-1.5">
+                  <Star className="h-4 w-4" /> Submit Rating
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+      </div>
+
+      {/* ── FLOATING CART BAR ── */}
+      {cart.length > 0 && (activeTab === 'explore' || activeTab === 'other-shops') && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-gray-950/90 to-transparent backdrop-blur-md safe-area-bottom mobile-booking-bar">
+          <div className="mx-auto max-w-3xl rounded-2xl bg-amber-500 p-3 text-white shadow-xl flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="relative rounded-xl bg-white/20 p-2.5 backdrop-blur-md">
-                <ShoppingBag className="h-6 w-6 text-white" />
-                <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 text-[11px] font-black text-amber-300 shadow">
+              <div className="relative bg-white/20 p-2 rounded-xl backdrop-blur-md">
+                <ShoppingBag className="h-5 w-5 text-white" />
+                <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-amber-300 shadow">
                   {cart.reduce((sum, i) => sum + i.quantity, 0)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-100 block">Your Food Basket</span>
-                <span className="text-lg sm:text-xl font-black text-white">{formatPrice(totalCartPrice)}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-100 block">Your Basket</span>
+                <span className="text-base font-bold">{formatPrice(totalCartPrice)}</span>
               </div>
             </div>
-
             <button
               type="button"
               disabled={isCurrentShopClosed}
               onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
-              className="rounded-xl bg-slate-950 px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-black text-amber-300 hover:bg-slate-900 transition shadow-lg flex items-center gap-2 cursor-pointer active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-500 disabled:text-gray-200 disabled:shadow-none"
+              className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-gray-800 transition shadow-lg flex items-center gap-1.5 disabled:bg-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed"
             >
-              <span>{isCurrentShopClosed ? 'Shop is Closed' : currentUser ? 'View Basket & Checkout' : 'Sign in to order'}</span>
+              <span>{isCurrentShopClosed ? 'Closed' : currentUser ? 'Checkout' : 'Sign in'}</span>
               <span>→</span>
             </button>
           </div>

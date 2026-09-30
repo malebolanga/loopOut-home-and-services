@@ -13,9 +13,13 @@ const requireDatabase = (res) => {
 };
 const format = (document) => ({ id: document._id.toString(), ...document.toObject() });
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
-const userId = (req) => String(req.user.id);
+const userId = (req) => String(req.user?.id || req.user?._id || '');
 const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
-const isOwner = (shop, req) => String(shop.ownerId) === userId(req);
+const isOwner = (shop, req) => {
+  const currentUid = userId(req);
+  if (!currentUid) return false;
+  return String(shop.ownerId || '') === currentUid || Boolean(req.user?.isAdmin || req.user?.role === 'admin');
+};
 const getOwnedShop = async (id, req, res) => {
   if (!validId(id)) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
   const shop = await Shop.findById(id);
