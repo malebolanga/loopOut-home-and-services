@@ -77,12 +77,18 @@ const Footer = () => {
     return null;
   }
 
+  const isFoodRoute =
+    location.pathname === '/food' ||
+    location.pathname.startsWith('/food/') ||
+    location.pathname === '/lunch' ||
+    location.pathname.startsWith('/lunch/');
+
   return (
     <>
   
 
-      {/* Main Footer - Hidden on mobile, visible on desktop */}
-      <footer className="hidden md:block bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-20 pb-12 mt-20 border-t border-gray-100 dark:border-gray-800">
+      {/* Main Footer - Hidden on mobile and small screens for food routes, visible on desktop */}
+      <footer className={`${isFoodRoute ? 'hidden lg:block' : 'hidden md:block'} bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-20 pb-12 mt-20 border-t border-gray-100 dark:border-gray-800`}>
         <div className="max-w-7xl mx-auto px-6 md:px-8">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-16">
             
@@ -135,13 +141,15 @@ const Footer = () => {
           </div>
         </div>
       </footer>      
-      <footer className="md:hidden mt-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
-        <div className="flex items-center justify-center gap-x-4 text-[11px] font-bold text-gray-500 dark:text-gray-400">
-          <Link to="/terms">Terms</Link>
-          <span className="text-gray-300 dark:text-gray-700">·</span>
-          <Link to="/privacy">Privacy</Link>
-        </div>
-      </footer>
+      {!isFoodRoute && (
+        <footer className="md:hidden mt-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
+          <div className="flex items-center justify-center gap-x-4 text-[11px] font-bold text-gray-500 dark:text-gray-400">
+            <Link to="/terms">Terms</Link>
+            <span className="text-gray-300 dark:text-gray-700">·</span>
+            <Link to="/privacy">Privacy</Link>
+          </div>
+        </footer>
+      )}
     </>
   );
 };

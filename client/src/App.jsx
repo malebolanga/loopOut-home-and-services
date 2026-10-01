@@ -426,7 +426,8 @@ function AppContent() {
   const isCreateListingPage = location.pathname.endsWith('/create-listing');
   // Hide header on /:userId/listings and /:userId/list (dynamic user listing pages)
   const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage;
+  const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
   const isListingsPage = location.pathname.startsWith('/listings') || isUserListingsPage;

@@ -79,6 +79,49 @@ export const VENDOR_DEFAULT_SIDES = [
   'Salad'
 ];
 
+export const getAvailableSides = (meal) => {
+  if (!meal) return [];
+  if (meal.sides && Array.isArray(meal.sides) && meal.sides.length > 0) {
+    return meal.sides;
+  }
+  const text = ((meal.name || '') + ' ' + (meal.description || '')).trim();
+
+  const found = new Set();
+  const sideMatchers = [
+    { name: 'Spinach', pattern: /spinach/i },
+    { name: 'Beets', pattern: /beet|bedro[ts]/i },
+    { name: 'Cabbage', pattern: /cabbage/i },
+    { name: 'Pumpkin', pattern: /pumpkin/i },
+    { name: 'Sweet Potatoes', pattern: /sweet\s*potato/i },
+    { name: 'Mash Potatoes', pattern: /mash(?:ed)?\s*potato/i },
+    { name: 'Potatoes', pattern: /(?<!sweet\s*)(?<!mash(?:ed)?\s*)potato(?:es)?|chips/i },
+    { name: 'Chakalaka', pattern: /ch[au]k[au]laka/i },
+    { name: 'Atchar', pattern: /at?char/i },
+    { name: 'Salad', pattern: /salad/i },
+    { name: 'Coleslaw', pattern: /coleslaw/i }
+  ];
+
+  sideMatchers.forEach((m) => {
+    if (m.pattern.test(text)) found.add(m.name);
+  });
+
+  const nameHasPap = /\bpap\b/i.test(meal.name || '');
+  if (!nameHasPap && /\bpap\b/i.test(text)) {
+    found.add('Pap');
+  }
+
+  if (found.size >= 2) return Array.from(found);
+  return [...VENDOR_DEFAULT_SIDES];
+};
+
+export const getMaxSides = (meal) => {
+  if (!meal) return 3;
+  const text = ((meal.name || '') + ' ' + (meal.description || '')).toLowerCase();
+  if (/four\s*side/i.test(text)) return 4;
+  if (/two\s*side/i.test(text)) return 2;
+  return 3;
+};
+
 const SHOP_THEMES = [
   {
     id: 'amber',
@@ -430,6 +473,7 @@ export default function LunchComingSoon() {
   const [shops, setShops] = useState([]);
   const [selectedShopId, setSelectedShopId] = useState('');
   const [cart, setCart] = useState([]);
+  const [selectedMealSides, setSelectedMealSides] = useState({});
   const [orders, setOrders] = useState([]);
   const [notice, setNotice] = useState(null);
 
@@ -448,6 +492,7 @@ export default function LunchComingSoon() {
 
   // Form states for checkout & delivery
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showBasketPreview, setShowBasketPreview] = useState(false);
   const [checkoutData, setCheckoutData] = useState({
     customerName: currentUser?.username || currentUser?.name || '',
     customerPhone: currentUser?.phone || '',
@@ -947,6 +992,27 @@ export default function LunchComingSoon() {
   }, [completedStoreOrders]);
 
 
+  // Sides operations
+  const getActiveSides = (meal, availableSides, maxSides = 3) => {
+    if (selectedMealSides[meal.id] !== undefined) {
+      return selectedMealSides[meal.id];
+    }
+    return availableSides.slice(0, maxSides);
+  };
+
+  const toggleSideForMeal = (mealId, side, availableSides, maxSides = 3) => {
+    setSelectedMealSides((prev) => {
+      const current = prev[mealId] !== undefined ? prev[mealId] : availableSides.slice(0, maxSides);
+      if (current.includes(side)) {
+        return { ...prev, [mealId]: current.filter((s) => s !== side) };
+      }
+      if (current.length < maxSides) {
+        return { ...prev, [mealId]: [...current, side] };
+      }
+      return { ...prev, [mealId]: [...current.slice(1), side] };
+    });
+  };
+
   // Cart operations
   const addToCart = (meal) => {
     if (currentShop?.isOpen === false) {
@@ -958,21 +1024,34 @@ export default function LunchComingSoon() {
       return;
     }
 
+    const availableSides = getAvailableSides(meal);
+    const maxSides = getMaxSides(meal);
+    const chosenSides = availableSides.length > 0
+      ? getActiveSides(meal, availableSides, maxSides)
+      : (meal.sides || []);
+
+    const cartKey = meal.id + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
+
     setCart((items) => {
-      const existing = items.find((item) => item.id === meal.id);
-      if (existing) {
-        return items.map((item) => item.id === meal.id ? { ...item, quantity: item.quantity + 1 } : item);
+      const existingIndex = items.findIndex((item) => (item.cartKey && item.cartKey === cartKey) || (item.id === meal.id && JSON.stringify(item.sides || []) === JSON.stringify(chosenSides)));
+      if (existingIndex > -1) {
+        return items.map((item, idx) => idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...items, { ...meal, quantity: 1 }];
+      return [...items, { ...meal, sides: chosenSides, cartKey, quantity: 1 }];
     });
+    // Auto-show basket preview popup
+    setShowBasketPreview(true);
   };
 
-  const updateQuantity = (mealId, change) => {
+  const updateQuantity = (cartKeyOrId, change) => {
     if (isCurrentShopClosed) return;
 
     setCart((items) =>
       items
-        .map((item) => (item.id === mealId ? { ...item, quantity: item.quantity + change } : item))
+        .map((item) => {
+          const isMatch = (item.cartKey && item.cartKey === cartKeyOrId) || item.id === cartKeyOrId;
+          return isMatch ? { ...item, quantity: item.quantity + change } : item;
+        })
         .filter((item) => item.quantity > 0)
     );
   };
@@ -1247,7 +1326,7 @@ export default function LunchComingSoon() {
   };
 
   return (
-    <main className="app-safe-top min-h-screen app-safe-content-bottom pb-36 sm:pb-8 bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden">
+    <main className={`app-safe-top min-h-screen app-safe-content-bottom ${cart.length > 0 ? 'pb-28 sm:pb-24' : 'pb-12 sm:pb-8'} bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden`}>
       <div className="mx-auto max-w-5xl w-full">
 
         {/* ── CLEAN HEADER ── */}
@@ -1548,7 +1627,11 @@ export default function LunchComingSoon() {
                 {visibleMeals.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {visibleMeals.map((meal) => {
-                      const inCart = cart.find((c) => c.id === meal.id);
+                      const availableSides = getAvailableSides(meal);
+                      const maxSides = getMaxSides(meal);
+                      const activeSides = availableSides.length > 0 ? getActiveSides(meal, availableSides, maxSides) : [];
+                      const cartKey = meal.id + (activeSides.length ? '-' + activeSides.slice().sort().join('-') : '');
+                      const inCart = cart.find((c) => (c.cartKey && c.cartKey === cartKey) || c.id === meal.id);
                       const soldOut = meal.isAvailable === false;
                       const visual = getItemVisual(meal);
                       return (
@@ -1577,22 +1660,49 @@ export default function LunchComingSoon() {
                               {meal.description && (
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{meal.description}</p>
                               )}
-                              {meal.sides && meal.sides.length > 0 && (
-                                <p className="text-[10px] text-gray-400 mt-1">Sides: {meal.sides.slice(0, 3).join(', ')}{meal.sides.length > 3 ? '...' : ''}</p>
-                              )}
                             </div>
                           </div>
+
+                          {/* ── SIDES SELECTOR ── */}
+                          {availableSides.length > 0 && !soldOut && (
+                            <div className="mt-2.5">
+                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
+                                Choose sides <span className="text-amber-500">({activeSides.length}/{maxSides})</span>
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {availableSides.map((side) => {
+                                  const isSelected = activeSides.includes(side);
+                                  return (
+                                    <button
+                                      key={side}
+                                      type="button"
+                                      onClick={() => toggleSideForMeal(meal.id, side, availableSides, maxSides)}
+                                      className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                                        isSelected
+                                          ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
+                                          : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-amber-300'
+                                      }`}
+                                    >
+                                      {isSelected && <Check className="h-2.5 w-2.5" />}
+                                      {side}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Add to cart */}
                           <div className="mt-2.5 flex items-center justify-end gap-2">
                             {soldOut ? (
                               <span className="text-[10px] font-bold text-red-500">Sold Out</span>
                             ) : inCart ? (
                               <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-1">
-                                <button type="button" onClick={() => updateQuantity(meal.id, -1)} className="p-1 text-gray-500 hover:text-red-500 transition">
+                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, -1)} className="p-1 text-gray-500 hover:text-red-500 transition">
                                   <Minus className="h-3.5 w-3.5" />
                                 </button>
                                 <span className="text-xs font-bold text-gray-700 dark:text-gray-200 min-w-[20px] text-center">{inCart.quantity}</span>
-                                <button type="button" onClick={() => updateQuantity(meal.id, 1)} className="p-1 text-gray-500 hover:text-emerald-500 transition">
+                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, 1)} className="p-1 text-gray-500 hover:text-emerald-500 transition">
                                   <Plus className="h-3.5 w-3.5" />
                                 </button>
                               </div>
@@ -2153,23 +2263,35 @@ export default function LunchComingSoon() {
                 {/* Cart Items */}
                 <div className="space-y-2">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
-                          <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                    <div key={item.cartKey || item.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 space-y-1.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                            <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, -1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-red-100 hover:text-red-500">
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="text-xs font-bold min-w-[16px] text-center text-gray-700 dark:text-gray-200">{item.quantity}</span>
+                          <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, 1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-emerald-100 hover:text-emerald-500">
+                            <Plus className="h-3 w-3" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <button type="button" onClick={() => updateQuantity(item.id, -1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-red-100 hover:text-red-500">
-                          <Minus className="h-3 w-3" />
-                        </button>
-                        <span className="text-xs font-bold min-w-[16px] text-center text-gray-700 dark:text-gray-200">{item.quantity}</span>
-                        <button type="button" onClick={() => updateQuantity(item.id, 1)} className="p-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-600 dark:text-gray-300 hover:bg-emerald-100 hover:text-emerald-500">
-                          <Plus className="h-3 w-3" />
-                        </button>
-                      </div>
+                      {item.sides && item.sides.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-0.5">
+                          {item.sides.map((side) => (
+                            <span key={side} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                              <Check className="h-2 w-2" />
+                              {side}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
@@ -2770,6 +2892,117 @@ export default function LunchComingSoon() {
 
       </div>
 
+      {/* ── BASKET PREVIEW POPUP (auto-shows on add) ── */}
+      <AnimatePresence>
+        {showBasketPreview && cart.length > 0 && (
+          <motion.div
+            key="basket-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            onClick={() => setShowBasketPreview(false)}
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative z-10 w-full max-w-md mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-700" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <ShoppingBag className="h-5 w-5 text-amber-500" />
+                    <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-white text-[9px] font-black min-w-[16px] h-[16px] rounded-full flex items-center justify-center">
+                      {cart.reduce((s, i) => s + i.quantity, 0)}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-gray-900 dark:text-white">Your Basket</h3>
+                  {currentShop && (
+                    <span className="text-[10px] text-gray-400 font-semibold">· {currentShop.name}</span>
+                  )}
+                </div>
+                <button onClick={() => setShowBasketPreview(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <X className="h-4 w-4 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Cart items list */}
+              <div className="px-5 py-3 space-y-3 max-h-60 overflow-y-auto">
+                {cart.map((item) => (
+                  <div key={item.cartKey || item.id} className="space-y-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xl shrink-0">{getItemVisual(item).emoji || '🍱'}</span>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>
+                          <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, -1)} className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition">
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="text-xs font-black text-gray-900 dark:text-white min-w-[16px] text-center">{item.quantity}</span>
+                        <button type="button" onClick={() => updateQuantity(item.cartKey || item.id, 1)} className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-emerald-100 hover:text-emerald-500 transition">
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                    {item.sides && item.sides.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pl-8">
+                        {item.sides.map((side) => (
+                          <span key={side} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                            <Check className="h-2 w-2" />
+                            {side}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Total + Confirm button */}
+              <div className="px-5 pb-6 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-bold text-gray-600 dark:text-gray-400">Total</span>
+                  <span className="text-xl font-black text-amber-600">{formatPrice(totalCartPrice)}</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={isCurrentShopClosed}
+                  onClick={() => {
+                    setShowBasketPreview(false);
+                    currentUser ? setShowCheckoutModal(true) : navigate('/sign-in');
+                  }}
+                  className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white py-3.5 text-sm font-black shadow-lg hover:from-amber-600 hover:to-orange-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  {isCurrentShopClosed ? 'Shop Closed' : currentUser ? `Confirm Order · ${formatPrice(totalCartPrice)}` : 'Sign in to Order'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBasketPreview(false)}
+                  className="w-full mt-2 text-center text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 font-semibold py-1"
+                >
+                  Continue browsing
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── FLOATING CART BAR ── */}
       {cart.length > 0 && (activeTab === 'explore' || activeTab === 'other-shops') && (
         <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-gradient-to-t from-gray-950/90 to-transparent backdrop-blur-md safe-area-bottom mobile-booking-bar">
@@ -2777,7 +3010,7 @@ export default function LunchComingSoon() {
             <div className="flex items-center gap-3">
               <div className="relative bg-white/20 p-2 rounded-xl backdrop-blur-md">
                 <ShoppingBag className="h-5 w-5 text-white" />
-                <span className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-amber-300 shadow">
+                <span className="absolute -top-1.5 -right-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-amber-300 shadow">
                   {cart.reduce((sum, i) => sum + i.quantity, 0)}
                 </span>
               </div>
@@ -2789,10 +3022,12 @@ export default function LunchComingSoon() {
             <button
               type="button"
               disabled={isCurrentShopClosed}
-              onClick={() => currentUser ? setShowCheckoutModal(true) : navigate('/sign-in')}
-              className="rounded-xl bg-gray-900 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-gray-800 transition shadow-lg flex items-center gap-1.5 disabled:bg-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed"
+              onClick={() => {
+                currentUser ? setShowBasketPreview(true) : navigate('/sign-in');
+              }}
+              className="rounded-xl bg-gray-900 px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-gray-800 transition shadow-lg flex items-center gap-1.5 disabled:bg-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed"
             >
-              <span>{isCurrentShopClosed ? 'Closed' : currentUser ? 'Checkout' : 'Sign in'}</span>
+              <span>{isCurrentShopClosed ? 'Closed' : currentUser ? 'View Basket' : 'Sign in'}</span>
               <span>→</span>
             </button>
           </div>

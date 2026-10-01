@@ -152,10 +152,10 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
     let path = `/listing/${item._id}`; // safe default
 
     if (resolvedType === 'listing' || resolvedType === 'property'
-        || resolvedType === 'rent' || resolvedType === 'over'
-        || resolvedType === 'sale' || resolvedType === 'land'
-        || resolvedType === 'resort' || resolvedType === 'hotel'
-        || resolvedType === 'apartment' || resolvedType === 'office') {
+      || resolvedType === 'rent' || resolvedType === 'over'
+      || resolvedType === 'sale' || resolvedType === 'land'
+      || resolvedType === 'resort' || resolvedType === 'hotel'
+      || resolvedType === 'apartment' || resolvedType === 'office') {
       path = `/listing/${item._id}`;
     } else if (resolvedType === 'event') {
       path = `/event/${item._id}`;
@@ -223,7 +223,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           </div>
         )}
       </div>
-      
+
       {/* Info section - Placed exactly like Airbnb, borderless, clean */}
       <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
@@ -231,11 +231,11 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
             <p className={`font-semibold text-gray-900 dark:text-white truncate ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
               {item.address?.split(',')[0] || item.name || 'South Africa'}
             </p>
-            
+
             <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight mt-0.5">
               {item.name}
             </p>
-            
+
             <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight">
               {getCategoryLabel()}
             </p>

@@ -120,8 +120,19 @@ export const HomeHero = ({ navigate, compact = false }) => {
               {slide.headline}
             </h1>
 
-            <p className="text-white/75 text-sm sm:text-base mt-3 max-w-xl">
-              Discover trusted services, people and places around you — all in one LoopOut.
+            <p className="flex items-center gap-2 mt-3 flex-wrap">
+              <span
+                className="text-[11px] font-black tracking-[0.12em] uppercase px-2.5 py-1 rounded-full"
+                style={{ color: slide.accent, background: `${slide.accent}22` }}
+              >
+                Fine
+              </span>
+              <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
+                Fresh
+              </span>
+              <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
+                Fast
+              </span>
             </p>
 
             <form onSubmit={search} className="mt-5 w-full max-w-2xl">
