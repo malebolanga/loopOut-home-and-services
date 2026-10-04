@@ -3224,28 +3224,31 @@ const FoodSpecialsStrip = ({ navigate }) => {
                 </span>
               )}
 
-              {/* Quick Add to Cart Button */}
-              <button
-                type="button"
-                onClick={(e) => handleQuickAdd(e, item)}
-                className="w-8 h-8 rounded-full flex items-center justify-center absolute right-1.5 bottom-1.5 shadow-lg transition-all duration-200 active:scale-90 z-10"
-                style={{
-                  background: cart.some((ci) => ci.item.id === item.id)
-                    ? 'linear-gradient(135deg,#f59e0b,#ef4444)'
-                    : '#1ed760',
-                  color: '#000',
-                }}
-                title={`Add ${item.name} to basket`}
-                aria-label={`Add ${item.name} to basket`}
-              >
-                {cart.some((ci) => ci.item.id === item.id) ? (
-                  <span className="text-[11px] font-black text-white">
-                    {cart.find((ci) => ci.item.id === item.id)?.qty}
-                  </span>
-                ) : (
-                  <PlusCircle className="w-4 h-4 fill-black stroke-none" />
-                )}
-              </button>
+              {/* Basket Button */}
+              {(() => {
+                const cartEntry = cart.find((ci) => ci.item.id === item.id);
+                const qty = cartEntry?.qty ?? 0;
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => handleQuickAdd(e, item)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center absolute right-1.5 bottom-1.5 transition-all duration-200 active:scale-90 z-10"
+                    title={`Add ${item.name} to basket`}
+                    aria-label={`Add ${item.name} to basket`}
+                  >
+                    {qty > 1 ? (
+                      <span className="text-[13px] font-black leading-none" style={{ color: '#1ed760' }}>
+                        {qty}
+                      </span>
+                    ) : (
+                      <ShoppingBag
+                        className="w-[18px] h-[18px]"
+                        style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
+                      />
+                    )}
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Title */}
