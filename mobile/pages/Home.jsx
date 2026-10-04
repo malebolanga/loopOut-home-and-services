@@ -3015,6 +3015,26 @@ const FoodSpecialsStrip = ({ navigate }) => {
     }
   };
 
+  // Quick-add: add item directly from carousel card without opening detail modal
+  const handleQuickAdd = (e, item) => {
+    e.stopPropagation();
+    if (activeCartShopId && item.shopId !== activeCartShopId) {
+      setCrossShopCandidate(item);
+      return;
+    }
+    const existing = cart.findIndex((ci) => ci.item.id === item.id);
+    if (existing >= 0) {
+      setCart((prev) =>
+        prev.map((ci, idx) =>
+          idx === existing ? { ...ci, qty: ci.qty + 1 } : ci
+        )
+      );
+    } else {
+      handleAddToCart({ item, qty: 1, sideNames: [], drinks: [] });
+    }
+    setShowOrderReview(true);
+  };
+
   // Replace cart with items from the new shop
   const handleReplaceCart = () => {
     setCart([]);
@@ -3126,8 +3146,20 @@ const FoodSpecialsStrip = ({ navigate }) => {
       <div className="flex items-center justify-between mb-3 px-0.5">
         <div>
           <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-            <span>Made For You</span>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 font-mono tracking-normal">• Fresh &amp; Fast</span>
+         
+            <button
+              type="button"
+              onClick={() => cart.length > 0 && setShowOrderReview(true)}
+              className="relative flex items-center justify-center w-7 h-7 rounded-xl bg-rose-100 dark:bg-rose-900/30 transition hover:bg-rose-200 dark:hover:bg-rose-800/40"
+              title="View basket"
+            >
+              <Flame className="w-4 h-4 text-rose-500" />
+              {totalCartItems > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] font-black min-w-[14px] h-[14px] px-0.5 rounded-full flex items-center justify-center border border-white shadow-sm">
+                  {totalCartItems}
+                </span>
+              )}
+            </button>
           </h3>
         </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -3192,10 +3224,31 @@ const FoodSpecialsStrip = ({ navigate }) => {
                 </span>
               )}
 
-              {/* Floating Spotify Green Action Button on cover bottom-right */}
-              <div className="w-8 h-8 rounded-full bg-[#1ed760] text-black shadow-lg shadow-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-y-0 translate-y-2 transition-all duration-200 absolute right-1.5 bottom-1.5 hover:scale-110 active:scale-95">
-                <Play className="w-3.5 h-3.5 fill-black ml-0.5" />
-              </div>
+              {/* Basket Button */}
+              {(() => {
+                const cartEntry = cart.find((ci) => ci.item.id === item.id);
+                const qty = cartEntry?.qty ?? 0;
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => handleQuickAdd(e, item)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center absolute right-1.5 bottom-1.5 transition-all duration-200 active:scale-90 z-10"
+                    title={`Add ${item.name} to basket`}
+                    aria-label={`Add ${item.name} to basket`}
+                  >
+                    {qty > 1 ? (
+                      <span className="text-[13px] font-black leading-none" style={{ color: '#1ed760' }}>
+                        {qty}
+                      </span>
+                    ) : (
+                      <ShoppingBag
+                        className="w-[18px] h-[18px]"
+                        style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
+                      />
+                    )}
+                  </button>
+                );
+              })()}
             </div>
 
             {/* Title */}
