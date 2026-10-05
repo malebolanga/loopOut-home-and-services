@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 import PrivateRoute from "./components/PrivateRoute";
 import AuthSessionManager from "./components/AuthSessionManager";
 import NeuralSplash from "./components/NeuralSplash";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, useRef, lazy, Suspense } from "react";
 import ScrollToTop from "./components/ScrollToTop";
 import { useSelector, useDispatch } from "react-redux";
 import { signOutUserSuccess } from "./redux/user/userSlice";
@@ -462,8 +462,13 @@ function AppContent() {
 export default function App() {
   const { currentUser } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+  const initialSessionCheckDone = useRef(false);
 
+  // Validate persisted session once on initial application load / rehydration
   useEffect(() => {
+    if (initialSessionCheckDone.current) return;
+    initialSessionCheckDone.current = true;
+
     const validateTokenOnMount = async () => {
       if (!currentUser) return;
       try {
@@ -484,17 +489,26 @@ export default function App() {
         if (data && data.valid && (data.token || data.access_token)) {
           persistSessionToken(data);
         }
-
-        // Hydrate database wishlist for logged in user
-        const items = await getWishlistBackend();
-        if (Array.isArray(items)) {
-          dispatch(setWishlistCount(items.length));
-        }
       } catch (error) {
         console.error('Initial session check failed:', error);
       }
     };
+
     validateTokenOnMount();
+  }, [dispatch, currentUser]);
+
+  // Hydrate database wishlist whenever logged in user changes
+  useEffect(() => {
+    if (!currentUser?._id) return;
+    getWishlistBackend()
+      .then((items) => {
+        if (Array.isArray(items)) {
+          dispatch(setWishlistCount(items.length));
+        }
+      })
+      .catch((err) => {
+        console.warn('Wishlist hydration error:', err?.message);
+      });
   }, [dispatch, currentUser?._id]);
 
   return (

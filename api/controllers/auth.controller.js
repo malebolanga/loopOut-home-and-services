@@ -230,7 +230,26 @@ export const google = async (req, res, next) => {
     if (!user) {
       const base = (decoded.name || email.split('@')[0]).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24) || 'member';
       const username = `${base}${crypto.randomBytes(3).toString('hex')}`;
-      user = await User.create({ username, email, password: await bcryptjs.hash(crypto.randomBytes(32).toString('hex'), 12), avatar: decoded.picture || undefined, isVerified: true });
+      user = await User.create({
+        username,
+        email,
+        password: await bcryptjs.hash(crypto.randomBytes(32).toString('hex'), 12),
+        avatar: decoded.picture || undefined,
+        isVerified: true
+      });
+    } else {
+      let needsSave = false;
+      if (!user.isVerified) {
+        user.isVerified = true;
+        needsSave = true;
+      }
+      if (!user.avatar && decoded.picture) {
+        user.avatar = decoded.picture;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await user.save();
+      }
     }
     return issueSession(res, user);
   } catch (error) { return next(error); }
@@ -243,19 +262,52 @@ export const signOut = async (req, res) => {
 
 export const validateToken = async (req, res, next) => {
   try {
-    let token = req.cookies.access_token;
-    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) token = req.headers.authorization.split(' ')[1];
-    if (!token || token === 'null' || token === 'undefined') return res.status(200).json({ valid: false });
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const candidateTokens = [];
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      const headerToken = req.headers.authorization.split(' ')[1];
+      if (headerToken && headerToken !== 'null' && headerToken !== 'undefined') {
+        candidateTokens.push(headerToken);
+      }
+    }
+    if (req.cookies && req.cookies.access_token) {
+      const cookieToken = req.cookies.access_token;
+      if (cookieToken && cookieToken !== 'null' && cookieToken !== 'undefined') {
+        candidateTokens.push(cookieToken);
+      }
+    }
+
+    let decoded = null;
+    let validToken = null;
+
+    for (const cand of candidateTokens) {
+      try {
+        decoded = jwt.verify(cand, process.env.JWT_SECRET);
+        validToken = cand;
+        break;
+      } catch (err) {
+        // Try next candidate token
+      }
+    }
+
+    if (!decoded || !validToken) return res.status(200).json({ valid: false });
+
     const user = await User.findById(decoded.id).select('-password -otp');
-    if (!user || !user.isVerified) return res.status(200).json({ valid: false });
+    if (!user || user.isVerified === false) return res.status(200).json({ valid: false });
+
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
     try {
       await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date() } });
     } catch (err) {}
     const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
-    return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({ valid: true, user: safeUser, token: refreshedToken, access_token: refreshedToken });
-  } catch (error) { return res.status(200).json({ valid: false }); }
+    return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({
+      valid: true,
+      user: safeUser,
+      token: refreshedToken,
+      access_token: refreshedToken
+    });
+  } catch (error) {
+    return res.status(200).json({ valid: false });
+  }
 };
 
 export const verifyOtp = async (req, res, next) => {
