@@ -9,12 +9,14 @@ $src     = "$root\client\src"
 $mobile  = "$root\mobile"
 
 $folders = @(
-    @{ from = "$src\pages";      to = "$mobile\pages";      filter = "*.jsx" },
+    @{ from = "$src\pages";      to = "$mobile\pages";      filter = "*.*"   },
     @{ from = "$src\components"; to = "$mobile\components";  filter = "*.*"   },
     @{ from = "$src\hooks";      to = "$mobile\hooks";       filter = "*.*"   },
     @{ from = "$src\utils";      to = "$mobile\utils";       filter = "*.*"   },
     @{ from = "$src\redux";      to = "$mobile\redux";       filter = "*.*"   },
-    @{ from = "$src\data";       to = "$mobile\data";        filter = "*.*"   }
+    @{ from = "$src\data";       to = "$mobile\data";        filter = "*.*"   },
+    @{ from = "$src\services";   to = "$mobile\services";    filter = "*.*"   },
+    @{ from = "$src\styles";     to = "$mobile\styles";      filter = "*.*"   }
 )
 
 $totalCopied = 0
