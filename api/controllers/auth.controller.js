@@ -147,6 +147,16 @@ export const signup = async (req, res, next) => {
     const delivery = await sendVerificationCode(user, existingEmail ? 'Complete your LoopOut registration' : 'Your LoopOut verification code');
     const isDev = process.env.NODE_ENV !== 'production';
     if (!delivery.success) {
+      if (isDev) {
+        console.warn(`⚠️ [DEV MODE] Email delivery failed, but allowing signup with dev code for ${email}. OTP: ${delivery.otp}`);
+        return res.status(existingEmail ? 200 : 201).json({
+          success: true,
+          requiresVerification: true,
+          email,
+          message: `Verification code generated (Dev mode: ${delivery.otp}).`,
+          devCode: delivery.otp
+        });
+      }
       console.error(`Signup verification email to ${email} failed to send.`);
       return res.status(503).json({
         success: false,
@@ -186,10 +196,33 @@ export const google = async (req, res, next) => {
   try {
     if (!req.body.idToken || typeof req.body.idToken !== 'string') return next(errorHandler(400, 'A Google identity token is required.'));
     let decoded;
-    try { decoded = await (await firebaseAuth()).verifyIdToken(req.body.idToken, true); }
-    catch (error) {
-      if (error.message === 'Firebase Admin credentials are not configured.') return next(errorHandler(503, 'Google sign-in is temporarily unavailable.'));
-      return next(errorHandler(401, 'Google sign-in could not be verified.'));
+    try {
+      decoded = await (await firebaseAuth()).verifyIdToken(req.body.idToken, true);
+    } catch (error) {
+      console.warn('Firebase Admin verification failed, trying Google tokeninfo fallback:', error.message);
+      try {
+        const tokenRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(req.body.idToken)}`);
+        if (tokenRes.ok) {
+          const info = await tokenRes.json();
+          if (info.email && (info.email_verified === 'true' || info.email_verified === true)) {
+            decoded = {
+              email: info.email,
+              email_verified: true,
+              name: info.name || info.email.split('@')[0],
+              picture: info.picture,
+            };
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Google tokeninfo fallback error:', fallbackError.message);
+      }
+
+      if (!decoded) {
+        if (error.message === 'Firebase Admin credentials are not configured.') {
+          return next(errorHandler(503, 'Google sign-in is temporarily unavailable (Firebase service account not configured on server).'));
+        }
+        return next(errorHandler(401, 'Google sign-in could not be verified.'));
+      }
     }
     const email = normalizeEmail(decoded.email);
     if (!email || !decoded.email_verified) return next(errorHandler(401, 'A verified Google email address is required.'));
@@ -276,11 +309,19 @@ export const resendOtp = async (req, res, next) => {
     const createdAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
     if (Date.now() - createdAt < OTP_RESEND_COOLDOWN_MS) return next(errorHandler(429, 'Please wait a minute before requesting another code.'));
     const delivery = await sendVerificationCode(user, 'Your new LoopOut verification code');
+    const isDev = process.env.NODE_ENV !== 'production';
     if (!delivery.success) {
+      if (isDev) {
+        console.warn(`⚠️ [DEV MODE] Resend email failed, but providing dev code for ${email}. OTP: ${delivery.otp}`);
+        return res.status(200).json({
+          success: true,
+          message: 'If an unverified account exists, a code has been sent.',
+          devCode: delivery.otp
+        });
+      }
       console.error(`Resend verification email to ${email} failed to send.`);
       return res.status(503).json({ success: false, message: "We couldn't send your verification email right now. Please try again shortly." });
     }
-    const isDev = process.env.NODE_ENV !== 'production';
     return res.status(200).json({ success: true, message: 'If an unverified account exists, a code has been sent.', ...(isDev ? { devCode: delivery.otp } : {}) });
   } catch (error) { return next(error); }
 };

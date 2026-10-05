@@ -3,8 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import OAuth from '../components/OAuth';
 import { FaSpinner, FaArrowLeft, FaWifi } from 'react-icons/fa';
 import BrandLogo from '../components/BrandLogo';
-import { useDispatch } from 'react-redux';
-import { signInSuccess } from '../redux/user/userSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { signInSuccess, signInFailure } from '../redux/user/userSlice';
 import { persistSessionToken, fetchWithRetry } from '../utils/authenticatedFetch';
 
 const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-white';
@@ -20,6 +20,7 @@ export default function SignUp() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { error: reduxAuthError } = useSelector((state) => state.user);
 
   useEffect(() => {
     if (location.state?.verify && location.state?.email) {
@@ -136,7 +137,7 @@ export default function SignUp() {
           <span>Server is waking up — this may take up to 30 seconds on first use…</span>
         </div>
       )}
-      {error && <p role="alert" className="mt-5 p-3 text-center text-sm bg-red-500/25 border border-red-300/40 rounded-xl">{error}</p>}
+      {(error || reduxAuthError) && <p role="alert" className="mt-5 p-3 text-center text-sm bg-red-500/25 border border-red-300/40 rounded-xl">{error || reduxAuthError}</p>}
       <p className="mt-7 text-center text-sm text-gray-200">Already have an account? <Link to="/sign-in" className="font-semibold underline">Sign in</Link></p>
     </div></div>;
 }

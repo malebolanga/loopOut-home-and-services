@@ -23,22 +23,25 @@ export const sendEmail = async (to, subject, text, html) => {
       return { success: false, error: 'Email delivery is not configured.' };
     }
 
+    const emailUser = (process.env.EMAIL_USER || '').trim();
+    const emailPass = (process.env.EMAIL_PASS || '').trim().replace(/\s+/g, '');
+
     const transportConfig = process.env.EMAIL_HOST && process.env.EMAIL_HOST !== 'smtp.gmail.com'
       ? {
           host: process.env.EMAIL_HOST,
           port: Number(process.env.EMAIL_PORT) || 587,
           secure: process.env.EMAIL_SECURE === 'true',
           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: emailUser,
+            pass: emailPass,
           },
           tls: { rejectUnauthorized: true }
         }
       : {
           service: 'gmail',
           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
+            user: emailUser,
+            pass: emailPass,
           },
           tls: { rejectUnauthorized: true }
         };
@@ -46,7 +49,7 @@ export const sendEmail = async (to, subject, text, html) => {
     const transporter = nodemailer.createTransport(transportConfig);
 
     const info = await transporter.sendMail({
-      from: `"LoopOut Support" <${process.env.EMAIL_USER}>`,
+      from: `"LoopOut Support" <${emailUser}>`,
       to,
       subject,
       text,
@@ -56,7 +59,12 @@ export const sendEmail = async (to, subject, text, html) => {
     console.log('✅ Email sent successfully to %s: %s', to, info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error('❌ Error sending email to %s:', to, error.message);
+    if (error.message && (error.message.includes('534-5.7.9') || error.message.includes('Application-specific password required'))) {
+      console.error('❌ Gmail requires a 16-character App Password, NOT your regular Google account password.');
+      console.error('👉 Generate one at: https://myaccount.google.com/apppasswords and update EMAIL_PASS in .env and Render.');
+    } else {
+      console.error('❌ Error sending email to %s:', to, error.message);
+    }
     return { success: false, error: error.message };
   }
 };
