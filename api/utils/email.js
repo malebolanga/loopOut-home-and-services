@@ -35,7 +35,10 @@ export const sendEmail = async (to, subject, text, html) => {
             user: emailUser,
             pass: emailPass,
           },
-          tls: { rejectUnauthorized: true }
+          tls: { rejectUnauthorized: true },
+          connectionTimeout: 60000,
+          greetingTimeout: 30000,
+          socketTimeout: 60000,
         }
       : {
           service: 'gmail',
@@ -43,18 +46,41 @@ export const sendEmail = async (to, subject, text, html) => {
             user: emailUser,
             pass: emailPass,
           },
-          tls: { rejectUnauthorized: true }
+          tls: { rejectUnauthorized: true },
+          connectionTimeout: 60000,
+          greetingTimeout: 30000,
+          socketTimeout: 60000,
         };
 
     const transporter = nodemailer.createTransport(transportConfig);
 
-    const info = await transporter.sendMail({
-      from: `"LoopOut Support" <${emailUser}>`,
-      to,
-      subject,
-      text,
-      html: html || text,
-    });
+    // Gmail occasionally drops an SMTP connection from a hosted service. Retry
+    // only transient network failures so users do not lose a verification email.
+    let info;
+    let lastError;
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        info = await transporter.sendMail({
+          from: `"LoopOut Support" <${emailUser}>`,
+          to,
+          subject,
+          text,
+          html: html || text,
+        });
+        break;
+      } catch (error) {
+        lastError = error;
+        const transient = ['ETIMEDOUT', 'ESOCKET', 'ECONNECTION', 'ECONNRESET', 'Connection timeout']
+          .some((marker) => error.code === marker || error.message?.includes(marker));
+        if (!transient || attempt === 3) throw error;
+
+        const delayMs = attempt * 1000;
+        console.warn('Email attempt %d for %s timed out; retrying in %dms.', attempt, to, delayMs);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+
+    if (!info) throw lastError;
 
     console.log('✅ Email sent successfully to %s: %s', to, info.messageId);
     return { success: true, messageId: info.messageId };
