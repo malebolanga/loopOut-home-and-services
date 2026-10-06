@@ -137,6 +137,9 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
     if (type === 'selling' || type === 'sell') {
       return item.category ? item.category.charAt(0).toUpperCase() + item.category.slice(1) : 'For Sale';
     }
+    if (type === 'food' || item.itemType === 'food') {
+      return item.badge || item.subType || 'Food & Lunch';
+    }
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
@@ -161,6 +164,8 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       path = `/event/${item._id}`;
     } else if (resolvedType === 'selling' || resolvedType === 'sell') {
       path = `/sell-item/${item._id}`;
+    } else if (resolvedType === 'food' || resolvedType === 'lunch') {
+      path = item.route || '/food';
     } else if (resolvedType === 'helper') {
       const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
       if (specializedTypes.includes(item.type)) {

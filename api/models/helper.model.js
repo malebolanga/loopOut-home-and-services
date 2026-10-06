@@ -192,6 +192,12 @@ const helperSchema = new mongoose.Schema({
   },
   { timestamps: true });
 
+// ── Indexes ───────────────────────────────────────────────────────────────
+helperSchema.index({ createdAt: -1 });
+helperSchema.index({ kind: 1, createdAt: -1 });
+helperSchema.index({ userRef: 1, createdAt: -1 });
+helperSchema.index({ creator: 1, createdAt: -1 });
+
 const Helper = mongoose.model('Helper', helperSchema);
 
 export default Helper;

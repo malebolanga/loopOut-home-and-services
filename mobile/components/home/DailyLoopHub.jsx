@@ -79,17 +79,6 @@ const HUB_ITEMS = [
     border: 'ring-1 ring-cyan-200/60',
     action: 'modal-whisper',
   },
-  {
-    id: 'matchmaker',
-    emoji: '💖',
-    label: 'Matchmaker',
-    desc: 'Find your match',
-    textColor: 'text-rose-600',
-    gradient: 'from-pink-400 via-rose-500 to-red-500',
-    shadow: 'shadow-pink-400/30',
-    border: 'ring-1 ring-pink-200/60',
-    action: '/matchmaker',
-  },
 ];
 
 

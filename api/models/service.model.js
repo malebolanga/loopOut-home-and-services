@@ -261,6 +261,12 @@ const serviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ── Indexes ───────────────────────────────────────────────────────────────
+serviceSchema.index({ createdAt: -1 });
+serviceSchema.index({ kind: 1, createdAt: -1 });
+serviceSchema.index({ userRef: 1, createdAt: -1 });
+serviceSchema.index({ creator: 1, createdAt: -1 });
+
 const Service = mongoose.model('Service', serviceSchema);
 
 export default Service;

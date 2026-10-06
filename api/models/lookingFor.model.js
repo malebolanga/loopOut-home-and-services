@@ -84,6 +84,11 @@ const lookingForSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ── Indexes ───────────────────────────────────────────────────────────────
+lookingForSchema.index({ createdAt: -1 });
+lookingForSchema.index({ category: 1, createdAt: -1 });
+lookingForSchema.index({ userRef: 1, createdAt: -1 });
+
 const LookingFor = mongoose.model('LookingFor', lookingForSchema);
 
 export default LookingFor;

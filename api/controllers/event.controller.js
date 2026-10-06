@@ -1,4 +1,4 @@
-import Event from '../models/event.model.js';
+﻿import Event from '../models/event.model.js';
 import { errorHandler } from '../utils/error.js';
 import User from '../models/user.model.js'; // Add this import
 import { createAreaNotifications } from '../utils/notificationUtils.js';
@@ -43,15 +43,18 @@ export const getEvents = async (req, res, next) => {
     if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
 
     const query = {
-      $or: [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } },
-        { address: { $regex: searchTerm, $options: 'i' } }
-      ],
       ...(category && { type: category }),
       ...(location && { address: { $regex: location, $options: 'i' } }),
       ...(Object.keys(price).length && { regularPrice: price })
     };
+
+    if (searchTerm && searchTerm.trim() !== '') {
+      query.$or = [
+        { name: { $regex: searchTerm.trim(), $options: 'i' } },
+        { description: { $regex: searchTerm.trim(), $options: 'i' } },
+        { address: { $regex: searchTerm.trim(), $options: 'i' } },
+      ];
+    }
 
     const events = await Event.find(query)
       .sort({ createdAt: -1 })

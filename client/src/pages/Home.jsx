@@ -19,7 +19,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Target, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -3685,16 +3685,6 @@ function MobileAppHomepage({
       textColor: 'text-orange-600',
       bgColor: 'bg-orange-500',
       route: '/food'
-    },
-    {
-      id: 'Matchmaker',
-      label: 'Matchmaker',
-      emoji: '🎯',
-      icon: Target,
-      desc: 'AI matching',
-      textColor: 'text-fuchsia-600',
-      bgColor: 'bg-fuchsia-500',
-      route: '/matchmaker'
     },
     {
       id: 'LookingFor',

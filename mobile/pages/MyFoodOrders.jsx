@@ -171,7 +171,7 @@ export default function MyFoodOrders() {
               <RefreshCw className="w-4 h-4" />
             </button>
             <Link
-              to="/#food-section"
+              to="/food"
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all"
             >
               <span>Explore Food</span>
@@ -248,7 +248,7 @@ export default function MyFoodOrders() {
               </p>
             </div>
             <Link
-              to="/#food-section"
+              to="/food"
               className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs uppercase tracking-wider shadow-md hover:opacity-95 active:scale-95 transition-all"
             >
               Browse Local Food &amp; Menus →

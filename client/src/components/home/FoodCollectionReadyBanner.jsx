@@ -152,14 +152,17 @@ const FoodCollectionReadyBanner = ({ navigate }) => {
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl text-white shadow-sm ${bannerContent.iconClass}`}>
             <ShoppingBagIcon className="h-5 w-5" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div
+            onClick={() => navigate?.('/food')}
+            className="min-w-0 flex-1 cursor-pointer"
+          >
             <p className={`text-sm font-black ${bannerContent.textClass}`}>{bannerContent.title}</p>
             <p className={`mt-0.5 truncate text-xs font-medium ${bannerContent.detailClass}`}>{bannerContent.message}</p>
           </div>
           <button
             type="button"
-            onClick={() => navigate?.('/lunch')}
-            className={`hidden shrink-0 rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-wider text-white transition-colors sm:block ${bannerContent.buttonClass}`}
+            onClick={() => navigate?.('/food')}
+            className={`shrink-0 rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-[10px] font-black uppercase tracking-wider text-white transition-colors ${bannerContent.buttonClass}`}
           >
             View order
           </button>

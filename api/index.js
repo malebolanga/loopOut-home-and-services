@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
@@ -123,7 +123,15 @@ app.use(helmet({
 app.use(mongoSanitize());
 app.use(compression());
 const isProduction = process.env.NODE_ENV === 'production';
-const apiLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: isProduction ? 500 : 2000, message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' }, standardHeaders: true, legacyHeaders: false });
+// General API limiter — 1 500 req / 5 min per IP. Adjust APP_RATE_LIMIT env var to override.
+const apiLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: isProduction ? (parseInt(process.env.APP_RATE_LIMIT) || 1500) : 5000,
+  message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path === '/api/health',
+});
 const messagesLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: 500, message: { success: false, message: 'Too many message requests, please slow down.' }, standardHeaders: true, legacyHeaders: false });
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

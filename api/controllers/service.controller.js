@@ -226,11 +226,6 @@ export const getServices = async (req, res, next) => {
     }
 
     const query = {
-      $or: [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } },
-        { address: { $regex: searchTerm, $options: 'i' } }
-      ],
       ...(offer && { offer }),
       ...(type && { type }),
       ...(Object.keys(price).length && { regularPrice: price }),
@@ -262,6 +257,15 @@ export const getServices = async (req, res, next) => {
       ...(req.query.mobileService && { mobileService: req.query.mobileService === 'true' }),
       ...(req.query.ecoFriendly && { ecoFriendly: req.query.ecoFriendly === 'true' }),
     };
+
+    // Only add full-text regex when searchTerm is non-empty — avoids a full collection scan
+    if (searchTerm && searchTerm.trim() !== '') {
+      query.$or = [
+        { name: { $regex: searchTerm.trim(), $options: 'i' } },
+        { description: { $regex: searchTerm.trim(), $options: 'i' } },
+        { address: { $regex: searchTerm.trim(), $options: 'i' } },
+      ];
+    }
 
     const sortOrder = order === 'asc' || order === '1' || order === 1 ? 1 : -1;
 

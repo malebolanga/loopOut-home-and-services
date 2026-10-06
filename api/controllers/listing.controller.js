@@ -364,13 +364,7 @@ export const getListings = async (req, res, next) => {
 
     const order = req.query.order || 'desc';
 
-    const listings = await Listing.find({
-      $or: [
-        { name: { $regex: searchTerm, $options: 'i' } },
-        { description: { $regex: searchTerm, $options: 'i' } },
-        { address: { $regex: searchTerm, $options: 'i' } }
-      ],
-      address: { $regex: address, $options: 'i' },
+    const filter = {
       offer,
       furnished,
       parking,
@@ -392,7 +386,21 @@ export const getListings = async (req, res, next) => {
       bedrooms,
       bathrooms,
       ...(Object.keys(price).length && { regularPrice: price }),
-    })
+    };
+
+    if (searchTerm && searchTerm.trim() !== '') {
+      filter.$or = [
+        { name: { $regex: searchTerm.trim(), $options: 'i' } },
+        { description: { $regex: searchTerm.trim(), $options: 'i' } },
+        { address: { $regex: searchTerm.trim(), $options: 'i' } }
+      ];
+    }
+
+    if (address && address.trim() !== '') {
+      filter.address = { $regex: address.trim(), $options: 'i' };
+    }
+
+    const listings = await Listing.find(filter)
       .sort({ [sort]: order })
       .limit(limit)
       .skip(startIndex)

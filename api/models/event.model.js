@@ -101,5 +101,9 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ── Indexes ───────────────────────────────────────────────────────────────
+eventSchema.index({ createdAt: -1 });
+eventSchema.index({ userRef: 1, createdAt: -1 });
+
 const Event = mongoose.model('Event', eventSchema);
 export default Event;

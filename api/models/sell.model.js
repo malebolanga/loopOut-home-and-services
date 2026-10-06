@@ -22,5 +22,10 @@ const sellSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ── Indexes ───────────────────────────────────────────────────────────────
+sellSchema.index({ createdAt: -1 });
+sellSchema.index({ category: 1, createdAt: -1 });
+sellSchema.index({ creator: 1, createdAt: -1 });
+
 const Sell = mongoose.model('Sell', sellSchema);
 export default Sell;

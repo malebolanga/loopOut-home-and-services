@@ -79,47 +79,75 @@ export const VENDOR_DEFAULT_SIDES = [
   'Salad'
 ];
 
+// Returns sides only when explicitly added by the vendor or detected in the meal description.
+// Never falls back to default sides — items like kotas, drinks, and chips have zero sides unless specified.
 export const getAvailableSides = (meal) => {
   if (!meal) return [];
-  if (meal.sides && Array.isArray(meal.sides) && meal.sides.length > 0) {
-    return meal.sides;
+  // 1. Explicit sides provided in meal.sides
+  if (Array.isArray(meal.sides) && meal.sides.length > 0) {
+    return meal.sides.filter(Boolean);
   }
-  const text = ((meal.name || '') + ' ' + (meal.description || '')).trim();
+
+  const name = (meal.name || '').toLowerCase();
+  const tag = (meal.tag || '').toLowerCase();
+
+  // Beverages never have sides
+  if (tag === 'drinks' || /\b(juice|coke|fanta|sprite|pepsi|water|soda|milkshake|ginger\s*beer|mazoe|freezo|cold\s*drink)\b/i.test(name)) {
+    return [];
+  }
+
+  // 2. Only detect sides if the vendor explicitly added them in the description
+  const desc = (meal.description || '').trim();
+  if (!desc) return [];
+
+  // Standalone kotas / slap chips already have fillings or chips, only show sides if "sides:" is explicitly mentioned in description
+  if (/\b(kota|sphatlo|dagwood|slap\s*chips|chips?\s*(large|small|only)?)\b/i.test(name) && !/sides?:/i.test(desc)) {
+    return [];
+  }
 
   const found = new Set();
   const sideMatchers = [
-    { name: 'Spinach', pattern: /spinach/i },
-    { name: 'Beets', pattern: /beet|bedro[ts]/i },
-    { name: 'Cabbage', pattern: /cabbage/i },
-    { name: 'Pumpkin', pattern: /pumpkin/i },
-    { name: 'Sweet Potatoes', pattern: /sweet\s*potato/i },
-    { name: 'Mash Potatoes', pattern: /mash(?:ed)?\s*potato/i },
-    { name: 'Potatoes', pattern: /(?<!sweet\s*)(?<!mash(?:ed)?\s*)potato(?:es)?|chips/i },
-    { name: 'Chakalaka', pattern: /ch[au]k[au]laka/i },
-    { name: 'Atchar', pattern: /at?char/i },
-    { name: 'Salad', pattern: /salad/i },
-    { name: 'Coleslaw', pattern: /coleslaw/i }
+    { name: 'Spinach', pattern: /\b(spinach|morogo)\b/i },
+    { name: 'Beets', pattern: /\b(beet|beetroot|bedro[ts])\b/i },
+    { name: 'Cabbage', pattern: /\bcabbage\b/i },
+    { name: 'Pumpkin', pattern: /\bpumpkin\b/i },
+    { name: 'Sweet Potatoes', pattern: /\bsweet\s*potato(?:es)?\b/i },
+    { name: 'Mash Potatoes', pattern: /\bmash(?:ed)?\s*potato(?:es)?\b/i },
+    { name: 'Potatoes', pattern: /\b(?:roast\s*)?potato(?:es)?\b/i },
+    { name: 'Chakalaka', pattern: /\bch[au]k[au]laka\b/i },
+    { name: 'Atchar', pattern: /\bat?char\b/i },
+    { name: 'Salad', pattern: /\b(green\s*salad|garden\s*salad|fresh\s*salad|salad)\b/i },
+    { name: 'Coleslaw', pattern: /\bcoleslaw\b/i },
+    { name: 'Pap', pattern: /\b(pap|phutu|stywe\s*pap)\b/i },
+    { name: 'Rice', pattern: /\b(yellow\s*rice|savory\s*rice|steamed\s*rice|rice)\b/i }
   ];
 
   sideMatchers.forEach((m) => {
-    if (m.pattern.test(text)) found.add(m.name);
+    if (m.pattern.test(desc)) found.add(m.name);
   });
 
-  const nameHasPap = /\bpap\b/i.test(meal.name || '');
-  if (!nameHasPap && /\bpap\b/i.test(text)) {
-    found.add('Pap');
-  }
-
-  if (found.size >= 2) return Array.from(found);
-  return [...VENDOR_DEFAULT_SIDES];
+  return Array.from(found);
 };
 
 export const getMaxSides = (meal) => {
-  if (!meal) return 3;
-  const text = ((meal.name || '') + ' ' + (meal.description || '')).toLowerCase();
-  if (/four\s*side/i.test(text)) return 4;
-  if (/two\s*side/i.test(text)) return 2;
-  return 3;
+  if (!meal) return 0;
+  const name = (meal.name || '').toLowerCase();
+  const tag  = (meal.tag  || '').toLowerCase();
+  // No sides for drinks
+  if (tag === 'drinks' || /\b(juice|coke|fanta|sprite|pepsi|water|soda|milkshake|ginger\s*beer|mazoe|freezo|cold\s*drink)\b/i.test(name)) return 0;
+  // No sides for standalone snacks / kotas / chips unless sides are explicitly present
+  const sides = getAvailableSides(meal);
+  if (!sides || sides.length === 0) return 0;
+
+  if (/\b(kota|sphatlo|dagwood|slap\s*chips|chips?\s*(large|small|only)?|onion\s*rings|magwinya|vetkoek|boerewors\s*roll|fried\s*egg\s*roll)\b/i.test(name)) {
+    if (!meal.sides?.length && !/sides?:/i.test(meal.description || '')) return 0;
+  }
+
+  const text = (name + ' ' + (meal.description || '')).toLowerCase();
+  if (/(?:four|4)\s*sides?/i.test(text)) return Math.min(4, sides.length);
+  if (/(?:two|2)\s*sides?/i.test(text)) return Math.min(2, sides.length);
+  if (/(?:one|1)\s*side\b/i.test(text)) return 1;
+  return Math.min(3, sides.length);
 };
 
 const SHOP_THEMES = [
@@ -532,7 +560,7 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     image: '🍱',
-    sides: [...VENDOR_DEFAULT_SIDES]
+    sides: []
   });
 
   // Edit states
@@ -563,7 +591,7 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     image: '🍱',
-    sides: [...VENDOR_DEFAULT_SIDES]
+    sides: []
   });
 
   // Selected Order for Receipt Modal
@@ -994,6 +1022,7 @@ export default function LunchComingSoon() {
 
   // Sides operations
   const getActiveSides = (meal, availableSides, maxSides = 3) => {
+    if (!maxSides || !availableSides?.length) return [];
     if (selectedMealSides[meal.id] !== undefined) {
       return selectedMealSides[meal.id];
     }
@@ -1026,9 +1055,9 @@ export default function LunchComingSoon() {
 
     const availableSides = getAvailableSides(meal);
     const maxSides = getMaxSides(meal);
-    const chosenSides = availableSides.length > 0
+    const chosenSides = availableSides.length > 0 && maxSides > 0
       ? getActiveSides(meal, availableSides, maxSides)
-      : (meal.sides || []);
+      : [];
 
     const cartKey = meal.id + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
 
@@ -1181,7 +1210,7 @@ export default function LunchComingSoon() {
         );
       }
       setShowAddMealModal(false);
-      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [...VENDOR_DEFAULT_SIDES] });
+      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
@@ -1663,8 +1692,8 @@ export default function LunchComingSoon() {
                             </div>
                           </div>
 
-                          {/* ── SIDES SELECTOR ── */}
-                          {availableSides.length > 0 && !soldOut && (
+                          {/* ── SIDES SELECTOR — only shown when vendor explicitly added sides ── */}
+                          {availableSides.length > 0 && maxSides > 0 && !soldOut && (
                             <div className="mt-2.5">
                               <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
                                 Choose sides <span className="text-amber-500">({activeSides.length}/{maxSides})</span>

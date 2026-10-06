@@ -74,7 +74,7 @@ import {
   signOutUserFailure,
 } from "../redux/user/userSlice";
 
-import { Sparkles } from 'lucide-react';
+import { Sparkles, UtensilsCrossed } from 'lucide-react';
 import { useSearchIntelligence } from '../hooks/useSearchIntelligence';
 
 const PROPERTY_SUBTYPES = [
@@ -104,10 +104,14 @@ const HELPER_SUBTYPES = [
 const normalizeSearchType = (type) => {
   if (type === 'helper') return 'helpers';
   if (type === 'property') return 'properties';
+  if (type === 'lunch') return 'food';
   return type || 'all';
 };
 
 const QUICK_DISCOVERY_MAP = {
+  food: { searchType: 'food', subType: '' },
+  lunch: { searchType: 'food', subType: '' },
+  'street-food': { searchType: 'food', subType: 'street_food' },
   resort: { searchType: 'properties', subType: 'resort' },
   hotel: { searchType: 'properties', subType: 'sale' },
   guesthouse: { searchType: 'properties', subType: 'guest_house' },
@@ -127,6 +131,9 @@ const QUICK_DISCOVERY_MAP = {
 };
 
 const HEADER_CATEGORY_ICONS = {
+  food: UtensilsCrossed,
+  lunch: UtensilsCrossed,
+  'street-food': UtensilsCrossed,
   properties: HomeIcon,
   services: BriefcaseIcon,
   helpers: UserGroupIcon,
@@ -509,6 +516,7 @@ export default function Header() {
 
   // Command Center Navigation
   const MASTER_COMMANDS = [
+    { label: 'FOOD & LUNCH', route: '/food', icon: <UtensilsCrossed className="w-5 h-5" />, color: 'bg-gradient-to-tr from-amber-500 to-orange-500' },
     { label: 'LOOPBOT AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
     { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'ELITE REWARDS', route: '/rewards', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
@@ -980,6 +988,7 @@ export default function Header() {
                 {[
                   { id: 'all', label: 'Universe', icon: Sparkles, color: 'rose' },
                   { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
+                  { id: 'food', label: 'Food & Lunch', icon: UtensilsCrossed, color: 'orange', path: '/food' },
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
                   { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
                   { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
@@ -1143,6 +1152,7 @@ export default function Header() {
                   
                   <div className="grid grid-cols-2 gap-3">
                     {[
+                      { id: 'food', label: 'Food & Lunch', icon: '🍱', color: 'bg-orange-50', path: '/food' },
                       { id: 'helpers', label: 'Helper', icon: '👨‍💼', color: 'bg-emerald-50' },
                       { id: 'services', label: 'Services', icon: '🛠️', color: 'bg-blue-50' },
                       { id: 'properties', label: 'Homes', icon: '🏠', color: 'bg-rose-50' },
@@ -1169,7 +1179,12 @@ export default function Header() {
                         <button 
                           key={cat.id}
                           onClick={() => {
-                            const isCore = ['properties', 'services', 'helpers', 'events'].includes(cat.id);
+                            if (cat.path) {
+                              navigate(cat.path);
+                              setShowSearch(false);
+                              return;
+                            }
+                            const isCore = ['properties', 'services', 'helpers', 'events', 'food'].includes(cat.id);
                             const discovery = QUICK_DISCOVERY_MAP[cat.id] || {
                               searchType: isCore ? cat.id : 'all',
                               subType: ''

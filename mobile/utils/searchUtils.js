@@ -23,6 +23,12 @@ export const SEARCH_TYPE_CONFIG = {
     icon: '🎪',
     field: 'title',
     filters: ['category', 'dateFrom', 'dateTo', 'priceMin', 'priceMax']
+  },
+  food: {
+    endpoint: '/api/lunch/shops',
+    icon: '🍱',
+    field: 'name',
+    filters: ['cuisine', 'priceMin', 'priceMax']
   }
 };
 
@@ -72,6 +78,13 @@ export const generateSuggestions = (query, activeType, searchHistory) => {
       'Food & wine tasting event',
       'Art exhibition opening night',
       'Sports tournament this Saturday'
+    ],
+    food: [
+      'Hot lunch specials near you',
+      'Quarter Kota and chips',
+      'Flame grilled chicken & pap',
+      'Local street food takeaways',
+      'Fresh bakery & burgers'
     ]
   };
 
@@ -94,7 +107,8 @@ export const generateSuggestions = (query, activeType, searchHistory) => {
     { keywords: ['apartment', 'house', 'villa', 'property', 'rent', 'sale'], type: 'properties' },
     { keywords: ['clean', 'service', 'repair', 'maintain', 'moving'], type: 'services' },
     { keywords: ['helper', 'chef', 'tutor', 'assistant', 'maid'], type: 'helpers' },
-    { keywords: ['event', 'festival', 'concert', 'party', 'show'], type: 'events' }
+    { keywords: ['event', 'festival', 'concert', 'party', 'show'], type: 'events' },
+    { keywords: ['food', 'lunch', 'eat', 'dinner', 'breakfast', 'meal', 'burger', 'kota', 'pizza', 'takeaway', 'restaurant', 'snack', 'cafe', 'dish', 'chips', 'chicken', 'pap', 'stew'], type: 'food' }
   ];
 
   keywordPatterns.forEach(({ keywords, type }) => {
@@ -243,6 +257,7 @@ export const extractFiltersFromQuery = (query) => {
     { patterns: ['service', 'repair', 'maintain', 'moving', 'transport', 'car wash', 'catering', 'delivery', 'clean', 'plumb', 'electrician'], type: 'services' },
     { patterns: ['helper', 'chef', 'tutor', 'assistant', 'maid', 'barber', 'stylist', 'tattoo', 'domestic'], type: 'helpers' },
     { patterns: ['event', 'festival', 'concert', 'party', 'show', 'exhibition', 'jazz', 'tickets'], type: 'events' },
+    { patterns: ['food', 'lunch', 'eat', 'dinner', 'breakfast', 'meal', 'meals', 'burger', 'kota', 'pizza', 'takeaway', 'restaurant', 'snack', 'cafe', 'dish', 'chips', 'chicken', 'pap', 'stew', 'fast food'], type: 'food' },
     { patterns: ['need', 'looking for', 'request', 'help with'], type: 'looking-for' }
   ];
 
@@ -258,7 +273,10 @@ export const extractFiltersFromQuery = (query) => {
     { patterns: ['sale', 'buy', 'purchase', 'owner'], subType: 'sale', type: 'properties' },
     { patterns: ['guest house', 'guesthouse', 'b&b', 'bed and breakfast'], subType: 'guest_house', type: 'properties' },
     { patterns: ['car wash', 'carwash', 'valet'], subType: 'car_wash', type: 'services' },
-    { patterns: ['maid', 'domestic', 'cleaner'], subType: 'domestic', type: 'helpers' }
+    { patterns: ['maid', 'domestic', 'cleaner'], subType: 'domestic', type: 'helpers' },
+    { patterns: ['kota', 'street food', 'sphatlo'], subType: 'street_food', type: 'food' },
+    { patterns: ['burger', 'chips', 'fries', 'fast food'], subType: 'fast_food', type: 'food' },
+    { patterns: ['traditional', 'pap', 'stew', 'mogodu'], subType: 'traditional', type: 'food' }
   ];
 
   subTypeKeywords.forEach(({ patterns, subType, type }) => {

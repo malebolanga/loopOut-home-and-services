@@ -69,7 +69,8 @@ import {
   BookOpen,
   Search as SearchIconLucide,
   Navigation,
-  Check
+  Check,
+  UtensilsCrossed
 } from 'lucide-react';
 import NeighborhoodInsights from '../components/NeighborhoodInsights';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
@@ -130,6 +131,11 @@ const ALL_CATEGORIES = [
 
   // Daily Essentials (for Homepage consistency)
   { id: 'daily', label: 'Daily Loop', type: 'services', icon: Sparkles, color: 'bg-green-100 text-green-800', description: 'Essentials & daily needs' },
+
+  // Food & Lunch
+  { id: 'food', label: 'Food & Lunch', type: 'food', icon: UtensilsCrossed, color: 'bg-orange-100 text-orange-800', description: 'Local kitchens, meals & takeaways' },
+  { id: 'street_food', label: 'Street Food & Kotas', type: 'food', icon: UtensilsCrossed, color: 'bg-amber-100 text-amber-800', description: 'Kotas, chips & fast bites' },
+  { id: 'traditional', label: 'Traditional African', type: 'food', icon: UtensilsCrossed, color: 'bg-rose-100 text-rose-800', description: 'Pap, stew, mogodu & chakalaka' }
 ];
 
 // Property Types Configuration
@@ -187,6 +193,14 @@ const EVENTS_CATEGORY_CONFIG = {
   tech: { label: 'Tech', color: 'bg-blue-100 text-blue-800', icon: '💻', endpoint: 'event' },
 };
 
+// Food Categories Configuration
+const FOOD_CATEGORY_CONFIG = {
+  food: { label: 'All Meals', color: 'bg-orange-100 text-orange-800', icon: '🍱', endpoint: 'lunch' },
+  street_food: { label: 'Street Food & Kotas', color: 'bg-amber-100 text-amber-800', icon: '🥪', endpoint: 'lunch' },
+  traditional: { label: 'Traditional & Stew', color: 'bg-rose-100 text-rose-800', icon: '🍲', endpoint: 'lunch' },
+  fast_food: { label: 'Burgers & Grills', color: 'bg-red-100 text-red-800', icon: '🍔', endpoint: 'lunch' }
+};
+
 // Main Search Type Configuration
 const SEARCH_TYPE_CONFIG = {
   all: {
@@ -196,6 +210,15 @@ const SEARCH_TYPE_CONFIG = {
     bgColor: 'bg-gray-900',
     textColor: 'text-gray-900 dark:text-white',
     endpoint: 'all'
+  },
+  food: {
+    label: 'Food & Lunch',
+    icon: UtensilsCrossed,
+    color: 'from-orange-500 to-amber-600',
+    bgColor: 'bg-orange-500',
+    textColor: 'text-orange-600',
+    endpoint: 'lunch',
+    subTypes: FOOD_CATEGORY_CONFIG
   },
   properties: {
     label: 'Properties',
@@ -254,6 +277,7 @@ const containerVariants = {
 const normalizeSearchType = (type) => {
   if (type === 'helper') return 'helpers';
   if (type === 'property') return 'properties';
+  if (type === 'lunch') return 'food';
   return type || 'all';
 };
 
@@ -303,6 +327,7 @@ const CategoryDropdown = ({
 
   const getGroupLabel = (type) => {
     switch (type) {
+      case 'food': return '🍱 Food & Lunch';
       case 'properties': return '🏠 Properties & Accommodation';
       case 'services': return '🔧 Services';
       case 'helper': return '👤 Helper & Professionals';
@@ -490,6 +515,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     if (type === 'services') return 'service';
     if (type === 'helper') return 'helper';
     if (type === 'events') return 'event';
+    if (type === 'food' || type === 'lunch') return 'food';
     return type;
   })();
 
@@ -499,6 +525,10 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         item={item}
         type={airbnbCardType}
         onClick={(path) => {
+          if (item.itemType === 'food' || item.route === '/food') {
+            navigate('/food');
+            return;
+          }
           if (onClick) {
             onClick(path);
             return;
@@ -708,7 +738,7 @@ const SearchPage = () => {
       const fetchWithParams = async (currentLocation, currentSearchTerm) => {
         let endpoints = [];
         if (type === 'all') {
-          endpoints = ['listing', 'service', 'helper', 'event'];
+          endpoints = ['listing', 'service', 'helper', 'event', 'lunch'];
         } else {
           const config = SEARCH_TYPE_CONFIG[type];
           if (config) endpoints = [config.endpoint];
@@ -716,6 +746,67 @@ const SearchPage = () => {
 
         let successfulRequests = 0;
         const fetchPromises = endpoints.map(async (endpoint) => {
+          if (endpoint === 'lunch') {
+            try {
+              const res = await fetch('/api/lunch/shops');
+              if (res.ok) {
+                const shops = await res.json();
+                successfulRequests += 1;
+                const foodItems = [];
+                const termLower = (currentSearchTerm || '').toLowerCase().trim();
+                const locLower = (currentLocation || '').toLowerCase().trim();
+
+                (Array.isArray(shops) ? shops : []).forEach(shop => {
+                  const shopMatchesTerm = !termLower ||
+                    shop.name?.toLowerCase().includes(termLower) ||
+                    shop.cuisine?.toLowerCase().includes(termLower) ||
+                    shop.address?.toLowerCase().includes(termLower);
+
+                  const shopMatchesLoc = !locLower ||
+                    shop.address?.toLowerCase().includes(locLower);
+
+                  (shop.meals || []).forEach(meal => {
+                    if (meal.isAvailable === false) return;
+                    const mealMatchesTerm = !termLower ||
+                      meal.name?.toLowerCase().includes(termLower) ||
+                      meal.description?.toLowerCase().includes(termLower) ||
+                      meal.tag?.toLowerCase().includes(termLower);
+
+                    if ((shopMatchesTerm || mealMatchesTerm) && (!locLower || shopMatchesLoc)) {
+                      foodItems.push({
+                        _id: `${shop.id || shop._id}_${meal.id}`,
+                        id: `${shop.id || shop._id}_${meal.id}`,
+                        name: meal.name,
+                        title: meal.name,
+                        description: `${meal.description || ''} • ${shop.name} (${shop.cuisine || 'Local Food'})`,
+                        regularPrice: meal.price,
+                        discountPrice: meal.originalPrice || meal.price,
+                        price: meal.price,
+                        address: shop.address || 'Polokwane, Limpopo',
+                        imageUrls: [meal.image?.startsWith('http') ? meal.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800'],
+                        image: meal.image?.startsWith('http') ? meal.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
+                        itemType: 'food',
+                        type: 'food',
+                        subType: shop.cuisine || 'food',
+                        shopId: shop.id || shop._id,
+                        shopName: shop.name,
+                        rating: 4.9,
+                        latitude: shop.latitude,
+                        longitude: shop.longitude,
+                        badge: meal.tag || 'Hot Food',
+                        route: '/food'
+                      });
+                    }
+                  });
+                });
+                return foodItems;
+              }
+            } catch (err) {
+              console.error('Error fetching lunch shops:', err);
+            }
+            return [];
+          }
+
           let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
 
           if (currentSearchTerm) url += `&searchTerm=${encodeURIComponent(currentSearchTerm)}`;
@@ -1070,6 +1161,31 @@ const SearchPage = () => {
                 </button>
               </div>
             </div>
+
+            {/* Lunch & Food Hub Banner */}
+            {(searchType === 'food' || /lunch|food|eat|meal|burger|kota|pizza|restaurant/i.test(searchTerm)) && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-rose-500 text-white shadow-lg shadow-orange-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shrink-0">
+                    🍱
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-black tracking-tight leading-tight">Explore Live Local Kitchens & Menus</h3>
+                    <p className="text-[11px] text-orange-100 font-medium">Order hot meals, customize sides & track live pickup at the Lunch hub.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate('/food')}
+                  className="px-4 py-2 bg-white text-orange-600 rounded-full font-black text-xs uppercase tracking-wider hover:bg-orange-50 transition-all shadow-md shrink-0 active:scale-95 cursor-pointer"
+                >
+                  Open Lunch Hub →
+                </button>
+              </motion.div>
+            )}
 
             {/* Results Grid */}
             {searchError && (
