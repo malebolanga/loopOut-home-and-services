@@ -20,7 +20,7 @@ html, body {
 
 @media (max-width: 767px) {
   .app-safe-top {
-    padding-top: max(24px, calc(6px + env(safe-area-inset-top, 24px))) !important;
+    padding-top: max(28px, calc(8px + env(safe-area-inset-top, 28px))) !important;
   }
 }
 
@@ -102,6 +102,35 @@ html, body {
 
 .active-scale:active {
   transform: scale(0.96);
+}
+
+/* Shared Android-style interaction language: clear focus, comfortable touch area,
+   and predictable sheets across the app. Components can opt in without duplicating styles. */
+.app-touch-control {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 14px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.app-touch-control:active {
+  transform: scale(0.97);
+}
+
+:where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(244, 63, 94, 0.38);
+  outline-offset: 2px;
+}
+
+.app-bottom-sheet {
+  border-radius: 28px 28px 0 0;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 640px) {
+  .app-bottom-sheet {
+    border-radius: 28px;
+  }
 }
 
 @media (max-width: 767px) {

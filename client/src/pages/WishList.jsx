@@ -349,11 +349,11 @@ const WishList = () => {
       style={{ fontFamily: "'Circular', 'Inter', 'Helvetica Neue', sans-serif" }}
     >
       {/* ── Sticky header ── */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className="max-w-[1280px] mx-auto px-6 sm:px-10 xl:px-20 h-[72px] flex items-center justify-between gap-4">
+      <header className="app-safe-top sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-10 xl:px-20 h-16 sm:h-[72px] flex items-center justify-between gap-4">
 
           {/* Left: back button always visible + title */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => openGroup ? setOpenGroup(null) : navigate(-1)}
               aria-label="Go back"
@@ -363,7 +363,7 @@ const WishList = () => {
                 <path d="M10 13L5 8L10 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
-            <h1 className="text-[22px] font-semibold text-gray-900 tracking-tight truncate">
+            <h1 className="text-[20px] sm:text-[22px] font-semibold text-gray-900 tracking-tight truncate">
               {openGroup
                 ? (GROUPS.find((g) => g.id === openGroup)?.label || 'Wishlist')
                 : 'Wishlists'}

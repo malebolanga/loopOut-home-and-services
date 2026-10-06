@@ -174,8 +174,8 @@ export default function UserListings() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center gap-3">
+        <header className="app-safe-top sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[72px] flex items-center gap-3">
             <div className="w-9 h-9 bg-gray-100 rounded-full" />
             <div className="h-5 w-32 bg-gray-100 rounded-full" />
           </div>
@@ -199,11 +199,11 @@ export default function UserListings() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
+    <div className="min-h-screen bg-white app-safe-content-bottom pb-20" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
       {/* Sticky header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+      <header className="app-safe-top sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -215,16 +215,16 @@ export default function UserListings() {
               </svg>
             </button>
             <div className="min-w-0">
-              <h1 className="text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">My Listings</h1>
-              <p className="text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
+              <h1 className="text-[18px] sm:text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">My Listings</h1>
+              <p className="text-[12px] sm:text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
             </div>
           </div>
           <Link
             to="/create-listing"
-            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl shadow transition-all duration-200"
+            className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
           >
-            <FaPlus className="w-3.5 h-3.5" />
-            New Post
+            <FaPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+            <span>New Post</span>
           </Link>
         </div>
       </header>

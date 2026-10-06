@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import bcryptjs from 'bcryptjs';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
@@ -190,13 +191,20 @@ export const getUserEvents = async (req, res, next) => {
 // Add this function to get user's post count including events
 export const getUserPostCount = async (req, res, next) => {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id || req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(200).json({
+        count: 0,
+        limit: 3,
+        breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+      });
+    }
 
     const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
-      Listing.countDocuments({ userRef: userId }),
-      Service.countDocuments({ userRef: userId }),
-      Helper.countDocuments({ userRef: userId }),
-      Event.countDocuments({ userRef: userId })
+      Listing.countDocuments({ userRef: userId }).catch(() => 0),
+      Service.countDocuments({ userRef: userId }).catch(() => 0),
+      Helper.countDocuments({ userRef: userId }).catch(() => 0),
+      Event.countDocuments({ userRef: userId }).catch(() => 0)
     ]);
 
     const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount;
@@ -212,21 +220,32 @@ export const getUserPostCount = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(errorHandler(500, 'Failed to get user post count'));
+    console.error('Failed to get user post count:', error);
+    res.status(200).json({
+      count: 0,
+      limit: 3,
+      breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+    });
   }
 };
 
 // POST version: reads userId from request body (used by CreateListing)
 export const getPostCountByBody = async (req, res, next) => {
   try {
-    const userId = req.body.userId;
-    if (!userId) return next(errorHandler(400, 'userId is required'));
+    const userId = req.body?.userId || req.user?.id;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(200).json({
+        count: 0,
+        limit: 3,
+        breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+      });
+    }
 
     const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
-      Listing.countDocuments({ userRef: userId }),
-      Service.countDocuments({ userRef: userId }),
-      Helper.countDocuments({ userRef: userId }),
-      Event.countDocuments({ userRef: userId })
+      Listing.countDocuments({ userRef: userId }).catch(() => 0),
+      Service.countDocuments({ userRef: userId }).catch(() => 0),
+      Helper.countDocuments({ userRef: userId }).catch(() => 0),
+      Event.countDocuments({ userRef: userId }).catch(() => 0)
     ]);
 
     const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount;
@@ -242,7 +261,12 @@ export const getPostCountByBody = async (req, res, next) => {
       }
     });
   } catch (error) {
-    next(errorHandler(500, 'Failed to get user post count'));
+    console.error('Failed to get user post count by body:', error);
+    res.status(200).json({
+      count: 0,
+      limit: 3,
+      breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+    });
   }
 };
 

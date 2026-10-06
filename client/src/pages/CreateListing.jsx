@@ -766,28 +766,43 @@ export default function CreateListing() {
         }
 
         try {
-          const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
-          const res = await fetch(`${apiUrl}/api/user/post-count`, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
+          const userId = currentUser._id || currentUser.id;
+          if (!userId) {
+            setLoading(false);
+            return;
+          }
+
+          const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser.token || currentUser.access_token || '';
+          const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          };
+
+          // Try standard GET endpoint first (matches Profile & Dashboard)
+          let res = await fetch(`/api/user/post-count/${userId}`, {
+            headers,
             credentials: 'include',
-            body: JSON.stringify({ userId: currentUser._id }),
           });
 
+          // Fallback to POST endpoint if GET returns 404/405
+          if (!res.ok && (res.status === 404 || res.status === 405)) {
+            res = await fetch(`/api/user/post-count`, {
+              method: 'POST',
+              headers,
+              credentials: 'include',
+              body: JSON.stringify({ userId }),
+            });
+          }
+
           if (!res.ok) {
-            if (res.status === 404) {
-              setPostLimitReached(false);
-              setPaymentRequired(false);
-              return;
-            }
-            throw new Error(`Error: ${res.status}`);
+            // Graceful fallback if backend count check is unavailable
+            setPostLimitReached(false);
+            setPaymentRequired(false);
+            return;
           }
 
           const data = await res.json();
-          if (data.count >= (data.limit || 3)) {
+          if (data && typeof data.count === 'number' && data.count >= (data.limit || 3)) {
             setPostLimitReached(true);
             setPaymentRequired(true);
           } else {
@@ -795,7 +810,7 @@ export default function CreateListing() {
             setPaymentRequired(false);
           }
         } catch (err) {
-          console.error("Failed to fetch post count:", err);
+          console.warn("Post count check fallback:", err?.message || err);
           setPostLimitReached(false);
           setPaymentRequired(false);
         } finally {

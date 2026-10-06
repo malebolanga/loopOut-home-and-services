@@ -1254,7 +1254,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
           exit={{ y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative z-10 w-full max-w-md mx-0 sm:mx-4 bg-white dark:bg-gray-950 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+          className="app-bottom-sheet relative z-10 w-full max-w-md mx-0 sm:mx-4 bg-white dark:bg-gray-950 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
         >
           {/* Mobile Drag handle */}
           <div className="flex justify-center pt-2.5 pb-1 sm:hidden shrink-0">
