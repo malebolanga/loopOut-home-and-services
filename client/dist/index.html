@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
-  <meta name="theme-color" content="#f0f2f5" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="LoopOut - The ultimate marketplace for properties, services, helpers, and events. Discover premium listings and seamless booking experiences." />
   <meta name="keywords" content="LoopOut, marketplace, services, properties, events, booking, helpers, rentals" />
@@ -46,6 +46,32 @@
     overflow-y: auto;
 
   }
+
+  /* First paint: this appears before React and the native app are ready. */
+  .initial-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: #0f172a;
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .initial-splash__logo {
+    width: 82px;
+    height: 82px;
+    padding: 13px;
+    border-radius: 27px;
+    background: #fff1f3;
+  }
+  .initial-splash__name { margin-top: 18px; font-size: 29px; font-weight: 800; letter-spacing: -1px; }
+  .initial-splash__name strong { color: #ff385c; }
+  .initial-splash__bar { width: 64px; height: 4px; margin-top: 22px; overflow: hidden; border-radius: 999px; background: #f1f5f9; }
+  .initial-splash__bar::after { content: ''; display: block; width: 32px; height: 100%; border-radius: inherit; background: #ff385c; animation: initial-splash-load 900ms ease-in-out infinite; }
+  @keyframes initial-splash-load { from { transform: translateX(-110%); } to { transform: translateX(210%); } }
 
   html {
     scroll-behavior: smooth;
@@ -217,14 +243,14 @@
     font-style: normal;
   }
 </style>
-  <script type="module" crossorigin src="/assets/index-OM46JSEe.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-B5-tRRwa.css">
+  <script type="module" crossorigin src="/assets/index-t-SGDZ3C.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Cxee7t6l.css">
 </head>
 <body>
 
 
 
-  <div id="root"></div>
+  <div id="root"><div class="initial-splash" aria-label="Loading LoopOut"><img class="initial-splash__logo" src="/loopout_icon.svg" alt="LoopOut" /><div class="initial-splash__name">loop<strong>Out</strong></div><div class="initial-splash__bar"></div></div></div>
 
 
   <!--
