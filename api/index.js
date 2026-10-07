@@ -78,6 +78,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
+  'http://127.0.0.1:3000',
   'capacitor://localhost',
   process.env.CLIENT_URL,
   process.env.RENDER_EXTERNAL_URL
@@ -91,6 +92,7 @@ app.use(cors({
       allowedOrigins.some(o => origin.startsWith(o)) ||
       origin.endsWith('.onrender.com') ||
       origin.startsWith('http://localhost') ||
+      origin.startsWith('http://127.0.0.1') ||
       origin.startsWith('https://localhost') ||
       origin.startsWith('capacitor://')
     ) {
