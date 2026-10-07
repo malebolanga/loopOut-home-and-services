@@ -40,7 +40,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
-import { isNativeApp } from '../utils/nativeApp';
+import { isNativeApp, isAndroidApp } from '../utils/nativeApp';
 
 
 import {
@@ -3726,6 +3726,34 @@ function MobileAppHomepage({
     return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
   }, [activeTab, activeSubcategory, getSourceForTab]);
 
+  const loadMoreSentinelRef = useRef(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Auto-load more items when scrolling near the end
+  useEffect(() => {
+    if (visibleCount >= filteredItems.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first?.isIntersecting && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + 8, filteredItems.length));
+            setIsLoadingMore(false);
+          }, 200);
+        }
+      },
+      { rootMargin: '350px' }
+    );
+
+    const el = loadMoreSentinelRef.current;
+    if (el) observer.observe(el);
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [visibleCount, filteredItems.length, isLoadingMore]);
+
   const getSubcategoryCount = useCallback((tab, subId) => {
     const source = getSourceForTab(tab);
     if (tab === 'RecentAdded' || tab === 'Recent Added') {
@@ -4026,24 +4054,33 @@ function MobileAppHomepage({
 
           {/* Load More / Search */}
           {visibleCount < filteredItems.length ? (
-            <div className="mt-8 flex flex-col items-center">
-              <motion.button
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setVisibleCount(prev => prev + 8)}
-                className="group relative flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                <Sparkles className="w-3.5 h-3.5 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
-                <span className="tracking-wide">Load More {currentTabLabel}</span>
-                <span className="ml-1 px-2 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
-                  +{Math.min(8, filteredItems.length - visibleCount)}
-                </span>
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
-              </motion.button>
-              <span className="mt-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
-                Showing {Math.min(visibleCount, filteredItems.length)} of {filteredItems.length} {currentTabLabel.toLowerCase()}
-              </span>
+            <div ref={loadMoreSentinelRef} className="mt-8 flex flex-col items-center">
+              {isAndroidApp() ? (
+                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-gray-800/80 text-slate-500 dark:text-gray-400 text-xs font-semibold">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                  <span>Loading more {currentTabLabel.toLowerCase()}...</span>
+                </div>
+              ) : (
+                <>
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setVisibleCount(prev => prev + 8)}
+                    className="group relative flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                    <Sparkles className="w-3.5 h-3.5 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
+                    <span className="tracking-wide">Load More {currentTabLabel}</span>
+                    <span className="ml-1 px-2 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
+                      +{Math.min(8, filteredItems.length - visibleCount)}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
+                  </motion.button>
+                  <span className="mt-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
+                    Showing {Math.min(visibleCount, filteredItems.length)} of {filteredItems.length} {currentTabLabel.toLowerCase()}
+                  </span>
+                </>
+              )}
             </div>
           ) : filteredItems.length > 0 && (
             <div className="mt-8 flex flex-col items-center justify-center text-center py-3">
@@ -4073,7 +4110,7 @@ function MobileAppHomepage({
         </div>
 
         {/* End of Feed */}
-        <CaughtUpHub stats={stats} navigate={navigate} />
+        {!isAndroidApp() && <CaughtUpHub stats={stats} navigate={navigate} />}
 
       </main>
     </div>
@@ -4157,6 +4194,34 @@ function DesktopHomepage({
   }, [activeTab, tabs]);
 
   const filteredDesktopItems = getFilteredItems();
+
+  const loadMoreDesktopSentinelRef = useRef(null);
+  const [isLoadingMoreDesktop, setIsLoadingMoreDesktop] = useState(false);
+
+  // Auto-load more items when scrolling near the end on desktop/tablet
+  useEffect(() => {
+    if (visibleCount >= filteredDesktopItems.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first?.isIntersecting && !isLoadingMoreDesktop) {
+          setIsLoadingMoreDesktop(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => Math.min(prev + 12, filteredDesktopItems.length));
+            setIsLoadingMoreDesktop(false);
+          }, 200);
+        }
+      },
+      { rootMargin: '350px' }
+    );
+
+    const el = loadMoreDesktopSentinelRef.current;
+    if (el) observer.observe(el);
+    return () => {
+      if (el) observer.unobserve(el);
+    };
+  }, [visibleCount, filteredDesktopItems.length, isLoadingMoreDesktop]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
@@ -4361,24 +4426,33 @@ function DesktopHomepage({
 
             {/* Desktop Load More / End Indicator */}
             {visibleCount < filteredDesktopItems.length ? (
-              <div className="mt-14 flex flex-col items-center">
-                <motion.button
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.96 }}
-                  onClick={() => setVisibleCount(prev => prev + 12)}
-                  className="group relative flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                  <Sparkles className="w-4 h-4 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
-                  <span className="tracking-wide">Load More {currentTabLabel}</span>
-                  <span className="ml-1 px-2.5 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
-                    +{Math.min(12, filteredDesktopItems.length - visibleCount)}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
-                </motion.button>
-                <span className="mt-2.5 text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
-                  Showing {Math.min(visibleCount, filteredDesktopItems.length)} of {filteredDesktopItems.length} {currentTabLabel.toLowerCase()}
-                </span>
+              <div ref={loadMoreDesktopSentinelRef} className="mt-14 flex flex-col items-center">
+                {isAndroidApp() ? (
+                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-gray-800/80 text-slate-500 dark:text-gray-400 text-xs font-semibold">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
+                    <span>Loading more {currentTabLabel.toLowerCase()}...</span>
+                  </div>
+                ) : (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => setVisibleCount(prev => prev + 12)}
+                      className="group relative flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                      <Sparkles className="w-4 h-4 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
+                      <span className="tracking-wide">Load More {currentTabLabel}</span>
+                      <span className="ml-1 px-2.5 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
+                        +{Math.min(12, filteredDesktopItems.length - visibleCount)}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
+                    </motion.button>
+                    <span className="mt-2.5 text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
+                      Showing {Math.min(visibleCount, filteredDesktopItems.length)} of {filteredDesktopItems.length} {currentTabLabel.toLowerCase()}
+                    </span>
+                  </>
+                )}
               </div>
             ) : filteredDesktopItems.length > 0 && (
               <div className="mt-14 flex flex-col items-center justify-center text-center py-4">
@@ -4452,9 +4526,11 @@ function DesktopHomepage({
         </div>
 
         {/* Caught Up Hub - End of Feed Showcase */}
-        <div className="mt-20">
-          <CaughtUpHub stats={stats} navigate={navigate} />
-        </div>
+        {!isAndroidApp() && (
+          <div className="mt-20">
+            <CaughtUpHub stats={stats} navigate={navigate} />
+          </div>
+        )}
       </main>
     </div>
   );
