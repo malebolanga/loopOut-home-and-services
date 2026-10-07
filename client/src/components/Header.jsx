@@ -759,8 +759,8 @@ export default function Header() {
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
           <div className="flex flex-row items-center justify-between h-14 md:h-16">
             
-            {/* Left: Branding & Home Link — desktop only per this request */}
-            <div className={`hidden md:flex transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            {/* Left: Branding is always visible, including in the native mobile app. */}
+            <div className={`flex flex-shrink-0 transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <Link
                 to="/"
                 aria-label="loopOut Home"
@@ -784,8 +784,8 @@ export default function Header() {
               </Link>
             </div>
 
-            {/* Mobile Search Pill — takes the logo's place in the main row */}
-            <div className={`flex-1 md:hidden transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            {/* Mobile Search Pill — sits beside the brand rather than replacing it. */}
+            <div className={`min-w-0 flex-1 mx-3 md:hidden transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
@@ -816,25 +816,9 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Right: User Menu */}
-            <div className="relative md:translate-x-[20px]">
+            {/* Right: Alerts only — account access remains in the bottom navigation. */}
+            <div className="relative">
               <div className="flex flex-row items-center gap-1.5 md:gap-3">
-
-                {/* Calendar Icon - Desktop and Mobile (Alone, sleek, without circle) */}
-                <button
-                  onClick={() => handleNavigate('/calendar')}
-                  aria-label={`Calendar Schedule${calendarBadgeCount > 0 ? `. ${calendarBadgeCount} confirmed appointments` : ''}`}
-                  title="Daily Schedule & Appointments Calendar"
-                  className="relative p-2 text-slate-700 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors flex items-center justify-center cursor-pointer rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-800/60"
-                >
-                  <CalendarDaysIcon className="w-6 h-6 stroke-[1.8px]" />
-                  {calendarBadgeCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[15px] h-[15px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white dark:border-gray-900 shadow-sm z-10 font-black">
-                      {calendarBadgeCount}
-                    </span>
-                  )}
-                </button>
-
                 {/* Notification Bell Icon - Desktop and Mobile (Alone, sleek, without circle) */}
                 <button
                   onClick={handleNotificationsClick}
@@ -849,56 +833,6 @@ export default function Header() {
                     </span>
                   )}
                 </button>
-
-                {/* Profile / Sign In — Desktop */}
-                <div className="relative hidden md:block" ref={profileDropdownRef}>
-                  <button
-                    onClick={() => {
-                      setShowProfileDropdown((prev) => !prev);
-                      setShowLanguageDropdown(false);
-                      setShowCurrencyDropdown(false);
-                    }}
-                    aria-label={currentUser ? 'Account menu' : 'Sign in'}
-                    aria-expanded={showProfileDropdown}
-                    className={`flex items-center gap-2 rounded-full border border-slate-200 dark:border-gray-700 pl-1.5 pr-3 h-9 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all ${
-                      currentUser ? '' : 'bg-slate-950 dark:bg-white border-slate-950 dark:border-white pl-3'
-                    }`}
-                  >
-                    {currentUser ? (
-                      <>
-                        <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 dark:border-gray-700 flex-shrink-0">
-                          <ImageWithFallback
-                            src={currentUser.avatar}
-                            type="avatar"
-                            alt="Profile"
-                            className="w-full h-full"
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-gray-300 max-w-[80px] truncate">
-                          {currentUser.username}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[11px] font-black uppercase tracking-wider text-white dark:text-slate-950">
-                        Sign In
-                      </span>
-                    )}
-                  </button>
-
-                  <AnimatePresence>
-                    {showProfileDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute top-full right-0 mt-3 w-80 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 p-4 z-50 max-h-[85vh] overflow-y-auto"
-                      >
-                        {profileMenuContent}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
 
               </div>
 
