@@ -228,10 +228,10 @@ const AnimatedRoutes = () => {
         {/* Service Routes */}
         <Route path="/carwash/:id" element={<PageTransition><CarWashPage /></PageTransition>} />
         <Route path="/storage/:id" element={<PageTransition><StoragePage /></PageTransition>} />
-        <Route path="/photography/:id" element={<PageTransition><HelperPage /></PageTransition>} />
-        <Route path="/beauty/:id" element={<PageTransition><HelperPage /></PageTransition>} />
-        <Route path="/barber/:id" element={<PageTransition><HelperPage /></PageTransition>} />
-        <Route path="/tattoo/:id" element={<PageTransition><HelperPage /></PageTransition>} />
+        <Route path="/photography/:id" element={<PageTransition><PhotographyHelperPage /></PageTransition>} />
+        <Route path="/beauty/:id"      element={<PageTransition><BeautyPage /></PageTransition>} />
+        <Route path="/barber/:id"      element={<PageTransition><BarberPage /></PageTransition>} />
+        <Route path="/tattoo/:id"      element={<PageTransition><TattooPage /></PageTransition>} />
         <Route path="/chef/:id" element={<PageTransition><ChefPage /></PageTransition>} />
         <Route path="/helper/:id" element={<PageTransition><HelperPage /></PageTransition>} />
         <Route path="/event/:id" element={<PageTransition><EventPage /></PageTransition>} />

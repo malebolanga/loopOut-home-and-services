@@ -71,7 +71,7 @@ export const addMealToShop = async (req, res, next) => {
     const name = cleanText(req.body.name, 100); const price = Number(req.body.price);
     if (!name || !Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid meal name and price.' });
     const sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
-    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', image: cleanText(req.body.image, 32) || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', image: cleanText(req.body.image, 32) || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
     shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
   } catch (error) { return next(error); }
 };
@@ -84,6 +84,7 @@ export const updateMealInShop = async (req, res, next) => {
     if (req.body.name !== undefined) meal.name = cleanText(req.body.name, 100);
     if (req.body.description !== undefined) meal.description = cleanText(req.body.description, 500);
     if (req.body.tag !== undefined) meal.tag = cleanText(req.body.tag, 40);
+    if (req.body.category !== undefined) meal.category = cleanText(req.body.category, 60);
     if (req.body.image !== undefined) meal.image = cleanText(req.body.image, 32);
     if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
     if (req.body.sides !== undefined) meal.sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];

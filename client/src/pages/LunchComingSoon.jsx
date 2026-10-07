@@ -66,6 +66,59 @@ const PRESET_MOODS = [
   { id: 'comfort', label: '🍲 Comfort Food' },
 ];
 
+export const FOOD_CATEGORIES = [
+  { id: 'all', name: 'Full Menu', icon: '🍽️', label: 'Full Menu', desc: 'All items, pap, kotas & full selection' },
+  { id: 'african', name: 'African Cuisines', icon: '🍲', label: 'African Cuisines', desc: 'Pap, stews, mogodu & traditional meals' },
+  { id: 'light', name: 'Light Food', icon: '🥗', label: 'Light Food', desc: 'Salads, burgers, pies, kotas & quick bites' },
+  { id: 'drinks', name: 'Soft Drinks', icon: '🥤', label: 'Soft Drinks', desc: 'Cold drinks, juices & sodas' },
+  { id: 'fruits', name: 'Fruits', icon: '🍎', label: 'Fruits', desc: 'Fresh fruits & fruit salads' }
+];
+
+export const detectMealCategory = (meal) => {
+  if (!meal) return 'light';
+  const explicit = (meal.category || '').trim().toLowerCase();
+  if (explicit) {
+    if (explicit.includes('drink') || explicit.includes('beverage')) return 'drinks';
+    if (explicit.includes('fruit')) return 'fruits';
+    if (explicit.includes('african') || explicit.includes('traditional') || explicit.includes('cuisine')) return 'african';
+    if (explicit.includes('light') || explicit.includes('snack') || explicit.includes('fast')) return 'light';
+    if (explicit.includes('full') || explicit.includes('main')) return 'all';
+  }
+
+  const text = `${meal.name || ''} ${meal.description || ''} ${meal.tag || ''}`.toLowerCase();
+
+  // 1. Soft drinks
+  if (/\b(drink|drinks|soft\s*drink|soft\s*drinks|coke|coca-cola|fanta|sprite|pepsi|stoney|spar-letta|twist|water|juice|soda|beverage|cold\s*drink|milkshake|freezo|cordial|ginger\s*beer|mazoe)\b/i.test(text)) {
+    return 'drinks';
+  }
+
+  // 2. Fruits
+  if (/\b(fruit|fruits|apple|banana|orange|mango|grapes|pineapple|watermelon|peach|fruit\s*salad|fruit\s*bowl|fresh\s*fruit|berries)\b/i.test(text)) {
+    return 'fruits';
+  }
+
+  // 3. African Cuisines: Pap, stews, mogodu, mala, samp, dombolo, hardbody, traditional
+  if (/\b(pap|mogodu|mala|tripe|samp|dombolo|hardbody|stew|curry|morogo|ting|phutu|beef\s*and\s*pap|chicken\s*and\s*pap|wors\s*and\s*pap|african|traditional|seshego\s*special|braai|t-bone|giblets)\b/i.test(text) && !/\b(kota|kots|burger|sandwich|wrap)\b/i.test(meal.name || '')) {
+    return 'african';
+  }
+
+  // 4. Light Food: Salad, burger, pie, kota, chips, toastie, sandwich, wrap, roll, boerewors roll, vetkoek, magwinya
+  if (/\b(salad|burger|pie|kota|kots|quarter|dagwood|sphatlo|chips|fries|sandwich|toastie|wrap|roll|boerewors\s*roll|vetkoek|magwinya|hot\s*dog|light\s*food|snack)\b/i.test(text)) {
+    return 'light';
+  }
+
+  if (/\b(beef|chicken|pork|steak|wors|meat)\b/i.test(text)) {
+    return 'african';
+  }
+
+  return 'light';
+};
+
+export const getCategoryBadge = (meal) => {
+  const cat = detectMealCategory(meal);
+  return FOOD_CATEGORIES.find(c => c.id === cat) || { id: 'light', name: 'Light Food', icon: '🥗' };
+};
+
 export const VENDOR_DEFAULT_SIDES = [
   'Chakalaka',
   'Potatoes',
@@ -559,6 +612,7 @@ export default function LunchComingSoon() {
     description: '',
     price: '',
     tag: 'Popular',
+    category: 'Full Menu',
     image: '🍱',
     sides: []
   });
@@ -590,6 +644,7 @@ export default function LunchComingSoon() {
     description: '',
     price: '',
     tag: 'Popular',
+    category: 'Full Menu',
     image: '🍱',
     sides: []
   });
@@ -617,6 +672,7 @@ export default function LunchComingSoon() {
   // Customer menu discovery controls
   const [menuSearch, setMenuSearch] = useState('');
   const [menuTagFilter, setMenuTagFilter] = useState('All');
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState('all'); // 'all' | 'african' | 'light' | 'drinks' | 'fruits'
 
   const handleAiAutoFillMeal = (isEdit = false) => {
     const targetForm = isEdit ? editMealForm : newMealForm;
@@ -628,6 +684,7 @@ export default function LunchComingSoon() {
         description: aiResult.description,
         price: aiResult.price,
         tag: aiResult.tag,
+        category: aiResult.category || 'Full Menu',
         image: aiResult.image
       }));
     } else {
@@ -637,6 +694,7 @@ export default function LunchComingSoon() {
         description: aiResult.description,
         price: aiResult.price,
         tag: aiResult.tag,
+        category: aiResult.category || 'Full Menu',
         image: aiResult.image
       }));
     }
@@ -802,14 +860,26 @@ export default function LunchComingSoon() {
   const isCurrentShopClosed = currentShop?.isOpen === false;
 
   const menuTags = useMemo(() => ['All', ...new Set((currentShop?.meals || []).map((meal) => meal.tag).filter(Boolean))], [currentShop]);
+
+  const categoryCounts = useMemo(() => {
+    const counts = { all: (currentShop?.meals || []).length, african: 0, light: 0, drinks: 0, fruits: 0 };
+    (currentShop?.meals || []).forEach((meal) => {
+      const cat = detectMealCategory(meal);
+      if (counts[cat] !== undefined) counts[cat] += 1;
+    });
+    return counts;
+  }, [currentShop]);
+
   const visibleMeals = useMemo(() => {
     const search = menuSearch.trim().toLowerCase();
     return (currentShop?.meals || []).filter((meal) => {
+      const mealCat = detectMealCategory(meal);
+      const matchesCategory = selectedFoodCategory === 'all' || mealCat === selectedFoodCategory;
       const matchesTag = menuTagFilter === 'All' || meal.tag === menuTagFilter;
       const matchesSearch = !search || `${meal.name || ''} ${meal.description || ''} ${meal.tag || ''}`.toLowerCase().includes(search);
-      return matchesTag && matchesSearch;
+      return matchesCategory && matchesTag && matchesSearch;
     });
-  }, [currentShop, menuSearch, menuTagFilter]);
+  }, [currentShop, selectedFoodCategory, menuSearch, menuTagFilter]);
 
   // Unique Color Theme for the active selected shop
   const activeTheme = useMemo(() => {
@@ -1629,7 +1699,56 @@ export default function LunchComingSoon() {
             {/* ── MENU GRID (Order Mode) ── */}
             {currentShop && orderMode === 'order' && (
               <div>
-                {/* Search & Filter */}
+                {/* ── FOOD CATEGORIES BAR (Full Menu, African Cuisines, Light Food, Soft Drinks, Fruits) ── */}
+                <div className="mb-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                      <UtensilsCrossed className="h-3.5 w-3.5 text-amber-500" />
+                      <span>Food Categories</span>
+                    </h3>
+                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                      {selectedFoodCategory === 'all'
+                        ? 'Full Menu · All Items'
+                        : `${FOOD_CATEGORIES.find((c) => c.id === selectedFoodCategory)?.name || ''} (${categoryCounts[selectedFoodCategory] || 0})`}
+                    </span>
+                  </div>
+
+                  <div
+                    className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory"
+                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                  >
+                    {FOOD_CATEGORIES.map((cat) => {
+                      const isSelected = selectedFoodCategory === cat.id;
+                      const count = categoryCounts[cat.id] || 0;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedFoodCategory(cat.id)}
+                          className={`shrink-0 snap-start flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-500 text-white shadow-amber-500/25 shadow-md scale-[1.02]'
+                              : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-gray-800/60'
+                          }`}
+                        >
+                          <span className="text-base leading-none">{cat.icon}</span>
+                          <span className="whitespace-nowrap">{cat.name}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-black leading-none ${
+                              isSelected
+                                ? 'bg-white/25 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Search & Tag Filter */}
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
@@ -1637,7 +1756,7 @@ export default function LunchComingSoon() {
                       type="text"
                       value={menuSearch}
                       onChange={(e) => setMenuSearch(e.target.value)}
-                      placeholder="Search menu..."
+                      placeholder="Search meals, kotas, pap, drinks..."
                       className="w-full rounded-lg bg-white dark:bg-gray-900 pl-9 pr-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none transition placeholder:text-gray-400"
                     />
                   </div>
@@ -1663,6 +1782,7 @@ export default function LunchComingSoon() {
                       const inCart = cart.find((c) => (c.cartKey && c.cartKey === cartKey) || c.id === meal.id);
                       const soldOut = meal.isAvailable === false;
                       const visual = getItemVisual(meal);
+                      const catBadge = getCategoryBadge(meal);
                       return (
                         <div
                           key={meal.id}
@@ -1680,14 +1800,20 @@ export default function LunchComingSoon() {
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                   <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{meal.name}</h4>
-                                  {meal.tag && (
-                                    <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{meal.tag}</span>
-                                  )}
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                                      <span>{catBadge.icon}</span>
+                                      <span>{catBadge.name}</span>
+                                    </span>
+                                    {meal.tag && (
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{meal.tag}</span>
+                                    )}
+                                  </div>
                                 </div>
                                 <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatPrice(meal.price)}</span>
                               </div>
                               {meal.description && (
-                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{meal.description}</p>
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">{meal.description}</p>
                               )}
                             </div>
                           </div>
@@ -1751,9 +1877,27 @@ export default function LunchComingSoon() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-10">
-                    <span className="text-3xl">🍽️</span>
-                    <p className="text-sm text-gray-400 mt-2">{menuSearch ? 'No menu items match your search' : 'No menu items yet'}</p>
+                  <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+                    <span className="text-4xl block mb-2">{FOOD_CATEGORIES.find((c) => c.id === selectedFoodCategory)?.icon || '🍽️'}</span>
+                    <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {menuSearch
+                        ? 'No menu items match your search'
+                        : `No ${FOOD_CATEGORIES.find((c) => c.id === selectedFoodCategory)?.name || 'items'} in this shop yet`}
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+                      {selectedFoodCategory !== 'all'
+                        ? `Switch back to Full Menu to view all ${(currentShop?.meals || []).length} available meals & items.`
+                        : 'Try searching with different keywords.'}
+                    </p>
+                    {selectedFoodCategory !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedFoodCategory('all'); setMenuSearch(''); setMenuTagFilter('All'); }}
+                        className="mt-3.5 inline-flex items-center gap-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow transition"
+                      >
+                        🍽️ View Full Menu ({(currentShop?.meals || []).length})
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -2202,8 +2346,16 @@ export default function LunchComingSoon() {
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{meal.name}</p>
-                            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                            <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-400 mt-0.5">
                               <span className="font-bold text-amber-600">{formatPrice(meal.price)}</span>
+                              {(() => {
+                                const cat = getCategoryBadge(meal);
+                                return (
+                                  <span className="inline-flex items-center gap-0.5 font-medium text-gray-500 dark:text-gray-400">
+                                    <span>{cat.icon}</span> {cat.name}
+                                  </span>
+                                );
+                              })()}
                               {meal.tag && <span>· {meal.tag}</span>}
                               <span className={meal.isAvailable === false ? 'text-red-500 font-bold' : 'text-emerald-500'}>{meal.isAvailable === false ? 'Sold Out' : 'In Stock'}</span>
                             </div>
@@ -2221,7 +2373,7 @@ export default function LunchComingSoon() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEditMealForm({ ...meal, id: meal.id });
+                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal) });
                               setShowEditMealModal(true);
                             }}
                             className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition"
@@ -2617,7 +2769,7 @@ export default function LunchComingSoon() {
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Emoji Icon</label>
                     <select value={newShopForm.image} onChange={(e) => setNewShopForm({...newShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
                     </select>
                   </div>
                 </div>
@@ -2684,21 +2836,33 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={newMealForm.description} onChange={(e) => setNewMealForm({...newMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} placeholder="Brief description..." />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
                     <input type="number" required step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
                   </div>
                   <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
+                    <select value={newMealForm.category} onChange={(e) => setNewMealForm({...newMealForm, category: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      <option value="African Cuisines">🍲 African Cuisines</option>
+                      <option value="Light Food">🥗 Light Food</option>
+                      <option value="Soft Drinks">🥤 Soft Drinks</option>
+                      <option value="Fruits">🍎 Fruits</option>
+                      <option value="Full Menu">🍽️ Full Menu / Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tag</label>
                     <select value={newMealForm.tag} onChange={(e) => setNewMealForm({...newMealForm, tag: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {['Popular', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
+                      {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
                     <select value={newMealForm.image} onChange={(e) => setNewMealForm({...newMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
                     </select>
                   </div>
                 </div>
@@ -2751,7 +2915,7 @@ export default function LunchComingSoon() {
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
                     <select value={editShopForm.image} onChange={(e) => setEditShopForm({...editShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
                     </select>
                   </div>
                 </div>
@@ -2818,21 +2982,33 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={editMealForm.description} onChange={(e) => setEditMealForm({...editMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
                     <input type="number" required step="0.01" value={editMealForm.price} onChange={(e) => setEditMealForm({...editMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                   </div>
                   <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
+                    <select value={editMealForm.category} onChange={(e) => setEditMealForm({...editMealForm, category: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                      <option value="African Cuisines">🍲 African Cuisines</option>
+                      <option value="Light Food">🥗 Light Food</option>
+                      <option value="Soft Drinks">🥤 Soft Drinks</option>
+                      <option value="Fruits">🍎 Fruits</option>
+                      <option value="Full Menu">🍽️ Full Menu / Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tag</label>
                     <select value={editMealForm.tag} onChange={(e) => setEditMealForm({...editMealForm, tag: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {['Popular', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
+                      {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
                     <select value={editMealForm.image} onChange={(e) => setEditMealForm({...editMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
                     </select>
                   </div>
                 </div>

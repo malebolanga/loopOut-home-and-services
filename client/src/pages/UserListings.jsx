@@ -105,6 +105,8 @@ export default function UserListings() {
   const [userListings,  setUserListings]  = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [loading,       setLoading]       = useState(true);
+  const [confirmTarget, setConfirmTarget] = useState(null); // { id, category, title }
+  const [deleteError,   setDeleteError]   = useState(null);
 
   useEffect(() => {
     if (!currentUser) navigate('/sign-in');
@@ -135,8 +137,9 @@ export default function UserListings() {
   };
 
   const handleDelete = async (id, category) => {
-    if (!window.confirm('Permanently delete this item? This cannot be undone.')) return;
+    setConfirmTarget(null);
     setDeletingId(id);
+    setDeleteError(null);
     try {
       const endpoint =
         category === 'stays'       ? `/api/listing/delete/${id}`
@@ -150,7 +153,7 @@ export default function UserListings() {
       if (!res.ok) throw new Error(data.message || 'Failed to delete');
       setUserListings(prev => prev.filter(l => l._id !== id));
     } catch (err) {
-      alert(err.message || 'Failed to delete');
+      setDeleteError(err.message || 'Failed to delete. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -263,7 +266,10 @@ export default function UserListings() {
                 key={listing._id}
                 listing={listing}
                 onEdit={(l) => navigate(getEditPath(l))}
-                onDelete={handleDelete}
+                onDelete={(id, cat) => {
+                  const item = userListings.find(l => l._id === id);
+                  setConfirmTarget({ id, category: cat, title: item?.name || item?.title || 'this item' });
+                }}
                 deletingId={deletingId}
                 navigate={navigate}
               />
@@ -302,6 +308,54 @@ export default function UserListings() {
           </div>
         )}
       </main>
+
+      {/* ── Delete error banner ── */}
+      {deleteError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium max-w-sm w-full mx-4">
+          <span className="flex-1">{deleteError}</span>
+          <button onClick={() => setDeleteError(null)} aria-label="Dismiss" className="text-white/70 hover:text-white">✕</button>
+        </div>
+      )}
+
+      {/* ── Delete confirm modal ── */}
+      {confirmTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setConfirmTarget(null)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-1">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-semibold text-gray-900">Delete listing?</h3>
+              <p className="text-[14px] text-gray-500 mt-1">
+                "<span className="font-medium text-gray-700">{confirmTarget.title}</span>" will be permanently removed. This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmTarget(null)}
+                className="flex-1 py-2.5 text-[14px] font-semibold text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmTarget.id, confirmTarget.category)}
+                disabled={deletingId === confirmTarget.id}
+                className="flex-1 py-2.5 text-[14px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deletingId === confirmTarget.id ? <FaSpinner className="w-3.5 h-3.5 animate-spin" /> : null}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
