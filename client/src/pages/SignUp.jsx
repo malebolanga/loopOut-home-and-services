@@ -48,7 +48,10 @@ export default function SignUp() {
       const response = await fetchWithRetry(
         '/api/auth/signup',
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
-        { maxRetries: 4, timeoutMs: 40000 }
+        // Render can take up to a minute to wake, and Gmail may retry a
+        // transient connection. Keep this request alive instead of aborting a
+        // valid sign-up midway through email delivery.
+        { maxRetries: 2, timeoutMs: 180000 }
       );
       clearTimeout(wakeTimer);
       setServerStatus('');
@@ -60,7 +63,9 @@ export default function SignUp() {
     } catch (requestError) {
       setServerStatus('');
       const msg = requestError?.message || '';
-      if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
+      if (msg.toLowerCase().includes('abort') || msg.toLowerCase().includes('timeout')) {
+        setError('The verification service took too long to respond. Please wait a moment, then try again.');
+      } else if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
         setError('Connection error — please check your internet and try again.');
       } else {
         setError(msg || 'Unable to create your account.');
