@@ -765,6 +765,8 @@ export default function ListingBookingSheet({
           listingId: listing._id,
           startDate: startDateStr,
           endDate: endDateStr,
+          totalPrice: totalPrice,
+          price: totalPrice,
           phone: bookingDetails.phone,
           message: `${bookingDetails.selectedUnit ? `[${config.unitLabel}: ${bookingDetails.selectedUnit}] ` : ''}${bookingDetails.specialRequests || ''}`.trim(),
           subtype: bookingDetails.selectedUnit || undefined,

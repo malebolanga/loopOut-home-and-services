@@ -50,7 +50,6 @@ import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
-import AIAutoFillModal from '../components/AIAutoFillModal';
 
 const CustomHeartIcon = () => (
   <svg 
@@ -95,26 +94,31 @@ const ProfanityWarning = ({ text }) => {
   );
 };
 
-// Airbnb-style UI Components
-const SectionCard = ({ title, children, className = "" }) => (
+// Professional Airbnb/Stripe-grade UI Components
+const SectionCard = ({ title, subtitle, children, className = "" }) => (
   <motion.div
-    initial={{ opacity: 0, y: 30 }}
+    initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8, ease: "easeOut" }}
-    className={`bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white/40 p-8 md:p-14 shadow-[0_30px_100px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_120px_rgba(0,0,0,0.06)] transition-all duration-700 ${className}`}
+    transition={{ duration: 0.35, ease: "easeOut" }}
+    className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200/90 dark:border-gray-800 p-6 sm:p-10 shadow-sm transition-all duration-300 ${className}`}
   >
-    <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-10 tracking-tight leading-tight">{title}</h2>
+    <div className="mb-6 sm:mb-8">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-snug">{title}</h2>
+      {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>}
+    </div>
     {children}
   </motion.div>
 );
 
 const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null }) => (
   <div className={`group/form ${className}`}>
-    <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">
-      {label}
-      {required && <span className="text-rose-500 ml-2 font-bold opacity-60">*Required</span>}
-    </label>
-    <div className="relative group/input">
+    {label && (
+      <label htmlFor={id} className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        {label}
+        {required && <span className="text-rose-500 ml-1 font-semibold">*</span>}
+      </label>
+    )}
+    <div className="relative">
       {type === "textarea" ? (
         <textarea
           id={id}
@@ -122,81 +126,95 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 resize-none hover:border-gray-100 dark:hover:border-gray-800 shadow-sm"
+          className="w-full px-4 py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all resize-none shadow-xs hover:border-gray-300 dark:hover:border-gray-600"
           rows={rows}
         />
       ) : type === "number" ? (
-        <div className="relative group/num">
-           <input
+        <div className="relative">
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">
+            R
+          </div>
+          <input
             type="number"
             id={id}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
+            className="w-full pl-9 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-semibold shadow-xs hover:border-gray-300 dark:hover:border-gray-600"
           />
-          <div className="absolute left-7 top-1/2 -translate-y-1/2 text-rose-500 font-black text-xl group-focus-within/num:scale-110 transition-transform">R</div>
         </div>
       ) : type === "select" ? (
-        <select
-          id={id}
-          value={value}
-          onChange={onChange}
-          required={required}
-          className="w-full px-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm appearance-none"
-        >
-          {placeholder && <option value="">{placeholder}</option>}
-          {children}
-        </select>
+        <div className="relative">
+          <select
+            id={id}
+            value={value}
+            onChange={onChange}
+            required={required}
+            className="w-full px-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-xs appearance-none cursor-pointer hover:border-gray-300 dark:hover:border-gray-600"
+          >
+            {placeholder && <option value="">{placeholder}</option>}
+            {children}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-400">
+            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+          </div>
+        </div>
       ) : (
-        <div className="relative group/text">
-           {Icon && <Icon className="absolute left-7 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400 group-focus-within/text:text-rose-500 transition-all duration-500" />}
-           <input
+        <div className="relative">
+          {Icon && (
+            <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors pointer-events-none" />
+          )}
+          <input
             type={type}
             id={id}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className={`w-full ${Icon ? 'pl-16' : 'px-8'} pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm`}
+            className={`w-full ${Icon ? 'pl-11' : 'px-4'} pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium shadow-xs hover:border-gray-300 dark:hover:border-gray-600`}
           />
         </div>
       )}
       {children}
       <ProfanityWarning text={value} />
     </div>
-    {helpText && <p className="mt-4 text-xs font-bold text-gray-400 ml-4 italic opacity-80">{helpText}</p>}
+    {helpText && <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400 ml-1">{helpText}</p>}
   </div>
 );
 
-const CategoryCard = ({ id, icon: Icon, label, description, selected, onSelect }) => (
+const CategoryCard = ({ id, emoji, label, description, selected, onSelect }) => (
   <div
     onClick={() => onSelect(id)}
     className={`
-      relative group cursor-pointer p-8 rounded-[2.5rem] border-4 transition-all duration-500 overflow-hidden
+      group relative cursor-pointer p-5 sm:p-6 rounded-2xl border-2 transition-all duration-200 flex flex-col justify-between text-left
       ${selected 
-        ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
-        : 'border-gray-50 bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'}
+        ? 'border-gray-900 dark:border-white bg-gray-50/80 dark:bg-gray-800/40 shadow-sm ring-1 ring-gray-900 dark:ring-white' 
+        : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-900 dark:hover:border-white hover:shadow-xs'}
     `}
   >
-    <div className={`
-      w-20 h-20 rounded-[1.7rem] flex items-center justify-center mb-10 transition-all duration-500 transform group-hover:rotate-12
-      ${selected ? 'bg-rose-500 text-white' : 'bg-white dark:bg-gray-900 text-gray-400 group-hover:text-rose-500 shadow-lg'}
-    `}>
-      <Icon className="w-10 h-10" />
-    </div>
-    
-    <div className="relative z-10">
-      <h3 className={`text-2xl font-black mb-3 tracking-tight ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</h3>
-      <p className={`text-sm font-medium leading-relaxed ${selected ? 'text-gray-400' : 'text-gray-500 dark:text-white group-hover:text-gray-700 dark:group-hover:text-white'}`}>{description}</p>
+    <div className="flex items-start justify-between">
+      <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl sm:text-4xl transition-transform group-hover:scale-110 duration-200 select-none shadow-xs">
+        {emoji}
+      </div>
+
+      {selected ? (
+        <div className="w-6 h-6 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 flex items-center justify-center shadow-xs">
+          <CheckCircleIcon className="w-4 h-4" />
+        </div>
+      ) : (
+        <div className="w-6 h-6 rounded-full border-2 border-gray-300 dark:border-gray-700 group-hover:border-gray-400 dark:group-hover:border-gray-500 transition-colors" />
+      )}
     </div>
 
-    {selected && (
-      <div className="absolute top-0 right-0 p-6">
-        <Sparkles className="w-8 h-8 text-rose-500 opacity-20" />
-      </div>
-    )}
+    <div className="mt-5">
+      <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white tracking-tight">
+        {label}
+      </h3>
+      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+        {description}
+      </p>
+    </div>
   </div>
 );
 
@@ -204,29 +222,36 @@ const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect }) => (
   <div
     onClick={() => onSelect(id)}
     className={`
-      p-8 rounded-[2.5rem] border-4 transition-all duration-700 cursor-pointer flex flex-col items-center justify-center text-center group relative overflow-hidden
+      p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center relative group
       ${selected 
-        ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.05]' 
-        : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'}
+        ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-gray-800 text-white shadow-md' 
+        : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-xs'}
     `}
   >
     <div className={`
-      w-16 h-16 rounded-[1.2rem] flex items-center justify-center mb-6 transition-all duration-500 transform group-hover:-rotate-12
-      ${selected ? 'bg-rose-500 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 group-hover:text-rose-500 shadow-sm'}
+      w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors
+      ${selected ? 'bg-rose-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
     `}>
-       {emoji ? <span className="text-3xl">{emoji}</span> : <Icon className="w-8 h-8" />}
+       {emoji ? <span className="text-2xl">{emoji}</span> : <Icon className="w-6 h-6" />}
     </div>
-    <span className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${selected ? 'text-rose-400' : 'text-gray-400'}`}>Selection</span>
-    <span className={`text-sm font-black uppercase tracking-[0.1em] ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
+    <span className={`text-xs sm:text-sm font-semibold tracking-tight ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
+
+    {selected && (
+      <div className="absolute top-2.5 right-2.5">
+        <div className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center">
+          <CheckCircleIcon className="w-3 h-3" />
+        </div>
+      </div>
+    )}
   </div>
 );
 
 const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
   <label className={`
-    flex items-center gap-4 p-6 border-4 rounded-[2rem] cursor-pointer transition-all duration-500 group
+    flex items-center gap-3.5 p-3.5 sm:p-4 border-2 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-200
     ${checked 
-      ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.02]' 
-      : 'border-gray-50 bg-white/40 backdrop-blur-md hover:bg-white dark:hover:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-800 hover:shadow-xl'
+      ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-gray-800 text-white shadow-sm' 
+      : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-xs'
     }
   `}>
     <input
@@ -237,19 +262,23 @@ const AmenityCard = ({ id, label, emoji, checked, onChange }) => (
       className="hidden"
     />
     <div className={`
-      w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500
-      ${checked ? 'bg-rose-500 text-white' : 'bg-gray-50 dark:bg-gray-800 text-gray-400 group-hover:text-rose-500'}
+      w-9 h-9 rounded-lg flex items-center justify-center transition-colors
+      ${checked ? 'bg-rose-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
     `}>
-       <span className="text-2xl">{emoji}</span>
+       <span className="text-lg">{emoji}</span>
     </div>
-    <span className={`text-sm font-bold tracking-tight ${checked ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
-    {checked && <CheckCircleIcon className="w-5 h-5 text-rose-500 ml-auto" />}
+    <span className={`text-xs sm:text-sm font-semibold flex-1 ${checked ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
+    {checked ? (
+      <CheckCircleIcon className="w-5 h-5 text-rose-500" />
+    ) : (
+      <div className="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600" />
+    )}
   </label>
 );
 
 const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFiles = 20, label, uploading, uploadProgress }) => (
-  <div className="space-y-6">
-    <div className="flex flex-col gap-6">
+  <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <input
         type="file"
         id={`${type}-upload`}
@@ -262,53 +291,51 @@ const MediaUploadArea = ({ type = 'image', onChange, onSubmit, filesCount, maxFi
       <label
         htmlFor={`${type}-upload`}
         className={`
-          relative group p-12 md:p-20 border-4 border-dashed rounded-[3rem] flex flex-col items-center justify-center 
-          cursor-pointer transition-all duration-500 min-h-[300px] overflow-hidden
-          ${uploading ? 'border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800' : 'border-gray-100 dark:border-gray-800 hover:border-rose-500 hover:bg-rose-50/30'}
+          relative group p-8 sm:p-12 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center 
+          cursor-pointer transition-all duration-200 text-center
+          ${uploading 
+            ? 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 cursor-wait' 
+            : 'border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 hover:border-rose-500 hover:bg-rose-50/20 dark:hover:bg-rose-950/20'}
         `}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
         {type === 'image' ? (
           <>
-            <div className="w-20 h-20 bg-rose-500 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-rose-200 group-hover:rotate-12 transition-transform duration-500">
-              <CameraIcon className="w-10 h-10" />
+            <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-500 rounded-2xl mb-4 flex items-center justify-center shadow-xs">
+              <CameraIcon className="w-7 h-7" />
             </div>
-            <span className="text-gray-900 dark:text-white font-black text-2xl mb-2 tracking-tight">{label || "Captivate with Photos"}</span>
-            <span className="text-gray-400 font-bold text-sm tracking-wide">Drag and drop or tap to browse your gallery</span>
-            <div className="mt-8 flex items-center gap-3 px-5 py-2.5 bg-white dark:bg-gray-900 rounded-full shadow-sm border border-gray-50">
-               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Recommended: 16:9 Aspect Ratio</span>
+            <span className="text-gray-900 dark:text-white font-bold text-base sm:text-lg mb-1">{label || "Upload Photos"}</span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Drag and drop or tap to browse files</span>
+            <div className="mt-4 flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 shadow-xs">
+               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+               <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Recommended: High quality JPG, PNG, WEBP</span>
             </div>
           </>
         ) : (
           <>
-            <div className="w-20 h-20 bg-gray-900 text-white rounded-3xl mb-8 flex items-center justify-center shadow-2xl shadow-gray-200 group-hover:-rotate-12 transition-transform duration-500">
-              <VideoCameraIcon className="w-10 h-10" />
+            <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl mb-4 flex items-center justify-center shadow-xs">
+              <VideoCameraIcon className="w-7 h-7" />
             </div>
-            <span className="text-gray-900 dark:text-white font-black text-2xl mb-2 tracking-tight">{label || "Cinematic Showcase"}</span>
-            <span className="text-gray-400 font-bold text-sm tracking-wide">Bring your listing to life with high-quality video</span>
+            <span className="text-gray-900 dark:text-white font-bold text-base sm:text-lg mb-1">{label || "Upload Video"}</span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Add an optional walkthrough video (MP4, WebM)</span>
           </>
         )}
       </label>
       
       {filesCount > 0 && (
         <motion.button
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           type="button"
           onClick={onSubmit}
-          className="w-full py-5 bg-gray-900 text-white rounded-3xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all duration-300 transform active:scale-95"
+          className="w-full py-3.5 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl font-bold text-sm tracking-wide shadow-sm transition-all duration-200 active:scale-[0.99]"
           disabled={uploading}
         >
           {uploading ? (
-             <div className="flex items-center justify-center gap-3">
-                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce [animation-delay:-.3s]" />
-                <div className="w-2 h-2 bg-white dark:bg-gray-900 rounded-full animate-bounce [animation-delay:-.5s]" />
-                <span>Processing {Math.round(uploadProgress)}%</span>
+             <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white dark:border-gray-900 border-t-transparent rounded-full animate-spin" />
+                <span>Uploading {Math.round(uploadProgress)}%...</span>
              </div>
-          ) : `Deploy ${filesCount} Masterpiece${filesCount > 1 ? 's' : ''}`}
+          ) : `Upload ${filesCount} File${filesCount > 1 ? 's' : ''}`}
         </motion.button>
       )}
     </div>
@@ -325,7 +352,8 @@ const getVisibleSteps = (category, type) => {
     { id: 6, label: "Services", icon: TagIcon },
     { id: 7, label: "Team", icon: UserGroupIcon },
     { id: 8, label: "Media", icon: CameraIcon },
-    { id: 9, label: "Review", icon: CheckCircleIcon }
+    { id: 9, label: "Pricing", icon: CurrencyDollarIcon },
+    { id: 10, label: "Review", icon: CheckCircleIcon }
   ];
 
   if (!category) {
@@ -334,10 +362,10 @@ const getVisibleSteps = (category, type) => {
 
   return allSteps.filter(step => {
     if (category === 'selling') {
-      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 8 || step.id === 9;
+      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 8 || step.id === 9 || step.id === 10;
     }
     if (category === 'events') {
-      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 5 || step.id === 8 || step.id === 9;
+      return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 5 || step.id === 8 || step.id === 9 || step.id === 10;
     }
     if (category === 'property') {
       // rent: no schedule step at all
@@ -357,57 +385,47 @@ const getCurrentPhase = (step) => {
   return 3;
 };
 
-const getPhaseMeta = (phase, category) => {
+const getPhaseMeta = (phase) => {
   if (phase === 1) {
     return {
       phase: 1,
-      label: 'Category & Basics',
-      sub: 'Category · Type · Overview',
+      label: 'Basics',
     };
   }
   if (phase === 2) {
-    if (category === 'selling') {
-      return {
-        phase: 2,
-        label: 'Upload Photo',
-        sub: 'Photos of your item',
-      };
-    }
     return {
       phase: 2,
-      label: 'Photos & Details',
-      sub: 'Schedule · Amenities · Media',
+      label: 'Details & Photos',
     };
   }
   return {
     phase: 3,
-    label: 'Pricing & Publish',
-    sub: 'Price · Review · Go live',
+    label: 'Finish & Publish',
   };
 };
 
 const StepProgress = ({ currentStep, category, type }) => {
   const currentPhase = getCurrentPhase(currentStep);
   const visibleSteps = getVisibleSteps(category, type);
-  const currIdx = visibleSteps.findIndex(s => s.id === currentStep);
+  const currIdx = Math.max(0, visibleSteps.findIndex(s => s.id === currentStep));
   const totalVisible = visibleSteps.length;
 
   const phases = [1, 2, 3].map(p => ({
     number: p,
-    ...getPhaseMeta(p, category)
+    ...getPhaseMeta(p)
   }));
 
   return (
-    <div className="mb-10 md:mb-14">
-      {/* 3 Macro Phase Bubbles */}
-      <div className="max-w-xl mx-auto px-4">
+    <div className="mb-6 sm:mb-8">
+      {/* 3 Macro Phase Stepper */}
+      <div className="max-w-md mx-auto px-4">
         <div className="relative flex items-center justify-between">
-          {/* Connecting Track behind circles */}
-          <div className="absolute top-5 sm:top-6 left-6 right-6 h-1 bg-gray-200 dark:bg-gray-800 rounded-full z-0" />
+          {/* Background Track */}
+          <div className="absolute top-4 sm:top-5 left-6 right-6 h-0.5 bg-gray-200 dark:bg-gray-800 z-0" />
           
           {/* Active Colored Track */}
           <div 
-            className="absolute top-5 sm:top-6 left-6 h-1 bg-gradient-to-r from-rose-500 to-rose-600 rounded-full transition-all duration-500 z-0"
+            className="absolute top-4 sm:top-5 left-6 h-0.5 bg-rose-500 transition-all duration-300 z-0"
             style={{ 
               width: currentPhase === 1 ? '0%' : currentPhase === 2 ? '50%' : 'calc(100% - 48px)' 
             }}
@@ -421,29 +439,26 @@ const StepProgress = ({ currentStep, category, type }) => {
               <div key={phase.number} className="relative z-10 flex flex-col items-center">
                 <div
                   className={`
-                    w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300 shadow-md
+                    w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-200
                     ${isCompleted 
-                      ? 'bg-rose-500 text-white shadow-rose-200 dark:shadow-none' 
+                      ? 'bg-rose-500 text-white' 
                       : isActive 
-                        ? 'bg-gray-900 text-white ring-4 ring-rose-500/30 scale-110 shadow-lg dark:bg-white dark:text-gray-900' 
-                        : 'bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 text-gray-400'}
+                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 ring-4 ring-rose-500/20 shadow-sm' 
+                        : 'bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 text-gray-400'}
                   `}
                 >
                   {isCompleted ? (
-                    <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   ) : (
                     <span>{phase.number}</span>
                   )}
                 </div>
 
-                <div className="mt-2.5 text-center">
-                  <div className={`text-[11px] sm:text-xs md:text-sm font-bold tracking-tight whitespace-nowrap transition-colors ${
-                    isActive ? 'text-gray-900 dark:text-white font-extrabold' : isCompleted ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-gray-400 dark:text-gray-500'
+                <div className="mt-2 text-center">
+                  <div className={`text-xs font-semibold tracking-tight whitespace-nowrap transition-colors ${
+                    isActive ? 'text-gray-900 dark:text-white font-bold' : isCompleted ? 'text-rose-600 dark:text-rose-400' : 'text-gray-400 dark:text-gray-500'
                   }`}>
                     {phase.label}
-                  </div>
-                  <div className="hidden sm:block text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 max-w-[130px] line-clamp-1">
-                    {phase.sub}
                   </div>
                 </div>
               </div>
@@ -451,13 +466,11 @@ const StepProgress = ({ currentStep, category, type }) => {
           })}
         </div>
 
-        {/* Granular step breadcrumb / pill */}
-        <div className="mt-6 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-medium bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-300 shadow-sm border border-gray-200/60 dark:border-gray-700/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
-            Phase {currentPhase} of 3: <strong className="font-semibold text-gray-900 dark:text-white">{getPhaseMeta(currentPhase, category).label}</strong>
-            <span className="text-gray-400">·</span>
-            <span className="text-gray-400">Step {Math.max(1, currIdx + 1)} of {totalVisible}</span>
+        {/* Clean step pill */}
+        <div className="mt-4 flex items-center justify-center">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            Phase {currentPhase} of 3 · Step {currIdx + 1} of {totalVisible}
           </span>
         </div>
       </div>
@@ -472,19 +485,6 @@ export default function CreateListing() {
   
   // Scroll state
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-  
-  const handleAIApply = (aiData) => {
-    setListingForm((prev) => ({
-      ...prev,
-      name: aiData.name || prev.name,
-      description: aiData.description || prev.description,
-      address: aiData.address || prev.address,
-      regularPrice: aiData.regularPrice || prev.regularPrice
-    }));
-    // Try to guess a category if possible, or just jump to Step 3 so they can fill details
-    setCurrentStep(3);
-  };
   
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(1);
@@ -1038,7 +1038,9 @@ export default function CreateListing() {
         setError("You must upload at least one image");
         return;
       }
-      
+    }
+
+    if (currentStep === 9) {
       if (listingForm.regularPrice === undefined || listingForm.regularPrice === null || listingForm.regularPrice === "") {
         setError("Please enter a regular price");
         return;
@@ -1061,7 +1063,7 @@ export default function CreateListing() {
     if (currIdx !== -1 && currIdx < visible.length - 1) {
       setCurrentStep(visible[currIdx + 1].id);
     } else {
-      setCurrentStep(prev => Math.min(prev + 1, 9));
+      setCurrentStep(prev => Math.min(prev + 1, 10));
     }
   };
 
@@ -1904,126 +1906,144 @@ export default function CreateListing() {
 
   const currentPhase = getCurrentPhase(currentStep);
   const visibleSteps = getVisibleSteps(selectedCategory, selectedType);
-  const currStepIdx = visibleSteps.findIndex(s => s.id === currentStep);
-  const nextStepObj = currStepIdx !== -1 && currStepIdx < visibleSteps.length - 1 ? visibleSteps[currStepIdx + 1] : null;
+  const currStepIdx = Math.max(0, visibleSteps.findIndex(s => s.id === currentStep));
+  const isLastStep = currStepIdx === visibleSteps.length - 1;
+  const nextStepObj = currStepIdx < visibleSteps.length - 1 ? visibleSteps[currStepIdx + 1] : null;
   const nextPhase = nextStepObj ? getCurrentPhase(nextStepObj.id) : 3;
   const isPhaseTransition = nextStepObj && nextPhase > currentPhase;
   const nextPhaseMeta = getPhaseMeta(nextPhase, selectedCategory);
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-gray-800 app-safe-content-bottom pb-36 md:pb-12">
-      {/* Cinematic Animated Background */}
-      <div className="fixed inset-0 -z-10 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-rose-500/5 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse [animation-delay:3s]" />
-        <div className="absolute top-[40%] left-[30%] w-[30%] h-[30%] bg-purple-500/5 rounded-full blur-[100px] animate-pulse [animation-delay:1.5s]" />
-      </div>
-
-      {/* Airbnb-style Header */}
-      <header>
-        <div className="app-safe-top sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#DDDDDD] dark:border-gray-800">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-between h-20">
-              <button 
-                onClick={() => navigate(-1)}
-                className={`p-2 rounded-full transition-colors ${
-                  isScrolled ? 'hover:bg-gray-100 dark:hover:bg-gray-800' : 'hover:bg-white/20'
-                }`}
-              >
-                <ArrowLeftIcon className={`w-6 h-6 ${
-                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-black dark:text-white'
-                }`} />
-              </button>
-              
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="font-bold text-2xl tracking-tighter text-[#FF5A5F]">
-                  loopOut
-                </span>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <span className={`font-medium ${
-                  isScrolled ? 'text-gray-900 dark:text-white' : 'text-gray-900 dark:text-white'
-                }`}>
-                  Create listing
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  Phase {currentPhase} of 3: {getPhaseMeta(currentPhase, selectedCategory).label}
-                </span>
-              </div>
-              
-              <div className="w-10" /> {/* Spacer for alignment */}
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50/70 dark:bg-gray-950 app-safe-content-bottom pb-32 md:pb-36">
+      {/* Sleek Modern Header */}
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 shadow-xs">
+        <div className="app-safe-top max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <button 
+              type="button"
+              onClick={() => {
+                if (currStepIdx > 0) {
+                  handlePrevStep();
+                } else {
+                  navigate('/user-listings');
+                }
+              }}
+              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
+              title="Go back"
+              aria-label="Go back"
+            >
+              <ArrowLeftIcon className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <span className="font-extrabold text-xl tracking-tight text-[#FF5A5F]">
+                loopOut
+              </span>
+              <span className="text-gray-300 dark:text-gray-700 font-light">/</span>
+              <span className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white">
+                Create Listing
+              </span>
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                Phase {currentPhase} of 3
+              </span>
             </div>
+            
+            <button
+              type="button"
+              onClick={() => navigate('/user-listings')}
+              className="text-xs sm:text-sm font-semibold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full border border-gray-300 dark:border-gray-700 hover:border-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer"
+            >
+              Save & exit
+            </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12 md:pb-20">
-        <AIAutoFillModal 
-          isOpen={showAIModal} 
-          onClose={() => setShowAIModal(false)} 
-          onApply={handleAIApply} 
-        />
-        {/* AI Assistant Banner */}
-        <div className="bg-gradient-to-r from-rose-500 to-orange-500 rounded-[2rem] p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-             <h3 className="text-xl font-bold flex items-center gap-2 tracking-tight"><Sparkles className="w-6 h-6"/> AI Auto-Fill</h3>
-             <p className="text-sm font-medium text-white/90">Describe what you're listing and let AI do the rest.</p>
-          </div>
-          <button type="button" onClick={() => setShowAIModal(true)} className="bg-white dark:bg-gray-900 text-rose-500 px-6 py-3 rounded-2xl font-black hover:bg-gray-100 dark:hover:bg-gray-800 transition whitespace-nowrap shadow-md">Try AI Assistant</button>
-        </div>
-
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-40 sm:pb-44 md:pb-48">
         {/* Step Progress */}
-        <div className="mt-10">
-          <StepProgress currentStep={currentStep} category={selectedCategory} type={selectedType} />
+        <div className="mt-4 mb-8 sm:mt-6 sm:mb-10">
+          <StepProgress 
+            currentStep={currentStep} 
+            category={selectedCategory} 
+            type={selectedType}
+          />
         </div>
 
         {/* Main Form Container */}
         <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8">
+          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8 pb-24 sm:pb-28">
             
             {/* Step 1: Select Category */}
             {currentStep === 1 && (
-              <SectionCard title="What would you like to list?">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <CategoryCard
-                    id="property"
-                    icon={HomeIcon}
-                    label="Property"
-                    description="Rent out your property, room, or entire home"
-                    selected={selectedCategory === 'property'}
-                    onSelect={setSelectedCategory}
-                  />
-                  <CategoryCard
-                    id="experiences"
-                    icon={BriefcaseIcon}
-                    label="Services"
-                    description="Offer professional services to the community"
-                    selected={selectedCategory === 'experiences'}
-                    onSelect={setSelectedCategory}
-                  />
-                  <CategoryCard
-                    id="online"
-                    icon={UserIcon}
-                    label="Helper"
-                    description="Register as a personal helper or specialist"
-                    selected={selectedCategory === 'online'}
-                    onSelect={setSelectedCategory}
-                  />
-                  <CategoryCard
-                    id="events"
-                    icon={CalendarIcon}
-                    label="Events"
-                    description="Create and promote local happenings"
-                    selected={selectedCategory === 'events'}
-                    onSelect={setSelectedCategory}
-                  />
+              <SectionCard title="Choose your listing path" subtitle="Select one option to start. You can review every detail before publishing.">
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('property')}
+                      aria-pressed={selectedCategory === 'property'}
+                      className={`group relative min-h-52 sm:min-h-60 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/25 ${
+                        selectedCategory === 'property'
+                          ? 'border-rose-500 bg-rose-50 text-gray-950 shadow-lg shadow-rose-500/10 dark:bg-rose-950/25 dark:text-white'
+                          : 'border-gray-200 bg-white text-gray-950 shadow-sm hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'property' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300'}`}><HomeModernIcon className="h-6 w-6" /></div>
+                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'property' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {selectedCategory === 'property' && <CheckCircleIcon className="h-4 w-4" />}
+                        </div>
+                      </div>
+                      <div className="mt-7">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">Stay</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight">A place to stay</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Home, room, apartment, guest house, hotel, or self-catering stay.</p>
+                      </div>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a place</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('experiences')}
+                      aria-pressed={selectedCategory === 'experiences'}
+                      className={`group relative min-h-52 sm:min-h-60 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/25 ${
+                        selectedCategory === 'experiences'
+                          ? 'border-rose-500 bg-rose-50 text-gray-950 shadow-lg shadow-rose-500/10 dark:bg-rose-950/25 dark:text-white'
+                          : 'border-gray-200 bg-white text-gray-950 shadow-sm hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'experiences' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}><BriefcaseIcon className="h-6 w-6" /></div>
+                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'experiences' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {selectedCategory === 'experiences' && <CheckCircleIcon className="h-4 w-4" />}
+                        </div>
+                      </div>
+                      <div className="mt-7">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">Services</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight">A service to offer</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Beauty, transport, trades, cleaning, and professional local services.</p>
+                      </div>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a service</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
+                    </button>
+                  </div>
+
+                  <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />
+                      <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />
+                      <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />
+                    </div>
+                  </div>
+
                 </div>
               </SectionCard>
             )}
 
             {/* Step 2: Select Type */}
             {currentStep === 2 && (
-              <SectionCard title={`What type of ${selectedCategory === 'property' ? 'property' : 
+              <SectionCard className="scroll-mb-40" title={`What type of ${selectedCategory === 'property' ? 'property' : 
                 selectedCategory === 'experiences' ? 'service' :
                 selectedCategory === 'online' ? 'helper' : 
                 selectedCategory === 'selling' ? 'item' : 'event'}?`}>
@@ -2117,24 +2137,24 @@ export default function CreateListing() {
                             exit={{ opacity: 0, height: 0 }}
                             className="col-span-full"
                           >
-                            <div className="bg-rose-50/50 border border-rose-100 rounded-[2rem] p-6 flex flex-col gap-4 mt-2">
-                               <div className="flex items-center gap-4">
+                            <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-4 sm:p-5 flex flex-col gap-3.5 mt-2">
+                               <div className="flex items-center gap-3.5">
                                   <div className="relative">
                                     <img 
                                       src={foundHost.avatar} 
                                       alt={foundHost.username}
-                                      className="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm"
+                                      className="w-12 h-12 rounded-xl object-cover border border-rose-200 shadow-xs"
                                     />
-                                    <div className="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" />
+                                    <div className="absolute -bottom-0.5 -right-0.5 bg-emerald-500 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-gray-900" />
                                   </div>
-                                  <div className="flex-1">
-                                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Mutual Connection Identified</p>
-                                     <h4 className="text-lg font-black text-gray-900 dark:text-white tracking-tight">{foundHost.username}</h4>
+                                  <div className="flex-1 min-w-0">
+                                     <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">Mutual Connection Identified</p>
+                                     <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">{foundHost.username}</h4>
                                   </div>
                                   <button 
                                     type="button"
                                     onClick={() => setListingForm(prev => ({ ...prev, host: foundHost.username }))}
-                                    className="px-4 py-2 bg-white dark:bg-gray-900 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-900 dark:text-white shadow-sm hover:shadow-md transition-all active:scale-95"
+                                    className="px-3.5 py-1.5 bg-white dark:bg-gray-800 rounded-lg text-xs font-semibold text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 shadow-xs hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer"
                                   >
                                     Use as Host
                                   </button>
@@ -3208,60 +3228,56 @@ export default function CreateListing() {
               <>
               {/* Guest house / Hotel / Resort / Self-Catering → Check-in & Check-out */}
               {selectedCategory === 'property' && (selectedType === 'over' || selectedType === 'hotel' || selectedType === 'resort' || selectedType === 'land') && (
-                <SectionCard title="Check-in & Check-out">
-                  <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Set your standard check-in and check-out times so guests know when they can arrive and depart.</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <SectionCard title="Check-in & Check-out" subtitle="Set your standard check-in and check-out times so guests know when to arrive and depart.">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="group/form">
-                      <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">Check-in Time</label>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Check-in Time</label>
                       <div className="relative">
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🛬</div>
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg">🛬</div>
                         <input
                           type="time"
                           value={listingForm.checkInTime}
                           onChange={(e) => setListingForm({ ...listingForm, checkInTime: e.target.value })}
-                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
+                          className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-xs"
                         />
                       </div>
-                      <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Earliest time guests may check in</p>
+                      <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Earliest time guests may check in</p>
                     </div>
                     <div className="group/form">
-                      <label className="block text-[10px] font-black text-gray-400 group-focus-within/form:text-rose-500 uppercase tracking-[0.25em] mb-4 ml-2 transition-colors">Check-out Time</label>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Check-out Time</label>
                       <div className="relative">
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🛫</div>
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-lg">🛫</div>
                         <input
                           type="time"
                           value={listingForm.checkOutTime}
                           onChange={(e) => setListingForm({ ...listingForm, checkOutTime: e.target.value })}
-                          className="w-full pl-16 pr-8 py-6 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2.5rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-black text-lg shadow-sm"
+                          className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all shadow-xs"
                         />
                       </div>
-                      <p className="mt-3 text-xs font-bold text-gray-400 ml-4 italic opacity-80">Latest time guests must check out</p>
+                      <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Latest time guests must check out</p>
                     </div>
                   </div>
                 </SectionCard>
               )}
               {/* Services / Experiences / Events → full weekly operating schedule */}
               {selectedCategory !== 'property' && (
-              <SectionCard title="Operating Schedule">
-                <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Define when you are available for bookings. This helps customers know when they can reach you or visit your location.</p>
-                <div className="space-y-4">
+              <SectionCard title="Operating Schedule" subtitle="Define when you are available for bookings so customers know when they can reach you.">
+                <div className="space-y-3">
                   {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map((day) => (
-                    <motion.div 
+                    <div 
                       key={day}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`p-6 rounded-[2.5rem] border-4 transition-all duration-700 ${listingForm.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-50 shadow-sm hover:shadow-md'}`}
+                      className={`p-3.5 sm:p-4 rounded-xl border transition-all duration-200 ${listingForm.operatingHours[day].closed ? 'bg-gray-50 dark:bg-gray-800/40 border-gray-200 dark:border-gray-800 opacity-60' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-xs'}`}
                     >
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-5 min-w-[140px]">
-                          <div className={`w-4 h-4 rounded-full ${listingForm.operatingHours[day].closed ? 'bg-gray-300' : 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.5)] animate-pulse'}`} />
-                          <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tight">{day}</h3>
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                        <div className="flex items-center gap-2.5 min-w-[110px] w-full sm:w-auto">
+                          <div className={`w-2.5 h-2.5 rounded-full ${listingForm.operatingHours[day].closed ? 'bg-gray-300 dark:bg-gray-600' : 'bg-emerald-500'}`} />
+                          <h3 className="text-sm font-semibold text-gray-900 dark:text-white capitalize">{day}</h3>
                         </div>
                         
                         {!listingForm.operatingHours[day].closed ? (
-                          <div className="flex items-center gap-4 flex-1 justify-center bg-gray-50 dark:bg-gray-800/50 p-2 rounded-[1.5rem]">
-                            <div className="flex flex-col items-center">
-                              <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Open</span>
+                          <div className="flex items-center gap-2.5 flex-1 justify-center bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Open</span>
                               <input 
                                 type="time" 
                                 value={listingForm.operatingHours[day].open}
@@ -3272,12 +3288,12 @@ export default function CreateListing() {
                                     [day]: { ...listingForm.operatingHours[day], open: e.target.value }
                                   }
                                 })}
-                                className="px-5 py-3 bg-white dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                                className="px-2.5 py-1 bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                               />
                             </div>
-                            <div className="h-8 w-[2px] bg-gray-200 mt-4" />
-                            <div className="flex flex-col items-center">
-                              <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Close</span>
+                            <span className="text-gray-300 dark:text-gray-600">—</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Close</span>
                               <input 
                                 type="time" 
                                 value={listingForm.operatingHours[day].close}
@@ -3288,13 +3304,13 @@ export default function CreateListing() {
                                     [day]: { ...listingForm.operatingHours[day], close: e.target.value }
                                   }
                                 })}
-                                className="px-5 py-3 bg-white dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-rose-500 outline-none font-black text-sm transition-all shadow-inner"
+                                className="px-2.5 py-1 bg-white dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                               />
                             </div>
                           </div>
                         ) : (
-                          <div className="flex-1 text-center py-6 bg-gray-100 dark:bg-gray-800/50 rounded-[1.5rem] border-2 border-dashed border-gray-200 dark:border-gray-800">
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Unavailable for Business</span>
+                          <div className="flex-1 text-center py-2 bg-gray-100/70 dark:bg-gray-800/40 rounded-lg border border-dashed border-gray-200 dark:border-gray-700">
+                            <span className="text-xs font-medium text-gray-400">Closed</span>
                           </div>
                         )}
 
@@ -3307,15 +3323,15 @@ export default function CreateListing() {
                               [day]: { ...listingForm.operatingHours[day], closed: !listingForm.operatingHours[day].closed }
                             }
                           })}
-                          className={`min-w-[120px] px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500 ${listingForm.operatingHours[day].closed ? 'bg-rose-500 text-white shadow-[0_10px_30px_rgba(244,63,94,0.3)] hover:scale-105 active:scale-95' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-900 hover:text-white shadow-sm'}`}
+                          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer ${listingForm.operatingHours[day].closed ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-xs' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                         >
                           {listingForm.operatingHours[day].closed ? 'Activate' : 'Deactivate'}
                         </button>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
-                </SectionCard>
+              </SectionCard>
               )}
               </>
             )}
@@ -3370,30 +3386,30 @@ export default function CreateListing() {
                         onChange={(e) => setListingForm({...listingForm, newServicePrice: e.target.value})}
                       />
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-bold text-gray-700 dark:text-white">Description</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Description</label>
                         <textarea
                           placeholder="What is included in this service?"
                           value={listingForm.newServiceDescription || ""}
                           onChange={(e) => setListingForm({...listingForm, newServiceDescription: e.target.value})}
-                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-medium shadow-sm outline-none resize-none"
+                          className="w-full px-4 py-2.5 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-normal text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all resize-none shadow-xs"
                           rows="3"
                         />
                       </div>
-                      <div className="flex flex-col gap-2 justify-center">
-                        <label className="text-sm font-bold text-gray-700 dark:text-white">Service Photo</label>
+                      <div className="flex flex-col gap-1.5 justify-center">
+                        <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">Service Photo</label>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handleServiceImageChange}
-                          className="w-full px-8 py-5 bg-white/40 backdrop-blur-md border-4 border-gray-50 rounded-[2rem] focus:ring-[20px] focus:ring-rose-500/5 focus:border-gray-900 focus:bg-white dark:focus:bg-gray-900 transition-all duration-700 hover:border-gray-100 dark:hover:border-gray-800 font-bold shadow-sm outline-none"
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 cursor-pointer shadow-xs"
                         />
-                        {serviceUploading && <span className="text-xs text-rose-500 font-black animate-pulse mt-1">Uploading...</span>}
+                        {serviceUploading && <span className="text-xs text-rose-500 font-semibold animate-pulse mt-1">Uploading photo...</span>}
                         {listingForm.newServiceImage && (
-                          <div className="mt-2 flex items-center gap-3">
-                            <img src={listingForm.newServiceImage} alt="Service preview" className="w-16 h-16 object-cover rounded-xl shadow-md border" />
-                            <span className="text-xs text-gray-400 font-bold">Image loaded successfully</span>
+                          <div className="mt-2 flex items-center gap-2.5">
+                            <img src={listingForm.newServiceImage} alt="Service preview" className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700 shadow-xs" />
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Photo ready</span>
                           </div>
                         )}
                       </div>
@@ -3419,34 +3435,34 @@ export default function CreateListing() {
                           });
                         }
                       }}
-                      className="px-8 py-4 bg-gray-900 text-white rounded-[1.5rem] font-bold text-sm hover:bg-rose-500 transition-all active:scale-95"
+                      className="px-5 py-2.5 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-xs cursor-pointer active:scale-95"
                     >
-                      Add Service
+                      + Add Service
                     </button>
 
                     {listingForm.serviceList.length > 0 && (
-                      <div className="mt-8 space-y-4">
-                        <h3 className="font-bold text-gray-900 dark:text-white uppercase tracking-widest text-[10px]">Your Service List</h3>
-                        <div className="space-y-3">
+                      <div className="mt-6 space-y-3">
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-xs">Your Added Services</h3>
+                        <div className="space-y-2.5">
                           {listingForm.serviceList.map((service, index) => (
-                            <div key={index} className="flex items-center justify-between p-6 bg-gray-50 dark:bg-gray-800 rounded-[2rem] border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-800 transition-all">
-                              <div className="flex items-center gap-4">
+                            <div key={index} className="flex items-center justify-between p-3.5 sm:p-4 bg-gray-50 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center gap-3">
                                 {service.image && (
-                                  <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-2xl border bg-white dark:bg-gray-900 shadow-sm" />
+                                  <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white dark:bg-gray-900 shadow-xs" />
                                 )}
                                 <div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="font-bold text-gray-900 dark:text-white">{service.name}</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white text-sm">{service.name}</p>
                                     {service.type && (
-                                      <span className="px-2.5 py-1 bg-gray-200 text-gray-700 dark:text-white text-[10px] font-black uppercase tracking-wider rounded-lg">
+                                      <span className="px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-[10px] font-semibold uppercase tracking-wider rounded-md">
                                         {service.type}
                                       </span>
                                     )}
                                   </div>
                                   {service.description && (
-                                    <p className="text-xs text-gray-500 dark:text-white mt-1 max-w-xs md:max-w-md">{service.description}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-xs md:max-w-md">{service.description}</p>
                                   )}
-                                  <p className="text-rose-500 font-black mt-1">R{service.price}</p>
+                                  <p className="text-rose-600 dark:text-rose-400 font-bold text-xs mt-0.5">R{service.price}</p>
                                 </div>
                               </div>
                               <button
@@ -3455,7 +3471,7 @@ export default function CreateListing() {
                                   ...listingForm,
                                   serviceList: listingForm.serviceList.filter((_, i) => i !== index)
                                 })}
-                                className="p-3 text-gray-400 hover:text-rose-500 transition-colors"
+                                className="p-2 text-gray-400 hover:text-rose-500 transition-colors"
                               >
                                 <XMarkIcon className="w-5 h-5" />
                               </button>
@@ -3475,8 +3491,8 @@ export default function CreateListing() {
                 <SectionCard title="Our Team">
                   <p className="text-gray-600 dark:text-white mb-6">Introduce the people who will be performing the services.</p>
                   
-                  <div className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormInput
                         label="Performer Name"
                         placeholder="e.g. John Doe"
@@ -3493,32 +3509,32 @@ export default function CreateListing() {
                       />
                     </div>
                     
-                    <div className="flex flex-col gap-6 p-10 bg-gray-50 dark:bg-gray-800/50 border-4 border-dashed border-gray-100 dark:border-gray-800 rounded-[3rem] transition-all hover:border-gray-200 dark:hover:border-gray-800">
-                      <div className="flex flex-col md:flex-row items-center gap-8">
-                        <div className="w-32 h-32 rounded-[2.5rem] bg-white dark:bg-gray-900 shadow-inner flex items-center justify-center overflow-hidden border-2 border-gray-50 flex-shrink-0 relative group">
+                    <div className="flex flex-col gap-4 p-5 sm:p-6 bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-700 rounded-2xl">
+                      <div className="flex flex-col sm:flex-row items-center gap-5">
+                        <div className="w-20 h-20 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-700 shadow-xs flex-shrink-0">
                           {performerUploading ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div>
-                              <span className="text-[8px] font-black text-rose-500 uppercase tracking-tighter">Uploading</span>
+                            <div className="flex flex-col items-center gap-1.5">
+                              <div className="animate-spin rounded-full h-5 w-5 border-2 border-rose-500 border-t-transparent"></div>
+                              <span className="text-[10px] font-semibold text-rose-500">Uploading</span>
                             </div>
                           ) : listingForm.newPerformerImage ? (
                             <img src={listingForm.newPerformerImage} alt="Preview" className="w-full h-full object-cover" />
                           ) : (
-                            <CameraIcon className="w-10 h-10 text-gray-200" />
+                            <CameraIcon className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                           )}
                         </div>
                         
-                        <div className="flex-1 space-y-4 text-center md:text-left">
-                          <h4 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-[0.1em]">Performer Photo</h4>
-                          <p className="text-xs text-gray-400 font-medium leading-relaxed">Add a face to the name. Choose a clear, professional photo from your device.</p>
+                        <div className="flex-1 space-y-2 text-center sm:text-left">
+                          <h4 className="text-xs font-semibold text-gray-800 dark:text-gray-200">Member Photo</h4>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Choose a clear photo from your device.</p>
                           
-                          <label className="inline-flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-[1.5rem] text-xs font-black uppercase tracking-[0.15em] text-gray-900 dark:text-white cursor-pointer hover:bg-gray-900 hover:text-white hover:border-gray-900 transition-all active:scale-95 shadow-sm">
-                            <PlusIcon className="w-4 h-4" />
+                          <label className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold text-gray-800 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-xs">
+                            <PlusIcon className="w-3.5 h-3.5" />
                             <span>Select Photo</span>
                             <input 
                               type="file" 
                               className="hidden" 
-                              accept="image/*"
+                              accept="image/*" 
                               onChange={handlePerformerImageChange}
                               disabled={performerUploading}
                             />
@@ -3545,21 +3561,23 @@ export default function CreateListing() {
                           });
                         }
                       }}
-                      className="px-10 py-5 bg-gray-900 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-500 transition-all active:scale-95 disabled:opacity-50"
+                      className="px-5 py-2.5 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
-                      {performerUploading ? "Please Wait..." : "Add Team Member"}
+                      {performerUploading ? "Uploading Photo..." : "+ Add Team Member"}
                     </button>
 
                     {listingForm.performers.length > 0 && (
-                      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {listingForm.performers.map((performer, index) => (
-                          <div key={index} className="relative p-6 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-[2.5rem] flex items-center gap-6 group hover:border-gray-900 transition-all">
-                            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-gray-50">
-                              <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-black text-gray-900 dark:text-white">{performer.name}</p>
-                              <p className="text-sm font-bold text-gray-400">{performer.experience}</p>
+                          <div key={index} className="p-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-between shadow-xs">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 flex-shrink-0">
+                                <img src={performer.image} alt={performer.name} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{performer.name}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{performer.experience}</p>
+                              </div>
                             </div>
                             <button
                               type="button"
@@ -3567,9 +3585,9 @@ export default function CreateListing() {
                                 ...listingForm,
                                 performers: listingForm.performers.filter((_, i) => i !== index)
                               })}
-                              className="absolute top-4 right-4 p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100"
+                              className="p-2 text-gray-400 hover:text-rose-500 transition-colors"
                             >
-                              <XMarkIcon className="w-5 h-5" />
+                              <XMarkIcon className="w-4 h-4" />
                             </button>
                           </div>
                         ))}
@@ -3645,249 +3663,260 @@ export default function CreateListing() {
                     )}
                   </div>
                 </SectionCard>
+              </div>
+            )}
 
-                <SectionCard title="Pricing">
-                  <p className="text-gray-600 dark:text-white mb-10 leading-relaxed font-medium">Set the price for your listing so customers or guests know what to expect.</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <FormInput
-                      label={getPricingLabel()}
-                      type="number"
-                      id="regularPrice"
-                      value={listingForm.regularPrice}
-                      onChange={handleFormChange}
-                      placeholder="Enter price"
-                      required
-                    />
-                    <div className="space-y-4">
-                      <label className="flex items-center gap-4 cursor-pointer p-5 border-4 border-gray-50 rounded-[2rem] hover:border-gray-100 dark:hover:border-gray-800 transition-all">
+            {/* Step 9: Pricing & Offers */}
+            {currentStep === 9 && (
+              <div className="space-y-8">
+                <SectionCard title="Set your price">
+                  <p className="text-gray-600 dark:text-white mb-8 leading-relaxed font-medium">
+                    {selectedCategory === 'property'
+                      ? "Set a competitive price for your property. Transparent pricing attracts the best guests and tenants."
+                      : selectedCategory === 'events'
+                      ? "Set your ticket or entry price. Enter R0 if your event is free for the community."
+                      : selectedCategory === 'selling'
+                      ? "Set the price you want for your item. You can offer promotional discounts anytime."
+                      : "Define your base service rate. Clear upfront pricing builds trust with customers."}
+                  </p>
+
+                  <div className="bg-white dark:bg-gray-800/40 p-5 sm:p-7 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xs space-y-6">
+                    <div className="max-w-md">
+                      <FormInput
+                        label={getPricingLabel()}
+                        type="number"
+                        id="regularPrice"
+                        value={listingForm.regularPrice}
+                        onChange={handleFormChange}
+                        placeholder="e.g. 500"
+                        required
+                        helpText={selectedCategory === 'property' ? "Specify rate in South African Rand (ZAR / R)" : ""}
+                      />
+                    </div>
+
+                    <div className="pt-5 border-t border-gray-100 dark:border-gray-800">
+                      <label className="flex items-center gap-3.5 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-xs">
                         <input
                           type="checkbox"
                           id="offer"
                           checked={listingForm.offer}
                           onChange={handleFormChange}
-                          className="w-5 h-5 accent-rose-500 rounded"
+                          className="w-4 h-4 accent-rose-500 rounded cursor-pointer"
                         />
-                        <span className="font-black text-gray-900 dark:text-white text-sm">Offer a discounted / adjusted price</span>
+                        <div>
+                          <span className="font-semibold text-gray-900 dark:text-white text-xs sm:text-sm block">
+                            Offer a promotional discount
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            Give first-time customers or special bookings a discounted price
+                          </span>
+                        </div>
                       </label>
+
                       {listingForm.offer && (
-                        <FormInput
-                          label="Discounted Price"
-                          type="number"
-                          id="discountPrice"
-                          value={listingForm.discountPrice}
-                          onChange={handleFormChange}
-                          placeholder="Discounted price"
-                        />
+                        <div className="mt-3.5 p-4 sm:p-5 bg-white dark:bg-gray-900 rounded-xl border border-rose-200 dark:border-rose-900/40 space-y-3.5">
+                          <FormInput
+                            label="Discounted Promotional Price (R)"
+                            type="number"
+                            id="discountPrice"
+                            value={listingForm.discountPrice}
+                            onChange={handleFormChange}
+                            placeholder="e.g. 400"
+                          />
+                          {+listingForm.regularPrice > 0 && +listingForm.discountPrice > 0 && +listingForm.discountPrice < +listingForm.regularPrice && (
+                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-300 px-3.5 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800/40">
+                              <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                              <span>
+                                Guests save R{(+listingForm.regularPrice - +listingForm.discountPrice).toLocaleString()} ({Math.round(((+listingForm.regularPrice - +listingForm.discountPrice) / +listingForm.regularPrice) * 100)}% off regular price)
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Pricing Tips Card */}
+                  <div className="p-4 sm:p-5 bg-gray-50 dark:bg-gray-800/40 rounded-xl border border-gray-200 dark:border-gray-700/60 flex items-start gap-3">
+                    <CurrencyDollarIcon className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed space-y-1">
+                      <p className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">Protected Payouts via PayFast</p>
+                      <p>
+                        All bookings and payments are secured. Your earnings are credited directly upon successful completion of the booking or stay.
+                      </p>
                     </div>
                   </div>
                 </SectionCard>
               </div>
             )}
 
-            {/* Step 9: Review & Submit */}
-            {currentStep === 9 && (
+            {/* Step 10: Review & Submit */}
+            {currentStep === 10 && (
               <div className="space-y-8">
                 <SectionCard title="Review your listing">
                   <div className="space-y-6">
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Summary</h3>
-                      <div className="space-y-3 text-sm">
-                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                          <span className="text-gray-600 dark:text-white">Category</span>
-                          <span className="font-medium text-gray-900 dark:text-white capitalize">{selectedCategory}</span>
+                    {/* Visual Preview Header Card */}
+                    {listingForm.imageUrls.length > 0 && (
+                      <div className="relative rounded-2xl overflow-hidden aspect-video max-h-56 sm:max-h-64 border border-gray-200 dark:border-gray-800 shadow-sm group">
+                        <img 
+                          src={listingForm.imageUrls[0]} 
+                          alt={listingForm.name || "Listing preview"} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-end p-5 sm:p-6 text-white">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="px-2.5 py-0.5 bg-rose-500 text-white rounded-full text-xs font-semibold capitalize">
+                              {selectedCategory}
+                            </span>
+                            <span className="px-2.5 py-0.5 bg-white/20 backdrop-blur-md text-white rounded-full text-xs font-medium capitalize">
+                              {selectedType}
+                            </span>
+                          </div>
+                          <h3 className="text-lg sm:text-xl font-bold truncate">{listingForm.name || "Untitled Listing"}</h3>
+                          <p className="text-xs sm:text-sm text-gray-200 truncate mt-0.5">{listingForm.address}</p>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                          <span className="text-gray-600 dark:text-white">Type</span>
-                          <span className="font-medium text-gray-900 dark:text-white capitalize">{selectedType}</span>
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700/60 p-5 sm:p-6 space-y-4">
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="font-bold text-base text-gray-900 dark:text-white">Listing Summary</h3>
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(3)}
+                          className="text-xs font-semibold text-rose-500 hover:text-rose-600 underline cursor-pointer"
+                        >
+                          Edit Details
+                        </button>
+                      </div>
+
+                      <div className="space-y-2.5 text-xs sm:text-sm">
+                        <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                          <span className="text-gray-500 dark:text-gray-400">Category & Type</span>
+                          <span className="font-semibold text-gray-900 dark:text-white capitalize">{selectedCategory} · {selectedType}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                          <span className="text-gray-600 dark:text-white">Title</span>
-                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.name}</span>
+                        <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                          <span className="text-gray-500 dark:text-gray-400">Title</span>
+                          <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">{listingForm.name}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                          <span className="text-gray-600 dark:text-white">Host/Organizer</span>
-                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.host}</span>
+                        <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                          <span className="text-gray-500 dark:text-gray-400">Host / Provider</span>
+                          <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs">{listingForm.host}</span>
                         </div>
-                        <div className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-800">
-                          <span className="text-gray-600 dark:text-white">Location</span>
-                          <span className="font-medium text-gray-900 dark:text-white text-right max-w-xs">{listingForm.address}</span>
+                        <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                          <span className="text-gray-500 dark:text-gray-400">Contact Number</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{listingForm.contact}</span>
                         </div>
-                        <div className="flex justify-between py-2">
-                          <span className="text-gray-600 dark:text-white">Price</span>
-                          <span className="font-medium text-gray-900 dark:text-white">R{listingForm.regularPrice}</span>
+                        <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                          <span className="text-gray-500 dark:text-gray-400">Location</span>
+                          <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">{listingForm.address}</span>
                         </div>
-                        {selectedCategory === 'property' && ['over', 'sale', 'resort', 'land'].includes(selectedType) && (
-                          <>
-                            <div className="flex justify-between py-2 border-t border-gray-100 dark:border-gray-800 mt-2">
-                              <span className="text-gray-600 dark:text-white">Check-in Time</span>
-                              <span className="font-medium text-gray-900 dark:text-white">{listingForm.checkInTime}</span>
-                            </div>
-                            <div className="flex justify-between py-2">
-                              <span className="text-gray-600 dark:text-white">Check-out Time</span>
-                              <span className="font-medium text-gray-900 dark:text-white">{listingForm.checkOutTime}</span>
-                            </div>
-                          </>
+                        <div className="flex justify-between items-center py-1.5">
+                          <span className="text-gray-500 dark:text-gray-400">Base Price</span>
+                          <div className="flex items-center gap-2">
+                            {listingForm.offer && listingForm.discountPrice ? (
+                              <>
+                                <span className="line-through text-gray-400 text-xs">R{listingForm.regularPrice}</span>
+                                <span className="font-bold text-rose-600 dark:text-rose-400 text-sm sm:text-base">R{listingForm.discountPrice}</span>
+                              </>
+                            ) : (
+                              <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">R{listingForm.regularPrice}</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setCurrentStep(9)}
+                              className="text-xs font-semibold text-rose-500 hover:text-rose-600 underline ml-2 cursor-pointer"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+
+                        {selectedCategory === 'property' && ['over', 'hotel', 'resort', 'land'].includes(selectedType) && (
+                          <div className="pt-2 border-t border-gray-200/80 dark:border-gray-700/60 flex justify-between text-xs text-gray-600 dark:text-gray-300">
+                            <span>Check-in: <strong>{listingForm.checkInTime}</strong></span>
+                            <span>Check-out: <strong>{listingForm.checkOutTime}</strong></span>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Photos</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-white">
-                        <CameraIcon className="w-5 h-5" />
-                        <span>{listingForm.imageUrls.length} photos uploaded</span>
+                    {/* Photos Count Preview */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700/60 p-4 sm:p-5 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-semibold">
+                        <CameraIcon className="w-5 h-5 text-rose-500" />
+                        <span>{listingForm.imageUrls.length} photo{listingForm.imageUrls.length > 1 ? 's' : ''} uploaded</span>
+                        {listingForm.videoUrl && <span className="text-xs text-gray-400">· 1 video included</span>}
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(8)}
+                        className="text-xs font-semibold text-rose-500 hover:text-rose-600 underline cursor-pointer"
+                      >
+                        Edit Media
+                      </button>
                     </div>
 
                     {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
                       <>
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Provider Details</h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800">
-                              <span className="text-gray-600 dark:text-white">Type:</span>
-                              <span className="font-medium text-gray-900 dark:text-white capitalize">{listingForm.providerType || "Not selected"}</span>
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700/60 p-4 sm:p-5">
+                          <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-2.5">Provider Details</h3>
+                          <div className="space-y-1.5 text-xs sm:text-sm">
+                            <div className="flex justify-between py-1 border-b border-gray-200/80 dark:border-gray-700/60">
+                              <span className="text-gray-500 dark:text-gray-400">Entity:</span>
+                              <span className="font-semibold text-gray-900 dark:text-white capitalize">{listingForm.providerType || "Individual"}</span>
                             </div>
-                            {listingForm.providerType === 'individual' && (
+                            {listingForm.providerType === 'individual' && listingForm.citizenship && (
                               <div className="flex justify-between py-1">
-                                <span className="text-gray-600 dark:text-white">Citizenship:</span>
-                                <span className="font-medium text-gray-900 dark:text-white">{listingForm.citizenship}</span>
+                                <span className="text-gray-500 dark:text-gray-400">Citizenship:</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">{listingForm.citizenship}</span>
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Services</h3>
-                          <div className="space-y-3 text-sm">
-                            {listingForm.serviceList.map((s, i) => (
-                              <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0 gap-4">
-                                <div className="flex items-center gap-3">
-                                  {s.image && (
-                                    <img src={s.image} alt={s.name} className="w-10 h-10 object-cover rounded-lg border bg-white dark:bg-gray-900" />
-                                  )}
-                                  <div>
-                                    <span className="font-bold text-gray-900 dark:text-white block">{s.name}</span>
-                                    {s.description && (
-                                      <span className="text-xs text-gray-500 dark:text-white block max-w-xs">{s.description}</span>
-                                    )}
-                                  </div>
+                        {listingForm.serviceList && listingForm.serviceList.length > 0 && (
+                          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700/60 p-4 sm:p-5">
+                            <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-2.5">Services Offered</h3>
+                            <div className="space-y-1.5 text-xs sm:text-sm">
+                              {listingForm.serviceList.map((s, i) => (
+                                <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60 last:border-0 gap-4">
+                                  <span className="font-medium text-gray-900 dark:text-white">{s.name}</span>
+                                  <span className="font-bold text-rose-600 dark:text-rose-400">R{s.price}</span>
                                 </div>
-                                <span className="font-black text-rose-500">R{s.price}</span>
-                              </div>
-                            ))}
-                            {listingForm.serviceList.length === 0 && <p className="text-gray-500 dark:text-white">No services added</p>}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-
-                        <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                          <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Team Members</h3>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {listingForm.performers.map((p, i) => (
-                              <div key={i} className="flex items-center gap-3 bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-                                <img src={p.image} className="w-10 h-10 rounded-lg object-cover" />
-                                <div>
-                                  <p className="font-bold text-gray-900 dark:text-white text-xs">{p.name}</p>
-                                  <p className="text-[10px] text-gray-500 dark:text-white">{p.experience}</p>
-                                </div>
-                              </div>
-                            ))}
-                            {listingForm.performers.length === 0 && <p className="text-gray-500 dark:text-white text-sm">No team members added</p>}
-                          </div>
-                        </div>
+                        )}
                       </>
                     )}
 
-                    <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Amenities</h3>
+                    {/* Amenities summary */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-200 dark:border-gray-700/60 p-4 sm:p-5">
+                      <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-2.5">Selected Amenities</h3>
                       <div className="flex flex-wrap gap-2">
                         {getAmenitiesByCategory()
                           .filter(amenity => listingForm[amenity.id])
                           .map(amenity => (
-                            <span key={amenity.id} className="px-3 py-1 bg-white dark:bg-gray-900 rounded-full text-sm border border-gray-200 dark:border-gray-800">
-                              {amenity.label}
+                            <span key={amenity.id} className="px-3 py-1 bg-white dark:bg-gray-900 rounded-lg text-xs font-medium border border-gray-200 dark:border-gray-700 shadow-xs flex items-center gap-1.5">
+                              <span>{amenity.emoji}</span>
+                              <span>{amenity.label}</span>
                             </span>
                           ))}
                         {getAmenitiesByCategory().filter(amenity => listingForm[amenity.id]).length === 0 && (
-                          <p className="text-gray-500 dark:text-white text-sm">No amenities selected</p>
+                          <p className="text-gray-400 text-xs italic">No specific amenities selected</p>
                         )}
                       </div>
                     </div>
-
-                    {selectedCategory !== 'selling' && selectedCategory !== 'events' && selectedCategory !== 'property' && (
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Operating Schedule</h3>
-                        <div className="grid grid-cols-1 gap-2 text-sm">
-                          {Object.entries(listingForm.operatingHours).map(([day, hours]) => (
-                            <div key={day} className="flex justify-between py-1 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                              <span className="text-gray-600 dark:text-white capitalize font-bold">{day}</span>
-                              {hours.closed ? (
-                                <span className="text-rose-500 font-black text-[10px] uppercase tracking-widest bg-rose-50 px-2 py-0.5 rounded">Closed</span>
-                              ) : (
-                                <span className="font-black text-gray-900 dark:text-white">{hours.open} - {hours.close}</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Show specific details based on type */}
-                    {selectedCategory === 'online' && selectedType === 'sneaker' && (
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Sneaker Cleaning Details</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Shoe Types:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.shoeTypes}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Cleaning Method:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.cleaningMethod || "Not specified"}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Turnaround Time:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.turnaroundTime}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-
-
-                    {selectedCategory === 'online' && selectedType === 'animals' && (
-                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-                        <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-4">Animal Care Details</h3>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Animal Types:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.animalTypes}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Services Offered:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.servicesOffered}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Experience:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.experience}</span>
-                          </div>
-                          <div className="flex justify-between py-1">
-                            <span className="text-gray-600 dark:text-white">Certifications:</span>
-                            <span className="font-medium text-gray-900 dark:text-white">{listingForm.certifications || "None listed"}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </SectionCard>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 flex gap-4">
-                  <InformationCircleIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-5 flex gap-3.5">
+                  <ShieldCheckIcon className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-blue-900 mb-1">Important</h4>
-                    <p className="text-blue-800 text-sm">
-                      By submitting, you agree to our terms of service. Ensure all information is accurate.
+                    <h4 className="font-semibold text-emerald-900 dark:text-emerald-200 text-sm mb-0.5">Terms & Guarantee</h4>
+                    <p className="text-emerald-800 dark:text-emerald-300 text-xs leading-relaxed">
+                      By publishing this listing, you confirm that your offering meets our safety and quality standards. You can edit, manage, or pause this listing anytime from your dashboard.
                     </p>
                   </div>
                 </div>
@@ -3896,78 +3925,84 @@ export default function CreateListing() {
 
             {/* Error Display */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4 flex gap-3">
                 <ExclamationTriangleIcon className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-red-800 font-medium">{error}</p>
+                  <p className="text-red-800 dark:text-red-200 text-xs sm:text-sm font-semibold">{error}</p>
                 </div>
               </div>
             )}
 
-            {/* Navigation Buttons - Airbnb Style */}
-            <div className="sticky bottom-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200 dark:border-gray-800 pt-5 pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 md:border-t-0 md:pt-0 md:pb-0 md:static flex justify-between items-center gap-4 z-40 safe-area-bottom mobile-booking-bar">
-              <button
-                type="button"
-                onClick={() => {
-                  setDirection('back');
-                  setFadeIn(false);
-                  setTimeout(() => {
-                    handlePrevStep();
-                    setFadeIn(true);
-                  }, 300);
-                }}
-                className={`
-                  px-6 sm:px-9 py-4 sm:py-4.5 rounded-[2rem] font-bold uppercase tracking-[0.15em] transition-all duration-300 text-[11px] sm:text-xs
-                  ${currentStep > 1 ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700' : 'invisible'}
-                `}
-              >
-                Go Back
-              </button>
-
-              {/* Phase progress indicator */}
-              <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200/60 dark:border-gray-700/60 shadow-sm">
-                <span className="font-semibold text-gray-800 dark:text-gray-200">Phase {currentPhase} of 3</span>
-                <span>·</span>
-                <span>Step {Math.max(1, currStepIdx + 1)} of {visibleSteps.length}</span>
+            {/* Navigation Buttons - Airbnb Fixed Bottom Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+              {/* Progress Line */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gray-100 dark:bg-gray-800">
+                <div 
+                  className="h-full bg-gray-900 dark:bg-white transition-all duration-300 ease-out"
+                  style={{ width: `${Math.round(((currStepIdx + 1) / visibleSteps.length) * 100)}%` }}
+                />
               </div>
-              
-              {currentStep < 9 ? (
+
+              <div className="max-w-4xl mx-auto px-4 sm:px-8 py-3.5 sm:py-4 flex items-center justify-between gap-4">
+                {/* Airbnb Signature Back Button */}
                 <button
                   type="button"
-                  onClick={handleNextStep}
-                  className="px-8 sm:px-10 py-4 sm:py-4.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-[2rem] font-bold uppercase tracking-[0.15em] shadow-xl hover:bg-rose-600 dark:hover:bg-rose-600 dark:hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2.5 sm:gap-3 group text-[11px] sm:text-xs"
+                  onClick={() => {
+                    if (currStepIdx > 0) {
+                      handlePrevStep();
+                    } else {
+                      navigate('/user-listings');
+                    }
+                  }}
+                  className="font-bold text-sm sm:text-base text-gray-900 dark:text-white underline underline-offset-4 hover:opacity-75 transition-opacity flex items-center gap-2 cursor-pointer py-2 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95"
                 >
-                  <span>
-                    {isPhaseTransition ? `Next: ${nextPhaseMeta.label}` : 'Continue'}
-                  </span>
-                  <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
+                  <ArrowLeftIcon className="w-4 h-4" />
+                  <span>Back</span>
                 </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-10 sm:px-12 py-4 sm:py-4.5 bg-rose-500 text-white rounded-[2rem] font-bold uppercase tracking-[0.15em] shadow-xl shadow-rose-200 dark:shadow-none hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 group text-[11px] sm:text-xs"
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      <span>Deploying...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12" />
-                      <span>Finalize Listing</span>
-                    </>
-                  )}
-                </button>
-              )}
+
+                {/* Step indicator */}
+                <div className="flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-200/80 dark:border-gray-700/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  <span>Step {currStepIdx + 1} of {visibleSteps.length}</span>
+                </div>
+
+                {!isLastStep ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={currentStep === 1 && !selectedCategory}
+                    className="px-6 sm:px-8 py-3 bg-gray-900 hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl font-bold transition-all active:scale-95 flex items-center gap-2 text-xs sm:text-sm shadow-sm cursor-pointer"
+                  >
+                    <span>Continue</span>
+                    <ArrowRightIcon className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-7 sm:px-9 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-70 text-white rounded-xl font-bold transition-all active:scale-95 flex items-center gap-2 text-xs sm:text-sm shadow-sm cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                        <span>Publishing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleIcon className="w-4 h-4" />
+                        <span>Publish Listing</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>
 
         {/* Help Text */}
-        <div className="mt-12 text-center">
-          <p className="text-sm text-gray-500 dark:text-white">
+        <div className="mt-10 text-center">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             Having trouble? <button type="button" onClick={() => navigate('/help-center')} className="underline font-medium text-gray-900 dark:text-white hover:text-rose-600 transition-colors">Get help</button>
           </p>
         </div>
@@ -3975,13 +4010,13 @@ export default function CreateListing() {
 
       {/* Upload Progress Modal */}
       {uploading && (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-xl flex items-center justify-center z-[100] p-6">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-[3rem] p-12 max-w-md w-full shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-xl relative overflow-hidden text-center"
           >
-            <div className="absolute top-0 left-0 w-full h-2 bg-gray-100 dark:bg-gray-800">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gray-100 dark:bg-gray-800">
                <motion.div 
                  className="h-full bg-rose-500"
                  initial={{ width: 0 }}
@@ -3989,35 +4024,17 @@ export default function CreateListing() {
                />
             </div>
             
-            <div className="text-center relative z-10">
-              <div className="w-24 h-24 bg-rose-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-inner overflow-hidden">
-                <motion.div
-                  animate={{ 
-                    rotate: 360,
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ 
-                    rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 1, repeat: Infinity }
-                  }}
-                  className="text-rose-500"
-                >
-                  <Sparkles className="w-10 h-10" />
-                </motion.div>
-              </div>
-              <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Deploying...</h3>
-              <p className="text-gray-400 font-bold text-sm uppercase tracking-widest mb-6">Masterpiece {Math.round(uploadProgress)}% Complete</p>
-              
-              <div className="flex items-center justify-center gap-2">
-                 {[1, 2, 3].map(i => (
-                    <motion.div
-                      key={i}
-                      animate={{ opacity: [0.3, 1, 0.3] }}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                      className="w-2 h-2 bg-rose-500 rounded-full"
-                    />
-                 ))}
-              </div>
+            <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <CameraIcon className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Uploading Media</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{Math.round(uploadProgress)}% completed. Please keep this page open.</p>
+            
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-rose-500 h-2 rounded-full transition-all duration-200"
+                style={{ width: `${uploadProgress}%` }}
+              />
             </div>
           </motion.div>
         </div>
@@ -4025,27 +4042,27 @@ export default function CreateListing() {
 
       {/* Promotion Popup */}
       {showPromotionPopup && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xl flex items-center justify-center z-[110] p-6 overflow-y-auto">
+        <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-[110] p-4 overflow-y-auto">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white dark:bg-gray-900 rounded-[3.5rem] max-w-3xl w-full overflow-hidden shadow-2xl my-auto border border-gray-100 dark:border-gray-800"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-900 rounded-2xl max-w-xl w-full overflow-hidden shadow-2xl my-auto border border-gray-200 dark:border-gray-800"
           >
             {promotionSteps === 0 && (
-              <div className="p-12 md:p-16 text-center bg-gradient-to-b from-rose-50/50 to-white">
-                <div className="w-24 h-24 bg-rose-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-rose-200 rotate-12 transition-transform hover:rotate-0">
-                  <Sparkles className="w-12 h-12" />
+              <div className="p-8 sm:p-10 text-center">
+                <div className="w-14 h-14 bg-rose-50 dark:bg-rose-950/40 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <Sparkles className="w-7 h-7" />
                 </div>
-                <h3 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight leading-tight">
-                   Your listing is <br /> <span className="text-rose-500">Live & Legends</span>! 🎉
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                   Listing Published Successfully! 🎉
                 </h3>
-                <p className="text-gray-500 dark:text-white font-medium mb-12 text-lg max-w-md mx-auto leading-relaxed">
-                  Now, give it the spotlight it deserves. Boost your visibility to reach thousands more.
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
+                  Your listing is now live. Boost your visibility to reach more potential guests and customers faster.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-5 justify-center">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setPromotionSteps(1)}
-                    className="px-10 py-5 bg-gray-900 text-white rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-rose-600 transition-all active:scale-95 flex items-center justify-center gap-3"
+                    className="px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 cursor-pointer"
                   >
                     🚀 Promote Now
                   </button>
@@ -4057,57 +4074,49 @@ export default function CreateListing() {
                                  `/event/${newListingId}`;
                       navigate(path);
                     }}
-                    className="px-10 py-5 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-400 rounded-[1.5rem] font-black uppercase tracking-[0.2em] hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-all active:scale-95"
+                    className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer"
                   >
-                    Discover it
+                    View Listing
                   </button>
                 </div>
               </div>
             )}
 
             {promotionSteps === 1 && (
-              <div className="p-10 md:p-14">
-                <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Choose your <span className="text-rose-500">Boost</span></h3>
-                <p className="text-gray-500 dark:text-white font-medium mb-12">Select a masterpiece package that fits your ambition</p>
+              <div className="p-6 sm:p-8">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Choose a Boost Plan</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mb-6">Select a promotion package to increase your views and inquiries</p>
                 
-                <div className="grid md:grid-cols-2 gap-6 mb-12">
+                <div className="grid sm:grid-cols-2 gap-4 mb-8">
                   {[
-                    { id: 'standard', price: 40, multiplier: '25x', days: '7 days', features: ['25x visibility multiplier', 'Featured category placement', 'Professional badge', '7 days of prime spot'] },
-                    { id: 'premium', price: 100, multiplier: '80x', days: '14 days', features: ['80x visibility multiplier', 'Homepage spotlight feature', 'Elite gold badge', '14 days of prime spot', 'Priority expert support'] }
+                    { id: 'standard', price: 40, multiplier: '25x', days: '7 days', features: ['25x visibility multiplier', 'Featured category placement', 'Verified badge', '7 days duration'] },
+                    { id: 'premium', price: 100, multiplier: '80x', days: '14 days', features: ['80x visibility multiplier', 'Homepage spotlight feature', 'Elite featured badge', '14 days duration', 'Priority support'] }
                   ].map((pkg) => (
                     <div
                       key={pkg.id}
                       onClick={() => setPromotionPackage(pkg.id)}
                       className={`
-                        p-8 border-4 rounded-[2.5rem] cursor-pointer transition-all duration-500 relative overflow-hidden group
+                        p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 relative
                         ${promotionPackage === pkg.id 
-                          ? 'border-gray-900 bg-gray-900 text-white shadow-2xl scale-[1.03]' 
-                          : 'border-gray-50 hover:border-gray-200 dark:hover:border-gray-800 bg-gray-50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-900'}
+                          ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-gray-800 text-white shadow-sm' 
+                          : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700'}
                       `}
                     >
-                      <div className="flex justify-between items-start mb-6">
+                      <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h4 className={`font-black text-2xl capitalize mb-1 ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{pkg.id}</h4>
-                          <div className={`text-[10px] font-bold uppercase tracking-widest ${promotionPackage === pkg.id ? 'text-rose-400' : 'text-rose-500'}`}>{pkg.multiplier} Reach Expansion</div>
+                          <h4 className={`font-bold text-lg capitalize mb-0.5 ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{pkg.id}</h4>
+                          <span className={`text-xs font-semibold ${promotionPackage === pkg.id ? 'text-rose-400' : 'text-rose-500'}`}>{pkg.multiplier} Reach</span>
                         </div>
-                        <div className="text-right">
-                          <span className={`text-3xl font-black ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>R{pkg.price}</span>
-                        </div>
+                        <span className={`text-xl font-bold ${promotionPackage === pkg.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>R{pkg.price}</span>
                       </div>
-                      <ul className="space-y-3">
+                      <ul className="space-y-2">
                         {pkg.features.map((feat, i) => (
-                          <li key={i} className="flex items-center gap-3 text-sm font-medium">
-                            <CheckCircleIcon className={`w-5 h-5 ${promotionPackage === pkg.id ? 'text-rose-500' : 'text-rose-400'}`} />
-                            <span className={promotionPackage === pkg.id ? 'text-gray-300' : 'text-gray-600 dark:text-white'}>{feat}</span>
+                          <li key={i} className="flex items-center gap-2 text-xs">
+                            <CheckCircleIcon className={`w-4 h-4 shrink-0 ${promotionPackage === pkg.id ? 'text-rose-400' : 'text-rose-500'}`} />
+                            <span className={promotionPackage === pkg.id ? 'text-gray-300' : 'text-gray-600 dark:text-gray-400'}>{feat}</span>
                           </li>
                         ))}
                       </ul>
-
-                      {promotionPackage === pkg.id && (
-                         <div className="absolute top-0 right-0 p-3">
-                            <Sparkles className="w-8 h-8 text-rose-500 opacity-20 rotate-12" />
-                         </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -4182,5 +4191,3 @@ export default function CreateListing() {
     </div>
   );
 }
-
-

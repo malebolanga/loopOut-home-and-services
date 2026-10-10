@@ -52,6 +52,7 @@ export const createBooking = async (req, res) => {
     const {
       listingId, helperId, serviceId, eventId,
       startDate, endDate,
+      totalPrice, price,
       phone, message, subtype, numberOfGuests, functionType,
       selectedPerformer, performerExperience, performerImage
     } = req.body;
@@ -69,7 +70,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Number of guests must be a positive whole number.' });
     }
 
-    // Fetch item from DB to calculate server-authoritative price
+    // Fetch item from DB to calculate server-authoritative price fallback
     let item;
     if (listingId) item = await Listing.findById(listingId);
     else if (helperId) item = await Helper.findById(helperId);
@@ -81,7 +82,6 @@ export const createBooking = async (req, res) => {
       return res.status(404).json({ error: 'Listing or item not found' });
     }
 
-    // Server-side total price — never trust client-supplied totalPrice
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
@@ -90,7 +90,12 @@ export const createBooking = async (req, res) => {
     }
     const timeDifference = Math.max(0, end.getTime() - start.getTime());
     const numberOfUnits = Math.max(1, Math.ceil(timeDifference / (1000 * 3600 * 24)));
-    const serverTotalPrice = (item.regularPrice || 0) * numberOfUnits;
+    
+    // Honor the price selected by the user during reservation (unit/service/option/style/package)
+    const clientSelectedPrice = Number(totalPrice ?? price);
+    const resolvedTotalPrice = (!isNaN(clientSelectedPrice) && clientSelectedPrice > 0)
+      ? clientSelectedPrice
+      : ((item.regularPrice || 0) * numberOfUnits);
 
     // Overlap check to prevent double-booking
     // For single-time appointments (like helpers/services where start == end), treat slot window as 1 hour
@@ -122,7 +127,7 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
     }
 
-    // Create booking with server-authoritative user ID and price
+    // Create booking with user-selected price
     const newBooking = new Booking({
       user: authenticatedUserId,
       listing: listingId || undefined,
@@ -131,7 +136,7 @@ export const createBooking = async (req, res) => {
       event: eventId || undefined,
       startDate: slotStart,
       endDate: slotEnd,
-      totalPrice: serverTotalPrice,
+      totalPrice: resolvedTotalPrice,
       phone,
       message,
       subtype,
@@ -151,7 +156,7 @@ export const createBooking = async (req, res) => {
     if (serviceId) await Service.findByIdAndUpdate(serviceId, { $inc: { bookingsCount: 1 } });
     if (eventId) await Event.findByIdAndUpdate(eventId, { $inc: { bookingsCount: 1 } });
 
-    // Notify host & guest
+    // Notify host & guest with the selected booking price
     const itemName = item ? (item.name || item.title || 'Service') : 'Service';
     const itemType = listingId ? 'listing' : helperId ? 'helper' : serviceId ? 'service' : 'event';
     const itemId = listingId || helperId || serviceId || eventId;
@@ -162,8 +167,8 @@ export const createBooking = async (req, res) => {
           userId: hostUserId,
           type: 'booking',
           title: 'New Booking Request',
-          message: `You have a new booking request for "${itemName}" - ZAR ${serverTotalPrice.toLocaleString()}`,
-          data: { bookingId: newBooking._id, itemType, itemId }
+          message: `You have a new booking request for "${itemName}" - ZAR ${resolvedTotalPrice.toLocaleString()}`,
+          data: { bookingId: newBooking._id, itemType, itemId, price: resolvedTotalPrice, totalPrice: resolvedTotalPrice }
         }).save();
       }
     } catch (notifErr) {
@@ -176,8 +181,8 @@ export const createBooking = async (req, res) => {
           userId: authenticatedUserId,
           type: 'booking',
           title: 'Booking Request Placed',
-          message: `Your booking request for "${itemName}" has been submitted (ZAR ${serverTotalPrice.toLocaleString()}).`,
-          data: { bookingId: newBooking._id, itemType, itemId }
+          message: `Your booking request for "${itemName}" has been submitted (ZAR ${resolvedTotalPrice.toLocaleString()}).`,
+          data: { bookingId: newBooking._id, itemType, itemId, price: resolvedTotalPrice, totalPrice: resolvedTotalPrice }
         }).save();
       }
     } catch (notifErr) {
@@ -187,7 +192,7 @@ export const createBooking = async (req, res) => {
     res.status(201).json({
       message: 'Booking request created. Host has been notified.',
       booking: newBooking,
-      serverTotalPrice
+      serverTotalPrice: resolvedTotalPrice
     });
 
   } catch (error) {
@@ -431,7 +436,7 @@ export const updateBookingStatus = async (req, res) => {
                 type: 'booking',
                 title: '📅 Appointment Confirmed',
                 message: `Appointment for "${itemName}" with ${booking.user?.username || 'client'} is confirmed on your Calendar schedule.`,
-                data: { bookingId: booking._id, itemType, itemId, status: 'confirmed', isCalendar: true, link: '/calendar' }
+                data: { bookingId: booking._id, itemType, itemId, status: 'confirmed', price: booking.totalPrice, totalPrice: booking.totalPrice, isCalendar: true, link: '/calendar' }
               }).save();
             } catch (hostNotifErr) {
               console.error('Failed to notify host of calendar confirmation:', hostNotifErr);
@@ -454,7 +459,7 @@ export const updateBookingStatus = async (req, res) => {
                 type: 'booking',
                 title: 'Work Closed & Payment Released',
                 message: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released the payment!`,
-                data: { bookingId: booking._id, itemType, itemId, status: 'completed' }
+                data: { bookingId: booking._id, itemType, itemId, status: 'completed', price: booking.totalPrice, totalPrice: booking.totalPrice }
               }).save();
             }
           }
@@ -471,7 +476,7 @@ export const updateBookingStatus = async (req, res) => {
             type: status === 'completed' ? 'review' : 'booking',
             title,
             message: messageText,
-            data: { bookingId: booking._id, itemType, itemId, status, canReview: (status === 'completed' || status === 'confirmed') }
+            data: { bookingId: booking._id, itemType, itemId, status, price: booking.totalPrice, totalPrice: booking.totalPrice, canReview: (status === 'completed' || status === 'confirmed') }
           }).save();
         }
       } catch (notifErr) {

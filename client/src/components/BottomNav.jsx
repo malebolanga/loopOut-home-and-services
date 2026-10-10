@@ -58,7 +58,10 @@ const BottomNav = () => {
     '/become', 
     '/login-required',
     '/lunch',
-    '/food'
+    '/food',
+    '/notifications',
+    '/my-orders',
+    '/food-orders'
   ];
   const hiddenBottomNavPrefixes = [
     '/food',

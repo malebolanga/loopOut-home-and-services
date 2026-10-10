@@ -387,6 +387,9 @@ function AppContent() {
     '/calendar',
     '/planner',
     '/settings',
+    '/notifications',
+    '/my-orders',
+    '/food-orders',
   ];
   const hideHeaderPaths = [
     '/calendar',
@@ -414,7 +417,9 @@ function AppContent() {
     '/settings',
     '/micro-gigs',
     '/gigs',
-    '/neighborhood-gigs'
+    '/neighborhood-gigs',
+    '/my-orders',
+    '/food-orders'
   ];
 
   const specializedHelperPaths = [
@@ -423,7 +428,7 @@ function AppContent() {
 
   const isSpecializedPage = specializedHelperPaths.some(path => location.pathname.startsWith(path));
   const isStoragePage = location.pathname.startsWith('/storage/');
-  const isCreateListingPage = location.pathname.endsWith('/create-listing');
+  const isCreateListingPage = location.pathname.includes('create-listing');
   // Hide header on /:userId/listings and /:userId/list (dynamic user listing pages)
   const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
   const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');

@@ -5,10 +5,55 @@ import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 
+const parsePriceFromText = (text) => {
+    if (!text || typeof text !== 'string') return null;
+    const match = text.match(/(?:ZAR|R)\s?([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.[0-9]{2})?|[0-9]+(?:\.[0-9]{2})?)/i);
+    if (match) {
+        const rawNum = match[1].replace(/[\s,]/g, '');
+        const val = parseFloat(rawNum);
+        if (!isNaN(val) && val > 0) return val;
+    }
+    return null;
+};
+
+const extractPriceInfo = (notification, priceMap = {}) => {
+    if (!notification) return null;
+    let price = null;
+    const data = notification.data || {};
+
+    if (data.totalPrice != null && Number(data.totalPrice) > 0) price = Number(data.totalPrice);
+    else if (data.price != null && Number(data.price) > 0) price = Number(data.price);
+    else if (data.offerPrice != null && Number(data.offerPrice) > 0) price = Number(data.offerPrice);
+    else if (data.budget != null && Number(data.budget) > 0) price = Number(data.budget);
+    else if (data.amount != null && Number(data.amount) > 0) price = Number(data.amount);
+    else if (notification.price != null && Number(notification.price) > 0) price = Number(notification.price);
+    else if (notification.totalPrice != null && Number(notification.totalPrice) > 0) price = Number(notification.totalPrice);
+
+    if (price == null) {
+        price = parsePriceFromText(notification.message) || parsePriceFromText(notification.title);
+    }
+
+    if (price == null && data.bookingId && priceMap[data.bookingId.toString()] != null) {
+        price = Number(priceMap[data.bookingId.toString()]);
+    }
+
+    if (price == null || isNaN(price) || price <= 0) return null;
+
+    const titleLower = (notification.title || '').toLowerCase();
+    const msgLower = (notification.message || '').toLowerCase();
+    let label = 'Price';
+    if (data.offerPrice || titleLower.includes('offer') || msgLower.includes('offer')) label = 'Offer Price';
+    else if (notification.type === 'booking' || data.bookingId || titleLower.includes('booking') || titleLower.includes('appointment')) label = 'Booking Price';
+    else if (titleLower.includes('food') || msgLower.includes('food') || data.orderId) label = 'Order Total';
+
+    return { amount: price, formatted: `ZAR ${price.toLocaleString()}`, label };
+};
+
 export default function Notifications() {
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [bookingPriceMap, setBookingPriceMap] = useState({});
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [loadingBooking, setLoadingBooking] = useState(false);
@@ -26,6 +71,31 @@ export default function Notifications() {
         }
         fetchNotifications();
     }, [currentUser?._id, navigate]);
+
+    useEffect(() => {
+        if (!currentUser?._id) return;
+        const fetchBookingPrices = async () => {
+            try {
+                const token = getToken();
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                const [userRes, hostRes] = await Promise.allSettled([
+                    fetch(`/api/bookings/user/${currentUser._id}`, { credentials: 'include', headers }),
+                    fetch(`/api/bookings/host/${currentUser._id}`, { credentials: 'include', headers })
+                ]);
+                const newMap = {};
+                if (userRes.status === 'fulfilled' && userRes.value?.ok) {
+                    const uData = await userRes.value.json();
+                    if (Array.isArray(uData)) uData.forEach(b => { if (b._id && (b.totalPrice != null || b.price != null)) newMap[b._id.toString()] = b.totalPrice ?? b.price; });
+                }
+                if (hostRes.status === 'fulfilled' && hostRes.value?.ok) {
+                    const hData = await hostRes.value.json();
+                    if (Array.isArray(hData)) hData.forEach(b => { if (b._id && (b.totalPrice != null || b.price != null)) newMap[b._id.toString()] = b.totalPrice ?? b.price; });
+                }
+                if (Object.keys(newMap).length > 0) setBookingPriceMap(prev => ({ ...prev, ...newMap }));
+            } catch (_err) { /* silently ignore */ }
+        };
+        fetchBookingPrices();
+    }, [currentUser?._id, getToken]);
 
     useEffect(() => {
         const fetchBookingDetails = async () => {
@@ -479,6 +549,17 @@ export default function Notifications() {
                                         {notification.message}
                                     </p>
 
+                                    {(() => {
+                                        const priceInfo = extractPriceInfo(notification, bookingPriceMap);
+                                        if (!priceInfo) return null;
+                                        return (
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{priceInfo.label}:</span>
+                                                <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">{priceInfo.formatted}</span>
+                                            </div>
+                                        );
+                                    })()}
+
                                     <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
                                         <span className="flex items-center gap-1">
                                             <FiClock className="w-3.5 h-3.5" />
@@ -533,6 +614,24 @@ export default function Notifications() {
                                     {selectedNotification.message}
                                 </p>
 
+                                {/* Price display when bookingDetails not yet loaded */}
+                                {(() => {
+                                    const modalPrice = extractPriceInfo(selectedNotification, bookingPriceMap);
+                                    if (modalPrice && !bookingDetails && !loadingBooking) {
+                                        return (
+                                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60">
+                                                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
+                                                    <div>
+                                                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{modalPrice.label}</p>
+                                                        <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-300">{modalPrice.formatted}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+
                                 {loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800 animate-pulse space-y-3">
                                         <div className="h-4 bg-gray-200 rounded w-1/3"></div>
@@ -563,7 +662,15 @@ export default function Notifications() {
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">Total Price</p>
-                                                <p className="font-medium text-emerald-600 font-bold">ZAR {Number(bookingDetails.totalPrice || 0).toLocaleString()}</p>
+                                                <p className="font-medium text-emerald-600 font-bold">
+                                                    ZAR {Number(
+                                                        selectedNotification?.data?.price ||
+                                                        selectedNotification?.data?.totalPrice ||
+                                                        parsePriceFromText(selectedNotification?.message) ||
+                                                        bookingDetails.totalPrice ||
+                                                        0
+                                                    ).toLocaleString()}
+                                                </p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">Dates</p>
