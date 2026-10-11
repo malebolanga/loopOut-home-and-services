@@ -552,6 +552,21 @@ html.dark textarea::placeholder,
   outline-offset: 2px;
 }
 
+/* Home feed photography: one calm, readable treatment regardless of the
+   original upload. The overlay sits above the photo and below controls. */
+.home-image-card {
+  isolation: isolate;
+  background: #e2e8f0;
+}
+
+.home-image-card .home-media-gallery img {
+  filter: brightness(0.9) saturate(0.88);
+}
+
+.home-image-card:hover .home-media-gallery img {
+  filter: brightness(0.96) saturate(0.92);
+}
+
 /* Most existing cards already use rounded white panels. Give those panels a
    consistent border and restrained shadow without changing their layouts. */
 .loopout-app .bg-white.rounded-xl,

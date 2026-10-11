@@ -431,12 +431,14 @@ const EliteHelperCard = ({ helper, onClick }) => {
       onClick={onClick}
       className="cursor-pointer flex flex-col gap-2 "
     >
-      <div className="relative aspect-square overflow-hidden md:rounded-2xl rounded-none -mx-4 md:mx-0 bg-gray-100 ">
+      <div className="home-image-card relative aspect-[4/3] overflow-hidden rounded-2xl mx-0 bg-gray-100 ring-1 ring-black/5">
         <ImageGallery
           imageUrls={helper.imageUrls || []}
           alt={helper.name}
           type="avatar"
+          className="home-media-gallery"
         />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-t from-slate-950/50 via-slate-950/12 to-transparent" />
 
         {/* Verification removed */}
         <div className="absolute bottom-3 left-3 bg-white/40 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
@@ -500,8 +502,9 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
       onClick={() => onClick(item._id ? `/${type}/${item._id}` : '#')}
       className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
-        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
+      <div className="home-image-card relative aspect-[4/3] overflow-hidden bg-gray-50">
+        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover brightness-90 saturate-90 group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-slate-950/45 via-slate-950/10 to-transparent" />
 
         {/* Top Badges */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">

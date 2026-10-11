@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
-import { BookOpen, Navigation2 } from 'lucide-react';
+import { Navigation2 } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '../../hooks/useWishlist';
@@ -196,20 +196,14 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none "
     >
       {/* Image section */}
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 mb-2">
+      <div className="home-image-card relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 mb-2 ring-1 ring-black/5">
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
           alt={item.name}
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
+          className="home-media-gallery"
         />
-        {/* Bookings overlay */}
-        <div className="absolute top-3 right-3 flex items-center justify-center z-20 pointer-events-auto /booking transition-transform cursor-pointer">
-          <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md border border-white/20 rounded-lg shadow-md flex items-center justify-center text-white">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[10px] font-black ml-1 shrink-0">{item.bookingsCount || 0}</span>
-            <span className="text-[8px] font-bold uppercase tracking-[0.2em] hidden group-hover/booking:inline-block ml-1 text-slate-200">Bookings</span>
-          </div>
-        </div>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-t from-slate-950/50 via-slate-950/12 to-transparent" />
         {/* Favorite button */}
         <button
           onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}

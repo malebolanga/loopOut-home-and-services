@@ -264,7 +264,7 @@ export default function Header() {
       const res = await authenticatedFetchWithRetry(
         '/api/notifications',
         { headers: { 'Content-Type': 'application/json' }, signal },
-        { maxRetries: 3, timeoutMs: 40000 }
+        { maxRetries: 3, timeoutMs: 40000, quiet: true }
       );
 
       // Silently ignore auth errors, rate limit states, and server-not-ready states
@@ -321,8 +321,8 @@ export default function Header() {
     }
     try {
       const [userRes, hostRes] = await Promise.allSettled([
-        authenticatedFetchWithRetry(`/api/bookings/user/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 }),
-        authenticatedFetchWithRetry(`/api/bookings/host/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 })
+        authenticatedFetchWithRetry(`/api/bookings/user/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000, quiet: true }),
+        authenticatedFetchWithRetry(`/api/bookings/host/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000, quiet: true })
       ]);
 
       let confirmedCount = 0;

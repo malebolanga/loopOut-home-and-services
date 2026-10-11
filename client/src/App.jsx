@@ -294,6 +294,9 @@ const AnimatedRoutes = () => {
         <Route path="/responsible" element={<PageTransition><ResponsibleHosting /></PageTransition>} />
         <Route path="/host-experience" element={<PageTransition><HostExperience /></PageTransition>} />
         <Route path="/host" element={<PageTransition><HostYourHome /></PageTransition>} />
+        <Route path="/host/helper" element={<HostCreateRedirect tab="online" />} />
+        <Route path="/host/services" element={<HostCreateRedirect tab="experiences" />} />
+        <Route path="/host/home" element={<HostCreateRedirect tab="property" />} />
         <Route path="/hosting-resources" element={<PageTransition><HostingResources /></PageTransition>} />
         <Route path="/diversity-belonging" element={<PageTransition><DiversityPage /></PageTransition>} />
         <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
@@ -348,6 +351,14 @@ const ListingRedirect = () => {
   }, [id, navigate]);
 
   return null;
+};
+
+// Friendly host URLs used by the desktop footer. Signed-in hosts go directly
+// to the matching step of the existing Create Listing flow.
+const HostCreateRedirect = ({ tab }) => {
+  const { currentUser } = useSelector((state) => state.user);
+  const userId = currentUser?._id || currentUser?.id;
+  return <Navigate to={userId ? `/${userId}/create-listing?tab=${tab}` : '/login-required'} replace />;
 };
 
 import OnboardingGuide from './components/OnboardingGuide';
