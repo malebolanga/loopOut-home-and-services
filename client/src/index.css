@@ -523,3 +523,57 @@ html.dark textarea::placeholder,
 .text-gradient {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-orange-500;
 }
+
+/* --------------------------------------------------------------------------
+   Shared LoopOut interface language
+   A quiet, Airbnb-inspired visual baseline used by every route. Individual
+   screens keep their content and purpose, while controls now feel like one app.
+   -------------------------------------------------------------------------- */
+.loopout-app {
+  min-height: 100dvh;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.loopout-app :where(button, a, input, select, textarea) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loopout-app :where(button, [role="button"], a[href]) {
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.loopout-app :where(button, [role="button"]):active {
+  transform: scale(0.98);
+}
+
+.loopout-app :where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(244, 63, 94, 0.35);
+  outline-offset: 2px;
+}
+
+/* Most existing cards already use rounded white panels. Give those panels a
+   consistent border and restrained shadow without changing their layouts. */
+.loopout-app .bg-white.rounded-xl,
+.loopout-app .bg-white.rounded-2xl,
+.loopout-app .bg-white.rounded-3xl {
+  border-color: rgb(226 232 240 / 0.9);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
+}
+
+.dark .loopout-app .dark\:bg-gray-900.rounded-xl,
+.dark .loopout-app .dark\:bg-gray-900.rounded-2xl,
+.dark .loopout-app .dark\:bg-gray-900.rounded-3xl {
+  border-color: rgb(55 65 81 / 0.9);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18), 0 8px 24px rgb(0 0 0 / 0.16);
+}
+
+@media (max-width: 767px) {
+  .loopout-app :where(input, select, textarea) {
+    min-height: 44px;
+  }
+
+  .loopout-app :where(button, a[href]) {
+    min-height: 40px;
+  }
+}

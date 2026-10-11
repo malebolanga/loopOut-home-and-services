@@ -32,8 +32,22 @@ export default defineConfig({
     minify: 'esbuild',
     chunkSizeWarningLimit: 500,
     assetsInlineLimit: 4096,
-    // Do not manually split packages that import React. The previous split
-    // could allow cached vendor chunks to run with a different React runtime,
-    // producing createContext/useLayoutEffect errors in production.
+    rollupOptions: {
+      output: {
+        // Keep React and its renderer together. Other large, independent
+        // libraries can be cached separately and are only fetched when a
+        // screen that needs them is opened.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store|react-redux|@reduxjs)[\\/]/.test(id)) return 'react-core';
+          if (id.includes('/firebase/')) return 'firebase';
+          if (id.includes('/swiper/')) return 'swiper';
+          if (id.includes('/framer-motion/')) return 'motion';
+          if (id.includes('/react-icons/') || id.includes('/lucide-react/')) return 'icons';
+          if (id.includes('/jspdf/') || id.includes('/jspdf-autotable/')) return 'pdf';
+          if (id.includes('/leaflet/') || id.includes('/@react-google-maps/')) return 'maps';
+        }
+      }
+    },
   }
 })

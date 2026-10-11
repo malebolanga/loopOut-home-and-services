@@ -22,6 +22,17 @@ html, body {
   .app-safe-top {
     padding-top: max(28px, calc(8px + env(safe-area-inset-top, 28px))) !important;
   }
+
+  /* Baseline protection for every route: pages without their own explicit
+     mobile bottom padding still scroll above the fixed navigation bar. */
+  html {
+    scroll-padding-bottom: max(8rem, calc(7rem + env(safe-area-inset-bottom, 24px)));
+  }
+
+  main,
+  [role="main"] {
+    padding-bottom: max(8rem, calc(7rem + env(safe-area-inset-bottom, 24px)));
+  }
 }
 
 .app-safe-bottom,

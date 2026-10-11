@@ -21,11 +21,11 @@ import AIAssistantWidget from "./components/AIAssistantWidget";
 import BottomNav from "./components/BottomNav";
 import PhoneNotificationManager from "./components/PhoneNotificationManager";
 
-// Core Pages (Statically imported to guarantee instant initial rendering)
+// Core page: keep Home immediate; load authentication only when it is opened.
 import Home from "./pages/Home";
-import SignIn from "./pages/SignIn";
-import SignUp from "./pages/SignUp";
-import ForgotPassword from "./pages/ForgotPassword";
+const SignIn = lazy(() => import("./pages/SignIn"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 
 // Dynamic / Code-Splitted Pages (Lazy-loaded on-demand)
 const Profile = lazy(() => import("./pages/Profile"));
@@ -445,7 +445,7 @@ function AppContent() {
     isInboxPage;
   
   return (
-    <>
+    <div className="loopout-app">
       <OnboardingGuide />
       <AIAssistantWidget />
       <NeuralSplash />
@@ -460,7 +460,7 @@ function AppContent() {
       </Suspense>
       {!isStoragePage && <BottomNav />}
       {!hideFooter && <Footer />}
-    </>
+    </div>
   );
 }
 
