@@ -39,6 +39,7 @@ import {
 import { FaWhatsapp, FaPhone } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { canCreateFor } from '../utils/offeringPermissions';
 import {
   subscribeToShops,
   subscribeToOrders,
@@ -843,10 +844,10 @@ export default function LunchComingSoon() {
       searchParams.get('register') === 'true';
 
     if (isRegister) {
-      if (currentUser) {
+      if (canCreateFor(currentUser, 'food')) {
         setShowAddShopModal(true);
       } else {
-        navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search));
+        navigate(currentUser ? '/food' : '/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search), { replace: true });
       }
     }
   }, [location.pathname, location.search, currentUser, navigate]);
@@ -1446,7 +1447,7 @@ export default function LunchComingSoon() {
               <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Browse menus · Order food · Track orders</p>
             </div>
           </div>
-          <button
+          {canCreateFor(currentUser, 'food') && <button
             type="button"
             onClick={() => {
               if (currentUser) setShowAddShopModal(true);
@@ -1455,7 +1456,7 @@ export default function LunchComingSoon() {
             className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
           >
             <PlusCircle className="h-3.5 w-3.5" /> Register Shop
-          </button>
+          </button>}
         </div>
 
         {/* ── NOTICE BANNER ── */}
@@ -1572,13 +1573,13 @@ export default function LunchComingSoon() {
                 <div className="text-5xl mb-3">🍽️</div>
                 <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No food shops yet</h3>
                 <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Be the first to register your food business and start receiving orders.</p>
-                <button
+                {canCreateFor(currentUser, 'food') && <button
                   type="button"
                   onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
                   className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow transition"
                 >
                   <PlusCircle className="h-4 w-4" /> Register Your Shop
-                </button>
+                </button>}
               </div>
             )}
 
@@ -2142,7 +2143,7 @@ export default function LunchComingSoon() {
                       {dashboardShop.isOpen !== false ? '🟢 Open' : '🔴 Closed'}
                     </button>
                   )}
-                  <button
+                  {canCreateFor(currentUser, 'food') && <button
                     type="button"
                     onClick={() => {
                       if (dashboardShop) {
@@ -2165,7 +2166,7 @@ export default function LunchComingSoon() {
                     className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
-                  </button>
+                  </button>}
                 </div>
               </div>
             </div>
@@ -2297,13 +2298,13 @@ export default function LunchComingSoon() {
                   <UtensilsCrossed className="h-4 w-4 text-amber-500" /> Your Menu
                   <span className="text-[10px] text-gray-400">({(dashboardShop?.meals || []).length} items)</span>
                 </h3>
-                <button
+                {canCreateFor(currentUser, 'food') && <button
                   type="button"
                   onClick={() => setShowAddMealModal(true)}
                   className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition"
                 >
                   <Plus className="h-3 w-3" /> Add Meal
-                </button>
+                </button>}
               </div>
 
               {/* Search & Tags */}

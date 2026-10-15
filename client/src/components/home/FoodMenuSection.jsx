@@ -130,7 +130,7 @@ const FoodCard = ({ item }) => {
         )}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
-        <span className={`absolute top-3 left-3 ${item.badgeColor} text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow`}>
+        <span className="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow shadow-rose-950/20">
           {item.badge}
         </span>
 

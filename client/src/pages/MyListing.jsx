@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { Star, Sparkles, MapPin, Edit2, Trash2, Home as HomeIcon } from 'lucide-react';
+import { canCreateListings } from '../utils/offeringPermissions';
 
 const ListingTypeConfig = {
   rent: {
@@ -348,13 +349,13 @@ export default function PropertyListings() {
               ? 'Get started by adding your first property listing'
               : 'Try adjusting your filters'}
           </p>
-          <Link
+          {canCreateListings(currentUser) && <Link
             to="/create-listing"
             className="inline-flex items-center px-6 py-3 mt-6 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-rose-600 hover:bg-rose-700 transition-colors"
           >
             <span className="mr-2 -ml-1">➕</span>
             Create Listing
-          </Link>
+          </Link>}
         </div>
       )}
     </div>

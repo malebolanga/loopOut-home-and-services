@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { canCreateFor } from '../utils/offeringPermissions';
 
 import { Navigation } from 'swiper/modules';
 import SwiperCore from 'swiper';
@@ -12,6 +14,7 @@ import ListingItem from '../components/ListingItem';
 
 
 export default function Rent() {
+  const { currentUser } = useSelector((state) => state.user);
   const [offerListings, setOfferListings] = useState([]);
  
   const [rentListings, setRentListings] = useState([]);
@@ -199,20 +202,20 @@ alt="example"
         <p className='text-gray-400 p-6 text-center text-xs sm:text-sm'>Reach a vast and engaged audience of potential buyers by showcasing your property on Loupeout Home.Making it an ideal destination for those looking to buy, sell, or rent properties.</p>
     
             <l className="p-5">
-         <Link
+         {canCreateFor(currentUser, 'property') && <Link
               className='bg-red-400 h-40 w-40 text-xs sm:text-sm text-white p-3 rounded-lg  text-center hover:opacity-95'
               to={'/create-listing'}
             >
              Sell Proparty
-            </Link>
+            </Link>}
             </l>
             <l>
-            <Link
+            {canCreateFor(currentUser, 'property') && <Link
               className='bg-blue-400 text-xs sm:text-sm text-white p-3 rounded-lg text-center hover:opacity-95'
               to={'/create-listing'}
             >
               Rent Property
-            </Link>
+            </Link>}
             </l>
             </div>
       

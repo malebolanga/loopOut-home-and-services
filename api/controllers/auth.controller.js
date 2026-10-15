@@ -102,11 +102,12 @@ const firebaseAuth = async () => {
   return getAuth();
 };
 
-const validateSignup = ({ username, email, password, phone, location, acceptedTerms }) => {
-  if (!/^[a-zA-Z0-9_]{3,30}$/.test(String(username || '').trim())) return 'Choose a username with 3–30 letters, numbers, or underscores.';
+const validateSignup = ({ username, email, password, phone, location, offeringType, acceptedTerms }) => {
+  if (!String(username || '').trim()) return 'Please enter a username.';
   if (!emailPattern.test(normalizeEmail(email))) return 'Enter a valid email address.';
   if (!isStrongPassword(password)) return 'Use a password of at least 8 characters.';
   if (!String(phone || '').trim() || !String(location || '').trim()) return 'Phone number and location are required.';
+  if (!['viewer', 'services', 'property', 'food', 'goods'].includes(offeringType)) return 'Choose how you would like to use LoopOut.';
   if (acceptedTerms !== true) return 'You must accept the Terms of Service and Privacy Policy.';
   return null;
 };
@@ -129,6 +130,7 @@ export const signup = async (req, res, next) => {
       password: await bcryptjs.hash(req.body.password, 12),
       phone: String(req.body.phone).trim(),
       location: String(req.body.location).trim(),
+      offeringType: req.body.offeringType,
       accessContacts: false,
       contacts: [],
       isVerified: false,
@@ -194,6 +196,11 @@ export const signin = async (req, res, next) => {
 
 export const google = async (req, res, next) => {
   try {
+    const allowedOfferingTypes = ['viewer', 'services', 'property', 'food', 'goods'];
+    const requestedOfferingType = req.body.offeringType;
+    if (requestedOfferingType && (!allowedOfferingTypes.includes(requestedOfferingType) || req.body.acceptedTerms !== true || !String(req.body.phone || '').trim() || !String(req.body.location || '').trim())) {
+      return next(errorHandler(400, 'Choose an account type, provide your phone and area, and accept the Terms and Privacy Policy.'));
+    }
     if (!req.body.idToken || typeof req.body.idToken !== 'string') return next(errorHandler(400, 'A Google identity token is required.'));
     let decoded;
     try {
@@ -227,6 +234,9 @@ export const google = async (req, res, next) => {
     const email = normalizeEmail(decoded.email);
     if (!email || !decoded.email_verified) return next(errorHandler(401, 'A verified Google email address is required.'));
     let user = await User.findOne({ email });
+    if ((!user || !user.offeringType) && !requestedOfferingType) {
+      return res.status(200).json({ success: true, requiresOfferingType: true, email });
+    }
     if (!user) {
       const base = (decoded.name || email.split('@')[0]).replace(/[^a-zA-Z0-9_]/g, '').slice(0, 24) || 'member';
       const username = `${base}${crypto.randomBytes(3).toString('hex')}`;
@@ -235,10 +245,22 @@ export const google = async (req, res, next) => {
         email,
         password: await bcryptjs.hash(crypto.randomBytes(32).toString('hex'), 12),
         avatar: decoded.picture || undefined,
+        phone: String(req.body.phone || '').trim(),
+        location: String(req.body.location || '').trim(),
+        offeringType: requestedOfferingType || 'viewer',
+        ...(req.body.acceptedTerms === true ? { termsAcceptedAt: new Date(), privacyAcceptedAt: new Date() } : {}),
         isVerified: true
       });
     } else {
       let needsSave = false;
+      if (requestedOfferingType && !user.offeringType) {
+        user.offeringType = requestedOfferingType;
+        if (req.body.phone) user.phone = String(req.body.phone).trim();
+        if (req.body.location) user.location = String(req.body.location).trim();
+        user.termsAcceptedAt = new Date();
+        user.privacyAcceptedAt = new Date();
+        needsSave = true;
+      }
       if (!user.isVerified) {
         user.isVerified = true;
         needsSave = true;

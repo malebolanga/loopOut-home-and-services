@@ -2,16 +2,17 @@ import express from 'express';
 import { createSellListing, getSellListings, getSellListingById } from '../controllers/sell.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 import { upload } from '../utils/upload.js';
+import { requireOfferingType } from '../utils/requireOfferingType.js';
 
 import multer from 'multer';
 
 const router = express.Router();
 
-router.post('/', verifyToken, createSellListing);
+router.post('/', verifyToken, requireOfferingType('goods'), createSellListing);
 router.get('/', getSellListings);
 router.get('/:id', getSellListingById);
 
-router.post('/upload', verifyToken, (req, res) => {
+router.post('/upload', verifyToken, requireOfferingType('goods'), (req, res) => {
   upload.array('images', 5)(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {

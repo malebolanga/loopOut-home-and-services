@@ -168,7 +168,8 @@ const helperSchema = new mongoose.Schema({
         }
     ],
     bookingsCount: { type: Number, default: 0 },
-    responseRate: { type: String, default: 'Usually responds within an hour' },
+    // This is optional and should only be shown when it has been measured or supplied.
+    responseRate: { type: String, default: '' },
     performers: [
       {
         name: { type: String, required: true },

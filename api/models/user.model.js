@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    offeringType: {
+        type: String,
+        enum: ['viewer', 'services', 'property', 'food', 'goods', ''],
+        default: '',
+    },
     interests: {
         type: String,
         default: "",

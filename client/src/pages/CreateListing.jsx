@@ -1979,7 +1979,7 @@ export default function CreateListing() {
               <SectionCard title="Choose your listing path" subtitle="Select one option to start. You can review every detail before publishing.">
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
+                    {(!currentUser?.offeringType || currentUser.offeringType === 'property') && <button
                       type="button"
                       onClick={() => setSelectedCategory('property')}
                       aria-pressed={selectedCategory === 'property'}
@@ -2001,9 +2001,9 @@ export default function CreateListing() {
                         <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Home, room, apartment, guest house, hotel, or self-catering stay.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a place</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
-                    </button>
+                    </button>}
 
-                    <button
+                    {(!currentUser?.offeringType || currentUser.offeringType === 'services') && <button
                       type="button"
                       onClick={() => setSelectedCategory('experiences')}
                       aria-pressed={selectedCategory === 'experiences'}
@@ -2025,15 +2025,15 @@ export default function CreateListing() {
                         <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Beauty, transport, trades, cleaning, and professional local services.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a service</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
-                    </button>
+                    </button>}
                   </div>
 
                   <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
                     <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />
-                      <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />
-                      <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />
+                      {(!currentUser?.offeringType || currentUser.offeringType === 'services') && <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />}
+                      {(!currentUser?.offeringType || ['services', 'property', 'goods'].includes(currentUser.offeringType)) && <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />}
+                      {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
                     </div>
                   </div>
 

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authenticatedFetch, authenticatedFetchWithRetry, clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
 import { pushPhoneNotification } from './PhoneNotificationManager';
+import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 import {
   MagnifyingGlassIcon,
@@ -831,14 +832,14 @@ export default function Header() {
                   )}
                 </button>
 
-                <Link
-                  to={currentUser ? `/${currentUser._id}/create-listing` : '/sign-in'}
+                {currentUser && canCreateListings(currentUser) && <Link
+                  to={getCreationRoute(currentUser)}
                   aria-label={currentUser ? 'Create a listing' : 'Sign in to create a listing'}
                   className="hidden h-10 items-center gap-2 rounded-full bg-rose-500 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-600 hover:shadow-md active:scale-95 md:flex"
                 >
                   <PlusIcon className="h-4 w-4" />
                   <span>Create</span>
-                </Link>
+                </Link>}
 
                 <div className="relative hidden md:block" ref={profileDropdownRef}>
                   <button

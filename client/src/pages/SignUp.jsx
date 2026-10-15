@@ -11,7 +11,7 @@ const inputClass = 'w-full px-4 py-3 bg-white/10 border border-white/20 rounded-
 
 export default function SignUp() {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '', phone: '', location: '', acceptedTerms: false, otp: '' });
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '', phone: '', location: '', offeringType: '', acceptedTerms: false, otp: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [serverStatus, setServerStatus] = useState(''); // 'waking' | ''
@@ -32,7 +32,7 @@ export default function SignUp() {
   const change = ({ target }) => setFormData((current) => ({ ...current, [target.id]: target.type === 'checkbox' ? target.checked : target.value }));
   const checkCredentials = (event) => {
     event.preventDefault(); setError('');
-    if (!/^[a-zA-Z0-9_]{3,30}$/.test(formData.username)) return setError('Use 3–30 letters, numbers, or underscores for your username.');
+    if (!formData.username.trim()) return setError('Please enter a username.');
     if (formData.password.length < 8) return setError('Use a password of at least 8 characters.');
     if (formData.password !== formData.confirmPassword) return setError('Your passwords do not match.');
     setStep(2);
@@ -45,15 +45,19 @@ export default function SignUp() {
       const { confirmPassword, otp, ...payload } = formData;
       // Show 'waking up' hint after 4 s so user knows what's happening on Render cold-start
       const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
-      const response = await fetchWithRetry(
-        '/api/auth/signup',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
-        // Render can take up to a minute to wake, and Gmail may retry a
-        // transient connection. Keep this request alive instead of aborting a
-        // valid sign-up midway through email delivery.
-        { maxRetries: 2, timeoutMs: 180000 }
-      );
-      clearTimeout(wakeTimer);
+      let response;
+      try {
+        response = await fetchWithRetry(
+          '/api/auth/signup',
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
+          // Render can take up to a minute to wake, and Gmail may retry a
+          // transient connection. Keep this request alive instead of aborting a
+          // valid sign-up midway through email delivery.
+          { maxRetries: 2, timeoutMs: 180000 }
+        );
+      } finally {
+        clearTimeout(wakeTimer);
+      }
       setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to create your account.');
@@ -67,6 +71,8 @@ export default function SignUp() {
         setError('The verification service took too long to respond. Please wait a moment, then try again.');
       } else if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
         setError('Connection error — please check your internet and try again.');
+      } else if (msg.toLowerCase().includes('verification email') || msg.toLowerCase().includes('email delivery')) {
+        setError('We could not send the verification email. Please use “Resend code” in a moment, or contact LoopOut support if it continues.');
       } else {
         setError(msg || 'Unable to create your account.');
       }
@@ -77,17 +83,23 @@ export default function SignUp() {
     try {
       setLoading(true);
       const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
-      const response = await fetchWithRetry(
-        '/api/auth/verify-otp',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) },
-        { maxRetries: 3, timeoutMs: 35000 }
-      );
-      clearTimeout(wakeTimer);
+      let response;
+      try {
+        response = await fetchWithRetry(
+          '/api/auth/verify-otp',
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) },
+          { maxRetries: 3, timeoutMs: 35000 }
+        );
+      } finally {
+        clearTimeout(wakeTimer);
+      }
       setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to verify that code.');
       persistSessionToken(data);
-      dispatch(signInSuccess(data.user || data)); navigate('/');
+      const signedInUser = data.user || data;
+      dispatch(signInSuccess(signedInUser));
+      navigate(signedInUser.offeringType === 'services' ? '/verification' : '/');
     } catch (requestError) {
       setServerStatus('');
       setError(requestError?.message || 'Verification failed. Please try again.');
@@ -116,12 +128,11 @@ export default function SignUp() {
           <label className="block text-sm">Password<input id="password" type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={formData.password} onChange={change} required /></label>
           <label className="block text-sm">Confirm password<input id="confirmPassword" type="password" autoComplete="new-password" className={`${inputClass} mt-1`} value={formData.confirmPassword} onChange={change} required /></label>
           <button className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold">Continue</button>
-          <div className="relative py-2 text-center before:absolute before:inset-x-0 before:top-1/2 before:border-t before:border-white/20"><span className="relative px-3 bg-slate-900 text-sm text-gray-200">or</span></div><OAuth />
         </form></>}
       {step === 2 && <><button onClick={() => setStep(1)} className="flex items-center gap-2 text-sm text-gray-200 mb-4"><FaArrowLeft /> Back</button><h1 className="text-2xl font-semibold text-center mb-2">Complete your profile</h1><p className="text-center text-gray-200 mb-6">Step 2 of 3 · We’ll verify your email next</p>
-        <form onSubmit={signup} className="space-y-4"><label className="block text-sm">Mobile number<input id="phone" type="tel" autoComplete="tel" className={`${inputClass} mt-1`} value={formData.phone} onChange={change} required /></label><label className="block text-sm">City or area<input id="location" autoComplete="address-level2" className={`${inputClass} mt-1`} value={formData.location} onChange={change} required /></label>
+        <form onSubmit={signup} className="space-y-4"><fieldset><legend className="block text-sm font-medium mb-2">How will you use LoopOut?</legend><div className="grid grid-cols-2 gap-2">{[{ value: 'viewer', label: 'Browse, book & request' }, { value: 'services', label: 'Provide services' }, { value: 'property', label: 'List property' }, { value: 'food', label: 'Open a food shop' }, { value: 'goods', label: 'Sell goods' }].map((option) => <label key={option.value} className={`flex items-center gap-2 rounded-xl border p-3 text-sm cursor-pointer ${formData.offeringType === option.value ? 'border-pink-300 bg-pink-500/20' : 'border-white/20 bg-white/5'}`}><input type="radio" name="offeringType" value={option.value} checked={formData.offeringType === option.value} onChange={() => setFormData((current) => ({ ...current, offeringType: option.value }))} required /><span>{option.label}</span></label>)}</div>{formData.offeringType === 'services' && <p className="mt-2 text-xs text-gray-200">Service providers will be asked to upload a government ID or passport and take a live selfie for identity review after email verification.</p>}{formData.offeringType === 'viewer' && <p className="mt-2 text-xs text-gray-200">You can browse, book, and post requests. Marketplace listing and shop creation tools will be hidden.</p>}</fieldset><label className="block text-sm">Mobile number<input id="phone" type="tel" autoComplete="tel" className={`${inputClass} mt-1`} value={formData.phone} onChange={change} required /></label><label className="block text-sm">City or area<input id="location" autoComplete="address-level2" className={`${inputClass} mt-1`} value={formData.location} onChange={change} required /></label>
           <label className="flex items-start gap-3 text-sm text-gray-100"><input id="acceptedTerms" type="checkbox" className="mt-1" checked={formData.acceptedTerms} onChange={change} required /><span>I agree to the <Link className="underline" to="/terms" target="_blank">Terms of Service</Link> and <Link className="underline" to="/privacy" target="_blank">Privacy Policy</Link>.</span></label>
-          <p className="text-xs text-gray-300">LoopOut does not access your contacts during sign-up.</p><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Send verification code'}</button></form></>}
+          <p className="text-xs text-gray-300">LoopOut does not access your contacts during sign-up.</p><button disabled={loading} className="w-full bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 rounded-xl font-semibold disabled:opacity-60">{loading ? <FaSpinner className="animate-spin mx-auto" /> : 'Send verification code'}</button><div className="relative py-2 text-center before:absolute before:inset-x-0 before:top-1/2 before:border-t before:border-white/20"><span className="relative px-3 bg-slate-900 text-sm text-gray-200">or</span></div><OAuth offeringType={formData.offeringType} phone={formData.phone} location={formData.location} acceptedTerms={formData.acceptedTerms} /></form></>}
       {step === 3 && <><button onClick={() => setStep(2)} className="flex items-center gap-2 text-sm text-gray-200 mb-4"><FaArrowLeft /> Back</button><h1 className="text-2xl font-semibold text-center mb-2">Verify your email</h1><p className="text-center text-gray-200 mb-6">Step 3 of 3 · Enter the six-digit code sent to {formData.email}.</p>
         {devCode && (
           <div className="mb-4 p-3 bg-amber-500/20 border border-amber-400/40 rounded-xl text-center text-xs text-amber-200">

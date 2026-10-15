@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2 } from 'lucide-react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
+import { canCreateListings } from '../utils/offeringPermissions';
 
 /* ─── helpers ────────────────────────────────────────────────────────────────── */
 const getItemPath = (listing) =>
@@ -222,13 +223,13 @@ export default function UserListings() {
               <p className="text-[12px] sm:text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
             </div>
           </div>
-          <Link
+          {canCreateListings(currentUser) && <Link
             to="/create-listing"
             className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
           >
             <FaPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>New Post</span>
-          </Link>
+          </Link>}
         </div>
       </header>
 
@@ -290,13 +291,13 @@ export default function UserListings() {
                 : 'Try a different filter or clear all.'}
             </p>
             {userListings.length === 0 ? (
-              <Link
+              <>{canCreateListings(currentUser) && <Link
                 to="/create-listing"
                 className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
                 style={{ background: 'linear-gradient(to right, #e11d48, #be123c)' }}
               >
                 Create Listing
-              </Link>
+              </Link>}</>
             ) : (
               <button
                 onClick={() => setSelectedTypes([])}

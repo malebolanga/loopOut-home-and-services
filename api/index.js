@@ -157,6 +157,7 @@ app.get('/api/health', (_req, res) => {
         success: databaseConnected,
         service: 'loopout-api',
         database: databaseConnected ? 'connected' : 'unavailable',
+        email: process.env.EMAIL_USER && process.env.EMAIL_PASS ? 'configured' : 'unavailable',
     });
 });
 const distPath = path.resolve(__dirname, '../client/dist'); app.use(express.static(distPath));

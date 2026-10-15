@@ -21,6 +21,7 @@ const Become = () => {
   const navigate = useNavigate();
 
   const { currentUser } = useSelector((state) => state.user);
+  const canStartCreating = currentUser?.offeringType !== 'viewer';
 
   const steps = [
     {
@@ -128,7 +129,7 @@ const Become = () => {
                   </h2>
                   <p className="text-gray-400 mb-12 text-lg font-medium">Choose your sector and begin your listing journey. Our AI will guide you through every optimization.</p>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  {canStartCreating && <div className="grid grid-cols-2 gap-4">
                      {categories.map((cat, i) => (
                        <button
                          key={i}
@@ -141,7 +142,7 @@ const Become = () => {
                           <span className="text-sm font-black uppercase tracking-widest">{cat.name}</span>
                        </button>
                      ))}
-                  </div>
+                  </div>}
                </div>
 
                <div className="relative">

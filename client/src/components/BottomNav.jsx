@@ -29,6 +29,7 @@ import {
 } from "../redux/user/userSlice";
 import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
 import { Sparkles, Utensils } from 'lucide-react';
+import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -126,7 +127,7 @@ const BottomNav = () => {
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
     { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    { id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
+    ...(currentUser && canCreateListings(currentUser) ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }] : []),
     { id: 'lunch', label: 'Lunch', icon: Utensils, activeIcon: Utensils, route: '/lunch' },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];

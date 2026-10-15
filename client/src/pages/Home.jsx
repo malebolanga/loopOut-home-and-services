@@ -2924,6 +2924,7 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
 };
 
 const FoodSpecialsStrip = ({ navigate }) => {
+  const { currentUser } = useSelector((state) => state.user);
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
@@ -3175,7 +3176,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>My Orders</span>
           </motion.button>
-          <motion.button
+          {currentUser?.offeringType === 'food' && <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food/register')}
@@ -3183,7 +3184,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Register Place</span>
-          </motion.button>
+          </motion.button>}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

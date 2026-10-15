@@ -126,7 +126,13 @@ export default function HostYourHome() {
 
           {/* Core Paths - Dynamic Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {hostTypes.map((type, index) => (
+            {hostTypes.filter((type) => {
+              if (!currentUser || currentUser.offeringType === 'viewer') return false;
+              if (!currentUser.offeringType) return true;
+              if (type.id === 'listing') return currentUser.offeringType === 'property';
+              if (type.id === 'service' || type.id === 'helper') return currentUser.offeringType === 'services';
+              return true;
+            }).map((type, index) => (
               <motion.div
                 key={type.id}
                 initial={{ opacity: 0, y: 20 }}

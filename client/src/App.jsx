@@ -42,6 +42,7 @@ const HostTools = lazy(() => import("./pages/HostTools"));
 
 // Listing Related Pages
 const CreateListing = lazy(() => import("./pages/CreateListing"));
+const ListingCreationGate = lazy(() => import("./components/ListingCreationGate"));
 const UpdateListing = lazy(() => import("./pages/UpdateListing"));
 const Listing = lazy(() => import("./pages/Listing"));
 const RentPage = lazy(() => import("./pages/RentPage"));
@@ -320,7 +321,7 @@ const AnimatedRoutes = () => {
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
           <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
-          <Route path="/:userId/create-listing" element={<PageTransition><CreateListing /></PageTransition>} />
+          <Route path="/:userId/create-listing" element={<PageTransition><ListingCreationGate><CreateListing /></ListingCreationGate></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />
           <Route path="/splitter" element={<PageTransition><Splitter /></PageTransition>} />
         </Route>
