@@ -832,14 +832,25 @@ export default function Header() {
                   )}
                 </button>
 
-                {currentUser && canCreateListings(currentUser) && <Link
-                  to={getCreationRoute(currentUser)}
-                  aria-label={currentUser ? 'Create a listing' : 'Sign in to create a listing'}
-                  className="hidden h-10 items-center gap-2 rounded-full bg-rose-500 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-600 hover:shadow-md active:scale-95 md:flex"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                  <span>Create</span>
-                </Link>}
+                {currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer' ? (
+                  <Link
+                    to={getCreationRoute(currentUser)}
+                    aria-label="Create a listing"
+                    className="hidden h-10 items-center gap-2 rounded-full bg-rose-500 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-600 hover:shadow-md active:scale-95 md:flex"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    <span>Create</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/become"
+                    aria-label="Become a host or provider"
+                    className="hidden h-10 items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50/70 px-4 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 hover:border-rose-400 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 md:flex"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Become a Host</span>
+                  </Link>
+                )}
 
                 <div className="relative hidden md:block" ref={profileDropdownRef}>
                   <button

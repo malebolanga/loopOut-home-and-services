@@ -124,10 +124,14 @@ const BottomNav = () => {
 
   if (isBottomNavHidden) return null;
 
+  const isProvider = currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer';
+
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
     { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    ...(currentUser && canCreateListings(currentUser) ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }] : []),
+    ...(isProvider
+      ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }]
+      : [{ id: 'become', label: 'Become', icon: Sparkles, activeIcon: Sparkles, route: '/become' }]),
     { id: 'lunch', label: 'Lunch', icon: Utensils, activeIcon: Utensils, route: '/lunch' },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];

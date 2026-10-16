@@ -86,12 +86,9 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
-import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
-import HelperItem from '../components/HelperItem';
-import BookingHistory from '../components/BookingHistory';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 
 export default function TattooPage() {
@@ -106,6 +103,7 @@ export default function TattooPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -117,14 +115,12 @@ export default function TattooPage() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
   const [topComments, setTopComments] = useState([]);
-  const [similarHelpers, setSimilarHelpers] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
   useEffect(() => {
     if (helper) {
-      fetchSimilarHelpers();
       fetchBookingSummary();
       saveToHistory(helper);
     }
@@ -139,17 +135,6 @@ export default function TattooPage() {
       }
     } catch (error) {
       console.error('Error fetching booking summary:', error);
-    }
-  };
-
-  const fetchSimilarHelpers = async () => {
-    try {
-      const res = await fetch(`/api/helper/similar/${helper._id}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setSimilarHelpers(data);
-    } catch (error) {
-      console.error('Error fetching similar helpers:', error);
     }
   };
 
@@ -322,15 +307,28 @@ export default function TattooPage() {
 
   // Prioritize dynamic serviceList from database, fallback to hardcoded options
   const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
-    ? helper.serviceList.map((s, index) => ({ 
+    ? helper.serviceList.map((s, index) => {
+        const isTattoo = helper.type === 'tattoo';
+        const cleanServiceName = isTattoo
+          ? String(s.name || '').replace(/^Full Day Tattoo$/i, 'Full-day tattoo session').replace(/^Half Day Tattoo$/i, 'Half-day tattoo session').replace(/^Touch Up \(Within 3 Months of Getting Tattooed By Me\)$/i, 'Touch-up (within 3 months)')
+          : s.name;
+        const cleanServiceDescription = isTattoo
+          ? String(s.description || '')
+              .replace(/Please note that an hour will be set a side for a lunch break for the both of us to rejuvenate through the session\.?/i, 'Includes a one-hour lunch break.')
+              .replace(/3-3\.5 hours of tattooing/i, '3–3.5 hours of tattooing.')
+              .replace(/1 hour or less time spent on tattoo/i, 'Up to one hour of tattooing.')
+              .replace(/I offer free touch ups for tattoos done by me that are scheduled at a maximum of 3 months since the tattoo was done\.\s*1\.5hours maximum\.?/i, 'Free touch-up for tattoos by this artist, booked within 3 months of the original session. Up to 1.5 hours.')
+          : s.description;
+        return {
         id: s.name, 
-        name: s.name, 
+        name: cleanServiceName,
         type: s.type,
-        description: s.description,
+        description: cleanServiceDescription,
         price: s.price,
         image: s.image,
         icon: <FaCheckCircle className="text-rose-500" /> 
-      }))
+      };
+      })
     : getServiceOptions(helper?.type);
 
   // Full page overlay state for booking form
@@ -840,6 +838,7 @@ export default function TattooPage() {
   useEffect(() => {
     const fetchRatings = async () => {
       if (helper && helper._id) {
+        setCommentsLoading(true);
         try {
           const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`);
           const data = await res.json();
@@ -856,6 +855,8 @@ export default function TattooPage() {
           }
         } catch (error) {
           console.error('Error fetching ratings:', error);
+        } finally {
+          setCommentsLoading(false);
         }
       }
     };
@@ -2237,7 +2238,15 @@ export default function TattooPage() {
     );
   }
 
-  const description = helper.description || '';
+  const description = helper.type === 'tattoo'
+    ? (helper.description || '')
+        .replace(/Tattoo Artist Based in a Private Studio\.\s*/i, '')
+        .replace(/Private studio is based in [^.]+\.\s*/i, 'Works from a private studio in Johannesburg. ')
+        .replace(/Specialising in Neotraditional Tattoos, New School Tattoos, Blackwork Tattoos and any size or style tattoos are always welcome!?/i, 'Specialising in neo-traditional, new school and blackwork tattoos. All sizes and styles are welcome.')
+    : (helper.description || '');
+  const nearDetails = helper.type === 'tattoo'
+    ? String(helper.near || '').replace(/Neotraditional Tattoos, New School Tattoos, Blackwork Tattoos and any size or style tattoos/i, 'Neo-traditional, new school and blackwork tattoos. All sizes and styles are welcome.')
+    : (helper.near || '');
   const displayText = showFullDescription
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
@@ -2305,43 +2314,26 @@ export default function TattooPage() {
         )}
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-60">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-            {getProfessionalTitle(helper.type)} services by {helper.name}
+          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">
+            Tattoo services by {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+            <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
-              <span className="font-semibold text-slate-900 text-base">
-                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
-              </span>
-              <span>·</span>
-              <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
+              <span className="font-semibold">{ratings?.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}</span>
+              <span className="text-slate-500">{commentsLoading ? 'Loading reviews' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
-              <MapPinIcon className="text-slate-400 w-4 h-4" />
-              <span>{helper.address || 'Johannesburg, South Africa'}</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
+            {helper.isSuperhelper && <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700"><CheckBadgeIcon className="h-4 w-4" /> Superhelper</span>}
+            {bookingSummary.count > 0 && <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600"><PlusCircleIcon className="h-4 w-4 text-indigo-500" /> Booked {bookingSummary.count} {bookingSummary.count === 1 ? 'time' : 'times'}</span>}
+            {helper.address && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600"><MapPinIcon className="h-4 w-4 shrink-0 text-slate-400" /><span className="truncate">{helper.address}</span></span>}
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Host Info Bar */}
@@ -2352,11 +2344,9 @@ export default function TattooPage() {
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
+                    Hosted by {helper.userRef?.username || helper.name}
                   </h2>
-                  <p className="text-gray-600 mt-1">
-                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
-                  </p>
+                  <p className="text-gray-600 mt-1">View provider profile</p>
                 </div>
                 <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
                   {helper.userRef?.avatar ? (
@@ -2372,38 +2362,12 @@ export default function TattooPage() {
                 </div>
               </Link>
               
-              {/* Mutual Friends Section */}
-              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
             </div>
 
-
-            <div className="space-y-6 pb-8 border-b border-slate-100">
-              <div className="flex items-start gap-4">
-                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
-                </div>
-              </div>
-            </div>
 
             {/* Description */}
             <div className="pb-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About this professional</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">About {helper.name}</h2>
               <div className="text-gray-700 leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
@@ -2452,13 +2416,14 @@ export default function TattooPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
-                      <div 
+                      <button
                         key={service.id} 
                         onClick={() => setSelectedModalService(service)}
+                        type="button"
                         className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
@@ -2474,14 +2439,14 @@ export default function TattooPage() {
                             </div>
                           )}
                           <div className="min-w-0">
-                            {service.type && (
+                            {service.type && !(helper.type === 'tattoo' && /^tattoo$/i.test(service.type)) && (
                               <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                                 isSelected ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'
                               }`}>
                                 {service.type}
                               </span>
                             )}
-                            <p className={`font-medium transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                            <p className={`text-left font-semibold transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
                               {service.name}
                             </p>
                             {service.description && (
@@ -2491,9 +2456,9 @@ export default function TattooPage() {
                             )}
                           </div>
                         </div>
-                        {service.price && (
-                          <span className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
-                            R{service.price}
+                        {service.price !== undefined && service.price !== null && (
+                          <span className={`shrink-0 font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
+                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}
                           </span>
                         )}
                         {isSelected && (
@@ -2501,7 +2466,7 @@ export default function TattooPage() {
                             <CheckIcon className="text-white w-3 h-3" />
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -2513,7 +2478,7 @@ export default function TattooPage() {
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
                 </h2>
               </div>
 
@@ -2619,7 +2584,7 @@ export default function TattooPage() {
                 onClick={() => setShowCommentsPanel(true)}
                 className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
-                Show all {commentCount} reviews
+                Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
               </button>
             </div>
 
@@ -2635,9 +2600,9 @@ export default function TattooPage() {
               </div>
               {helper.near && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{helper.type === 'tattoo' ? 'Specialties' : "What's nearby"}</h3>
                   <div className="text-gray-700 text-xs lg:text-sm space-y-1">
-                    {(helper.near || '').split('\n').slice(0, 4).map((item, i) => (
+                    {nearDetails.split('\n').slice(0, 4).map((item, i) => (
                       <p key={i}>{item}</p>
                     ))}
                   </div>
@@ -2650,155 +2615,33 @@ export default function TattooPage() {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="top-24 py-12">
-              {/* Masterpiece Booking Card */}
-              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
-                <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-gray-950 dark:text-white tracking-tighter">R{helper.regularPrice}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/ service</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
-                    <StarIconSolid className="w-4 h-4 text-rose-500" />
-                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
-                  </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-gray-800 dark:bg-gray-900 sticky top-24">
+                <p className="text-sm font-medium text-slate-500">Studio minimum</p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">R{helper.regularPrice}</span>
+                  <span className="text-sm text-slate-500">for up to 1 hour</span>
                 </div>
-
-                {/* Quick Booking Options */}
-                <div className="space-y-4 mb-8">
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                    />
-                  </div>
-
-                  {bookingData.date && (
-                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
-                      <BookingTimeSlots
-                        selectedDate={bookingData.date}
-                        selectedTime={bookingData.time}
-                        onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
-                        isTimeSlotBooked={isTimeSlotBooked}
-                        isDateFullyBooked={isDateFullyBooked}
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      placeholder="Full Designation"
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <button
-                    onClick={openBookingFormOverlay}
-                    className="w-full py-5 bg-gray-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
-                  >
-                    Check Availability
-                  </button>
-
-                  <button
-                    onClick={handleInternalMessage}
-                    className="w-full py-4 bg-white border border-slate-100 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Secure Message
-                  </button>
-                </div>
-
-                <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
-                   loopOut Promise: Zero Upfront Charge
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-gray-50">
-                  {bookingData.selectedServices.length > 0 ? (
-                    bookingData.selectedServices.map(id => {
-                      const s = serviceOptions.find(opt => opt.id === id);
-                      return s ? (
-                        <div key={id} className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500">{s.name}</span>
-                          <span className="text-xs font-black text-gray-950 dark:text-white">R{s.price}</span>
-                        </div>
-                      ) : null;
-                    })
-                  ) : (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
-                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.regularPrice}</span>
-                    </div>
-                  )}
-                  {helper.travelFee > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 italic">Deployment Fee</span>
-                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.travelFee}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
-                    <span className="text-xs font-black text-gray-950 dark:text-white">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                  </div>
-                  <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
-                    <span className="text-lg font-black text-rose-500 italic tracking-tighter">R{totalPrice}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 text-center py-14">
-                <button className="text-gray-400 text-[10px] font-black uppercase tracking-widest underline underline-offset-8 hover:text-rose-500 transition-colors flex items-center justify-center gap-2 mx-auto">
-                  <FlagIcon className="w-4 h-4" />
-                  Report this listing
+                <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  Session prices vary by duration. Choose an option below to review its details.
+                </p>
+                {bookingData.selectedServices.length > 0 && (
+                  <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                    {bookingData.selectedServices.length} session option{bookingData.selectedServices.length === 1 ? '' : 's'} selected
+                  </p>
+                )}
+                <button onClick={openBookingFormOverlay} className="mt-6 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                  Review &amp; reserve
                 </button>
+                <button onClick={handleInternalMessage} className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800">
+                  Message {helper.name}
+                </button>
+                <p className="mt-4 text-center text-xs text-slate-500">You can confirm details with the artist before booking.</p>
               </div>
+
             </div>
           </div>
         </div>
 
-        {/* Mutual Connections Section */}
-        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-            <UserGroupIcon className="text-rose-500 w-6 h-6" />
-            Mutual Connections
-          </h2>
-          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-200/60 dark:border-gray-800 shadow-sm">
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
-          </div>
-
-        {/* Recent Bookers Section */}
-        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
-        </div>
-
-
-
-        {/* Similar Helpers */}
-          {similarHelpers.length > 0 && (
-            <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-                <MapPinIcon className="text-rose-500 w-6 h-6" />
-                Other professionals in the matrix
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {similarHelpers.map((item) => (
-                  <HelperItem key={item._id} helper={item} />
-                ))}
-              </div>
-            </div>
-          )}
       </main>
 
       {/* Full Screen Gallery Overlay */}

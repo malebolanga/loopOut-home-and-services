@@ -116,13 +116,13 @@ export default function UserListings() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const [listingsRes, servicesRes, helpersRes] = await Promise.all([
-        fetch(`/api/user/listings/${currentUser._id}`),
-        fetch(`/api/user/services/${currentUser._id}`),
-        fetch(`/api/user/helpers/${currentUser._id}`),
-      ]);
+      const isServicesProvider = currentUser?.offeringType === 'services';
       const [listingsData, servicesData, helpersData] = await Promise.all([
-        listingsRes.json(), servicesRes.json(), helpersRes.json(),
+        !isServicesProvider 
+          ? fetch(`/api/user/listings/${currentUser._id}`).then(r => r.json()).catch(() => [])
+          : Promise.resolve([]),
+        fetch(`/api/user/services/${currentUser._id}`).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/helpers/${currentUser._id}`).then(r => r.json()).catch(() => []),
       ]);
       const allItems = [
         ...(Array.isArray(listingsData) ? listingsData : (listingsData.listings || [])).map(l => ({ ...l, category: 'stays' })),
@@ -168,7 +168,12 @@ export default function UserListings() {
     { key: 'stays',       label: 'Stays' },
     { key: 'experiences', label: 'Services' },
     { key: 'online',      label: 'Helpers' },
-  ];
+  ].filter(f => {
+    if (!currentUser?.offeringType) return true;
+    if (currentUser.offeringType === 'services') return f.key !== 'stays';
+    if (currentUser.offeringType === 'property') return f.key === 'stays';
+    return true;
+  });
 
   const filtered = selectedTypes.length > 0
     ? userListings.filter(l => selectedTypes.includes(l.category))
@@ -223,13 +228,22 @@ export default function UserListings() {
               <p className="text-[12px] sm:text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
             </div>
           </div>
-          {canCreateListings(currentUser) && <Link
-            to="/create-listing"
-            className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
-          >
-            <FaPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span>New Post</span>
-          </Link>}
+          {currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer' ? (
+            <Link
+              to={getCreationRoute(currentUser) || `/${currentUser._id}/create-listing`}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
+            >
+              <FaPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>New Post</span>
+            </Link>
+          ) : (
+            <Link
+              to="/become"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
+            >
+              <span>Become a Host</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -283,21 +297,33 @@ export default function UserListings() {
               <FaPlus className="w-7 h-7 text-rose-500" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              {userListings.length === 0 ? 'Ready to become a host?' : 'No matches'}
+              {userListings.length === 0 ? 'Ready to become a host or provider?' : 'No matches'}
             </h2>
             <p className="text-gray-500 text-[15px] leading-relaxed mb-8">
               {userListings.length === 0
-                ? 'Create your first listing and start earning.'
+                ? (currentUser?.offeringType === 'viewer'
+                    ? 'Your account is currently set up for browsing and booking. Learn how to convert your account into a host, service provider, or shop owner.'
+                    : 'Create your first listing and start earning.')
                 : 'Try a different filter or clear all.'}
             </p>
             {userListings.length === 0 ? (
-              <>{canCreateListings(currentUser) && <Link
-                to="/create-listing"
-                className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
-                style={{ background: 'linear-gradient(to right, #e11d48, #be123c)' }}
-              >
-                Create Listing
-              </Link>}</>
+              currentUser?.offeringType === 'viewer' ? (
+                <Link
+                  to="/become"
+                  className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity shadow-md"
+                  style={{ background: 'linear-gradient(to right, #f59e0b, #e11d48)' }}
+                >
+                  Learn How to Become a Host
+                </Link>
+              ) : (
+                <Link
+                  to="/create-listing"
+                  className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
+                  style={{ background: 'linear-gradient(to right, #e11d48, #be123c)' }}
+                >
+                  Create Listing
+                </Link>
+              )
             ) : (
               <button
                 onClick={() => setSelectedTypes([])}

@@ -27,11 +27,10 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
-import HelperComments from '../components/HelperComments';
+import Comment from '../components/Comment';
 import HelperBookingSheet from '../components/HelperBookingSheet';
-import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
+import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import { useBookedSlots } from '../hooks/useBookedSlots';
-import BookingTimeSlots from '../components/BookingTimeSlots';
 
 export default function CarWashPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -45,6 +44,8 @@ export default function CarWashPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const hasReviews = commentCount > 0 && Number(carWash?.rating) > 0;
+  const ratingLabel = hasReviews ? Number(carWash.rating).toFixed(1) : '';
 
   const params = useParams();
   const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(carWash?._id || params.carWashId || params.id);
@@ -95,26 +96,17 @@ export default function CarWashPage() {
     ceramic: { id: 'ceramic', name: 'Ceramic Coating', description: 'Paint decontamination, clay bar & long-lasting ceramic coat protection', price: 800, duration: '3 hrs', includes: ['Clay bar treatment', 'Ceramic coating', 'Paint decontamination', 'Engine clean'], popular: false },
   };
 
-  const defaultServices = [
-    STANDARD_PACKAGES_MAP.wash_glow,
-    STANDARD_PACKAGES_MAP.wash_dry,
-    STANDARD_PACKAGES_MAP.wash_dry_polish,
-    STANDARD_PACKAGES_MAP.engine_wash,
-    STANDARD_PACKAGES_MAP.interior_clean,
-    STANDARD_PACKAGES_MAP.full_detail
-  ];
-
   // Dynamic wash services based on listing serviceList or carWashPackages
   const activeServices = useMemo(() => {
     if (carWash?.serviceList && carWash.serviceList.length > 0) {
       return carWash.serviceList.map((item, idx) => ({
         id: item.type || `service_${idx}`,
         name: item.name,
-        description: item.description || 'Car wash service option',
-        price: item.price || 100,
-        duration: item.duration || '30-45 mins',
-        includes: item.description ? [item.description] : ['Professional wash service'],
-        popular: idx === 0 || item.type === 'full_detail' || item.type === 'wash_glow'
+        description: item.description || '',
+        price: Number(item.price) || 0,
+        duration: item.duration || '',
+        includes: [],
+        popular: false
       }));
     }
 
@@ -125,16 +117,16 @@ export default function CarWashPage() {
         return {
           id: pkgId,
           name: pkgId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          description: 'Car wash package option',
-          price: 150,
-          duration: '30-45 mins',
-          includes: ['Professional car wash service'],
+          description: '',
+          price: Number(carWash?.regularPrice) || 0,
+          duration: '',
+          includes: [],
           popular: false
         };
       });
     }
 
-    return defaultServices;
+    return [];
   }, [carWash]);
 
   // Dynamic vehicle types based on listing vehicleTypes string
@@ -142,30 +134,27 @@ export default function CarWashPage() {
     if (carWash?.vehicleTypes) {
       const typesList = carWash.vehicleTypes.split(',').map(s => s.trim()).filter(Boolean);
       return typesList.map(typeStr => {
-        const lower = typeStr.toLowerCase();
-        let multiplier = 1.0;
-        if (lower.includes('suv') || lower.includes('crossover')) multiplier = 1.25;
-        else if (lower.includes('4x4') || lower.includes('bakkie') || lower.includes('truck')) multiplier = 1.4;
-        else if (lower.includes('van') || lower.includes('minibus')) multiplier = 1.5;
-        else if (lower.includes('luxury') || lower.includes('sports')) multiplier = 1.6;
-        else if (lower.includes('motorcycle') || lower.includes('quad')) multiplier = 0.8;
-
         return {
           id: typeStr,
           name: typeStr,
-          multiplier
+          multiplier: 1
         };
       });
     }
     return [
       { id: 'Sedan', name: 'Sedan', multiplier: 1.0 },
       { id: 'Hatchback', name: 'Hatchback', multiplier: 1.0 },
-      { id: 'SUV / Crossover', name: 'SUV / Crossover', multiplier: 1.25 },
-      { id: '4x4 / Bakkie / Truck', name: '4x4 / Bakkie / Truck', multiplier: 1.4 },
-      { id: 'Van / Minibus', name: 'Van / Minibus', multiplier: 1.5 },
-      { id: 'Luxury / Sports Car', name: 'Luxury / Sports Car', multiplier: 1.6 }
+      { id: 'SUV / Crossover', name: 'SUV / Crossover', multiplier: 1 },
+      { id: '4x4 / Bakkie / Truck', name: '4x4 / Bakkie / Truck', multiplier: 1 },
+      { id: 'Van / Minibus', name: 'Van / Minibus', multiplier: 1 },
+      { id: 'Luxury / Sports Car', name: 'Luxury / Sports Car', multiplier: 1 }
     ];
   }, [carWash]);
+
+  const listedPrices = activeServices.map((service) => Number(service.price)).filter((price) => price > 0);
+  const startingPrice = listedPrices.length
+    ? Math.min(...listedPrices)
+    : Number(carWash?.regularPrice) || null;
 
   const carWashServices = activeServices;
   const vehicleTypes = activeVehicleTypes;
@@ -185,9 +174,9 @@ export default function CarWashPage() {
       ...carWash,
       type: 'carwash',
       name: carWash.name,
-      regularPrice: carWash.regularPrice || 100
+      regularPrice: carWash.regularPrice || startingPrice || 0
     };
-  }, [carWash]);
+  }, [carWash, startingPrice]);
 
 
   useEffect(() => {
@@ -247,6 +236,32 @@ export default function CarWashPage() {
   const openBookingFormOverlay = () => {
     setShowBookingFormOverlay(true);
     document.body.style.overflow = 'hidden';
+  };
+
+  const handleMessageProvider = async () => {
+    const providerId = carWash?.userRef?._id || carWash?.userRef;
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+    if (!providerId || currentUser._id === providerId) return;
+
+    try {
+      const response = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: providerId,
+          content: `Hi, I'm interested in ${carWash.name}.`
+        })
+      });
+      const data = await response.json();
+      if (response.ok) navigate(`/messages/${data.conversationId || data._id}`);
+      else alert(data.message || 'Failed to start conversation');
+    } catch (messageError) {
+      console.error('Error starting conversation:', messageError);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   // Function to close full-page booking form overlay
@@ -544,92 +559,56 @@ export default function CarWashPage() {
         </div>
       </nav>
 
-      {/* Image Gallery Section - Edge to Edge Style */}
-      <div className="relative w-full overflow-hidden bg-slate-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full">
-          {/* Main Large Image */}
-          <div 
-            className="relative h-full cursor-pointer group"
-            onClick={() => setShowImageModal(true)}
-          >
-            <img
-              src={carWash.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
-              alt={carWash.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+      {/* Image Gallery - Full Width */}
+      {carWash.imageUrls?.length > 0 && (
+        <div className="relative w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[320px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+            <button type="button" aria-label="View first photo" className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }}>
+              <img src={carWash.imageUrls[0]} alt={carWash.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+            </button>
+            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
+              {carWash.imageUrls.slice(1, 5).map((url, index) => (
+                <button type="button" key={url + index} aria-label={`View photo ${index + 2}`} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(index + 1); setShowImageModal(true); }}>
+                  <img src={url} alt={`${carWash.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+                </button>
+              ))}
+              {carWash.imageUrls.length < 5 && Array(4 - Math.min(4, carWash.imageUrls.length - 1)).fill(null).map((_, index) => <div key={`empty-${index}`} className="bg-slate-800 h-full" />)}
+            </div>
           </div>
-          
-          {/* Side Grid Images */}
-          <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-            {[1, 2, 3, 4].map((index) => (
-              <div 
-                key={index}
-                className="relative cursor-pointer group overflow-hidden"
-                onClick={() => {
-                  setActiveImageIndex(index);
-                  setShowImageModal(true);
-                }}
-              >
-                <img
-                  src={carWash.imageUrls?.[index] || carWash.imageUrls?.[0] || 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                  alt={`${carWash.name} ${index + 1}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                {index === 3 && carWash.imageUrls?.length > 5 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="text-white font-semibold text-lg">+{carWash.imageUrls.length - 5} more</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <button type="button" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }} className="absolute top-24 md:top-28 right-4 md:right-6 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-900 flex items-center gap-2 shadow-xl border border-slate-200/50 hover:bg-white transition z-20">
+            <FaExpand className="w-4 h-4" /> Show all {carWash.imageUrls.length} photos
+          </button>
         </div>
-        
-        {/* Mobile Image Indicator */}
-        <div className="flex justify-center gap-2 mt-4 md:hidden">
-          {carWash.imageUrls?.map((_, idx) => (
-            <div 
-              key={idx}
-              className={`h-1.5 rounded-full transition-all ${idx === activeImageIndex ? 'w-6 bg-gray-800' : 'w-1.5 bg-gray-300'}`}
-            />
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Content Grid */}
-      <div className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-900 px-4 sm:px-6 lg:px-8 py-8 pb-24 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
+          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">{carWash.name}</h1>
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+            <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
+              <FaStar className="text-amber-400" />
+              <span className="font-semibold">{hasReviews ? ratingLabel : 'New'}</span>
+              <span className="text-slate-500">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaCheckCircle className="h-4 w-4 text-indigo-500" />{Number(carWash.bookingsCount) > 0 ? ` Booked ${carWash.bookingsCount} ${Number(carWash.bookingsCount) === 1 ? 'time' : 'times'}` : ' No bookings yet'}</span>
+            {carWash.address && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaMapMarkerAlt className="h-4 w-4 shrink-0 text-slate-400" /><span className="truncate">{carWash.address}</span></span>}
+          </div>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
           
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
-            
-            {/* Header Info */}
-            <div className="border-b border-gray-200 dark:border-gray-800 pb-6">
-              <h1 className="text-3xl font-semibold text-gray-900 dark:text-white mb-2">{carWash.name}</h1>
-              <div className="flex flex-wrap items-center gap-4 text-gray-600 dark:text-white">
-                <div className="flex items-center gap-1">
-                  <FaStar className="text-rose-500 fill-rose-500" />
-                  <span className="font-semibold text-gray-900 dark:text-white">{carWash.rating || '4.9'}</span>
-                  <span className="underline cursor-pointer hover:text-gray-900 dark:hover:text-white">{carWash.reviewCount || '12'} reviews</span>
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
+              <Link to={`/user-profile/${carWash.userRef?._id}`} className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Hosted by {carWash.userRef?.username || carWash.name}</h2>
+                  <p className="text-gray-600 dark:text-gray-300 mt-1">View provider profile</p>
                 </div>
-                <span>·</span>
-                <div className="flex items-center gap-1">
-                  <FaAward className="text-rose-500" />
-                  <span>{carWash.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'}</span>
-                </div>
-                <span>·</span>
-                <div className="flex items-center gap-1">
-                  <FaMapMarkerAlt className="text-rose-500 shrink-0" />
-                  <span className="font-semibold text-gray-900 dark:text-white">{carWash.address || 'Mobile service area'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Service Provider Info */}
-            <div className="flex items-center gap-4 py-6 border-b border-gray-200 dark:border-gray-800">
-              <Link to={`/user-profile/${carWash.userRef?._id}`} className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden hover:opacity-80 transition-opacity">
+                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
                 {carWash.userRef?.avatar ? (
                   <img 
                     src={carWash.userRef.avatar} 
@@ -641,43 +620,13 @@ export default function CarWashPage() {
                     <FaUser className="text-2xl" />
                   </div>
                 )}
+                </div>
               </Link>
-              <div>
-                <Link to={`/user-profile/${carWash.userRef?._id}`} className="hover:underline">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{carWash.userRef?.username || 'Car Wash Professional'}</h2>
-                </Link>
-                <p className="text-gray-600 dark:text-white">{carWash.host || '5'} years of experience</p>
-              </div>
-            </div>
-
-            {/* Highlights */}
-            <div className="space-y-4 py-6 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex gap-4">
-                <FaHome className="text-2xl text-gray-700 dark:text-white mt-1" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Mobile Service</h3>
-                  <p className="text-gray-600 dark:text-white text-sm mt-1">I come to your location for ultimate convenience. All equipment provided.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <FaCertificate className="text-2xl text-gray-700 dark:text-white mt-1" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Experienced Professional</h3>
-                  <p className="text-gray-600 dark:text-white text-sm mt-1">Certified and trained in premium detailing techniques and products.</p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <FaClock className="text-2xl text-gray-700 dark:text-white mt-1" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Flexible Scheduling</h3>
-                  <p className="text-gray-600 dark:text-white text-sm mt-1">Available 7 days a week. Same-day bookings often available.</p>
-                </div>
-              </div>
             </div>
 
             {/* Description */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About this service</h2>
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">About {carWash.name}</h2>
               <div className="text-gray-700 dark:text-white leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, idx) => (
                   <p key={idx}>{paragraph}</p>
@@ -694,65 +643,41 @@ export default function CarWashPage() {
             </div>
 
             {/* Services Offered */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Select your service</h2>
-              <div className="space-y-4">
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Services offered</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {activeServices.map((service) => (
-                  <div 
+                  <button type="button"
                     key={service.id}
                     onClick={() => handleServiceSelection(service.id)}
-                    className={`relative border-2 rounded-xl p-6 cursor-pointer transition-all hover:border-gray-400 ${
+                    aria-pressed={selectedServices.includes(service.id)}
+                    className={`flex w-full items-start justify-between gap-3 p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                       selectedServices.includes(service.id) 
-                        ? 'border-rose-500 bg-rose-50/30' 
-                        : 'border-gray-200 dark:border-gray-800'
+                        ? 'border-rose-500 bg-rose-50 shadow-sm dark:bg-rose-950/20'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800'
                     }`}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{service.name}</h3>
-                          {service.popular && (
-                            <span className="px-2 py-1 bg-rose-100 text-rose-700 text-xs font-semibold rounded-full">
-                              Popular
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-gray-600 dark:text-white text-sm mb-3">{service.description}</p>
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {service.includes.map((item, idx) => (
-                            <span key={idx} className="text-xs text-gray-500 dark:text-white flex items-center gap-1">
-                              <FaCheck className="text-green-500" /> {item}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-white">
-                          <span className="flex items-center gap-1">
-                            <FaClock /> {service.duration}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right ml-4">
-                        <div className="text-xl font-semibold text-gray-900 dark:text-white">R{service.price}</div>
-                        <div className="text-sm text-gray-500 dark:text-white">per vehicle</div>
-                      </div>
-                    </div>
-                    
-                    {/* Selection Indicator */}
-                    <div className={`absolute top-4 right-4 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedServices.includes(service.id) 
-                        ? 'border-rose-500 bg-rose-500' 
-                        : 'border-gray-300 dark:border-gray-700'
-                    }`}>
-                      {selectedServices.includes(service.id) && <FaCheck className="text-white text-xs" />}
-                    </div>
-                  </div>
+                    <span className={`mt-1 shrink-0 text-xl ${selectedServices.includes(service.id) ? 'text-rose-500' : 'text-slate-400'}`} aria-hidden="true">🚗</span>
+                    <span className="min-w-0 flex-1">
+                      <span className={`block font-semibold ${selectedServices.includes(service.id) ? 'text-rose-700 dark:text-rose-300' : 'text-gray-900 dark:text-white'}`}>{service.name}</span>
+                      {service.description && <span className="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">{service.description}</span>}
+                      {service.duration && <span className="mt-2 block text-xs text-gray-500 dark:text-gray-400">{service.duration}</span>}
+                    </span>
+                    <span className={`shrink-0 font-semibold ${selectedServices.includes(service.id) ? 'text-rose-600' : 'text-gray-700 dark:text-gray-200'}`}>{Number(service.price) > 0 ? `R${service.price}` : 'Ask for price'}</span>
+                    {selectedServices.includes(service.id) && (
+                      <span className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500">
+                        <FaCheck className="text-white text-xs" />
+                      </span>
+                    )}
+                  </button>
                 ))}
+                {activeServices.length === 0 && <p className="rounded-xl border border-gray-200 p-5 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">Service options have not been added yet. Message the provider for details.</p>}
               </div>
               
               {selectedServices.length > 0 && (
                 <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600 dark:text-white font-medium">Vehicle type adjustment</span>
+                    <span className="text-gray-600 dark:text-white font-medium">Vehicle type</span>
                     <select 
                       name="vehicleType"
                       value={bookingData.vehicleType}
@@ -774,232 +699,49 @@ export default function CarWashPage() {
             </div>
 
             {/* Reviews Section */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-6">
-                <FaStar className="text-rose-500 fill-rose-500 text-xl" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {carWash.rating || '4.9'} · {carWash.reviewCount || '12'} reviews
-                </h2>
+                <FaStar className="text-amber-400 text-xl" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{hasReviews ? `${ratingLabel} · ${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}` : 'New · 0 reviews'}</h2>
               </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Cleanliness</span>
-                    <span className="font-semibold">4.9</span>
-                  </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-rose-500 rounded-full w-[98%]" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Communication</span>
-                    <span className="font-semibold">5.0</span>
-                  </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-rose-500 rounded-full w-full" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Value</span>
-                    <span className="font-semibold">4.8</span>
-                  </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-rose-500 rounded-full w-[96%]" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Service Quality</span>
-                    <span className="font-semibold">4.9</span>
-                  </div>
-                  <div className="h-1 bg-gray-200 rounded-full">
-                    <div className="h-1 bg-rose-500 rounded-full w-[98%]" />
-                  </div>
-                </div>
-              </div>
-
-              <HelperComments 
-                helperId={carWash._id} 
-                onCommentCountChange={setCommentCount}
-                limit={2}
+              <Comment
+                serviceId={carWash._id}
+                onTotalComments={setCommentCount}
+                maxComments={2}
               />
               
-              <button 
+              {commentCount > 2 && <button
                 onClick={() => setShowCommentsPanel(true)}
-                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
               >
                 Show all {commentCount} reviews
-              </button>
-            </div>
-
-            {/* Qualifications */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">My qualifications</h2>
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
-                    <FaBriefcase className="text-gray-700 dark:text-white text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{carWash.host || '5'} years of experience</h3>
-                    <p className="text-gray-600 dark:text-white text-sm mt-1">Professional car detailing and washing services with premium products.</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
-                    <FaCertificate className="text-gray-700 dark:text-white text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Certified Detailer</h3>
-                    <p className="text-gray-600 dark:text-white text-sm mt-1">Trained in ceramic coating, paint correction, and interior restoration.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Location / Service Area */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">I'll come to you</h2>
-              <p className="text-gray-600 dark:text-white mb-4">
-                I travel to guests in the {carWash.address || 'surrounding area'}. To book in a different location, you can message me.
-              </p>
-              <div className="h-64 bg-gray-200 rounded-xl overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-                  <div className="text-center">
-                    <FaMapPin className="text-4xl text-rose-500 mx-auto mb-2" />
-                    <p className="text-gray-600 dark:text-white">Service Area Map</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Things to Know */}
-            <div className="py-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Things to know</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Service requirements</h3>
-                  <ul className="space-y-2 text-gray-600 dark:text-white text-sm">
-                    <li>Access to water source</li>
-                    <li>Safe parking space</li>
-                    <li>All vehicle types welcome</li>
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Cancellation policy</h3>
-                  <p className="text-gray-600 dark:text-white text-sm">
-                    Cancel at least 24 hours before the start time for a full refund.
-                  </p>
-                  <button className="text-gray-900 dark:text-white font-semibold underline text-sm mt-2">Learn more</button>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Safety & quality</h3>
-                  <p className="text-gray-600 dark:text-white text-sm">
-                    All professionals are vetted for quality and safety standards.
-                  </p>
-                </div>
-              </div>
+              </button>}
             </div>
 
           </div>
 
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <div className="border border-gray-300 dark:border-gray-700 rounded-xl shadow-lg p-6 bg-white dark:bg-gray-900">
-                <div className="flex items-end justify-between mb-6">
-                  <div>
-                    <span className="text-2xl font-bold text-gray-900 dark:text-white">R{carWash.regularPrice}</span>
-                    <span className="text-gray-600 dark:text-white"> / service</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-sm">
-                    <FaStar className="text-rose-500 fill-rose-500" />
-                    <span className="font-semibold">{carWash.rating || '4.9'}</span>
-                  </div>
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-gray-800 dark:bg-gray-900 sticky top-24">
+                <p className="text-sm font-medium text-slate-500">Services from</p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">{startingPrice ? `R${startingPrice}` : 'Ask for price'}</span>
+                  {startingPrice && <span className="text-sm text-slate-500">per vehicle</span>}
                 </div>
-
-                {/* Quick Booking Form */}
-                <div className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
-                  <div className="p-3 border-b border-gray-300 dark:border-gray-700">
-                    <label className="block text-xs font-bold text-gray-900 dark:text-white uppercase mb-1">Date</label>
-                    <input 
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      className="w-full text-sm text-gray-700 dark:text-white outline-none"
-                      min={new Date().toISOString().split('T')[0]}
-                    />
-                  </div>
-                  <div className="p-3 border-b border-gray-300 dark:border-gray-700">
-                    <BookingTimeSlots
-                      selectedDate={bookingData.date}
-                      selectedTime={bookingData.time}
-                      onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
-                      isTimeSlotBooked={isTimeSlotBooked}
-                      isDateFullyBooked={isDateFullyBooked}
-                    />
-                  </div>
-                  <div className="p-3">
-                    <label className="block text-xs font-bold text-gray-900 dark:text-white uppercase mb-1">Your Name</label>
-                    <input 
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      placeholder="Full name"
-                      className="w-full text-sm text-gray-700 dark:text-white outline-none"
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  onClick={openBookingFormOverlay}
-                  className="w-full py-3.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors mb-4"
-                >
-                  Check availability
+                <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Choose a wash or detailing service to see your estimate.</p>
+                {selectedServices.length > 0 && <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:bg-gray-800 dark:text-slate-200">{selectedServices.length} service{selectedServices.length === 1 ? '' : 's'} selected · R{totalPrice} estimated</p>}
+                <button onClick={openBookingFormOverlay} className="mt-6 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
+                  Review &amp; reserve
                 </button>
-
-                <div className="text-center text-gray-500 dark:text-white text-sm mb-4">
-                  You won't be charged yet
-                </div>
-
-                {totalPrice > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex justify-between text-gray-600 dark:text-white">
-                      <span className="underline">Service estimate</span>
-                      <span>R{totalPrice}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-gray-900 dark:text-white text-lg pt-3 border-t border-gray-200 dark:border-gray-800">
-                      <span>Total</span>
-                      <span>R{totalPrice}</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                  <FaCheckCircle className="text-rose-500 mt-0.5" />
-                  <p className="text-sm text-gray-600 dark:text-white">
-                    <span className="font-semibold text-gray-900 dark:text-white">High demand:</span> This service is usually booked within 3 hours.
-                  </p>
-                </div>
-              </div>
-
-              {/* Report Link */}
-              <div className="mt-6 text-center">
-                <button className="flex items-center justify-center gap-2 text-gray-500 dark:text-white hover:text-gray-700 dark:hover:text-white text-sm mx-auto">
-                  <FaFlag className="text-xs" />
-                  Report this listing
+                <button onClick={handleMessageProvider} className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800">
+                  Message {carWash.userRef?.username || 'provider'}
                 </button>
-              </div>
+                <p className="mt-4 text-center text-xs text-slate-500">Confirm service and appointment details before booking.</p>
             </div>
           </div>
 
         </div>
-      </div>
+      </main>
 
       {/* Full Screen Image Modal */}
       {showImageModal && (
@@ -1084,24 +826,27 @@ export default function CarWashPage() {
 
       {/* Comments Side Panel */}
       {showCommentsPanel && (
-        <CommentsSidePanelHelper
-          helperId={carWash._id}
+        <CommentsSidePanelService
+          serviceId={carWash._id}
           onClose={() => setShowCommentsPanel(false)}
         />
       )}
 
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40 safe-area-bottom mobile-booking-bar">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">R{totalPrice || carWash.regularPrice}</span>
-            <span className="text-gray-600 dark:text-white text-sm"> / service</span>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0 flex-1 mr-2">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{totalPrice > 0 ? `R${totalPrice}` : startingPrice ? `R${startingPrice}` : 'Ask for price'}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">{selectedServices.length > 0 ? 'Estimated total' : 'Starting at'}</span>
+            </div>
+            <div className="truncate text-[10px] font-bold uppercase tracking-widest text-rose-600">{carWash.name}</div>
           </div>
           <button 
             onClick={openBookingFormOverlay}
-            className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg transition-colors"
+            className="shrink-0 rounded-2xl bg-slate-950 px-6 py-4 text-[11px] font-black uppercase tracking-[0.16em] text-white transition hover:bg-black active:scale-95"
           >
-            Book Now
+            Review & Reserve
           </button>
         </div>
       </div>

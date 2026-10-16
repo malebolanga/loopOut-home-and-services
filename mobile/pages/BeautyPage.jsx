@@ -86,12 +86,9 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
-import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
-import HelperItem from '../components/HelperItem';
-import BookingHistory from '../components/BookingHistory';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
 
@@ -107,6 +104,7 @@ export default function BeautyPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isDisliked, setIsDisliked] = useState(false);
@@ -118,14 +116,12 @@ export default function BeautyPage() {
   const [totalPrice, setTotalPrice] = useState(0);
   const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
   const [topComments, setTopComments] = useState([]);
-  const [similarHelpers, setSimilarHelpers] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
   const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 
   useEffect(() => {
     if (helper) {
-      fetchSimilarHelpers();
       fetchBookingSummary();
       saveToHistory(helper);
     }
@@ -140,17 +136,6 @@ export default function BeautyPage() {
       }
     } catch (error) {
       console.error('Error fetching booking summary:', error);
-    }
-  };
-
-  const fetchSimilarHelpers = async () => {
-    try {
-      const res = await fetch(`/api/helper/similar/${helper._id}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setSimilarHelpers(data);
-    } catch (error) {
-      console.error('Error fetching similar helpers:', error);
     }
   };
 
@@ -321,16 +306,24 @@ export default function BeautyPage() {
     }
   };
 
+  const getServiceDisplayName = (name) => {
+    const normalizedName = String(name || '').trim().replace(/\s+/g, ' ');
+    if (/^rlay \(rubber base\) exit gel overlay \(rubber base\)$/i.test(normalizedName)) {
+      return 'Rubber Base Gel Overlay';
+    }
+    return normalizedName;
+  };
+
   // Prioritize dynamic serviceList from database, fallback to hardcoded options
   const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
         id: s.name, 
-        name: s.name, 
+        name: getServiceDisplayName(s.name), 
         type: s.type,
         description: s.description,
         price: s.price,
         image: s.image,
-        icon: <FaCheckCircle className="text-rose-500" /> 
+        icon: <FaHandSparkles className="text-rose-500" /> 
       }))
     : getServiceOptions(helper?.type);
 
@@ -845,6 +838,7 @@ export default function BeautyPage() {
   useEffect(() => {
     const fetchRatings = async () => {
       if (helper && helper._id) {
+        setCommentsLoading(true);
         try {
           const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`);
           const data = await res.json();
@@ -861,6 +855,8 @@ export default function BeautyPage() {
           }
         } catch (error) {
           console.error('Error fetching ratings:', error);
+        } finally {
+          setCommentsLoading(false);
         }
       }
     };
@@ -2244,45 +2240,42 @@ export default function BeautyPage() {
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 pb-60 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4">
-            {getProfessionalTitle(helper.type)} services by {helper.name}
+          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">
+            Beauty services by {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+            <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
-              <span className="font-semibold text-slate-900 text-base">
-                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+              <span className="font-semibold">{ratings?.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}</span>
+              <span className="text-slate-500">
+                {commentsLoading ? 'Loading reviews' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
               </span>
-              <span>·</span>
-              <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
-              <MapPinIcon className="text-slate-400 w-4 h-4" />
-              <span>{helper.address || 'Johannesburg, South Africa'}</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
+            {helper.isSuperhelper && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700">
+                <CheckBadgeIcon className="h-4 w-4" /> Superhelper
+              </span>
+            )}
+            {bookingSummary.count > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600">
+                <PlusCircleIcon className="h-4 w-4 text-indigo-500" /> Booked {bookingSummary.count} {bookingSummary.count === 1 ? 'time' : 'times'}
+              </span>
+            )}
+            {helper.address && (
+              <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600">
+                <MapPinIcon className="h-4 w-4 shrink-0 text-slate-400" />
+                <span className="truncate">{helper.address}</span>
+              </span>
+            )}
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+        <div className="mt-8 max-w-5xl space-y-8">
+          <div className="space-y-8">
             {/* Host Info Bar */}
             <div className="pb-6 border-b border-gray-200">
               <Link
@@ -2291,11 +2284,9 @@ export default function BeautyPage() {
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
+                    Hosted by {helper.userRef?.username || helper.name}
                   </h2>
-                  <p className="text-gray-600 mt-1">
-                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
-                  </p>
+                  <p className="text-gray-600 mt-1">View provider profile</p>
                 </div>
                 <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
                   {helper.userRef?.avatar ? (
@@ -2311,38 +2302,11 @@ export default function BeautyPage() {
                 </div>
               </Link>
               
-              {/* Mutual Friends Section */}
-              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
-            </div>
-
-
-            <div className="space-y-6 pb-8 border-b border-slate-100">
-              <div className="flex items-start gap-4">
-                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
-                <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
-                </div>
-              </div>
             </div>
 
             {/* Description */}
             <div className="pb-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About this professional</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">About {helper.name}</h2>
               <div className="text-gray-700 leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, index) => (
                   <p key={index}>{paragraph}</p>
@@ -2391,17 +2355,19 @@ export default function BeautyPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
-                      <div 
+                      <button
                         key={service.id} 
+                        type="button"
                         onClick={() => setSelectedModalService(service)}
-                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        aria-pressed={isSelected}
+                        className={`flex min-h-[10rem] w-full items-start justify-between gap-3 rounded-xl border p-4 text-left transition-all ${
                           isSelected 
-                            ? 'border-rose-500 bg-rose-50 shadow-sm' 
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            ? 'border-rose-300 bg-rose-50/70 shadow-sm' 
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                         }`}
                       >
                         <div className="flex items-start gap-3 min-w-0">
@@ -2440,210 +2406,26 @@ export default function BeautyPage() {
                             <CheckIcon className="text-white w-3 h-3" />
                           </div>
                         )}
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {/* Interactive Beauty & Glam Customizer on Main Page */}
-            <div className="pb-8 border-b border-gray-200">
-              <div className="rounded-3xl border-2 border-pink-200 bg-gradient-to-br from-pink-50/80 via-rose-50/40 to-white p-6 sm:p-8 space-y-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-pink-100 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-pink-500 to-rose-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-pink-200">
-                      💄
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-black text-gray-900 tracking-tight">Customize Your Glam Experience</h3>
-                      <p className="text-xs text-pink-700 font-medium">Select your occasion, glam finish & styles below — prefilled for your WhatsApp booking</p>
-                    </div>
-                  </div>
-                  <span className="self-start sm:self-auto text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full bg-pink-100 text-pink-800 border border-pink-200">
-                    Glam Builder
-                  </span>
-                </div>
-
-                {/* 1. Occasion */}
-                <div>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
-                      ✨ 1. Select Occasion
-                    </label>
-                    {bookingData.beautyOccasion && (
-                      <span className="text-xs font-bold text-pink-600 bg-pink-100/90 px-2.5 py-0.5 rounded-full">
-                        {bookingData.beautyOccasion}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {[
-                      { id: 'Bridal / Wedding', emoji: '👰', label: 'Bridal / Wedding' },
-                      { id: 'Matric Farewell / Dance', emoji: '💃', label: 'Matric Dance' },
-                      { id: 'Birthday Celebration', emoji: '🎂', label: 'Birthday' },
-                      { id: 'Photoshoot / Media', emoji: '📸', label: 'Photoshoot' },
-                      { id: 'Gala / Red Carpet Event', emoji: '🥂', label: 'Gala / Event' },
-                      { id: 'Baby / Bridal Shower', emoji: '💐', label: 'Shower' },
-                      { id: 'Date Night / Night Out', emoji: '🕯️', label: 'Night Out' },
-                      { id: 'Everyday / Casual Glam', emoji: '✨', label: 'Everyday Glam' }
-                    ].map(occ => {
-                      const isSelected = bookingData.beautyOccasion === occ.id;
-                      return (
-                        <button
-                          key={occ.id}
-                          type="button"
-                          onClick={() => setBookingData(prev => ({ ...prev, beautyOccasion: occ.id }))}
-                          className={`flex items-center gap-2 p-3 rounded-2xl text-xs font-bold border-2 transition-all text-left shadow-sm ${
-                            isSelected
-                              ? 'bg-pink-500 border-pink-500 text-white shadow-md shadow-pink-200 scale-[1.02]'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300 hover:bg-pink-50/50'
-                          }`}
-                        >
-                          <span className="text-base">{occ.emoji}</span>
-                          <span className="truncate">{occ.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 2. Look Finish & Style */}
-                <div>
-                  <div className="flex items-center justify-between mb-2.5">
-                    <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
-                      🌟 2. Desired Look Finish & Coverage
-                    </label>
-                    {bookingData.glamFinish && (
-                      <span className="text-xs font-bold text-pink-600 bg-pink-100/90 px-2.5 py-0.5 rounded-full">
-                        {bookingData.glamFinish}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {[
-                      { id: 'Full Matte / Airbrush', icon: '🎨', label: 'Full Matte / Airbrush' },
-                      { id: 'Dewy / Glass Skin Glow', icon: '✨', label: 'Dewy / Glass Skin Glow' },
-                      { id: 'Soft Velvet Natural', icon: '🌸', label: 'Soft Velvet Natural' },
-                      { id: 'Ultra Long-Wear Waterproof', icon: '🛡️', label: 'Long-Wear Waterproof' },
-                      { id: 'Bold Cut-Crease & Glitter', icon: '💎', label: 'Bold Cut-Crease & Glitter' },
-                      { id: 'Clean Girl Minimalist', icon: '🌿', label: 'Clean Girl Minimalist' }
-                    ].map(finish => {
-                      const isSelected = bookingData.glamFinish === finish.id;
-                      return (
-                        <button
-                          key={finish.id}
-                          type="button"
-                          onClick={() => setBookingData(prev => ({ ...prev, glamFinish: finish.id }))}
-                          className={`flex items-center gap-2 p-3 rounded-2xl text-xs font-bold border-2 transition-all text-left shadow-sm ${
-                            isSelected
-                              ? 'bg-purple-600 border-purple-600 text-white shadow-md shadow-purple-200 scale-[1.02]'
-                              : 'bg-white border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50/50'
-                          }`}
-                        >
-                          <span className="text-base">{finish.icon}</span>
-                          <span className="truncate">{finish.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 3. Party Size & Lashes in 2 columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Party Size */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
-                        👥 3. Party Size
-                      </label>
-                      {bookingData.peopleCount && (
-                        <span className="text-[11px] font-bold text-pink-600">
-                          {bookingData.peopleCount}
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: '1 Person (Solo)', label: 'Solo (1)', icon: '👤' },
-                        { id: '2 People (Duo)', label: 'Duo (2)', icon: '👥' },
-                        { id: '3-4 People (Group)', label: 'Group (3-4)', icon: '✨' },
-                        { id: '5+ People (Bridal/Party)', label: 'Party (5+)', icon: '👑' }
-                      ].map(party => {
-                        const isSelected = bookingData.peopleCount === party.id;
-                        return (
-                          <button
-                            key={party.id}
-                            type="button"
-                            onClick={() => setBookingData(prev => ({ ...prev, peopleCount: party.id }))}
-                            className={`flex items-center gap-1.5 p-2.5 rounded-xl text-xs font-bold border-2 transition-all justify-center ${
-                              isSelected
-                                ? 'bg-pink-600 border-pink-600 text-white shadow-md shadow-pink-200'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
-                            }`}
-                          >
-                            <span>{party.icon}</span>
-                            <span className="truncate">{party.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Lashes Preference */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-xs font-black text-gray-900 uppercase tracking-wider">
-                        👁️ 4. Lashes Preference
-                      </label>
-                      {bookingData.lashPreference && (
-                        <span className="text-[11px] font-bold text-pink-600 truncate max-w-[120px]">
-                          {bookingData.lashPreference}
-                        </span>
-                      )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { id: 'Dramatic 3D/Mink Lashes', label: 'Dramatic 3D' },
-                        { id: 'Soft Wispy / Cluster Lashes', label: 'Soft Wispy' },
-                        { id: 'Natural Strip Lashes', label: 'Natural Strip' },
-                        { id: 'No Lashes (Mascara Only)', label: 'No Lashes' }
-                      ].map(lash => {
-                        const isSelected = bookingData.lashPreference === lash.id;
-                        return (
-                          <button
-                            key={lash.id}
-                            type="button"
-                            onClick={() => setBookingData(prev => ({ ...prev, lashPreference: lash.id }))}
-                            className={`p-2.5 rounded-xl text-xs font-bold border-2 transition-all text-center truncate ${
-                              isSelected
-                                ? 'bg-rose-600 border-rose-600 text-white shadow-md shadow-rose-200'
-                                : 'bg-white border-gray-200 text-gray-700 hover:border-pink-300'
-                            }`}
-                          >
-                            {lash.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direct WhatsApp Booking Button */}
-                <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 bg-pink-100/60 p-4 rounded-2xl border border-pink-200">
-                  <div>
-                    <p className="text-xs font-black text-gray-900">Ready to secure your booking?</p>
-                    <p className="text-[11px] text-pink-800">All selections above will be formatted into your WhatsApp reservation message.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={openBookingFormOverlay}
-                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 whitespace-nowrap"
-                  >
-                    Proceed to WhatsApp Booking →
-                  </button>
-                </div>
+            {/* Booking entry point */}
+            <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800 dark:bg-gray-900/60">
+              <div>
+                <h3 className="text-base font-semibold text-slate-900 dark:text-white">Ready to book?</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-gray-400">Choose a service and add your appointment details in the booking form.</p>
               </div>
+              <button
+                type="button"
+                onClick={openBookingFormOverlay}
+                className="inline-flex shrink-0 items-center justify-center rounded-xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 dark:bg-rose-600 dark:hover:bg-rose-500"
+              >
+                Review &amp; Reserve
+              </button>
             </div>
 
             {/* Reviews Summary */}
@@ -2651,11 +2433,13 @@ export default function BeautyPage() {
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
                 </h2>
               </div>
 
-              {commentCount > 0 ? (
+              {commentsLoading ? (
+                <p className="mb-6 text-gray-500">Loading customer reviews…</p>
+              ) : commentCount > 0 ? (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
                     {/* Cleanliness */}
@@ -2753,12 +2537,14 @@ export default function BeautyPage() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
+              {!commentsLoading && commentCount > 0 && (
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                >
+                  Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
+                </button>
+              )}
             </div>
 
             {/* Location */}
@@ -2771,212 +2557,12 @@ export default function BeautyPage() {
                   title={`${helper.name}'s Location`}
                 />
               </div>
-              {helper.near && (
-                <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
-                  <div className="text-gray-700 text-xs lg:text-sm space-y-1">
-                    {(helper.near || '').split('\n').slice(0, 4).map((item, i) => (
-                      <p key={i}>{item}</p>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
           </div>
 
-          {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <div className="top-24 py-12">
-              {/* Masterpiece Booking Card */}
-              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
-                <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-gray-950 dark:text-white tracking-tighter">R{helper.regularPrice}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/ service</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
-                    <StarIconSolid className="w-4 h-4 text-rose-500" />
-                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
-                  </div>
-                </div>
-
-                {/* Quick Booking Options */}
-                <div className="space-y-4 mb-8">
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                    />
-                  </div>
-
-                  {bookingData.date && (
-                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
-                      <BookingTimeSlots
-                        selectedDate={bookingData.date}
-                        selectedTime={bookingData.time}
-                        onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
-                        isTimeSlotBooked={isTimeSlotBooked}
-                        isDateFullyBooked={isDateFullyBooked}
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      placeholder="Your Full Name"
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
-                    />
-                  </div>
-
-                  {/* Beauty Occasion Dropdown */}
-                  <div className="p-4 bg-pink-50/60 rounded-2xl border border-pink-100 hover:border-pink-300 transition-all">
-                    <label className="block text-[9px] font-black text-pink-900 uppercase tracking-widest mb-1.5">✨ Occasion</label>
-                    <select
-                      name="beautyOccasion"
-                      value={bookingData.beautyOccasion || ''}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, beautyOccasion: e.target.value }))}
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer"
-                    >
-                      <option value="">Select Occasion...</option>
-                      <option value="Bridal / Wedding">👰 Bridal / Wedding</option>
-                      <option value="Matric Farewell / Dance">💃 Matric Dance</option>
-                      <option value="Birthday Celebration">🎂 Birthday</option>
-                      <option value="Photoshoot / Media">📸 Photoshoot / Media</option>
-                      <option value="Gala / Red Carpet Event">🥂 Gala / Red Carpet</option>
-                      <option value="Baby / Bridal Shower">💐 Baby / Bridal Shower</option>
-                      <option value="Date Night / Night Out">🕯️ Date Night / Night Out</option>
-                      <option value="Everyday / Casual Glam">✨ Everyday Glam</option>
-                    </select>
-                  </div>
-
-                  {/* Glam Finish & Look */}
-                  <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-100 hover:border-purple-300 transition-all">
-                    <label className="block text-[9px] font-black text-purple-900 uppercase tracking-widest mb-1.5">🌟 Glam Finish & Style</label>
-                    <select
-                      name="glamFinish"
-                      value={bookingData.glamFinish || ''}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, glamFinish: e.target.value }))}
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none cursor-pointer"
-                    >
-                      <option value="">Select Glam Finish...</option>
-                      <option value="Full Matte / Airbrush">🎨 Full Matte / Airbrush</option>
-                      <option value="Dewy / Glass Skin Glow">✨ Dewy / Glass Skin Glow</option>
-                      <option value="Soft Velvet Natural">🌸 Soft Velvet Natural</option>
-                      <option value="Ultra Long-Wear Waterproof">🛡️ Long-Wear Waterproof</option>
-                      <option value="Bold Cut-Crease & Glitter">💎 Bold Cut-Crease & Glitter</option>
-                      <option value="Clean Girl Minimalist">🌿 Clean Girl Minimalist</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <button
-                    onClick={openBookingFormOverlay}
-                    className="w-full py-5 bg-gray-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
-                  >
-                    Check Availability
-                  </button>
-
-                  <button
-                    onClick={handleInternalMessage}
-                    className="w-full py-4 bg-white border border-slate-100 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Secure Message
-                  </button>
-                </div>
-
-                <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
-                   loopOut Promise: Zero Upfront Charge
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-gray-50">
-                  {bookingData.selectedServices.length > 0 ? (
-                    bookingData.selectedServices.map(id => {
-                      const s = serviceOptions.find(opt => opt.id === id);
-                      return s ? (
-                        <div key={id} className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500">{s.name}</span>
-                          <span className="text-xs font-black text-gray-950 dark:text-white">R{s.price}</span>
-                        </div>
-                      ) : null;
-                    })
-                  ) : (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 italic">Base Deployment</span>
-                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.regularPrice}</span>
-                    </div>
-                  )}
-                  {helper.travelFee > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 italic">Deployment Fee</span>
-                      <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.travelFee}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
-                    <span className="text-xs font-black text-gray-950 dark:text-white">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
-                  </div>
-                  <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
-                    <span className="text-lg font-black text-rose-500 italic tracking-tighter">R{totalPrice}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 text-center py-14">
-                <button className="text-gray-400 text-[10px] font-black uppercase tracking-widest underline underline-offset-8 hover:text-rose-500 transition-colors flex items-center justify-center gap-2 mx-auto">
-                  <FlagIcon className="w-4 h-4" />
-                  Report this listing
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Mutual Connections Section */}
-        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-            <UserGroupIcon className="text-rose-500 w-6 h-6" />
-            Mutual Connections
-          </h2>
-          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-200/60 dark:border-gray-800 shadow-sm">
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
-          </div>
-
-        {/* Recent Bookers Section */}
-        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
-        </div>
-
-
-
-        {/* Similar Helpers */}
-          {similarHelpers.length > 0 && (
-            <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-                <MapPinIcon className="text-rose-500 w-6 h-6" />
-                Other professionals in the matrix
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {similarHelpers.map((item) => (
-                  <HelperItem key={item._id} helper={item} />
-                ))}
-              </div>
-            </div>
-          )}
       </main>
 
       {/* Full Screen Gallery Overlay */}
@@ -3038,22 +2624,18 @@ export default function BeautyPage() {
       />
 
 {/* Mobile Bottom Bar - 100% Width & Flush to Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom mobile-booking-bar">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 mr-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-slate-900 tracking-tighter">R{totalPrice}</span>
-              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic">Total Est.</span>
-            </div>
-            <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
-              {helper?.name}
-            </div>
+      <div className="mobile-booking-bar safe-area-bottom fixed bottom-0 left-0 right-0 z-[1100] border-t border-slate-200 bg-white/95 p-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-2 sm:px-4">
+          <div className="min-w-0">
+            <div className="text-xs font-medium text-slate-500">Estimated total</div>
+            <div className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">R{totalPrice}</div>
           </div>
           <button
+            type="button"
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="rounded-xl bg-slate-950 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98] dark:bg-rose-600 dark:hover:bg-rose-500"
           >
-            Review & Reserve
+            Review &amp; Reserve
           </button>
         </div>
       </div>

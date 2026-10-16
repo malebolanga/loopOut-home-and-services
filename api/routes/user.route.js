@@ -35,6 +35,7 @@ router.get('/test', test);
 
 // Route to update user (using PUT for RESTful convention)
 router.put('/update/:id', verifyToken, updateUser);
+router.post('/update/:id', verifyToken, updateUser);
 
 // Route to delete user
 router.delete('/delete/:id', verifyToken, deleteUser);

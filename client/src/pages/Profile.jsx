@@ -347,7 +347,7 @@ export default function Profile() {
   useEffect(() => {
     if (currentUser) {
       if (canCreateFor(currentUser, 'property')) handleShowListings();
-      if (['services', 'property', 'goods'].includes(currentUser.offeringType)) fetchUserEvents();
+      if (['property', 'goods'].includes(currentUser.offeringType)) fetchUserEvents();
       fetchPostCount();
     }
   }, [currentUser?._id]);
@@ -1764,7 +1764,13 @@ export default function Profile() {
                       { label: 'Event', hint: 'Experience, activity or occasion', icon: CalendarIcon, tab: 'events', color: 'text-amber-600 bg-amber-100 dark:bg-amber-950/50' },
                       { label: 'Service', hint: 'Professional or home service', icon: FaTools, tab: 'experiences', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/50' },
                       { label: 'Goods', hint: 'Products for sale', icon: FaGift, tab: 'selling', color: 'text-pink-600 bg-pink-100 dark:bg-pink-950/50' },
-                    ].filter(({ tab }) => !currentUser?.offeringType || (tab === 'stays' ? currentUser.offeringType === 'property' : tab === 'selling' ? currentUser.offeringType === 'goods' : tab === 'events' ? ['services', 'property', 'goods'].includes(currentUser.offeringType) : currentUser.offeringType === 'services')).map(({ label, hint, icon: Icon, tab, color }) => (
+                    ].filter(({ tab }) => {
+                      if (!currentUser?.offeringType) return true;
+                      if (currentUser.offeringType === 'services') return tab === 'experiences' || tab === 'online';
+                      if (currentUser.offeringType === 'property') return tab === 'stays' || tab === 'events';
+                      if (currentUser.offeringType === 'goods') return tab === 'selling' || tab === 'events';
+                      return false;
+                    }).map(({ label, hint, icon: Icon, tab, color }) => (
                       <button
                         key={label}
                         onClick={() => navigate(`/${currentUser?._id}/create-listing?tab=${tab}`)}
@@ -1843,6 +1849,15 @@ export default function Profile() {
                       <PlusIcon className="w-[18px] h-[18px]" />
                       Create your first listing
                     </Link>}
+                    {currentUser?.offeringType === 'services' && (
+                      <Link
+                        to={`/${currentUser?._id}/listings`}
+                        className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                      >
+                        <PlusIcon className="w-[18px] h-[18px]" />
+                        Manage your services & helpers
+                      </Link>
+                    )}
                   </div>
                 )}
               </SectionCard>
@@ -1912,10 +1927,6 @@ export default function Profile() {
                     <CalendarIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
                     <h4 className="text-lg font-semibold text-[#484848] dark:text-white mb-2">No events yet</h4>
                     <p className="text-[#767676] dark:text-white mb-6">Create events to connect with your community</p>
-                    {currentUser?.offeringType === 'services' && <button onClick={() => navigate(`/${currentUser?._id}/create-listing?tab=events`)} className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
-                      <PlusIcon className="w-[18px] h-[18px]" />
-                      Create event
-                    </button>}
                   </div>
                 )}
               </SectionCard>

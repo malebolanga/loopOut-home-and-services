@@ -42,6 +42,9 @@ import {
   PlusIcon,
   MinusIcon,
   QuestionMarkCircleIcon,
+  IdentificationIcon,
+  ShieldExclamationIcon,
+  CheckBadgeIcon,
 } from "@heroicons/react/24/outline";
 import { Sparkles, Users } from 'lucide-react';
 import Header from '../components/Header';
@@ -49,7 +52,9 @@ import Footer from '../components/Footer';
 import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { updateUserSuccess } from "../redux/user/userSlice";
+import { getServiceProviderVerificationStatus } from "../utils/offeringPermissions";
 
 const CustomHeartIcon = () => (
   <svg 
@@ -480,8 +485,14 @@ const StepProgress = ({ currentStep, category, type }) => {
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Verification state for service providers / helpers
+  const [verificationStatus, setVerificationStatus] = useState(() => getServiceProviderVerificationStatus(currentUser));
+  const [checkingVerification, setCheckingVerification] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   
   // Scroll state
   const [isScrolled, setIsScrolled] = useState(false);
@@ -750,10 +761,69 @@ export default function CreateListing() {
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
-      setSelectedCategory(tabFromUrl);
-      setCurrentStep(2);
+      if (currentUser?.offeringType === 'services') {
+        if (tabFromUrl === 'experiences' || tabFromUrl === 'service' || tabFromUrl === 'services') {
+          setSelectedCategory('experiences');
+          setCurrentStep(2);
+        } else if (tabFromUrl === 'online' || tabFromUrl === 'helper' || tabFromUrl === 'helpers') {
+          setSelectedCategory('online');
+          setCurrentStep(2);
+        } else {
+          // Service providers can only post services and helpers; disallow properties/goods/events
+          setSelectedCategory('');
+          setCurrentStep(1);
+        }
+      } else {
+        setSelectedCategory(tabFromUrl);
+        setCurrentStep(2);
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, currentUser?.offeringType]);
+
+  // Live verification compliance check for service providers and helpers
+  useEffect(() => {
+    if (currentUser?._id && currentUser?.offeringType === 'services') {
+      const fetchVerificationStatus = async () => {
+        try {
+          setCheckingVerification(true);
+          const res = await fetch('/api/verification/status', {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('access_token') || currentUser.token || ''}`
+            },
+            credentials: 'include'
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const status = {
+              isCompliant: data.isCompliant,
+              hasIdDocument: data.hasIdDocument,
+              hasFaceScan: data.hasFaceScan,
+              hasProfilePicture: data.hasProfilePicture,
+              missing: data.missing || [],
+              missingCount: (data.missing || []).length
+            };
+            setVerificationStatus(status);
+            if (data.idDocumentUrl || data.liveSelfieUrl || data.avatar) {
+              dispatch(updateUserSuccess({
+                ...currentUser,
+                idDocumentUrl: data.idDocumentUrl || currentUser.idDocumentUrl,
+                liveSelfieUrl: data.liveSelfieUrl || currentUser.liveSelfieUrl,
+                avatar: data.avatar || currentUser.avatar,
+                kycStatus: data.kycStatus || currentUser.kycStatus,
+                isVerified: data.isVerified !== undefined ? data.isVerified : currentUser.isVerified
+              }));
+            }
+          }
+        } catch (err) {
+          console.warn("Could not check verification status:", err);
+        } finally {
+          setCheckingVerification(false);
+        }
+      };
+      fetchVerificationStatus();
+    }
+  }, [currentUser?._id, currentUser?.offeringType]);
 
   // Check post limit
   useEffect(() => {
@@ -896,6 +966,14 @@ export default function CreateListing() {
     if (currentStep === 1 && !selectedCategory) {
       setError("Please select a category");
       return;
+    }
+
+    if (currentStep === 1 && (currentUser?.offeringType === 'services' || selectedCategory === 'experiences' || selectedCategory === 'online')) {
+      if (!verificationStatus.isCompliant) {
+        setShowVerificationModal(true);
+        setError(`Identity verification required: As a service provider or helper, you must submit your ${verificationStatus.missing.join(', ')} before continuing.`);
+        return;
+      }
     }
     
     if (currentStep === 2 && !selectedType) {
@@ -1445,6 +1523,17 @@ export default function CreateListing() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (currentUser?.offeringType === 'services' && selectedCategory !== 'experiences' && selectedCategory !== 'online') {
+      return setError("As a service provider, you can only create Services or Helper listings.");
+    }
+
+    if (currentUser?.offeringType === 'services' || selectedCategory === 'experiences' || selectedCategory === 'online') {
+      if (!verificationStatus.isCompliant) {
+        setShowVerificationModal(true);
+        return setError(`Identity verification required: As a service provider or helper, you must submit your ${verificationStatus.missing.join(', ')} before publishing.`);
+      }
+    }
+
     if (listingForm.imageUrls.length < 1) {
       return setError("You must upload at least one image");
     }
@@ -1978,6 +2067,121 @@ export default function CreateListing() {
             {currentStep === 1 && (
               <SectionCard title="Choose your listing path" subtitle="Select one option to start. You can review every detail before publishing.">
                 <div className="space-y-5">
+                  {/* Service Provider Verification Alert Banner */}
+                  {(currentUser?.offeringType === 'services' || selectedCategory === 'experiences' || selectedCategory === 'online') && !verificationStatus.isCompliant && (
+                    <div className="rounded-[1.75rem] border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50/50 to-white p-5 sm:p-6 shadow-sm dark:border-amber-700/60 dark:from-amber-950/40 dark:via-gray-900 dark:to-gray-900">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-200/60 dark:border-amber-800/40">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+                            <ShieldExclamationIcon className="w-7 h-7" />
+                          </div>
+                          <div>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 mb-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                              Verification Required to Post
+                            </div>
+                            <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                              Complete your Provider Credentials
+                            </h4>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => navigate('/verification')}
+                          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                        >
+                          <span>Verify Now</span>
+                          <ArrowRightIcon className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                        To protect our community, service providers and helpers must submit their government ID, complete a face scan, and upload a profile picture before publishing listings.
+                      </p>
+
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* 1. ID Document */}
+                        <div className={`p-3.5 rounded-2xl border ${verificationStatus.hasIdDocument ? 'bg-emerald-50/70 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-white dark:bg-gray-800 border-amber-200 dark:border-amber-800/60'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xl">📄</span>
+                            {verificationStatus.hasIdDocument ? (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                            ) : (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
+                            )}
+                          </div>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white">ID or Passport</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Government issued document</p>
+                          {!verificationStatus.hasIdDocument && (
+                            <button
+                              type="button"
+                              onClick={() => navigate('/verification')}
+                              className="mt-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Upload Document</span> →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* 2. Face Scan */}
+                        <div className={`p-3.5 rounded-2xl border ${verificationStatus.hasFaceScan ? 'bg-emerald-50/70 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-white dark:bg-gray-800 border-amber-200 dark:border-amber-800/60'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xl">🤳</span>
+                            {verificationStatus.hasFaceScan ? (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                            ) : (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
+                            )}
+                          </div>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white">Face Scan</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Live camera biometric check</p>
+                          {!verificationStatus.hasFaceScan && (
+                            <button
+                              type="button"
+                              onClick={() => navigate('/verification')}
+                              className="mt-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Scan Face</span> →
+                            </button>
+                          )}
+                        </div>
+
+                        {/* 3. Profile Picture */}
+                        <div className={`p-3.5 rounded-2xl border ${verificationStatus.hasProfilePicture ? 'bg-emerald-50/70 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-white dark:bg-gray-800 border-amber-200 dark:border-amber-800/60'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xl">👤</span>
+                            {verificationStatus.hasProfilePicture ? (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                            ) : (
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
+                            )}
+                          </div>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white">Profile Picture</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Real profile avatar photo</p>
+                          {!verificationStatus.hasProfilePicture && (
+                            <button
+                              type="button"
+                              onClick={() => navigate('/profile')}
+                              className="mt-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Upload Photo</span> →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentUser?.offeringType === 'services' && verificationStatus.isCompliant && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 flex items-center gap-3">
+                      <CheckBadgeIcon className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <div>
+                        <p className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300">Provider Verified</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-400">Your documents, face scan, and profile picture are verified. You are clear to post services and helper listings.</p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {(!currentUser?.offeringType || currentUser.offeringType === 'property') && <button
                       type="button"
@@ -2026,16 +2230,44 @@ export default function CreateListing() {
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a service</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
+
+                    {/* For Service Providers, display Helper as a prominent, matching top-level card */}
+                    {currentUser?.offeringType === 'services' && <button
+                      type="button"
+                      onClick={() => setSelectedCategory('online')}
+                      aria-pressed={selectedCategory === 'online'}
+                      className={`group relative min-h-52 sm:min-h-60 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/25 ${
+                        selectedCategory === 'online'
+                          ? 'border-rose-500 bg-rose-50 text-gray-950 shadow-lg shadow-rose-500/10 dark:bg-rose-950/25 dark:text-white'
+                          : 'border-gray-200 bg-white text-gray-950 shadow-sm hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'online' ? 'bg-rose-500 text-white' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'}`}><UserGroupIcon className="h-6 w-6" /></div>
+                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'online' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {selectedCategory === 'online' && <CheckCircleIcon className="h-4 w-4" />}
+                        </div>
+                      </div>
+                      <div className="mt-7">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Tutors, domestic help, animal care, sneaker cleaning, and personal support.</p>
+                      </div>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
+                    </button>}
                   </div>
 
-                  <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
-                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {(!currentUser?.offeringType || currentUser.offeringType === 'services') && <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />}
-                      {(!currentUser?.offeringType || ['services', 'property', 'goods'].includes(currentUser.offeringType)) && <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />}
-                      {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
+                  {/* Other listing options (hidden for service providers) */}
+                  {currentUser?.offeringType !== 'services' && (
+                    <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
+                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {!currentUser?.offeringType && <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />}
+                        {(!currentUser?.offeringType || currentUser.offeringType === 'property' || currentUser.offeringType === 'goods') && <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />}
+                        {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                 </div>
               </SectionCard>
@@ -4188,6 +4420,128 @@ export default function CreateListing() {
             </motion.div>
         </div>
       )}
+
+      {/* Verification Required Modal for Service Providers & Helpers */}
+      <AnimatePresence>
+        {showVerificationModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 p-6 sm:p-8 shadow-2xl space-y-6"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center text-3xl shadow-sm">
+                  🛡️
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowVerificationModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300 mb-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  Provider Requirement
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+                  Verification Required to Post
+                </h3>
+                <p className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                  As a service provider or helper, you cannot post until your identity documents, face scan, and profile picture are submitted.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${verificationStatus.hasIdDocument ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">📄</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900 dark:text-white">ID Document or Passport</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasIdDocument ? 'Uploaded & verified' : 'Not submitted yet'}</p>
+                    </div>
+                  </div>
+                  {verificationStatus.hasIdDocument ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setShowVerificationModal(false); navigate('/verification'); }}
+                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                    >
+                      Upload
+                    </button>
+                  )}
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${verificationStatus.hasFaceScan ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🤳</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900 dark:text-white">Face Scan / Live Selfie</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasFaceScan ? 'Biometric scan complete' : 'Not scanned yet'}</p>
+                    </div>
+                  </div>
+                  {verificationStatus.hasFaceScan ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setShowVerificationModal(false); navigate('/verification'); }}
+                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                    >
+                      Scan Face
+                    </button>
+                  )}
+                </div>
+
+                <div className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${verificationStatus.hasProfilePicture ? 'bg-emerald-50/60 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">👤</span>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900 dark:text-white">Profile Picture</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasProfilePicture ? 'Custom avatar uploaded' : 'Default photo detected'}</p>
+                    </div>
+                  </div>
+                  {verificationStatus.hasProfilePicture ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setShowVerificationModal(false); navigate('/profile'); }}
+                      className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                    >
+                      Upload
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => { setShowVerificationModal(false); navigate('/verification'); }}
+                  className="w-full py-4 bg-gray-950 hover:bg-black dark:bg-white dark:text-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl transition active:scale-95 cursor-pointer"
+                >
+                  Go to Verification Suite
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowVerificationModal(false)}
+                  className="w-full py-2.5 text-xs font-bold text-gray-500 hover:text-gray-800 dark:hover:text-white transition cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

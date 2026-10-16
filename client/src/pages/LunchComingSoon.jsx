@@ -847,7 +847,11 @@ export default function LunchComingSoon() {
       if (canCreateFor(currentUser, 'food')) {
         setShowAddShopModal(true);
       } else {
-        navigate(currentUser ? '/food' : '/sign-in?redirect=' + encodeURIComponent(location.pathname + location.search), { replace: true });
+        navigate('/food', { replace: true });
+        setNotice({
+          type: 'error',
+          message: 'Only accounts registered as a food shop owner on sign-up can register a shop. You can browse menus and order food.'
+        });
       }
     }
   }, [location.pathname, location.search, currentUser, navigate]);
@@ -1241,7 +1245,14 @@ export default function LunchComingSoon() {
   const handleCreateShopSubmit = async (e) => {
     e.preventDefault();
     if (!newShopForm.name) return;
-    if (!currentUser) { navigate('/sign-in'); return; }
+    if (!canCreateFor(currentUser, 'food')) {
+      setShowAddShopModal(false);
+      setNotice({
+        type: 'error',
+        message: 'Only accounts registered as a food shop owner on sign-up can register a shop. You can browse and order food.'
+      });
+      return;
+    }
     try {
       const newShopId = await createShop({
         ...newShopForm,
@@ -1447,16 +1458,15 @@ export default function LunchComingSoon() {
               <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Browse menus · Order food · Track orders</p>
             </div>
           </div>
-          {canCreateFor(currentUser, 'food') && <button
-            type="button"
-            onClick={() => {
-              if (currentUser) setShowAddShopModal(true);
-              else navigate('/sign-in?redirect=' + encodeURIComponent(location.pathname));
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
-          >
-            <PlusCircle className="h-3.5 w-3.5" /> Register Shop
-          </button>}
+          {canCreateFor(currentUser, 'food') && (
+            <button
+              type="button"
+              onClick={() => setShowAddShopModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+            >
+              <PlusCircle className="h-3.5 w-3.5" /> Register Shop
+            </button>
+          )}
         </div>
 
         {/* ── NOTICE BANNER ── */}
@@ -1572,14 +1582,20 @@ export default function LunchComingSoon() {
               <div className="text-center py-16">
                 <div className="text-5xl mb-3">🍽️</div>
                 <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300">No food shops yet</h3>
-                <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">Be the first to register your food business and start receiving orders.</p>
-                {canCreateFor(currentUser, 'food') && <button
-                  type="button"
-                  onClick={() => currentUser ? setShowAddShopModal(true) : navigate('/sign-in')}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow transition"
-                >
-                  <PlusCircle className="h-4 w-4" /> Register Your Shop
-                </button>}
+                <p className="text-sm text-gray-400 mt-1 max-w-xs mx-auto">
+                  {canCreateFor(currentUser, 'food')
+                    ? 'Be the first to register your food business and start receiving orders.'
+                    : 'Check back soon for delicious meals from local food shops.'}
+                </p>
+                {canCreateFor(currentUser, 'food') && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddShopModal(true)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow transition"
+                  >
+                    <PlusCircle className="h-4 w-4" /> Register Your Shop
+                  </button>
+                )}
               </div>
             )}
 
@@ -2741,7 +2757,7 @@ export default function LunchComingSoon() {
         )}
 
         {/* ADD SHOP MODAL */}
-        {showAddShopModal && (
+        {showAddShopModal && canCreateFor(currentUser, 'food') && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 bg-black/60 backdrop-blur-sm" onClick={() => setShowAddShopModal(false)}>
             <motion.div
               initial={{ opacity: 0, y: 50 }}

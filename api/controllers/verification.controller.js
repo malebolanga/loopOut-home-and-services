@@ -85,3 +85,41 @@ export const submitKyc = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getVerificationStatus = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('offeringType idDocumentUrl liveSelfieUrl faceData avatar isVerified kycStatus');
+    if (!user) return next(errorHandler(404, 'User not found'));
+
+    const hasIdDocument = Boolean(user.idDocumentUrl && user.idDocumentUrl.trim() !== '');
+    const hasFaceScan = Boolean(
+      (user.liveSelfieUrl && user.liveSelfieUrl.trim() !== '') ||
+      (user.faceData?.imageUrl && user.faceData.imageUrl.trim() !== '')
+    );
+    const isDefaultAvatar = !user.avatar || user.avatar.includes('blank-profile-picture') || user.avatar.trim() === '';
+    const hasProfilePicture = !isDefaultAvatar;
+    const isCompliant = hasIdDocument && hasFaceScan && hasProfilePicture;
+
+    const missing = [];
+    if (!hasIdDocument) missing.push('ID document or passport');
+    if (!hasFaceScan) missing.push('Face scan / live selfie');
+    if (!hasProfilePicture) missing.push('Profile picture');
+
+    res.status(200).json({
+      success: true,
+      isCompliant,
+      hasIdDocument,
+      hasFaceScan,
+      hasProfilePicture,
+      missing,
+      idDocumentUrl: user.idDocumentUrl || '',
+      liveSelfieUrl: user.liveSelfieUrl || '',
+      faceData: user.faceData || null,
+      avatar: user.avatar || '',
+      kycStatus: user.kycStatus || 'unverified',
+      isVerified: user.isVerified || false,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

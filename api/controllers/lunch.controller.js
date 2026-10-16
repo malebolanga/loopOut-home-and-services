@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
 import Shop from '../models/shop.model.js';
+import User from '../models/user.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import TableBooking from '../models/tableBooking.model.js';
 import Notification from '../models/notification.model.js';
@@ -43,6 +44,17 @@ export const getShops = async (req, res, next) => {
 export const createShop = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
+    const currentUid = userId(req);
+    if (!currentUid) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
+
+    const user = await User.findById(currentUid).select('offeringType');
+    if (!user || user.offeringType !== 'food') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only accounts registered as a food shop owner on sign-up can register a shop. Other accounts can only view and order.'
+      });
+    }
+
     const name = cleanText(req.body.name, 80);
     const address = cleanText(req.body.address, 180);
     const phone = cleanText(req.body.phone, 30);

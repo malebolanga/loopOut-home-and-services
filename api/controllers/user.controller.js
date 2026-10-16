@@ -47,6 +47,14 @@ export const updateUser = async (req, res, next) => {
       }
     });
 
+    // Allow account conversion to valid provider roles
+    if (req.body.offeringType !== undefined) {
+      const validRoles = ['viewer', 'services', 'property', 'food', 'goods'];
+      if (validRoles.includes(req.body.offeringType)) {
+        updateData.offeringType = req.body.offeringType;
+      }
+    }
+
     // Auto-populate default contacts for demo when contacts access is enabled and contacts array is empty
     if (req.body.accessContacts === true) {
       const existingUser = await User.findById(req.params.id);
@@ -152,7 +160,11 @@ export const getUserServices = async (req, res, next) => {
 
 export const getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select('-password -__v -otp -otpExpiry -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks');
+    const isSelf = req.user?.id === req.params.id;
+    const projection = isSelf
+      ? '-password -__v -otp -otpExpiry'
+      : '-password -__v -otp -otpExpiry -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks';
+    const user = await User.findById(req.params.id).select(projection);
     if (!user) return next(errorHandler(404, 'User not found!'));
     res.status(200).json(user);
   } catch (error) {

@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import ServiceDetailsModal from '../components/ServiceDetailsModal';
+import HelperBookingSheet from '../components/HelperBookingSheet';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
@@ -86,13 +87,11 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
-import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperItem from '../components/HelperItem';
 import BookingHistory from '../components/BookingHistory';
-import HelperBookingSheet from '../components/HelperBookingSheet';
 
 export default function ChefPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2253,6 +2252,10 @@ export default function ChefPage() {
   }
 
   const description = helper.description || '';
+  const isSuperhelper = Boolean(helper.isSuperhelper || helper.userRef?.isSuperhost);
+  const isVerifiedProvider = Boolean(
+    helper.isVerified || helper.verified || helper.userRef?.isVerified || helper.userRef?.verified
+  );
   const displayText = showFullDescription
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
@@ -2297,7 +2300,7 @@ export default function ChefPage() {
       <div className="w-full">
         {/* Airbnb-style image gallery layout */}
         {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[320px] sm:h-[400px] lg:h-[480px] w-full bg-slate-900 overflow-hidden">
             <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
               <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
@@ -2320,60 +2323,58 @@ export default function ChefPage() {
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 pb-60 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
+          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">
             {getProfessionalTitle(helper.type)} services by {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
+            <div className="flex items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-3.5 py-2">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
-              <span className="font-semibold text-slate-900 text-base">
-                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+              <span className="font-semibold text-slate-900">
+                {commentCount > 0 && ratings?.overall > 0 ? ratings.overall.toFixed(1) : 'New'}
               </span>
-              <span>·</span>
-              <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
+              <span className="text-slate-600">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
+            {isSuperhelper && (
+              <div className="flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3.5 py-2 text-slate-700">
+                <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
+                <span className="font-semibold text-xs">Superhelper</span>
+              </div>
+            )}
+            {Number(bookingSummary.count) > 0 && (
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-slate-700">
+                <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
+                <span className="font-medium text-xs">Booked {bookingSummary.count} times</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-slate-700">
               <MapPinIcon className="text-slate-400 w-4 h-4" />
-              <span>{helper.address || 'Johannesburg, South Africa'}</span>
+              <span className="font-medium text-xs">{helper.address || 'Johannesburg, South Africa'}</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
+        <div className="grid grid-cols-1 gap-12 mt-8">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8">
             {/* Host Info Bar */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
               <Link
                 to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit"
+                className="flex w-full items-center justify-between gap-4 hover:opacity-80 transition-opacity"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                     {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 mt-1">
-                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
+                    {isSuperhelper ? 'Superhelper' : isVerifiedProvider ? 'Verified provider' : 'Provider'}{helper.experience ? ` · ${helper.experience} experience` : ''}
                   </p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0 bg-gray-100 flex items-center justify-center">
                   {helper.userRef?.avatar ? (
                     <img
                       src={helper.userRef.avatar}
@@ -2387,31 +2388,29 @@ export default function ChefPage() {
                 </div>
               </Link>
               
-              {/* Mutual Friends Section */}
-              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
             </div>
 
 
-            <div className="space-y-6 pb-8 border-b border-slate-100">
-              <div className="flex items-start gap-4">
-                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-8 border-b border-slate-100">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                <Sparkles className="w-5 h-5 text-rose-500 mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
+                  <h3 className="font-semibold text-sm text-gray-950">Customer reviews</h3>
+                  <p className="text-gray-600 text-sm leading-5 mt-1">{commentCount > 0 ? `${commentCount} customer review${commentCount === 1 ? '' : 's'} shared for this professional` : 'Reviews will appear here when customers share feedback'}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                <ShieldCheckIcon className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
+                  <h3 className="font-semibold text-sm text-gray-950">Professional profile</h3>
+                  <p className="text-gray-600 text-sm leading-5 mt-1">Review the experience and service details shared by this professional</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                <ClockIcon className="w-5 h-5 text-teal-500 mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
+                  <h3 className="font-semibold text-sm text-gray-950">Scheduling</h3>
+                  <p className="text-gray-600 text-sm leading-5 mt-1">Confirm available dates and hours directly with the professional</p>
                 </div>
               </div>
             </div>
@@ -2467,7 +2466,7 @@ export default function ChefPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {serviceOptions.map((service, index) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
@@ -2528,7 +2527,7 @@ export default function ChefPage() {
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
+                  {commentCount > 0 && ratings?.overall > 0 ? ratings.overall.toFixed(1) : 'New'} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
                 </h2>
               </div>
 
@@ -2650,7 +2649,7 @@ export default function ChefPage() {
               </div>
               {helper.near && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">Additional professional details</h3>
                   <div className="text-gray-700 text-xs lg:text-sm space-y-1">
                     {(helper.near || '').split('\n').slice(0, 4).map((item, i) => (
                       <p key={i}>{item}</p>
@@ -2662,223 +2661,11 @@ export default function ChefPage() {
 
           </div>
 
-          {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <div className="top-24 py-12">
-              {/* Masterpiece Booking Card */}
-              <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
-                <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-black text-gray-950 dark:text-white tracking-tighter">R{helper.regularPrice}</span>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{helper.type === 'chef' || helper.type === 'cooking' ? '/ guest' : '/ service'}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
-                    <StarIconSolid className="w-4 h-4 text-rose-500" />
-                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
-                  </div>
-                </div>
-
-                {/* Quick Booking Options */}
-                <div className="space-y-4 mb-8">
-                  {/* Number of Guests for Chef */}
-                  {(helper.type === 'chef' || helper.type === 'cooking') && (
-                    <div className="p-4 bg-orange-50/60 rounded-2xl border border-orange-100">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-[9px] font-black text-orange-950 uppercase tracking-widest">
-                          👥 Number of Guests
-                        </label>
-                        <span className="text-[11px] font-black text-orange-700 bg-orange-200/60 px-2 py-0.5 rounded-lg">
-                          {bookingData.numberOfGuests || '1'} {parseInt(bookingData.numberOfGuests) === 1 ? 'Guest' : 'Guests'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-5 gap-1.5 mb-2">
-                        {[1, 2, 5, 10, 20].map(n => {
-                          const isSelected = String(bookingData.numberOfGuests || '1') === String(n);
-                          return (
-                            <button
-                              key={n}
-                              type="button"
-                              onClick={() => setBookingData(prev => ({ ...prev, numberOfGuests: String(n) }))}
-                              className={`py-1.5 rounded-xl text-xs font-black border transition-all text-center ${
-                                isSelected
-                                  ? 'bg-orange-500 border-orange-500 text-white shadow-sm scale-105'
-                                  : 'bg-white border-orange-200 text-gray-700 hover:bg-orange-100'
-                              }`}
-                            >
-                              {n}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <input
-                        type="number"
-                        name="numberOfGuests"
-                        value={bookingData.numberOfGuests || ''}
-                        onChange={handleBookingChange}
-                        min="1"
-                        placeholder="Custom guests (e.g. 50)..."
-                        className="w-full bg-white px-3 py-2 rounded-xl text-xs font-bold text-gray-900 border border-orange-200 outline-none"
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
-                    <input
-                      type="date"
-                      name="date"
-                      value={bookingData.date}
-                      onChange={handleBookingChange}
-                      min={new Date().toISOString().split('T')[0]}
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none"
-                    />
-                  </div>
-
-                  {bookingData.date && (
-                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
-                      <BookingTimeSlots
-                        selectedDate={bookingData.date}
-                        selectedTime={bookingData.time}
-                        onSelectTime={(time) => setBookingData(prev => ({ ...prev, time }))}
-                        isTimeSlotBooked={isTimeSlotBooked}
-                        isDateFullyBooked={isDateFullyBooked}
-                      />
-                    </div>
-                  )}
-
-                  <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                    <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Personnel Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={bookingData.name}
-                      onChange={handleBookingChange}
-                      placeholder="Full Designation"
-                      className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-8">
-                  <button
-                    onClick={openBookingFormOverlay}
-                    className="w-full py-5 bg-gray-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
-                  >
-                    Review & Reserve
-                  </button>
-
-                  <button
-                    onClick={handleInternalMessage}
-                    className="w-full py-4 bg-white border border-slate-100 text-gray-950 text-[10px] font-black uppercase tracking-widest rounded-2xl hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm"
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4 text-rose-500" /> Secure Message
-                  </button>
-                </div>
-
-                <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
-                   loopOut Promise: Zero Upfront Charge
-                </div>
-
-                <div className="space-y-4 pt-6 border-t border-gray-50">
-                  {/* Dynamic Pricing Breakdown */}
-                  {(() => {
-                    const isChef = helper.type === 'chef' || helper.type === 'cooking';
-                    const guestCount = isChef ? (parseInt(bookingData.numberOfGuests) || 1) : 1;
-                    let selectedServicesSum = 0;
-                    bookingData.selectedServices.forEach(sId => {
-                      const opt = serviceOptions.find(o => String(o.id) === String(sId));
-                      if (opt && opt.price) selectedServicesSum += parseInt(String(opt.price).replace(/[^\d]/g, '')) || 0;
-                    });
-                    const perGuestRate = selectedServicesSum > 0 
-                      ? selectedServicesSum 
-                      : (parseInt(helper.regularPrice) || 250);
-                    const subtotalBase = isChef ? perGuestRate * guestCount : (selectedServicesSum > 0 ? selectedServicesSum : (parseInt(helper.regularPrice) || 0));
-                    const protocolFee = Math.round(subtotalBase * 0.1);
-
-                    return (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500">
-                            {isChef ? `Rate (R${perGuestRate} × ${guestCount} ${guestCount === 1 ? 'Guest' : 'Guests'})` : 'Base Deployment'}
-                          </span>
-                          <span className="text-xs font-black text-gray-950 dark:text-white">R{subtotalBase}</span>
-                        </div>
-                        {bookingData.selectedServices.length > 0 && (
-                          <div className="space-y-1 pl-2 border-l-2 border-orange-200">
-                            {bookingData.selectedServices.map((id, index) => {
-                              const s = serviceOptions.find(opt => String(opt.id) === String(id));
-                              return s ? (
-                                <div key={`${id}-${index}`} className="flex justify-between items-center text-[11px]">
-                                  <span className="text-gray-500">{s.name}</span>
-                                  <span className="font-bold text-gray-700">{isChef ? `R${s.price} × ${guestCount} = R${s.price * guestCount}` : `R${s.price}`}</span>
-                                </div>
-                              ) : null;
-                            })}
-                          </div>
-                        )}
-                        {helper.travelFee > 0 && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-gray-500 italic">Deployment Fee</span>
-                            <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.travelFee}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
-                          <span className="text-xs font-black text-gray-950 dark:text-white">R{protocolFee}</span>
-                        </div>
-                        <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
-                          <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
-                          <span className="text-lg font-black text-rose-500 italic tracking-tighter">R{totalPrice}</span>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              <div className="mt-4 text-center py-14">
-                <button className="text-gray-400 text-[10px] font-black uppercase tracking-widest underline underline-offset-8 hover:text-rose-500 transition-colors flex items-center justify-center gap-2 mx-auto">
-                  <FlagIcon className="w-4 h-4" />
-                  Report this listing
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-
-        {/* Mutual Connections Section */}
-        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-            <UserGroupIcon className="text-rose-500 w-6 h-6" />
-            Mutual Connections
-          </h2>
-          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-200/60 dark:border-gray-800 shadow-sm">
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
-          </div>
 
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
-        </div>
 
-
-
-        {/* Similar Helpers */}
-          {similarHelpers.length > 0 && (
-            <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
-                <MapPinIcon className="text-rose-500 w-6 h-6" />
-                Other professionals in the matrix
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {similarHelpers.map((item) => (
-                  <HelperItem key={item._id} helper={item} />
-                ))}
-              </div>
-            </div>
-          )}
       </main>
 
       {/* Full Screen Gallery Overlay */}
@@ -2921,7 +2708,6 @@ export default function ChefPage() {
         </div>
       )}
 
-            {/* Helper Booking Sheet Popout */}
       <HelperBookingSheet
         isOpen={showBookingFormOverlay}
         onClose={closeBookingFormOverlay}
@@ -2939,23 +2725,18 @@ export default function ChefPage() {
         isDateFullyBooked={isDateFullyBooked}
       />
 
-{/* Mobile Bottom Bar - 100% Width & Flush to Bottom */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-slate-200 dark:border-gray-800 p-4 lg:hidden z-[1100] shadow-[0_-10px_30px_rgba(0,0,0,0.05)] safe-area-bottom mobile-booking-bar">
-        <div className="flex items-center justify-between">
-          <div className="flex-1 mr-4">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-slate-900 tracking-tighter">R{totalPrice}</span>
-              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic">Total Est.</span>
-            </div>
-            <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
-              {helper?.name}
-            </div>
+      <div className="mobile-booking-bar safe-area-bottom fixed bottom-0 left-0 right-0 z-[1100] border-t border-slate-200 bg-white/95 p-3 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-2 sm:px-4">
+          <div className="min-w-0">
+            <div className="text-xs font-medium text-slate-500">Estimated total</div>
+            <div className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">R{totalPrice}</div>
           </div>
           <button
+            type="button"
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="rounded-xl bg-slate-950 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98] dark:bg-rose-600 dark:hover:bg-rose-500"
           >
-            Review & Reserve
+            Review &amp; Reserve
           </button>
         </div>
       </div>
@@ -2972,6 +2753,13 @@ export default function ChefPage() {
           analyzingComments={analyzingComments}
         />
       )}
+
+      <ServiceDetailsModal
+        service={selectedModalService}
+        isSelected={selectedModalService && bookingData.selectedServices.includes(selectedModalService.id)}
+        onClose={() => setSelectedModalService(null)}
+        onSelect={handleServiceSelection}
+      />
     </div>
   );
 }
