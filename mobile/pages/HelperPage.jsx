@@ -366,7 +366,8 @@ export default function HelperPage() {
     }
   };
 
-  // Prioritize dynamic serviceList from database, fallback to hardcoded options
+  // Only show services that this provider has actually added to their profile.
+  // Generic defaults can make it look as though a provider offers or charges for work they do not.
   const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
         id: s._id ? String(s._id) : (s.id ? String(s.id) : `${s.name || 'service'}-${index}`), 
@@ -377,7 +378,7 @@ export default function HelperPage() {
         image: s.image,
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
-    : getServiceOptions(helper?.type);
+    : [];
 
   // Full page overlay state for booking form
   const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
@@ -438,6 +439,18 @@ export default function HelperPage() {
   };
 
   const themeColor = helper ? getThemeColor(helper.type) : 'red';
+  const galleryImages = Array.isArray(helper?.imageUrls)
+    ? helper.imageUrls.filter((url) => typeof url === 'string' && url.trim())
+    : [];
+  const storedRating = Number(helper?.rating);
+  const computedRating = Number(ratings?.overall);
+  const ratingValue = computedRating > 0 ? computedRating : (storedRating > 0 ? storedRating : null);
+  const hasRating = ratingValue !== null;
+  const isVerifiedProvider = Boolean(
+    helper?.isVerified || helper?.verified || helper?.userRef?.isVerified || helper?.userRef?.verified
+  );
+  const isSuperhelper = Boolean(helper?.isSuperhelper || helper?.userRef?.isSuperhost);
+  const hasBookings = Number(bookingSummary?.count) > 0;
 
   // Haircut styles for barbers
   const haircutStyles = [
@@ -1312,14 +1325,6 @@ export default function HelperPage() {
 
         const data = await res.json();
         setHelper(data);
-
-        // Simulate AI assessment on data load
-        simulateAiAssessment(data);
-
-        // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals', 'handyman', 'maintenance'].includes(data.type)) {
-          verifySocialMediaPresence(data);
-        }
 
         setLoading(false);
       } catch (err) {
@@ -2314,17 +2319,17 @@ export default function HelperPage() {
   };
 
   const nextImage = () => {
-    if (helper.imageUrls && helper.imageUrls.length > 0) {
+    if (galleryImages.length > 0) {
       setCurrentGalleryIndex((prevIndex) =>
-        prevIndex === helper.imageUrls.length - 1 ? 0 : prevIndex + 1
+        prevIndex === galleryImages.length - 1 ? 0 : prevIndex + 1
       );
     }
   };
 
   const prevImage = () => {
-    if (helper.imageUrls && helper.imageUrls.length > 0) {
+    if (galleryImages.length > 0) {
       setCurrentGalleryIndex((prevIndex) =>
-        prevIndex === 0 ? helper.imageUrls.length - 1 : prevIndex - 1
+        prevIndex === 0 ? galleryImages.length - 1 : prevIndex - 1
       );
     }
   };
@@ -2477,26 +2482,36 @@ export default function HelperPage() {
       {/* Image Gallery - Full Width */}
       <div className="w-full">
         {/* Airbnb-style image gallery layout */}
-        {helper.imageUrls && helper.imageUrls.length > 0 && (
+        {galleryImages.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
             <div className="relative h-full cursor-pointer overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src={galleryImages[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {helper.imageUrls.slice(1, 5).map((url, index) => (
+              {galleryImages.slice(1, 5).map((url, index) => (
                 <div key={index} className="relative h-full cursor-pointer overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
                   <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
               ))}
-              {helper.imageUrls.length < 5 && Array(4 - Math.min(4, helper.imageUrls.length - 1)).fill(null).map((_, i) => (
+              {galleryImages.length < 5 && Array(4 - Math.min(4, galleryImages.length - 1)).fill(null).map((_, i) => (
                 <div key={`empty-${i}`} className="bg-slate-800 h-full" />
               ))}
             </div>
             <button onClick={() => openFullScreenGallery(0)} className="absolute top-28 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20">
-              <Squares2X2Icon className="w-4 h-4" /> Show all {helper.imageUrls.length} photos
+              <Squares2X2Icon className="w-4 h-4" /> Show all {galleryImages.length} photos
             </button>
+          </div>
+        ) : (
+          <div className="h-[310px] md:h-[430px] bg-slate-100 flex flex-col items-center justify-center gap-3 text-center px-6">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <PhotoIcon className="w-7 h-7 text-slate-400" />
+            </div>
+            <div>
+              <p className="font-black text-slate-900">Photos coming soon</p>
+              <p className="text-sm text-slate-500 mt-1">This provider has not added portfolio photos yet.</p>
+            </div>
           </div>
         )}
       </div>
@@ -2519,26 +2534,17 @@ export default function HelperPage() {
             <div className="flex items-center gap-2">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
               <span className="font-semibold text-slate-900 text-base">
-                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+                {hasRating ? ratingValue.toFixed(1) : 'New'}
               </span>
               <span>·</span>
               <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
             </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700">
-              <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
-              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
-            </div>
-            <span className="text-slate-300">·</span>
-            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
+            {isSuperhelper && <><span className="text-slate-300">·</span><div className="flex items-center gap-2 text-slate-700"><CheckBadgeIcon className="text-rose-500 w-4 h-4" /><span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span></div></>}
+            {hasBookings && <><span className="text-slate-300">·</span><div className="flex items-center gap-2 text-slate-700"><PlusCircleIcon className="text-indigo-500 w-4 h-4" /><span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count} times</span></div></>}
+            {helper.address && <><span className="text-slate-300">·</span><div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
               <MapPinIcon className="text-slate-400 w-4 h-4" />
-              <span>{helper.address || 'Johannesburg, South Africa'}</span>
-            </div>
+              <span>{helper.address}</span>
+            </div></>}
 
           </div>
         </div>
@@ -2558,7 +2564,7 @@ export default function HelperPage() {
                     {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 mt-1">
-                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}
+                    {isSuperhelper ? 'Superhelper' : (isVerifiedProvider ? 'Verified provider' : 'Provider')}
                   </p>
                   {helper.providerType === 'company' && (
                     <p className="text-gray-600 mt-1 text-sm font-medium">Company</p>
@@ -2585,29 +2591,28 @@ export default function HelperPage() {
             </div>
 
 
-            <div className="space-y-6 pb-8 border-b border-slate-100">
-              <div className="flex items-start gap-4">
-                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
-                <div>
-                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</p>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
-                </div>
+            {(isSuperhelper || isVerifiedProvider || helper.operatingHours) && (
+              <div className="space-y-6 pb-8 border-b border-slate-100">
+                {isSuperhelper && (
+                  <div className="flex items-start gap-4">
+                    <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950">Highly rated provider</p><p className="text-gray-500 text-xs font-medium mt-1">Earned from real customer feedback on LoopOut.</p></div>
+                  </div>
+                )}
+                {isVerifiedProvider && (
+                  <div className="flex items-start gap-4">
+                    <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950">Verified provider</p><p className="text-gray-500 text-xs font-medium mt-1">This provider’s account has been verified by LoopOut.</p></div>
+                  </div>
+                )}
+                {helper.operatingHours && (
+                  <div className="flex items-start gap-4">
+                    <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950">Hours shared</p><p className="text-gray-500 text-xs font-medium mt-1">See the schedule below to choose an available time.</p></div>
+                  </div>
+                )}
               </div>
-              <div className="flex items-start gap-4">
-                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                <div>
-                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</p>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
-                <div>
-                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</p>
-                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
-                </div>
-              </div>
-            </div>
+            )}
 
             <OperatingSchedule 
               operatingHours={helper.operatingHours} 
@@ -2617,17 +2622,6 @@ export default function HelperPage() {
 
 
 
-            {/* Response Rate */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-start gap-4">
-                <BoltIcon className="w-6 h-6 text-yellow-500 mt-1" />
-                <div>
-                  <p className="font-black uppercase tracking-widest text-xs text-gray-950">Response Rate</p>
-                  <p className="text-gray-500 text-xs font-medium mt-1">{helper.responseRate || 'Usually responds within an hour'}</p>
-                </div>
-              </div>
-            </div>
-
             {/* Service Providers Section */}
             {helper.performers && helper.performers.length > 0 && (
               <div className="py-6 border-b border-gray-200">
@@ -2635,8 +2629,9 @@ export default function HelperPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {helper.performers.map((performer, idx) => {
                     const hasBookedPerformer = userBookings.some(b => b.selectedPerformer === performer.name);
-                    const perfRating = performer.rating || 5;
+                    const perfRating = Number(performer.rating);
                     const perfRatingsCount = performer.ratingsCount || 0;
+                    const hasPerformerRating = perfRating > 0;
 
                     return (
                       <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
@@ -2656,10 +2651,7 @@ export default function HelperPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <h4 className="font-bold text-slate-900">{performer.name}</h4>
-                              <div className="flex items-center gap-0.5 bg-rose-50 px-2 py-0.5 rounded-full text-rose-600">
-                                <StarIconSolid className="w-3.5 h-3.5 text-rose-500" />
-                                <span className="text-[11px] font-black">{Number(perfRating).toFixed(1)}</span>
-                              </div>
+                              {hasPerformerRating ? <div className="flex items-center gap-0.5 bg-rose-50 px-2 py-0.5 rounded-full text-rose-600"><StarIconSolid className="w-3.5 h-3.5 text-rose-500" /><span className="text-[11px] font-black">{perfRating.toFixed(1)}</span></div> : <span className="text-[11px] font-black text-slate-400">New</span>}
                             </div>
                             <p className="text-xs text-slate-500">{performer.experience} experience</p>
                             {perfRatingsCount > 0 && (
@@ -2674,7 +2666,7 @@ export default function HelperPage() {
                             <button
                               onClick={() => {
                                 setSelectedPerformerToRate(performer);
-                                setPerformerRating(perfRating);
+                                setPerformerRating(hasPerformerRating ? perfRating : 0);
                                 setShowPerformerRatingModal(true);
                               }}
                               className="px-3.5 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 shadow-md shadow-rose-200"
@@ -2729,16 +2721,16 @@ export default function HelperPage() {
             </div>
 
             {/* Professional Portfolio - Show All Photos */}
-            {helper.imageUrls && helper.imageUrls.length > 0 && (
+            {galleryImages.length > 0 && (
               <div className="pb-8 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Professional Portfolio</h2>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
-                    {helper.imageUrls.length} Photos
+                    {galleryImages.length} Photos
                   </span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {helper.imageUrls.map((url, index) => (
+                  {galleryImages.map((url, index) => (
                     <div 
                       key={index} 
                       onClick={() => openFullScreenGallery(index)}
@@ -2757,7 +2749,7 @@ export default function HelperPage() {
             )}
 
             {/* Services Offered - FIXED SECTION */}
-            {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals' || helper.type === 'handyman' || helper.type === 'maintenance') && (
+            {serviceOptions.length > 0 && (
               <div className="pb-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
                 <Swiper
@@ -2874,7 +2866,7 @@ export default function HelperPage() {
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
+                  {hasRating ? ratingValue.toFixed(1) : 'New'} · {commentCount} reviews
                 </h2>
               </div>
 
@@ -2985,12 +2977,12 @@ export default function HelperPage() {
             </div>
 
             {/* Location */}
-            <div className="py-6 border-t border-gray-200">
+            {helper.address && <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{helper.address}</p>
               <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
                 <GoogleMapComponent
-                  address={helper.address || 'Johannesburg, South Africa'}
+                  address={helper.address}
                   title={`${helper.name}'s Location`}
                 />
               </div>
@@ -3004,13 +2996,13 @@ export default function HelperPage() {
                   </div>
                 </div>
               )}
-            </div>
+            </div>}
 
             <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <div className="top-24 py-12">
               {/* Masterpiece Booking Card */}
               <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
@@ -3024,7 +3016,7 @@ export default function HelperPage() {
                   </div>
                   <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
                     <StarIconSolid className="w-4 h-4 text-rose-500" />
-                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
+                  <span className="text-xs font-black text-rose-700">{hasRating ? ratingValue.toFixed(1) : 'New'}</span>
                   </div>
                 </div>
 
@@ -3083,7 +3075,7 @@ export default function HelperPage() {
                 <div className="space-y-3 mb-8">
                   <button
                     onClick={openBookingFormOverlay}
-                    className="w-full py-5 bg-gray-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl active:scale-95"
+                    className="w-full py-5 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-[1.5rem] transition-all shadow-xl shadow-rose-200 active:scale-95"
                   >
                     Check Availability
                   </button>
@@ -3168,7 +3160,7 @@ export default function HelperPage() {
       </main>
 
       {/* Full Screen Gallery Overlay */}
-      {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (
+      {showFullScreenGallery && galleryImages.length > 0 && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           <div className="flex items-center justify-between p-4 text-white">
             <button
@@ -3178,7 +3170,7 @@ export default function HelperPage() {
               <XMarkIcon className="w-6 h-6" />
             </button>
             <span className="font-medium">
-              {currentGalleryIndex + 1} / {helper.imageUrls.length}
+              {currentGalleryIndex + 1} / {galleryImages.length}
             </span>
             <div className="w-10" /> {/* Spacer for centering */}
           </div>
@@ -3192,7 +3184,7 @@ export default function HelperPage() {
             </button>
 
             <img
-              src={helper.imageUrls[currentGalleryIndex]}
+              src={galleryImages[currentGalleryIndex]}
               alt={`Gallery ${currentGalleryIndex + 1}`}
               className="max-h-full max-w-full object-contain rounded-lg"
             />
@@ -3239,7 +3231,7 @@ export default function HelperPage() {
           </div>
           <button
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="px-8 py-4 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
           >
             Review & Reserve
           </button>

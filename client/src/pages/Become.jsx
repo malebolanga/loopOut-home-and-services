@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   HomeIcon, 
   UserGroupIcon, 
@@ -34,6 +34,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { updateUserSuccess } from '../redux/user/userSlice';
+import { getServiceProviderVerificationStatus } from '../utils/offeringPermissions';
 
 const PROVIDER_ROLES = [
   {
@@ -186,17 +187,28 @@ const FAQS = [
 export default function Become() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
   const { currentUser } = useSelector((state) => state.user);
 
-  const [selectedRole, setSelectedRole] = useState(PROVIDER_ROLES[0].id);
+  const roleParam = searchParams.get('role');
+  const initialRole = PROVIDER_ROLES.some((r) => r.id === roleParam) ? roleParam : PROVIDER_ROLES[0].id;
+
+  const [selectedRole, setSelectedRole] = useState(initialRole);
   const [converting, setConverting] = useState(false);
   const [successModal, setSuccessModal] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [openFaq, setOpenFaq] = useState(null);
 
+  React.useEffect(() => {
+    if (roleParam && PROVIDER_ROLES.some((r) => r.id === roleParam)) {
+      setSelectedRole(roleParam);
+    }
+  }, [roleParam]);
+
   const currentRoleInfo = PROVIDER_ROLES.find((r) => r.id === selectedRole) || PROVIDER_ROLES[0];
   const isViewer = !currentUser || currentUser?.offeringType === 'viewer';
   const isAlreadyThisRole = currentUser?.offeringType === selectedRole;
+  const verificationStatus = getServiceProviderVerificationStatus(currentUser);
 
   const handleConvertRole = async (targetRole) => {
     if (!currentUser) {
@@ -215,12 +227,14 @@ export default function Become() {
     setErrorMsg(null);
 
     try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || '';
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
+        credentials: 'include',
         body: JSON.stringify({ offeringType: targetRole })
       });
 
@@ -439,6 +453,67 @@ export default function Become() {
                 ))}
               </ul>
             </div>
+
+            {/* Live KYC Verification Status (Service Providers) */}
+            {currentRoleInfo.id === 'services' && currentUser && (
+              <div className={`rounded-2xl p-5 border ${
+                verificationStatus.isCompliant
+                  ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/30'
+                  : 'border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/30'
+              }`}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheckIcon className={`w-5 h-5 ${verificationStatus.isCompliant ? 'text-emerald-600' : 'text-amber-600'}`} />
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Your Service Provider Verification Status
+                    </h4>
+                  </div>
+                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full w-fit ${
+                    verificationStatus.isCompliant
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
+                  }`}>
+                    {verificationStatus.isCompliant ? 'Verified & Ready' : `${verificationStatus.missingCount} requirement${verificationStatus.missingCount > 1 ? 's' : ''} left`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                    verificationStatus.hasIdDocument ? 'bg-white dark:bg-gray-900 border-emerald-200 text-emerald-700' : 'bg-white/80 dark:bg-gray-900 border-slate-200 text-slate-600'
+                  }`}>
+                    <span className="font-medium">ID / Passport</span>
+                    {verificationStatus.hasIdDocument ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <span className="text-[10px] text-amber-600 font-bold">Needed</span>}
+                  </div>
+                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                    verificationStatus.hasFaceScan ? 'bg-white dark:bg-gray-900 border-emerald-200 text-emerald-700' : 'bg-white/80 dark:bg-gray-900 border-slate-200 text-slate-600'
+                  }`}>
+                    <span className="font-medium">Live Face Scan</span>
+                    {verificationStatus.hasFaceScan ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <span className="text-[10px] text-amber-600 font-bold">Needed</span>}
+                  </div>
+                  <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                    verificationStatus.hasProfilePicture ? 'bg-white dark:bg-gray-900 border-emerald-200 text-emerald-700' : 'bg-white/80 dark:bg-gray-900 border-slate-200 text-slate-600'
+                  }`}>
+                    <span className="font-medium">Profile Picture</span>
+                    {verificationStatus.hasProfilePicture ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <span className="text-[10px] text-amber-600 font-bold">Needed</span>}
+                  </div>
+                </div>
+
+                {!verificationStatus.isCompliant && (
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-amber-200/60 dark:border-amber-900/40">
+                    <p className="text-xs text-amber-800 dark:text-amber-300">
+                      Complete ID verification so clients can hire you with 100% confidence.
+                    </p>
+                    <button
+                      onClick={() => navigate('/verification')}
+                      className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition whitespace-nowrap flex items-center justify-center gap-1.5"
+                    >
+                      <span>Complete Verification</span>
+                      <ArrowRightIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* What you need to prepare (Requirements) */}
             <div>

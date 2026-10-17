@@ -3,17 +3,19 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2 } from 'lucide-react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
-import { canCreateListings } from '../utils/offeringPermissions';
+import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 /* ─── helpers ────────────────────────────────────────────────────────────────── */
 const getItemPath = (listing) =>
   listing.category === 'stays'       ? `/listing/${listing._id}`
   : listing.category === 'experiences' ? `/service/${listing._id}`
+  : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/helper/${listing._id}`;
 
 const getEditPath = (listing) =>
   listing.category === 'stays'       ? `/update-listing/${listing._id}`
   : listing.category === 'experiences' ? `/update-service/${listing._id}`
+  : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/update-helper/${listing._id}`;
 
 const formatDate = (dateStr) => {
@@ -26,7 +28,7 @@ const formatDate = (dateStr) => {
 };
 
 const CATEGORY_LABELS = {
-  stays: 'Stay', experiences: 'Service', online: 'Helper',
+  stays: 'Stay', experiences: 'Service', online: 'Helper', selling: 'Item for Sale',
 };
 
 /* ─── Listing card ────────────────────────────────────────────────────────────── */
@@ -117,17 +119,25 @@ export default function UserListings() {
     setLoading(true);
     try {
       const isServicesProvider = currentUser?.offeringType === 'services';
-      const [listingsData, servicesData, helpersData] = await Promise.all([
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || '';
+      const authHeaders = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      };
+
+      const [listingsData, servicesData, helpersData, sellsData] = await Promise.all([
         !isServicesProvider 
-          ? fetch(`/api/user/listings/${currentUser._id}`).then(r => r.json()).catch(() => [])
+          ? fetch(`/api/user/listings/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => [])
           : Promise.resolve([]),
-        fetch(`/api/user/services/${currentUser._id}`).then(r => r.json()).catch(() => []),
-        fetch(`/api/user/helpers/${currentUser._id}`).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/services/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/helpers/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/sell/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
       ]);
       const allItems = [
         ...(Array.isArray(listingsData) ? listingsData : (listingsData.listings || [])).map(l => ({ ...l, category: 'stays' })),
         ...(Array.isArray(servicesData) ? servicesData : (servicesData.services || [])).map(s => ({ ...s, category: 'experiences' })),
         ...(Array.isArray(helpersData)  ? helpersData  : (helpersData.helpers   || [])).map(h => ({ ...h, category: 'online' })),
+        ...(Array.isArray(sellsData)    ? sellsData    : (sellsData.data || sellsData.sells || [])).map(g => ({ ...g, category: 'selling' })),
       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setUserListings(allItems);
     } catch (err) {
@@ -145,10 +155,16 @@ export default function UserListings() {
       const endpoint =
         category === 'stays'       ? `/api/listing/delete/${id}`
         : category === 'experiences' ? `/api/service/delete/${id}`
+        : category === 'selling'     ? `/api/sell/${id}`
         : `/api/helper/delete/${id}`;
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || '';
       const res = await fetch(endpoint, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete');
@@ -168,10 +184,12 @@ export default function UserListings() {
     { key: 'stays',       label: 'Stays' },
     { key: 'experiences', label: 'Services' },
     { key: 'online',      label: 'Helpers' },
+    { key: 'selling',     label: 'Goods' },
   ].filter(f => {
     if (!currentUser?.offeringType) return true;
-    if (currentUser.offeringType === 'services') return f.key !== 'stays';
+    if (currentUser.offeringType === 'services') return f.key === 'experiences' || f.key === 'online';
     if (currentUser.offeringType === 'property') return f.key === 'stays';
+    if (currentUser.offeringType === 'goods') return f.key === 'selling';
     return true;
   });
 

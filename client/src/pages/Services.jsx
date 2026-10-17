@@ -1929,7 +1929,7 @@ const ServicePage = () => {
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24 space-y-4">
               {/* Premium Booking Card */}
               <div className="rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.10)] border border-slate-100 overflow-hidden bg-white dark:bg-gray-900">

@@ -7,6 +7,7 @@ import {
     getUserServices,
     getUserHelpers,
     getUserEvents,
+    getUserSellListings,
     getUserPostCount,
     getPostCountByBody,
     getUser,
@@ -24,7 +25,7 @@ import {
     downloadUserData
 } from '../controllers/user.controller.js';
 
-import { verifyToken } from '../utils/verifyUser.js';
+import { verifyToken, verifyTokenOptional } from '../utils/verifyUser.js';
 
 
 
@@ -53,6 +54,8 @@ router.get('/helpers/:id', verifyToken, getUserHelpers);
 
 // Add these new routes
 router.get('/events/:id', verifyToken, getUserEvents);
+router.get('/sell/:id', verifyToken, getUserSellListings);
+router.get('/sells/:id', verifyToken, getUserSellListings);
 
 // Route to get post count by user ID param (Profile page)
 router.get('/post-count/:id', verifyToken, getUserPostCount);
@@ -64,7 +67,7 @@ router.post('/post-count', verifyToken, getPostCountByBody);
 
 // Add these new routes
 router.put('/rate-host/:hostId', verifyToken, rateHost);
-router.get('/host-ratings/:hostId', verifyToken, getHostRatings);
+router.get('/host-ratings/:hostId', verifyTokenOptional, getHostRatings);
 router.post('/verify-whatsapp/:id', verifyToken, verifyWhatsApp);
 
 // Follower routes

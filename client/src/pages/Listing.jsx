@@ -1981,7 +1981,7 @@ export default function Listing() {
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1 relative">
+          <div className="hidden lg:block lg:col-span-1 relative">
             <div className="lg:sticky lg:top-28 space-y-4 pb-8 z-10">
               <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
                 {/* Price Header */}

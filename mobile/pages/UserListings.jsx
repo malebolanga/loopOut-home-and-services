@@ -3,16 +3,19 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Edit2, Trash2 } from 'lucide-react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
+import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 /* ─── helpers ────────────────────────────────────────────────────────────────── */
 const getItemPath = (listing) =>
   listing.category === 'stays'       ? `/listing/${listing._id}`
   : listing.category === 'experiences' ? `/service/${listing._id}`
+  : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/helper/${listing._id}`;
 
 const getEditPath = (listing) =>
   listing.category === 'stays'       ? `/update-listing/${listing._id}`
   : listing.category === 'experiences' ? `/update-service/${listing._id}`
+  : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/update-helper/${listing._id}`;
 
 const formatDate = (dateStr) => {
@@ -25,7 +28,7 @@ const formatDate = (dateStr) => {
 };
 
 const CATEGORY_LABELS = {
-  stays: 'Stay', experiences: 'Service', online: 'Helper',
+  stays: 'Stay', experiences: 'Service', online: 'Helper', selling: 'Item for Sale',
 };
 
 /* ─── Listing card ────────────────────────────────────────────────────────────── */
@@ -105,6 +108,8 @@ export default function UserListings() {
   const [userListings,  setUserListings]  = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [loading,       setLoading]       = useState(true);
+  const [confirmTarget, setConfirmTarget] = useState(null); // { id, category, title }
+  const [deleteError,   setDeleteError]   = useState(null);
 
   useEffect(() => {
     if (!currentUser) navigate('/sign-in');
@@ -113,18 +118,20 @@ export default function UserListings() {
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const [listingsRes, servicesRes, helpersRes] = await Promise.all([
-        fetch(`/api/user/listings/${currentUser._id}`),
-        fetch(`/api/user/services/${currentUser._id}`),
-        fetch(`/api/user/helpers/${currentUser._id}`),
-      ]);
-      const [listingsData, servicesData, helpersData] = await Promise.all([
-        listingsRes.json(), servicesRes.json(), helpersRes.json(),
+      const isServicesProvider = currentUser?.offeringType === 'services';
+      const [listingsData, servicesData, helpersData, sellsData] = await Promise.all([
+        !isServicesProvider
+          ? fetch(`/api/user/listings/${currentUser._id}`).then(r => r.json()).catch(() => [])
+          : Promise.resolve([]),
+        fetch(`/api/user/services/${currentUser._id}`).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/helpers/${currentUser._id}`).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/sell/${currentUser._id}`).then(r => r.json()).catch(() => []),
       ]);
       const allItems = [
         ...(Array.isArray(listingsData) ? listingsData : (listingsData.listings || [])).map(l => ({ ...l, category: 'stays' })),
         ...(Array.isArray(servicesData) ? servicesData : (servicesData.services || [])).map(s => ({ ...s, category: 'experiences' })),
         ...(Array.isArray(helpersData)  ? helpersData  : (helpersData.helpers   || [])).map(h => ({ ...h, category: 'online' })),
+        ...(Array.isArray(sellsData)    ? sellsData    : (sellsData.data || sellsData.sells || [])).map(g => ({ ...g, category: 'selling' })),
       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setUserListings(allItems);
     } catch (err) {
@@ -135,22 +142,24 @@ export default function UserListings() {
   };
 
   const handleDelete = async (id, category) => {
-    if (!window.confirm('Permanently delete this item? This cannot be undone.')) return;
+    setConfirmTarget(null);
     setDeletingId(id);
+    setDeleteError(null);
     try {
       const endpoint =
         category === 'stays'       ? `/api/listing/delete/${id}`
         : category === 'experiences' ? `/api/service/delete/${id}`
+        : category === 'selling'     ? `/api/sell/${id}`
         : `/api/helper/delete/${id}`;
       const res = await fetch(endpoint, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || ''}` },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete');
       setUserListings(prev => prev.filter(l => l._id !== id));
     } catch (err) {
-      alert(err.message || 'Failed to delete');
+      setDeleteError(err.message || 'Failed to delete. Please try again.');
     } finally {
       setDeletingId(null);
     }
@@ -164,7 +173,14 @@ export default function UserListings() {
     { key: 'stays',       label: 'Stays' },
     { key: 'experiences', label: 'Services' },
     { key: 'online',      label: 'Helpers' },
-  ];
+    { key: 'selling',     label: 'Goods' },
+  ].filter(f => {
+    if (!currentUser?.offeringType) return true;
+    if (currentUser.offeringType === 'services') return f.key === 'experiences' || f.key === 'online';
+    if (currentUser.offeringType === 'goods') return f.key === 'selling';
+    if (currentUser.offeringType === 'property') return f.key === 'stays';
+    return true;
+  });
 
   const filtered = selectedTypes.length > 0
     ? userListings.filter(l => selectedTypes.includes(l.category))
@@ -174,8 +190,8 @@ export default function UserListings() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center gap-3">
+        <header className="app-safe-top sticky top-0 z-30 bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[72px] flex items-center gap-3">
             <div className="w-9 h-9 bg-gray-100 rounded-full" />
             <div className="h-5 w-32 bg-gray-100 rounded-full" />
           </div>
@@ -199,11 +215,11 @@ export default function UserListings() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-20" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
+    <div className="min-h-screen bg-white app-safe-content-bottom pb-20" style={{ fontFamily: "'Inter','Helvetica Neue',sans-serif" }}>
       {/* Sticky header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 h-[72px] flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+      <header className="app-safe-top sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -215,17 +231,26 @@ export default function UserListings() {
               </svg>
             </button>
             <div className="min-w-0">
-              <h1 className="text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">My Listings</h1>
-              <p className="text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
+              <h1 className="text-[18px] sm:text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">My Listings</h1>
+              <p className="text-[12px] sm:text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
             </div>
           </div>
-          <Link
-            to="/create-listing"
-            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl shadow transition-all duration-200"
-          >
-            <FaPlus className="w-3.5 h-3.5" />
-            New Post
-          </Link>
+          {currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer' ? (
+            <Link
+              to={getCreationRoute(currentUser) || `/${currentUser._id}/create-listing`}
+              className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
+            >
+              <FaPlus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>New Post</span>
+            </Link>
+          ) : (
+            <Link
+              to="/become"
+              className="flex-shrink-0 inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs sm:text-sm font-semibold rounded-xl shadow transition-all duration-200"
+            >
+              <span>Become a Host</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -263,7 +288,10 @@ export default function UserListings() {
                 key={listing._id}
                 listing={listing}
                 onEdit={(l) => navigate(getEditPath(l))}
-                onDelete={handleDelete}
+                onDelete={(id, cat) => {
+                  const item = userListings.find(l => l._id === id);
+                  setConfirmTarget({ id, category: cat, title: item?.name || item?.title || 'this item' });
+                }}
                 deletingId={deletingId}
                 navigate={navigate}
               />
@@ -276,21 +304,33 @@ export default function UserListings() {
               <FaPlus className="w-7 h-7 text-rose-500" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-3">
-              {userListings.length === 0 ? 'Ready to become a host?' : 'No matches'}
+              {userListings.length === 0 ? 'Ready to become a host or provider?' : 'No matches'}
             </h2>
             <p className="text-gray-500 text-[15px] leading-relaxed mb-8">
               {userListings.length === 0
-                ? 'Create your first listing and start earning.'
+                ? (currentUser?.offeringType === 'viewer'
+                    ? 'Your account is currently set up for browsing and booking. Learn how to convert your account into a host, service provider, or shop owner.'
+                    : 'Create your first listing and start earning.')
                 : 'Try a different filter or clear all.'}
             </p>
             {userListings.length === 0 ? (
-              <Link
-                to="/create-listing"
-                className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
-                style={{ background: 'linear-gradient(to right, #e11d48, #be123c)' }}
-              >
-                Create Listing
-              </Link>
+              currentUser?.offeringType === 'viewer' ? (
+                <Link
+                  to="/become"
+                  className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity shadow-md"
+                  style={{ background: 'linear-gradient(to right, #f59e0b, #e11d48)' }}
+                >
+                  Learn How to Become a Host
+                </Link>
+              ) : (
+                <Link
+                  to="/create-listing"
+                  className="px-6 py-3 text-[15px] font-semibold text-white rounded-xl hover:opacity-90 transition-opacity"
+                  style={{ background: 'linear-gradient(to right, #e11d48, #be123c)' }}
+                >
+                  Create Listing
+                </Link>
+              )
             ) : (
               <button
                 onClick={() => setSelectedTypes([])}
@@ -302,6 +342,53 @@ export default function UserListings() {
           </div>
         )}
       </main>
+
+      {/* ── Delete error banner ── */}
+      {deleteError && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium max-w-sm w-full mx-4">
+          <span className="flex-1">{deleteError}</span>
+          <button onClick={() => setDeleteError(null)} aria-label="Dismiss" className="text-white/70 hover:text-white">✕</button>
+        </div>
+      )}
+
+      {/* ── Delete confirm modal ── */}
+      {confirmTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          onClick={() => setConfirmTarget(null)}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mb-1">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h3 className="text-[17px] font-semibold text-gray-900">Delete listing?</h3>
+              <p className="text-[14px] text-gray-500 mt-1">
+                "<span className="font-medium text-gray-700">{confirmTarget.title}</span>" will be permanently removed. This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmTarget(null)}
+                className="flex-1 py-2.5 text-[14px] font-semibold text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(confirmTarget.id, confirmTarget.category)}
+                disabled={deletingId === confirmTarget.id}
+                className="flex-1 py-2.5 text-[14px] font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deletingId === confirmTarget.id ? <FaSpinner className="w-3.5 h-3.5 animate-spin" /> : null}
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

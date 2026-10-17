@@ -6,6 +6,7 @@ import Listing from '../models/listing.model.js';
 import Service from '../models/service.model.js';
 import Helper from '../models/helper.model.js';
 import Event from '../models/event.model.js';
+import Sell from '../models/sell.model.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const test = (req, res) => {
@@ -200,7 +201,20 @@ export const getUserEvents = async (req, res, next) => {
   }
 };
 
-// Add this function to get user's post count including events
+export const getUserSellListings = async (req, res, next) => {
+  if (req.user.id === req.params.id) {
+    try {
+      const sells = await Sell.find({ creator: req.params.id });
+      res.status(200).json(sells);
+    } catch (error) {
+      next(error);
+    }
+  } else {
+    return next(errorHandler(401, 'You can only view your own items!'));
+  }
+};
+
+// Add this function to get user's post count including events and goods
 export const getUserPostCount = async (req, res, next) => {
   try {
     const userId = req.params.id || req.user?.id;
@@ -208,18 +222,19 @@ export const getUserPostCount = async (req, res, next) => {
       return res.status(200).json({
         count: 0,
         limit: 3,
-        breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+        breakdown: { listings: 0, services: 0, helpers: 0, events: 0, goods: 0 }
       });
     }
 
-    const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
+    const [listingsCount, servicesCount, helpersCount, eventsCount, goodsCount] = await Promise.all([
       Listing.countDocuments({ userRef: userId }).catch(() => 0),
       Service.countDocuments({ userRef: userId }).catch(() => 0),
       Helper.countDocuments({ userRef: userId }).catch(() => 0),
-      Event.countDocuments({ userRef: userId }).catch(() => 0)
+      Event.countDocuments({ userRef: userId }).catch(() => 0),
+      Sell.countDocuments({ creator: userId }).catch(() => 0)
     ]);
 
-    const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount;
+    const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount + goodsCount;
 
     res.status(200).json({
       count: totalPosts,
@@ -228,7 +243,8 @@ export const getUserPostCount = async (req, res, next) => {
         listings: listingsCount,
         services: servicesCount,
         helpers: helpersCount,
-        events: eventsCount
+        events: eventsCount,
+        goods: goodsCount
       }
     });
   } catch (error) {
@@ -236,7 +252,7 @@ export const getUserPostCount = async (req, res, next) => {
     res.status(200).json({
       count: 0,
       limit: 3,
-      breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+      breakdown: { listings: 0, services: 0, helpers: 0, events: 0, goods: 0 }
     });
   }
 };
@@ -249,18 +265,19 @@ export const getPostCountByBody = async (req, res, next) => {
       return res.status(200).json({
         count: 0,
         limit: 3,
-        breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+        breakdown: { listings: 0, services: 0, helpers: 0, events: 0, goods: 0 }
       });
     }
 
-    const [listingsCount, servicesCount, helpersCount, eventsCount] = await Promise.all([
+    const [listingsCount, servicesCount, helpersCount, eventsCount, goodsCount] = await Promise.all([
       Listing.countDocuments({ userRef: userId }).catch(() => 0),
       Service.countDocuments({ userRef: userId }).catch(() => 0),
       Helper.countDocuments({ userRef: userId }).catch(() => 0),
-      Event.countDocuments({ userRef: userId }).catch(() => 0)
+      Event.countDocuments({ userRef: userId }).catch(() => 0),
+      Sell.countDocuments({ creator: userId }).catch(() => 0)
     ]);
 
-    const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount;
+    const totalPosts = listingsCount + servicesCount + helpersCount + eventsCount + goodsCount;
 
     res.status(200).json({
       count: totalPosts,
@@ -269,7 +286,8 @@ export const getPostCountByBody = async (req, res, next) => {
         listings: listingsCount,
         services: servicesCount,
         helpers: helpersCount,
-        events: eventsCount
+        events: eventsCount,
+        goods: goodsCount
       }
     });
   } catch (error) {
@@ -277,11 +295,10 @@ export const getPostCountByBody = async (req, res, next) => {
     res.status(200).json({
       count: 0,
       limit: 3,
-      breakdown: { listings: 0, services: 0, helpers: 0, events: 0 }
+      breakdown: { listings: 0, services: 0, helpers: 0, events: 0, goods: 0 }
     });
   }
 };
-
 
 // Add these functions at the bottom
 
@@ -374,7 +391,7 @@ export const rateHost = async (req, res, next) => {
 export const getHostRatings = async (req, res, next) => {
   try {
     const { hostId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id ? req.user.id.toString() : null;
 
     const host = await User.findById(hostId)
       .select('likeCount dislikeCount ratedBy');
@@ -383,13 +400,13 @@ export const getHostRatings = async (req, res, next) => {
       return next(errorHandler(404, 'Host not found'));
     }
 
-    const userAction = host.ratedBy.find(r =>
-      r.userId.toString() === userId
-    )?.action || null;
+    const userAction = (userId && Array.isArray(host.ratedBy))
+      ? host.ratedBy.find(r => r.userId && r.userId.toString() === userId)?.action || null
+      : null;
 
     res.status(200).json({
-      likeCount: host.likeCount,
-      dislikeCount: host.dislikeCount,
+      likeCount: host.likeCount || 0,
+      dislikeCount: host.dislikeCount || 0,
       userAction
     });
   } catch (error) {

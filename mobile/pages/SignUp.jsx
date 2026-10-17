@@ -32,7 +32,7 @@ export default function SignUp() {
   const change = ({ target }) => setFormData((current) => ({ ...current, [target.id]: target.type === 'checkbox' ? target.checked : target.value }));
   const checkCredentials = (event) => {
     event.preventDefault(); setError('');
-    if (!/^[a-zA-Z0-9_]{3,30}$/.test(formData.username)) return setError('Use 3–30 letters, numbers, or underscores for your username.');
+    if (!formData.username.trim()) return setError('Please enter a username.');
     if (formData.password.length < 8) return setError('Use a password of at least 8 characters.');
     if (formData.password !== formData.confirmPassword) return setError('Your passwords do not match.');
     setStep(2);
@@ -45,12 +45,19 @@ export default function SignUp() {
       const { confirmPassword, otp, ...payload } = formData;
       // Show 'waking up' hint after 4 s so user knows what's happening on Render cold-start
       const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
-      const response = await fetchWithRetry(
-        '/api/auth/signup',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
-        { maxRetries: 4, timeoutMs: 40000 }
-      );
-      clearTimeout(wakeTimer);
+      let response;
+      try {
+        response = await fetchWithRetry(
+          '/api/auth/signup',
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(payload) },
+          // Render can take up to a minute to wake, and Gmail may retry a
+          // transient connection. Keep this request alive instead of aborting a
+          // valid sign-up midway through email delivery.
+          { maxRetries: 2, timeoutMs: 180000 }
+        );
+      } finally {
+        clearTimeout(wakeTimer);
+      }
       setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to create your account.');
@@ -60,8 +67,12 @@ export default function SignUp() {
     } catch (requestError) {
       setServerStatus('');
       const msg = requestError?.message || '';
-      if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
+      if (msg.toLowerCase().includes('abort') || msg.toLowerCase().includes('timeout')) {
+        setError('The verification service took too long to respond. Please wait a moment, then try again.');
+      } else if (msg.toLowerCase().includes('quic') || msg.toLowerCase().includes('network') || msg.toLowerCase().includes('fetch')) {
         setError('Connection error — please check your internet and try again.');
+      } else if (msg.toLowerCase().includes('verification email') || msg.toLowerCase().includes('email delivery')) {
+        setError('We could not send the verification email. Please use “Resend code” in a moment, or contact LoopOut support if it continues.');
       } else {
         setError(msg || 'Unable to create your account.');
       }
@@ -72,17 +83,23 @@ export default function SignUp() {
     try {
       setLoading(true);
       const wakeTimer = setTimeout(() => setServerStatus('waking'), 4000);
-      const response = await fetchWithRetry(
-        '/api/auth/verify-otp',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) },
-        { maxRetries: 3, timeoutMs: 35000 }
-      );
-      clearTimeout(wakeTimer);
+      let response;
+      try {
+        response = await fetchWithRetry(
+          '/api/auth/verify-otp',
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: formData.otp.trim() }) },
+          { maxRetries: 3, timeoutMs: 35000 }
+        );
+      } finally {
+        clearTimeout(wakeTimer);
+      }
       setServerStatus('');
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Unable to verify that code.');
       persistSessionToken(data);
-      dispatch(signInSuccess(data.user || data)); navigate('/');
+      const signedInUser = data.user || data;
+      dispatch(signInSuccess(signedInUser));
+      navigate(signedInUser.offeringType === 'services' ? '/verification' : '/');
     } catch (requestError) {
       setServerStatus('');
       setError(requestError?.message || 'Verification failed. Please try again.');

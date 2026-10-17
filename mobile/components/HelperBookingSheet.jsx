@@ -747,7 +747,9 @@ export default function HelperBookingSheet({
                         >
                           <div className="text-xl mb-1">{service.icon}</div>
                           <div className="font-bold text-xs text-gray-900 dark:text-white leading-tight">{service.name}</div>
-                          <div className="text-rose-600 font-black text-[11px] mt-1">R{service.price}</div>
+                          <div className="text-rose-600 font-black text-[11px] mt-1">
+                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}
+                          </div>
                           {isSelected && (
                             <div className="absolute top-2.5 right-2.5 w-4 h-4 bg-rose-500 rounded-full flex items-center justify-center">
                               <CheckIcon className="text-white w-2.5 h-2.5" />

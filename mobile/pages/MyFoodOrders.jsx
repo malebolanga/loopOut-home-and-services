@@ -137,7 +137,7 @@ export default function MyFoodOrders() {
       </Helmet>
 
       {/* Top sticky navbar */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/80 dark:border-gray-800/80 px-4 sm:px-6 py-3.5 shadow-xs">
+      <header className="app-safe-top sticky top-0 z-40 backdrop-blur-xl bg-white/80 dark:bg-gray-950/80 border-b border-gray-200/80 dark:border-gray-800/80 px-4 sm:px-6 py-3.5 shadow-xs">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button

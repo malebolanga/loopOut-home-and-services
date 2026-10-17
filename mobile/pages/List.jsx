@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MdLocationOn, MdStar, MdFilterList, MdRefresh, MdMoreVert, MdEdit, MdDelete } from 'react-icons/md';
 import { FaSpinner, FaPlus, FaHome, FaBuilding, FaTree, FaKey, FaMoneyBillWave, FaBed, FaBath } from 'react-icons/fa';
 import { Star, Sparkles, Edit2, Trash2, Home as HomeIcon } from 'lucide-react';
+import { canCreateListings } from '../utils/offeringPermissions';
 
 const ListingTypeConfig = {
   rent: {
@@ -336,13 +337,13 @@ export default function List() {
                 ? 'Start by creating your first property listing to showcase it to potential guests or buyers.'
                 : 'Try adjusting your filters to see more results.'}
             </p>
-            <Link
+            {canCreateListings(currentUser) && <Link
               to={`/${currentUser?._id}/create-listing`}
               className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] hover:shadow-md transition-all"
             >
               <FaPlus className="w-4 h-4" />
               Create listing
-            </Link>
+            </Link>}
           </div>
         )}
       </main>

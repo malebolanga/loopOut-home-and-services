@@ -78,6 +78,19 @@ export default function StoragePage() {
     );
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: storage?.name || 'Storage Space',
+        text: storage?.description,
+        url: window.location.href,
+      }).catch((error) => console.error('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert('Link copied to clipboard!');
+    }
+  };
+
   const openBooking = () => {
     setBookingStep(1);
     setBookingError('');
@@ -157,9 +170,17 @@ export default function StoragePage() {
         <div className="relative w-full">
           <div className="absolute left-4 right-4 top-4 z-30 flex items-center justify-between md:left-6 md:right-6 md:top-6">
             <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50"><FaArrowLeft /></button>
-            <button type="button" onClick={() => setIsSaved((saved) => !saved)} aria-label={isSaved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={isSaved} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50">
-              <FaHeart className={isSaved ? 'text-rose-400' : ''} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleShare}
+                className="p-2.5 rounded-full transition-all duration-300 bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm"
+              >
+                <FaShare className="w-5 h-5" />
+              </button>
+              <button type="button" onClick={() => setIsSaved((saved) => !saved)} aria-label={isSaved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={isSaved} className="p-2.5 rounded-full transition-all duration-300 bg-black/20 hover:bg-black/40 backdrop-blur-sm">
+                <FaHeart className={`w-5 h-5 ${isSaved ? 'text-rose-400' : 'text-white'}`} />
+              </button>
+            </div>
           </div>
           <div className="grid h-[320px] w-full grid-cols-1 gap-2 overflow-hidden bg-slate-900 sm:h-[400px] md:h-[500px] lg:h-[600px] md:grid-cols-2">
             <button type="button" aria-label="View first photo" onClick={() => { setActiveImg(0); setLightbox(true); }} className="group relative h-full overflow-hidden text-left">
@@ -184,7 +205,19 @@ export default function StoragePage() {
         <div className="relative flex h-[320px] w-full items-center justify-center bg-gradient-to-br from-slate-700 to-slate-950 sm:h-[400px] md:h-[500px] lg:h-[600px]">
           <div className="absolute left-4 right-4 top-4 z-30 flex items-center justify-between md:left-6 md:right-6 md:top-6">
             <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50"><FaArrowLeft /></button>
-            <button type="button" onClick={() => setIsSaved((saved) => !saved)} aria-label={isSaved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={isSaved} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50"><FaHeart className={isSaved ? 'text-rose-400' : ''} /></button>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <button type="button" onClick={handleShare} aria-label="Share this listing" className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50">
+                  <FaShare />
+                </button>
+                {shareCopied && (
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-lg backdrop-blur-sm">
+                    Link copied!
+                  </span>
+                )}
+              </div>
+              <button type="button" onClick={() => setIsSaved((saved) => !saved)} aria-label={isSaved ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={isSaved} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/50"><FaHeart className={isSaved ? 'text-rose-400' : ''} /></button>
+            </div>
           </div>
           <FaWarehouse className="h-24 w-24 text-slate-400" />
         </div>

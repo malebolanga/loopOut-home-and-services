@@ -566,6 +566,28 @@ export default function DashBoard() {
                               <div className="flex-1 min-w-0">
                                  <p className="text-[11px] font-black text-gray-900 dark:text-white truncate uppercase tracking-tight">{notif.title || 'System Alert'}</p>
                                  <p className="text-[10px] text-gray-500 dark:text-white line-clamp-2 mt-0.5">{notif.message}</p>
+                                 {(() => {
+                                   const data = notif.data || {};
+                                   let price = data.totalPrice ?? data.price ?? data.offerPrice ?? data.amount ?? notif.price ?? notif.totalPrice;
+                                   if (price == null) {
+                                     const text = `${notif.message || ''} ${notif.title || ''}`;
+                                     const match = text.match(/(?:ZAR|R)\s?([0-9]{1,3}(?:[,\s][0-9]{3})*(?:\.[0-9]{2})?|[0-9]+(?:\.[0-9]{2})?)/i);
+                                     if (match) {
+                                       const val = parseFloat(match[1].replace(/[\s,]/g, ''));
+                                       if (!isNaN(val) && val > 0) price = val;
+                                     }
+                                   }
+                                   if (price != null && !isNaN(price) && Number(price) > 0) {
+                                     return (
+                                       <div className="mt-1">
+                                         <span className="inline-block px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-[9px] font-black text-emerald-700 dark:text-emerald-400">
+                                           ZAR {Number(price).toLocaleString()}
+                                         </span>
+                                       </div>
+                                     );
+                                   }
+                                   return null;
+                                 })()}
                                  <p className="text-[8px] text-gray-400 mt-1 font-bold">{getTimeAgo(notif.createdAt)}</p>
                               </div>
                            </div>

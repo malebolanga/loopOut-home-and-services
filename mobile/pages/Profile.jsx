@@ -22,6 +22,7 @@ import {
   signOutUserStart,
 } from "../redux/user/userSlice";
 import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
+import { canCreateFor, canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 import {
   MdLocationOn,
   MdVerifiedUser,
@@ -276,6 +277,13 @@ export default function Profile() {
   const [activeSection, setActiveSection] = useState("personal");
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
+  const isProvider = canCreateListings(currentUser);
+  const offeringLabels = { viewer: 'Browsing account', services: 'Service provider', property: 'Property host', food: 'Food shop', goods: 'Goods seller' };
+  const offeringLabel = offeringLabels[currentUser?.offeringType] || 'LoopOut member';
+
+  useEffect(() => {
+    if (!isProvider && ['host-account', 'my-listings', 'events'].includes(activeSection)) setActiveSection('personal');
+  }, [isProvider, activeSection]);
 
   // WhatsApp integration states
   const [whatsappNumber, setWhatsappNumber] = useState('');
@@ -338,7 +346,8 @@ export default function Profile() {
   // Fetch user events and post count
   useEffect(() => {
     if (currentUser) {
-      fetchUserEvents();
+      if (canCreateFor(currentUser, 'property')) handleShowListings();
+      if (['property', 'goods'].includes(currentUser.offeringType)) fetchUserEvents();
       fetchPostCount();
     }
   }, [currentUser?._id]);
@@ -1048,7 +1057,7 @@ export default function Profile() {
                  {[
                    { label: "Elite Points", value: currentUser?.points ?? 0, color: "text-purple-400" },
                    { label: "Email status", value: currentUser?.isVerified ? "Verified" : "Unverified", color: currentUser?.isVerified ? "text-emerald-400" : "text-amber-400" },
-                   { label: "Deployments", value: postCount || "0", color: "text-blue-400" },
+                    { label: offeringLabel, value: postCount || "0", color: "text-blue-400" },
                    { label: "Active Connections", value: currentUser?.followers?.length || 0, color: "text-indigo-400" }
                  ].map((stat, i) => (
                    <div key={i} className="flex flex-col">
@@ -1115,25 +1124,25 @@ export default function Profile() {
                       active={activeSection === "privacy"}
                       onClick={() => setActiveSection("privacy")}
                     />
-                    <MenuItem
+                    {isProvider && <MenuItem
                       icon={HomeIcon}
-                      label="Command Dashboard"
+                      label={currentUser?.offeringType === 'property' ? 'Host dashboard' : 'Provider dashboard'}
                       active={activeSection === "host-account"}
                       onClick={() => setActiveSection("host-account")}
-                    />
+                    />}
                     <MenuItem
                       icon={HeartIcon}
                       label="Wishlist Vault"
                       active={activeSection === "wishlist"}
                       onClick={() => setActiveSection("wishlist")}
                     />
-                    <MenuItem
+                    {isProvider && <MenuItem
                       icon={ListBulletIcon}
-                      label="My listings"
+                      label={currentUser?.offeringType === 'property' ? 'My properties' : currentUser?.offeringType === 'food' ? 'My shop' : currentUser?.offeringType === 'goods' ? 'My goods' : 'My offers'}
                       active={activeSection === "my-listings"}
                       onClick={() => setActiveSection("my-listings")}
                       badge={userListings?.length || 0}
-                    />
+                    />}
                     <MenuItem
                       icon={TrophyIcon}
                       label="Elite Rewards"
@@ -1328,7 +1337,11 @@ export default function Profile() {
                                 Complete identity verification through the secure verification flow
                               </p>
                             </div>
-                            {!isFaceVerified ? (
+                            {currentUser?.offeringType === 'services' && (currentUser?.kycStatus === 'verified' ? (
+                              <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full"><CheckCircleIcon className="w-3.5 h-3.5" />Verified</span>
+                            ) : currentUser?.kycStatus === 'pending' ? (
+                              <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm font-medium">Under review</span>
+                            ) : (
                               <button
                                 type="button"
                                 onClick={handleNavigateToVerification}
@@ -1336,12 +1349,7 @@ export default function Profile() {
                               >
                                 Verify identity
                               </button>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[#00A699] font-medium bg-[#00A699]/10 px-3 py-1 rounded-full">
-                                <CheckCircleIcon className="w-3.5 h-3.5" />
-                                Verified
-                              </span>
-                            )}
+                            ))}
                           </div>
 
                           {/* Phone Verification Row */}
@@ -1734,6 +1742,7 @@ export default function Profile() {
             {/* My Listings Section */}
             {activeSection === "my-listings" && (
               <SectionCard title="My listings" icon={ListBulletIcon}>
+                {canCreateListings(currentUser) && <>
                 <div className="mb-7 rounded-[1.75rem] border border-rose-100 bg-gradient-to-br from-rose-50 via-white to-amber-50 p-5 dark:border-rose-900/50 dark:from-rose-950/30 dark:via-gray-900 dark:to-amber-950/20">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
@@ -1742,19 +1751,26 @@ export default function Profile() {
                       <p className="mt-1 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-300">Choose the option that best matches what you offer. You can add photos, availability, pricing and contact details in the next step.</p>
                     </div>
                     <button
-                      onClick={() => navigate(`/${currentUser?._id}/create-listing`)}
+                      onClick={() => navigate(getCreationRoute(currentUser))}
                       className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#FF5A5F] px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/20 transition hover:bg-[#E00B41]"
                     >
                       <PlusIcon className="h-4 w-4" /> Create listing
                     </button>
                   </div>
-                  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  {currentUser?.offeringType === 'food' ? <button onClick={() => navigate('/food/register')} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-3 font-bold text-white"><PlusIcon className="h-4 w-4" /> Set up food shop</button> : <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
                     {[
                       { label: 'Stay', hint: 'Home, room or holiday stay', icon: HomeIcon, tab: 'stays', color: 'text-blue-600 bg-blue-100 dark:bg-blue-950/50' },
                       { label: 'Helper', hint: 'Local help or personal service', icon: FaHandsHelping, tab: 'online', color: 'text-violet-600 bg-violet-100 dark:bg-violet-950/50' },
                       { label: 'Event', hint: 'Experience, activity or occasion', icon: CalendarIcon, tab: 'events', color: 'text-amber-600 bg-amber-100 dark:bg-amber-950/50' },
                       { label: 'Service', hint: 'Professional or home service', icon: FaTools, tab: 'experiences', color: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-950/50' },
-                    ].map(({ label, hint, icon: Icon, tab, color }) => (
+                      { label: 'Goods', hint: 'Products for sale', icon: FaGift, tab: 'selling', color: 'text-pink-600 bg-pink-100 dark:bg-pink-950/50' },
+                    ].filter(({ tab }) => {
+                      if (!currentUser?.offeringType) return true;
+                      if (currentUser.offeringType === 'services') return tab === 'experiences' || tab === 'online';
+                      if (currentUser.offeringType === 'property') return tab === 'stays' || tab === 'events';
+                      if (currentUser.offeringType === 'goods') return tab === 'selling' || tab === 'events';
+                      return false;
+                    }).map(({ label, hint, icon: Icon, tab, color }) => (
                       <button
                         key={label}
                         onClick={() => navigate(`/${currentUser?._id}/create-listing?tab=${tab}`)}
@@ -1765,8 +1781,9 @@ export default function Profile() {
                         <span className="mt-0.5 block text-[10px] font-medium leading-4 text-slate-500 dark:text-slate-400">{hint}</span>
                       </button>
                     ))}
-                  </div>
+                  </div>}
                 </div>
+                </>}
 
                 {userListings && userListings.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1801,20 +1818,20 @@ export default function Profile() {
                             </span>
                           </div>
                           <div className="flex gap-2">
-                            <Link
+                            {canCreateFor(currentUser, 'property') && <Link
                               to={`/update-listing/${listing._id}`}
                               className="flex-1 flex items-center justify-center gap-2 py-2 border border-[#DDDDDD] rounded-lg text-[#484848] dark:text-white hover:bg-[#F7F7F7] dark:bg-gray-800 transition-colors font-medium"
                             >
                               <PencilSquareIcon className="w-4 h-4" />
                               Edit
-                            </Link>
-                            <button
+                            </Link>}
+                            {canCreateFor(currentUser, 'property') && <button
                               onClick={() => handleListingDelete(listing._id)}
                               className="flex-1 flex items-center justify-center gap-2 py-2 border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium"
                             >
                               <TrashIcon className="w-4 h-4" />
                               Delete
-                            </button>
+                            </button>}
                           </div>
                         </div>
                       </div>
@@ -1825,13 +1842,22 @@ export default function Profile() {
                     <HomeIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
                     <h4 className="text-lg font-semibold text-[#484848] dark:text-white mb-2">No listings yet</h4>
                     <p className="text-[#767676] dark:text-white mb-6">Start hosting and earn income</p>
-                    <Link
+                    {canCreateFor(currentUser, 'property') && <Link
                       to={`/${currentUser?._id}/create-listing`}
                       className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors"
                     >
                       <PlusIcon className="w-[18px] h-[18px]" />
                       Create your first listing
-                    </Link>
+                    </Link>}
+                    {currentUser?.offeringType === 'services' && (
+                      <Link
+                        to={`/${currentUser?._id}/listings`}
+                        className="inline-flex items-center gap-2 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-colors"
+                      >
+                        <PlusIcon className="w-[18px] h-[18px]" />
+                        Manage your services & helpers
+                      </Link>
+                    )}
                   </div>
                 )}
               </SectionCard>
@@ -1901,10 +1927,6 @@ export default function Profile() {
                     <CalendarIcon className="w-12 h-12 mx-auto text-[#DDDDDD] mb-4" />
                     <h4 className="text-lg font-semibold text-[#484848] dark:text-white mb-2">No events yet</h4>
                     <p className="text-[#767676] dark:text-white mb-6">Create events to connect with your community</p>
-                    <button className="inline-flex items-center gap-2 bg-[#FF5A5F] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#E00B41] transition-colors">
-                      <PlusIcon className="w-[18px] h-[18px]" />
-                      Create event
-                    </button>
                   </div>
                 )}
               </SectionCard>

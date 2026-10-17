@@ -87,19 +87,28 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const fetchWithRetry = async (
   input,
   options = {},
-  { maxRetries = 3, timeoutMs = 35000 } = {}
+  { maxRetries = 3, timeoutMs = 35000, quiet = false } = {}
 ) => {
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const { signal: callerSignal, ...requestOptions } = options;
+    if (callerSignal?.aborted) {
+      throw callerSignal.reason || new DOMException('The request was cancelled.', 'AbortError');
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const abortFromCaller = () => controller.abort(callerSignal?.reason);
+    callerSignal?.addEventListener('abort', abortFromCaller, { once: true });
     try {
-      const response = await fetch(input, { ...options, signal: controller.signal });
-      clearTimeout(timer);
+      const response = await fetch(input, { ...requestOptions, signal: controller.signal });
       return response; // Caller handles 4xx/5xx
     } catch (err) {
-      clearTimeout(timer);
       lastError = err;
+
+      // A page change or component unmount deliberately cancelled this request.
+      // It is not a network failure and must never be retried.
+      if (callerSignal?.aborted) throw err;
 
       const isAbort = err?.name === 'AbortError';
       const isRetryable =
@@ -109,10 +118,15 @@ export const fetchWithRetry = async (
       if (!isRetryable || attempt === maxRetries) throw err;
 
       const delay = Math.min(1000 * 2 ** attempt, 8000);
-      console.warn(
-        `[fetchWithRetry] Attempt ${attempt + 1} failed (${err.message}). Retrying in ${delay}ms…`
-      );
+      if (!quiet) {
+        console.warn(
+          `[fetchWithRetry] Attempt ${attempt + 1} failed (${err.message}). Retrying in ${delay}ms…`
+        );
+      }
       await sleep(delay);
+    } finally {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener('abort', abortFromCaller);
     }
   }
   throw lastError;

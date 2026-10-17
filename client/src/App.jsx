@@ -321,6 +321,7 @@ const AnimatedRoutes = () => {
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
           <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
+          <Route path="/create-listing" element={<CreateListingRedirect />} />
           <Route path="/:userId/create-listing" element={<PageTransition><ListingCreationGate><CreateListing /></ListingCreationGate></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />
           <Route path="/splitter" element={<PageTransition><Splitter /></PageTransition>} />
@@ -359,7 +360,26 @@ const ListingRedirect = () => {
 const HostCreateRedirect = ({ tab }) => {
   const { currentUser } = useSelector((state) => state.user);
   const userId = currentUser?._id || currentUser?.id;
-  return <Navigate to={userId ? `/${userId}/create-listing?tab=${tab}` : '/login-required'} replace />;
+  if (!userId) return <Navigate to="/login-required" replace />;
+  if (currentUser?.offeringType === 'viewer') return <Navigate to="/become" replace />;
+  return <Navigate to={`/${userId}/create-listing?tab=${tab}`} replace />;
+};
+
+const CreateListingRedirect = () => {
+  const { currentUser } = useSelector((state) => state.user);
+  const location = useLocation();
+  const userId = currentUser?._id || currentUser?.id;
+
+  if (!userId) {
+    return <Navigate to={`/sign-in?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  }
+  if (currentUser?.offeringType === 'viewer') {
+    return <Navigate to="/become" replace />;
+  }
+  if (currentUser?.offeringType === 'food') {
+    return <Navigate to="/food/register" replace />;
+  }
+  return <Navigate to={`/${userId}/create-listing${location.search}`} replace />;
 };
 
 import OnboardingGuide from './components/OnboardingGuide';
