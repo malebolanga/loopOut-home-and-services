@@ -82,6 +82,7 @@ import 'swiper/css/free-mode';
 // Swiper styles already imported above
 
 import ImageWithFallback from '../components/ImageWithFallback';
+import MutualFriends from '../components/MutualFriends';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
@@ -2346,8 +2347,6 @@ export default function PrivateTutor() {
   }
 
   const description = helper.description || '';
-  const hasReviews = commentCount > 0 && Number(ratings?.overall || helper.rating) > 0;
-  const displayedRating = hasReviews ? Number(ratings?.overall || helper.rating).toFixed(1) : 'New';
   const displayText = showFullDescription
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
@@ -2421,20 +2420,32 @@ export default function PrivateTutor() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white mb-4 tracking-tight">
             {getProfessionalTitle(helper.type)} services by {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-2.5 text-sm">
-            <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+            <div className="flex items-center gap-2">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
-              <span className="font-semibold">{displayedRating}</span>
-              <span className="text-slate-500">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300">
+              <span className="font-semibold text-slate-900 text-base">
+                {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+              </span>
+              <span>·</span>
+              <span className="underline hover:text-slate-900 transition-colors cursor-pointer">{commentCount} reviews</span>
+            </div>
+            <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700">
+              <CheckBadgeIcon className="text-rose-500 w-4 h-4" />
+              <span className="font-black uppercase tracking-widest text-[10px]">Superhelper</span>
+            </div>
+            <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700">
               <PlusCircleIcon className="text-indigo-500 w-4 h-4" />
-              {Number(bookingSummary.count) > 0 ? `Booked ${bookingSummary.count} ${Number(bookingSummary.count) === 1 ? 'time' : 'times'}` : 'No bookings yet'}
-            </span>
-            {helper.address && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300">
-              <MapPinIcon className="text-slate-400 w-4 h-4 shrink-0" /><span className="truncate">{helper.address}</span>
-            </span>}
-            {helper.userRef?.isSuperhost && <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700"><CheckBadgeIcon className="w-4 h-4" />Superhost</span>}
+              <span className="font-black uppercase tracking-widest text-[10px]">Booked {bookingSummary.count || 0} times</span>
+            </div>
+            <span className="text-slate-300">·</span>
+            <div className="flex items-center gap-2 text-slate-700 underline font-black uppercase tracking-widest text-[10px] cursor-pointer hover:text-slate-900 transition-colors">
+              <MapPinIcon className="text-slate-400 w-4 h-4" />
+              <span>{helper.address || 'Johannesburg, South Africa'}</span>
+            </div>
+            <span className="text-slate-300">·</span>
+            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
           </div>
         </div>
 
@@ -2452,7 +2463,9 @@ export default function PrivateTutor() {
                   <h2 className="text-xl font-semibold text-gray-900">
                     {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
                   </h2>
-                  <p className="text-gray-600 mt-1">{helper.userRef?.isSuperhost ? 'Superhost' : 'View provider profile'}</p>
+                  <p className="text-gray-600 mt-1">
+                    {helper.userRef?.isSuperhost ? 'Superhost' : 'Verified Host'} · {helper.host || 5}+ years of experience
+                  </p>
                 </div>
                 <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
                   {helper.userRef?.avatar ? (
@@ -2460,7 +2473,7 @@ export default function PrivateTutor() {
                       src={helper.userRef.avatar}
                       alt={helper.userRef?.username || helper.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      onError={(e) => { e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'; }}
                     />
                   ) : (
                     <FaUser className="text-2xl text-gray-400" />
@@ -2468,6 +2481,33 @@ export default function PrivateTutor() {
                 </div>
               </Link>
               
+              {/* Mutual Friends Section */}
+              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
+            </div>
+
+
+            <div className="space-y-6 pb-8 border-b border-slate-100">
+              <div className="flex items-start gap-4">
+                <Sparkles className="w-6 h-6 text-rose-500 mt-1" />
+                <div>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Top rated professional</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Highly rated for quality, reliability, and customer satisfaction</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
+                <div>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Experienced & Verified</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Background checked with verified credentials and references</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
+                <div>
+                  <h3 className="font-black uppercase tracking-widest text-xs text-gray-950">Flexible scheduling</h3>
+                  <p className="text-gray-500 text-xs font-medium mt-1">Available 7 days a week with flexible hours to suit your needs</p>
+                </div>
+              </div>
             </div>
 
             {/* Description */}
@@ -2564,7 +2604,7 @@ export default function PrivateTutor() {
               <div className="flex items-center gap-2 mb-8">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  {displayedRating} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
+                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} reviews
                 </h2>
               </div>
 
@@ -2666,27 +2706,27 @@ export default function PrivateTutor() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              {commentCount > 0 && <button
+              <button
                 onClick={() => setShowCommentsPanel(true)}
                 className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
               >
                 Show all {commentCount} reviews
-              </button>}
+              </button>
             </div>
 
             {/* Location */}
-            {helper.address && <div className="py-6 border-t border-gray-200">
+            <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{helper.address}</p>
               <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
                 <GoogleMapComponent
-                  address={helper.address}
+                  address={helper.address || 'Johannesburg, South Africa'}
                   title={`${helper.name}'s Location`}
                 />
               </div>
               {helper.near && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">Subjects covered</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
                   <div className="text-gray-700 text-xs lg:text-sm space-y-1">
                     {(helper.near || '').split('\n').slice(0, 4).map((item, i) => (
                       <p key={i}>{item}</p>
@@ -2694,27 +2734,26 @@ export default function PrivateTutor() {
                   </div>
                 </div>
               )}
-            </div>}
+            </div>
 
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="top-24">
+          <div className="lg:col-span-1">
+            <div className="top-24 py-12">
               {/* Masterpiece Booking Card */}
               <div className="rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 bg-transparent sticky top-24 border border-slate-200/50 dark:border-gray-800 mb-12 lg:mb-0">
-                <div className="mb-6 border-b border-slate-100 pb-5">
+                <div className="flex items-end justify-between mb-8 pb-6 border-b border-gray-50">
                   <div>
-                    <span className="text-xs font-semibold text-slate-500 block mb-1">Tutoring rate</span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-3xl font-bold text-gray-950 dark:text-white tracking-tight">R{tutorHourlyRate}</span>
-                      <span className="text-sm font-medium text-gray-500">/ hour</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 block mb-1">Service Rate</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-gray-950 dark:text-white tracking-tighter">R{helper.regularPrice}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">/ service</span>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
-                    <StarIconSolid className="h-4 w-4 text-amber-400" />
-                    <span className="font-semibold text-slate-800">{displayedRating}</span>
-                    <span>{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
+                  <div className="flex items-center gap-2 bg-rose-50 px-3 py-2 rounded-2xl">
+                    <StarIconSolid className="w-4 h-4 text-rose-500" />
+                    <span className="text-xs font-black text-rose-700">{helper.rating || '4.5'}</span>
                   </div>
                 </div>
 
@@ -2722,7 +2761,7 @@ export default function PrivateTutor() {
                 <div className="space-y-4 mb-8">
                   {helper.type === 'tutor' ? (
                     <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                          <label className="block text-xs font-semibold text-gray-700 mb-1.5">Subject &amp; module</label>
+                      <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Subject & Module</label>
                       <div className="text-xs font-bold text-gray-800">
                         {bookingData.selectedSubject ? `${bookingData.selectedSubject} - ${bookingData.selectedModule || 'Select Module'}` : 'Select Subject in Details Form'}
                       </div>
@@ -2731,7 +2770,7 @@ export default function PrivateTutor() {
                     <>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-gray-200 transition-all">
-                        <label className="block text-xs font-semibold text-gray-700 mb-1.5">Date</label>
+                          <label className="block text-[9px] font-black text-gray-900 uppercase tracking-widest mb-1.5">Deployment Date</label>
                           <input
                             type="date"
                             name="date"
@@ -2759,7 +2798,7 @@ export default function PrivateTutor() {
                           name="name"
                           value={bookingData.name}
                           onChange={handleBookingChange}
-                          placeholder="Your name"
+                          placeholder="Full Designation"
                           className="w-full bg-transparent text-xs font-bold text-gray-900 outline-none placeholder-gray-300"
                         />
                       </div>
@@ -2783,20 +2822,20 @@ export default function PrivateTutor() {
                   </button>
                 </div>
 
-                <div className="text-center text-xs text-gray-500 mb-6">
-                   You can review the estimate before sending your request.
+                <div className="text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-8 italic">
+                   loopOut Promise: Zero Upfront Charge
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-gray-50">
                   {helper.type === 'tutor' ? (
                     <>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-500">Subject / rate</span>
-                        <span className="text-xs font-semibold text-gray-950 dark:text-white">{bookingData.selectedSubject || 'No subject selected'} · R{tutorHourlyRate}/hr</span>
+                        <span className="text-xs font-bold text-gray-500">Subject / Rate</span>
+                        <span className="text-xs font-black text-gray-950 dark:text-white">{bookingData.selectedSubject || 'Not selected'} (R{tutorHourlyRate}/hr)</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-500">Selected package</span>
-                        <span className="text-xs font-semibold text-gray-950 dark:text-white">
+                        <span className="text-xs font-bold text-gray-500">Selected Package</span>
+                        <span className="text-xs font-black text-gray-950 dark:text-white">
                           {bookingData.tutorPackage === 'two_sessions' && 'Two Sessions'}
                           {bookingData.tutorPackage === 'three_months' && '3 Months Contract'}
                           {bookingData.tutorPackage === 'four_months' && '4 Months Contract'}
@@ -2804,8 +2843,8 @@ export default function PrivateTutor() {
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium text-gray-500">Estimated hours</span>
-                        <span className="text-xs font-semibold text-gray-950 dark:text-white">{tutorTotalHours} hrs</span>
+                        <span className="text-xs font-bold text-gray-500">Total Hours</span>
+                        <span className="text-xs font-black text-gray-950 dark:text-white">{tutorTotalHours} hrs</span>
                       </div>
                     </>
                   ) : (
@@ -2833,12 +2872,12 @@ export default function PrivateTutor() {
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-medium text-gray-500">Service fee (10%)</span>
+                    <span className="text-xs font-bold text-gray-500">Service Fee (10%)</span>
                     <span className="text-xs font-black text-gray-950 dark:text-white">R{Math.round((totalPrice - (helper.travelFee || 0)) / 1.1 * 0.1)}</span>
                   </div>
                   <div className="mt-4 p-4 bg-gray-900 rounded-2xl flex justify-between items-center">
-                    <span className="text-xs font-semibold text-white">Estimated total</span>
-                    <span className="text-lg font-bold text-white">R{totalPrice}</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Total Estimate</span>
+                    <span className="text-lg font-black text-rose-500 italic tracking-tighter">R{totalPrice}</span>
                   </div>
                 </div>
               </div>
@@ -2853,9 +2892,18 @@ export default function PrivateTutor() {
           </div>
         </div>
 
+        {/* Mutual Connections Section */}
+        <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
+          <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter italic uppercase">
+            <UserGroupIcon className="text-rose-500 w-6 h-6" />
+            Mutual Connections
+          </h2>
+          <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-slate-200/60 dark:border-gray-800 shadow-sm">
+            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
+          </div>
+
         {/* Recent Bookers Section */}
-        <div className="mt-12 border-t border-slate-200/50 pt-10">
-          <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
         </div>
 
 

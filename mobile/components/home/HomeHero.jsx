@@ -9,25 +9,25 @@ const SLIDES = [
     id: 1,
     image: '/loopout_for_everyone.png',
     accent: '#F43F5E',
-    category: 'YOUR LOCAL MARKETPLACE',
+    category: 'STAYS',
     headline: 'Find a place that feels like home.',
-    cta: { label: 'Find a home', path: '/search?type=properties' },
+    cta: { label: 'Find a place', path: '/search?type=properties' },
   },
   {
     id: 2,
     image: '/loopout_maid_celebration.png',
     accent: '#F59E0B',
-    category: 'YOUR LOCAL MARKETPLACE',
+    category: 'SERVICES',
     headline: 'Trusted help, right when you need it.',
-    cta: { label: 'Book a service', path: '/search?type=services' },
+    cta: { label: 'Explore services', path: '/search?type=services' },
   },
   {
     id: 3,
     image: '/barber_loopout_campaign.png',
     accent: '#818CF8',
-    category: 'YOUR LOCAL MARKETPLACE',
+    category: 'GROOMING',
     headline: 'Book someone you can trust.',
-    cta: { label: 'Find a helper', path: '/search?type=helpers' },
+    cta: { label: 'Find a barber', path: '/search?category=barber&type=services' },
   },
 ];
 
@@ -120,18 +120,18 @@ export const HomeHero = ({ navigate, compact = false }) => {
               {slide.headline}
             </h1>
 
-            <p className="flex items-center gap-2 mt-3 flex-wrap" aria-label="LoopOut categories">
+            <p className="flex items-center gap-2 mt-3 flex-wrap">
               <span
                 className="text-[11px] font-black tracking-[0.12em] uppercase px-2.5 py-1 rounded-full"
                 style={{ color: slide.accent, background: `${slide.accent}22` }}
               >
-                Homes
+                Fine
               </span>
               <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Services
+                Fresh
               </span>
               <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Helpers
+                Fast
               </span>
             </p>
 

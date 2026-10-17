@@ -2613,7 +2613,7 @@ export default function TattooPage() {
           </div>
 
           {/* Right Column - Booking Card */}
-          <div className="hidden lg:block lg:col-span-1">
+          <div className="lg:col-span-1">
             <div className="top-24 py-12">
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-gray-800 dark:bg-gray-900 sticky top-24">
                 <p className="text-sm font-medium text-slate-500">Studio minimum</p>

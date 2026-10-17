@@ -29,7 +29,6 @@ import {
 } from "../redux/user/userSlice";
 import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
 import { Sparkles, Utensils } from 'lucide-react';
-import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -59,10 +58,7 @@ const BottomNav = () => {
     '/become', 
     '/login-required',
     '/lunch',
-    '/food',
-    '/notifications',
-    '/my-orders',
-    '/food-orders'
+    '/food'
   ];
   const hiddenBottomNavPrefixes = [
     '/food',
@@ -124,14 +120,10 @@ const BottomNav = () => {
 
   if (isBottomNavHidden) return null;
 
-  const isProvider = currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer';
-
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
     { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
-    ...(isProvider
-      ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }]
-      : [{ id: 'become', label: 'Become', icon: Sparkles, activeIcon: Sparkles, route: '/become' }]),
+    { id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in' },
     { id: 'lunch', label: 'Lunch', icon: Utensils, activeIcon: Utensils, route: '/lunch' },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];

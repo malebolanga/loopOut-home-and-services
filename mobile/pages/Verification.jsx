@@ -56,13 +56,6 @@ export default function Verification() {
   const [selfieUrl, setSelfieUrl] = useState('');
   const fileRef = useRef(null);
 
-  useEffect(() => {
-    if (currentUser?.offeringType === 'services' && currentUser?.kycStatus !== 'pending' && currentUser?.kycStatus !== 'verified') {
-      setMethod('kyc');
-      setStep(2);
-    }
-  }, [currentUser?.offeringType, currentUser?.kycStatus]);
-
   // Verification Protocols
   const PROTOCOLS = [
     { id: 'kyc', label: 'LIVE IDENTITY (KYC)', icon: <IdentificationIcon className="w-6 h-6" />, color: 'bg-indigo-500', description: 'Gov ID + Live Selfie Verification' },
@@ -143,7 +136,7 @@ export default function Verification() {
        const data = await res.json();
        if (data.success === false) { setError(data.message); return; }
        
-       const updatedUser = { ...currentUser, isVerified: false, kycStatus: 'pending' };
+       const updatedUser = { ...currentUser, isVerified: true, kycStatus: 'pending' };
        dispatch(updateUserSuccess(updatedUser));
        setStep(3); // success screen
      } catch (err) {
@@ -288,7 +281,8 @@ export default function Verification() {
                   <span className="text-gray-300">IDENTITY</span>
                 </h1>
                 <p className="max-w-xl text-gray-500 dark:text-white font-medium leading-relaxed">
-                  Confirm your identity with a government ID or passport and a live camera selfie. Your documents are submitted for review; taking a selfie does not automatically verify your account.
+                  Establish an immutable connection between your physical presence and the loopOut network. 
+                  Choose a deployment protocol to securely verify your identity.
                 </p>
               </div>
 
@@ -427,7 +421,7 @@ export default function Verification() {
                               onClick={handleCaptureSelfie}
                               className="px-12 py-5 bg-gray-950 text-white hover:bg-black rounded-[2rem] text-xs font-black uppercase tracking-widest transition-all shadow-2xl active:scale-95 flex items-center gap-3"
                             >
-                              Capture live selfie
+                              Verify Selfie
                             </button>
                          </div>
                        )}

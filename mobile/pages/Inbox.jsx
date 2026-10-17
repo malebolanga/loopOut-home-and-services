@@ -238,19 +238,9 @@ export default function Inbox() {
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center p-10 text-center">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-500 dark:bg-rose-500/10">
-                <FiMessageCircle className="h-7 w-7" />
-              </div>
-              <h2 className="text-base font-bold text-gray-900 dark:text-white">No messages yet</h2>
-              <p className="mt-2 max-w-xs text-sm leading-relaxed text-gray-500 dark:text-gray-400">Contact a host or provider from a listing to start a conversation.</p>
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                className="mt-5 rounded-xl bg-rose-500 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm shadow-rose-500/25 transition hover:bg-rose-600"
-              >
-                Explore listings
-              </button>
+            <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400">
+              <FiMessageCircle className="w-12 h-12 mb-4 opacity-20" />
+              <p>No messages found</p>
             </div>
           )}
         </div>

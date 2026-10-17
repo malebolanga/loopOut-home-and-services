@@ -115,22 +115,22 @@ const FoodCard = ({ item }) => {
       className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-100 flex flex-col"
     >
       {/* Image */}
-      <div className="home-image-card relative aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">
+      <div className="relative h-44 overflow-hidden bg-slate-100 shrink-0">
         {!imgError ? (
           <img
             src={item.image}
             alt={item.name}
             onError={() => setImgError(true)}
-            className="w-full h-full object-cover brightness-90 saturate-90 group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${item.gradient} flex items-center justify-center`}>
             <span className="text-6xl">{item.emoji}</span>
           </div>
         )}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-        <span className="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow shadow-rose-950/20">
+        <span className={`absolute top-3 left-3 ${item.badgeColor} text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow`}>
           {item.badge}
         </span>
 

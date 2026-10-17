@@ -41,7 +41,7 @@ export default function HostYourHome() {
       color: 'from-rose-500 to-orange-400',
       tag: 'Property',
       potential: 'R15,000 /mo',
-      path: currentUser ? `/${currentUser._id}/create-listing?tab=property` : '/sign-in'
+      path: currentUser ? `/${currentUser._id}/create-listing` : '/sign-in'
     },
     {
       id: 'service',
@@ -51,7 +51,7 @@ export default function HostYourHome() {
       color: 'from-blue-600 to-indigo-400',
       tag: 'Professional',
       potential: 'R8,000 /mo',
-      path: currentUser ? `/${currentUser._id}/create-listing?tab=experiences` : '/sign-in'
+      path: '/create-service'
     },
     {
       id: 'helper',
@@ -61,7 +61,7 @@ export default function HostYourHome() {
       color: 'from-emerald-500 to-teal-400',
       tag: 'Support',
       potential: 'R5,000 /mo',
-      path: currentUser ? `/${currentUser._id}/create-listing?tab=online` : '/sign-in'
+      path: '/create-helper'
     },
     {
       id: 'event',
@@ -71,7 +71,7 @@ export default function HostYourHome() {
       color: 'from-purple-600 to-pink-400',
       tag: 'Experience',
       potential: 'R12,000 /event',
-      path: currentUser ? `/${currentUser._id}/create-listing?tab=events` : '/sign-in'
+      path: '/create-event'
     }
   ];
 
@@ -126,14 +126,7 @@ export default function HostYourHome() {
 
           {/* Core Paths - Dynamic Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {hostTypes.filter((type) => {
-              if (!currentUser || currentUser.offeringType === 'viewer') return false;
-              if (!currentUser.offeringType) return true;
-              if (currentUser.offeringType === 'services') return type.id === 'service' || type.id === 'helper';
-              if (currentUser.offeringType === 'property') return type.id === 'listing' || type.id === 'event';
-              if (currentUser.offeringType === 'goods') return type.id === 'event';
-              return false;
-            }).map((type, index) => (
+            {hostTypes.map((type, index) => (
               <motion.div
                 key={type.id}
                 initial={{ opacity: 0, y: 20 }}
