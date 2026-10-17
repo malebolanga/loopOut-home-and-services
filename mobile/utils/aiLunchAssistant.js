@@ -92,15 +92,16 @@ export const PRESET_MOODS = [
 export function generateVendorMealAI(rawInput) {
   const input = (rawInput || '').trim().toLowerCase();
 
+  if (!input) {
+    return { name: '🔥 Signature Chef Special', description: 'Freshly prepared daily meal with rich local flavors.', price: '75', tag: 'Chef Special', category: 'Full Menu', image: '🍱' };
+  }
+
   let name = rawInput || 'Special Daily Combo';
   let description = 'Prepared fresh daily with premium ingredients and authentic house seasonings.';
   let price = '65';
   let tag = 'Popular';
+  let category = 'Full Menu';
   let image = '🍱';
-
-  if (!input) {
-    return { name: '🔥 Signature Chef Special', description: 'Freshly prepared daily meal with rich local flavors.', price: '75', tag: 'Chef Special', image: '🍱' };
-  }
 
   // Keywords detection
   if (input.includes('kota') || input.includes('spatlo')) {
@@ -108,52 +109,67 @@ export function generateVendorMealAI(rawInput) {
     description = `Loaded local Kota packed with crispy chips, melted cheese, polony, vienna, egg, and signature house sauce.`;
     price = '55';
     tag = '🔥 Hot Seller';
+    category = 'Light Food';
     image = '🥪';
   } else if (input.includes('chicken') || input.includes('wing') || input.includes('drum')) {
     name = `🍗 Honey BBQ Grilled Chicken Meal`;
     description = `Juicy flame-grilled chicken served with golden crispy fries or pap and chakalaka.`;
     price = '85';
     tag = 'Popular';
+    category = 'African Cuisines';
     image = '🍗';
   } else if (input.includes('burger') || input.includes('cheese')) {
     name = `🍔 Gourmet Smash Beef Burger`;
     description = `Double beef patty topped with melted cheddar, caramelized onions, fresh lettuce, and tangy burger sauce.`;
     price = '75';
     tag = 'Top Rated';
+    category = 'Light Food';
     image = '🍔';
   } else if (input.includes('pap') || input.includes('mogodu') || input.includes('hardbody') || input.includes('stew') || input.includes('tripe')) {
     name = `🍲 Traditional Slow-Cooked Stew & Pap`;
     description = `Authentic slow-cooked tender meat served with fluffy white pap, chakalaka, and seasoned spinach.`;
     price = '80';
     tag = '👑 Local Classic';
+    category = 'African Cuisines';
     image = '🍲';
   } else if (input.includes('pizza') || input.includes('slice')) {
     name = `🍕 Loaded Meat Lovers Pizza`;
     description = `Stone-baked pizza with rich tomato base, mozzarella, pepperoni, bacon, and herbs.`;
     price = '110';
     tag = 'Popular';
+    category = 'Light Food';
     image = '🍕';
-  } else if (input.includes('salad') || input.includes('wrap') || input.includes('veggie') || input.includes('vegan')) {
-    name = `🥗 Mediterranean Fresh Garden Wrap`;
-    description = `Crispy fresh greens, grilled veggies, feta cheese, olives, and zesty herb dressing.`;
-    price = '60';
+  } else if (input.includes('salad') || input.includes('wrap') || input.includes('veggie') || input.includes('vegan') || input.includes('pie')) {
+    name = `🥗 Fresh Garden Salad & Snack`;
+    description = `Crispy fresh greens, grilled veggies, dressing, and delicious light snack bites.`;
+    price = '50';
     tag = '🥗 Healthy Choice';
+    category = 'Light Food';
     image = '🥗';
-  } else if (input.includes('drink') || input.includes('juice') || input.includes('smoothie')) {
-    name = `🥤 Ice Cold Refresher & Juice`;
+  } else if (input.includes('fruit') || input.includes('apple') || input.includes('banana') || input.includes('berries')) {
+    name = `🍎 Seasonal Fresh Fruit Bowl`;
+    description = `Sweet diced fresh seasonal fruits served cold with mint.`;
+    price = '35';
+    tag = '🍎 Fresh & Healthy';
+    category = 'Fruits';
+    image = '🍎';
+  } else if (input.includes('drink') || input.includes('juice') || input.includes('smoothie') || input.includes('coke') || input.includes('soda')) {
+    name = `🥤 Ice Cold Soft Drink Refresher`;
     description = `Chilled refreshing beverage to perfectly complement your lunch meal.`;
-    price = '25';
+    price = '20';
     tag = 'Refreshing';
+    category = 'Soft Drinks';
     image = '🥤';
   } else {
     name = rawInput.charAt(0).toUpperCase() + rawInput.slice(1) + ' Special';
     description = `Special house dish prepared fresh upon order with delicious local sides.`;
     price = '70';
     tag = 'Chef Special';
+    category = 'Full Menu';
     image = '🍱';
   }
 
-  return { name, description, price, tag, image };
+  return { name, description, price, tag, category, image };
 }
 
 /**

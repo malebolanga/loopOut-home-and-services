@@ -38,6 +38,10 @@ export const installApiBaseUrl = () => {
     if (isApiRequest) {
       const token = getStoredToken();
       const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : {}));
+      const auth = headers.get('Authorization');
+      if (auth && (auth.includes('undefined') || auth.includes('null') || auth.trim() === 'Bearer')) {
+        headers.delete('Authorization');
+      }
       if (token && !headers.has('Authorization')) {
         headers.set('Authorization', `Bearer ${token}`);
       }

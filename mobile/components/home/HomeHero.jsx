@@ -9,25 +9,25 @@ const SLIDES = [
     id: 1,
     image: '/loopout_for_everyone.png',
     accent: '#F43F5E',
-    category: 'STAYS',
+    category: 'YOUR LOCAL MARKETPLACE',
     headline: 'Find a place that feels like home.',
-    cta: { label: 'Find a place', path: '/search?type=properties' },
+    cta: { label: 'Find a home', path: '/search?type=properties' },
   },
   {
     id: 2,
     image: '/loopout_maid_celebration.png',
     accent: '#F59E0B',
-    category: 'SERVICES',
+    category: 'YOUR LOCAL MARKETPLACE',
     headline: 'Trusted help, right when you need it.',
-    cta: { label: 'Explore services', path: '/search?type=services' },
+    cta: { label: 'Book a service', path: '/search?type=services' },
   },
   {
     id: 3,
     image: '/barber_loopout_campaign.png',
     accent: '#818CF8',
-    category: 'GROOMING',
+    category: 'YOUR LOCAL MARKETPLACE',
     headline: 'Book someone you can trust.',
-    cta: { label: 'Find a barber', path: '/search?category=barber&type=services' },
+    cta: { label: 'Find a helper', path: '/search?type=helpers' },
   },
 ];
 
@@ -120,18 +120,18 @@ export const HomeHero = ({ navigate, compact = false }) => {
               {slide.headline}
             </h1>
 
-            <p className="flex items-center gap-2 mt-3 flex-wrap">
+            <p className="flex items-center gap-2 mt-3 flex-wrap" aria-label="LoopOut categories">
               <span
                 className="text-[11px] font-black tracking-[0.12em] uppercase px-2.5 py-1 rounded-full"
                 style={{ color: slide.accent, background: `${slide.accent}22` }}
               >
-                Fine
+                Homes
               </span>
               <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Fresh
+                Services
               </span>
               <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Fast
+                Helpers
               </span>
             </p>
 

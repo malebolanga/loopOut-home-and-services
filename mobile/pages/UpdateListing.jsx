@@ -73,18 +73,22 @@ export default function UpdateListing() {
 
   useEffect(() => {
     const fetchListing = async () => {
-      const listingId = params.listingId;
-      const res = await fetch(`/api/listing/get/${listingId}`);
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
-        return;
+      try {
+        const listingId = params.listingId;
+        const res = await fetch(`/api/listing/get/${listingId}`);
+        const data = await res.json();
+        if (data.success === false) {
+          setError(data.message || 'Listing not found or could not be loaded.');
+          return;
+        }
+        setFormData(data);
+      } catch (err) {
+        setError('Failed to fetch listing data.');
       }
-      setFormData(data);
     };
 
     fetchListing();
-  }, []);
+  }, [params.listingId]);
 
 
     // Store video
@@ -263,12 +267,14 @@ export default function UpdateListing() {
         setLoading(true);
         setError(false);
         
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || '';
         const res = await fetch(`/api/listing/update/${params.listingId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           },
+          credentials: 'include',
           body: JSON.stringify({
             ...formData,
             userRef: currentUser._id,
@@ -290,7 +296,6 @@ export default function UpdateListing() {
       }
     };
 
-
     
   return (
    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -298,8 +303,8 @@ export default function UpdateListing() {
        <div className="space-y-8">
            {/* Heading */}
            <div className="text-center space-y-2">
-               <h1 className="text-3xl font-bold text-airbnb-red">Create New Listing</h1>
-               <p className="text-gray-600 dark:text-white">Share your space with travelers from around the world</p>
+               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Update Listing</h1>
+               <p className="text-gray-600 dark:text-gray-400">Modify your property details, pricing, photos, and policies</p>
              </div>
      
            {/* Form */}

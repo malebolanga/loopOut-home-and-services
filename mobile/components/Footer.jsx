@@ -2,73 +2,23 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from 'react-redux';
-import { HomeIcon, MapIcon, HeartIcon, UserIcon, CpuChipIcon } from '@heroicons/react/24/outline';
-import { BrandIcon } from './BrandLogo';
 
 const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
-  const [isNavVisible, setIsNavVisible] = useState(true);
-  const [isAtTop, setIsAtTop] = useState(true);
   const lastScroll = useRef(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  useEffect(() => {
-    if (currentUser) {
-      const favorites = JSON.parse(localStorage.getItem(`favorites-${currentUser._id}`)) || [];
-      setIsFavorite(favorites.length > 0);
-    }
-  }, [currentUser?._id]);
 
   const handleProtectedClick = (e, path) => {
     if (!currentUser) {
       e.preventDefault();
       navigate('/login-required');
     } else if (path === '/profile') {
-      // Already logged in, allow navigation to profile
       navigate('/profile');
     }
   };
 
-  // 新增：处理 Profile 点击事件
-  const handleProfileClick = (e) => {
-    if (!currentUser) {
-      e.preventDefault();
-      navigate('/login-required'); // 导航到登录页面
-    }
-    // 如果已登录，Link 组件会正常导航到 /profile
-  };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setIsAtTop(currentScrollY < 100);
-      
-      const isScrollingUp = currentScrollY < lastScroll.current;
-      
-      // Elite Behavior: Hide when scrolling down, show when scrolling up
-      if (currentScrollY < 50) {
-        setIsNavVisible(true); 
-      } else if (isScrollingUp) {
-        setIsNavVisible(true); // Show when user wants to navigate
-      } else {
-        setIsNavVisible(false); // Hide when user is consuming content (scrolling down)
-      }
-      
-      lastScroll.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Hide footer only on full-bleed profile layouts. Listing/helper/service/
-  // event detail pages keep the footer so Privacy/Terms links stay reachable.
+  // Hide footer only on full-bleed profile layouts.
   if (
     location.pathname === '/profile' ||
     location.pathname.startsWith('/user/') ||
@@ -85,68 +35,94 @@ const Footer = () => {
 
   return (
     <>
-  
-
-      {/* Main Footer - Hidden on mobile and small screens for food routes, visible on desktop */}
-      <footer className={`${isFoodRoute ? 'hidden lg:block' : 'hidden md:block'} bg-gray-50 dark:bg-gray-950 text-gray-600 dark:text-gray-400 pt-20 pb-12 mt-20 border-t border-gray-100 dark:border-gray-800`}>
-        <div className="max-w-7xl mx-auto px-6 md:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-12 mb-16">
-            
-            {/* Brand Column */}
-            <div className="col-span-2 md:col-span-5 space-y-6 md:space-y-8">
-              <div className="flex items-center gap-3">
-                     <BrandIcon className="w-8 h-8" />
-                 <h3 className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white">loopOut</h3>
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed font-medium max-w-sm">
-                The ultimate neural ecosystem for high-fidelity stays, vetted local professionals, and premium lifestyle services.
-              </p>
-            </div>
-
-            {/* Links Columns */}
-            <div className="md:col-span-2 space-y-6">
-              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Company</h5>
-              <ul className="space-y-4">
-                <li><Link to="/about" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">About</Link></li>
-                <li><Link to="/pricing" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Pricing</Link></li>
-                <li><Link to="/become" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">List with loopOut</Link></li>
-              </ul>
-            </div>
-
-            <div className="md:col-span-2 space-y-6">
-              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Support</h5>
-              <ul className="space-y-4">
-                <li><Link to="/help-center" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Help Center</Link></li>
-                <li><Link to="/trust" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Trust & Safety</Link></li>
-                <li><Link to="/contact" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Contact us</Link></li>
-              </ul>
-            </div>
-
-            <div className="col-span-2 md:col-span-3 space-y-6">
-              <h5 className="text-gray-950 dark:text-white font-black text-[10px] uppercase tracking-[0.2em]">Protocols</h5>
-              <ul className="space-y-4">
-                <li><Link to="/terms" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Terms of Service</Link></li>
-                <li><Link to="/privacy" className="text-sm font-bold text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-all">Privacy Policy</Link></li>
-              </ul>
-            </div>
-
-          </div>
-
-          <div className="border-t border-gray-100 dark:border-gray-800 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <span className="text-xs font-bold text-gray-400 dark:text-gray-500">© {new Date().getFullYear()} loopOut Neural Hub. All rights reserved.</span>
-            <div className="flex items-center gap-10">
-               <span className="text-xs font-black text-gray-900 dark:text-white border-b border-rose-500/30">ENGLISH (SA)</span>
-               <span className="text-xs font-black text-gray-900 dark:text-white border-b border-rose-500/30">ZAR (R)</span>
-            </div>
-          </div>
+      {/* ── Desktop Footer Bar (Airbnb-style minimal bottom bar) ── */}
+      <footer
+        className={`${isFoodRoute ? 'hidden lg:flex' : 'hidden md:flex'} items-center justify-between bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800 px-8 py-4 text-[13px] text-gray-500 dark:text-gray-400`}
+      >
+        {/* Left: copyright + nav links */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span>© {new Date().getFullYear()} loopOut, Inc.</span>
+          <span className="mx-1 opacity-40">·</span>
+          <Link to="/privacy" className="hover:underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+            Privacy
+          </Link>
+          <span className="mx-1 opacity-40">·</span>
+          <Link to="/terms" className="hover:underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+            Terms
+          </Link>
+          <span className="mx-1 opacity-40">·</span>
+          <Link to="/sitemap" className="hover:underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+            Sitemap
+          </Link>
         </div>
-      </footer>      
+
+        {/* Right: language, currency, social icons */}
+        <div className="flex items-center gap-4">
+          {/* Language */}
+          <button className="flex items-center gap-1.5 hover:text-gray-800 dark:hover:text-gray-200 transition-colors font-medium">
+            {/* Globe icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            English
+          </button>
+
+          {/* Currency */}
+          <button className="hover:text-gray-800 dark:hover:text-gray-200 transition-colors font-medium">
+            R ZAR
+          </button>
+
+          {/* Facebook */}
+          <a
+            href="https://www.facebook.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Facebook"
+            className="hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+
+          {/* X (Twitter) */}
+          <a
+            href="https://www.twitter.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="X (Twitter)"
+            className="hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+
+          {/* Instagram */}
+          <a
+            href="https://www.instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+        </div>
+      </footer>
+
+      {/* ── Mobile Footer Bar ── */}
       {!isFoodRoute && (
-        <footer className="md:hidden mt-8 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
+        <footer className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-x-4 text-[11px] font-bold text-gray-500 dark:text-gray-400">
-            <Link to="/terms">Terms</Link>
+            <Link to="/terms" className="hover:underline">Terms</Link>
             <span className="text-gray-300 dark:text-gray-700">·</span>
-            <Link to="/privacy">Privacy</Link>
+            <Link to="/privacy" className="hover:underline">Privacy</Link>
           </div>
         </footer>
       )}

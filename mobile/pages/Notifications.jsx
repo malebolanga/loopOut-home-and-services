@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { FiBell, FiCheck, FiTrash2, FiClock } from 'react-icons/fi';
+import { FiBell, FiCheck, FiTrash2, FiClock, FiArrowLeft } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 
@@ -11,42 +11,66 @@ const parsePriceFromText = (text) => {
     if (match) {
         const rawNum = match[1].replace(/[\s,]/g, '');
         const val = parseFloat(rawNum);
-        if (!isNaN(val) && val > 0) return val;
+        if (!isNaN(val) && val > 0) {
+            return val;
+        }
     }
     return null;
 };
 
 const extractPriceInfo = (notification, priceMap = {}) => {
     if (!notification) return null;
+
     let price = null;
     const data = notification.data || {};
 
-    if (data.totalPrice != null && Number(data.totalPrice) > 0) price = Number(data.totalPrice);
-    else if (data.price != null && Number(data.price) > 0) price = Number(data.price);
-    else if (data.offerPrice != null && Number(data.offerPrice) > 0) price = Number(data.offerPrice);
-    else if (data.budget != null && Number(data.budget) > 0) price = Number(data.budget);
-    else if (data.amount != null && Number(data.amount) > 0) price = Number(data.amount);
-    else if (notification.price != null && Number(notification.price) > 0) price = Number(notification.price);
-    else if (notification.totalPrice != null && Number(notification.totalPrice) > 0) price = Number(notification.totalPrice);
+    if (data.totalPrice != null && Number(data.totalPrice) > 0) {
+        price = Number(data.totalPrice);
+    } else if (data.price != null && Number(data.price) > 0) {
+        price = Number(data.price);
+    } else if (data.offerPrice != null && Number(data.offerPrice) > 0) {
+        price = Number(data.offerPrice);
+    } else if (data.budget != null && Number(data.budget) > 0) {
+        price = Number(data.budget);
+    } else if (data.amount != null && Number(data.amount) > 0) {
+        price = Number(data.amount);
+    } else if (notification.price != null && Number(notification.price) > 0) {
+        price = Number(notification.price);
+    } else if (notification.totalPrice != null && Number(notification.totalPrice) > 0) {
+        price = Number(notification.totalPrice);
+    }
 
+    // Check message text first (which captured the user's selected price when the reservation was placed)
     if (price == null) {
         price = parsePriceFromText(notification.message) || parsePriceFromText(notification.title);
     }
 
+    // Fallback to booking price map from database
     if (price == null && data.bookingId && priceMap[data.bookingId.toString()] != null) {
         price = Number(priceMap[data.bookingId.toString()]);
     }
 
-    if (price == null || isNaN(price) || price <= 0) return null;
+    if (price == null || isNaN(price) || price <= 0) {
+        return null;
+    }
 
     const titleLower = (notification.title || '').toLowerCase();
     const msgLower = (notification.message || '').toLowerCase();
-    let label = 'Price';
-    if (data.offerPrice || titleLower.includes('offer') || msgLower.includes('offer')) label = 'Offer Price';
-    else if (notification.type === 'booking' || data.bookingId || titleLower.includes('booking') || titleLower.includes('appointment')) label = 'Booking Price';
-    else if (titleLower.includes('food') || msgLower.includes('food') || data.orderId) label = 'Order Total';
 
-    return { amount: price, formatted: `ZAR ${price.toLocaleString()}`, label };
+    let label = 'Price';
+    if (data.offerPrice || titleLower.includes('offer') || msgLower.includes('offer')) {
+        label = 'Offer Price';
+    } else if (notification.type === 'booking' || data.bookingId || titleLower.includes('booking') || titleLower.includes('appointment')) {
+        label = 'Booking Price';
+    } else if (titleLower.includes('food') || msgLower.includes('food') || data.orderId) {
+        label = 'Order Total';
+    }
+
+    return {
+        amount: price,
+        formatted: `ZAR ${price.toLocaleString()}`,
+        label
+    };
 };
 
 export default function Notifications() {
@@ -85,14 +109,30 @@ export default function Notifications() {
                 const newMap = {};
                 if (userRes.status === 'fulfilled' && userRes.value?.ok) {
                     const uData = await userRes.value.json();
-                    if (Array.isArray(uData)) uData.forEach(b => { if (b._id && (b.totalPrice != null || b.price != null)) newMap[b._id.toString()] = b.totalPrice ?? b.price; });
+                    if (Array.isArray(uData)) {
+                        uData.forEach(b => {
+                            if (b._id && (b.totalPrice != null || b.price != null)) {
+                                newMap[b._id.toString()] = b.totalPrice ?? b.price;
+                            }
+                        });
+                    }
                 }
                 if (hostRes.status === 'fulfilled' && hostRes.value?.ok) {
                     const hData = await hostRes.value.json();
-                    if (Array.isArray(hData)) hData.forEach(b => { if (b._id && (b.totalPrice != null || b.price != null)) newMap[b._id.toString()] = b.totalPrice ?? b.price; });
+                    if (Array.isArray(hData)) {
+                        hData.forEach(b => {
+                            if (b._id && (b.totalPrice != null || b.price != null)) {
+                                newMap[b._id.toString()] = b.totalPrice ?? b.price;
+                            }
+                        });
+                    }
                 }
-                if (Object.keys(newMap).length > 0) setBookingPriceMap(prev => ({ ...prev, ...newMap }));
-            } catch (_err) { /* silently ignore */ }
+                if (Object.keys(newMap).length > 0) {
+                    setBookingPriceMap(prev => ({ ...prev, ...newMap }));
+                }
+            } catch (_err) {
+                // Silently ignore
+            }
         };
         fetchBookingPrices();
     }, [currentUser?._id, getToken]);
@@ -418,8 +458,17 @@ export default function Notifications() {
 
     if (loading) {
         return (
-            <div className="max-w-4xl mx-auto px-4 py-8 animate-pulse">
-                <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="app-safe-top max-w-4xl mx-auto px-4 py-8 animate-pulse">
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2.5 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                        aria-label="Go Back"
+                    >
+                        <FiArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/4"></div>
+                </div>
                 <div className="space-y-4">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 flex gap-4 h-24">
@@ -441,16 +490,25 @@ export default function Notifications() {
     return (
         <div className="app-safe-top max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 app-safe-content-bottom pb-36 min-h-screen">
             <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                        Notifications
-                        {unreadCount > 0 && (
-                            <span className="bg-rose-500 text-white text-sm py-0.5 px-2.5 rounded-full font-medium">
-                                {unreadCount} new
-                            </span>
-                        )}
-                    </h1>
-                    <p className="text-gray-500 dark:text-white mt-1">Stay updated with your latest bookings, requests, and reviews.</p>
+                <div className="flex items-center gap-3.5">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2.5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-rose-500 transition-all shadow-xs active:scale-95 cursor-pointer flex-shrink-0"
+                        aria-label="Go Back"
+                    >
+                        <FiArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                            Notifications
+                            {unreadCount > 0 && (
+                                <span className="bg-rose-500 text-white text-sm py-0.5 px-2.5 rounded-full font-medium">
+                                    {unreadCount} new
+                                </span>
+                            )}
+                        </h1>
+                        <p className="text-gray-500 dark:text-white mt-1 text-sm sm:text-base">Stay updated with your latest bookings, requests, and reviews.</p>
+                    </div>
                 </div>
 
                 {notifications.length > 0 && (
@@ -504,71 +562,80 @@ export default function Notifications() {
             ) : (
                 <div className="space-y-4">
                     <AnimatePresence>
-                        {notifications.map((notification) => (
-                            <motion.div
-                                key={notification._id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                onClick={() => handleNotificationClick(notification)}
-                                className={`relative flex gap-4 p-5 rounded-2xl border transition-all cursor-pointer ${notification.read
-                                    ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white shadow-sm hover:shadow-md'
-                                    : 'bg-blue-50/50 border-blue-200 text-gray-900 dark:text-white shadow-md ring-1 ring-blue-100 shadow-blue-50'
-                                    }`}
-                            >
-                                {!notification.read && (
-                                    <div className="absolute top-5 right-5 w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse"></div>
-                                )}
+                        {notifications.map((notification) => {
+                            const priceInfo = extractPriceInfo(notification, bookingPriceMap);
+                            return (
+                                <motion.div
+                                    key={notification._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    onClick={() => handleNotificationClick(notification)}
+                                    className={`relative flex gap-4 p-5 rounded-2xl border transition-all cursor-pointer ${notification.read
+                                        ? 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-600 dark:text-white shadow-sm hover:shadow-md'
+                                        : 'bg-blue-50/50 border-blue-200 text-gray-900 dark:text-white shadow-md ring-1 ring-blue-100 shadow-blue-50'
+                                        }`}
+                                >
+                                    {!notification.read && (
+                                        <div className="absolute top-5 right-5 w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-pulse"></div>
+                                    )}
 
-                                <div className="flex-shrink-0 mt-1">
-                                    {getNotificationIcon(notification.type)}
-                                </div>
-
-                                <div className="flex-1 min-w-0 pr-2 sm:pr-8">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.read ? 'text-gray-800 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
-                                            {notification.title}
-                                        </h3>
-                                        {notification.type === 'review' && (
-                                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
-                                                Review
-                                            </span>
-                                        )}
-                                        {(notification.title?.toLowerCase().includes('new booking request') || notification.title?.toLowerCase().includes('action required')) && (
-                                            <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                                                Action Required
-                                            </span>
-                                        )}
-                                        {notification.title?.toLowerCase().includes('request placed') && (
-                                            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
-                                                Pending Approval
-                                            </span>
-                                        )}
+                                    <div className="flex-shrink-0 mt-1">
+                                        {getNotificationIcon(notification.type)}
                                     </div>
-                                    <p className={`text-xs sm:text-sm mb-3 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
-                                        {notification.message}
-                                    </p>
 
-                                    {(() => {
-                                        const priceInfo = extractPriceInfo(notification, bookingPriceMap);
-                                        if (!priceInfo) return null;
-                                        return (
-                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{priceInfo.label}:</span>
-                                                <span className="text-sm font-extrabold text-emerald-700 dark:text-emerald-300">{priceInfo.formatted}</span>
+                                    <div className="flex-1 min-w-0 pr-2 sm:pr-8">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className={`text-sm sm:text-base font-semibold truncate ${notification.read ? 'text-gray-800 dark:text-white' : 'text-gray-900 dark:text-white'}`}>
+                                                {notification.title}
+                                            </h3>
+                                            {notification.type === 'review' && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+                                                    Review
+                                                </span>
+                                            )}
+                                            {(notification.title?.toLowerCase().includes('new booking request') || notification.title?.toLowerCase().includes('action required')) && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                                                    Action Required
+                                                </span>
+                                            )}
+                                            {notification.title?.toLowerCase().includes('request placed') && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-800 rounded-full">
+                                                    Pending Approval
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className={`text-xs sm:text-sm mb-2.5 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
+                                            {notification.message}
+                                        </p>
+
+                                        {/* Display price just below the notification information */}
+                                        {priceInfo && (
+                                            <div className="mb-3 flex items-center gap-2.5 flex-wrap">
+                                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+                                                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                                        {priceInfo.label}:
+                                                    </span>
+                                                    <span className="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-300">
+                                                        {priceInfo.formatted}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1">
+                                                    Click to view details &rarr;
+                                                </span>
                                             </div>
-                                        );
-                                    })()}
+                                        )}
 
-                                    <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
-                                        <span className="flex items-center gap-1">
-                                            <FiClock className="w-3.5 h-3.5" />
-                                            {formattedDates[notification._id]}
-                                        </span>
+                                        <div className="flex items-center gap-4 text-xs font-medium text-gray-400">
+                                            <span className="flex items-center gap-1">
+                                                <FiClock className="w-3.5 h-3.5" />
+                                                {formattedDates[notification._id]}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
                 </div>
             )}
@@ -614,7 +681,7 @@ export default function Notifications() {
                                     {selectedNotification.message}
                                 </p>
 
-                                {/* Price display when bookingDetails not yet loaded */}
+                                {/* Price display in modal when bookingDetails is not available/applicable */}
                                 {(() => {
                                     const modalPrice = extractPriceInfo(selectedNotification, bookingPriceMap);
                                     if (modalPrice && !bookingDetails && !loadingBooking) {
@@ -622,8 +689,12 @@ export default function Notifications() {
                                             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60">
                                                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60">
                                                     <div>
-                                                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{modalPrice.label}</p>
-                                                        <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-300">{modalPrice.formatted}</p>
+                                                        <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                                            {modalPrice.label}
+                                                        </p>
+                                                        <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-300">
+                                                            {modalPrice.formatted}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>

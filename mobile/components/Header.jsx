@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authenticatedFetch, authenticatedFetchWithRetry, clearPersistedSessionToken } from '../utils/authenticatedFetch';
 
 import { pushPhoneNotification } from './PhoneNotificationManager';
+import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 import {
   MagnifyingGlassIcon,
@@ -45,6 +46,7 @@ import {
   ArrowRightIcon,
   ArrowLongRightIcon,
   MicrophoneIcon,
+  PlusIcon,
   BoltIcon,
   FireIcon,
   CalendarIcon,
@@ -263,7 +265,7 @@ export default function Header() {
       const res = await authenticatedFetchWithRetry(
         '/api/notifications',
         { headers: { 'Content-Type': 'application/json' }, signal },
-        { maxRetries: 3, timeoutMs: 40000 }
+        { maxRetries: 3, timeoutMs: 40000, quiet: true }
       );
 
       // Silently ignore auth errors, rate limit states, and server-not-ready states
@@ -320,8 +322,8 @@ export default function Header() {
     }
     try {
       const [userRes, hostRes] = await Promise.allSettled([
-        authenticatedFetchWithRetry(`/api/bookings/user/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 }),
-        authenticatedFetchWithRetry(`/api/bookings/host/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000 })
+        authenticatedFetchWithRetry(`/api/bookings/user/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000, quiet: true }),
+        authenticatedFetchWithRetry(`/api/bookings/host/${currentUser._id}`, { signal }, { maxRetries: 3, timeoutMs: 40000, quiet: true })
       ]);
 
       let confirmedCount = 0;
@@ -640,12 +642,13 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders'];
   const hiddenPrefixes = ['/food', '/lunch', '/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 
     hiddenRoutes.includes(location.pathname) || 
-    hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix));
+    hiddenPrefixes.some(prefix => location.pathname.startsWith(prefix)) ||
+    location.pathname.includes('create-listing');
 
   const profileMenuContent = (
     <div className="flex flex-col">
@@ -759,33 +762,28 @@ export default function Header() {
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
           <div className="flex flex-row items-center justify-between h-14 md:h-16">
             
-            {/* Left: Branding & Home Link — desktop only per this request */}
-            <div className={`hidden md:flex transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            {/* Left: Branding — hidden on mobile, visible on sm+ */}
+            <div className={`hidden sm:flex flex-shrink-0 transition-all duration-500 ${showSearch ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <Link
                 to="/"
                 aria-label="loopOut Home"
                 className="flex items-center gap-2 cursor-pointer"
               >
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-rose-500 to-orange-400 blur-xl opacity-20 hover:opacity-40 transition-opacity duration-500 rounded-full" />
-                  <BrandIcon className="w-9 h-9 md:w-8 md:h-8 relative z-10 transition-transform group-hover:rotate-[15deg] duration-700 ease-out" />
+                  <div className="absolute inset-0 rounded-full bg-rose-500/20 blur-lg" />
+                  <BrandIcon className="relative z-10 h-8 w-8" />
                 </div>
-                <div className="block">
-                  <h1 className="text-base md:text-xl font-black tracking-tighter leading-none">
-                    <span className="text-rose-500">loop</span>
-                    <span className="text-orange-500">Out</span>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-black leading-none tracking-tighter">
+                    <span className="text-rose-500">loop</span><span className="text-orange-500">Out</span>
                   </h1>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <div className="h-[1px] w-3 bg-rose-500/50" />
-                    <span className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em] leading-none hidden sm:inline">Your local hub</span>
-                    <div className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                  </div>
+                  <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">Your local hub</p>
                 </div>
               </Link>
             </div>
 
-            {/* Mobile Search Pill — takes the logo's place in the main row */}
-            <div className={`flex-1 md:hidden transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+            {/* Mobile Search Pill — sits beside the brand rather than replacing it. */}
+            <div className={`min-w-0 flex-1 mx-3 md:hidden transition-all duration-500 ${showSearch ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
               <button
                 onClick={() => setShowSearch(true)}
                 aria-label="Open search"
@@ -809,32 +807,16 @@ export default function Header() {
                 <div className="w-[1px] h-5 bg-slate-200 dark:bg-gray-700" />
                 <span className="text-[11px] font-black text-slate-900 dark:text-white px-5 py-2.5 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors">Any type</span>
                 <div className="w-[1px] h-5 bg-slate-200 dark:bg-gray-700" />
-                <span className="text-[11px] font-medium text-slate-400 dark:text-gray-500 px-4 py-2.5">Search loopOut</span>
+                <span className="text-[11px] font-medium text-slate-400 dark:text-gray-500 px-4 py-2.5">Search</span>
                 <div className="w-9 h-9 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center text-white mr-1.5 group-hover:from-rose-600 group-hover:to-rose-700 transition-all shadow-md shadow-rose-200">
                   <MagnifyingGlassIcon className="w-4 h-4 stroke-[2.5px]" />
                 </div>
               </button>
             </div>
 
-            {/* Right: User Menu */}
-            <div className="relative md:translate-x-[20px]">
+            {/* Right: alerts on every device, account menu on desktop. */}
+            <div className="relative">
               <div className="flex flex-row items-center gap-1.5 md:gap-3">
-
-                {/* Calendar Icon - Desktop and Mobile (Alone, sleek, without circle) */}
-                <button
-                  onClick={() => handleNavigate('/calendar')}
-                  aria-label={`Calendar Schedule${calendarBadgeCount > 0 ? `. ${calendarBadgeCount} confirmed appointments` : ''}`}
-                  title="Daily Schedule & Appointments Calendar"
-                  className="relative p-2 text-slate-700 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors flex items-center justify-center cursor-pointer rounded-xl hover:bg-slate-100/80 dark:hover:bg-gray-800/60"
-                >
-                  <CalendarDaysIcon className="w-6 h-6 stroke-[1.8px]" />
-                  {calendarBadgeCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-rose-500 text-white text-[8px] min-w-[15px] h-[15px] px-1 flex items-center justify-center rounded-full border-[1.5px] border-white dark:border-gray-900 shadow-sm z-10 font-black">
-                      {calendarBadgeCount}
-                    </span>
-                  )}
-                </button>
-
                 {/* Notification Bell Icon - Desktop and Mobile (Alone, sleek, without circle) */}
                 <button
                   onClick={handleNotificationsClick}
@@ -850,49 +832,62 @@ export default function Header() {
                   )}
                 </button>
 
-                {/* Profile / Sign In — Desktop */}
+                {currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer' ? (
+                  <Link
+                    to={getCreationRoute(currentUser)}
+                    aria-label="Create a listing"
+                    className="hidden h-10 items-center gap-2 rounded-full bg-rose-500 px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-rose-600 hover:shadow-md active:scale-95 md:flex"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    <span>Create</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/become"
+                    aria-label="Become a host or provider"
+                    className="hidden h-10 items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50/70 px-4 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-100 hover:border-rose-400 active:scale-95 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 md:flex"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Become a Host</span>
+                  </Link>
+                )}
+
                 <div className="relative hidden md:block" ref={profileDropdownRef}>
                   <button
+                    type="button"
                     onClick={() => {
-                      setShowProfileDropdown((prev) => !prev);
+                      setShowProfileDropdown((open) => !open);
                       setShowLanguageDropdown(false);
                       setShowCurrencyDropdown(false);
                     }}
-                    aria-label={currentUser ? 'Account menu' : 'Sign in'}
+                    aria-label={currentUser ? 'Open profile menu' : 'Sign in'}
                     aria-expanded={showProfileDropdown}
-                    className={`flex items-center gap-2 rounded-full border border-slate-200 dark:border-gray-700 pl-1.5 pr-3 h-9 cursor-pointer hover:shadow-md hover:border-slate-400 transition-all ${
-                      currentUser ? '' : 'bg-slate-950 dark:bg-white border-slate-950 dark:border-white pl-3'
+                    className={`flex h-10 items-center gap-2 rounded-full border px-3 transition-all hover:shadow-md ${
+                      currentUser
+                        ? 'border-slate-200 bg-white text-slate-800 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100'
+                        : 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
                     }`}
                   >
                     {currentUser ? (
                       <>
-                        <div className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 dark:border-gray-700 flex-shrink-0">
-                          <ImageWithFallback
-                            src={currentUser.avatar}
-                            type="avatar"
-                            alt="Profile"
-                            className="w-full h-full"
-                          />
+                        <div className="h-6 w-6 overflow-hidden rounded-full border border-slate-200 dark:border-gray-700">
+                          <ImageWithFallback src={currentUser.avatar} type="avatar" alt="Profile" className="h-full w-full" />
                         </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-gray-300 max-w-[80px] truncate">
-                          {currentUser.username}
-                        </span>
+                        <span className="max-w-24 truncate text-xs font-bold">{currentUser.username}</span>
                       </>
                     ) : (
-                      <span className="text-[11px] font-black uppercase tracking-wider text-white dark:text-slate-950">
-                        Sign In
-                      </span>
+                      <span className="text-xs font-bold">Sign in</span>
                     )}
                   </button>
 
                   <AnimatePresence>
                     {showProfileDropdown && (
                       <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        initial={{ opacity: 0, y: -8, scale: 0.98 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute top-full right-0 mt-3 w-80 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-800 p-4 z-50 max-h-[85vh] overflow-y-auto"
+                        className="absolute right-0 top-full z-50 mt-3 max-h-[85vh] w-80 overflow-y-auto rounded-[2rem] border border-gray-100 bg-white p-4 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] dark:border-gray-800 dark:bg-gray-900"
                       >
                         {profileMenuContent}
                       </motion.div>
