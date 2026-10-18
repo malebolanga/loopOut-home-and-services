@@ -35,7 +35,6 @@ import {
   KeyIcon,
   HeartIcon,
   ShareIcon,
-  Squares2X2Icon,
   InformationCircleIcon,
   PaperAirplaneIcon,
   ClockIcon,
@@ -1420,8 +1419,41 @@ const ServicePage = () => {
   const whatsappNumber = formatContactForWhatsApp(service.contact);
   const hasReviews = commentCount > 0 && Number(ratings?.overall || service.rating) > 0;
 
+  const handleInternalMessage = async () => {
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    const receiverId = service.userRef?._id || service.userRef || service.creator;
+    if (String(currentUser._id) === String(receiverId)) {
+      alert('You cannot message yourself.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId,
+          content: `Hi ${service.name}, I'm interested in your ${getProfessionalTitle(service.type).toLowerCase()} services.`,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.message || 'Failed to start conversation');
+        return;
+      }
+      navigate(`/messages/${data.conversationId || data._id}`);
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Failed to start conversation. Please try again.');
+    }
+  };
+
   return (
-    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white dark:bg-gray-900">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-slate-100' : 'bg-transparent'}`}>
         <div className="max-w-screen-xl mx-auto px-4 md:px-6">
@@ -1468,7 +1500,7 @@ const ServicePage = () => {
       </nav>
 
       {/* Hero Image Gallery - Full Width */}
-      <div className="relative h-[400px] md:h-[500px] lg:h-[600px] bg-slate-900 overflow-hidden">
+      <div className="relative h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] bg-slate-100 overflow-hidden">
         {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1.5 h-full w-full">
             {/* Main image */}
@@ -1479,7 +1511,7 @@ const ServicePage = () => {
               <img
                 src={service.imageUrls[0]}
                 alt={service.name}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
                 onError={(e) => {
                   e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                 }}
@@ -1498,7 +1530,7 @@ const ServicePage = () => {
                 <img
                   src={url}
                   alt={`${service.name} ${index + 2}`}
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
                   onError={(e) => {
                     e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800';
                   }}
@@ -1506,14 +1538,10 @@ const ServicePage = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
               </div>
             ))}
+            {Array.from({ length: Math.max(0, 4 - Math.min(4, service.imageUrls.length - 1)) }).map((_, index) => (
+              <div key={`service-gallery-placeholder-${index}`} className="hidden bg-slate-200 md:block" aria-hidden="true" />
+            ))}
 
-            <button
-              onClick={() => openFullScreenGallery(0)}
-              className="absolute bottom-5 right-5 bg-white/95 backdrop-blur-xl px-5 py-2.5 rounded-2xl font-semibold text-sm text-slate-900 flex items-center gap-2.5 hover:bg-white dark:hover:bg-gray-900 hover:scale-105 active:scale-95 transition-all duration-300 shadow-2xl border border-slate-200/60"
-            >
-              <Squares2X2Icon className="w-4 h-4" />
-              <span>Show all {service.imageUrls.length} photos</span>
-            </button>
           </div>
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center gap-3">
@@ -1524,9 +1552,13 @@ const ServicePage = () => {
       </div>
 
       {/* Main Content */}
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
-        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">{service.name}</h1>
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+        <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
+          <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
+            {service.userRef?.avatar ? <img src={service.userRef.avatar} alt={service.userRef?.username || service.name} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaUser className="text-xl text-slate-400" />}
+          </div>
+          <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">{service.name}</h1>
+          <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `${getProfessionalTitle(service.type)} services in ${service.address || 'your area'}`}</p>
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800"><StarIconSolid className="w-4 h-4 text-amber-400" /><span className="font-semibold">{hasReviews ? Number(ratings?.overall || service.rating).toFixed(1) : 'New'}</span><span className="text-slate-500">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span></span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaCheckCircle className="text-indigo-500" />{Number(service.bookingsCount) > 0 ? ` Booked ${service.bookingsCount} ${Number(service.bookingsCount) === 1 ? 'time' : 'times'}` : ' No bookings yet'}</span>
@@ -1562,19 +1594,27 @@ const ServicePage = () => {
 
 
             {/* Provider Info */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
               <Link 
                 to={`/user-profile/${service.userRef?._id || service.userRef || service.creator}`}
-                className="flex items-start gap-4 hover:opacity-80 transition-opacity w-fit"
+                className="flex items-center gap-4 transition-opacity hover:opacity-80 sm:w-fit"
               >
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 shadow-sm border border-gray-100 dark:border-gray-800 flex items-center justify-center">
-                  {service.userRef?.avatar ? <img src={service.userRef.avatar} alt={service.userRef?.username || service.name} className="w-full h-full object-cover" /> : <FaUser className="text-2xl text-gray-400" />}
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
+                  {service.userRef?.avatar ? <img src={service.userRef.avatar} alt={service.userRef?.username || service.name} className="h-full w-full object-cover object-center" /> : <FaUser className="text-2xl text-slate-400" />}
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Hosted by {service.userRef?.username || service.name}</h2>
+                  <h2 className="text-xl font-semibold text-slate-900">Hosted by {service.userRef?.username || service.name}</h2>
                   <p className="mt-1 text-gray-600 dark:text-gray-400">View provider profile</p>
                 </div>
               </Link>
+              <button
+                type="button"
+                onClick={handleInternalMessage}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
+              >
+                <FiMessageSquare className="h-4 w-4" />
+                Message
+              </button>
             </div>
 
 
@@ -1673,15 +1713,15 @@ const ServicePage = () => {
             )}
 
             {/* Service Options */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Service options</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="border-b border-slate-200 pb-7">
+              <h2 className="mb-4 text-xl font-semibold text-slate-900">Choose a service</h2>
+              <div className="grid grid-cols-1 gap-3">
                 {displayedServices.map((option, idx) => {
                   const isSelected = selectedService?.id === option.id;
                   return (
                     <button type="button"
                       key={`${option.id}-${idx}`}
-                      className={`flex w-full items-start justify-between gap-3 p-4 border-2 rounded-xl text-left transition-all cursor-pointer ${
+                      className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-all cursor-pointer ${
                         isSelected 
                           ? 'border-rose-500 bg-rose-50 shadow-sm' 
                           : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -1692,12 +1732,12 @@ const ServicePage = () => {
                       <div className="flex-1 pr-4">
                         <div className="flex items-start gap-3 mb-1">
                           {option.image && (
-                            <img src={option.image} alt={option.name} className="w-12 h-12 object-cover rounded-lg border bg-white dark:bg-gray-900 shrink-0 mt-0.5" />
+                            <img src={option.image} alt={option.name} className="h-16 w-16 shrink-0 rounded-xl border border-slate-100 bg-white object-cover" />
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className={`${isSelected ? 'text-rose-500' : 'text-gray-400'}`}>{option.icon}</span>
-                              <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-gray-900 dark:text-white'}`}>{option.name}</h3>
+                              <h3 className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{option.name}</h3>
+                              {option.icon && <span className={`${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{option.icon}</span>}
                               {option.popular && (
                                 <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded">
                                   Popular
@@ -1709,8 +1749,8 @@ const ServicePage = () => {
                                 </span>
                               )}
                             </div>
-                            {option.description && <p className="text-gray-600 dark:text-gray-400 text-sm mt-1 line-clamp-2">{option.description}</p>}
-                            {option.duration && <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{option.duration}</p>}
+                            {option.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{option.description}</p>}
+                            {option.duration && <p className="mt-2 text-xs text-slate-500">{option.duration}</p>}
                           </div>
                         </div>
                       </div>
@@ -1718,7 +1758,7 @@ const ServicePage = () => {
                         <p className={`font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-900 dark:text-white'}`}>
                           {typeof option.price === 'number' || (option.price && !String(option.price).startsWith('R')) ? `R${option.price}` : option.price}
                         </p>
-                        <span className={`mt-2 inline-flex px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        <span className={`mt-2 inline-flex rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
                             isSelected 
                               ? 'bg-rose-500 text-white' 
                               : 'bg-gray-900 text-white'
@@ -1742,6 +1782,22 @@ const ServicePage = () => {
                 </button>
               )}
             </div>
+
+            {service.imageUrls?.length > 0 && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="service-portfolio-title">
+                <div className="mb-4 flex items-end justify-between gap-4">
+                  <div><h2 id="service-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider’s work</p></div>
+                  <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {service.imageUrls.length}</button>
+                </div>
+                <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
+                  {service.imageUrls.slice(0, 3).map((url, index) => (
+                    <button key={`service-portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
+                      <img src={url} alt={`${service.name} portfolio photo ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Service Performers Section */}
             {service.performers && service.performers.length > 0 && (
@@ -2123,7 +2179,7 @@ const ServicePage = () => {
         {service.address && <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
           <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">Where you'll be</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm lg:text-base">{service.address}</p>
-          <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
+          <div className="relative h-[300px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
             <GoogleMapComponent
               address={service.address}
               title={`${service.name}'s Service Area`}

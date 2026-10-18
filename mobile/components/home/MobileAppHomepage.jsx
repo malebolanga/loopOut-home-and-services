@@ -31,6 +31,7 @@ import {
 import { FaWhatsapp, FaPhone, FaBolt, FaStar, FaUserCheck, FaMapMarkerAlt } from 'react-icons/fa';
 import { AirbnbCard, AirbnbCardSkeleton } from './AirbnbCard';
 import { CategoriesSlider } from './CategoriesSlider';
+import { RecentAdded3DIcon, MoreCategories3DIcon, ThreeDButton } from './ThreeDCategoryIcons';
 import { TOP_CATEGORIES } from '../../data/categories';
 import ContinueSearchingCard from './ContinueSearchingCard';
 import { CompareRecommendedSection, UpcomingBookingsSection } from './HomeSections';
@@ -248,7 +249,44 @@ export default function MobileAppHomepage({
         />
       </Helmet>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-5">
+        {/* ── TOP 3D QUICK ICONS (Recently Added + More Categories) ───────── */}
+        <div className="flex items-center justify-center gap-6 sm:gap-10 mb-3 px-1">
+          <motion.button
+            type="button"
+            onClick={() => navigate('/search?sort=createdAt_desc&type=all')}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            className="flex items-center gap-2  cursor-pointer focus:outline-none"
+            aria-label="Recently Added"
+          >
+            <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+              <RecentAdded3DIcon className="w-8 h-8" />
+            </div>
+            <div className="text-left">
+              <p className="text-[9px] font-black uppercase tracking-wider text-rose-500 leading-tight">New</p>
+              <p className="text-xs font-black text-slate-800 leading-tight">Recently Added</p>
+            </div>
+          </motion.button>
+
+          <motion.button
+            type="button"
+            onClick={() => navigate('/categories')}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            className="flex items-center gap-2  cursor-pointer focus:outline-none"
+            aria-label="More Categories"
+          >
+            <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+              <MoreCategories3DIcon className="w-8 h-8" />
+            </div>
+            <div className="text-left">
+              <p className="text-[9px] font-black uppercase tracking-wider text-indigo-500 leading-tight">Browse</p>
+              <p className="text-xs font-black text-slate-800 leading-tight">More Categories</p>
+            </div>
+          </motion.button>
+        </div>
+
         {/* ── 1. GREETING & HERO SECTION ───────────────────────────────────── */}
         <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-gray-900 to-slate-900 text-white p-6 sm:p-10 lg:p-12 shadow-2xl mb-8 border border-white/10">
           {/* Ambient Glows */}
@@ -322,6 +360,140 @@ export default function MobileAppHomepage({
               ))}
             </div>
           </div>
+        </section>
+
+        {/* ── 1b. QUICK CATEGORY ICONS ─────────────────────────────────────── */}
+        <section className="mb-8">
+
+          {/* Icon grid — 5 pills, horizontally scrollable on small screens */}
+          <div className="flex items-stretch gap-3 overflow-x-auto scrollbar-hide pb-1">
+            {[
+              {
+                id: 'homes',
+                label: 'Homes',
+                route: '/listing-home-page',
+                emoji: '🏠',
+                gradient: 'from-rose-500 to-pink-600',
+                bg: 'bg-rose-50',
+                text: 'text-rose-700',
+                border: 'border-rose-100',
+              },
+              {
+                id: 'services',
+                label: 'Services',
+                route: '/services-home-page',
+                emoji: '🔧',
+                gradient: 'from-blue-500 to-indigo-600',
+                bg: 'bg-blue-50',
+                text: 'text-blue-700',
+                border: 'border-blue-100',
+              },
+              {
+                id: 'helpers',
+                label: 'Helpers',
+                route: '/helper-home-page',
+                emoji: '🙋',
+                gradient: 'from-emerald-500 to-teal-600',
+                bg: 'bg-emerald-50',
+                text: 'text-emerald-700',
+                border: 'border-emerald-100',
+              },
+              {
+                id: 'events',
+                label: 'Events',
+                route: '/events',
+                emoji: '🎟️',
+                gradient: 'from-amber-500 to-orange-500',
+                bg: 'bg-amber-50',
+                text: 'text-amber-700',
+                border: 'border-amber-100',
+              },
+              {
+                id: 'more',
+                label: 'More',
+                route: '/categories',
+                emoji: '➕',
+                gradient: 'from-slate-600 to-slate-800',
+                bg: 'bg-slate-50',
+                text: 'text-slate-700',
+                border: 'border-slate-200',
+              },
+            ].map((cat) => (
+              <motion.button
+                key={cat.id}
+                whileHover={{ y: -3, scale: 1.03 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => navigate(cat.route)}
+                className={`flex-shrink-0 flex flex-col items-center gap-2 px-5 py-4 rounded-2xl border ${cat.border} ${cat.bg} hover:shadow-md transition-all group min-w-[80px]`}
+              >
+                {/* Gradient icon circle */}
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center text-2xl shadow-lg group-hover:shadow-xl transition-shadow`}>
+                  {cat.emoji}
+                </div>
+                <span className={`text-[11px] font-black uppercase tracking-[0.12em] ${cat.text}`}>
+                  {cat.label}
+                </span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Recently Added strip */}
+          {newNearYouItems.length > 0 && (
+            <div className="mt-5">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <p className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  Recently Added
+                </p>
+                <button
+                  onClick={() => navigate('/search?sort=createdAt_desc&type=all')}
+                  className="text-xs font-bold text-rose-600 hover:text-rose-700"
+                >
+                  See all →
+                </button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
+                {newNearYouItems.slice(0, 8).map((item, i) => {
+                  const thumb = item.imageUrls?.[0] || item.avatar || null;
+                  const route = item.itemType === 'service' ? `/service/${item._id}`
+                    : item.itemType === 'helper' ? `/helper/${item._id}`
+                    : item.itemType === 'event' ? `/event/${item._id}`
+                    : `/listing/${item._id}`;
+                  const typeColors = {
+                    service: 'bg-blue-500',
+                    helper: 'bg-emerald-500',
+                    event: 'bg-amber-500',
+                    listing: 'bg-rose-500',
+                  };
+                  return (
+                    <motion.button
+                      key={item._id || i}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => navigate(route)}
+                      className="flex-shrink-0 w-[120px] rounded-2xl overflow-hidden bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all text-left"
+                    >
+                      <div className="relative h-[72px] bg-slate-100">
+                        {thumb ? (
+                          <img src={thumb} alt={item.name || item.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className={`w-full h-full bg-gradient-to-br ${typeColors[item.itemType] || 'bg-rose-500'} opacity-20`} />
+                        )}
+                        <span className={`absolute top-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full text-white ${typeColors[item.itemType] || 'bg-rose-500'}`}>
+                          {item.itemType}
+                        </span>
+                      </div>
+                      <div className="px-2 py-2">
+                        <p className="text-[11px] font-black text-slate-900 leading-tight line-clamp-2">
+                          {item.name || item.title || 'New listing'}
+                        </p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ── 2. YOUR DAILY LOOP (DAILY HABIT SNAPSHOT) ───────────────────── */}

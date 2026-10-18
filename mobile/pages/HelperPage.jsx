@@ -7,7 +7,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
 import { app } from "../firebase";
-import MutualFriends from '../components/MutualFriends';
 import OperatingSchedule from '../components/OperatingSchedule';
 import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
@@ -35,7 +34,6 @@ import {
   KeyIcon,
   HeartIcon,
   ShareIcon,
-  Squares2X2Icon,
   InformationCircleIcon,
   PaperAirplaneIcon,
   ClockIcon,
@@ -2460,7 +2458,7 @@ export default function HelperPage() {
   };
 
   return (
-    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-gray-800' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -2506,15 +2504,15 @@ export default function HelperPage() {
       {/* Image Gallery - Full Width */}
       <div className="w-full relative">
         {galleryImages.length > 0 ? (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[340px] sm:h-[420px] md:h-[500px] lg:h-[580px] w-full bg-slate-950 overflow-hidden">
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
             <div className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(0)}>
-              <img src={galleryImages[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src={galleryImages[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent pointer-events-none" />
             </div>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
               {galleryImages.slice(1, 5).map((url, index) => (
                 <div key={index} className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
               ))}
@@ -2522,9 +2520,6 @@ export default function HelperPage() {
                 <div key={`empty-${i}`} className="bg-slate-900 h-full" />
               ))}
             </div>
-            <button onClick={() => openFullScreenGallery(0)} className="absolute bottom-5 right-4 md:right-6 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-xl font-bold uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20">
-              <Squares2X2Icon className="w-4 h-4" /> Show all {galleryImages.length} photos
-            </button>
           </div>
         ) : (
           <div className="h-[310px] md:h-[430px] bg-slate-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-3 text-center px-6">
@@ -2539,17 +2534,18 @@ export default function HelperPage() {
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
-        <div className="mb-10 pt-8 border-b border-slate-200/60 dark:border-gray-800 pb-8">
-          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-600">
-            {getCategoryIcon(helper.type)}
-            <span>{getProfessionalTitle(helper.type)}</span>
+        <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
+          <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
+            {helper.userRef?.avatar ? <img src={helper.userRef.avatar} alt={helper.userRef?.username || helper.name} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
           </div>
-          <h1 className="mb-4 max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-600">{getCategoryIcon(helper.type)}<span>{getProfessionalTitle(helper.type)}</span></div>
+          <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
             {helper.name}
           </h1>
-          <div className="flex flex-wrap items-center gap-2.5 text-sm">
+          <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Professional services in ${helper.address || 'your area'}`}</p>
+          <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
               <span className="font-semibold">{hasRating ? ratingValue.toFixed(1) : 'New'}</span>
@@ -2592,14 +2588,14 @@ export default function HelperPage() {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Host Info Bar */}
-            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit"
+                className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {getProfessionalTitle(helper.type)} hosted by {helper.userRef?.username || helper.name}
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Hosted by {helper.userRef?.username || helper.name}
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
                     {isSuperhelper ? 'Superhelper' : (isVerifiedProvider ? 'Verified provider' : 'Provider')}
@@ -2611,21 +2607,22 @@ export default function HelperPage() {
                     <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm font-medium">Citizenship: {helper.citizenship}</p>
                   )}
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm flex-shrink-0 ml-4 bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
                   {helper.userRef?.avatar ? (
                     <img
                       src={helper.userRef.avatar}
                       alt={helper.userRef?.username || helper.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'; }}
+                      className="h-full w-full object-cover object-center"
+                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                     />
                   ) : (
                     <FaUser className="text-2xl text-gray-400" />
                   )}
                 </div>
               </Link>
+
               
-              <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} />
+              <button type="button" onClick={handleInternalMessage} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"><ChatBubbleLeftRightIcon className="h-4 w-4" />Message</button>
             </div>
 
             {(isSuperhelper || isVerifiedProvider || helper.operatingHours) && (
@@ -2670,6 +2667,19 @@ export default function HelperPage() {
               )}
             </div>
 
+            <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-qualifications-title">
+              <h2 id="helper-qualifications-title" className="mb-4 text-xl font-semibold text-slate-900">My qualifications</h2>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><CheckBadgeIcon className="h-5 w-5" /></span>
+                  <div className="space-y-2 whitespace-pre-line text-sm leading-6 text-slate-600">
+                    {[helper.experience, helper.education, helper.training, helper.certifications].filter((item) => typeof item === 'string' && item.trim()).slice(0, 6).map((item, index) => <p key={`qualification-${index}`}>{item}</p>)}
+                    {!helper.experience && !helper.education && !helper.training && !helper.certifications && <p>Message the provider to ask about experience and training.</p>}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             {/* Sneaker Cleaning Details */}
             {helper.type === 'sneaker' && (helper.shoeTypes || helper.cleaningMethod || helper.turnaroundTime) && (
               <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
@@ -2702,87 +2712,29 @@ export default function HelperPage() {
 
             {/* Services Offered */}
             {serviceOptions.length > 0 && (
-              <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Services offered</h2>
-                  <span className="text-xs text-gray-400 font-medium">Swipe to explore</span>
-                </div>
-                <Swiper
-                  spaceBetween={12}
-                  slidesPerView={2.2}
-                  breakpoints={{
-                    480: { slidesPerView: 3.2 },
-                    768: { slidesPerView: 4.5 },
-                    1024: { slidesPerView: 5.5 },
-                  }}
-                  className="w-full !pb-4"
-                >
+              <div className="border-b border-slate-200 pb-7">
+                <h2 className="mb-4 text-xl font-semibold text-slate-900">Choose a service</h2>
+                <div className="grid grid-cols-1 gap-3">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
-                      <SwiperSlide key={service.id} className="h-auto">
-                        <div 
-                          onClick={() => setSelectedModalService(service)}
-                          className={`flex flex-col h-full items-center text-center justify-between gap-1 p-3 rounded-2xl border-2 transition-all cursor-pointer relative ${
-                            isSelected 
-                              ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30 shadow-md scale-[0.98]' 
-                              : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-md'
-                          }`}
-                        >
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 w-6 h-6 bg-rose-500 rounded-full flex items-center justify-center shadow-sm z-10 text-white text-[10px]">
-                              {service.icon}
-                            </div>
-                          )}
-                          
-                          {/* Top: Name */}
-                          <div className="w-full mt-1 relative z-10">
-                            {service.type && (
-                              <span className={`inline-block mb-1 rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest uppercase ${
-                                isSelected ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-                              }`}>
-                                {service.type}
-                              </span>
-                            )}
-                            <h3 className={`font-bold text-sm leading-tight transition-colors ${isSelected ? 'text-rose-900 dark:text-rose-200' : 'text-gray-900 dark:text-white'}`}>
-                              {service.name}
-                            </h3>
-                          </div>
-
-                          {/* Center: Emoji/Icon */}
-                          <div className="flex-1 flex items-center justify-center py-2 w-full">
-                            {service.image ? (
-                              <img src={service.image} alt={service.name} className="w-14 h-14 object-cover rounded-xl border-4 border-white dark:border-gray-800 shadow-sm" />
-                            ) : (
-                              <div className={`text-5xl drop-shadow-sm transition-transform duration-500 hover:scale-110 hover:rotate-3 ${isSelected ? 'text-rose-500' : 'text-gray-700 dark:text-gray-300'}`}>
-                                {service.icon}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Bottom: Price */}
-                          <div className="w-full pt-2 border-t border-gray-100 dark:border-gray-800">
-                            {service.price ? (
-                              <div className="flex flex-col items-center">
-                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
-                                <span className={`text-lg font-black ${isSelected ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
-                                  R{service.price}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-center">
-                                <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
-                                <span className={`text-base font-black ${isSelected ? 'text-rose-600 dark:text-rose-400' : 'text-gray-900 dark:text-white'}`}>
-                                  Quote
-                                </span>
-                              </div>
-                            )}
+                      <button key={service.id} type="button" onClick={() => setSelectedModalService(service)} aria-pressed={isSelected} className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-all ${isSelected ? 'border-rose-500 bg-rose-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}>
+                        <div className="flex min-w-0 items-start gap-3">
+                          {service.image ? <img src={service.image} alt={service.name} className="h-16 w-16 shrink-0 rounded-xl border border-slate-100 bg-white object-cover" /> : <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{service.icon}</div>}
+                          <div className="min-w-0">
+                            {service.type && <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${isSelected ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>{service.type}</span>}
+                            <p className={`font-semibold ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</p>
+                            {service.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</p>}
                           </div>
                         </div>
-                      </SwiperSlide>
+                        <span className={`shrink-0 text-right font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
+                          {service.price ? `R${service.price}` : 'Quote'}<span className="block text-[11px] font-normal text-slate-500">{service.price ? 'per service' : 'ask for pricing'}</span>
+                        </span>
+                        {isSelected && <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500"><CheckIcon className="h-3 w-3 text-white" /></span>}
+                      </button>
                     );
                   })}
-                </Swiper>
+                </div>
               </div>
             )}
 
@@ -2876,32 +2828,20 @@ export default function HelperPage() {
               </div>
             )}
 
-            {/* Professional Portfolio - Show All Photos */}
             {galleryImages.length > 0 && (
-              <div className="pb-8 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Professional Portfolio</h2>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                    {galleryImages.length} Photos
-                  </span>
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-portfolio-title">
+                <div className="mb-4 flex items-end justify-between gap-4">
+                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider’s work</p></div>
+                  <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {galleryImages.length}</button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {galleryImages.map((url, index) => (
-                    <div 
-                      key={index} 
-                      onClick={() => openFullScreenGallery(index)}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer relative shadow-sm hover:shadow-md transition-all active:scale-95 bg-slate-100 dark:bg-gray-800 border border-slate-100 dark:border-gray-800 group"
-                    >
-                      <img 
-                        src={url} 
-                        alt={`Portfolio ${index + 1}`} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </div>
+                <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
+                  {galleryImages.slice(0, 3).map((url, index) => (
+                    <button key={`portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
+                      <img src={url} alt={`${helper.name} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                    </button>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Operating Schedule */}
@@ -3056,7 +2996,6 @@ export default function HelperPage() {
               </button>
             </div>
 
-            <MutualFriends targetUserId={helper.userRef?._id || helper.userRef} detailed={true} />
           </div>
 
           {/* Right Column - Booking Card */}

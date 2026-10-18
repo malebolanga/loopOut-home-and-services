@@ -13,12 +13,10 @@ import emailjs from "emailjs-com";
 import Calendar from "react-calendar";
 import CommentsSidePanel from '../components/CommentsSidePanel';
 import ImageWithFallback from '../components/ImageWithFallback';
-import MutualFriends from '../components/MutualFriends';
 import OperatingSchedule from '../components/OperatingSchedule';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
-import BookingHistory from '../components/BookingHistory';
 import BookingProgress from '../components/BookingProgress';
 import ListingBookingSheet from '../components/ListingBookingSheet';
 
@@ -358,7 +356,7 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex flex-col bg-black">
       {/* Header */}
       <div className="flex items-center justify-between p-4 text-white">
         <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -412,7 +410,178 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
           ))}
         </Swiper>
       </div>
-    </div>
+    </motion.div>
+  );
+};
+
+// Airbnb Style Float-in Gallery Component
+const AirbnbFloatGallery = ({
+  images = [],
+  isOpen,
+  onClose,
+  listingName = 'Listing',
+  listingAddress = '',
+  onImageClick,
+  handleShare,
+  toggleFavorite,
+  isFavorite = false
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ y: "100%", opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: "100%", opacity: 0 }}
+      transition={{ type: "spring", damping: 28, stiffness: 220, mass: 0.85 }}
+      className="fixed inset-0 z-[1000] bg-white text-slate-900 overflow-y-auto flex flex-col"
+    >
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Back to listing"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-700"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+          </button>
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+              {listingName}
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Photo tour · {images.length} {images.length === 1 ? 'photo' : 'photos'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {handleShare && (
+            <button
+              type="button"
+              onClick={handleShare}
+              aria-label="Share listing"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+            >
+              <ShareIcon className="w-4 h-4" />
+            </button>
+          )}
+          {toggleFavorite && (
+            <button
+              type="button"
+              onClick={toggleFavorite}
+              aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors"
+            >
+              {isFavorite ? (
+                <HeartIconSolid className="w-5 h-5 text-rose-500" />
+              ) : (
+                <HeartIcon className="w-5 h-5 text-slate-700" />
+              )}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close photo tour"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+          >
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+
+      {/* Gallery Content */}
+      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 flex-1">
+        {/* Intro */}
+        <div className="border-b border-slate-100 pb-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 mb-2">
+            Property Photo Tour
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+            {listingName}
+          </h1>
+          {listingAddress && (
+            <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+              <MapPinIcon className="w-4 h-4 text-slate-400 shrink-0" />
+              <span>{listingAddress}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Photos Layout - Airbnb Style */}
+        <div className="space-y-4">
+          {/* Main Hero Photo */}
+          {images.length > 0 && (
+            <div
+              onClick={() => onImageClick?.(0)}
+              className="group relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+            >
+              <ImageWithFallback
+                src={images[0]}
+                imageUrls={images}
+                alt={`${listingName} photo 1`}
+                type="property"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+              <div className="absolute bottom-4 left-4 rounded-lg bg-black/60 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white">
+                1 / {images.length}
+              </div>
+            </div>
+          )}
+
+          {/* Subsequent Photos in dynamic Airbnb Grid */}
+          {images.length > 1 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {images.slice(1).map((img, sliceIdx) => {
+                const actualIdx = sliceIdx + 1;
+                const isWide = actualIdx % 5 === 0;
+
+                return (
+                  <div
+                    key={`photo-${actualIdx}`}
+                    onClick={() => onImageClick?.(actualIdx)}
+                    className={`group relative rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 ${
+                      isWide ? 'sm:col-span-2 aspect-[16/9]' : 'aspect-[4/3]'
+                    }`}
+                  >
+                    <ImageWithFallback
+                      src={img}
+                      imageUrls={images.slice(actualIdx)}
+                      alt={`${listingName} photo ${actualIdx + 1}`}
+                      type="property"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                    <div className="absolute bottom-3 left-3 rounded-md bg-black/60 backdrop-blur-sm px-2.5 py-1 text-[11px] font-medium text-white">
+                      {actualIdx + 1} / {images.length}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer info */}
+        <div className="pt-10 pb-8 text-center border-t border-slate-100">
+          <p className="text-sm font-medium text-slate-500 mb-4">
+            You&apos;ve viewed all {images.length} photos of {listingName}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm transition-all active:scale-95 shadow-sm"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to listing
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
@@ -433,6 +602,7 @@ export default function Listing() {
   const [selectedUnit, setSelectedUnit] = useState('');
   const [showContactModal, setShowContactModal] = useState(false);
   const [showFullGallery, setShowFullGallery] = useState(false);
+  const [showFloatGallery, setShowFloatGallery] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [roomsDrawerOpen, setRoomsDrawerOpen] = useState(false);
 
@@ -911,11 +1081,36 @@ export default function Listing() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 300);
+      setIsScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (showFloatGallery || showFullGallery) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showFloatGallery, showFullGallery]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (showFullGallery) {
+          setShowFullGallery(false);
+        } else if (showFloatGallery) {
+          setShowFloatGallery(false);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showFullGallery, showFloatGallery]);
 
   useEffect(() => {
     if (typeof process !== 'undefined' && process.env.REACT_APP_EMAILJS_PUBLIC_KEY) {
@@ -1075,17 +1270,36 @@ export default function Listing() {
   const isVerifiedHost = Boolean(listing.userRef?.isVerified || listing.userRef?.verified || listing.userRef?.isSuperhost);
   const hasOfferPrice = !isRent && listing.offer && Number(listing.discountPrice) > 0 && Number(listing.discountPrice) < Number(listing.regularPrice);
   const displayedPrice = hasOfferPrice ? Number(listing.discountPrice) : Number(listing.regularPrice);
+  const listingHighlights = [
+    listing.pool && {
+      icon: FaSwimmingPool,
+      title: 'Enjoy the pool',
+      detail: 'A pool is available at this property.',
+    },
+    listing.parking && {
+      icon: FaParking,
+      title: 'Park for free',
+      detail: 'Free parking is available at this property.',
+    },
+    isVerifiedHost && {
+      icon: MdOutlineGppGood,
+      title: listing.userRef?.isSuperhost ? 'Superhost' : 'Verified host',
+      detail: 'Host verification is on file with LoopOut.',
+    },
+  ].filter(Boolean);
+  const cancellationSummary = !isSaleOrRent && /free/i.test(String(listing.cancel || ''))
+    ? 'Free cancellation up to 72 hours before check-in'
+    : null;
   return (
-    <main className="min-h-screen overflow-x-hidden p-0 app-safe-content-bottom pb-36 lg:pb-0">
-      {/* Navigation Header */}
+    <div className="min-h-screen overflow-x-hidden p-0 app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation Header - Transparent on top of image */}
-      <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
-        <div className="max-w-screen-xl mx-auto px-4 md:px-6">
+      <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-gray-800' : 'bg-transparent'}`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             <button 
               onClick={() => navigate(-1)} 
               aria-label="Go back"
-              className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${isScrolled ? 'border-slate-200 bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm' : 'border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md hover:bg-black/50'}`}
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
@@ -1094,157 +1308,162 @@ export default function Listing() {
               <button 
                 onClick={handleShare} 
                 aria-label="Share listing"
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 text-white backdrop-blur-sm'}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${isScrolled ? 'border-slate-200 bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm' : 'border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md hover:bg-black/50'}`}
               >
                 <ShareIcon className="w-5 h-5" />
               </button>
               <button 
                 onClick={toggleFavorite} 
                 aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-                className={`p-2.5 rounded-full transition-all duration-300 ${isScrolled ? 'bg-slate-100 hover:bg-slate-200 text-slate-900' : 'bg-black/20 hover:bg-black/40 backdrop-blur-sm'}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${isScrolled ? 'border-slate-200 bg-white dark:bg-gray-800 text-slate-900 dark:text-white shadow-sm' : 'border-white/50 bg-black/30 text-white shadow-lg backdrop-blur-md hover:bg-black/50'}`}
               >
-                {isFavorite ? <HeartIconSolid className="w-6 h-6 text-rose-500" /> : <HeartIcon className={`w-6 h-6 ${isScrolled ? 'text-slate-900' : 'text-white'}`} />}
+                {isFavorite ? <HeartIconSolid className="w-5 h-5 text-rose-500" /> : <HeartIcon className={`w-5 h-5 ${isScrolled ? 'text-slate-900 dark:text-white' : 'text-white'}`} />}
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Image Gallery Grid - Full Width Airbnb Style */}
-      <div className="m-0 w-screen max-w-none p-0">
-        <div className="relative w-full overflow-hidden bg-slate-900 shadow-sm h-[400px] md:h-[500px] lg:h-[600px]">
-          {!hasListingImages ? (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 px-6 text-center text-white">
-              <PhotoIcon className="h-12 w-12 text-white/50" aria-hidden="true" />
-              <p className="mt-3 text-base font-semibold">Photos coming soon</p>
-              <p className="mt-1 text-sm text-white/65">The host has not added photos for this listing yet.</p>
-            </div>
-          ) : <>
-          {/* Mobile Swiper (hidden on md and up) */}
-          <div className="block md:hidden h-full w-full">
-            <Swiper
-              modules={[Pagination]}
-              pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
-              className="h-full w-full"
-            >
-              {listing.imageUrls.map((url, index) => (
-                <SwiperSlide key={index}>
-                  <div 
-                    onClick={() => { setGalleryIndex(index); setShowFullGallery(true); }}
-                    className="w-full h-full cursor-pointer"
-                  >
-                    <ImageWithFallback
-                      src={url}
-                      imageUrls={listing.imageUrls}
-                      alt={`${listing.name} ${index + 1}`}
-                      type="property"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+      {/* Hero Image Gallery - Full Width covering left, right, and top (Helper & Services standard) */}
+      <div className="relative h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
+        {!hasListingImages ? (
+          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 px-6 text-center text-white">
+            <PhotoIcon className="h-12 w-12 text-white/50" aria-hidden="true" />
+            <p className="mt-3 text-base font-semibold">Photos coming soon</p>
+            <p className="mt-1 text-sm text-white/65">The host has not added photos for this listing yet.</p>
           </div>
-
-          {/* Desktop Grid (hidden on mobile) */}
-          <div className="hidden md:grid grid-cols-4 grid-rows-2 gap-2 h-full w-full">
-            {/* Main Image - Takes left half (2 cols, 2 rows) */}
-            <div
-              className="col-span-2 row-span-2 relative overflow-hidden cursor-pointer group"
-              onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-            >
-              <ImageWithFallback
-                src={listing.imageUrls[0]}
-                imageUrls={listing.imageUrls}
-                alt={listing.name}
-                type="property"
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+        ) : (
+          <>
+            {/* Mobile Swiper (hidden on md and up) */}
+            <div className="block md:hidden h-full w-full">
+              <Swiper
+                modules={[Pagination]}
+                pagination={{ clickable: true, bulletActiveClass: 'swiper-pagination-bullet-active !bg-rose-500' }}
+                className="h-full w-full"
+              >
+                {listing.imageUrls.map((url, index) => (
+                  <SwiperSlide key={index}>
+                    <div 
+                      onClick={() => setShowFloatGallery(true)}
+                      className="w-full h-full cursor-pointer relative"
+                    >
+                      <ImageWithFallback
+                        src={url}
+                        imageUrls={listing.imageUrls}
+                        alt={`${listing.name} ${index + 1}`}
+                        type="property"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
 
-            {/* Side Images - 2x2 grid on right */}
-            {listing.imageUrls.slice(1, 5).map((url, index) => (
+            {/* Desktop Grid (hidden on mobile) */}
+            <div className="hidden h-full w-full grid-cols-4 grid-rows-2 gap-1.5 md:grid">
+              {/* Main Image - Takes left half (2 cols, 2 rows) */}
               <div
-                key={index}
-                className="relative overflow-hidden cursor-pointer group"
-                onClick={() => { setGalleryIndex(index + 1); setShowFullGallery(true); }}
+                className="col-span-2 row-span-2 relative overflow-hidden cursor-pointer group"
+                onClick={() => setShowFloatGallery(true)}
               >
                 <ImageWithFallback
-                  src={url}
-                  imageUrls={listing.imageUrls.slice(index + 1)}
-                  alt={`${listing.name} ${index + 2}`}
+                  src={listing.imageUrls[0]}
+                  imageUrls={listing.imageUrls}
+                  alt={listing.name}
                   type="property"
-                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
               </div>
-            ))}
-          </div>
 
-          {/* Show All Photos Button */}
-          <button
-            onClick={() => { setGalleryIndex(0); setShowFullGallery(true); }}
-            className="absolute bottom-6 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-10"
-          >
-            <PhotoIcon className="w-5 h-5" />
-            <span>Show all {listing.imageUrls.length} photos</span>
-          </button>
-          </>}
-        </div>
-      </div>
-
-      {/* Full Screen Gallery */}
-      {hasListingImages && <FullScreenGallery
-        images={listing.imageUrls}
-        currentIndex={galleryIndex}
-        isOpen={showFullGallery}
-        onClose={() => setShowFullGallery(false)}
-        onPrev={() => setGalleryIndex(prev => prev === 0 ? listing.imageUrls.length - 1 : prev - 1)}
-        onNext={() => setGalleryIndex(prev => prev === listing.imageUrls.length - 1 ? 0 : prev + 1)}
-        onIndexChange={setGalleryIndex}
-      />}
-
-      {/* Main Content - Optimized for large screens */}
-      <div className="relative z-10 -mt-8 md:-mt-12 max-w-7xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-4 sm:px-6 lg:px-8 py-8 lg:py-12 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-8 lg:space-y-10">
-            {/* Header */}
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold text-gray-900 dark:text-white mb-2">{listing.name}</h1>
-              {listing.kind && (
-                <div className="text-sm font-semibold text-rose-500 mb-2.5 capitalize tracking-wide flex items-center gap-1.5">
-                  <HomeModernIcon className="w-4 h-4" />
-                  {listing.kind.replace(/_/g, " ")}
+              {/* Side Images - 2x2 grid on right */}
+              {listing.imageUrls.slice(1, 5).map((url, index) => (
+                <div
+                  key={index}
+                  className="relative overflow-hidden cursor-pointer group"
+                  onClick={() => setShowFloatGallery(true)}
+                >
+                  <ImageWithFallback
+                    src={url}
+                    imageUrls={listing.imageUrls.slice(index + 1)}
+                    alt={`${listing.name} ${index + 2}`}
+                    type="property"
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
-              )}
-              <div className="flex flex-wrap items-center gap-2 text-gray-600 dark:text-gray-400 text-sm lg:text-base">
-                {hasReviews && <>
-                  <span className="flex items-center gap-1">
-                    <StarIconSolid className="text-[#FFB400] w-4 h-4" />
-                    <span className="font-semibold text-gray-900 dark:text-white">{ratings.overall.toFixed(1)}</span>
-                    <span className="underline">{commentCount} reviews</span>
-                  </span>
-                  <span>·</span>
-                </>}
-                <span className="underline">{listing.address?.split(',')[0]}</span>
-                <span>·</span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${listingType.color}`}>
-                  {listingType.label}
-                </span>
-                {bookingSummary.count > 0 && (
-                  <>
-                    <span>·</span>
-                    <span className="flex items-center gap-1 text-rose-500 font-semibold px-2 py-1 bg-rose-50 rounded text-xs">
-                      <TicketIcon className="w-4 h-4" />
-                      {bookingSummary.count} {bookingSummary.count === 1 ? 'Booking' : 'Bookings'}
-                    </span>
-                  </>
-                )}
-              </div>
+              ))}
+              {Array.from({ length: Math.max(0, 4 - Math.min(4, listing.imageUrls.length - 1)) }).map((_, index) => (
+                <div key={`listing-gallery-placeholder-${index}`} className="bg-slate-200" aria-hidden="true" />
+              ))}
             </div>
 
+            {/* Photo count button - Clean number without background, no word "photos" */}
+            <button
+              type="button"
+              onClick={() => setShowFloatGallery(true)}
+              aria-label={`Open photo gallery with ${listing.imageUrls.length} photos`}
+              className="absolute bottom-6 right-5 sm:bottom-8 sm:right-8 z-20 font-bold text-white text-lg sm:text-2xl tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer focus:outline-none"
+            >
+              {listing.imageUrls.length}
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Airbnb Style Float-In Gallery Page */}
+      <AnimatePresence>
+        {showFloatGallery && hasListingImages && (
+          <AirbnbFloatGallery
+            images={listing.imageUrls}
+            isOpen={showFloatGallery}
+            onClose={() => setShowFloatGallery(false)}
+            listingName={listing.name}
+            listingAddress={listing.address}
+            onImageClick={(index) => {
+              setGalleryIndex(index);
+              setShowFullGallery(true);
+            }}
+            handleShare={handleShare}
+            toggleFavorite={toggleFavorite}
+            isFavorite={isFavorite}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Full Screen Gallery (Lightbox zoom) */}
+      {hasListingImages && (
+        <FullScreenGallery
+          images={listing.imageUrls}
+          currentIndex={galleryIndex}
+          isOpen={showFullGallery}
+          onClose={() => setShowFullGallery(false)}
+          onPrev={() => setGalleryIndex(prev => prev === 0 ? listing.imageUrls.length - 1 : prev - 1)}
+          onNext={() => setGalleryIndex(prev => prev === listing.imageUrls.length - 1 ? 0 : prev + 1)}
+          onIndexChange={setGalleryIndex}
+        />
+      )}
+
+      {/* Main Content - Overlapping sheet matching Helper and Services standard */}
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+        <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
+          <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">{listingType.label}{listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-sm text-slate-700">
+            <span className="inline-flex items-center gap-1.5">
+              <StarIconSolid className="h-4 w-4 text-amber-400" />
+              {hasReviews ? <><strong className="font-semibold text-slate-900">{Number(ratings.overall).toFixed(1)}</strong><span className="underline">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span></> : <span>New · {commentCount} reviews</span>}
+            </span>
+            <span className="inline-flex items-center gap-1.5"><TicketIcon className="h-4 w-4 text-slate-500" /><strong className="font-medium text-slate-900">{bookingSummary.count}</strong> {bookingSummary.count === 1 ? 'booking' : 'bookings'}</span>
+            {cancellationSummary && <span className="inline-flex items-center gap-1.5 text-emerald-700"><CheckCircleIcon className="h-4 w-4" />{cancellationSummary}</span>}
+            {listing.address && <span className="inline-flex items-center gap-1.5"><MapPinIcon className="h-4 w-4 shrink-0 text-slate-500" /><span>{listing.address}</span></span>}
+          </div>
+        </section>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-8 lg:space-y-10">
             {/* Guest Favorite Badge — only backed by real reviews */}
             {isGuestFavourite && <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100">
               <div className="flex-shrink-0">
@@ -1283,7 +1502,7 @@ export default function Listing() {
                <div className="flex flex-wrap gap-3 mt-6">
               {listing.bedrooms && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
-                  <FaBed className="text-rose-400" /> {listing.bedrooms} {listing.bedrooms > 1 ? "rooms/beds" : "bed"}
+                  <FaBed className="text-slate-500" /> {listing.bedrooms} {listing.bedrooms === 1 ? "bedroom" : "bedrooms"}
                 </div>
               )}
               {listing.numberOfApartments > 0 && (
@@ -1314,6 +1533,67 @@ export default function Listing() {
             </div>
             </div>
 
+            {/* Host Info */}
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <Link
+                to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
+                className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
+              >
+                {listing.userRef?.avatar ? (
+                  <img
+                    src={listing.userRef.avatar}
+                    alt={listing.userRef.username}
+                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 shadow-sm text-gray-400">
+                    <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
+                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isVerifiedHost ? 'Verified Host · ' : 'Host · '}
+                    {listing.userRef?.createdAt ? (() => {
+                      const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
+                      return months < 12 ? `${months} month${months > 1 ? 's' : ''} hosting` : `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} hosting`;
+                    })() : '1 month hosting'}
+                  </p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Listing Highlights */}
+            {listingHighlights.length > 0 && (
+              <section className="border-b border-gray-200 py-6 dark:border-gray-800" aria-labelledby="listing-highlights-title">
+                <h2 id="listing-highlights-title" className="mb-5 text-lg font-semibold text-gray-900 dark:text-white">Listing highlights</h2>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {listingHighlights.map(({ icon: Icon, title, detail }) => (
+                    <div key={title} className="flex items-start gap-4">
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-slate-700 dark:text-slate-300" aria-hidden="true" />
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h3>
+                        <p className="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">{detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Description */}
+            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
+              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">About this place</h2>
+              <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm lg:text-base">
+                {isExpanded ? listing.description : truncateDescription(listing.description, 60)}
+              </div>
+              {listing.description?.split(' ').length > 60 && (
+                <button onClick={() => setIsExpanded(!isExpanded)} className="mt-4 font-semibold underline flex items-center gap-1 text-sm lg:text-base">
+                  {isExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
+
             {/* Available Units & Rooms — horizontal scroll carousel */}
             {listing.roomTypes && listing.roomTypes.length > 0 && (
               <div className="py-5 border-b border-gray-200 dark:border-gray-800">
@@ -1321,13 +1601,13 @@ export default function Listing() {
                 <div className="flex items-center justify-between mb-3.5">
                   <div>
                     <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                      <span>🏢</span> Available Units &amp; Rooms
+                      Choose your room
                     </h2>
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
                       {listing.roomTypes.length} {listing.roomTypes.length === 1 ? 'unit' : 'units'} available at this property
                     </p>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                     {listing.roomTypes.length} {listing.roomTypes.length === 1 ? 'Unit' : 'Units'}
                   </span>
                 </div>
@@ -1340,10 +1620,10 @@ export default function Listing() {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.3 }}
-                      className="flex-none w-44 sm:w-48 snap-start bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-rose-300 dark:hover:border-rose-900/60 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden group flex flex-col"
+                      className="flex w-60 flex-none snap-start flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 sm:w-64"
                     >
                       {/* Image */}
-                      <div className="relative h-28 sm:h-32 w-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+                      <div className="relative h-36 w-full flex-shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800 sm:h-40">
                         {room.image ? (
                           <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : listing.imageUrls && listing.imageUrls[0] ? (
@@ -1382,10 +1662,9 @@ export default function Listing() {
                             setSelectedUnit(room.name);
                             setShowBookingModal(true);
                           }}
-                          className="w-full mt-auto py-1.5 px-2 bg-rose-50 hover:bg-rose-600 dark:bg-rose-950/40 dark:hover:bg-rose-600 text-rose-600 hover:text-white dark:text-rose-400 dark:hover:text-white border border-rose-200/80 dark:border-rose-800/80 rounded-lg text-[10px] sm:text-[11px] font-bold transition-all duration-200 cursor-pointer flex items-center justify-center gap-1 group/btn active:scale-95 shadow-2xs"
+                          className="mt-auto flex w-full items-center justify-center rounded-xl bg-rose-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 active:scale-[0.99]"
                         >
-                          <span>Reserve</span>
-                          <span className="text-xs transition-transform group-hover/btn:translate-x-0.5">👉</span>
+                          Reserve
                         </button>
                       </div>
                     </motion.div>
@@ -1393,122 +1672,6 @@ export default function Listing() {
                 </div>
               </div>
             )}
-
-            {/* Listing Highlights */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-5">What makes this place special</h2>
-              <div className="space-y-5">
-                {/* Exceptional check-in */}
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0">
-                    <MdLogin className="text-rose-500 text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Exceptional check-in experience</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">Recent guests gave the check-in process a 5-star rating.</p>
-                  </div>
-                </div>
-                {/* Free parking */}
-                {listing.parking && (
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-green-50 flex items-center justify-center flex-shrink-0">
-                      <FaParking className="text-green-600 text-lg" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Park for free</h3>
-                      <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">This is one of the few places in the area with free parking.</p>
-                    </div>
-                  </div>
-                )}
-                {/* Great communication */}
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <MdChat className="text-blue-500 text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm lg:text-base">Great host communication</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-0.5">Recent guests loved {listing.userRef?.username || 'the host'}'s communication.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Host Info */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <Link
-                to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
-                className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
-              >
-                {listing.userRef?.avatar ? (
-                  <img
-                    src={listing.userRef.avatar}
-                    alt={listing.userRef.username}
-                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 shadow-sm text-gray-400">
-                    <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
-                  </div>
-                )}
-                <div>
-                  <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
-                  <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
-                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isVerifiedHost ? 'Verified Host · ' : 'Host · '}
-                    {listing.userRef?.createdAt ? (() => {
-                      const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
-                      return months < 12 ? `${months} month${months > 1 ? 's' : ''} hosting` : `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} hosting`;
-                    })() : '1 month hosting'}
-                  </p>
-                </div>
-              </Link>
-              
-              {/* Mutual Friends Section */}
-              <MutualFriends targetUserId={listing.userRef?._id || listing.userRef} />
-            </div>
-
-            {/* Description */}
-            <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">About this place</h2>
-              <div className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm lg:text-base">
-                {isExpanded ? listing.description : truncateDescription(listing.description, 60)}
-              </div>
-              {listing.description?.split(' ').length > 60 && (
-                <button onClick={() => setIsExpanded(!isExpanded)} className="mt-4 font-semibold underline flex items-center gap-1 text-sm lg:text-base">
-                  {isExpanded ? 'Show less' : 'Show more'}
-                </button>
-              )}
-            </div>
-
-            {/* Property Portfolio - Show All Photos */}
-            {listing.imageUrls && listing.imageUrls.length > 0 && (
-              <div className="py-6 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">Property Portfolio</h2>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
-                    {listing.imageUrls.length} Photos
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {listing.imageUrls.map((url, index) => (
-                    <div 
-                      key={index} 
-                      onClick={() => { setGalleryIndex(index); setShowFullGallery(true); }}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
-                    >
-                      <ImageWithFallback 
-                        src={url} 
-                        imageUrls={listing.imageUrls}
-                        alt={`Property ${index + 1}`} 
-                        type="property"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
 
             {/* Amenities */}
             {activeAmenities.length > 0 && (
@@ -1831,14 +1994,11 @@ export default function Listing() {
               </button>
             </div>
 
-            {/* Recent Bookers Section */}
-            <BookingHistory bookingSummary={bookingSummary} providerName={listing?.name} providerType={listing?.type || 'property'} />
-
             {/* Location */}
             <div className="py-6 border-t border-gray-200 dark:border-gray-800">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-4">Where you'll be</h2>
               <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm lg:text-base">{listing.address}</p>
-              <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
+              <div className="relative h-[320px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 sm:h-[360px]">
                 <GoogleMapComponent 
                   latitude={listing.latitude} 
                   longitude={listing.longitude} 
@@ -1873,7 +2033,9 @@ export default function Listing() {
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm lg:text-base">Cancellation policy</h3>
                   <div className="space-y-2 text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
-                    {listing.cancel ? (
+                    {cancellationSummary ? (
+                      <p className="leading-relaxed">{cancellationSummary}</p>
+                    ) : listing.cancel ? (
                       listing.cancel.split('\n').map((policy, i) => (
                         <p key={i} className="leading-relaxed">{policy}</p>
                       ))
@@ -1983,7 +2145,7 @@ export default function Listing() {
           {/* Right Column - Booking Card */}
           <div className="hidden lg:block lg:col-span-1 relative">
             <div className="lg:sticky lg:top-28 space-y-4 pb-8 z-10">
-              <div className="border border-slate-200/50 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 lg:p-8 bg-transparent">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.08)] lg:p-7">
                 {/* Price Header */}
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
@@ -2050,7 +2212,7 @@ export default function Listing() {
                       {listing.cancel && (
                         <p className="text-gray-700 dark:text-gray-300 flex flex-col gap-0.5 pt-1 border-t border-gray-200 dark:border-gray-800/50">
                           <span className="font-semibold text-gray-600 dark:text-gray-400">Cancellation Policy:</span>
-                          <span className="text-gray-500 dark:text-gray-400 text-[11px] leading-snug">{listing.cancel}</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-[11px] leading-snug">{cancellationSummary || listing.cancel}</span>
                         </p>
                       )}
                     </>
@@ -2061,23 +2223,23 @@ export default function Listing() {
                 <button
                   onClick={() => setShowBookingModal(true)}
                   disabled={!formattedDisplayNumber}
-                  className="w-full py-2 lg:py-3 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm lg:text-base"
+                  className="w-full rounded-xl bg-rose-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:opacity-50 lg:text-base"
                 >
-                  <FaWhatsapp className="text-base lg:text-xl" />
-                  {isSaleOrRent ? 'Inquire via WhatsApp' : 'Book via WhatsApp'}
+                  {isSaleOrRent ? 'Contact host' : 'Reserve'}
                 </button>
+                <p className="mt-2 text-center text-xs text-gray-500">You won’t be charged yet</p>
 
                 <button
                   onClick={handleEscrowCheckout}
-                  className="w-full mt-2 py-2 lg:py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 text-sm lg:text-base shadow-sm"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 lg:text-base"
                 >
-                  <FaShieldAlt className="text-base lg:text-xl" />
-                  Pay Securely via Escrow
+                  <FaShieldAlt className="text-base text-indigo-600 lg:text-lg" />
+                  Pay securely via escrow
                 </button>
 
 
                 <p className="text-center text-gray-500 dark:text-gray-400 text-xs lg:text-sm mt-2">
-                  {isSaleOrRent ? 'Ask questions about this listing' : 'A pending request will be saved and the host notified via WhatsApp'}
+                  {isSaleOrRent ? 'Ask questions about this listing' : 'Your request will be sent to the host'}
                 </p>
 
                 {/* Quick Contact Button */}
@@ -2090,7 +2252,7 @@ export default function Listing() {
               </div>
 
               {/* Contact Info Card */}
-              <div className="border border-slate-200/50 rounded-3xl p-6 lg:p-8 bg-transparent">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 lg:p-7">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3 lg:mb-4">Contact Information</h3>
                 {currentUser ? (
                   <div className="space-y-2 lg:space-y-3">
@@ -2153,7 +2315,7 @@ export default function Listing() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* WhatsApp Booking Modal */}
       <WhatsAppBookingModal
@@ -2215,6 +2377,6 @@ export default function Listing() {
           </button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

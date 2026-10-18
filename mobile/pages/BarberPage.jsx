@@ -34,7 +34,6 @@ import {
   KeyIcon,
   HeartIcon,
   ShareIcon,
-  Squares2X2Icon,
   InformationCircleIcon,
   PaperAirplaneIcon,
   ClockIcon,
@@ -2203,7 +2202,7 @@ export default function BarberPage() {
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   return (
-    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -2240,15 +2239,15 @@ export default function BarberPage() {
       <div className="w-full">
         {/* Airbnb-style image gallery layout */}
         {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
             <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
               {helper.imageUrls.slice(1, 5).map((url, index) => (
                 <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
               ))}
@@ -2256,19 +2255,22 @@ export default function BarberPage() {
                 <div key={`empty-${i}`} className="bg-slate-800 h-full" />
               ))}
             </div>
-            <button onClick={() => openFullScreenGallery(0)} className="absolute top-28 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20">
-              <Squares2X2Icon className="w-4 h-4" /> Show all {helper.imageUrls.length} photos
-            </button>
           </div>
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
-        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">
-            Barber services by {helper.name}
+        <div className="mb-8 pt-7 border-b border-slate-200 pb-7">
+          {isBarber && (
+            <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
+              {helper.userRef?.avatar ? <img src={helper.userRef.avatar} alt={helper.userRef?.username || helper.name} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
+            </div>
+          )}
+          <h1 className="max-w-4xl text-2xl sm:text-3xl lg:text-4xl font-semibold text-slate-900 mb-3 tracking-tight leading-tight">
+            {isBarber ? helper.name : `Barber services by ${helper.name}`}
           </h1>
+          {isBarber && <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Barber service in ${helper.address || 'your area'}`}</p>}
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
@@ -2282,27 +2284,27 @@ export default function BarberPage() {
         </div>
 
         {/* Content Grid */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="mt-7 grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Host Info Bar */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="flex flex-col gap-4 border-b border-gray-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit"
+                className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit"
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     Hosted by {helper.userRef?.username || helper.name}
                   </h2>
-                  <p className="text-gray-600 mt-1">View provider profile</p>
+                  <p className="mt-1 text-gray-600">View provider profile</p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-gray-50 shadow-sm">
                   {helper.userRef?.avatar ? (
                     <img
                       src={helper.userRef.avatar}
                       alt={helper.userRef?.username || helper.name}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover object-center"
                       onError={(e) => { e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'; }}
                     />
                   ) : (
@@ -2310,7 +2312,14 @@ export default function BarberPage() {
                   )}
                 </div>
               </Link>
-              
+              <button
+                type="button"
+                onClick={handleInternalMessage}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"
+              >
+                <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                Message
+              </button>
             </div>
 
 
@@ -2335,9 +2344,9 @@ export default function BarberPage() {
 
             {/* Services Offered - FIXED SECTION */}
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
-              <div className="pb-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="pb-7 border-b border-slate-200">
+                <h2 className="text-xl font-semibold text-slate-900 mb-4">Choose a service</h2>
+                <div className="grid grid-cols-1 gap-3">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
@@ -2345,7 +2354,7 @@ export default function BarberPage() {
                         key={service.id} 
                         onClick={() => setSelectedModalService(service)}
                         type="button"
-                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -2353,9 +2362,9 @@ export default function BarberPage() {
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           {service.image ? (
-                            <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
+                            <img src={service.image} alt={service.name} className="w-16 h-16 object-cover rounded-xl border border-slate-100 bg-white shrink-0" />
                           ) : (
-                            <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'} shrink-0 mt-0.5`}>
+                            <div className={`flex h-16 w-16 items-center justify-center rounded-xl bg-slate-100 text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-slate-400'} shrink-0`}>
                               {service.icon}
                             </div>
                           )}
@@ -2367,19 +2376,19 @@ export default function BarberPage() {
                                 {service.type}
                               </span>
                             )}
-                            <p className={`text-left font-semibold transition-colors ${isSelected ? 'text-rose-700' : 'text-gray-900'}`}>
+                            <p className={`text-left font-semibold transition-colors ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>
                               {service.name}
                             </p>
                             {service.description && (
-                              <p className="mt-1 text-xs leading-relaxed text-gray-500 line-clamp-2">
+                              <p className="mt-1 text-xs leading-relaxed text-slate-500 line-clamp-2">
                                 {service.description}
                               </p>
                             )}
                           </div>
                         </div>
                         {service.price !== undefined && service.price !== null && (
-                          <span className={`shrink-0 font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
-                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}
+                          <span className={`shrink-0 text-right font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
+                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}<span className="block text-[11px] font-normal text-slate-500">per service</span>
                           </span>
                         )}
                         {isSelected && (
@@ -2392,6 +2401,43 @@ export default function BarberPage() {
                   })}
                 </div>
               </div>
+            )}
+
+            {isBarber && (
+              <>
+                <section className="border-b border-slate-200 pb-7" aria-labelledby="barber-qualifications-title">
+                  <h2 id="barber-qualifications-title" className="mb-4 text-xl font-semibold text-slate-900">My qualifications</h2>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><CheckBadgeIcon className="h-5 w-5" /></span>
+                      <div className="space-y-2 text-sm leading-6 text-slate-600">
+                        {(nearDetails.split('\n').filter(Boolean).length ? nearDetails.split('\n').filter(Boolean) : ['Contact the barber for details about experience and training.']).slice(0, 6).map((item, index) => (
+                          <p key={`qualification-${index}`}>{item}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {helper.imageUrls?.length > 0 && (
+                  <section className="border-b border-slate-200 pb-7" aria-labelledby="barber-portfolio-title">
+                    <div className="mb-4 flex items-end justify-between gap-4">
+                      <div>
+                        <h2 id="barber-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2>
+                        <p className="mt-1 text-sm text-slate-500">A selection of the barber’s work</p>
+                      </div>
+                      <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {helper.imageUrls.length}</button>
+                    </div>
+                    <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
+                      {helper.imageUrls.slice(0, 3).map((url, index) => (
+                        <button key={`portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
+                          <img src={url} alt={`${helper.name} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
             )}
 
             {/* Reviews Summary */}
@@ -2513,15 +2559,15 @@ export default function BarberPage() {
             <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{helper.address}</p>
-              <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
+              <div className="w-full h-[300px] bg-slate-100 rounded-2xl overflow-hidden relative border border-slate-200">
                 <GoogleMapComponent
                   address={helper.address || 'Johannesburg, South Africa'}
                   title={`${helper.name}'s Location`}
                 />
               </div>
-              {helper.near && (
+              {helper.near && !isBarber && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">{isBarber ? 'More about this barber' : "What's nearby"}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">What's nearby</h3>
                   <div className="text-gray-700 text-xs lg:text-sm space-y-1">
                     {nearDetails.split('\n').filter(Boolean).slice(0, 4).map((item, i) => (
                       <p key={i}>{item}</p>
@@ -2536,10 +2582,10 @@ export default function BarberPage() {
           {/* Right Column - Booking Card */}
           <div className="hidden lg:block lg:col-span-1">
             <div className="top-24 py-12">
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_16px_40px_rgba(15,23,42,0.08)] dark:border-gray-800 dark:bg-gray-900 sticky top-24">
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_rgba(15,23,42,0.08)] sticky top-24">
                 <p className="text-sm font-medium text-slate-500">Services from</p>
                 <div className="mt-1 flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tracking-tight text-slate-950 dark:text-white">R{startingServicePrice}</span>
+                  <span className="text-3xl font-bold tracking-tight text-slate-950">R{startingServicePrice}</span>
                   <span className="text-sm text-slate-500">per service</span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -2629,7 +2675,7 @@ export default function BarberPage() {
           <div className="flex-1 mr-4">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-black text-slate-900 tracking-tighter">R{mobilePrice}</span>
-              <span className="text-slate-400 text-[9px] font-semibold uppercase tracking-widest">{bookingData.selectedServices.length > 0 ? 'Estimated total' : 'Starting at'}</span>
+                  <span className="text-slate-500 text-xs">{bookingData.selectedServices.length > 0 ? 'Estimated total' : 'Starting at'}</span>
             </div>
             <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
               {helper?.name}
@@ -2637,9 +2683,9 @@ export default function BarberPage() {
           </div>
           <button
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-slate-950 hover:bg-black text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="px-7 py-3.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-95"
           >
-            Review & Reserve
+            Choose date
           </button>
         </div>
       </div>

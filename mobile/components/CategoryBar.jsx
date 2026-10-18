@@ -6,7 +6,7 @@ const CategoryIcon = ({ type }) => {
   // Advanced 3D SVGs with lighting effects and depth
   const icons = {
     homes: (
-      <svg viewBox="0 0 100 100" className="w-9 h-9 drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)]">
+      <svg viewBox="0 0 100 100" className="w-7 h-7 drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]">
         <defs>
           <linearGradient id="homeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#FF5A5F" />
@@ -30,7 +30,7 @@ const CategoryIcon = ({ type }) => {
       </svg>
     ),
     services: (
-      <svg viewBox="0 0 100 100" className="w-9 h-9 drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)]">
+      <svg viewBox="0 0 100 100" className="w-7 h-7 drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]">
         <defs>
           <linearGradient id="serviceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#3B82F6" />
@@ -47,7 +47,7 @@ const CategoryIcon = ({ type }) => {
       </svg>
     ),
     helpers: (
-      <svg viewBox="0 0 100 100" className="w-9 h-9 drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)]">
+      <svg viewBox="0 0 100 100" className="w-7 h-7 drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]">
         <defs>
           <linearGradient id="helperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#10B981" />
@@ -65,7 +65,7 @@ const CategoryIcon = ({ type }) => {
       </svg>
     ),
     events: (
-      <svg viewBox="0 0 100 100" className="w-9 h-9 drop-shadow-[0_10px_10px_rgba(0,0,0,0.2)]">
+      <svg viewBox="0 0 100 100" className="w-7 h-7 drop-shadow-[0_6px_6px_rgba(0,0,0,0.18)]">
         <defs>
           <linearGradient id="eventGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#F59E0B" />
@@ -96,19 +96,19 @@ const CategoryBar = () => {
   ];
 
   return (
-    <div className="w-full bg-white/90 backdrop-blur-xl sticky top-0 z-[60] border-b border-gray-100 shadow-sm overflow-x-auto scrollbar-hide py-3">
-      <div className="max-w-7xl mx-auto flex items-center justify-start md:justify-center gap-4 px-4 min-w-max">
+    <div className="w-full border-t border-gray-100/60 dark:border-gray-800/60 overflow-x-auto scrollbar-hide py-2.5">
+      <div className="max-w-7xl mx-auto flex items-center justify-center gap-3 px-4 md:px-8 min-w-max">
         {categories.map((cat) => (
           <motion.button
             key={cat.id}
             whileHover={{ 
               scale: 1.05, 
               backgroundColor: '#fff',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.08)'
+              boxShadow: '0 10px 25px rgba(0,0,0,0.08)'
             }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate(cat.route)}
-            className="flex items-center gap-3 px-6 py-3 rounded-2xl border border-gray-100 bg-gray-50/50 transition-all group relative overflow-hidden"
+            className="flex items-center gap-2 px-4 py-2 rounded-2xl border border-gray-100 bg-gray-50/50 transition-all relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <motion.div 
@@ -117,9 +117,11 @@ const CategoryBar = () => {
               className="flex-shrink-0 relative z-10"
               style={{ perspective: '1000px' }}
             >
-              <CategoryIcon type={cat.icon} />
+              <div className="w-7 h-7 [&_svg]:w-7 [&_svg]:h-7">
+                <CategoryIcon type={cat.icon} />
+              </div>
             </motion.div>
-            <span className="text-xs font-black text-gray-900 uppercase tracking-[0.2em] relative z-10">{cat.label}</span>
+            <span className="text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] relative z-10">{cat.label}</span>
           </motion.button>
         ))}
       </div>

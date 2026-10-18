@@ -34,7 +34,6 @@ import {
   KeyIcon,
   HeartIcon,
   ShareIcon,
-  Squares2X2Icon,
   InformationCircleIcon,
   PaperAirplaneIcon,
   ClockIcon,
@@ -2254,7 +2253,7 @@ export default function TattooPage() {
   const serviceEquipmentOptions = equipmentOptions[helper.type] || equipmentOptions.default;
 
   return (
-    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-slate-50 dark:bg-gray-950">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-slate-50/90 backdrop-blur-md shadow-sm border-b border-slate-200/50' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -2291,15 +2290,15 @@ export default function TattooPage() {
       <div className="w-full">
         {/* Airbnb-style image gallery layout */}
         {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
             <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </div>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
               {helper.imageUrls.slice(1, 5).map((url, index) => (
                 <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </div>
               ))}
@@ -2307,19 +2306,20 @@ export default function TattooPage() {
                 <div key={`empty-${i}`} className="bg-slate-800 h-full" />
               ))}
             </div>
-            <button onClick={() => openFullScreenGallery(0)} className="absolute top-28 right-6 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest text-slate-900 flex items-center gap-2 hover:bg-white hover:scale-105 active:scale-95 transition-all duration-300 shadow-xl border border-slate-200/50 z-20">
-              <Squares2X2Icon className="w-4 h-4" /> Show all {helper.imageUrls.length} photos
-            </button>
           </div>
         )}
       </div>
 
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
-        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">
+        <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
+          <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
+            {helper.userRef?.avatar ? <img src={helper.userRef.avatar} alt={helper.userRef?.username || helper.name} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
+          </div>
+          <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
             Tattoo services by {helper.name}
           </h1>
+          <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Tattoo services in ${helper.address || 'your area'}`}</p>
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <StarIconSolid className="text-amber-400 w-4 h-4" />
@@ -2337,10 +2337,10 @@ export default function TattooPage() {
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Host Info Bar */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
               <Link
                 to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit"
+                className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit"
               >
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -2348,20 +2348,20 @@ export default function TattooPage() {
                   </h2>
                   <p className="text-gray-600 mt-1">View provider profile</p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
                   {helper.userRef?.avatar ? (
                     <img
                       src={helper.userRef.avatar}
                       alt={helper.userRef?.username || helper.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.src = 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800'; }}
+                      className="h-full w-full object-cover object-center"
+                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                     />
                   ) : (
                     <FaUser className="text-2xl text-gray-400" />
                   )}
                 </div>
               </Link>
-              
+              <button type="button" onClick={handleInternalMessage} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"><ChatBubbleLeftRightIcon className="h-4 w-4" />Message</button>
             </div>
 
 
@@ -2384,39 +2384,27 @@ export default function TattooPage() {
               )}
             </div>
 
-            {/* Professional Portfolio - Show All Photos */}
-            {helper.imageUrls && helper.imageUrls.length > 0 && (
-              <div className="pb-8 border-b border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Professional Portfolio</h2>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full">
-                    {helper.imageUrls.length} Photos
-                  </span>
+            {helper.imageUrls?.length > 0 && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="tattoo-portfolio-title">
+                <div className="mb-4 flex items-end justify-between gap-4">
+                  <div><h2 id="tattoo-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of the artist’s work</p></div>
+                  <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {helper.imageUrls.length}</button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {helper.imageUrls.map((url, index) => (
-                    <div 
-                      key={index} 
-                      onClick={() => openFullScreenGallery(index)}
-                      className="aspect-square rounded-2xl overflow-hidden cursor-pointer group relative shadow-sm hover:shadow-md transition-all active:scale-95"
-                    >
-                      <img 
-                        src={url} 
-                        alt={`Portfolio ${index + 1}`} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                    </div>
+                <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
+                  {helper.imageUrls.slice(0, 3).map((url, index) => (
+                    <button key={`portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
+                      <img src={url} alt={`${helper.name} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                    </button>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Services Offered - FIXED SECTION */}
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Services offered</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <h2 className="mb-4 text-xl font-semibold text-slate-900">Choose a service</h2>
+                <div className="grid grid-cols-1 gap-3">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
@@ -2424,7 +2412,7 @@ export default function TattooPage() {
                         key={service.id} 
                         onClick={() => setSelectedModalService(service)}
                         type="button"
-                        className={`flex items-start justify-between gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                        className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-all cursor-pointer ${
                           isSelected 
                             ? 'border-rose-500 bg-rose-50 shadow-sm' 
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -2432,9 +2420,9 @@ export default function TattooPage() {
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           {service.image ? (
-                            <img src={service.image} alt={service.name} className="w-12 h-12 object-cover rounded-lg border bg-white shrink-0 mt-0.5" />
+                            <img src={service.image} alt={service.name} className="h-16 w-16 shrink-0 rounded-xl border border-slate-100 bg-white object-cover" />
                           ) : (
-                            <div className={`text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-gray-400'} shrink-0 mt-0.5`}>
+                            <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl transition-colors ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>
                               {service.icon}
                             </div>
                           )}
@@ -2457,8 +2445,8 @@ export default function TattooPage() {
                           </div>
                         </div>
                         {service.price !== undefined && service.price !== null && (
-                          <span className={`shrink-0 font-semibold ${isSelected ? 'text-rose-600' : 'text-gray-700'}`}>
-                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}
+                          <span className={`shrink-0 text-right font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
+                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}<span className="block text-[11px] font-normal text-slate-500">starting at</span>
                           </span>
                         )}
                         {isSelected && (
@@ -2472,6 +2460,19 @@ export default function TattooPage() {
                 </div>
               </div>
             )}
+
+            <section className="border-b border-slate-200 pb-7" aria-labelledby="tattoo-qualifications-title">
+              <h2 id="tattoo-qualifications-title" className="mb-4 text-xl font-semibold text-slate-900">My qualifications</h2>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600"><CheckBadgeIcon className="h-5 w-5" /></span>
+                  <div className="space-y-2 whitespace-pre-line text-sm leading-6 text-slate-600">
+                    {[helper.experience, helper.education, helper.training, helper.certifications].filter((item) => typeof item === 'string' && item.trim()).slice(0, 6).map((item, index) => <p key={`qualification-${index}`}>{item}</p>)}
+                    {!helper.experience && !helper.education && !helper.training && !helper.certifications && <p>Message the artist to ask about experience and training.</p>}
+                  </div>
+                </div>
+              </div>
+            </section>
 
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
@@ -2592,13 +2593,13 @@ export default function TattooPage() {
             <div className="py-6 border-t border-gray-200">
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-4">Where you'll be</h2>
               <p className="text-gray-700 mb-4 text-sm lg:text-base">{helper.address}</p>
-              <div className="w-full h-[450px] bg-black rounded-[2rem] overflow-hidden relative border border-slate-100/10 shadow-2xl">
+              <div className="relative h-[300px] w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                 <GoogleMapComponent
                   address={helper.address || 'Johannesburg, South Africa'}
                   title={`${helper.name}'s Location`}
                 />
               </div>
-              {helper.near && (
+              {helper.type !== 'tattoo' && helper.near && (
                 <div className="mt-6">
                   <h3 className="font-semibold text-gray-900 mb-2">{helper.type === 'tattoo' ? 'Specialties' : "What's nearby"}</h3>
                   <div className="text-gray-700 text-xs lg:text-sm space-y-1">
