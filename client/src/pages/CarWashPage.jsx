@@ -13,7 +13,7 @@ import {
   FaArrowDown, FaCalendar, FaBriefcase, FaAward,
   FaSoap, FaTint, FaOilCan, FaSprayCan, FaWrench,
   FaWater, FaWind, FaSun, FaCheck, FaRegSnowflake,
-  FaExpand, FaChevronLeft, FaChevronRight,
+  FaChevronLeft, FaChevronRight,
   FaHeart, FaShare, FaHome, FaUtensils, FaLeaf,
   FaFlag, FaBaby, FaSnowflake, FaUserFriends,
   FaCertificate, FaGraduationCap, FaGlobe,
@@ -526,7 +526,7 @@ export default function CarWashPage() {
   const displayText = showFullDescription ? description : description.slice(0, 250) + (description.length > 250 ? "..." : "");
 
   return (
-    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0">
+    <div className="min-h-screen app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
       {/* Navigation Header - Transparent on top of image */}
       <nav className={`app-safe-top fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-800/50' : 'bg-transparent py-2'}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -562,31 +562,32 @@ export default function CarWashPage() {
       {/* Image Gallery - Full Width */}
       {carWash.imageUrls?.length > 0 && (
         <div className="relative w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 h-[320px] sm:h-[400px] md:h-[500px] lg:h-[600px] w-full bg-slate-900 overflow-hidden">
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
             <button type="button" aria-label="View first photo" className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }}>
-              <img src={carWash.imageUrls[0]} alt={carWash.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+              <img src={carWash.imageUrls[0]} alt={carWash.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
             </button>
             <div className="hidden md:grid grid-cols-2 gap-2 h-full">
               {carWash.imageUrls.slice(1, 5).map((url, index) => (
                 <button type="button" key={url + index} aria-label={`View photo ${index + 2}`} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(index + 1); setShowImageModal(true); }}>
-                  <img src={url} alt={`${carWash.name} ${index + 2}`} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <img src={url} alt={`${carWash.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
                   <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
                 </button>
               ))}
               {carWash.imageUrls.length < 5 && Array(4 - Math.min(4, carWash.imageUrls.length - 1)).fill(null).map((_, index) => <div key={`empty-${index}`} className="bg-slate-800 h-full" />)}
             </div>
           </div>
-          <button type="button" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }} className="absolute top-24 md:top-28 right-4 md:right-6 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-900 flex items-center gap-2 shadow-xl border border-slate-200/50 hover:bg-white transition z-20">
-            <FaExpand className="w-4 h-4" /> Show all {carWash.imageUrls.length} photos
-          </button>
         </div>
       )}
 
       {/* Main Content Grid */}
-      <main className="relative z-10 -mt-8 md:-mt-12 max-w-6xl mx-auto rounded-t-[2rem] md:rounded-t-[2.5rem] bg-white dark:bg-gray-950 px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
-        <div className="mb-10 pt-8 border-b border-slate-200/60 pb-8">
-          <h1 className="max-w-4xl text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-5 tracking-tight leading-tight">{carWash.name}</h1>
+      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+        <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
+          <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
+            {carWash.userRef?.avatar ? <img src={carWash.userRef.avatar} alt={carWash.userRef?.username || carWash.name} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaUser className="text-xl text-slate-400" />}
+          </div>
+          <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">{carWash.name}</h1>
+          <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Car wash and detailing in ${carWash.address || 'your area'}`}</p>
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <FaStar className="text-amber-400" />
@@ -602,18 +603,18 @@ export default function CarWashPage() {
           
           {/* Left Column - Details */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
-              <Link to={`/user-profile/${carWash.userRef?._id}`} className="flex items-start justify-between hover:opacity-80 transition-opacity w-fit">
+            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+              <Link to={`/user-profile/${carWash.userRef?._id || carWash.userRef}`} className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Hosted by {carWash.userRef?.username || carWash.name}</h2>
                   <p className="text-gray-600 dark:text-gray-300 mt-1">View provider profile</p>
                 </div>
-                <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-200 shadow-sm flex-shrink-0 ml-4 bg-gray-50 flex items-center justify-center">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
                 {carWash.userRef?.avatar ? (
                   <img 
                     src={carWash.userRef.avatar} 
                     alt={carWash.userRef.username}
-                    className="w-full h-full object-cover"
+                    className="h-full w-full object-cover object-center"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-400">
@@ -622,6 +623,7 @@ export default function CarWashPage() {
                 )}
                 </div>
               </Link>
+              <button type="button" onClick={handleMessageProvider} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"><FaComment className="h-4 w-4" />Message</button>
             </div>
 
             {/* Description */}
@@ -644,26 +646,26 @@ export default function CarWashPage() {
 
             {/* Services Offered */}
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Services offered</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <h2 className="mb-4 text-xl font-semibold text-slate-900">Choose a service</h2>
+              <div className="grid grid-cols-1 gap-3">
                 {activeServices.map((service) => (
                   <button type="button"
                     key={service.id}
                     onClick={() => handleServiceSelection(service.id)}
                     aria-pressed={selectedServices.includes(service.id)}
-                    className={`flex w-full items-start justify-between gap-3 p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                    className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-3.5 text-left transition-all cursor-pointer ${
                       selectedServices.includes(service.id) 
                         ? 'border-rose-500 bg-rose-50 shadow-sm dark:bg-rose-950/20'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800'
                     }`}
                   >
-                    <span className={`mt-1 shrink-0 text-xl ${selectedServices.includes(service.id) ? 'text-rose-500' : 'text-slate-400'}`} aria-hidden="true">🚗</span>
+                    <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl ${selectedServices.includes(service.id) ? 'text-rose-500' : 'text-slate-400'}`} aria-hidden="true"><FaCar /></span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block font-semibold ${selectedServices.includes(service.id) ? 'text-rose-700 dark:text-rose-300' : 'text-gray-900 dark:text-white'}`}>{service.name}</span>
-                      {service.description && <span className="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400 line-clamp-2">{service.description}</span>}
-                      {service.duration && <span className="mt-2 block text-xs text-gray-500 dark:text-gray-400">{service.duration}</span>}
+                      <span className={`block font-semibold ${selectedServices.includes(service.id) ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</span>
+                      {service.description && <span className="mt-1 block line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</span>}
+                      {service.duration && <span className="mt-2 block text-xs text-slate-500">{service.duration}</span>}
                     </span>
-                    <span className={`shrink-0 font-semibold ${selectedServices.includes(service.id) ? 'text-rose-600' : 'text-gray-700 dark:text-gray-200'}`}>{Number(service.price) > 0 ? `R${service.price}` : 'Ask for price'}</span>
+                    <span className={`shrink-0 text-right font-semibold ${selectedServices.includes(service.id) ? 'text-rose-600' : 'text-slate-900'}`}>{Number(service.price) > 0 ? `R${service.price}` : 'Ask for price'}<span className="block text-[11px] font-normal text-slate-500">per vehicle</span></span>
                     {selectedServices.includes(service.id) && (
                       <span className="ml-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-500">
                         <FaCheck className="text-white text-xs" />
@@ -697,6 +699,22 @@ export default function CarWashPage() {
                 </div>
               )}
             </div>
+
+            {carWash.imageUrls?.length > 0 && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="carwash-portfolio-title">
+                <div className="mb-4 flex items-end justify-between gap-4">
+                  <div><h2 id="carwash-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider’s car care work</p></div>
+                  <button type="button" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {carWash.imageUrls.length}</button>
+                </div>
+                <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
+                  {carWash.imageUrls.slice(0, 3).map((url, index) => (
+                    <button key={`carwash-portfolio-${url}-${index}`} type="button" onClick={() => { setActiveImageIndex(index); setShowImageModal(true); }} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
+                      <img src={url} alt={`${carWash.name} portfolio photo ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Reviews Section */}
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">

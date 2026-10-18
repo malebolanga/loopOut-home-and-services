@@ -11,7 +11,8 @@ import {
   HandThumbUpIcon,
   HandThumbDownIcon,
   ChatBubbleOvalLeftEllipsisIcon,
-  PhoneIcon
+  PhoneIcon,
+  Squares2X2Icon
 } from '@heroicons/react/24/outline';
 import {
   StarIcon as StarIconSolid,
@@ -58,7 +59,14 @@ import { TOP_CATEGORIES } from '../data/categories';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import DownloadAppSection from '../components/home/DownloadAppSection';
+import CategoriesBottomSheet from '../components/home/CategoriesBottomSheet';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
+import {
+  RecentAdded3DIcon,
+  MoreCategories3DIcon,
+  Category3DIcon,
+  ThreeDButton
+} from '../components/home/ThreeDCategoryIcons';
 
 import {
   DISTANCE_TIERS,
@@ -3561,6 +3569,7 @@ function MobileAppHomepage({
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [visibleCount, setVisibleCount] = useState(12);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [isCategoriesSheetOpen, setIsCategoriesSheetOpen] = useState(false);
 
   useEffect(() => {
     setVisibleCount(12);
@@ -3702,6 +3711,18 @@ function MobileAppHomepage({
     }
   ];
 
+  // Pinned tabs on the sticky header bar:
+  // - "Recent Added" is always pinned on the header.
+  // - If user selects another category from the bottom sheet, it sticks on the homepage header as active.
+  const visibleTabs = useMemo(() => {
+    const recentTab = tabs.find(t => t.id === 'RecentAdded') || tabs[0];
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+      return [recentTab];
+    }
+    const currentTab = tabs.find(t => t.id === activeTab);
+    return currentTab ? [recentTab, currentTab] : [recentTab];
+  }, [tabs, activeTab]);
+
   const currentTabLabel = useMemo(() => {
     if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') return 'Recent Added';
     const found = tabs.find(t => t.id === activeTab);
@@ -3808,12 +3829,15 @@ function MobileAppHomepage({
     return (
       <DesktopHomepage
         tabs={tabs}
+        visibleTabs={visibleTabs}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         activeSubcategory={activeSubcategory}
         setActiveSubcategory={setActiveSubcategory}
         showAllCategories={showAllCategories}
         setShowAllCategories={setShowAllCategories}
+        isCategoriesSheetOpen={isCategoriesSheetOpen}
+        setIsCategoriesSheetOpen={setIsCategoriesSheetOpen}
         currentCategoryObj={currentCategoryObj}
         getSubcategoryCount={getSubcategoryCount}
         featuredProperties={featuredProperties}
@@ -3859,6 +3883,60 @@ function MobileAppHomepage({
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Hero banner intentionally hidden on mobile/small screens */}
 
+        {/* ── TOP STICKY 3D CATEGORIES BAR (Recent Added + More Categories) ── */}
+        <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2 mb-2 -mx-4 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.04)] w-[calc(100%+2rem)]">
+          <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
+            {visibleTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
+              return (
+                <motion.button
+                  key={tab.id}
+                  onClick={() => {
+                    if (tab.route) {
+                      navigate(tab.route);
+                      return;
+                    }
+                    setActiveTab(tab.id);
+                    setActiveSubcategory('all');
+                  }}
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  whileTap={{ scale: 0.92 }}
+                  className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
+                  aria-label={tab.label}
+                >
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+                    {isRecentAdded ? (
+                      <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+                    ) : (
+                      <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
+                    {tab.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+
+            {/* 'More categories' small 3D icon */}
+            <motion.button
+              onClick={() => setIsCategoriesSheetOpen(true)}
+              whileHover={{ scale: 1.08, y: -2 }}
+              whileTap={{ scale: 0.92 }}
+              className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
+              aria-label="More categories"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+                <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+              </div>
+              <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
+                More
+              </span>
+            </motion.button>
+          </div>
+        </div>
+
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
           {showLocationToast && (
@@ -3895,72 +3973,6 @@ function MobileAppHomepage({
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
-
-          {/* Sticky Categories Bar with horizontal swipe & enlarged icons (Left 0 to Right 0 full width) */}
-          <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-3 mb-4 -mx-4 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] w-[calc(100%+2rem)]">
-            <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1 snap-x snap-mandatory">
-              {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <motion.button
-                    layout
-                    key={tab.id}
-                    onClick={() => {
-                      if (tab.route) {
-                        navigate(tab.route);
-                        return;
-                      }
-                      setActiveTab(tab.id);
-                      setActiveSubcategory('all');
-                    }}
-                    whileTap={{ scale: 0.92 }}
-                    className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[54px] sm:min-w-[62px] py-0.5"
-                  >
-                    <motion.div
-                      animate={isActive ? { scale: [1, 0.92, 1.06, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.35, ease: 'easeInOut' }}
-                      className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 ${isActive
-                        ? 'bg-slate-950 dark:bg-white text-white dark:text-slate-950 shadow-lg shadow-slate-950/20 ring-2 ring-slate-950 dark:ring-white'
-                        : 'bg-slate-50 dark:bg-gray-800 border border-slate-200/90 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700 hover:border-slate-300 shadow-2xs'
-                        }`}
-                    >
-                      {(() => {
-                        const TabIcon = tab.icon || Sparkles;
-                        return <TabIcon className={`h-5 w-5 sm:h-6 sm:w-6 ${isActive ? 'text-rose-500 dark:text-rose-500' : (tab.textColor || 'text-slate-600')}`} aria-label={tab.label} />;
-                      })()}
-                    </motion.div>
-                    <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${isActive ? 'text-rose-600 font-extrabold' : (tab.textColor || 'text-slate-800 dark:text-gray-300')
-                      }`}>
-                      {tab.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-
-              {/* Toggle 'See more categories' button */}
-              <motion.button
-                layout
-                onClick={() => setShowAllCategories(prev => !prev)}
-                whileTap={{ scale: 0.92 }}
-                className="snap-start shrink-0 flex flex-col items-center justify-center text-center cursor-pointer focus:outline-none min-w-[64px] sm:min-w-[72px] py-0.5"
-              >
-                <div className={`w-[46px] h-[46px] sm:w-[52px] sm:h-[52px] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto transition-all duration-300 shadow-2xs ${showAllCategories
-                  ? 'bg-slate-100 dark:bg-gray-800 border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-700'
-                  : 'bg-rose-50 dark:bg-rose-500/10 border border-rose-200/90 dark:border-rose-500/30 text-rose-600 hover:bg-rose-100 dark:hover:bg-rose-500/20'
-                  }`}>
-                  {showAllCategories ? (
-                    <ChevronUp className="w-5 h-5 stroke-[2.5]" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 stroke-[2.5]" />
-                  )}
-                </div>
-                <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-wider mt-1.5 leading-tight truncate w-full ${showAllCategories ? 'text-slate-700' : 'text-rose-600'
-                  }`}>
-                  {showAllCategories ? 'Show less' : 'More categories'}
-                </span>
-              </motion.button>
-            </div>
-          </div>
 
           {/* Subcategory Pills */}
           {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
@@ -4116,6 +4128,19 @@ function MobileAppHomepage({
         {/* End of Feed */}
         {!isAndroidApp() && <CaughtUpHub stats={stats} navigate={navigate} />}
 
+        {/* Feather-in Categories Bottom Sheet */}
+        <CategoriesBottomSheet
+          isOpen={isCategoriesSheetOpen}
+          onClose={() => setIsCategoriesSheetOpen(false)}
+          tabs={tabs}
+          activeTab={activeTab}
+          onSelectCategory={(tabId) => {
+            setActiveTab(tabId);
+            setActiveSubcategory('all');
+          }}
+          navigate={navigate}
+        />
+
       </main>
     </div>
   );
@@ -4125,12 +4150,15 @@ function MobileAppHomepage({
 // --- Airbnb-Style Desktop Homepage ---
 function DesktopHomepage({
   tabs,
+  visibleTabs,
   activeTab,
   setActiveTab,
   activeSubcategory,
   setActiveSubcategory,
   showAllCategories,
   setShowAllCategories,
+  isCategoriesSheetOpen,
+  setIsCategoriesSheetOpen,
   currentCategoryObj,
   getSubcategoryCount,
   featuredProperties,
@@ -4242,20 +4270,15 @@ function DesktopHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-6">
-        <HomeHero navigate={navigate} />
-      </div>
-
-      {/* Sticky Elite Categories Bar */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-3.5 shadow-xs">
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide py-1">
-            {(showAllCategories ? tabs : tabs.filter(t => t.id === activeTab)).map((tab) => {
+      {/* Sticky Elite 3D Categories Bar (At the very top) */}
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2.5 shadow-xs border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
+          <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
+            {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;
+              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
               return (
                 <motion.button
-                  layout
                   key={tab.id}
                   onClick={() => {
                     if (tab.route) {
@@ -4265,62 +4288,47 @@ function DesktopHomepage({
                     setActiveTab(tab.id);
                     setActiveSubcategory('all');
                   }}
+                  whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  whileHover={{ y: -2 }}
-                  className="shrink-0 flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200"
+                  className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none"
+                  aria-label={tab.label}
                 >
-                  <motion.div
-                    animate={isActive ? { scale: [1, 0.94, 1.06, 1] } : { scale: 1 }}
-                    transition={{ duration: 0.35, ease: 'easeInOut' }}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isActive
-                      ? 'bg-slate-900 dark:bg-white shadow-md ring-2 ring-slate-900 dark:ring-white text-white dark:text-slate-900'
-                      : 'bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:bg-gray-100/80 dark:hover:bg-gray-700 shadow-xs'
-                      }`}
-                  >
-                    {(() => {
-                      const TabIcon = tab.icon || Sparkles;
-                      return <TabIcon className={`h-5 w-5 ${isActive ? 'text-rose-500 dark:text-rose-500' : (tab.textColor || 'text-slate-600')}`} aria-label={tab.label} />;
-                    })()}
-                  </motion.div>
-
+                  <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+                    {isRecentAdded ? (
+                      <RecentAdded3DIcon className="w-8 h-8" />
+                    ) : (
+                      <Category3DIcon type={tab.id} className="w-8 h-8" />
+                    )}
+                  </div>
                   <div className="text-left">
-                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : (tab.textColor || 'text-gray-800 dark:text-gray-300')
-                      }`}>
-                      {tab.label || tab.id}
+                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
+                      {tab.label}
                     </span>
-                    <span className="block text-[9.5px] text-gray-400 dark:text-gray-500 font-semibold mt-0.5 leading-tight">
-                      {tab.desc}
+                    <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                      {tab.desc || (isRecentAdded ? 'New listings' : '')}
                     </span>
                   </div>
                 </motion.button>
               );
             })}
 
-            {/* Toggle See more categories button */}
+            {/* More categories small 3D icon */}
             <motion.button
-              layout
-              onClick={() => setShowAllCategories(prev => !prev)}
+              onClick={() => setIsCategoriesSheetOpen(true)}
+              whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.92 }}
-              whileHover={{ y: -2 }}
-              className={`shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-xl cursor-pointer focus:outline-none transition-all duration-200 border ${showAllCategories
-                ? 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs'
-                : 'bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-2xs'
-                }`}
+              className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none"
+              aria-label="More categories"
             >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${showAllCategories ? 'bg-white text-slate-700' : 'bg-white text-rose-600'
-                } shadow-2xs`}>
-                {showAllCategories ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
+              <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+                <MoreCategories3DIcon className="w-8 h-8" />
               </div>
               <div className="text-left">
-                <span className="block text-xs font-black uppercase tracking-wider leading-tight">
-                  {showAllCategories ? 'Hide categories' : 'See more categories'}
+                <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">
+                  More categories
                 </span>
-                <span className="block text-[8.5px] opacity-70 font-semibold leading-tight">
-                  {showAllCategories ? 'Collapse' : `${tabs.length - 1} more`}
+                <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                  Browse all
                 </span>
               </div>
             </motion.button>
@@ -4329,12 +4337,17 @@ function DesktopHomepage({
           {/* Premium Filter Button */}
           <button
             onClick={() => navigate('/search')}
-            className="flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 ml-4 cursor-pointer"
+            className="hidden md:flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 absolute right-8 cursor-pointer"
           >
             <FunnelIcon className="w-3.5 h-3.5" />
             <span>Filters</span>
           </button>
         </div>
+      </div>
+
+      {/* ── HERO: brand intro, rotating campaigns ── */}
+      <div className="max-w-7xl mx-auto px-8 pt-6">
+        <HomeHero navigate={navigate} />
       </div>
 
       {/* Main Clean Feed Grid */}
@@ -4535,6 +4548,19 @@ function DesktopHomepage({
             <CaughtUpHub stats={stats} navigate={navigate} />
           </div>
         )}
+
+        {/* Feather-in Categories Bottom Sheet (Desktop) */}
+        <CategoriesBottomSheet
+          isOpen={isCategoriesSheetOpen}
+          onClose={() => setIsCategoriesSheetOpen(false)}
+          tabs={tabs}
+          activeTab={activeTab}
+          onSelectCategory={(tabId) => {
+            setActiveTab(tabId);
+            setActiveSubcategory('all');
+          }}
+          navigate={navigate}
+        />
       </main>
     </div>
   );
