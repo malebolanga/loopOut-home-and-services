@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 180" role="img" aria-labelledby="title description">
+  <title id="title">loopMe</title>
+  <desc id="description">loopMe wordmark with a continuous infinity loop icon.</desc>
+  <defs>
+    <linearGradient id="loopme-gradient" x1="18" y1="150" x2="147" y2="25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E61E4D"/>
+      <stop offset="1" stop-color="#FF6B6B"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(18 20)" fill="none" stroke="url(#loopme-gradient)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M78 78C52 47 18 46 18 78s34 31 60 0 60-31 60 0-34 31-60 0Z" stroke-width="12"/>
+  </g>
+  <text x="190" y="117" font-family="Inter, Manrope, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="88" font-weight="750" letter-spacing="-5">
+    <tspan fill="#20212A">loop</tspan><tspan fill="#E61E4D">Me</tspan>
+  </text>
+</svg>

@@ -81,7 +81,7 @@ const MAX_RECENTLY_VIEWED = 12;
 const DATA_FETCH_LIMIT = 50;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
-const API_TIMEOUT = 15000;
+const API_TIMEOUT = 45000;
 
 const CATEGORY_ICON_BY_ID = {
   all: Sparkles, property: House, rooms: BedDouble, guesthouse: House, hotel: Building2, lodge: House, apartment: Building2, self_catering: UtensilsCrossed, resort: House, hourly_room: BedDouble,
@@ -4703,6 +4703,89 @@ const Home = () => {
     setDataRefreshKey((key) => key + 1);
   }, []);
 
+  const rawPropertiesRef = useRef([]);
+  const rawServicesRef = useRef([]);
+  const rawHelpersRef = useRef([]);
+  const rawEventsRef = useRef([]);
+
+  const applyLocationSorting = useCallback((searchCoords, detectedCity) => {
+    const hasPreciseLocation = Boolean(searchCoords?.latitude && searchCoords?.longitude);
+    const propertiesData = rawPropertiesRef.current;
+    if (propertiesData && propertiesData.length > 0) {
+      if (hasPreciseLocation) {
+        const localMatches = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
+        if (localMatches.length > 0) {
+          setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+          setLocationStatus({
+            title: `Top Properties in ${detectedCity || 'your area'}`,
+            description: "Showing the best properties within your immediate area."
+          });
+        } else {
+          const nearby = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
+          if (nearby.length > 0) {
+            setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+            setLocationStatus({
+              title: `Properties near ${detectedCity || 'your area'}`,
+              description: "No direct matches in your city, showing nearby neighborhoods."
+            });
+          } else {
+            const regional = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
+            if (regional.length > 0) {
+              setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+              setLocationStatus({
+                title: "Properties in South Africa",
+                description: "Showing trending properties nationwide."
+              });
+            } else {
+              setFeaturedProperties(propertiesData.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+            }
+          }
+        }
+      } else {
+        setFeaturedProperties(propertiesData.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+      }
+    } else {
+      setFeaturedProperties([]);
+    }
+
+    const servicesData = rawServicesRef.current;
+    if (servicesData && servicesData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(servicesData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : servicesData;
+      setFeaturedServices((sorted.length > 0 ? sorted : servicesData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
+    } else {
+      setFeaturedServices([]);
+    }
+
+    const helpersData = rawHelpersRef.current;
+    if (helpersData && helpersData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(helpersData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : helpersData;
+      setFeaturedHelpers((sorted.length > 0 ? sorted : helpersData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
+    } else {
+      setFeaturedHelpers([]);
+    }
+
+    const eventsData = rawEventsRef.current;
+    if (eventsData && eventsData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(eventsData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : eventsData;
+      setFeaturedEvents((sorted.length > 0 ? sorted : eventsData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
+    } else {
+      setFeaturedEvents([]);
+    }
+  }, []);
+
+  // When geolocation finishes resolving in the background, update the sorting in memory without aborting or refetching
+  useEffect(() => {
+    if (rawPropertiesRef.current.length > 0 || rawServicesRef.current.length > 0) {
+      applyLocationSorting(coords, city);
+    }
+  }, [coords, city, applyLocationSorting]);
+
   useEffect(() => {
     let cancelled = false;
     const controllers = {
@@ -4720,7 +4803,6 @@ const Home = () => {
       setHomeLoadError(null);
       let searchCoords = coords || null;
       let detectedCity = city || null;
-      const hasPreciseLocation = Boolean(searchCoords?.latitude && searchCoords?.longitude);
       const handleFetchFailure = (error) => {
         if (!cancelled && error?.name !== 'AbortError') {
           setHomeLoadError('Unable to refresh all homepage listings.');
@@ -4746,44 +4828,9 @@ const Home = () => {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const localMatches = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity)
-                : [];
-              if (localMatches.length > 0) {
-                setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                setLocationStatus({
-                  title: `Top Properties in ${detectedCity}`,
-                  description: "Showing the best properties within your immediate area."
-                });
-              } else {
-                const nearby = hasPreciseLocation
-                  ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity)
-                  : [];
-                if (nearby.length > 0) {
-                  setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                  setLocationStatus({
-                    title: `Properties near ${detectedCity}`,
-                    description: "No direct matches in your city, showing nearby neighborhoods."
-                  });
-                } else {
-                  const regional = hasPreciseLocation
-                    ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity)
-                    : [];
-                  if (regional.length > 0) {
-                    setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                    setLocationStatus({
-                      title: "Properties in South Africa",
-                      description: "Showing trending properties nationwide."
-                    });
-                  } else {
-                    setFeaturedProperties(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                  }
-                }
-              }
-            } else {
-              setFeaturedProperties([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawPropertiesRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingProperties(false); }),
 
@@ -4791,18 +4838,9 @@ const Home = () => {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
-              } else {
-                setFeaturedServices(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
-              }
-            } else {
-              setFeaturedServices([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawServicesRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingServices(false); }),
 
@@ -4810,18 +4848,9 @@ const Home = () => {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
-              } else {
-                setFeaturedHelpers(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
-              }
-            } else {
-              setFeaturedHelpers([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawHelpersRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
@@ -4829,18 +4858,9 @@ const Home = () => {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
-              } else {
-                setFeaturedEvents(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
-              }
-            } else {
-              setFeaturedEvents([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawEventsRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingEvents(false); }),
 
@@ -4871,16 +4891,15 @@ const Home = () => {
       }
     };
 
-    if (!geoLoading) {
-      fetchHomepageData();
-    }
+    // Immediately start fetching data on mount without waiting for GPS
+    fetchHomepageData();
 
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
       Object.values(controllers).forEach(controller => controller.abort());
     };
-  }, [coords, city, geoLoading, dataRefreshKey]);
+  }, [dataRefreshKey, applyLocationSorting]);
 
   const recentlyAddedItems = useMemo(() => {
     const combined = [
