@@ -43,7 +43,7 @@ html {
   background-color: var(--app-bg);
   scroll-behavior: smooth;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y pinch-zoom;

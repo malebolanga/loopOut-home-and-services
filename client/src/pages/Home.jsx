@@ -60,6 +60,7 @@ import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import DownloadAppSection from '../components/home/DownloadAppSection';
 import CategoriesBottomSheet from '../components/home/CategoriesBottomSheet';
+import RecentPopoutMenu from '../components/home/RecentPopoutMenu';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 import {
   RecentAdded3DIcon,
@@ -86,7 +87,7 @@ const API_TIMEOUT = 45000;
 const CATEGORY_ICON_BY_ID = {
   all: Sparkles, property: House, rooms: BedDouble, guesthouse: House, hotel: Building2, lodge: House, apartment: Building2, self_catering: UtensilsCrossed, resort: House, hourly_room: BedDouble,
   service: Wrench, transport: Car, carwash: Car, catering: ChefHat, landscaping: Trees, moving: Truck, storage: Package, handyman: Hammer, others: Sparkles,
-  helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, animals: Dog,
+  helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, marquees: Store, marquee: Store, animals: Dog,
   event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
   selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen,
 };
@@ -3488,6 +3489,8 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
       case 'sneakers':
       case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
+      case 'marquees':
+      case 'marquee': return item.type === 'marquees' || item.type === 'marquee' || item.type === 'tent' || item.category === 'marquee' || /marquee|tents?|canop(y|ies)|stretch\s*tent|event setup|event hire/i.test(text);
       case 'animals':
       case 'animal': return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
       default: return true;
@@ -3557,6 +3560,31 @@ function MobileAppHomepage({
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollYRef.current;
+
+      if (currentScrollY < 50) {
+        setIsHeaderVisible(true);
+      } else if (isScrollingUp) {
+        setIsHeaderVisible(true);
+      } else {
+        setIsHeaderVisible(false);
+      }
+
+      setIsScrolled(currentScrollY > 60);
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (searchTerm.trim()) {
@@ -3570,6 +3598,7 @@ function MobileAppHomepage({
   const [visibleCount, setVisibleCount] = useState(12);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isCategoriesSheetOpen, setIsCategoriesSheetOpen] = useState(false);
+  const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
 
   useEffect(() => {
     setVisibleCount(12);
@@ -3578,19 +3607,19 @@ function MobileAppHomepage({
   const tabs = [
     {
       id: 'RecentAdded',
-      label: 'Recent Added',
+      label: 'Recent',
       emoji: '✨',
       icon: Sparkles,
       desc: 'New listings',
       textColor: 'text-rose-600',
       bgColor: 'bg-rose-500',
       subcategories: [
-        { id: 'all', label: 'All Recent', emoji: '✨' },
-        { id: 'property', label: 'Properties', emoji: '🏡' },
-        { id: 'service', label: 'Services', emoji: '🛠️' },
-        { id: 'helper', label: 'Helpers', emoji: '🧹' },
-        { id: 'event', label: 'Events', emoji: '🎟️' },
-        { id: 'selling', label: 'Items for Sale', emoji: '🏷️' }
+        { id: 'all', label: 'All Recent', emoji: '✨', desc: 'All new additions' },
+        { id: 'property', label: 'Property', emoji: '🏡', desc: 'Recent properties & stays' },
+        { id: 'service', label: 'Services', emoji: '🛠️', desc: 'Recent services & pros' },
+        { id: 'helper', label: 'Helper', emoji: '🧹', desc: 'Recent helpers & bookings' },
+        { id: 'event', label: 'Events', emoji: '🎟️', desc: 'Recent events & shows' },
+        { id: 'selling', label: 'Item for Sale', emoji: '🏷️', desc: 'Recent marketplace items' }
       ]
     },
     {
@@ -3602,15 +3631,15 @@ function MobileAppHomepage({
       textColor: 'text-emerald-600',
       bgColor: 'bg-emerald-500',
       subcategories: [
-        { id: 'all', label: 'All Properties', emoji: '🏡' },
-        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: '🏠' },
-        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌' },
-        { id: 'hotel', label: 'Hotels', emoji: '🏨' },
-        { id: 'lodge', label: 'Lodges', emoji: '🏡' },
-        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
-        { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
-        { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
-        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪' }
+        { id: 'all', label: 'All Properties', emoji: '🏡', desc: 'Explore all properties' },
+        { id: 'rooms', label: 'Rooms & Rent', emoji: '🏠', desc: 'Rooms, homes & apartments for rent' },
+        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌', desc: 'B&B and guest houses' },
+        { id: 'hotel', label: 'Hotels', emoji: '🏨', desc: 'Hotels & luxury suites' },
+        { id: 'lodge', label: 'Lodges', emoji: '🏡', desc: 'Safari & nature lodges' },
+        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢', desc: 'Apartment complexes & flats' },
+        { id: 'self_catering', label: 'Self Catering', emoji: '🍳', desc: 'Self catering stays & chalets' },
+        { id: 'resort', label: 'Holiday Park & Resort', emoji: '🏖️', desc: 'Holiday parks & resorts' },
+        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪', desc: 'Short stay & hourly rooms' }
       ]
     },
     {
@@ -3622,15 +3651,15 @@ function MobileAppHomepage({
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Services', emoji: '🛠️' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕' },
-        { id: 'carwash', label: 'Car Wash', emoji: '🚗' },
-        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚' },
-        { id: 'storage', label: 'Booking Storage', emoji: '📦' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧' },
-        { id: 'others', label: 'Others & General', emoji: '✨' }
+        { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
+        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕', desc: 'Rides, shuttles & logistics' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗', desc: 'Car wash & auto detailing' },
+        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️', desc: 'Catering, cakes & culinary' },
+        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿', desc: 'Gardening & yard care' },
+        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚', desc: 'Bakkie & home moving' },
+        { id: 'storage', label: 'Booking Storage', emoji: '📦', desc: 'Secure storage units' },
+        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧', desc: 'Plumbing, electrical & repairs' },
+        { id: 'others', label: 'Others & General', emoji: '✨', desc: 'General professional services' }
       ]
     },
     {
@@ -3642,16 +3671,17 @@ function MobileAppHomepage({
       textColor: 'text-sky-600',
       bgColor: 'bg-sky-500',
       subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: '🧹' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹' },
-        { id: 'tutor', label: 'Private Tutor', emoji: '📚' },
-        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉' },
-        { id: 'barber', label: 'Barbershop', emoji: '💈' },
-        { id: 'photography', label: 'Photographer', emoji: '📸' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟' },
-        { id: 'animals', label: 'Animal Care', emoji: '🐕' }
+        { id: 'all', label: 'All Helpers', emoji: '🧹', desc: 'Explore all helpers' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Maids, cleaners & housekeepers' },
+        { id: 'tutor', label: 'Private Tutor', emoji: '📚', desc: 'Academic tutors & lessons' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Personal chefs & cooking' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Nails, hair, lashes & skincare' },
+        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉', desc: 'Tattoos & body piercings' },
+        { id: 'barber', label: 'Barbershop', emoji: '💈', desc: 'Haircuts, fades & grooming' },
+        { id: 'photography', label: 'Photographer', emoji: '📸', desc: 'Photography, shoots & events' },
+        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
+        { id: 'marquees', label: 'Marquees & Tents', emoji: '🎪', desc: 'Marquee hire, tents & setups' },
+        { id: 'animals', label: 'Animal Care', emoji: '🐕', desc: 'Pet care & dog walking' }
       ]
     },
     {
@@ -3712,11 +3742,11 @@ function MobileAppHomepage({
   ];
 
   // Pinned tabs on the sticky header bar:
-  // - "Recent Added" is always pinned on the header.
+  // - "Recent" is always pinned on the header.
   // - If user selects another category from the bottom sheet, it sticks on the homepage header as active.
   const visibleTabs = useMemo(() => {
-    const recentTab = tabs.find(t => t.id === 'RecentAdded') || tabs[0];
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    const recentTab = tabs.find(t => t.id === 'RecentAdded' || t.id === 'Recent') || tabs[0];
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return [recentTab];
     }
     const currentTab = tabs.find(t => t.id === activeTab);
@@ -3724,13 +3754,13 @@ function MobileAppHomepage({
   }, [tabs, activeTab]);
 
   const currentTabLabel = useMemo(() => {
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') return 'Recent Added';
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') return 'Recent';
     const found = tabs.find(t => t.id === activeTab);
     return found?.label || activeTab;
   }, [activeTab, tabs]);
 
   const getSourceForTab = useCallback((tab) => {
-    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
     if (tab === 'Services') return featuredServices || [];
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
@@ -3741,7 +3771,7 @@ function MobileAppHomepage({
 
   const filteredItems = useMemo(() => {
     const source = getSourceForTab(activeTab);
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       if (activeSubcategory === 'all') return source;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -3781,7 +3811,7 @@ function MobileAppHomepage({
 
   const getSubcategoryCount = useCallback((tab, subId) => {
     const source = getSourceForTab(tab);
-    if (tab === 'RecentAdded' || tab === 'Recent Added') {
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') {
       if (subId === 'all') return source.length;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -3802,7 +3832,7 @@ function MobileAppHomepage({
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
     }
     return false;
@@ -3811,7 +3841,8 @@ function MobileAppHomepage({
   const getTabColor = (id) => {
     switch (id) {
       case 'RecentAdded':
-      case 'Recent Added': return 'bg-rose-500';
+      case 'Recent Added':
+      case 'Recent': return 'bg-rose-500';
       case 'Property':
       case 'Properties': return 'bg-emerald-500';
       case 'Services': return 'bg-amber-500';
@@ -3859,13 +3890,15 @@ function MobileAppHomepage({
         stats={stats}
         homeLoadError={homeLoadError}
         onRetryHomeData={onRetryHomeData}
+        isHeaderVisible={isHeaderVisible}
+        isScrolled={isScrolled}
       />
     );
   }
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pb-32 relative overflow-x-clip w-full">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pb-32 relative w-full">
       <Helmet>
         <title>loopOut | Find Homes, Services &amp; Helpers Near You</title>
         <meta name="description" content="Discover verified helpers, book top services, and explore properties in your area with loopOut." />
@@ -3873,69 +3906,97 @@ function MobileAppHomepage({
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body { scrollbar-width: none; -ms-overflow-style: none; }
         body::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 pt-3.5 sm:pt-5 pb-4 w-full">
-        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
-        {/* Hero banner intentionally hidden on mobile/small screens */}
-
-        {/* ── TOP STICKY 3D CATEGORIES BAR (Recent Added + More Categories) ── */}
-        <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2 mb-2 -mx-4 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.04)] w-[calc(100%+2rem)]">
-          <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
-            {visibleTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.route) {
-                      navigate(tab.route);
-                      return;
+      {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
+      <div
+        style={{ top: isHeaderVisible ? '80px' : '0px' }}
+        className="fixed left-0 right-0 z-40 bg-white/97 dark:bg-gray-950/97 backdrop-blur-2xl py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
+      >
+        <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
+          {visibleTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => {
+                  if (tab.route) {
+                    navigate(tab.route);
+                    return;
+                  }
+                  if (isRecentAdded) {
+                    if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
+                      setActiveTab(tab.id);
+                      setActiveSubcategory('all');
                     }
-                    setActiveTab(tab.id);
-                    setActiveSubcategory('all');
-                  }}
-                  whileHover={{ scale: 1.08, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
-                  aria-label={tab.label}
-                >
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
-                    {isRecentAdded ? (
-                      <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
-                    ) : (
-                      <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
-                    {tab.label}
-                  </span>
-                </motion.button>
-              );
-            })}
+                    setIsRecentPopoutOpen((prev) => !prev);
+                    return;
+                  }
+                  setActiveTab(tab.id);
+                  setActiveSubcategory('all');
+                }}
+                whileHover={{ scale: 1.08, y: -2 }}
+                whileTap={{ scale: 0.92 }}
+                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1 relative"
+                aria-label={tab.label}
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+                  {isRecentAdded ? (
+                    <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+                  ) : (
+                    <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
+                  )}
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
+                  {tab.label}
+                </span>
+                {isRecentAdded && activeSubcategory !== 'all' && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1 right-2 animate-pulse" />
+                )}
+              </motion.button>
+            );
+          })}
 
-            {/* 'More categories' small 3D icon */}
-            <motion.button
-              onClick={() => setIsCategoriesSheetOpen(true)}
-              whileHover={{ scale: 1.08, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
-              aria-label="More categories"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
-                <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
-                More
-              </span>
-            </motion.button>
-          </div>
+          {/* 'More categories' small 3D icon */}
+          <motion.button
+            onClick={() => setIsCategoriesSheetOpen(true)}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1"
+            aria-label="More categories"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+              <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
+              More
+            </span>
+          </motion.button>
         </div>
+
+        {/* ── Recent Popout Menu ── */}
+        <RecentPopoutMenu
+          isOpen={isRecentPopoutOpen}
+          onClose={() => setIsRecentPopoutOpen(false)}
+          activeSubcategory={activeSubcategory}
+          onSelect={(subId) => {
+            setActiveTab('RecentAdded');
+            setActiveSubcategory(subId);
+          }}
+          recentlyAddedItems={recentlyAddedItems}
+        />
+      </div>
+
+      <main className="px-4 pb-4 w-full">
+        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
+
+        {/* Spacer: height of categories bar only */}
+        <div className="h-[68px]" />
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -3974,8 +4035,12 @@ function MobileAppHomepage({
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
 
-          {/* Subcategory Pills */}
-          {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+          {/* Subcategory Pills - hidden for Recent as requested */}
+          {currentCategoryObj?.subcategories &&
+            currentCategoryObj.subcategories.length > 0 &&
+            activeTab !== 'RecentAdded' &&
+            activeTab !== 'Recent Added' &&
+            activeTab !== 'Recent' && (
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2.5 mb-5 -mx-4 px-4 snap-x">
               {currentCategoryObj.subcategories.map((sub) => {
                 const isSubActive = activeSubcategory === sub.id;
@@ -4002,10 +4067,30 @@ function MobileAppHomepage({
             </div>
           )}
 
+          {/* Recent active filter badge */}
+          {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && activeSubcategory !== 'all' && (
+            <div className="flex items-center justify-between mb-3 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60">
+              <div className="flex items-center gap-2">
+                <span className="text-xs">✨</span>
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                  Showing recent <span className="capitalize font-black">{activeSubcategory === 'selling' ? 'item for sale' : activeSubcategory}</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSubcategory('all')}
+                className="flex items-center gap-1 text-[11px] font-black text-rose-600 hover:text-rose-700 cursor-pointer"
+              >
+                <span>Clear filter</span>
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+          )}
+
           {/* Section label + live count */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-black text-base text-gray-950 tracking-tight">
-              Explore <span className="text-rose-500">{activeTab}</span>
+            <h2 className="font-black text-base text-gray-950 dark:text-white tracking-tight">
+              Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span>
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4134,9 +4219,10 @@ function MobileAppHomepage({
           onClose={() => setIsCategoriesSheetOpen(false)}
           tabs={tabs}
           activeTab={activeTab}
-          onSelectCategory={(tabId) => {
+          activeSubcategory={activeSubcategory}
+          onSelectCategory={(tabId, subId = 'all') => {
             setActiveTab(tabId);
-            setActiveSubcategory('all');
+            setActiveSubcategory(subId);
           }}
           navigate={navigate}
         />
@@ -4178,22 +4264,26 @@ function DesktopHomepage({
   requestCount,
   stats,
   homeLoadError,
-  onRetryHomeData
+  onRetryHomeData,
+  isHeaderVisible = true,
+  isScrolled = false
 }) {
+  const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
+
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
     if (activeTab === 'Services') return loadingServices;
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
     }
     return false;
   }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems]);
 
   const getSourceForTabDesktop = useCallback((tab) => {
-    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
     if (tab === 'Services') return featuredServices || [];
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
@@ -4204,7 +4294,7 @@ function DesktopHomepage({
 
   const getFilteredItems = useCallback(() => {
     const source = getSourceForTabDesktop(activeTab);
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       if (activeSubcategory === 'all') return source;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -4220,7 +4310,7 @@ function DesktopHomepage({
   }, [activeTab, activeSubcategory]);
 
   const currentTabLabel = useMemo(() => {
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') return 'Recent Added';
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') return 'Recent';
     const found = tabs?.find(t => t.id === activeTab);
     return found?.label || activeTab;
   }, [activeTab, tabs]);
@@ -4264,19 +4354,22 @@ function DesktopHomepage({
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body { scrollbar-width: none; -ms-overflow-style: none; }
         body::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Sticky Elite 3D Categories Bar (At the very top) */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2.5 shadow-xs border-b border-gray-100 dark:border-gray-800">
+      {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
+      <div
+        style={{ top: isHeaderVisible ? '96px' : '0px' }}
+        className="fixed left-0 right-0 z-40 bg-white/97 dark:bg-gray-950/97 backdrop-blur-2xl py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
+      >
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
             {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;
-              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
+              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
               return (
                 <motion.button
                   key={tab.id}
@@ -4285,12 +4378,20 @@ function DesktopHomepage({
                       navigate(tab.route);
                       return;
                     }
+                    if (isRecentAdded) {
+                      if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
+                        setActiveTab(tab.id);
+                        setActiveSubcategory('all');
+                      }
+                      setIsRecentPopoutOpen((prev) => !prev);
+                      return;
+                    }
                     setActiveTab(tab.id);
                     setActiveSubcategory('all');
                   }}
                   whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none"
+                  className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none relative"
                   aria-label={tab.label}
                 >
                   <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
@@ -4308,6 +4409,9 @@ function DesktopHomepage({
                       {tab.desc || (isRecentAdded ? 'New listings' : '')}
                     </span>
                   </div>
+                  {isRecentAdded && activeSubcategory !== 'all' && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 absolute -top-0.5 right-0 animate-pulse" />
+                  )}
                 </motion.button>
               );
             })}
@@ -4334,6 +4438,19 @@ function DesktopHomepage({
             </motion.button>
           </div>
 
+          {/* ── Recent Popout Menu (Desktop) ── */}
+          <RecentPopoutMenu
+            isOpen={isRecentPopoutOpen}
+            onClose={() => setIsRecentPopoutOpen(false)}
+            activeSubcategory={activeSubcategory}
+            onSelect={(subId) => {
+              setActiveTab('RecentAdded');
+              setActiveSubcategory(subId);
+            }}
+            recentlyAddedItems={recentlyAddedItems}
+            isDesktop={true}
+          />
+
           {/* Premium Filter Button */}
           <button
             onClick={() => navigate('/search')}
@@ -4346,15 +4463,19 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-6">
+      <div className="max-w-7xl mx-auto px-8 pt-[88px]">
         <HomeHero navigate={navigate} />
       </div>
 
       {/* Main Clean Feed Grid */}
       <main className="max-w-7xl mx-auto px-8 py-8">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
-        {/* Subcategories Horizontal Bar */}
-        {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+        {/* Subcategories Horizontal Bar - hidden on Recent as requested */}
+        {currentCategoryObj?.subcategories &&
+          currentCategoryObj.subcategories.length > 0 &&
+          activeTab !== 'RecentAdded' &&
+          activeTab !== 'Recent Added' &&
+          activeTab !== 'Recent' && (
           <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
             {currentCategoryObj.subcategories.map((sub) => {
               const isSubActive = activeSubcategory === sub.id;
@@ -4385,6 +4506,26 @@ function DesktopHomepage({
           </div>
         )}
 
+        {/* Recent filter badge for Desktop */}
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && activeSubcategory !== 'all' && (
+          <div className="flex items-center justify-between mb-6 px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 max-w-md">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">✨</span>
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                Showing recent <span className="capitalize font-black">{activeSubcategory === 'selling' ? 'item for sale' : activeSubcategory}</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSubcategory('all')}
+              className="flex items-center gap-1 text-[11px] font-black text-rose-600 hover:text-rose-700 cursor-pointer"
+            >
+              <span>Clear filter</span>
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          </div>
+        )}
+
         {/* Food Specials Strip — Desktop (always visible, right under search) */}
         <div className="mb-6">
           <FoodSpecialsStrip navigate={navigate} />
@@ -4394,8 +4535,10 @@ function DesktopHomepage({
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-black tracking-tighter leading-none">
-              <span className="text-slate-900">Explore </span>
-              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab}</span>
+              <span className="text-slate-900 dark:text-white">Explore </span>
+              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">
+                {activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}
+              </span>
             </h1>
             <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
@@ -4555,9 +4698,10 @@ function DesktopHomepage({
           onClose={() => setIsCategoriesSheetOpen(false)}
           tabs={tabs}
           activeTab={activeTab}
-          onSelectCategory={(tabId) => {
+          activeSubcategory={activeSubcategory}
+          onSelectCategory={(tabId, subId = 'all') => {
             setActiveTab(tabId);
-            setActiveSubcategory('all');
+            setActiveSubcategory(subId);
           }}
           navigate={navigate}
         />
