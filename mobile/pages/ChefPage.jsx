@@ -2639,7 +2639,7 @@ export default function ChefPage() {
         </div>
 
         {/* Recent Bookers Section */}
-        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'chef'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 

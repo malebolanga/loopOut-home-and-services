@@ -321,6 +321,8 @@ export default function Notifications() {
 
     const getNotificationIcon = (type) => {
         switch (type) {
+            case 'reference':
+                return <span className="text-2xl">🤝</span>;
             case 'booking':
                 return <span className="text-2xl">📅</span>;
             case 'payment':
@@ -348,6 +350,14 @@ export default function Notifications() {
     };
 
     const handleNotificationAction = (notification) => {
+        if (!notification) return;
+        if (notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) {
+            const convId = notification.data?.conversationId;
+            navigate(convId ? `/messages/${convId}` : '/messages');
+            setSelectedNotification(null);
+            return;
+        }
+
         if (notification.data) {
             const { itemType, itemId, orderId, orderCode, canReview } = notification.data;
             
@@ -594,6 +604,16 @@ export default function Notifications() {
                                                     Review
                                                 </span>
                                             )}
+                                            {notification.type === 'reference' && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 rounded-full flex-shrink-0">
+                                                    Reference Request
+                                                </span>
+                                            )}
+                                            {notification.type === 'message' && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-full flex-shrink-0">
+                                                    Direct Message
+                                                </span>
+                                            )}
                                             {(notification.title?.toLowerCase().includes('new booking request') || notification.title?.toLowerCase().includes('action required')) && (
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                                                     Action Required
@@ -623,6 +643,21 @@ export default function Notifications() {
                                                 <span className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1">
                                                     Click to view details &rarr;
                                                 </span>
+                                            </div>
+                                        )}
+
+                                        {(notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) && (
+                                            <div className="mb-3 flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleNotificationAction(notification);
+                                                    }}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
+                                                >
+                                                    <span>💬</span>
+                                                    <span>{notification.type === 'reference' ? 'Reply to Reference' : 'Open Message'}</span>
+                                                </button>
                                             </div>
                                         )}
 
@@ -680,6 +715,27 @@ export default function Notifications() {
                                 <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
                                     {selectedNotification.message}
                                 </p>
+
+                                {(selectedNotification.type === 'reference' || selectedNotification.data?.isReference) && (
+                                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60">
+                                        <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border border-purple-200/80 dark:border-purple-800/60">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-2xl">🤝</span>
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-purple-900 dark:text-purple-200">
+                                                        Reference Request
+                                                    </h4>
+                                                    <p className="text-xs text-purple-700 dark:text-purple-300">
+                                                        {selectedNotification.data?.providerName ? `Regarding ${selectedNotification.data.providerName}` : 'Booking Experience Inquiry'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                                                A community member noticed that you booked this service before and is asking for your recommendation. Reply directly in the chat to help your fellow loopOut members!
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Price display in modal when bookingDetails is not available/applicable */}
                                 {(() => {
@@ -955,12 +1011,26 @@ export default function Notifications() {
                                     <FiTrash2 /> Delete Notification
                                 </button>
                                 
-                                {selectedNotification.data && (selectedNotification.type === 'new_post' || selectedNotification.type === 'comment' || selectedNotification.type === 'review' || selectedNotification.type === 'booking') && (
+                                {selectedNotification.data && (
+                                    selectedNotification.type === 'new_post' || 
+                                    selectedNotification.type === 'comment' || 
+                                    selectedNotification.type === 'review' || 
+                                    selectedNotification.type === 'booking' ||
+                                    selectedNotification.type === 'reference' ||
+                                    selectedNotification.type === 'message' ||
+                                    selectedNotification.data?.conversationId
+                                ) && (
                                     <button
                                         onClick={() => handleNotificationAction(selectedNotification)}
-                                        className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 text-center"
+                                        className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 text-center flex items-center justify-center gap-2"
                                     >
-                                        {selectedNotification.type === 'review' || selectedNotification.data?.canReview ? '⭐ Write Review' : 'View Details'}
+                                        {selectedNotification.type === 'reference' || selectedNotification.data?.isReference
+                                            ? '💬 Reply to Reference Request'
+                                            : selectedNotification.type === 'message' || selectedNotification.data?.conversationId
+                                            ? '💬 Open Message'
+                                            : selectedNotification.type === 'review' || selectedNotification.data?.canReview 
+                                            ? '⭐ Write Review' 
+                                            : 'View Details'}
                                     </button>
                                 )}
                             </div>

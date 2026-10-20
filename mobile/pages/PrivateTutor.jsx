@@ -2857,7 +2857,7 @@ export default function PrivateTutor() {
 
         {/* Recent Bookers Section */}
         <div className="mt-12 border-t border-slate-200/50 pt-10">
-          <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type} />
+          <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'tutor'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
         </div>
 
 

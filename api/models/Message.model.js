@@ -20,6 +20,16 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isReference: {
+      type: Boolean,
+      default: false,
+    },
+    referenceDetails: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    serviceContext: {
+      type: mongoose.Schema.Types.Mixed,
+    },
   },
   { timestamps: true }
 );

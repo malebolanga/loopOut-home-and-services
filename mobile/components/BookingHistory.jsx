@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { FaCheckCircle } from 'react-icons/fa';
 
-export default function BookingHistory({ bookingSummary, providerName, providerType }) {
+export default function BookingHistory({ bookingSummary, providerName, providerType, providerImage, providerId }) {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
 
@@ -18,8 +18,9 @@ export default function BookingHistory({ bookingSummary, providerName, providerT
       return;
     }
 
-    const typeStr = providerType ? providerType.toLowerCase() : 'service';
-    const confirmRef = window.confirm(`Would you like to message ${booker.username} to ask for a reference about their booking with ${providerName || 'this professional'}?`);
+    const typeStr = providerType ? providerType.toLowerCase() : 'domestic';
+    const displayName = providerName || 'this domestic helper';
+    const confirmRef = window.confirm(`Would you like to message ${booker.username} to ask for a reference about their experience with ${displayName}?`);
     if (!confirmRef) return;
 
     try {
@@ -30,7 +31,15 @@ export default function BookingHistory({ bookingSummary, providerName, providerT
         },
         body: JSON.stringify({
           receiverId: booker._id,
-          content: `Hi ${booker.username}, I noticed that you've booked ${providerName || 'this professional'} for ${typeStr} services before. Would you recommend them? Thanks!`,
+          content: `Hi ${booker.username}, I noticed that you've booked ${displayName} for ${typeStr} services before. Would you recommend them? Thanks!`,
+          isReference: true,
+          referenceDetails: {
+            providerName: displayName,
+            providerType: typeStr,
+            providerImage: providerImage || '',
+            providerId: providerId || '',
+            bookerName: booker.username,
+          },
         }),
       });
       const data = await res.json();

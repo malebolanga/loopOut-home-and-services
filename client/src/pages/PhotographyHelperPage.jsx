@@ -88,6 +88,7 @@ import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 import BookingTimeSlots from '../components/BookingTimeSlots';
+import BookingHistory from '../components/BookingHistory';
 
 export default function PhotographyHelperPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2561,6 +2562,9 @@ export default function PhotographyHelperPage() {
             </div>
           </div>
         </div>
+
+        {/* Recent Bookers Section */}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'photography'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 

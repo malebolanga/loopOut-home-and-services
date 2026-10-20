@@ -90,6 +90,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
+import BookingHistory from '../components/BookingHistory';
 
 export default function BarberPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2608,6 +2609,9 @@ export default function BarberPage() {
             </div>
           </div>
         </div>
+
+        {/* Recent Bookers Section */}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'barber'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 

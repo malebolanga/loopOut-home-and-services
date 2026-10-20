@@ -89,6 +89,7 @@ import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
+import BookingHistory from '../components/BookingHistory';
 
 export default function TattooPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2642,6 +2643,9 @@ export default function TattooPage() {
             </div>
           </div>
         </div>
+
+        {/* Recent Bookers Section */}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'tattoo'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 

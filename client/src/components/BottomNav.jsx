@@ -20,6 +20,7 @@ import {
   HomeIcon as HomeIconSolid, 
   HeartIcon as HeartIconSolid, 
   UserIcon as UserIconSolid,
+  InboxIcon as InboxIconSolid,
   CheckBadgeIcon
 } from '@heroicons/react/24/solid';
 import {
@@ -27,8 +28,8 @@ import {
   signOutUserSuccess,
   signOutUserFailure,
 } from "../redux/user/userSlice";
-import { clearPersistedSessionToken } from '../utils/authenticatedFetch';
-import { Sparkles, Utensils } from 'lucide-react';
+import { clearPersistedSessionToken, authenticatedFetch } from '../utils/authenticatedFetch';
+import { Sparkles } from 'lucide-react';
 import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
 
 const BottomNav = () => {
@@ -38,6 +39,7 @@ const BottomNav = () => {
   const { currentUser } = useSelector((state) => state.user);
   
   const [showProfileDropup, setShowProfileDropup] = useState(false);
+  const [unreadInboxCount, setUnreadInboxCount] = useState(0);
   const navRef = useRef(null);
   
   const hiddenBottomNavRoutes = [
@@ -45,8 +47,6 @@ const BottomNav = () => {
     '/profile',
     '/dashboard',
     '/calendar',
-    '/messages',
-    '/inbox',
     '/planner',
     '/settings',
     '/listings',
@@ -96,6 +96,71 @@ const BottomNav = () => {
     /^\/[^/]+\/(?:create-listing|listings)(?:\/|$)/.test(location.pathname);
 
   useEffect(() => {
+    if (!currentUser?._id) {
+      setUnreadInboxCount(0);
+      return;
+    }
+
+    let isMounted = true;
+    let failCount = 0;
+    let timeoutId = null;
+    let lastFetchAt = 0;
+
+    const fetchUnreadCount = async () => {
+      lastFetchAt = Date.now();
+      try {
+        const res = await authenticatedFetch('/api/messages/unread-count');
+        if (!isMounted) return;
+        if (res.ok) {
+          failCount = 0;
+          const data = await res.json();
+          if (isMounted) {
+            setUnreadInboxCount(typeof data?.unreadCount === 'number' ? data.unreadCount : 0);
+          }
+        } else if (res.status >= 500) {
+          // Endpoint not yet live on deployed server — back off silently
+          failCount = Math.min(failCount + 1, 10); // cap at 10 (~85 min interval)
+        }
+        // 4xx errors (auth issues etc.) — don't increment failCount, just skip
+      } catch (_err) {
+        // Network error – silently ignore
+      }
+    };
+
+    const scheduleNext = () => {
+      clearTimeout(timeoutId);
+      // Base 15 s, doubles each failure: 15s → 30s → 60s → 120s → … → max 5 min
+      const delay = Math.min(15000 * Math.pow(2, failCount), 5 * 60 * 1000);
+      timeoutId = setTimeout(async () => {
+        if (!isMounted) return;
+        await fetchUnreadCount();
+        if (isMounted) scheduleNext();
+      }, delay);
+    };
+
+    // Initial fetch, then start the scheduled loop
+    fetchUnreadCount().then(() => { if (isMounted) scheduleNext(); });
+
+    // On window focus: only re-fetch if it has been >15 s since the last fetch
+    // AND only if we're not already in a heavy back-off state (failCount < 5)
+    const handleFocus = () => {
+      if (!isMounted) return;
+      const sinceLast = Date.now() - lastFetchAt;
+      if (sinceLast >= 15000 && failCount < 5) {
+        clearTimeout(timeoutId);
+        fetchUnreadCount().then(() => { if (isMounted) scheduleNext(); });
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [currentUser?._id]);
+
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (navRef.current && !navRef.current.contains(e.target)) {
         setShowProfileDropup(false);
@@ -132,7 +197,14 @@ const BottomNav = () => {
     ...(isProvider
       ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }]
       : [{ id: 'become', label: 'Become', icon: Sparkles, activeIcon: Sparkles, route: '/become' }]),
-    { id: 'lunch', label: 'Lunch', icon: Utensils, activeIcon: Utensils, route: '/lunch' },
+    { 
+      id: 'inbox', 
+      label: 'Inbox', 
+      icon: InboxIcon, 
+      activeIcon: InboxIconSolid, 
+      route: '/messages',
+      badge: unreadInboxCount
+    },
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];
 
@@ -276,7 +348,7 @@ const BottomNav = () => {
               aria-label={item.label || item.id}
               className="flex min-w-0 flex-1 flex-col items-center gap-1 touch-target transition-opacity"
             >
-              <div className={`p-1 rounded-xl transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+              <div className={`p-1 rounded-xl relative transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
                 {item.isProfile && currentUser ? (
                   <img
                     src={currentUser.avatar}
@@ -289,6 +361,11 @@ const BottomNav = () => {
                   />
                 ) : (
                   <Icon className={`w-7 h-7 ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`} />
+                )}
+                {Boolean(item.badge && item.badge > 0) && (
+                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black min-w-[17px] h-[17px] px-1 flex items-center justify-center rounded-full border-2 border-white dark:border-gray-950 shadow-sm animate-pulse">
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
                 )}
               </div>
               <span className={`max-w-full truncate text-[9px] font-black uppercase tracking-wide ${isActive ? 'text-[#FF5A5F]' : 'text-gray-600 dark:text-gray-400'}`}>

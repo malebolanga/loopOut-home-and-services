@@ -2171,7 +2171,13 @@ const ServicePage = () => {
         </div>
 
         {/* Recent Bookers Section */}
-        <BookingHistory bookingSummary={bookingSummary} providerName={service?.name} providerType={service?.type} />
+        <BookingHistory 
+          bookingSummary={bookingSummary} 
+          providerName={service?.name} 
+          providerType={service?.type || 'domestic'} 
+          providerImage={service?.imageUrls?.[0]} 
+          providerId={service?._id} 
+        />
 
 
 

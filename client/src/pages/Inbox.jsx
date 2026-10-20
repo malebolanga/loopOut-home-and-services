@@ -2,6 +2,16 @@ import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiSend, FiMoreVertical, FiArrowLeft, FiMessageCircle, FiTrash2, FiSearch } from 'react-icons/fi';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
+
+const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+
+// Derive display sender _id robustly (sender may be a populated object or a raw ID string)
+function getSenderId(msg) {
+  if (!msg?.sender) return null;
+  if (typeof msg.sender === 'object') return msg.sender._id;
+  return msg.sender;
+}
 
 export default function Inbox() {
   const { currentUser } = useSelector((state) => state.user);
@@ -17,7 +27,6 @@ export default function Inbox() {
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
-  // Helper for formatting time
   const formatTime = (date) => {
     if (!date) return '';
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -30,25 +39,20 @@ export default function Inbox() {
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(mins / 60);
     const days = Math.floor(hours / 24);
-
     if (mins < 1) return 'now';
     if (mins < 60) return `${mins}m`;
     if (hours < 24) return `${hours}h`;
     return `${days}d`;
   };
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
+  useEffect(() => { fetchConversations(); }, []);
 
   useEffect(() => {
     if (!conversationIdParam) return;
-    // Only run when the URL param changes, not on every conversations update
     fetchMessages(conversationIdParam);
     setShowMobileChat(true);
   }, [conversationIdParam]);
 
-  // Separate effect: auto-select conversation when list loads
   useEffect(() => {
     if (conversationIdParam && conversations.length > 0) {
       const conv = conversations.find(c => c._id === conversationIdParam);
@@ -56,22 +60,14 @@ export default function Inbox() {
     }
   }, [conversationIdParam, conversations]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const fetchConversations = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/messages/conversations');
+      const res = await authenticatedFetch('/api/messages/conversations');
       const data = await res.json();
-      if (res.ok) {
-        setConversations(data);
-      }
+      if (res.ok) setConversations(data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching conversations:', error);
@@ -82,13 +78,9 @@ export default function Inbox() {
   const fetchMessages = async (id) => {
     try {
       setMessagesLoading(true);
-      const res = await fetch(`/api/messages/${id}`);
+      const res = await authenticatedFetch(`/api/messages/${id}`);
       const data = await res.json();
-      if (res.ok) {
-        setMessages(data);
-        // Do NOT call fetchConversations() here — it creates an infinite loop
-        // via the useEffect that depends on `conversations` state
-      }
+      if (res.ok) setMessages(data);
       setMessagesLoading(false);
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -102,25 +94,38 @@ export default function Inbox() {
 
     const receiverId = selectedConversation.participants.find(p => p._id !== currentUser._id)?._id;
 
+    // Optimistic update
+    const optimisticMsg = {
+      _id: `temp_${Date.now()}`,
+      sender: { _id: currentUser._id, username: currentUser.username, avatar: currentUser.avatar },
+      content: newMessage,
+      createdAt: new Date().toISOString(),
+      isOptimistic: true,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    const sentText = newMessage;
+    setNewMessage('');
+
     try {
-      const res = await fetch('/api/messages/send', {
+      const res = await authenticatedFetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          receiverId,
-          content: newMessage,
-        }),
+        body: JSON.stringify({ receiverId, content: sentText }),
       });
 
       if (res.ok) {
         const message = await res.json();
-        setMessages([...messages, message]);
-        setNewMessage('');
-        // Update conversation list locally or refetch
+        setMessages(prev => prev.map(m => m._id === optimisticMsg._id ? message : m));
         fetchConversations();
+      } else {
+        // Remove optimistic on failure
+        setMessages(prev => prev.filter(m => m._id !== optimisticMsg._id));
+        setNewMessage(sentText);
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      setMessages(prev => prev.filter(m => m._id !== optimisticMsg._id));
+      setNewMessage(sentText);
     }
   };
 
@@ -135,7 +140,7 @@ export default function Inbox() {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this conversation?')) {
       try {
-        const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
+        const res = await authenticatedFetch(`/api/messages/${id}`, { method: 'DELETE' });
         if (res.ok) {
           setConversations(conversations.filter(c => c._id !== id));
           if (selectedConversation?._id === id) {
@@ -152,7 +157,7 @@ export default function Inbox() {
 
   const filteredConversations = conversations.filter(conv => {
     const otherUser = conv.participants.find(p => p._id !== currentUser._id);
-    return otherUser?.username.toLowerCase().includes(searchTerm.toLowerCase());
+    return otherUser?.username?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   if (!currentUser) {
@@ -163,6 +168,10 @@ export default function Inbox() {
       </div>
     );
   }
+
+  const refDetails = selectedConversation?.referenceDetails;
+  const serviceCtx = selectedConversation?.serviceContext;
+  const isRefConv = selectedConversation?.isReference || !!refDetails;
 
   return (
     <div className="app-safe-top max-w-[1400px] mx-auto h-[calc(100vh-184px)] md:h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
@@ -200,16 +209,18 @@ export default function Inbox() {
               const otherUser = conv.participants.find(p => p._id !== currentUser._id);
               const isSelected = selectedConversation?._id === conv._id;
               const unread = conv.unreadCount?.[currentUser._id] || 0;
+              const isRef = conv.isReference;
+              const refDet = conv.referenceDetails;
 
               return (
                 <div 
                   key={conv._id}
                   onClick={() => selectConversation(conv)}
-                  className={`flex items-center gap-4 p-4 cursor-pointer transition-all border-l-4 ${isSelected ? 'bg-rose-50/50 border-rose-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-transparent'}`}
+                  className={`flex items-center gap-4 p-4 cursor-pointer transition-all border-l-4 group ${isSelected ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-transparent'}`}
                 >
                   <div className="relative flex-shrink-0">
                     <img 
-                      src={otherUser?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
+                      src={otherUser?.avatar || FALLBACK_AVATAR} 
                       alt="" 
                       className="w-14 h-14 rounded-2xl object-cover shadow-sm"
                     />
@@ -218,14 +229,25 @@ export default function Inbox() {
                         {unread}
                       </div>
                     )}
+                    {isRef && (
+                      <div className="absolute -bottom-1 -right-1 bg-purple-500 w-4 h-4 flex items-center justify-center rounded-full border-2 border-white text-[8px]" title="Reference Request">
+                        🤝
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">{otherUser?.username}</h3>
-                      <span className="text-[10px] text-gray-400">{formatFromNow(conv.updatedAt)}</span>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">{otherUser?.username}</h3>
+                        {isRef && refDet?.providerName && (
+                          <p className="text-[10px] text-purple-600 dark:text-purple-400 font-bold truncate">Re: {refDet.providerName}</p>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-gray-400 flex-shrink-0 ml-2">{formatFromNow(conv.updatedAt)}</span>
                     </div>
-                    <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-white'}`}>
-                      {conv.lastMessageSender === currentUser._id && 'You: '}{conv.lastMessage || 'Start a conversation'}
+                    <p className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {conv.lastMessageSender?._id === currentUser._id || conv.lastMessageSender === currentUser._id ? 'You: ' : ''}
+                      {conv.lastMessage || 'Start a conversation'}
                     </p>
                   </div>
                   <button 
@@ -261,14 +283,14 @@ export default function Inbox() {
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+            <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-md sticky top-0 z-10">
               <div className="flex items-center gap-4">
                 <button onClick={() => setShowMobileChat(false)} className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
                   <FiArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3">
                   <img 
-                    src={selectedConversation.participants.find(p => p._id !== currentUser._id)?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
+                    src={selectedConversation.participants.find(p => p._id !== currentUser._id)?.avatar || FALLBACK_AVATAR} 
                     alt="" 
                     className="w-10 h-10 rounded-xl object-cover"
                   />
@@ -285,25 +307,56 @@ export default function Inbox() {
               </button>
             </div>
 
+            {/* Reference Context Banner */}
+            {isRefConv && (refDetails || serviceCtx) && (
+              <div className="mx-4 mt-4 p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border border-purple-200/80 dark:border-purple-800/60 flex gap-4 items-center flex-shrink-0">
+                {(refDetails?.providerImage || serviceCtx?.image) ? (
+                  <img 
+                    src={refDetails?.providerImage || serviceCtx?.image} 
+                    alt={refDetails?.providerName || serviceCtx?.name || 'Provider'} 
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-200 dark:border-purple-700 flex-shrink-0 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0 text-2xl">🤝</div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 rounded-full">Reference Request</span>
+                    {(refDetails?.providerType || serviceCtx?.type) && (
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 capitalize">{refDetails?.providerType || serviceCtx?.type}</span>
+                    )}
+                  </div>
+                  <h4 className="text-sm font-bold text-purple-900 dark:text-purple-100 truncate">{refDetails?.providerName || serviceCtx?.name || 'Domestic Helper / Service'}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                    {refDetails?.requesterName && `${refDetails.requesterName} is asking for your review of this professional.`}
+                    {!refDetails?.requesterName && 'This conversation is about a reference for a domestic professional.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Messages Body */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-gray-50 dark:bg-gray-800/30 side-panel-scroll pb-20 md:pb-8">
               {messagesLoading && messages.length === 0 ? (
                 <div className="flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div></div>
-              ) : messages.map((msg, index) => {
-                const isOwn = msg.sender === currentUser._id;
+              ) : messages.map((msg) => {
+                const senderId = getSenderId(msg);
+                const isOwn = senderId === currentUser._id;
+                const senderAvatar = typeof msg.sender === 'object' ? msg.sender?.avatar : currentUser.avatar;
                 return (
                   <div key={msg._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
+                    {!isOwn && (
+                      <img src={senderAvatar || FALLBACK_AVATAR} alt="" className="w-7 h-7 rounded-full object-cover mr-2 mt-auto flex-shrink-0" />
+                    )}
                     <div className={`max-w-[80%] md:max-w-[60%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                       <div className={`px-4 py-3 rounded-2xl shadow-sm ${
                         isOwn 
                           ? 'bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-tr-none' 
                           : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-white rounded-tl-none border border-gray-100 dark:border-gray-800'
-                      }`}>
+                      } ${msg.isOptimistic ? 'opacity-70' : ''}`}>
                         <p className="text-sm leading-relaxed">{msg.content}</p>
                       </div>
-                      <span className="text-[10px] text-gray-400 px-1">
-                        {formatTime(msg.createdAt)}
-                      </span>
+                      <span className="text-[10px] text-gray-400 px-1">{formatTime(msg.createdAt)}</span>
                     </div>
                   </div>
                 );
@@ -337,7 +390,7 @@ export default function Inbox() {
               <FiMessageCircle className="w-12 h-12 text-rose-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Select a conversation</h2>
-            <p className="text-gray-500 dark:text-white max-w-xs">Choose a conversation from the list to start chatting with your service providers or helpers.</p>
+            <p className="text-gray-500 dark:text-gray-400 max-w-xs">Choose a conversation from the list to start chatting with your service providers or helpers.</p>
           </div>
         )}
       </div>

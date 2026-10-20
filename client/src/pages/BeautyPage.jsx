@@ -90,6 +90,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
+import BookingHistory from '../components/BookingHistory';
 
 export default function BeautyPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2563,6 +2564,9 @@ export default function BeautyPage() {
           </div>
 
         </div>
+
+        {/* Recent Bookers Section */}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'beauty'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 
