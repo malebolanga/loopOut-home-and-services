@@ -1500,7 +1500,7 @@ const ServicePage = () => {
       </nav>
 
       {/* Hero Image Gallery - Full Width */}
-      <div className="relative h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] bg-slate-100 overflow-hidden">
+      <div className="relative h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] bg-slate-100 overflow-hidden">
         {service.imageUrls?.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-1.5 h-full w-full">
             {/* Main image */}
@@ -1552,7 +1552,7 @@ const ServicePage = () => {
       </div>
 
       {/* Main Content */}
-      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
             {service.userRef?.avatar ? <img src={service.userRef.avatar} alt={service.userRef?.username || service.name} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaUser className="text-xl text-slate-400" />}

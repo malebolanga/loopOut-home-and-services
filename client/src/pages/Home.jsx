@@ -825,6 +825,7 @@ export const isFoodImageUrl = (val) => {
 
 export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
   const [hasError, setHasError] = useState(false);
+  useEffect(() => setHasError(false), [src]);
   const isImg = !hasError && isFoodImageUrl(src);
 
   if (isImg) {
@@ -837,7 +838,9 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
       />
     );
   }
-  return <span className={className}>{src || fallback}</span>;
+  // If an image URL is invalid or the request fails, show the intended emoji
+  // fallback instead of leaking the full URL into the food card.
+  return <span className={className}>{isFoodImageUrl(src) ? fallback : (src || fallback)}</span>;
 };
 
 const detectFoodItemsInText = (text = '') => {

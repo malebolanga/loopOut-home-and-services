@@ -1325,7 +1325,7 @@ export default function Listing() {
       </nav>
 
       {/* Hero Image Gallery - Full Width covering left, right, and top (Helper & Services standard) */}
-      <div className="relative h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
+      <div className="relative h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
         {!hasListingImages ? (
           <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 px-6 text-center text-white">
             <PhotoIcon className="h-12 w-12 text-white/50" aria-hidden="true" />
@@ -1447,7 +1447,7 @@ export default function Listing() {
       )}
 
       {/* Main Content - Overlapping sheet matching Helper and Services standard */}
-      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
           <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">{listingType.label}{listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''}</p>
