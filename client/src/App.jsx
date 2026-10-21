@@ -180,6 +180,7 @@ const AnimatedRoutes = () => {
         <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
         <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
         <Route path="/messages" element={<PageTransition><Inbox /></PageTransition>} />
+        <Route path="/inbox" element={<PageTransition><Inbox /></PageTransition>} />
         <Route path="/smart-search" element={<PageTransition><SmartSearchPage /></PageTransition>} />
 
         <Route path="/dashboard" element={<PageTransition><DashBoard /></PageTransition>} />
@@ -251,6 +252,7 @@ const AnimatedRoutes = () => {
         <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
         <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
         <Route path="/messages/:id" element={<PageTransition><Inbox /></PageTransition>} />
+        <Route path="/inbox/:id" element={<PageTransition><Inbox /></PageTransition>} />
         <Route path="/settings" element={<PageTransition><SettingsPage /></PageTransition>} />
 
         {/* Dynamic User Routes */}
@@ -422,6 +424,8 @@ function AppContent() {
     '/notifications',
     '/my-orders',
     '/food-orders',
+    '/messages',
+    '/inbox',
   ];
   const hideHeaderPaths = [
     '/calendar',
@@ -451,7 +455,9 @@ function AppContent() {
     '/gigs',
     '/neighborhood-gigs',
     '/my-orders',
-    '/food-orders'
+    '/food-orders',
+    '/messages',
+    '/inbox'
   ];
 
   const specializedHelperPaths = [
@@ -464,11 +470,11 @@ function AppContent() {
   // Hide header on /:userId/listings and /:userId/list (dynamic user listing pages)
   const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
   const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage;
+  const isInboxPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/inbox');
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage || isInboxPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
   const isListingsPage = location.pathname.startsWith('/listings') || isUserListingsPage;
-  const isInboxPage = location.pathname.startsWith('/messages');
   const hideFooter =
     hideFooterPaths.includes(location.pathname) ||
     isStoragePage ||
@@ -490,7 +496,7 @@ function AppContent() {
       <Suspense fallback={<NeuralLoader fullScreen={true} />}>
         <AnimatedRoutes />
       </Suspense>
-      {!isStoragePage && <BottomNav />}
+      {!isStoragePage && !isInboxPage && <BottomNav />}
       {!hideFooter && <Footer />}
     </div>
   );

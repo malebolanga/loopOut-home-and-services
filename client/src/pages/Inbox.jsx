@@ -174,7 +174,7 @@ export default function Inbox() {
   const isRefConv = selectedConversation?.isReference || !!refDetails;
 
   return (
-    <div className="app-safe-top max-w-[1400px] mx-auto h-[calc(100vh-184px)] md:h-[calc(100vh-120px)] mt-4 mb-4 flex bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800">
+    <div className="app-safe-top max-w-[1400px] mx-auto h-[100dvh] md:h-[calc(100vh-40px)] md:my-5 flex bg-white dark:bg-gray-900 rounded-none md:rounded-3xl overflow-hidden shadow-none md:shadow-2xl border-0 md:border md:border-gray-100 dark:md:border-gray-800">
       
       {/* Sidebar: Conversation List */}
       <div className={`${showMobileChat ? 'hidden md:flex' : 'flex'} w-full md:w-[400px] flex-col border-r border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30`}>
@@ -201,7 +201,7 @@ export default function Inbox() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto side-panel-scroll pb-20 md:pb-0">
+        <div className="flex-1 overflow-y-auto side-panel-scroll pb-6 md:pb-0">
           {loading ? (
             <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-500"></div></div>
           ) : filteredConversations.length > 0 ? (
@@ -365,7 +365,7 @@ export default function Inbox() {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 pb-24 md:pb-6 md:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
+            <div className="p-4 pb-6 md:p-6 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
               <form onSubmit={handleSendMessage} className="flex items-center gap-3 bg-gray-100 dark:bg-gray-800/50 p-2 rounded-2xl border border-transparent focus-within:border-rose-500/20 focus-within:bg-white dark:focus-within:bg-gray-900 transition-all">
                 <input 
                   type="text" 

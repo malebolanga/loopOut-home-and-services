@@ -3915,7 +3915,7 @@ function MobileAppHomepage({
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '88px' : '8px' }}
-        className="fixed left-0 right-0 z-40 bg-white/97 dark:bg-gray-950/97 backdrop-blur-2xl py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
       >
         <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
           {visibleTabs.map((tab) => {
@@ -3945,7 +3945,7 @@ function MobileAppHomepage({
                 className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1 relative"
                 aria-label={tab.label}
               >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                   {isRecentAdded ? (
                     <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
                   ) : (
@@ -3970,7 +3970,7 @@ function MobileAppHomepage({
             className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1"
             aria-label="More categories"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
               <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
@@ -4363,7 +4363,7 @@ function DesktopHomepage({
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '96px' : '0px' }}
-        className="fixed left-0 right-0 z-40 bg-white/97 dark:bg-gray-950/97 backdrop-blur-2xl py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
       >
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
@@ -4394,7 +4394,7 @@ function DesktopHomepage({
                   className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={tab.label}
                 >
-                  <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                     {isRecentAdded ? (
                       <RecentAdded3DIcon className="w-8 h-8" />
                     ) : (
@@ -4424,7 +4424,7 @@ function DesktopHomepage({
               className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
               aria-label="More categories"
             >
-              <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+              <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                 <MoreCategories3DIcon className="w-8 h-8" />
               </div>
               <div className="text-left">
