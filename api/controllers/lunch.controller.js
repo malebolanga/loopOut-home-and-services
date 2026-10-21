@@ -18,7 +18,7 @@ const userId = (req) => String(req.user?.id || req.user?._id || '');
 const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
 const cleanImage = (value, fallback = '') => {
   const image = cleanText(value, 2048);
-  if (/^https?:\/\//i.test(image) || image.startsWith('/uploads/')) return image;
+  if (/^https?:\/\//i.test(image) || image.startsWith('/') || image.startsWith('data:image/')) return image;
   return image.length <= 16 ? image : fallback;
 };
 const getOwnedShop = async (id, req, res) => {

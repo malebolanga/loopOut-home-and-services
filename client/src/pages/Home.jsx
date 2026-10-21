@@ -811,6 +811,35 @@ const POPULAR_REQUEST_SUGGESTIONS = [
   { id: 'chakalaka', name: 'Chakalaka', icon: '🌶️' },
 ];
 
+export const isFoodImageUrl = (val) => {
+  if (!val || typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  return (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/uploads/') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:image/')
+  );
+};
+
+export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
+  const [hasError, setHasError] = useState(false);
+  const isImg = !hasError && isFoodImageUrl(src);
+
+  if (isImg) {
+    return (
+      <img
+        src={src.trim()}
+        alt={alt}
+        onError={() => setHasError(true)}
+        className={`w-full h-full object-cover ${imgClassName}`}
+      />
+    );
+  }
+  return <span className={className}>{src || fallback}</span>;
+};
+
 const detectFoodItemsInText = (text = '') => {
   if (!text || typeof text !== 'string') return [];
   const normalized = ` ${text.toLowerCase()} `;
@@ -1415,8 +1444,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
               <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-4">
                 {/* ── Shop Banner ── */}
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
-                  <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center text-2xl shadow-xs shrink-0">
-                    {item.shopImage || '🏪'}
+                  <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden text-2xl shadow-xs shrink-0 border border-amber-100 dark:border-gray-700">
+                    <FoodMedia src={item.shopImage} alt={item.shopName} fallback="🏪" className="text-2xl" imgClassName="rounded-xl" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
@@ -1451,7 +1480,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-2xl select-none shrink-0">{emoji}</span>
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700 select-none">
+                            <FoodMedia src={item.image} alt={item.name} fallback="🍱" className="text-2xl" imgClassName="rounded-xl" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-black text-gray-900 dark:text-white truncate">
                               {item.name}
@@ -1517,9 +1548,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xl">
-                              {(!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/')) ? '🍱' : ci.item.image}
-                            </span>
+                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700 select-none">
+                              <FoodMedia src={ci.item.image} alt={ci.item.name} fallback="🍱" className="text-xl" imgClassName="rounded-lg" />
+                            </div>
                             <div className="min-w-0">
                               <p className="text-xs font-black text-gray-900 dark:text-white truncate">
                                 {ci.item.name}
@@ -1736,8 +1767,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                 {/* ── Meal Hero Preview Card ── */}
                 <div className="p-3.5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-rose-50/40 dark:from-gray-900 dark:to-gray-900 border border-amber-200/70 dark:border-gray-800 shadow-xs flex flex-col gap-2.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center text-4xl shadow-sm shrink-0 border border-amber-100 dark:border-gray-700 select-none">
-                      {emoji}
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden text-4xl shadow-sm shrink-0 border border-amber-100 dark:border-gray-700 select-none">
+                      <FoodMedia src={item.image} alt={item.name} fallback="🍱" className="text-4xl" imgClassName="rounded-2xl" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -2179,7 +2210,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     {/* Horizontal Scroll of Suggestion Cards */}
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide p-3 bg-white/60 dark:bg-gray-900/60">
                       {shopSiblings.map((sib, idx) => {
-                        const sibEmoji = (!sib.image || sib.image.startsWith('http') || sib.image.startsWith('/')) ? '🍱' : sib.image;
                         // Generate pairing reason based on position / tag
                         const PAIRING_LABELS = ['Great combo!', 'Popular choice', 'Pairs perfectly', 'Customers love', 'Try together', 'Best seller', 'Top pick', 'Goes great'];
                         const pairingLabel = sib.tag || PAIRING_LABELS[idx % PAIRING_LABELS.length];
@@ -2190,8 +2220,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                             className="shrink-0 w-[130px] rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden hover:border-violet-400 dark:hover:border-violet-700 hover:shadow-md transition-all group"
                           >
                             {/* Emoji / Image section */}
-                            <div className="relative h-[52px] bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-gray-800 dark:to-gray-800 flex items-center justify-center">
-                              <span className="text-3xl select-none">{sibEmoji}</span>
+                            <div className="relative h-[52px] bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-gray-800 dark:to-gray-800 flex items-center justify-center overflow-hidden">
+                              <FoodMedia src={sib.image} alt={sib.name} fallback="🍱" className="text-3xl select-none" />
                               {/* Pairing tag badge */}
                               <div className="absolute top-1 left-1">
                                 <span className="text-[7.5px] font-black px-1.5 py-0.5 rounded-md bg-violet-600 text-white uppercase tracking-wider shadow-xs leading-none">
@@ -2670,8 +2700,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
             <>
               {/* ── HEADER ── */}
               <div className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-xl shrink-0">
-                  {shopImage}
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden text-xl shrink-0 border border-amber-100 dark:border-gray-700">
+                  <FoodMedia src={shopImage} alt={shopName} fallback="🏪" className="text-xl" imgClassName="rounded-2xl" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
@@ -2709,8 +2739,6 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                     </p>
                     <div className="flex flex-col gap-3">
                       {cart.map((ci, idx) => {
-                        const emoji = (!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/'))
-                          ? '🍱' : ci.item.image;
                         return (
                           <motion.div
                             key={`${ci.item.id}-${idx}`}
@@ -2719,8 +2747,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                             transition={{ delay: idx * 0.06 }}
                             className="flex gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
                           >
-                            <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center text-2xl shrink-0 shadow-xs">
-                              {emoji}
+                            <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center overflow-hidden text-2xl shrink-0 shadow-xs">
+                              <FoodMedia src={ci.item.image} alt={ci.item.name} fallback="🍱" className="text-2xl" imgClassName="rounded-xl" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -3218,10 +3246,14 @@ const FoodSpecialsStrip = ({ navigate }) => {
             className="snap-start shrink-0 w-[124px] sm:w-[142px]  hover:bg-gray-50 dark:hover:bg-gray-850 p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative  hover:shadow-md  dark:border-gray-800 flex flex-col"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg  relative overflow-hidden flex items-center justify-center mb-2 border-gray-100/80 dark:border-gray-700/50">
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
-                {(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}
-              </span>
+            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-2 border border-gray-100/80 dark:border-gray-700/50">
+              <FoodMedia
+                src={item.image}
+                alt={item.name}
+                fallback="🍱"
+                className="text-3xl group-hover:scale-110 transition-transform duration-300 select-none"
+                imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
+              />
 
               {/* Curated Tag Badge */}
               {item.tag && (
@@ -3323,7 +3355,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
               <div className="px-6 py-4 flex flex-col gap-3">
                 {/* Current cart shop */}
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                  <span className="text-lg">{cart[0]?.item.shopImage || '🏪'}</span>
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700">
+                    <FoodMedia src={cart[0]?.item.shopImage} alt={cart[0]?.item.shopName} fallback="🏪" className="text-lg" imgClassName="rounded-xl" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Current cart</p>
                     <p className="text-sm font-black text-gray-900 dark:text-white truncate">{cart[0]?.item.shopName}</p>
@@ -3339,7 +3373,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
 
                 {/* New item shop */}
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-                  <span className="text-lg">{crossShopCandidate.shopImage || '🏪'}</span>
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-amber-200 dark:border-amber-700">
+                    <FoodMedia src={crossShopCandidate.shopImage} alt={crossShopCandidate.shopName} fallback="🏪" className="text-lg" imgClassName="rounded-xl" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider">New shop</p>
                     <p className="text-sm font-black text-gray-900 dark:text-white truncate">{crossShopCandidate.shopName}</p>

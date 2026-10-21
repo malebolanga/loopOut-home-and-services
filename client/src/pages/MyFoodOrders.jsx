@@ -43,6 +43,18 @@ const getStepIndex = (status) => {
   return 0;
 };
 
+const isFoodImageUrl = (val) => {
+  if (!val || typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  return (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/uploads/') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:image/')
+  );
+};
+
 export default function MyFoodOrders() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user || {});
@@ -279,8 +291,11 @@ export default function MyFoodOrders() {
                   {/* Top order summary header */}
                   <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center text-2xl shrink-0">
-                        {order.shopImage || '🍲'}
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center overflow-hidden text-2xl shrink-0">
+                        {isFoodImageUrl(order.shopImage) ? (
+                          <img src={order.shopImage} alt={shopName} className="w-full h-full object-cover rounded-2xl" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'inline'; }} />
+                        ) : null}
+                        <span className={isFoodImageUrl(order.shopImage) ? 'hidden' : ''}>{order.shopImage || '🍲'}</span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -358,22 +373,33 @@ export default function MyFoodOrders() {
                       {items.map((item, iIdx) => (
                         <div
                           key={iIdx}
-                          className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 flex items-start justify-between gap-2"
+                          className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 flex items-start justify-between gap-2.5"
                         >
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                              {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
-                            </p>
-                            {Array.isArray(item.sides) && item.sides.length > 0 && (
-                              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
-                                🥗 {item.sides.join(', ')}
-                              </p>
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            {isFoodImageUrl(item.image) ? (
+                              <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 flex items-center justify-center text-lg shrink-0">
+                                {item.image || '🍱'}
+                              </div>
                             )}
-                            {Array.isArray(item.drinks) && item.drinks.length > 0 && (
-                              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-0.5 truncate">
-                                🥤 {item.drinks.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                                {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
                               </p>
-                            )}
+                              {Array.isArray(item.sides) && item.sides.length > 0 && (
+                                <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
+                                  🥗 {item.sides.join(', ')}
+                                </p>
+                              )}
+                              {Array.isArray(item.drinks) && item.drinks.length > 0 && (
+                                <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-0.5 truncate">
+                                  🥤 {item.drinks.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <span className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
                             R{Number(item.price || (item.qty * (item.unitPrice || 0))).toFixed(2)}

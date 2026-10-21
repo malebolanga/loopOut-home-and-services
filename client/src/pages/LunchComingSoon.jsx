@@ -119,9 +119,16 @@ const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
 };
 
 const ShopImage = ({ image, className = '' }) => {
-  const isImage = typeof image === 'string' && (/^https?:\/\//i.test(image) || image.startsWith('/uploads/'));
+  const [error, setError] = useState(false);
+  const isImage = !error && typeof image === 'string' && (
+    image.startsWith('http://') ||
+    image.startsWith('https://') ||
+    image.startsWith('/uploads/') ||
+    image.startsWith('/') ||
+    image.startsWith('data:image/')
+  );
   return isImage
-    ? <img src={image} alt="Shop" className={`object-cover ${className}`} />
+    ? <img src={image.trim()} alt="Shop" className={`object-cover ${className}`} onError={() => setError(true)} />
     : <span className={className}>{image || '🏪'}</span>;
 };
 
@@ -1760,7 +1767,9 @@ export default function LunchComingSoon() {
                         className="w-full flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-xl shrink-0">{order.shopImage || '🍱'}</span>
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-xl" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
                               #{order.orderCode} · {order.shopName || 'Food Order'}
@@ -2157,7 +2166,9 @@ export default function LunchComingSoon() {
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{order.shopImage || '🍱'}</span>
+                          <div className="w-7 h-7 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-xl" />
+                          </div>
                           <div>
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200">#{order.orderCode}</p>
                             <p className="text-[10px] text-gray-400">{order.shopName}</p>
@@ -2199,7 +2210,9 @@ export default function LunchComingSoon() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{order.shopImage || '🍱'}</span>
+                        <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                          <ShopImage image={order.shopImage} className="w-full h-full object-cover text-lg" />
+                        </div>
                         <div>
                           <p className="text-xs font-bold text-gray-700 dark:text-gray-300">#{order.orderCode} · {order.shopName}</p>
                           <p className="text-[10px] text-gray-400">{(order.items || []).length} items · {formatPrice(order.total)}</p>
@@ -2366,7 +2379,9 @@ export default function LunchComingSoon() {
                     return (
                       <div key={order.id || order._id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                         <div className="flex items-center gap-2.5 min-w-0" onClick={() => setActiveReceiptOrder(order)} style={{ cursor: 'pointer' }}>
-                          <span className="text-lg">{order.shopImage || '🍱'}</span>
+                          <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-lg" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
                               #{order.orderCode} · {order.customerName || 'Customer'}
@@ -2568,7 +2583,13 @@ export default function LunchComingSoon() {
                     <div key={item.cartKey || item.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 space-y-1.5">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
+                          <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            {getItemVisual(item).isImage ? (
+                              <img src={getItemVisual(item).src} alt={item.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
+                            )}
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
                             <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
@@ -2741,7 +2762,13 @@ export default function LunchComingSoon() {
                         return (
                           <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-base">{iv.emoji || '🍱'}</span>
+                              <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                                {iv.isImage ? (
+                                  <img src={iv.src} alt={item.name} className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="text-base">{iv.emoji || '🍱'}</span>
+                                )}
+                              </div>
                               <div>
                                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.name}</p>
                                 <p className="text-[10px] text-gray-400">× {item.quantity}</p>
@@ -3247,8 +3274,14 @@ export default function LunchComingSoon() {
                 {cart.map((item) => (
                   <div key={item.cartKey || item.id} className="space-y-1">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xl shrink-0">{getItemVisual(item).emoji || '🍱'}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                          {getItemVisual(item).isImage ? (
+                            <img src={getItemVisual(item).src} alt={item.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-xl shrink-0">{getItemVisual(item).emoji || '🍱'}</span>
+                          )}
+                        </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>
                           <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
