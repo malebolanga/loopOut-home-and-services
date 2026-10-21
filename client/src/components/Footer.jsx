@@ -7,6 +7,7 @@ const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser } = useSelector((state) => state.user);
+  const { hideBottomNav } = useSelector((state) => state.frontend || {});
   const lastScroll = useRef(0);
 
   const handleProtectedClick = (e, path) => {
@@ -18,8 +19,9 @@ const Footer = () => {
     }
   };
 
-  // Hide footer only on full-bleed profile layouts.
+  // Hide footer when bottom sheets are open or on full-bleed profile layouts.
   if (
+    hideBottomNav ||
     location.pathname === '/profile' ||
     location.pathname.startsWith('/user/') ||
     location.pathname.startsWith('/user-profile/')

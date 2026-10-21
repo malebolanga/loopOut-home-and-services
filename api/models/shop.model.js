@@ -46,5 +46,7 @@ const shopSchema = new mongoose.Schema({
   reviews: [reviewSchema]
 }, { timestamps: true });
 
+shopSchema.index({ ownerId: 1, createdAt: -1 });
+
 const Shop = mongoose.model('Shop', shopSchema);
 export default Shop;

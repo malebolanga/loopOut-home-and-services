@@ -2,8 +2,11 @@ import User from '../models/user.model.js';
 
 export const requireOfferingType = (...allowedTypes) => async (req, res, next) => {
   try {
-    const user = await User.findById(req.user?.id).select('offeringType idDocumentUrl liveSelfieUrl faceData avatar isVerified kycStatus');
+    const user = await User.findById(req.user?.id).select('offeringType isAdmin role idDocumentUrl liveSelfieUrl faceData avatar isVerified kycStatus');
     if (!user) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
+
+    // Admins bypass offering type restrictions
+    if (user.isAdmin === true || user.role === 'admin') return next();
 
     // Food shop operations strictly require the 'food' offering type selected on sign-up
     if (allowedTypes.includes('food')) {

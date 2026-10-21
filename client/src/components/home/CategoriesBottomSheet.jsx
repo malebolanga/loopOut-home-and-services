@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { Sparkles, ChevronRight } from 'lucide-react';
@@ -53,7 +54,7 @@ export default function CategoriesBottomSheet({
     (t) => t.subcategories && t.subcategories.length > 0 && t.id !== 'RecentAdded' && t.id !== 'Recent'
   );
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -336,4 +337,7 @@ export default function CategoriesBottomSheet({
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(modalContent, document.body);
 }

@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1050" viewBox="0 0 1500 1050">
+  <defs>
+    <linearGradient id="bg" x2="0" y2="1"><stop stop-color="#fffaf8"/><stop offset="1" stop-color="#f4f6f8"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#17202e" flood-opacity=".12"/></filter>
+    <style>
+      .sans{font-family:Arial,Helvetica,sans-serif}.title{font-size:42px;font-weight:800;letter-spacing:-1px;fill:#17202e}.sub{font-size:18px;fill:#64748b}.label{font-size:16px;font-weight:700;letter-spacing:2px;fill:#64748b}.shirt{filter:url(#shadow)}
+    </style>
+  </defs>
+  <rect width="1500" height="1050" fill="url(#bg)"/>
+  <text x="75" y="80" class="sans title">LUNCH LOOP<tspan fill="#ff385c">OUT</tspan></text>
+  <text x="77" y="115" class="sans sub">Three wearable directions • LoopOut coral, ink and cream</text>
+  <!-- concept labels -->
+  <text x="247" y="185" class="sans label" text-anchor="middle">01 / THE LOOP</text>
+  <text x="750" y="185" class="sans label" text-anchor="middle">02 / LUNCH CLUB</text>
+  <text x="1250" y="185" class="sans label" text-anchor="middle">03 / GOOD COMPANY</text>
+  <!-- shirt silhouettes: front and back -->
+  <g class="shirt" transform="translate(85 210)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#ff385c"/>
+   <path d="M156 22q34 44 68 0" fill="none" stroke="#df284d" stroke-width="8"/>
+   <circle cx="200" cy="155" r="34" fill="none" stroke="#fff" stroke-width="5"/><path d="M178 155a22 22 0 0 1 38-15m8 15a22 22 0 0 1-38 15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="m215 134 2 9-9-1m-16 39-2-9 9 1" fill="#fff"/>
+   <text x="200" y="220" class="sans" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">loopOut</text>
+   <text x="200" y="244" class="sans" text-anchor="middle" font-size="10" letter-spacing="2" fill="#ffe4e9">LUNCH CREW</text>
+  </g>
+  <g class="shirt" transform="translate(85 650) scale(.78)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#ff385c"/>
+   <path d="M156 22q34 44 68 0" fill="none" stroke="#df284d" stroke-width="8"/>
+   <text x="200" y="175" class="sans" text-anchor="middle" font-size="25" font-weight="900" fill="#fff">LUNCH</text><text x="200" y="208" class="sans" text-anchor="middle" font-size="25" font-weight="900" fill="#fff">IN THE</text><text x="200" y="241" class="sans" text-anchor="middle" font-size="25" font-weight="900" fill="#fff">LOOP</text>
+   <path d="M130 265h140" stroke="#ffdce3" stroke-width="3"/><text x="200" y="292" class="sans" text-anchor="middle" font-size="12" letter-spacing="3" fill="#ffe4e9">LOOPOUT • 2026</text>
+  </g>
+  <g class="shirt" transform="translate(585 210)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#17202e"/>
+   <path d="M156 22q34 44 68 0" fill="none" stroke="#26354a" stroke-width="8"/>
+   <text x="200" y="170" class="sans" text-anchor="middle" font-size="13" font-weight="700" letter-spacing="3" fill="#ff385c">LOOPOUT</text><text x="200" y="207" class="sans" text-anchor="middle" font-size="27" font-weight="900" fill="#fff">LUNCH</text><text x="200" y="239" class="sans" text-anchor="middle" font-size="27" font-weight="900" fill="#fff">CLUB</text>
+   <path d="M155 255h90" stroke="#ff385c" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g class="shirt" transform="translate(585 650) scale(.78)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#17202e"/><path d="M156 22q34 44 68 0" fill="none" stroke="#26354a" stroke-width="8"/>
+   <text x="200" y="177" class="sans" text-anchor="middle" font-size="14" font-weight="700" letter-spacing="3" fill="#ff385c">EST. 2026</text><text x="200" y="215" class="sans" text-anchor="middle" font-size="28" font-weight="900" fill="#fff">GOOD FOOD.</text><text x="200" y="249" class="sans" text-anchor="middle" font-size="28" font-weight="900" fill="#fff">GOOD PEOPLE.</text><text x="200" y="283" class="sans" text-anchor="middle" font-size="18" font-weight="800" fill="#ff385c">LOOPOUT.</text>
+  </g>
+  <g class="shirt" transform="translate(1085 210)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#f5eee4"/>
+   <path d="M156 22q34 44 68 0" fill="none" stroke="#e8ded1" stroke-width="8"/>
+   <circle cx="200" cy="176" r="42" fill="#ff385c"/><path d="M180 176a20 20 0 0 1 35-13m5 13a20 20 0 0 1-35 13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/><path d="m215 159 2 8-8-1m-14 27-2-8 8 1" fill="#fff"/>
+   <text x="200" y="246" class="sans" text-anchor="middle" font-size="17" font-weight="900" fill="#17202e">GOOD COMPANY</text>
+  </g>
+  <g class="shirt" transform="translate(1085 650) scale(.78)">
+   <path d="M90 48 156 22Q190 65 224 22l66 26 64 72-48 39-34-36v275H108V123l-34 36-48-39z" fill="#f5eee4"/><path d="M156 22q34 44 68 0" fill="none" stroke="#e8ded1" stroke-width="8"/>
+   <text x="200" y="165" class="sans" text-anchor="middle" font-size="14" font-weight="700" letter-spacing="2" fill="#ff385c">LUNCH BREAK</text><text x="200" y="207" class="sans" text-anchor="middle" font-size="27" font-weight="900" fill="#17202e">BETTER</text><text x="200" y="239" class="sans" text-anchor="middle" font-size="27" font-weight="900" fill="#17202e">TOGETHER</text><text x="200" y="274" class="sans" text-anchor="middle" font-size="15" font-weight="800" letter-spacing="2" fill="#ff385c">LOOPOUT</text>
+  </g>
+  <text x="750" y="1015" class="sans sub" text-anchor="middle">Suggested print: small left-chest mark on front • bold event message on back • cotton tee, relaxed fit</text>
+</svg>

@@ -410,6 +410,11 @@ html.dark textarea::placeholder,
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
 }
 
+body.hide-bottom-nav .app-safe-bottom,
+body.hide-bottom-nav .glass-bottom-nav {
+  pointer-events: none !important;
+}
+
 /* Premium Animations */
 @keyframes float {
   0% { transform: translateY(0px) rotate(0deg); }

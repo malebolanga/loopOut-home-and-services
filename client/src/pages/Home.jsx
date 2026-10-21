@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setHideBottomNav, setHideHeader } from '../redux/frontendSlice';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -3599,6 +3600,25 @@ function MobileAppHomepage({
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isCategoriesSheetOpen, setIsCategoriesSheetOpen] = useState(false);
   const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  // Hide BottomNav, Footer and Header when either RecentPopoutMenu or CategoriesBottomSheet is open (fading up).
+  // When sheet closes (fading down), BottomNav, Footer and Header restore smoothly.
+  useEffect(() => {
+    const isSheetOpen = Boolean(isRecentPopoutOpen || isCategoriesSheetOpen);
+    dispatch(setHideBottomNav(isSheetOpen));
+    dispatch(setHideHeader(isSheetOpen));
+    if (isSheetOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => {
+      dispatch(setHideBottomNav(false));
+      dispatch(setHideHeader(false));
+      document.body.classList.remove('hide-bottom-nav');
+    };
+  }, [isRecentPopoutOpen, isCategoriesSheetOpen, dispatch]);
 
   useEffect(() => {
     setVisibleCount(12);
@@ -3914,7 +3934,7 @@ function MobileAppHomepage({
 
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '88px' : '8px' }}
+        style={{ top: isHeaderVisible ? '92px' : '8px' }}
         className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
       >
         <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
@@ -3978,18 +3998,6 @@ function MobileAppHomepage({
             </span>
           </motion.button>
         </div>
-
-        {/* ── Recent Popout Menu ── */}
-        <RecentPopoutMenu
-          isOpen={isRecentPopoutOpen}
-          onClose={() => setIsRecentPopoutOpen(false)}
-          activeSubcategory={activeSubcategory}
-          onSelect={(subId) => {
-            setActiveTab('RecentAdded');
-            setActiveSubcategory(subId);
-          }}
-          recentlyAddedItems={recentlyAddedItems}
-        />
       </div>
 
       <main className="px-4 pb-4 w-full">
@@ -4213,6 +4221,18 @@ function MobileAppHomepage({
         {/* End of Feed */}
         {!isAndroidApp() && <CaughtUpHub stats={stats} navigate={navigate} />}
 
+        {/* Recent Popout Menu (Mobile) */}
+        <RecentPopoutMenu
+          isOpen={isRecentPopoutOpen}
+          onClose={() => setIsRecentPopoutOpen(false)}
+          activeSubcategory={activeSubcategory}
+          onSelect={(subId) => {
+            setActiveTab('RecentAdded');
+            setActiveSubcategory(subId);
+          }}
+          recentlyAddedItems={recentlyAddedItems}
+        />
+
         {/* Feather-in Categories Bottom Sheet */}
         <CategoriesBottomSheet
           isOpen={isCategoriesSheetOpen}
@@ -4269,6 +4289,23 @@ function DesktopHomepage({
   isScrolled = false
 }) {
   const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const isSheetOpen = Boolean(isRecentPopoutOpen || isCategoriesSheetOpen);
+    dispatch(setHideBottomNav(isSheetOpen));
+    dispatch(setHideHeader(isSheetOpen));
+    if (isSheetOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => {
+      dispatch(setHideBottomNav(false));
+      dispatch(setHideHeader(false));
+      document.body.classList.remove('hide-bottom-nav');
+    };
+  }, [isRecentPopoutOpen, isCategoriesSheetOpen, dispatch]);
 
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
@@ -4437,19 +4474,6 @@ function DesktopHomepage({
               </div>
             </motion.button>
           </div>
-
-          {/* ── Recent Popout Menu (Desktop) ── */}
-          <RecentPopoutMenu
-            isOpen={isRecentPopoutOpen}
-            onClose={() => setIsRecentPopoutOpen(false)}
-            activeSubcategory={activeSubcategory}
-            onSelect={(subId) => {
-              setActiveTab('RecentAdded');
-              setActiveSubcategory(subId);
-            }}
-            recentlyAddedItems={recentlyAddedItems}
-            isDesktop={true}
-          />
 
           {/* Premium Filter Button */}
           <button
@@ -4691,6 +4715,19 @@ function DesktopHomepage({
             <CaughtUpHub stats={stats} navigate={navigate} />
           </div>
         )}
+
+        {/* Recent Popout Menu (Desktop) */}
+        <RecentPopoutMenu
+          isOpen={isRecentPopoutOpen}
+          onClose={() => setIsRecentPopoutOpen(false)}
+          activeSubcategory={activeSubcategory}
+          onSelect={(subId) => {
+            setActiveTab('RecentAdded');
+            setActiveSubcategory(subId);
+          }}
+          recentlyAddedItems={recentlyAddedItems}
+          isDesktop={true}
+        />
 
         {/* Feather-in Categories Bottom Sheet (Desktop) */}
         <CategoriesBottomSheet

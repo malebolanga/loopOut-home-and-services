@@ -43,6 +43,7 @@ import { canCreateFor } from '../utils/offeringPermissions';
 import {
   subscribeToShops,
   subscribeToOrders,
+  getMyShops,
   createLunchOrder,
   createShop,
   addMealToShop,
@@ -57,8 +58,72 @@ import {
   FOOD_EMOJIS,
   generateVendorMealAI
 } from '../utils/aiLunchAssistant';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
+
+const uploadFoodImage = async (file) => {
+  if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
+  if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
+  const formData = new FormData();
+  formData.append('files', file);
+  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+  const response = await fetch('/api/uploads', {
+    method: 'POST', credentials: 'include', body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.urls?.[0]) throw new Error(data.message || 'Photo upload failed. Please try again.');
+  const apiOrigin = new URL(resolveApiUrl('/api/uploads'), window.location.origin).origin;
+  return new URL(data.urls[0], apiOrigin).toString();
+};
+
+const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const isImage = typeof value === 'string' && (/^https?:\/\//i.test(value) || value.startsWith('/uploads/'));
+  const handleFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setError(''); setUploading(true);
+    try { onChange(await uploadFoodImage(file)); }
+    catch (uploadError) { setError(uploadError.message || 'Photo upload failed.'); }
+    finally { setUploading(false); }
+  };
+  return (
+    <div className="col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="h-14 w-14 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-3xl">
+          {isImage ? <img src={value} alt={`${label} preview`} className="h-full w-full object-cover" /> : (value || '🍱')}
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="cursor-pointer rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-bold text-white">
+              {uploading ? 'Uploading…' : isImage ? 'Change photo' : 'Upload a photo'}
+              <input type="file" accept="image/*" className="sr-only" disabled={uploading} onChange={handleFile} />
+            </label>
+            {isImage && <button type="button" onClick={() => onChange('🍱')} className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">Use emoji</button>}
+          </div>
+          <select aria-label={`${label} emoji fallback`} value={isImage ? '' : value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+            {isImage && <option value="">Photo selected</option>}
+            {emojis.map((emoji) => <option key={emoji.emoji} value={emoji.emoji}>{emoji.emoji} {emoji.name}</option>)}
+          </select>
+        </div>
+      </div>
+      <p className="mt-2 text-[10px] text-gray-500">Add one photo, or choose an emoji if you don’t have one.</p>
+      {error && <p role="alert" className="mt-1 text-[11px] text-red-600">{error}</p>}
+    </div>
+  );
+};
+
+const ShopImage = ({ image, className = '' }) => {
+  const isImage = typeof image === 'string' && (/^https?:\/\//i.test(image) || image.startsWith('/uploads/'));
+  return isImage
+    ? <img src={image} alt="Shop" className={`object-cover ${className}`} />
+    : <span className={className}>{image || '🏪'}</span>;
+};
 
 const PRESET_MOODS = [
   { id: 'quick', label: '⚡ Quick Lunch' },
@@ -553,6 +618,10 @@ export default function LunchComingSoon() {
   const [orderMode, setOrderMode] = useState('order'); // 'order' or 'table'
   const [fulfilment] = useState('pickup');
   const [shops, setShops] = useState([]);
+  // Authoritative list of this user's shops, fetched from the server using the JWT.
+  // Used instead of client-side UID filtering to prevent ownership mismatches
+  // when the persisted Redux currentUser._id is stale.
+  const [serverMyShops, setServerMyShops] = useState(null); // null = not yet loaded
   const [selectedShopId, setSelectedShopId] = useState('');
   const [cart, setCart] = useState([]);
   const [selectedMealSides, setSelectedMealSides] = useState({});
@@ -812,6 +881,18 @@ export default function LunchComingSoon() {
       }
     });
 
+    // Fetch authoritative owned shops for the authenticated user using JWT
+    if (currentUser) {
+      getMyShops()
+        .then((owned) => setServerMyShops(Array.isArray(owned) ? owned : []))
+        .catch((err) => {
+          console.warn("Could not fetch server-owned shops, falling back to client-side filter:", err);
+          setServerMyShops(null);
+        });
+    } else {
+      setServerMyShops(null);
+    }
+
     const unsubscribeOrders = currentUser ? subscribeToOrders((fetchedOrders) => setOrders(fetchedOrders)) : () => setOrders([]);
 
     return () => {
@@ -899,9 +980,15 @@ export default function LunchComingSoon() {
   // Shops that belong to the currently logged-in user
   const myShops = useMemo(() => {
     if (!currentUser) return [];
+    // Prefer server-authoritative list (fetched via JWT) to avoid stale-Redux-state mismatches
+    if (serverMyShops !== null) {
+      const ownedIds = new Set(serverMyShops.map((s) => String(s.id || s._id)));
+      const matchingLiveShops = shops.filter((s) => ownedIds.has(String(s.id || s._id)));
+      return matchingLiveShops.length > 0 ? matchingLiveShops : serverMyShops;
+    }
     const uid = String(currentUser._id || currentUser.id || 'guest');
     return shops.filter((s) => String(s.ownerId || '') === uid);
-  }, [shops, currentUser]);
+  }, [shops, currentUser, serverMyShops]);
 
   // Whether the current user owns at least one shop
   const isShopOwner = myShops.length > 0;
@@ -918,8 +1005,16 @@ export default function LunchComingSoon() {
   const isCurrentShopOwner = useMemo(() => {
     if (!currentUser || !dashboardShop) return false;
     const uid = String(currentUser._id || currentUser.id || '');
-    return Boolean(uid && (String(dashboardShop.ownerId || '') === uid || currentUser.isAdmin || currentUser.role === 'admin'));
-  }, [currentUser, dashboardShop]);
+    const inMyShops = myShops.some(
+      (s) => String(s.id || s._id) === String(dashboardShop.id || dashboardShop._id)
+    );
+    return Boolean(
+      inMyShops ||
+      (uid && String(dashboardShop.ownerId || '') === uid) ||
+      currentUser.isAdmin ||
+      currentUser.role === 'admin'
+    );
+  }, [currentUser, dashboardShop, myShops]);
 
   // Other shops (excluding the current user's active dashboard shop)
   const otherShops = useMemo(() => {
@@ -1260,6 +1355,11 @@ export default function LunchComingSoon() {
       });
       setShowAddShopModal(false);
       setSelectedShopId(newShopId);
+      if (currentUser) {
+        getMyShops()
+          .then((owned) => setServerMyShops(Array.isArray(owned) ? owned : []))
+          .catch(() => {});
+      }
       setNotice({ type: 'success', message: `Shop "${newShopForm.name.trim()}" created successfully!` });
       setNewShopForm({ name: '', cuisine: '', distance: '1.5 km', time: '20–30 min', image: '🥙', address: '', phone: '', whatsapp: '' });
     } catch (err) {
@@ -1405,8 +1505,12 @@ export default function LunchComingSoon() {
   const handleToggleShopOpen = async (shop) => {
     if (!shop) return;
     const uid = String(currentUser?._id || currentUser?.id || '');
+    const inMyShops = myShops.some(
+      (s) => String(s.id || s._id) === String(shop.id || shop._id)
+    );
     const isOwnerOfShop = Boolean(
-      uid && (String(shop.ownerId || '') === uid || currentUser?.isAdmin || currentUser?.role === 'admin')
+      inMyShops ||
+      (uid && (String(shop.ownerId || '') === uid || currentUser?.isAdmin || currentUser?.role === 'admin'))
     );
     if (!isOwnerOfShop) {
       setNotice({
@@ -1557,7 +1661,7 @@ export default function LunchComingSoon() {
                             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-amber-300 shadow-sm'
                         } ${isClosed ? 'opacity-60' : ''}`}
                       >
-                        <span className="text-3xl">{shop.image || '🏪'}</span>
+                        <ShopImage image={shop.image} className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
                         <span className={`text-xs font-semibold truncate max-w-[100px] ${isSelected ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>
                           {shop.name}
                         </span>
@@ -1603,7 +1707,7 @@ export default function LunchComingSoon() {
             {currentShop && (
               <div className="flex items-center justify-between gap-3 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl shrink-0">{currentShop.image || '🏪'}</span>
+                  <ShopImage image={currentShop.image} className="h-12 w-12 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
                   <div className="min-w-0">
                     <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
@@ -2138,7 +2242,7 @@ export default function LunchComingSoon() {
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white shadow-md">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl bg-white/20 p-2 rounded-xl">{dashboardShop?.image || '🏪'}</span>
+                  <ShopImage image={dashboardShop?.image} className="h-14 w-14 shrink-0 rounded-xl bg-white/20 flex items-center justify-center text-3xl" />
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">Your Shop</p>
                     <h3 className="text-lg font-bold truncate">{dashboardShop?.name || 'My Shop'}</h3>
@@ -2720,7 +2824,7 @@ export default function LunchComingSoon() {
                 </button>
               </div>
               <div className="text-center mb-4">
-                <span className="text-4xl">{currentShop.image || '🏪'}</span>
+                <ShopImage image={currentShop.image} className="mx-auto h-16 w-16 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-4xl" />
                 <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-2">{currentShop.name}</h4>
                 {currentShop.address && <p className="text-xs text-gray-400 mt-0.5">{currentShop.address}</p>}
               </div>
@@ -2778,23 +2882,18 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
                   <input type="text" required value={newShopForm.name} onChange={(e) => setNewShopForm({...newShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Mama's Kitchen" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine Type</label>
                     <input type="text" value={newShopForm.cuisine} onChange={(e) => setNewShopForm({...newShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Traditional" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Emoji Icon</label>
-                    <select value={newShopForm.image} onChange={(e) => setNewShopForm({...newShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Shop logo" value={newShopForm.image} onChange={(image) => setNewShopForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
                   <input type="text" value={newShopForm.address} onChange={(e) => setNewShopForm({...newShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="Street address" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
                     <input type="tel" value={newShopForm.phone} onChange={(e) => setNewShopForm({...newShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="0XX XXX XXXX" />
@@ -2876,13 +2975,8 @@ export default function LunchComingSoon() {
                       {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={newMealForm.image} onChange={(e) => setNewMealForm({...newMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Food photo" value={newMealForm.image} onChange={(image) => setNewMealForm((form) => ({ ...form, image }))} />
                 {/* Sides */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
@@ -2924,23 +3018,18 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
                   <input type="text" required value={editShopForm.name} onChange={(e) => setEditShopForm({...editShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine</label>
                     <input type="text" value={editShopForm.cuisine} onChange={(e) => setEditShopForm({...editShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={editShopForm.image} onChange={(e) => setEditShopForm({...editShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Shop logo" value={editShopForm.image || '🏪'} onChange={(image) => setEditShopForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
                   <input type="text" value={editShopForm.address} onChange={(e) => setEditShopForm({...editShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
                     <input type="tel" value={editShopForm.phone} onChange={(e) => setEditShopForm({...editShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
@@ -3022,13 +3111,8 @@ export default function LunchComingSoon() {
                       {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={editMealForm.image} onChange={(e) => setEditMealForm({...editMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Food photo" value={editMealForm.image || '🍱'} onChange={(image) => setEditMealForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
                   <input

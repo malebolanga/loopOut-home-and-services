@@ -92,6 +92,7 @@ listingSchema.index({ createdAt: -1 });
 listingSchema.index({ type: 1 });
 // Compound: type + createdAt → satisfies filtered + sorted feed in one pass
 listingSchema.index({ type: 1, createdAt: -1 });
+listingSchema.index({ regularPrice: 1, createdAt: -1 });
 // Promoted listings banner/carousel
 listingSchema.index({ isPromoted: 1, createdAt: -1 });
 // Owner's listing management page

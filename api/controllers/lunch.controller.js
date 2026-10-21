@@ -16,17 +16,23 @@ const format = (document) => ({ id: document._id.toString(), ...document.toObjec
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
 const userId = (req) => String(req.user?.id || req.user?._id || '');
 const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
-const isOwner = (shop, req) => {
-  const currentUid = userId(req);
-  if (!currentUid) return false;
-  return String(shop.ownerId || '') === currentUid || Boolean(req.user?.isAdmin || req.user?.role === 'admin');
+const cleanImage = (value, fallback = '') => {
+  const image = cleanText(value, 2048);
+  if (/^https?:\/\//i.test(image) || image.startsWith('/uploads/')) return image;
+  return image.length <= 16 ? image : fallback;
 };
 const getOwnedShop = async (id, req, res) => {
   if (!validId(id)) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
   const shop = await Shop.findById(id);
   if (!shop) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
-  if (!isOwner(shop, req)) { res.status(403).json({ success: false, message: 'You do not manage this shop.' }); return null; }
-  return shop;
+  const currentUid = userId(req);
+  if (!currentUid) { res.status(403).json({ success: false, message: 'You do not manage this shop.' }); return null; }
+  // Quick ownership check — avoids a DB round-trip for the common case
+  if (String(shop.ownerId || '') === currentUid) return shop;
+  // Fallback: check if the user is an admin in the database (JWT does not embed isAdmin/role)
+  const user = await User.findById(currentUid).select('isAdmin role').lean();
+  if (user && (user.isAdmin === true || user.role === 'admin')) return shop;
+  res.status(403).json({ success: false, message: 'You do not manage this shop.' }); return null;
 };
 const createNotification = async (userId, title, message, data) => {
   if (!validId(userId)) return;
@@ -37,6 +43,18 @@ export const getShops = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
     const shops = await Shop.find({ ownerId: { $ne: 'guest' } }).sort({ createdAt: -1 });
+    return res.json(shops.map(format));
+  } catch (error) { return next(error); }
+};
+
+export const getMyShops = async (req, res, next) => {
+  try {
+    if (!requireDatabase(res)) return;
+    const currentUid = userId(req);
+    if (!currentUid) return res.status(401).json({ success: false, message: 'Please sign in to continue.' });
+    const user = await User.findById(currentUid).select('isAdmin role').lean();
+    const isAdmin = Boolean(user && (user.isAdmin === true || user.role === 'admin'));
+    const shops = await Shop.find(isAdmin ? { ownerId: { $ne: 'guest' } } : { ownerId: currentUid }).sort({ createdAt: -1 });
     return res.json(shops.map(format));
   } catch (error) { return next(error); }
 };
@@ -60,7 +78,7 @@ export const createShop = async (req, res, next) => {
     const phone = cleanText(req.body.phone, 30);
     if (!name || !address || !phone) return res.status(400).json({ success: false, message: 'Shop name, address, and phone are required.' });
     if (await Shop.exists({ name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') })) return res.status(409).json({ success: false, message: 'A shop with that name already exists.' });
-    const shop = await Shop.create({ name, address, phone, cuisine: cleanText(req.body.cuisine, 60) || 'General', image: cleanText(req.body.image, 32) || '🏪', whatsapp: cleanText(req.body.whatsapp, 30), ownerId: userId(req), ownerName: cleanText(req.body.ownerName, 80) || 'Shop owner', isOpen: false, meals: [] });
+    const shop = await Shop.create({ name, address, phone, cuisine: cleanText(req.body.cuisine, 60) || 'General', image: cleanImage(req.body.image, '🏪') || '🏪', whatsapp: cleanText(req.body.whatsapp, 30), ownerId: userId(req), ownerName: cleanText(req.body.ownerName, 80) || 'Shop owner', isOpen: false, meals: [] });
     return res.status(201).json(format(shop));
   } catch (error) { return next(error); }
 };
@@ -69,7 +87,8 @@ export const updateShop = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
     const shop = await getOwnedShop(req.params.id, req, res); if (!shop) return;
-    for (const key of ['name', 'cuisine', 'address', 'phone', 'whatsapp', 'image']) if (req.body[key] !== undefined) shop[key] = cleanText(req.body[key], key === 'address' ? 180 : 80);
+    for (const key of ['name', 'cuisine', 'address', 'phone', 'whatsapp']) if (req.body[key] !== undefined) shop[key] = cleanText(req.body[key], key === 'address' ? 180 : 80);
+    if (req.body.image !== undefined) shop.image = cleanImage(req.body.image, shop.image || '🏪');
     if (typeof req.body.isOpen === 'boolean') shop.isOpen = req.body.isOpen;
     if (req.body.operatingHours && typeof req.body.operatingHours === 'object') shop.operatingHours = req.body.operatingHours;
     await shop.save(); return res.json(format(shop));
@@ -83,7 +102,7 @@ export const addMealToShop = async (req, res, next) => {
     const name = cleanText(req.body.name, 100); const price = Number(req.body.price);
     if (!name || !Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid meal name and price.' });
     const sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
-    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', image: cleanText(req.body.image, 32) || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
     shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
   } catch (error) { return next(error); }
 };
@@ -97,7 +116,7 @@ export const updateMealInShop = async (req, res, next) => {
     if (req.body.description !== undefined) meal.description = cleanText(req.body.description, 500);
     if (req.body.tag !== undefined) meal.tag = cleanText(req.body.tag, 40);
     if (req.body.category !== undefined) meal.category = cleanText(req.body.category, 60);
-    if (req.body.image !== undefined) meal.image = cleanText(req.body.image, 32);
+    if (req.body.image !== undefined) meal.image = cleanImage(req.body.image, meal.image || '🍽️');
     if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
     if (req.body.sides !== undefined) meal.sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
     if (req.body.price !== undefined) { const price = Number(req.body.price); if (!Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid price.' }); meal.price = Math.round(price * 100) / 100; }

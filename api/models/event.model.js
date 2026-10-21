@@ -103,6 +103,8 @@ const eventSchema = new mongoose.Schema(
 
 // ── Indexes ───────────────────────────────────────────────────────────────
 eventSchema.index({ createdAt: -1 });
+eventSchema.index({ type: 1, createdAt: -1 });
+eventSchema.index({ regularPrice: 1, createdAt: -1 });
 eventSchema.index({ userRef: 1, createdAt: -1 });
 
 const Event = mongoose.model('Event', eventSchema);

@@ -281,6 +281,104 @@ const normalizeSearchType = (type) => {
   return type || 'all';
 };
 
+// Keep the search page usable while API deployments roll out independently.
+// Older API instances do not have /api/search, so use their existing routes on 404.
+const fetchLegacySearchResults = async (urlParams, signal) => {
+  const type = normalizeSearchType(urlParams.get('type'));
+  const subType = urlParams.get('subType') || urlParams.get('category') || '';
+  const searchTerm = urlParams.get('searchTerm') || '';
+  const location = urlParams.get('location') || urlParams.get('address') || '';
+  const endpoints = type === 'all'
+    ? ['listing', 'service', 'helper', 'event', 'lunch']
+    : [SEARCH_TYPE_CONFIG[type]?.endpoint].filter(Boolean);
+
+  const requests = endpoints.map(async (endpoint) => {
+    if (endpoint === 'lunch') {
+      const response = await fetch('/api/lunch/shops', { signal });
+      if (!response.ok) throw new Error(`Food search failed (${response.status}).`);
+      const shops = await response.json();
+      const term = searchTerm.toLowerCase().trim();
+      const place = location.toLowerCase().trim();
+      const categoryPatterns = {
+        street_food: /street|kota|fast|chips|snack/i,
+        traditional: /traditional|pap|stew|mogodu|chakalaka/i,
+        fast_food: /burger|grill|fast/i,
+      };
+      return (Array.isArray(shops) ? shops : []).flatMap((shop) => {
+        const shopMatchesTerm = !term || [shop.name, shop.cuisine, shop.address].some((value) => value?.toLowerCase().includes(term));
+        const shopMatchesPlace = !place || shop.address?.toLowerCase().includes(place);
+        return (shop.meals || []).filter((meal) => {
+          if (meal.isAvailable === false || !shopMatchesPlace) return false;
+          const mealMatchesTerm = !term || [meal.name, meal.description, meal.tag].some((value) => value?.toLowerCase().includes(term));
+          const categoryPattern = type === 'food' ? categoryPatterns[subType] : null;
+          return (shopMatchesTerm || mealMatchesTerm) && (!categoryPattern || categoryPattern.test(`${meal.name} ${meal.tag} ${meal.category} ${shop.cuisine}`));
+        }).map((meal) => {
+          const image = meal.image?.startsWith('http') ? meal.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800';
+          return {
+            _id: `${shop.id || shop._id}_${meal.id}`,
+            id: `${shop.id || shop._id}_${meal.id}`,
+            name: meal.name,
+            title: meal.name,
+            description: `${meal.description || ''} • ${shop.name} (${shop.cuisine || 'Local Food'})`,
+            regularPrice: meal.price,
+            discountPrice: meal.originalPrice || meal.price,
+            price: meal.price,
+            address: shop.address || 'Polokwane, Limpopo',
+            imageUrls: [image],
+            image,
+            itemType: 'food',
+            type: 'food',
+            subType: shop.cuisine || 'food',
+            shopId: shop.id || shop._id,
+            shopName: shop.name,
+            rating: Number(shop.rating) || 0,
+            latitude: shop.latitude,
+            longitude: shop.longitude,
+            badge: meal.tag || 'Popular',
+            route: '/food',
+          };
+        });
+      });
+    }
+
+    const params = new URLSearchParams({ limit: String(DEFAULT_LISTING_LIMIT) });
+    if (searchTerm) params.set('searchTerm', searchTerm);
+    if (location) {
+      params.set('address', location);
+      params.set('location', location);
+    }
+    ['minPrice', 'maxPrice', 'minRating'].forEach((key) => {
+      const value = urlParams.get(key) || (key === 'maxPrice' ? urlParams.get('priceMax') : '');
+      if (value) params.set(key, value);
+    });
+
+    if (endpoint === 'listing' && subType && PROPERTY_TYPE_CONFIG[subType]) params.set('type', subType);
+    if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
+      params.set('type', ({ maid: 'domestic', nanny: 'domestic', hair: 'beauty', nail: 'beauty' })[subType] || subType);
+    }
+    if (endpoint === 'service' && subType && SERVICES_CATEGORY_CONFIG[subType]) {
+      params.set('type', ({ electrician: 'maintenance', transport: 'moving', daily: 'other' })[subType] || subType);
+    }
+
+    const response = await fetch(`/api/${endpoint}/get?${params}`, { signal });
+    if (!response.ok) throw new Error(`${endpoint} search failed (${response.status}).`);
+    const data = await response.json();
+    return (Array.isArray(data) ? data : []).map((item) => ({
+      ...item,
+      itemType: endpoint === 'helper' ? 'helper' : endpoint,
+      subType: item.type || item.category || subType,
+    }));
+  });
+
+  const settled = await Promise.allSettled(requests);
+  const successful = settled.filter((result) => result.status === 'fulfilled');
+  if (endpoints.length && !successful.length) throw settled[0]?.reason || new Error('Search is temporarily unavailable.');
+  let items = successful.flatMap((result) => result.value);
+  const minRating = Number(urlParams.get('minRating'));
+  if (Number.isFinite(minRating) && minRating > 0) items = items.filter((item) => Number(item.rating) >= minRating);
+  return { items, page: 0, hasMore: false };
+};
+
 // Category Dropdown Component (for compact view)
 const CategoryDropdown = ({
   isOpen,
@@ -582,8 +680,11 @@ const SearchPage = () => {
     return 'map';
   });
   const [loading, setLoading] = useState(false);
+  const [loadingMoreResults, setLoadingMoreResults] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [listings, setListings] = useState([]);
+  const [resultsPage, setResultsPage] = useState(0);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
   const { city: detectedCity } = useLocationCoords();
   const [filters, setFilters] = useState({
     minPrice: '',
@@ -706,209 +807,81 @@ const SearchPage = () => {
     }
   }, [location.search, detectedCity]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (page = 0, append = false, signal) => {
     const urlParams = new URLSearchParams(location.search);
-    setLoading(true);
+    if (append) setLoadingMoreResults(true);
+    else {
+      setLoading(true);
+      setListings([]);
+    }
     setSearchError('');
 
     try {
-      const type = normalizeSearchType(urlParams.get('type'));
-
+      const params = new URLSearchParams({
+        type: normalizeSearchType(urlParams.get('type')),
+        page: String(page),
+        limit: String(DEFAULT_LISTING_LIMIT),
+      });
       const subType = urlParams.get('subType') || urlParams.get('category') || '';
       const searchTerm = urlParams.get('searchTerm') || '';
-      const minPrice = urlParams.get('minPrice');
-      const maxPrice = urlParams.get('maxPrice');
-      const locationQ = urlParams.get('location') || urlParams.get('address') || '';
-      const minRating = urlParams.get('minRating');
+      const locationQuery = urlParams.get('location') || urlParams.get('address') || '';
+      const maxPrice = urlParams.get('maxPrice') || urlParams.get('priceMax') || '';
 
-      const nearbyLocationsMap = {
-        'polokwane': 'seshego|mankweng|lebowakgomo|mokopane|tzaneen|turfloop|turf',
-        'turf': 'polokwane|seshego|mankweng|lebowakgomo|mokopane|tzaneen',
-        'turfloop': 'polokwane|seshego|mankweng|lebowakgomo|mokopane|tzaneen',
-        'soshanguve': 'pretoria|mabopane|garankuwa|hammanskraal|centurion|midrand|rosslyn',
-        'tembisa': 'kempton park|boksburg|midrand|edenvale|benoni|germiston|johannesburg|ivory park',
-        'pretoria': 'centurion|soshanguve|midrand|mamelodi|johannesburg|atteridgeville',
-        'johannesburg': 'sandton|randburg|midrand|soweto|roodepoort|kempton park|boksburg|alberton',
-        'cape town': 'bellville|stellenbosch|somerset west|durbanville|milnerton|guguletu|khayelitsha',
-        'durban': 'umhlanga|pinetown|westville|chatsworth|amanzimtoti|kwamashu|umlazi',
-        'mamelodi': 'pretoria|centurion|silverton|cullinan',
-        'soweto': 'johannesburg|langlaagte|roodepoort|krugersdorp'
-      };
+      ['minPrice', 'minRating', 'bedroomsMin', 'bathroomsMin'].forEach((key) => {
+        const value = urlParams.get(key);
+        if (value) params.set(key, value);
+      });
+      if (searchTerm) params.set('q', searchTerm);
+      if (locationQuery) params.set('location', locationQuery);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (subType) params.set('subType', subType);
 
-      const fetchWithParams = async (currentLocation, currentSearchTerm) => {
-        let endpoints = [];
-        if (type === 'all') {
-          endpoints = ['listing', 'service', 'helper', 'event', 'lunch'];
-        } else {
-          const config = SEARCH_TYPE_CONFIG[type];
-          if (config) endpoints = [config.endpoint];
-        }
-
-        let successfulRequests = 0;
-        const fetchPromises = endpoints.map(async (endpoint) => {
-          if (endpoint === 'lunch') {
-            try {
-              const res = await fetch('/api/lunch/shops');
-              if (res.ok) {
-                const shops = await res.json();
-                successfulRequests += 1;
-                const foodItems = [];
-                const termLower = (currentSearchTerm || '').toLowerCase().trim();
-                const locLower = (currentLocation || '').toLowerCase().trim();
-
-                (Array.isArray(shops) ? shops : []).forEach(shop => {
-                  const shopMatchesTerm = !termLower ||
-                    shop.name?.toLowerCase().includes(termLower) ||
-                    shop.cuisine?.toLowerCase().includes(termLower) ||
-                    shop.address?.toLowerCase().includes(termLower);
-
-                  const shopMatchesLoc = !locLower ||
-                    shop.address?.toLowerCase().includes(locLower);
-
-                  (shop.meals || []).forEach(meal => {
-                    if (meal.isAvailable === false) return;
-                    const mealMatchesTerm = !termLower ||
-                      meal.name?.toLowerCase().includes(termLower) ||
-                      meal.description?.toLowerCase().includes(termLower) ||
-                      meal.tag?.toLowerCase().includes(termLower);
-
-                    if ((shopMatchesTerm || mealMatchesTerm) && (!locLower || shopMatchesLoc)) {
-                      foodItems.push({
-                        _id: `${shop.id || shop._id}_${meal.id}`,
-                        id: `${shop.id || shop._id}_${meal.id}`,
-                        name: meal.name,
-                        title: meal.name,
-                        description: `${meal.description || ''} • ${shop.name} (${shop.cuisine || 'Local Food'})`,
-                        regularPrice: meal.price,
-                        discountPrice: meal.originalPrice || meal.price,
-                        price: meal.price,
-                        address: shop.address || 'Polokwane, Limpopo',
-                        imageUrls: [meal.image?.startsWith('http') ? meal.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800'],
-                        image: meal.image?.startsWith('http') ? meal.image : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800',
-                        itemType: 'food',
-                        type: 'food',
-                        subType: shop.cuisine || 'food',
-                        shopId: shop.id || shop._id,
-                        shopName: shop.name,
-                        rating: 4.9,
-                        latitude: shop.latitude,
-                        longitude: shop.longitude,
-                        badge: meal.tag || 'Hot Food',
-                        route: '/food'
-                      });
-                    }
-                  });
-                });
-                return foodItems;
-              }
-            } catch (err) {
-              console.error('Error fetching lunch shops:', err);
-            }
-            return [];
-          }
-
-          let url = `/api/${endpoint}/get?limit=${DEFAULT_LISTING_LIMIT}`;
-
-          if (currentSearchTerm) url += `&searchTerm=${encodeURIComponent(currentSearchTerm)}`;
-          if (currentLocation) {
-            // Send both address and location to ensure endpoints pick up the right one
-            url += `&address=${encodeURIComponent(currentLocation)}&location=${encodeURIComponent(currentLocation)}`;
-          }
-
-        if (minPrice) url += `&minPrice=${encodeURIComponent(minPrice)}`;
-        const maxPriceParam = maxPrice || urlParams.get('priceMax');
-        if (maxPriceParam) url += `&maxPrice=${encodeURIComponent(maxPriceParam)}`;
-
-        if (endpoint === 'listing') {
-
-          const bedroomsMin = urlParams.get('bedroomsMin');
-          if (bedroomsMin) url += `&bedrooms=${bedroomsMin}`;
-
-          const bathroomsMin = urlParams.get('bathroomsMin');
-          if (bathroomsMin) url += `&bathrooms=${bathroomsMin}`;
-
-          if (subType && PROPERTY_TYPE_CONFIG[subType]) url += `&type=${subType}`;
-        }
-
-        if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
-          const helperType = { maid: 'domestic', nanny: 'domestic', hair: 'beauty', nail: 'beauty' }[subType] || subType;
-          url += `&type=${encodeURIComponent(helperType)}`;
-        }
-
-        if (endpoint === 'service' && subType && SERVICES_CATEGORY_CONFIG[subType]) {
-          const serviceType = { electrician: 'maintenance', transport: 'moving', daily: 'other' }[subType] || subType;
-          url += `&type=${encodeURIComponent(serviceType)}`;
-        }
-
-          try {
-            const res = await fetch(url);
-            if (res.ok) {
-              const data = await res.json();
-              successfulRequests += 1;
-              return data.map(item => ({
-                ...item,
-                itemType: endpoint,
-                subType: item.type || item.category || subType
-              }));
-            }
-            console.error(`Search request failed for ${endpoint}:`, res.status);
-          } catch (err) {
-            console.error(`Error fetching from ${endpoint}:`, err);
-          }
-          return [];
-        });
-
-        const results = await Promise.all(fetchPromises);
-        let combinedResults = results.flat();
-        if (endpoints.length > 0 && successfulRequests === 0) {
-          throw new Error('We could not load search results. Please try again.');
-        }
-
-        if (minRating) {
-          const ratingThreshold = parseFloat(minRating);
-          combinedResults = combinedResults.filter(item => Number(item.rating) >= ratingThreshold);
-        }
-        return combinedResults;
-      };
-
-      let finalResults = await fetchWithParams(locationQ, searchTerm);
-      
-      // If no results, check for fallback locations
-      if (finalResults.length === 0 && (locationQ || searchTerm)) {
-        const fullQuery = ((locationQ || '') + ' ' + (searchTerm || '')).toLowerCase();
-        let matchedFallback = '';
-        
-        for (const [key, fallbackStr] of Object.entries(nearbyLocationsMap)) {
-          if (fullQuery.includes(key)) {
-            matchedFallback = fallbackStr;
-            break;
-          }
-        }
-        
-        if (matchedFallback) {
-          // Re-fetch using the fallback string as the location
-          finalResults = await fetchWithParams(matchedFallback, searchTerm);
-        }
+      const response = await fetch(`/api/search?${params.toString()}`, { signal });
+      let payload;
+      if (response.status === 404) {
+        payload = await fetchLegacySearchResults(urlParams, signal);
+      } else {
+        payload = await response.json().catch(() => ({}));
+      }
+      if ((response.status !== 404 && !response.ok) || payload.success === false) {
+        throw new Error(payload.message || 'We could not load search results. Please try again.');
       }
 
-      const seen = new Set();
-      setListings(finalResults.filter(item => {
-        const key = `${item.itemType || item.type}:${item._id || item.id}`;
-        if (!item._id && !item.id || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      }));
+      const pageResults = Array.isArray(payload.items) ? payload.items : [];
+      const deduplicate = (items) => {
+        const seen = new Set();
+        return items.filter((item) => {
+          const id = item._id || item.id;
+          const key = `${item.itemType || item.type}:${id}`;
+          if (!id || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      };
+
+      if (append) setListings((current) => deduplicate([...current, ...pageResults]));
+      else setListings(deduplicate(pageResults));
+      setResultsPage(Number.isInteger(payload.page) ? payload.page : page);
+      setHasMoreResults(Boolean(payload.hasMore));
     } catch (error) {
+      if (error.name === 'AbortError') return;
       console.error('Search Database error:', error);
-      setListings([]);
+      if (!append) setListings([]);
       setSearchError(error.message || 'We could not load search results. Please try again.');
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+        setLoadingMoreResults(false);
+      }
     }
   }, [location.search]);
 
   useEffect(() => {
-    fetchData();
+    const controller = new AbortController();
+    setResultsPage(0);
+    setHasMoreResults(false);
+    fetchData(0, false, controller.signal);
+    return () => controller.abort();
   }, [fetchData]);
 
   // Geocode and update map center whenever the location filter changes
@@ -1141,7 +1114,7 @@ const SearchPage = () => {
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">
               <p className="text-sm font-semibold text-gray-500 dark:text-white">
-                {loading ? 'Searching...' : `${listings.length} ${searchType !== 'all' ? searchType : 'places'} ${filters.location ? `near ${filters.location}` : 'found'}`}
+                {loading ? 'Searching...' : `${listings.length} ${searchType !== 'all' ? searchType : 'results'} loaded${hasMoreResults ? '+' : ''}${filters.location ? ` near ${filters.location}` : ''}`}
               </p>
               {/* Mobile View Toggle */}
               <div className="flex items-center gap-1 lg:hidden">
@@ -1191,7 +1164,7 @@ const SearchPage = () => {
             {searchError && (
               <div role="alert" className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-medium text-rose-700">
                 <span>{searchError}</span>
-                <button onClick={fetchData} className="font-bold underline underline-offset-4">Retry</button>
+                <button onClick={() => fetchData(0, false)} className="font-bold underline underline-offset-4">Retry</button>
               </div>
             )}
             {loading ? (
@@ -1216,6 +1189,20 @@ const SearchPage = () => {
               </motion.div>
             ) : (
               <EmptyState onClear={clearFilters} />
+            )}
+
+            {hasMoreResults && !loading && listings.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => fetchData(resultsPage + 1, true)}
+                  disabled={loadingMoreResults}
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-700 px-6 py-3 text-sm font-semibold text-gray-900 dark:text-white hover:border-gray-900 dark:hover:border-white disabled:cursor-wait disabled:opacity-60"
+                >
+                  {loadingMoreResults && <ArrowPathIcon className="h-4 w-4 animate-spin" />}
+                  {loadingMoreResults ? 'Loading…' : 'Load more results'}
+                </button>
+              </div>
             )}
 
             {/* Recently Viewed */}

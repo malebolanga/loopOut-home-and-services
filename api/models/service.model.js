@@ -263,6 +263,8 @@ const serviceSchema = new mongoose.Schema(
 
 // ── Indexes ───────────────────────────────────────────────────────────────
 serviceSchema.index({ createdAt: -1 });
+serviceSchema.index({ type: 1, createdAt: -1 });
+serviceSchema.index({ regularPrice: 1, createdAt: -1 });
 serviceSchema.index({ kind: 1, createdAt: -1 });
 serviceSchema.index({ userRef: 1, createdAt: -1 });
 serviceSchema.index({ creator: 1, createdAt: -1 });
