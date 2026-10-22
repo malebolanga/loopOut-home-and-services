@@ -49,9 +49,8 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
   const handleError = () => {
     if (validImages[currentIndex]) {
       setFailedUrls(prev => new Set(prev).add(validImages[currentIndex]));
-    } else {
-      setImageLoaded(true);
     }
+    setImageLoaded(true);
   };
 
   const fallbackImage = FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default;

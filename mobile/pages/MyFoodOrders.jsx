@@ -43,6 +43,38 @@ const getStepIndex = (status) => {
   return 0;
 };
 
+const isFoodImageUrl = (val) => {
+  if (!val || typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  return (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/uploads/') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:image/')
+  );
+};
+
+const getItemEmojiFallback = (item) => {
+  if (item?.image && typeof item.image === 'string' && item.image.length <= 4 && !item.image.startsWith('/') && !item.image.startsWith('http')) {
+    return item.image;
+  }
+  const name = String(item?.name || item?.title || '').toLowerCase();
+  if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) return '🥪';
+  if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) return '🍔';
+  if (name.includes('pizza') || name.includes('slice')) return '🍕';
+  if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick')) return '🍗';
+  if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) return '🍟';
+  if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) return '🌯';
+  if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice')) return '🥤';
+  if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors')) return '🥩';
+  if (name.includes('fish') || name.includes('hake') || name.includes('seafood')) return '🐟';
+  if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu')) return '🍲';
+  if (name.includes('salad') || name.includes('greens') || name.includes('veg')) return '🥗';
+  if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream')) return '🍰';
+  return '🍱';
+};
+
 export default function MyFoodOrders() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user || {});
@@ -279,8 +311,11 @@ export default function MyFoodOrders() {
                   {/* Top order summary header */}
                   <div className="flex flex-wrap items-start justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center text-2xl shrink-0">
-                        {order.shopImage || '🍲'}
+                      <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 flex items-center justify-center overflow-hidden text-2xl shrink-0">
+                        {isFoodImageUrl(order.shopImage) ? (
+                          <img src={order.shopImage} alt={shopName} className="w-full h-full object-cover rounded-2xl" onError={(e) => { e.currentTarget.style.display = 'none'; if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'inline'; }} />
+                        ) : null}
+                        <span className={isFoodImageUrl(order.shopImage) ? 'hidden' : ''}>{order.shopImage || '🍲'}</span>
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
@@ -358,22 +393,44 @@ export default function MyFoodOrders() {
                       {items.map((item, iIdx) => (
                         <div
                           key={iIdx}
-                          className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 flex items-start justify-between gap-2"
+                          className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 flex items-start justify-between gap-2.5"
                         >
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                              {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
-                            </p>
-                            {Array.isArray(item.sides) && item.sides.length > 0 && (
-                              <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
-                                🥗 {item.sides.join(', ')}
-                              </p>
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            {isFoodImageUrl(item.image) ? (
+                              <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <span className="hidden text-lg">
+                                  {getItemEmojiFallback(item)}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 flex items-center justify-center text-lg shrink-0">
+                                {getItemEmojiFallback(item)}
+                              </div>
                             )}
-                            {Array.isArray(item.drinks) && item.drinks.length > 0 && (
-                              <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-0.5 truncate">
-                                🥤 {item.drinks.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                            <div className="min-w-0">
+                              <p className="text-xs font-black text-gray-900 dark:text-white truncate">
+                                {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
                               </p>
-                            )}
+                              {Array.isArray(item.sides) && item.sides.length > 0 && (
+                                <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
+                                  🥗 {item.sides.join(', ')}
+                                </p>
+                              )}
+                              {Array.isArray(item.drinks) && item.drinks.length > 0 && (
+                                <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold mt-0.5 truncate">
+                                  🥤 {item.drinks.map((d) => `${d.name} x${d.qty}`).join(', ')}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <span className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
                             R{Number(item.price || (item.qty * (item.unitPrice || 0))).toFixed(2)}

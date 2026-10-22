@@ -37,10 +37,17 @@ const BottomNav = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
+  const { hideBottomNav } = useSelector((state) => state.frontend || {});
   
   const [showProfileDropup, setShowProfileDropup] = useState(false);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
   const navRef = useRef(null);
+
+  useEffect(() => {
+    if (hideBottomNav) {
+      setShowProfileDropup(false);
+    }
+  }, [hideBottomNav]);
   
   const hiddenBottomNavRoutes = [
     '/wishlist',
@@ -209,7 +216,23 @@ const BottomNav = () => {
   ];
 
   return (
-    <div ref={navRef} className="app-safe-bottom bg-white dark:bg-gray-950 fixed bottom-0 left-0 right-0 z-[100] md:hidden">
+    <motion.div
+      ref={navRef}
+      initial={false}
+      animate={{
+        y: hideBottomNav ? 120 : 0,
+        opacity: hideBottomNav ? 0 : 1,
+      }}
+      transition={{
+        type: 'spring',
+        damping: 26,
+        stiffness: 240,
+        mass: 0.8
+      }}
+      className={`app-safe-bottom bg-white dark:bg-gray-950 fixed bottom-0 left-0 right-0 z-[100] md:hidden ${
+        hideBottomNav ? 'pointer-events-none' : ''
+      }`}
+    >
       {/* Profile Dropup Menu */}
       <AnimatePresence>
         {showProfileDropup && (
@@ -381,7 +404,7 @@ const BottomNav = () => {
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

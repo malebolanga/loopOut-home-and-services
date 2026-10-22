@@ -5,6 +5,8 @@ const initialState = {
   currency: 'R', // default currency symbol
   notificationCount: 0,
   wishlistCount: 0,
+  hideBottomNav: false,
+  hideHeader: false,
 };
 
 const frontendSlice = createSlice({
@@ -23,8 +25,21 @@ const frontendSlice = createSlice({
     setWishlistCount(state, action) {
       state.wishlistCount = action.payload;
     },
+    setHideBottomNav(state, action) {
+      state.hideBottomNav = Boolean(action.payload);
+    },
+    setHideHeader(state, action) {
+      state.hideHeader = Boolean(action.payload);
+    },
   },
 });
 
-export const { setTheme, setCurrency, setNotificationCount, setWishlistCount } = frontendSlice.actions;
+export const {
+  setTheme,
+  setCurrency,
+  setNotificationCount,
+  setWishlistCount,
+  setHideBottomNav,
+  setHideHeader,
+} = frontendSlice.actions;
 export default frontendSlice.reducer;

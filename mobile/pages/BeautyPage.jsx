@@ -90,6 +90,7 @@ import HelperComments from '../components/HelperComments';
 import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
+import BookingHistory from '../components/BookingHistory';
 
 export default function BeautyPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -2216,7 +2217,7 @@ export default function BeautyPage() {
       <div className="w-full">
         {/* Airbnb-style image gallery layout */}
         {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[260px] sm:h-[320px] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
             <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
               <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
@@ -2236,7 +2237,7 @@ export default function BeautyPage() {
         )}
       </div>
 
-      <main className="relative z-10 -mt-7 md:-mt-10 max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
         {/* Content Section */}
         <div className="mb-8 pt-7 border-b border-slate-200 pb-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
@@ -2563,6 +2564,9 @@ export default function BeautyPage() {
           </div>
 
         </div>
+
+        {/* Recent Bookers Section */}
+        <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'beauty'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </main>
 

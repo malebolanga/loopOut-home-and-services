@@ -21,6 +21,7 @@ const poll = (load, callback, delay) => {
 };
 
 export const subscribeToShops = (callback) => poll(() => request('/api/lunch/shops'), callback, 30_000);
+export const getMyShops = () => request('/api/lunch/my-shops');
 export const subscribeToOrders = (callback) => poll(() => request('/api/lunch/orders'), callback, 15_000);
 export const createShop = (shop) => request('/api/lunch/shops', { method: 'POST', body: JSON.stringify(shop) });
 export const updateShop = (id, shop) => request(`/api/lunch/shops/${id}`, { method: 'PUT', body: JSON.stringify(shop) });

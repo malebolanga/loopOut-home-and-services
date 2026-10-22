@@ -43,6 +43,7 @@ import { canCreateFor } from '../utils/offeringPermissions';
 import {
   subscribeToShops,
   subscribeToOrders,
+  getMyShops,
   createLunchOrder,
   createShop,
   addMealToShop,
@@ -53,12 +54,131 @@ import {
   deleteMealFromShop,
   rateShop
 } from '../services/lunchService';
+import { uploadFiles } from '../services/upload.service';
 import {
   FOOD_EMOJIS,
   generateVendorMealAI
 } from '../utils/aiLunchAssistant';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
+
+const uploadFoodImage = async (file) => {
+  if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
+  if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
+
+  // Primary: Upload directly to Firebase Cloud Storage for permanent cloud persistence
+  try {
+    const urls = await uploadFiles([file]);
+    if (urls && urls[0]) return urls[0];
+  } catch (cloudErr) {
+    console.warn('Firebase cloud upload failed, falling back to server upload:', cloudErr);
+  }
+
+  // Fallback: upload to server endpoint
+  const formData = new FormData();
+  formData.append('files', file);
+  const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+  const response = await fetch('/api/uploads', {
+    method: 'POST', credentials: 'include', body: formData,
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.urls?.[0]) throw new Error(data.message || 'Photo upload failed. Please try again.');
+  const apiOrigin = new URL(resolveApiUrl('/api/uploads'), window.location.origin).origin;
+  return new URL(data.urls[0], apiOrigin).toString();
+};
+
+const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => setImgError(false), [value]);
+  const isImage = !imgError && typeof value === 'string' && (/^https?:\/\//i.test(value) || value.startsWith('/uploads/'));
+  const handleFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setError(''); setUploading(true);
+    try { onChange(await uploadFoodImage(file)); }
+    catch (uploadError) { setError(uploadError.message || 'Photo upload failed.'); }
+    finally { setUploading(false); }
+  };
+  return (
+    <div className="col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 p-3">
+      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
+      <div className="flex items-center gap-3">
+        <div className="h-14 w-14 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-3xl">
+          {isImage ? (
+            <img
+              src={value}
+              alt={`${label} preview`}
+              className="h-full w-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            (typeof value === 'string' && value.length <= 4 && !value.startsWith('/') && !value.startsWith('http')) ? value : '🍱'
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="cursor-pointer rounded-lg bg-amber-500 hover:bg-amber-600 px-3 py-2 text-xs font-bold text-white">
+              {uploading ? 'Uploading…' : isImage ? 'Change photo' : 'Upload a photo'}
+              <input type="file" accept="image/*" className="sr-only" disabled={uploading} onChange={handleFile} />
+            </label>
+            {isImage && <button type="button" onClick={() => onChange('🍱')} className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-gray-300">Use emoji</button>}
+          </div>
+          <select aria-label={`${label} emoji fallback`} value={isImage ? '' : value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+            {isImage && <option value="">Photo selected</option>}
+            {emojis.map((emoji) => <option key={emoji.emoji} value={emoji.emoji}>{emoji.emoji} {emoji.name}</option>)}
+          </select>
+        </div>
+      </div>
+      <p className="mt-2 text-[10px] text-gray-500">Add one photo, or choose an emoji if you don’t have one.</p>
+      {error && <p role="alert" className="mt-1 text-[11px] text-red-600">{error}</p>}
+    </div>
+  );
+};
+
+export const ShopImage = ({ image, className = '' }) => {
+  const [error, setError] = useState(false);
+  useEffect(() => setError(false), [image]);
+  const isImage = !error && typeof image === 'string' && (
+    image.startsWith('http://') ||
+    image.startsWith('https://') ||
+    image.startsWith('/uploads/') ||
+    image.startsWith('/') ||
+    image.startsWith('data:image/')
+  );
+  const fallbackEmoji = (typeof image === 'string' && image.length <= 4 && !image.startsWith('/') && !image.startsWith('http')) ? image : '🏪';
+  return isImage
+    ? <img src={image.trim()} alt="Shop" className={`object-cover ${className}`} onError={() => setError(true)} loading="lazy" />
+    : <span className={className}>{fallbackEmoji}</span>;
+};
+
+export const FoodVisual = ({ visual, alt = 'Food', className = 'h-full w-full object-cover rounded-lg', emojiClassName = 'text-2xl' }) => {
+  const [error, setError] = useState(false);
+  useEffect(() => setError(false), [visual?.src]);
+  const showImage = !error && Boolean(visual?.isImage && visual?.src);
+
+  if (showImage) {
+    return (
+      <img
+        src={visual.src.trim()}
+        alt={alt}
+        className={className}
+        onError={() => setError(true)}
+        loading="lazy"
+      />
+    );
+  }
+
+  return (
+    <span className={emojiClassName} role="img" aria-label={alt}>
+      {visual?.emoji || '🍱'}
+    </span>
+  );
+};
 
 const PRESET_MOODS = [
   { id: 'quick', label: '⚡ Quick Lunch' },
@@ -288,53 +408,60 @@ function getShopTheme(shop) {
 // Visual Picture / Avatar resolver for Food Items on Receipts
 export const getItemVisual = (it) => {
   if (!it) return { emoji: '🍱', isImage: false, src: '' };
+
+  const resolveFallbackEmoji = () => {
+    if (it.image && typeof it.image === 'string' && it.image.length <= 4 && !it.image.startsWith('/') && !it.image.startsWith('http')) {
+      return it.image;
+    }
+    const name = String(it.name || '').toLowerCase();
+    if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) {
+      return '🥪';
+    }
+    if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) {
+      return '🍔';
+    }
+    if (name.includes('pizza') || name.includes('slice')) {
+      return '🍕';
+    }
+    if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick') || name.includes('grilled chicken')) {
+      return '🍗';
+    }
+    if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) {
+      return '🍟';
+    }
+    if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) {
+      return '🌯';
+    }
+    if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice') || name.includes('beverage') || name.includes('water')) {
+      return '🥤';
+    }
+    if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors') || name.includes('braai')) {
+      return '🥩';
+    }
+    if (name.includes('fish') || name.includes('hake') || name.includes('seafood') || name.includes('prawn')) {
+      return '🐟';
+    }
+    if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu') || name.includes('mala') || name.includes('samp')) {
+      return '🍲';
+    }
+    if (name.includes('salad') || name.includes('greens') || name.includes('veg')) {
+      return '🥗';
+    }
+    if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream') || name.includes('waffle') || name.includes('donut')) {
+      return '🍰';
+    }
+    return '🍱';
+  };
+
+  const fallbackEmoji = resolveFallbackEmoji();
+
   if (it.image && (typeof it.image === 'string') && (it.image.startsWith('http') || it.image.startsWith('/') || it.image.startsWith('data:'))) {
-    return { emoji: '', isImage: true, src: it.image };
+    return { emoji: fallbackEmoji, isImage: true, src: it.image };
   }
   if (it.imageUrl && (typeof it.imageUrl === 'string') && (it.imageUrl.startsWith('http') || it.imageUrl.startsWith('/'))) {
-    return { emoji: '', isImage: true, src: it.imageUrl };
+    return { emoji: fallbackEmoji, isImage: true, src: it.imageUrl };
   }
-  if (it.image && typeof it.image === 'string' && it.image.length <= 4) {
-    return { emoji: it.image, isImage: false, src: '' };
-  }
-  const name = String(it.name || '').toLowerCase();
-  if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) {
-    return { emoji: '🥪', isImage: false, src: '' };
-  }
-  if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) {
-    return { emoji: '🍔', isImage: false, src: '' };
-  }
-  if (name.includes('pizza') || name.includes('slice')) {
-    return { emoji: '🍕', isImage: false, src: '' };
-  }
-  if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick') || name.includes('grilled chicken')) {
-    return { emoji: '🍗', isImage: false, src: '' };
-  }
-  if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) {
-    return { emoji: '🍟', isImage: false, src: '' };
-  }
-  if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) {
-    return { emoji: '🌯', isImage: false, src: '' };
-  }
-  if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice') || name.includes('beverage') || name.includes('water')) {
-    return { emoji: '🥤', isImage: false, src: '' };
-  }
-  if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors') || name.includes('braai')) {
-    return { emoji: '🥩', isImage: false, src: '' };
-  }
-  if (name.includes('fish') || name.includes('hake') || name.includes('seafood') || name.includes('prawn')) {
-    return { emoji: '🐟', isImage: false, src: '' };
-  }
-  if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu') || name.includes('mala') || name.includes('samp')) {
-    return { emoji: '🍲', isImage: false, src: '' };
-  }
-  if (name.includes('salad') || name.includes('greens') || name.includes('veg')) {
-    return { emoji: '🥗', isImage: false, src: '' };
-  }
-  if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream') || name.includes('waffle') || name.includes('donut')) {
-    return { emoji: '🍰', isImage: false, src: '' };
-  }
-  return { emoji: it.image || '🍱', isImage: false, src: '' };
+  return { emoji: fallbackEmoji, isImage: false, src: '' };
 };
 
 // Dynamic Receipt Themes (Distinct colored paper backgrounds for receipts)
@@ -553,6 +680,10 @@ export default function LunchComingSoon() {
   const [orderMode, setOrderMode] = useState('order'); // 'order' or 'table'
   const [fulfilment] = useState('pickup');
   const [shops, setShops] = useState([]);
+  // Authoritative list of this user's shops, fetched from the server using the JWT.
+  // Used instead of client-side UID filtering to prevent ownership mismatches
+  // when the persisted Redux currentUser._id is stale.
+  const [serverMyShops, setServerMyShops] = useState(null); // null = not yet loaded
   const [selectedShopId, setSelectedShopId] = useState('');
   const [cart, setCart] = useState([]);
   const [selectedMealSides, setSelectedMealSides] = useState({});
@@ -812,6 +943,18 @@ export default function LunchComingSoon() {
       }
     });
 
+    // Fetch authoritative owned shops for the authenticated user using JWT
+    if (currentUser) {
+      getMyShops()
+        .then((owned) => setServerMyShops(Array.isArray(owned) ? owned : []))
+        .catch((err) => {
+          console.warn("Could not fetch server-owned shops, falling back to client-side filter:", err);
+          setServerMyShops(null);
+        });
+    } else {
+      setServerMyShops(null);
+    }
+
     const unsubscribeOrders = currentUser ? subscribeToOrders((fetchedOrders) => setOrders(fetchedOrders)) : () => setOrders([]);
 
     return () => {
@@ -899,9 +1042,15 @@ export default function LunchComingSoon() {
   // Shops that belong to the currently logged-in user
   const myShops = useMemo(() => {
     if (!currentUser) return [];
+    // Prefer server-authoritative list (fetched via JWT) to avoid stale-Redux-state mismatches
+    if (serverMyShops !== null) {
+      const ownedIds = new Set(serverMyShops.map((s) => String(s.id || s._id)));
+      const matchingLiveShops = shops.filter((s) => ownedIds.has(String(s.id || s._id)));
+      return matchingLiveShops.length > 0 ? matchingLiveShops : serverMyShops;
+    }
     const uid = String(currentUser._id || currentUser.id || 'guest');
     return shops.filter((s) => String(s.ownerId || '') === uid);
-  }, [shops, currentUser]);
+  }, [shops, currentUser, serverMyShops]);
 
   // Whether the current user owns at least one shop
   const isShopOwner = myShops.length > 0;
@@ -918,8 +1067,16 @@ export default function LunchComingSoon() {
   const isCurrentShopOwner = useMemo(() => {
     if (!currentUser || !dashboardShop) return false;
     const uid = String(currentUser._id || currentUser.id || '');
-    return Boolean(uid && (String(dashboardShop.ownerId || '') === uid || currentUser.isAdmin || currentUser.role === 'admin'));
-  }, [currentUser, dashboardShop]);
+    const inMyShops = myShops.some(
+      (s) => String(s.id || s._id) === String(dashboardShop.id || dashboardShop._id)
+    );
+    return Boolean(
+      inMyShops ||
+      (uid && String(dashboardShop.ownerId || '') === uid) ||
+      currentUser.isAdmin ||
+      currentUser.role === 'admin'
+    );
+  }, [currentUser, dashboardShop, myShops]);
 
   // Other shops (excluding the current user's active dashboard shop)
   const otherShops = useMemo(() => {
@@ -1260,6 +1417,11 @@ export default function LunchComingSoon() {
       });
       setShowAddShopModal(false);
       setSelectedShopId(newShopId);
+      if (currentUser) {
+        getMyShops()
+          .then((owned) => setServerMyShops(Array.isArray(owned) ? owned : []))
+          .catch(() => {});
+      }
       setNotice({ type: 'success', message: `Shop "${newShopForm.name.trim()}" created successfully!` });
       setNewShopForm({ name: '', cuisine: '', distance: '1.5 km', time: '20–30 min', image: '🥙', address: '', phone: '', whatsapp: '' });
     } catch (err) {
@@ -1405,8 +1567,12 @@ export default function LunchComingSoon() {
   const handleToggleShopOpen = async (shop) => {
     if (!shop) return;
     const uid = String(currentUser?._id || currentUser?.id || '');
+    const inMyShops = myShops.some(
+      (s) => String(s.id || s._id) === String(shop.id || shop._id)
+    );
     const isOwnerOfShop = Boolean(
-      uid && (String(shop.ownerId || '') === uid || currentUser?.isAdmin || currentUser?.role === 'admin')
+      inMyShops ||
+      (uid && (String(shop.ownerId || '') === uid || currentUser?.isAdmin || currentUser?.role === 'admin'))
     );
     if (!isOwnerOfShop) {
       setNotice({
@@ -1557,7 +1723,7 @@ export default function LunchComingSoon() {
                             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-amber-300 shadow-sm'
                         } ${isClosed ? 'opacity-60' : ''}`}
                       >
-                        <span className="text-3xl">{shop.image || '🏪'}</span>
+                        <ShopImage image={shop.image} className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
                         <span className={`text-xs font-semibold truncate max-w-[100px] ${isSelected ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>
                           {shop.name}
                         </span>
@@ -1603,7 +1769,7 @@ export default function LunchComingSoon() {
             {currentShop && (
               <div className="flex items-center justify-between gap-3 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl shrink-0">{currentShop.image || '🏪'}</span>
+                  <ShopImage image={currentShop.image} className="h-12 w-12 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
                   <div className="min-w-0">
                     <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
@@ -1656,7 +1822,9 @@ export default function LunchComingSoon() {
                         className="w-full flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition text-left"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-xl shrink-0">{order.shopImage || '🍱'}</span>
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-xl" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
                               #{order.orderCode} · {order.shopName || 'Food Order'}
@@ -1807,11 +1975,7 @@ export default function LunchComingSoon() {
                         >
                           <div className="flex items-start gap-3">
                             <div className="shrink-0 h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                              {visual.isImage ? (
-                                <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
-                              ) : (
-                                <span className="text-2xl">{visual.emoji}</span>
-                              )}
+                              <FoodVisual visual={visual} alt={meal.name} className="h-full w-full object-cover rounded-lg" emojiClassName="text-2xl" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
@@ -2053,7 +2217,9 @@ export default function LunchComingSoon() {
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">{order.shopImage || '🍱'}</span>
+                          <div className="w-7 h-7 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-xl" />
+                          </div>
                           <div>
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200">#{order.orderCode}</p>
                             <p className="text-[10px] text-gray-400">{order.shopName}</p>
@@ -2095,7 +2261,9 @@ export default function LunchComingSoon() {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{order.shopImage || '🍱'}</span>
+                        <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                          <ShopImage image={order.shopImage} className="w-full h-full object-cover text-lg" />
+                        </div>
                         <div>
                           <p className="text-xs font-bold text-gray-700 dark:text-gray-300">#{order.orderCode} · {order.shopName}</p>
                           <p className="text-[10px] text-gray-400">{(order.items || []).length} items · {formatPrice(order.total)}</p>
@@ -2138,7 +2306,7 @@ export default function LunchComingSoon() {
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-4 text-white shadow-md">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl bg-white/20 p-2 rounded-xl">{dashboardShop?.image || '🏪'}</span>
+                  <ShopImage image={dashboardShop?.image} className="h-14 w-14 shrink-0 rounded-xl bg-white/20 flex items-center justify-center text-3xl" />
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-amber-100">Your Shop</p>
                     <h3 className="text-lg font-bold truncate">{dashboardShop?.name || 'My Shop'}</h3>
@@ -2262,7 +2430,9 @@ export default function LunchComingSoon() {
                     return (
                       <div key={order.id || order._id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                         <div className="flex items-center gap-2.5 min-w-0" onClick={() => setActiveReceiptOrder(order)} style={{ cursor: 'pointer' }}>
-                          <span className="text-lg">{order.shopImage || '🍱'}</span>
+                          <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <ShopImage image={order.shopImage} className="w-full h-full object-cover text-lg" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">
                               #{order.orderCode} · {order.customerName || 'Customer'}
@@ -2355,11 +2525,7 @@ export default function LunchComingSoon() {
                       <div key={meal.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="shrink-0 h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                            {visual.isImage ? (
-                              <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
-                            ) : (
-                              <span className="text-xl">{visual.emoji}</span>
-                            )}
+                            <FoodVisual visual={visual} alt={meal.name} className="h-full w-full object-cover rounded-lg" emojiClassName="text-xl" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{meal.name}</p>
@@ -2464,7 +2630,9 @@ export default function LunchComingSoon() {
                     <div key={item.cartKey || item.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5 space-y-1.5">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
+                          <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                            <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-lg" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
                             <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
@@ -2637,7 +2805,9 @@ export default function LunchComingSoon() {
                         return (
                           <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
                             <div className="flex items-center gap-2">
-                              <span className="text-base">{iv.emoji || '🍱'}</span>
+                              <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                                <FoodVisual visual={iv} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-base" />
+                              </div>
                               <div>
                                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.name}</p>
                                 <p className="text-[10px] text-gray-400">× {item.quantity}</p>
@@ -2720,7 +2890,7 @@ export default function LunchComingSoon() {
                 </button>
               </div>
               <div className="text-center mb-4">
-                <span className="text-4xl">{currentShop.image || '🏪'}</span>
+                <ShopImage image={currentShop.image} className="mx-auto h-16 w-16 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-4xl" />
                 <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 mt-2">{currentShop.name}</h4>
                 {currentShop.address && <p className="text-xs text-gray-400 mt-0.5">{currentShop.address}</p>}
               </div>
@@ -2778,23 +2948,18 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
                   <input type="text" required value={newShopForm.name} onChange={(e) => setNewShopForm({...newShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Mama's Kitchen" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine Type</label>
                     <input type="text" value={newShopForm.cuisine} onChange={(e) => setNewShopForm({...newShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="e.g. Traditional" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Emoji Icon</label>
-                    <select value={newShopForm.image} onChange={(e) => setNewShopForm({...newShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Shop logo" value={newShopForm.image} onChange={(image) => setNewShopForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
                   <input type="text" value={newShopForm.address} onChange={(e) => setNewShopForm({...newShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="Street address" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
                     <input type="tel" value={newShopForm.phone} onChange={(e) => setNewShopForm({...newShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="0XX XXX XXXX" />
@@ -2876,13 +3041,8 @@ export default function LunchComingSoon() {
                       {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={newMealForm.image} onChange={(e) => setNewMealForm({...newMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Food photo" value={newMealForm.image} onChange={(image) => setNewMealForm((form) => ({ ...form, image }))} />
                 {/* Sides */}
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
@@ -2924,23 +3084,18 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Shop Name *</label>
                   <input type="text" required value={editShopForm.name} onChange={(e) => setEditShopForm({...editShopForm, name: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Cuisine</label>
                     <input type="text" value={editShopForm.cuisine} onChange={(e) => setEditShopForm({...editShopForm, cuisine: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={editShopForm.image} onChange={(e) => setEditShopForm({...editShopForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Shop logo" value={editShopForm.image || '🏪'} onChange={(image) => setEditShopForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Address</label>
                   <input type="text" value={editShopForm.address} onChange={(e) => setEditShopForm({...editShopForm, address: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Phone</label>
                     <input type="tel" value={editShopForm.phone} onChange={(e) => setEditShopForm({...editShopForm, phone: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" />
@@ -3022,13 +3177,8 @@ export default function LunchComingSoon() {
                       {['🔥 Hot Seller', 'Popular', 'Top Rated', 'New', 'Spicy', 'Healthy', 'Value', 'Special', 'Vegetarian', 'Vegan'].map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Icon</label>
-                    <select value={editMealForm.image} onChange={(e) => setEditMealForm({...editMealForm, image: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
-                      {FOOD_EMOJIS.map((em) => <option key={em.emoji} value={em.emoji}>{em.emoji} {em.name}</option>)}
-                    </select>
-                  </div>
                 </div>
+                <FoodImageField label="Food photo" value={editMealForm.image || '🍱'} onChange={(image) => setEditMealForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
                   <input
@@ -3163,8 +3313,10 @@ export default function LunchComingSoon() {
                 {cart.map((item) => (
                   <div key={item.cartKey || item.id} className="space-y-1">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-xl shrink-0">{getItemVisual(item).emoji || '🍱'}</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                          <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-xl shrink-0" />
+                        </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>
                           <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>

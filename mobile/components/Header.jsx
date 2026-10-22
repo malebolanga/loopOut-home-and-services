@@ -169,6 +169,7 @@ const HEADER_CATEGORY_ICONS = {
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
+  const { hideHeader } = useSelector((state) => state.frontend || {});
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('all');
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
@@ -748,8 +749,8 @@ export default function Header() {
         <motion.header
           initial={{ y: 0 }}
           animate={{ 
-            y: isNavVisible ? 0 : -120,
-            opacity: isNavVisible ? 1 : 0,
+            y: (hideHeader || !isNavVisible) ? -120 : 0,
+            opacity: (hideHeader || !isNavVisible) ? 0 : 1,
             paddingTop: scrolled ? '0.5rem' : '0.75rem',
             paddingBottom: scrolled ? '0.5rem' : '0.75rem',
           }}
@@ -757,7 +758,7 @@ export default function Header() {
           ref={headerRef}
         className={`app-safe-top fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
           scrolled ? 'bg-white/90 dark:bg-gray-950/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
-        }`}
+        } ${hideHeader ? 'pointer-events-none' : ''}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
           <div className="flex flex-row items-center justify-between h-14 md:h-16">

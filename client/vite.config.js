@@ -44,13 +44,14 @@ export default defineConfig({
         // screen that needs them is opened.
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
+          const normalized = id.replace(/\\/g, '/');
           if (/[\\/]node_modules[\\/](react|react-dom|scheduler|use-sync-external-store|react-redux|@reduxjs)[\\/]/.test(id)) return 'react-core';
-          if (id.includes('/firebase/')) return 'firebase';
-          if (id.includes('/swiper/')) return 'swiper';
-          if (id.includes('/framer-motion/')) return 'motion';
-          if (id.includes('/react-icons/') || id.includes('/lucide-react/')) return 'icons';
-          if (id.includes('/jspdf/') || id.includes('/jspdf-autotable/')) return 'pdf';
-          if (id.includes('/leaflet/') || id.includes('/@react-google-maps/')) return 'maps';
+          if (normalized.includes('/firebase/')) return 'firebase';
+          if (normalized.includes('/swiper/')) return 'swiper';
+          if (normalized.includes('/framer-motion/')) return 'motion';
+          if (normalized.includes('/react-icons/') || normalized.includes('/lucide-react/')) return 'icons';
+          if (normalized.includes('/jspdf/') || normalized.includes('/jspdf-autotable/')) return 'pdf';
+          if (normalized.includes('/leaflet/') || normalized.includes('/@react-google-maps/')) return 'maps';
         }
       }
     },

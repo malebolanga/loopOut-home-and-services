@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { setHideBottomNav, setHideHeader } from '../redux/frontendSlice';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -60,6 +61,7 @@ import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import DownloadAppSection from '../components/home/DownloadAppSection';
 import CategoriesBottomSheet from '../components/home/CategoriesBottomSheet';
+import RecentPopoutMenu from '../components/home/RecentPopoutMenu';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 import {
   RecentAdded3DIcon,
@@ -81,12 +83,12 @@ const MAX_RECENTLY_VIEWED = 12;
 const DATA_FETCH_LIMIT = 50;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
-const API_TIMEOUT = 15000;
+const API_TIMEOUT = 45000;
 
 const CATEGORY_ICON_BY_ID = {
   all: Sparkles, property: House, rooms: BedDouble, guesthouse: House, hotel: Building2, lodge: House, apartment: Building2, self_catering: UtensilsCrossed, resort: House, hourly_room: BedDouble,
   service: Wrench, transport: Car, carwash: Car, catering: ChefHat, landscaping: Trees, moving: Truck, storage: Package, handyman: Hammer, others: Sparkles,
-  helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, animals: Dog,
+  helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, marquees: Store, marquee: Store, animals: Dog,
   event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
   selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen,
 };
@@ -809,6 +811,114 @@ const POPULAR_REQUEST_SUGGESTIONS = [
   { id: 'chakalaka', name: 'Chakalaka', icon: '🌶️' },
 ];
 
+export const isFoodImageUrl = (val) => {
+  if (!val || typeof val !== 'string') return false;
+  const trimmed = val.trim();
+  return (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('/uploads/') ||
+    trimmed.startsWith('/') ||
+    trimmed.startsWith('data:image/')
+  );
+};
+
+export const resolveSmartFoodEmoji = (name = '', fallback = '🍱') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
+  if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger')) return '🍔';
+  if (n.includes('pizza') || n.includes('slice')) return '🍕';
+  if (n.includes('wing') || n.includes('chicken') || n.includes('drumstick')) return '🍗';
+  if (n.includes('chip') || n.includes('fries') || n.includes('slap chips')) return '🍟';
+  if (n.includes('wrap') || n.includes('shawarma') || n.includes('burrito')) return '🌯';
+  if (n.includes('drink') || n.includes('coke') || n.includes('soda') || n.includes('juice') || n.includes('beverage')) return '🥤';
+  if (n.includes('steak') || n.includes('beef') || n.includes('ribs') || n.includes('pork') || n.includes('wors') || n.includes('braai')) return '🥩';
+  if (n.includes('fish') || n.includes('hake') || n.includes('seafood')) return '🐟';
+  if (n.includes('pap') || n.includes('stew') || n.includes('curry') || n.includes('mogodu') || n.includes('mala') || n.includes('samp')) return '🍲';
+  if (n.includes('salad') || n.includes('greens') || n.includes('veg')) return '🥗';
+  if (n.includes('cake') || n.includes('dessert') || n.includes('ice cream') || n.includes('waffle')) return '🍰';
+  return (typeof fallback === 'string' && fallback.length <= 4 && !fallback.startsWith('/') && !fallback.startsWith('http')) ? fallback : '🍱';
+};
+
+export const resolveFoodPhoto = (name = '', fallbackUrl = '') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('rib') || n.includes('pork') || n.includes('bbq') || n.includes('flame')) {
+    return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
+    return 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger') || n.includes('smash')) {
+    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('steak') || n.includes('beef') || n.includes('braai') || n.includes('t-bone') || n.includes('wors') || n.includes('boerewors') || n.includes('meat')) {
+    return 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('chicken') || n.includes('wing') || n.includes('drumstick') || n.includes('poultry')) {
+    return 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('chip') || n.includes('fries') || n.includes('slap chips') || n.includes('potato')) {
+    return 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('pap') || n.includes('stew') || n.includes('curry') || n.includes('mogodu') || n.includes('mala') || n.includes('samp') || n.includes('soup')) {
+    return 'https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('salad') || n.includes('greens') || n.includes('veg') || n.includes('caesar')) {
+    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('wrap') || n.includes('shawarma') || n.includes('burrito') || n.includes('roll') || n.includes('taco')) {
+    return 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('pizza') || n.includes('slice')) {
+    return 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('fish') || n.includes('hake') || n.includes('seafood') || n.includes('calamari')) {
+    return 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('drink') || n.includes('coke') || n.includes('soda') || n.includes('juice') || n.includes('smoothie') || n.includes('beverage')) {
+    return 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('cake') || n.includes('dessert') || n.includes('ice cream') || n.includes('waffle') || n.includes('pastry')) {
+    return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80';
+  }
+  return fallbackUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+};
+
+export const resolveShopPhoto = (name = '') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('grill') || n.includes('bbq') || n.includes('braai')) {
+    return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
+  }
+  if (n.includes('green') || n.includes('salad') || n.includes('table')) {
+    return 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=300&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80';
+};
+
+export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
+  const [hasError, setHasError] = useState(false);
+  useEffect(() => setHasError(false), [src]);
+
+  const isShop = fallback === '🏪' || String(alt || '').toLowerCase().includes('shop');
+  const effectiveSrc = (!hasError && isFoodImageUrl(src))
+    ? src.trim()
+    : isShop
+      ? resolveShopPhoto(alt)
+      : resolveFoodPhoto(alt || src);
+
+  return (
+    <img
+      src={effectiveSrc}
+      alt={alt || 'Food'}
+      onError={() => {
+        if (!hasError) setHasError(true);
+      }}
+      className={`w-full h-full object-cover ${imgClassName}`}
+      loading="lazy"
+    />
+  );
+};
+
 const detectFoodItemsInText = (text = '') => {
   if (!text || typeof text !== 'string') return [];
   const normalized = ` ${text.toLowerCase()} `;
@@ -1413,8 +1523,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
               <div className="overflow-y-auto flex-1 px-5 py-4 flex flex-col gap-4">
                 {/* ── Shop Banner ── */}
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
-                  <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center text-2xl shadow-xs shrink-0">
-                    {item.shopImage || '🏪'}
+                  <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden text-2xl shadow-xs shrink-0 border border-amber-100 dark:border-gray-700">
+                    <FoodMedia src={item.shopImage} alt={item.shopName} fallback="🏪" className="text-2xl" imgClassName="rounded-xl" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[9px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
@@ -1449,7 +1559,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     <div className="p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex flex-col gap-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-2xl select-none shrink-0">{emoji}</span>
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700 select-none">
+                            <FoodMedia src={item.image} alt={item.name} fallback="🍱" className="text-2xl" imgClassName="rounded-xl" />
+                          </div>
                           <div className="min-w-0">
                             <p className="text-xs font-black text-gray-900 dark:text-white truncate">
                               {item.name}
@@ -1515,9 +1627,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xl">
-                              {(!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/')) ? '🍱' : ci.item.image}
-                            </span>
+                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700 select-none">
+                              <FoodMedia src={ci.item.image} alt={ci.item.name} fallback="🍱" className="text-xl" imgClassName="rounded-lg" />
+                            </div>
                             <div className="min-w-0">
                               <p className="text-xs font-black text-gray-900 dark:text-white truncate">
                                 {ci.item.name}
@@ -1734,8 +1846,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                 {/* ── Meal Hero Preview Card ── */}
                 <div className="p-3.5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/50 to-rose-50/40 dark:from-gray-900 dark:to-gray-900 border border-amber-200/70 dark:border-gray-800 shadow-xs flex flex-col gap-2.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center text-4xl shadow-sm shrink-0 border border-amber-100 dark:border-gray-700 select-none">
-                      {emoji}
+                    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden text-4xl shadow-sm shrink-0 border border-amber-100 dark:border-gray-700 select-none">
+                      <FoodMedia src={item.image} alt={item.name} fallback="🍱" className="text-4xl" imgClassName="rounded-2xl" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -2177,7 +2289,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     {/* Horizontal Scroll of Suggestion Cards */}
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide p-3 bg-white/60 dark:bg-gray-900/60">
                       {shopSiblings.map((sib, idx) => {
-                        const sibEmoji = (!sib.image || sib.image.startsWith('http') || sib.image.startsWith('/')) ? '🍱' : sib.image;
                         // Generate pairing reason based on position / tag
                         const PAIRING_LABELS = ['Great combo!', 'Popular choice', 'Pairs perfectly', 'Customers love', 'Try together', 'Best seller', 'Top pick', 'Goes great'];
                         const pairingLabel = sib.tag || PAIRING_LABELS[idx % PAIRING_LABELS.length];
@@ -2188,8 +2299,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                             className="shrink-0 w-[130px] rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden hover:border-violet-400 dark:hover:border-violet-700 hover:shadow-md transition-all group"
                           >
                             {/* Emoji / Image section */}
-                            <div className="relative h-[52px] bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-gray-800 dark:to-gray-800 flex items-center justify-center">
-                              <span className="text-3xl select-none">{sibEmoji}</span>
+                            <div className="relative h-[52px] bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-gray-800 dark:to-gray-800 flex items-center justify-center overflow-hidden">
+                              <FoodMedia src={sib.image} alt={sib.name} fallback="🍱" className="text-3xl select-none" />
                               {/* Pairing tag badge */}
                               <div className="absolute top-1 left-1">
                                 <span className="text-[7.5px] font-black px-1.5 py-0.5 rounded-md bg-violet-600 text-white uppercase tracking-wider shadow-xs leading-none">
@@ -2316,10 +2427,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Flame BBQ Ribs',
     price: 145,
     tag: 'Hot Food',
-    image: '🍖',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
-    shopImage: '🥙',
+    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Grill & Flame',
     shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
     shopDistance: '1.2 km away',
@@ -2335,10 +2446,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Special Dagwood Kota',
     price: 55,
     tag: 'Popular',
-    image: '🥪',
+    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🥙',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Street Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
@@ -2354,10 +2465,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Beef Stew & Pap',
     price: 115,
     tag: 'Favorite',
-    image: '🥘',
+    image: 'https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=600&q=80',
     shopId: 'mamas-kitchen',
     shopName: "Mama's Kitchen",
-    shopImage: '🍛',
+    shopImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Local Favourites',
     shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
     shopDistance: '800 m away',
@@ -2373,10 +2484,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Steak & Chakalaka Pap',
     price: 99,
     tag: 'Hot Food',
-    image: '🥩',
+    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80',
     shopId: 'mapho',
     shopName: 'Mapho Kitchen',
-    shopImage: '🏪',
+    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Traditional',
     shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
     shopDistance: '4.8 km away',
@@ -2392,10 +2503,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Loaded Kota Special',
     price: 50,
     tag: 'Popular',
-    image: '🥪',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
-    shopImage: '🥪',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Fast Food',
     shopAddress: '78 Biccard Street, Polokwane Central',
     shopDistance: '950 m away',
@@ -2411,10 +2522,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Chicken Caesar Salad',
     price: 105,
     tag: 'Favorite',
-    image: '🥗',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
     shopId: 'green-table',
     shopName: 'The Green Table',
-    shopImage: '🥗',
+    shopImage: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Healthy & Fresh',
     shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
     shopDistance: '2.5 km away',
@@ -2430,10 +2541,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Crispy Seasoned Chips',
     price: 35,
     tag: 'Special',
-    image: '🍟',
+    image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🍿',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Fast Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
@@ -2668,8 +2779,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
             <>
               {/* ── HEADER ── */}
               <div className="shrink-0 flex items-center gap-3 px-5 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-xl shrink-0">
-                  {shopImage}
+                <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center overflow-hidden text-xl shrink-0 border border-amber-100 dark:border-gray-700">
+                  <FoodMedia src={shopImage} alt={shopName} fallback="🏪" className="text-xl" imgClassName="rounded-2xl" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
@@ -2707,8 +2818,6 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                     </p>
                     <div className="flex flex-col gap-3">
                       {cart.map((ci, idx) => {
-                        const emoji = (!ci.item.image || ci.item.image.startsWith('http') || ci.item.image.startsWith('/'))
-                          ? '🍱' : ci.item.image;
                         return (
                           <motion.div
                             key={`${ci.item.id}-${idx}`}
@@ -2717,8 +2826,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
                             transition={{ delay: idx * 0.06 }}
                             className="flex gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
                           >
-                            <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center text-2xl shrink-0 shadow-xs">
-                              {emoji}
+                            <div className="w-11 h-11 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center justify-center overflow-hidden text-2xl shrink-0 shadow-xs">
+                              <FoodMedia src={ci.item.image} alt={ci.item.name} fallback="🍱" className="text-2xl" imgClassName="rounded-xl" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -3104,27 +3213,31 @@ const FoodSpecialsStrip = ({ navigate }) => {
           const available = shop.meals.filter((m) => m.isAvailable !== false);
           if (!available.length) return;
 
-          // Inside shop: sort Hot Food first, Popular second, Favorite third
+          // Inside shop: sort items with actual photos first, then by priority tag
           const sorted = [...available].sort((a, b) => {
+            const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
+            const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
+            if (aHasImg !== bHasImg) return aHasImg - bHasImg;
             return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
           });
 
           // Take up to 2 items per shop to present a diverse range of foods across different shops
           sorted.slice(0, 2).forEach((meal) => {
+            const resolvedImg = isFoodImageUrl(meal.image) ? meal.image : resolveFoodPhoto(meal.name);
             collected.push({
               id: meal.id,
               name: meal.name,
               price: meal.price,
               originalPrice: meal.originalPrice,
               tag: meal.tag || (getFoodPriorityRank('', meal.name) === 1 ? 'Hot Food' : 'Special'),
-              image: meal.image || '🍱',
+              image: resolvedImg,
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
               ingredients: meal.ingredients || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
-              shopImage: shop.image || '🏪',
+              shopImage: isFoodImageUrl(shop.image) ? shop.image : resolveShopPhoto(shop.name),
               shopCuisine: shop.cuisine || 'Local',
               shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
               shopDistance: shop.distance || '',
@@ -3135,11 +3248,24 @@ const FoodSpecialsStrip = ({ navigate }) => {
           });
         });
 
-        // Globally sort so Hot Food is 1st, Popular is 2nd, Favorite is 3rd
-        collected.sort((a, b) => getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name));
+        // Globally sort so items with real photos appear first, then by priority tag
+        collected.sort((a, b) => {
+          const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
+          const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
+          if (aHasImg !== bHasImg) return aHasImg - bHasImg;
+          return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
+        });
 
         if (isMounted && collected.length > 0) {
-          setFoodItems(collected);
+          // If database has only a few items, supplement with diverse fallback specials
+          // so cards never vanish or leave the carousel sparse upon refresh
+          if (collected.length < 8) {
+            const existingNames = new Set(collected.map(c => c.name.toLowerCase()));
+            const supplement = FALLBACK_FOOD_SPECIALS.filter(f => !existingNames.has(f.name.toLowerCase()));
+            setFoodItems([...collected, ...supplement]);
+          } else {
+            setFoodItems(collected);
+          }
         }
       } catch (err) {
         // Keep fallback list smoothly
@@ -3210,20 +3336,24 @@ const FoodSpecialsStrip = ({ navigate }) => {
         {foodItems.map((item, i) => (
           <motion.div
             key={`carousel-${item.shopId}-${item.id || i}`}
-            whileHover={{ y: -4 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="snap-start shrink-0 w-[124px] sm:w-[142px]  hover:bg-gray-50 dark:hover:bg-gray-850 p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative  hover:shadow-md  dark:border-gray-800 flex flex-col"
+            className="snap-start shrink-0 w-[88px] sm:w-[102px] hover:bg-gray-50 dark:hover:bg-gray-850 p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg  relative overflow-hidden flex items-center justify-center mb-2 border-gray-100/80 dark:border-gray-700/50">
-              <span className="text-3xl group-hover:scale-110 transition-transform duration-300">
-                {(!item.image || item.image.startsWith('http') || item.image.startsWith('/')) ? '🍱' : item.image}
-              </span>
+            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1 border border-gray-100/80 dark:border-gray-700/50">
+              <FoodMedia
+                src={item.image}
+                alt={item.name}
+                fallback="🍱"
+                className="text-xl group-hover:scale-110 transition-transform duration-300 select-none"
+                imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
+              />
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shadow-xs ${
+                <span className={`absolute top-0.5 left-0.5 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3244,17 +3374,17 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center absolute right-1.5 bottom-1.5 transition-all duration-200 active:scale-90 z-10"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
                     {qty > 1 ? (
-                      <span className="text-[13px] font-black leading-none" style={{ color: '#1ed760' }}>
+                      <span className="text-[10px] font-black leading-none" style={{ color: '#1ed760' }}>
                         {qty}
                       </span>
                     ) : (
                       <ShoppingBag
-                        className="w-[18px] h-[18px]"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5"
                         style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
                       />
                     )}
@@ -3264,20 +3394,20 @@ const FoodSpecialsStrip = ({ navigate }) => {
             </div>
 
             {/* Title */}
-            <p className="font-extrabold text-gray-900 dark:text-white truncate text-xs leading-tight group-hover:underline">
+            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[10px] sm:text-[11px] leading-tight group-hover:underline">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="text-gray-400 dark:text-gray-500 text-[10px] truncate leading-tight mt-0.5">
+            <p className="text-gray-400 dark:text-gray-500 text-[8.5px] sm:text-[9px] truncate leading-tight mt-0.5">
               {item.shopName}
             </p>
 
             {/* Price & GPS distance */}
-            <div className="flex items-center justify-between  border-gray-100 dark:border-gray-800">
-              <span className="font-black text-gray-900 dark:text-white text-xs">R{item.price}</span>
+            <div className="flex items-center justify-between border-gray-100 dark:border-gray-800 mt-0.5">
+              <span className="font-black text-gray-900 dark:text-white text-[10px] sm:text-[11px]">R{item.price}</span>
               {getAccurateDistanceLabel(item, coords) && (
-                <span className="text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[65px]">
+                <span className="text-[7.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[50px]">
                   📍 {getAccurateDistanceLabel(item, coords)}
                 </span>
               )}
@@ -3321,7 +3451,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
               <div className="px-6 py-4 flex flex-col gap-3">
                 {/* Current cart shop */}
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-                  <span className="text-lg">{cart[0]?.item.shopImage || '🏪'}</span>
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-gray-100 dark:border-gray-700">
+                    <FoodMedia src={cart[0]?.item.shopImage} alt={cart[0]?.item.shopName} fallback="🏪" className="text-lg" imgClassName="rounded-xl" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">Current cart</p>
                     <p className="text-sm font-black text-gray-900 dark:text-white truncate">{cart[0]?.item.shopName}</p>
@@ -3337,7 +3469,9 @@ const FoodSpecialsStrip = ({ navigate }) => {
 
                 {/* New item shop */}
                 <div className="flex items-center gap-2 p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-                  <span className="text-lg">{crossShopCandidate.shopImage || '🏪'}</span>
+                  <div className="w-8 h-8 rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0 border border-amber-200 dark:border-amber-700">
+                    <FoodMedia src={crossShopCandidate.shopImage} alt={crossShopCandidate.shopName} fallback="🏪" className="text-lg" imgClassName="rounded-xl" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-black text-amber-600 uppercase tracking-wider">New shop</p>
                     <p className="text-sm font-black text-gray-900 dark:text-white truncate">{crossShopCandidate.shopName}</p>
@@ -3488,6 +3622,8 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
       case 'sneakers':
       case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
+      case 'marquees':
+      case 'marquee': return item.type === 'marquees' || item.type === 'marquee' || item.type === 'tent' || item.category === 'marquee' || /marquee|tents?|canop(y|ies)|stretch\s*tent|event setup|event hire/i.test(text);
       case 'animals':
       case 'animal': return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
       default: return true;
@@ -3557,6 +3693,31 @@ function MobileAppHomepage({
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const lastScrollYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingUp = currentScrollY < lastScrollYRef.current;
+
+      if (currentScrollY < 50) {
+        setIsHeaderVisible(true);
+      } else if (isScrollingUp) {
+        setIsHeaderVisible(true);
+      } else {
+        setIsHeaderVisible(false);
+      }
+
+      setIsScrolled(currentScrollY > 60);
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (searchTerm.trim()) {
@@ -3570,6 +3731,26 @@ function MobileAppHomepage({
   const [visibleCount, setVisibleCount] = useState(12);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isCategoriesSheetOpen, setIsCategoriesSheetOpen] = useState(false);
+  const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  // Hide BottomNav, Footer and Header when either RecentPopoutMenu or CategoriesBottomSheet is open (fading up).
+  // When sheet closes (fading down), BottomNav, Footer and Header restore smoothly.
+  useEffect(() => {
+    const isSheetOpen = Boolean(isRecentPopoutOpen || isCategoriesSheetOpen);
+    dispatch(setHideBottomNav(isSheetOpen));
+    dispatch(setHideHeader(isSheetOpen));
+    if (isSheetOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => {
+      dispatch(setHideBottomNav(false));
+      dispatch(setHideHeader(false));
+      document.body.classList.remove('hide-bottom-nav');
+    };
+  }, [isRecentPopoutOpen, isCategoriesSheetOpen, dispatch]);
 
   useEffect(() => {
     setVisibleCount(12);
@@ -3578,19 +3759,19 @@ function MobileAppHomepage({
   const tabs = [
     {
       id: 'RecentAdded',
-      label: 'Recent Added',
+      label: 'Recent',
       emoji: '✨',
       icon: Sparkles,
       desc: 'New listings',
       textColor: 'text-rose-600',
       bgColor: 'bg-rose-500',
       subcategories: [
-        { id: 'all', label: 'All Recent', emoji: '✨' },
-        { id: 'property', label: 'Properties', emoji: '🏡' },
-        { id: 'service', label: 'Services', emoji: '🛠️' },
-        { id: 'helper', label: 'Helpers', emoji: '🧹' },
-        { id: 'event', label: 'Events', emoji: '🎟️' },
-        { id: 'selling', label: 'Items for Sale', emoji: '🏷️' }
+        { id: 'all', label: 'All Recent', emoji: '✨', desc: 'All new additions' },
+        { id: 'property', label: 'Property', emoji: '🏡', desc: 'Recent properties & stays' },
+        { id: 'service', label: 'Services', emoji: '🛠️', desc: 'Recent services & pros' },
+        { id: 'helper', label: 'Helper', emoji: '🧹', desc: 'Recent helpers & bookings' },
+        { id: 'event', label: 'Events', emoji: '🎟️', desc: 'Recent events & shows' },
+        { id: 'selling', label: 'Item for Sale', emoji: '🏷️', desc: 'Recent marketplace items' }
       ]
     },
     {
@@ -3602,15 +3783,15 @@ function MobileAppHomepage({
       textColor: 'text-emerald-600',
       bgColor: 'bg-emerald-500',
       subcategories: [
-        { id: 'all', label: 'All Properties', emoji: '🏡' },
-        { id: 'rooms', label: 'Rooms / Home to Rent', emoji: '🏠' },
-        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌' },
-        { id: 'hotel', label: 'Hotels', emoji: '🏨' },
-        { id: 'lodge', label: 'Lodges', emoji: '🏡' },
-        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢' },
-        { id: 'self_catering', label: 'Self Catering', emoji: '🍳' },
-        { id: 'resort', label: 'Resort & Holiday Park', emoji: '🏖️' },
-        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪' }
+        { id: 'all', label: 'All Properties', emoji: '🏡', desc: 'Explore all properties' },
+        { id: 'rooms', label: 'Rooms & Rent', emoji: '🏠', desc: 'Rooms, homes & apartments for rent' },
+        { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌', desc: 'B&B and guest houses' },
+        { id: 'hotel', label: 'Hotels', emoji: '🏨', desc: 'Hotels & luxury suites' },
+        { id: 'lodge', label: 'Lodges', emoji: '🏡', desc: 'Safari & nature lodges' },
+        { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢', desc: 'Apartment complexes & flats' },
+        { id: 'self_catering', label: 'Self Catering', emoji: '🍳', desc: 'Self catering stays & chalets' },
+        { id: 'resort', label: 'Holiday Park & Resort', emoji: '🏖️', desc: 'Holiday parks & resorts' },
+        { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪', desc: 'Short stay & hourly rooms' }
       ]
     },
     {
@@ -3622,15 +3803,15 @@ function MobileAppHomepage({
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Services', emoji: '🛠️' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕' },
-        { id: 'carwash', label: 'Car Wash', emoji: '🚗' },
-        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚' },
-        { id: 'storage', label: 'Booking Storage', emoji: '📦' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧' },
-        { id: 'others', label: 'Others & General', emoji: '✨' }
+        { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
+        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕', desc: 'Rides, shuttles & logistics' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗', desc: 'Car wash & auto detailing' },
+        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️', desc: 'Catering, cakes & culinary' },
+        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿', desc: 'Gardening & yard care' },
+        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚', desc: 'Bakkie & home moving' },
+        { id: 'storage', label: 'Booking Storage', emoji: '📦', desc: 'Secure storage units' },
+        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧', desc: 'Plumbing, electrical & repairs' },
+        { id: 'others', label: 'Others & General', emoji: '✨', desc: 'General professional services' }
       ]
     },
     {
@@ -3642,16 +3823,17 @@ function MobileAppHomepage({
       textColor: 'text-sky-600',
       bgColor: 'bg-sky-500',
       subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: '🧹' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹' },
-        { id: 'tutor', label: 'Private Tutor', emoji: '📚' },
-        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉' },
-        { id: 'barber', label: 'Barbershop', emoji: '💈' },
-        { id: 'photography', label: 'Photographer', emoji: '📸' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟' },
-        { id: 'animals', label: 'Animal Care', emoji: '🐕' }
+        { id: 'all', label: 'All Helpers', emoji: '🧹', desc: 'Explore all helpers' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Maids, cleaners & housekeepers' },
+        { id: 'tutor', label: 'Private Tutor', emoji: '📚', desc: 'Academic tutors & lessons' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Personal chefs & cooking' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Nails, hair, lashes & skincare' },
+        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉', desc: 'Tattoos & body piercings' },
+        { id: 'barber', label: 'Barbershop', emoji: '💈', desc: 'Haircuts, fades & grooming' },
+        { id: 'photography', label: 'Photographer', emoji: '📸', desc: 'Photography, shoots & events' },
+        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
+        { id: 'marquees', label: 'Marquees & Tents', emoji: '🎪', desc: 'Marquee hire, tents & setups' },
+        { id: 'animals', label: 'Animal Care', emoji: '🐕', desc: 'Pet care & dog walking' }
       ]
     },
     {
@@ -3712,11 +3894,11 @@ function MobileAppHomepage({
   ];
 
   // Pinned tabs on the sticky header bar:
-  // - "Recent Added" is always pinned on the header.
+  // - "Recent" is always pinned on the header.
   // - If user selects another category from the bottom sheet, it sticks on the homepage header as active.
   const visibleTabs = useMemo(() => {
-    const recentTab = tabs.find(t => t.id === 'RecentAdded') || tabs[0];
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    const recentTab = tabs.find(t => t.id === 'RecentAdded' || t.id === 'Recent') || tabs[0];
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return [recentTab];
     }
     const currentTab = tabs.find(t => t.id === activeTab);
@@ -3724,13 +3906,13 @@ function MobileAppHomepage({
   }, [tabs, activeTab]);
 
   const currentTabLabel = useMemo(() => {
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') return 'Recent Added';
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') return 'Recent';
     const found = tabs.find(t => t.id === activeTab);
     return found?.label || activeTab;
   }, [activeTab, tabs]);
 
   const getSourceForTab = useCallback((tab) => {
-    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
     if (tab === 'Services') return featuredServices || [];
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
@@ -3741,7 +3923,7 @@ function MobileAppHomepage({
 
   const filteredItems = useMemo(() => {
     const source = getSourceForTab(activeTab);
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       if (activeSubcategory === 'all') return source;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -3781,7 +3963,7 @@ function MobileAppHomepage({
 
   const getSubcategoryCount = useCallback((tab, subId) => {
     const source = getSourceForTab(tab);
-    if (tab === 'RecentAdded' || tab === 'Recent Added') {
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') {
       if (subId === 'all') return source.length;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -3802,7 +3984,7 @@ function MobileAppHomepage({
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
     }
     return false;
@@ -3811,7 +3993,8 @@ function MobileAppHomepage({
   const getTabColor = (id) => {
     switch (id) {
       case 'RecentAdded':
-      case 'Recent Added': return 'bg-rose-500';
+      case 'Recent Added':
+      case 'Recent': return 'bg-rose-500';
       case 'Property':
       case 'Properties': return 'bg-emerald-500';
       case 'Services': return 'bg-amber-500';
@@ -3859,13 +4042,15 @@ function MobileAppHomepage({
         stats={stats}
         homeLoadError={homeLoadError}
         onRetryHomeData={onRetryHomeData}
+        isHeaderVisible={isHeaderVisible}
+        isScrolled={isScrolled}
       />
     );
   }
 
   // Mobile View
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pb-32 relative overflow-x-clip w-full">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pb-32 relative w-full">
       <Helmet>
         <title>loopOut | Find Homes, Services &amp; Helpers Near You</title>
         <meta name="description" content="Discover verified helpers, book top services, and explore properties in your area with loopOut." />
@@ -3873,69 +4058,85 @@ function MobileAppHomepage({
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body { scrollbar-width: none; -ms-overflow-style: none; }
         body::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <main className="px-4 pt-3.5 sm:pt-5 pb-4 w-full">
-        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
-        {/* Hero banner intentionally hidden on mobile/small screens */}
-
-        {/* ── TOP STICKY 3D CATEGORIES BAR (Recent Added + More Categories) ── */}
-        <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2 mb-2 -mx-4 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.04)] w-[calc(100%+2rem)]">
-          <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
-            {visibleTabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.route) {
-                      navigate(tab.route);
-                      return;
+      {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
+      <div
+        style={{ top: isHeaderVisible ? '92px' : '8px' }}
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
+      >
+        <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
+          {visibleTabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => {
+                  if (tab.route) {
+                    navigate(tab.route);
+                    return;
+                  }
+                  if (isRecentAdded) {
+                    if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
+                      setActiveTab(tab.id);
+                      setActiveSubcategory('all');
                     }
-                    setActiveTab(tab.id);
-                    setActiveSubcategory('all');
-                  }}
-                  whileHover={{ scale: 1.08, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
-                  aria-label={tab.label}
-                >
-                  <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
-                    {isRecentAdded ? (
-                      <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
-                    ) : (
-                      <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
-                    {tab.label}
-                  </span>
-                </motion.button>
-              );
-            })}
+                    setIsRecentPopoutOpen((prev) => !prev);
+                    return;
+                  }
+                  setActiveTab(tab.id);
+                  setActiveSubcategory('all');
+                }}
+                whileHover={{ scale: 1.08, y: -2 }}
+                whileTap={{ scale: 0.92 }}
+                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1 relative"
+                aria-label={tab.label}
+              >
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+                  {isRecentAdded ? (
+                    <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+                  ) : (
+                    <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
+                  )}
+                </div>
+                <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
+                  {tab.label}
+                </span>
+                {isRecentAdded && activeSubcategory !== 'all' && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1 right-2 animate-pulse" />
+                )}
+              </motion.button>
+            );
+          })}
 
-            {/* 'More categories' small 3D icon */}
-            <motion.button
-              onClick={() => setIsCategoriesSheetOpen(true)}
-              whileHover={{ scale: 1.08, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex flex-col items-center justify-center  cursor-pointer focus:outline-none min-w-[56px] py-1"
-              aria-label="More categories"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-105">
-                <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
-                More
-              </span>
-            </motion.button>
-          </div>
+          {/* 'More categories' small 3D icon */}
+          <motion.button
+            onClick={() => setIsCategoriesSheetOpen(true)}
+            whileHover={{ scale: 1.08, y: -2 }}
+            whileTap={{ scale: 0.92 }}
+            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1"
+            aria-label="More categories"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+              <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
+              More
+            </span>
+          </motion.button>
         </div>
+      </div>
+
+      <main className="px-4 pb-4 w-full">
+        {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
+
+        {/* Spacer: height of categories bar only */}
+        <div className="h-[68px]" />
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -3974,8 +4175,12 @@ function MobileAppHomepage({
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
 
-          {/* Subcategory Pills */}
-          {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+          {/* Subcategory Pills - hidden for Recent as requested */}
+          {currentCategoryObj?.subcategories &&
+            currentCategoryObj.subcategories.length > 0 &&
+            activeTab !== 'RecentAdded' &&
+            activeTab !== 'Recent Added' &&
+            activeTab !== 'Recent' && (
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2.5 mb-5 -mx-4 px-4 snap-x">
               {currentCategoryObj.subcategories.map((sub) => {
                 const isSubActive = activeSubcategory === sub.id;
@@ -4002,10 +4207,30 @@ function MobileAppHomepage({
             </div>
           )}
 
+          {/* Recent active filter badge */}
+          {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && activeSubcategory !== 'all' && (
+            <div className="flex items-center justify-between mb-3 px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60">
+              <div className="flex items-center gap-2">
+                <span className="text-xs">✨</span>
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                  Showing recent <span className="capitalize font-black">{activeSubcategory === 'selling' ? 'item for sale' : activeSubcategory}</span>
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveSubcategory('all')}
+                className="flex items-center gap-1 text-[11px] font-black text-rose-600 hover:text-rose-700 cursor-pointer"
+              >
+                <span>Clear filter</span>
+                <X className="w-3.5 h-3.5 stroke-[2.5]" />
+              </button>
+            </div>
+          )}
+
           {/* Section label + live count */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-black text-base text-gray-950 tracking-tight">
-              Explore <span className="text-rose-500">{activeTab}</span>
+            <h2 className="font-black text-base text-gray-950 dark:text-white tracking-tight">
+              Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span>
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4128,15 +4353,28 @@ function MobileAppHomepage({
         {/* End of Feed */}
         {!isAndroidApp() && <CaughtUpHub stats={stats} navigate={navigate} />}
 
+        {/* Recent Popout Menu (Mobile) */}
+        <RecentPopoutMenu
+          isOpen={isRecentPopoutOpen}
+          onClose={() => setIsRecentPopoutOpen(false)}
+          activeSubcategory={activeSubcategory}
+          onSelect={(subId) => {
+            setActiveTab('RecentAdded');
+            setActiveSubcategory(subId);
+          }}
+          recentlyAddedItems={recentlyAddedItems}
+        />
+
         {/* Feather-in Categories Bottom Sheet */}
         <CategoriesBottomSheet
           isOpen={isCategoriesSheetOpen}
           onClose={() => setIsCategoriesSheetOpen(false)}
           tabs={tabs}
           activeTab={activeTab}
-          onSelectCategory={(tabId) => {
+          activeSubcategory={activeSubcategory}
+          onSelectCategory={(tabId, subId = 'all') => {
             setActiveTab(tabId);
-            setActiveSubcategory('all');
+            setActiveSubcategory(subId);
           }}
           navigate={navigate}
         />
@@ -4178,22 +4416,43 @@ function DesktopHomepage({
   requestCount,
   stats,
   homeLoadError,
-  onRetryHomeData
+  onRetryHomeData,
+  isHeaderVisible = true,
+  isScrolled = false
 }) {
+  const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const isSheetOpen = Boolean(isRecentPopoutOpen || isCategoriesSheetOpen);
+    dispatch(setHideBottomNav(isSheetOpen));
+    dispatch(setHideHeader(isSheetOpen));
+    if (isSheetOpen) {
+      document.body.classList.add('hide-bottom-nav');
+    } else {
+      document.body.classList.remove('hide-bottom-nav');
+    }
+    return () => {
+      dispatch(setHideBottomNav(false));
+      dispatch(setHideHeader(false));
+      document.body.classList.remove('hide-bottom-nav');
+    };
+  }, [isRecentPopoutOpen, isCategoriesSheetOpen, dispatch]);
+
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
     if (activeTab === 'Services') return loadingServices;
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
     }
     return false;
   }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems]);
 
   const getSourceForTabDesktop = useCallback((tab) => {
-    if (tab === 'RecentAdded' || tab === 'Recent Added') return recentlyAddedItems || [];
+    if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
     if (tab === 'Services') return featuredServices || [];
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
@@ -4204,7 +4463,7 @@ function DesktopHomepage({
 
   const getFilteredItems = useCallback(() => {
     const source = getSourceForTabDesktop(activeTab);
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') {
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
       if (activeSubcategory === 'all') return source;
       return source.filter(item => {
         const type = item.itemType === 'listing' ? 'property' : (item.itemType || '');
@@ -4220,7 +4479,7 @@ function DesktopHomepage({
   }, [activeTab, activeSubcategory]);
 
   const currentTabLabel = useMemo(() => {
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added') return 'Recent Added';
+    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') return 'Recent';
     const found = tabs?.find(t => t.id === activeTab);
     return found?.label || activeTab;
   }, [activeTab, tabs]);
@@ -4264,19 +4523,22 @@ function DesktopHomepage({
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        body { overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+        body { scrollbar-width: none; -ms-overflow-style: none; }
         body::-webkit-scrollbar { display: none; }
         * { scrollbar-width: none; -ms-overflow-style: none; }
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Sticky Elite 3D Categories Bar (At the very top) */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-2xl py-2.5 shadow-xs border-b border-gray-100 dark:border-gray-800">
+      {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
+      <div
+        style={{ top: isHeaderVisible ? '96px' : '0px' }}
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
+      >
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
             {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;
-              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added';
+              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
               return (
                 <motion.button
                   key={tab.id}
@@ -4285,15 +4547,23 @@ function DesktopHomepage({
                       navigate(tab.route);
                       return;
                     }
+                    if (isRecentAdded) {
+                      if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
+                        setActiveTab(tab.id);
+                        setActiveSubcategory('all');
+                      }
+                      setIsRecentPopoutOpen((prev) => !prev);
+                      return;
+                    }
                     setActiveTab(tab.id);
                     setActiveSubcategory('all');
                   }}
                   whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none"
+                  className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={tab.label}
                 >
-                  <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                     {isRecentAdded ? (
                       <RecentAdded3DIcon className="w-8 h-8" />
                     ) : (
@@ -4308,6 +4578,9 @@ function DesktopHomepage({
                       {tab.desc || (isRecentAdded ? 'New listings' : '')}
                     </span>
                   </div>
+                  {isRecentAdded && activeSubcategory !== 'all' && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 absolute -top-0.5 right-0 animate-pulse" />
+                  )}
                 </motion.button>
               );
             })}
@@ -4317,10 +4590,10 @@ function DesktopHomepage({
               onClick={() => setIsCategoriesSheetOpen(true)}
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex items-center gap-2.5 group cursor-pointer p-1 focus:outline-none"
+              className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
               aria-label="More categories"
             >
-              <div className="w-9 h-9 flex items-center justify-center transition-transform group-hover:scale-105">
+              <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                 <MoreCategories3DIcon className="w-8 h-8" />
               </div>
               <div className="text-left">
@@ -4346,15 +4619,19 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-6">
+      <div className="max-w-7xl mx-auto px-8 pt-[88px]">
         <HomeHero navigate={navigate} />
       </div>
 
       {/* Main Clean Feed Grid */}
       <main className="max-w-7xl mx-auto px-8 py-8">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
-        {/* Subcategories Horizontal Bar */}
-        {currentCategoryObj?.subcategories && currentCategoryObj.subcategories.length > 0 && (
+        {/* Subcategories Horizontal Bar - hidden on Recent as requested */}
+        {currentCategoryObj?.subcategories &&
+          currentCategoryObj.subcategories.length > 0 &&
+          activeTab !== 'RecentAdded' &&
+          activeTab !== 'Recent Added' &&
+          activeTab !== 'Recent' && (
           <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
             {currentCategoryObj.subcategories.map((sub) => {
               const isSubActive = activeSubcategory === sub.id;
@@ -4385,6 +4662,26 @@ function DesktopHomepage({
           </div>
         )}
 
+        {/* Recent filter badge for Desktop */}
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && activeSubcategory !== 'all' && (
+          <div className="flex items-center justify-between mb-6 px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 max-w-md">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">✨</span>
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-300">
+                Showing recent <span className="capitalize font-black">{activeSubcategory === 'selling' ? 'item for sale' : activeSubcategory}</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSubcategory('all')}
+              className="flex items-center gap-1 text-[11px] font-black text-rose-600 hover:text-rose-700 cursor-pointer"
+            >
+              <span>Clear filter</span>
+              <X className="w-3.5 h-3.5 stroke-[2.5]" />
+            </button>
+          </div>
+        )}
+
         {/* Food Specials Strip — Desktop (always visible, right under search) */}
         <div className="mb-6">
           <FoodSpecialsStrip navigate={navigate} />
@@ -4394,8 +4691,10 @@ function DesktopHomepage({
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-black tracking-tighter leading-none">
-              <span className="text-slate-900">Explore </span>
-              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab}</span>
+              <span className="text-slate-900 dark:text-white">Explore </span>
+              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">
+                {activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}
+              </span>
             </h1>
             <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
@@ -4549,15 +4848,29 @@ function DesktopHomepage({
           </div>
         )}
 
+        {/* Recent Popout Menu (Desktop) */}
+        <RecentPopoutMenu
+          isOpen={isRecentPopoutOpen}
+          onClose={() => setIsRecentPopoutOpen(false)}
+          activeSubcategory={activeSubcategory}
+          onSelect={(subId) => {
+            setActiveTab('RecentAdded');
+            setActiveSubcategory(subId);
+          }}
+          recentlyAddedItems={recentlyAddedItems}
+          isDesktop={true}
+        />
+
         {/* Feather-in Categories Bottom Sheet (Desktop) */}
         <CategoriesBottomSheet
           isOpen={isCategoriesSheetOpen}
           onClose={() => setIsCategoriesSheetOpen(false)}
           tabs={tabs}
           activeTab={activeTab}
-          onSelectCategory={(tabId) => {
+          activeSubcategory={activeSubcategory}
+          onSelectCategory={(tabId, subId = 'all') => {
             setActiveTab(tabId);
-            setActiveSubcategory('all');
+            setActiveSubcategory(subId);
           }}
           navigate={navigate}
         />
@@ -4703,6 +5016,89 @@ const Home = () => {
     setDataRefreshKey((key) => key + 1);
   }, []);
 
+  const rawPropertiesRef = useRef([]);
+  const rawServicesRef = useRef([]);
+  const rawHelpersRef = useRef([]);
+  const rawEventsRef = useRef([]);
+
+  const applyLocationSorting = useCallback((searchCoords, detectedCity) => {
+    const hasPreciseLocation = Boolean(searchCoords?.latitude && searchCoords?.longitude);
+    const propertiesData = rawPropertiesRef.current;
+    if (propertiesData && propertiesData.length > 0) {
+      if (hasPreciseLocation) {
+        const localMatches = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity);
+        if (localMatches.length > 0) {
+          setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+          setLocationStatus({
+            title: `Top Properties in ${detectedCity || 'your area'}`,
+            description: "Showing the best properties within your immediate area."
+          });
+        } else {
+          const nearby = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity);
+          if (nearby.length > 0) {
+            setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+            setLocationStatus({
+              title: `Properties near ${detectedCity || 'your area'}`,
+              description: "No direct matches in your city, showing nearby neighborhoods."
+            });
+          } else {
+            const regional = filterByDistanceTier(propertiesData, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity);
+            if (regional.length > 0) {
+              setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+              setLocationStatus({
+                title: "Properties in South Africa",
+                description: "Showing trending properties nationwide."
+              });
+            } else {
+              setFeaturedProperties(propertiesData.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+            }
+          }
+        }
+      } else {
+        setFeaturedProperties(propertiesData.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
+      }
+    } else {
+      setFeaturedProperties([]);
+    }
+
+    const servicesData = rawServicesRef.current;
+    if (servicesData && servicesData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(servicesData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : servicesData;
+      setFeaturedServices((sorted.length > 0 ? sorted : servicesData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
+    } else {
+      setFeaturedServices([]);
+    }
+
+    const helpersData = rawHelpersRef.current;
+    if (helpersData && helpersData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(helpersData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : helpersData;
+      setFeaturedHelpers((sorted.length > 0 ? sorted : helpersData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
+    } else {
+      setFeaturedHelpers([]);
+    }
+
+    const eventsData = rawEventsRef.current;
+    if (eventsData && eventsData.length > 0) {
+      const sorted = hasPreciseLocation
+        ? filterByDistanceTier(eventsData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
+        : eventsData;
+      setFeaturedEvents((sorted.length > 0 ? sorted : eventsData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
+    } else {
+      setFeaturedEvents([]);
+    }
+  }, []);
+
+  // When geolocation finishes resolving in the background, update the sorting in memory without aborting or refetching
+  useEffect(() => {
+    if (rawPropertiesRef.current.length > 0 || rawServicesRef.current.length > 0) {
+      applyLocationSorting(coords, city);
+    }
+  }, [coords, city, applyLocationSorting]);
+
   useEffect(() => {
     let cancelled = false;
     const controllers = {
@@ -4720,7 +5116,6 @@ const Home = () => {
       setHomeLoadError(null);
       let searchCoords = coords || null;
       let detectedCity = city || null;
-      const hasPreciseLocation = Boolean(searchCoords?.latitude && searchCoords?.longitude);
       const handleFetchFailure = (error) => {
         if (!cancelled && error?.name !== 'AbortError') {
           setHomeLoadError('Unable to refresh all homepage listings.');
@@ -4746,44 +5141,9 @@ const Home = () => {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const localMatches = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.POLOKWANE, detectedCity)
-                : [];
-              if (localMatches.length > 0) {
-                setFeaturedProperties(localMatches.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                setLocationStatus({
-                  title: `Top Properties in ${detectedCity}`,
-                  description: "Showing the best properties within your immediate area."
-                });
-              } else {
-                const nearby = hasPreciseLocation
-                  ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.NEARBY, detectedCity)
-                  : [];
-                if (nearby.length > 0) {
-                  setFeaturedProperties(nearby.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                  setLocationStatus({
-                    title: `Properties near ${detectedCity}`,
-                    description: "No direct matches in your city, showing nearby neighborhoods."
-                  });
-                } else {
-                  const regional = hasPreciseLocation
-                    ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.REGIONAL, detectedCity)
-                    : [];
-                  if (regional.length > 0) {
-                    setFeaturedProperties(regional.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                    setLocationStatus({
-                      title: "Properties in South Africa",
-                      description: "Showing trending properties nationwide."
-                    });
-                  } else {
-                    setFeaturedProperties(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'property' })));
-                  }
-                }
-              }
-            } else {
-              setFeaturedProperties([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawPropertiesRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingProperties(false); }),
 
@@ -4791,18 +5151,9 @@ const Home = () => {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedServices(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
-              } else {
-                setFeaturedServices(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'service' })));
-              }
-            } else {
-              setFeaturedServices([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawServicesRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingServices(false); }),
 
@@ -4810,18 +5161,9 @@ const Home = () => {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedHelpers(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
-              } else {
-                setFeaturedHelpers(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
-              }
-            } else {
-              setFeaturedHelpers([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawHelpersRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
@@ -4829,18 +5171,9 @@ const Home = () => {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
-            if (data?.length > 0) {
-              const sorted = hasPreciseLocation
-                ? filterByDistanceTier(data, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
-                : data;
-              if (sorted.length > 0) {
-                setFeaturedEvents(sorted.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
-              } else {
-                setFeaturedEvents(data.slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'event' })));
-              }
-            } else {
-              setFeaturedEvents([]);
-            }
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            rawEventsRef.current = list;
+            applyLocationSorting(searchCoords, detectedCity);
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingEvents(false); }),
 
@@ -4871,16 +5204,15 @@ const Home = () => {
       }
     };
 
-    if (!geoLoading) {
-      fetchHomepageData();
-    }
+    // Immediately start fetching data on mount without waiting for GPS
+    fetchHomepageData();
 
     return () => {
       cancelled = true;
       clearTimeout(timeoutId);
       Object.values(controllers).forEach(controller => controller.abort());
     };
-  }, [coords, city, geoLoading, dataRefreshKey]);
+  }, [dataRefreshKey, applyLocationSorting]);
 
   const recentlyAddedItems = useMemo(() => {
     const combined = [

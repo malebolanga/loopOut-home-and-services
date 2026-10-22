@@ -248,7 +248,7 @@ export default function SettingsPage() {
 
                   {/* Avatar Upload Preview */}
                   <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-gray-100/50 dark:border-gray-800">
-                    <div className="relative group">
+                    <div className="relative ">
                       <div className="w-24 h-24 rounded-[2rem] overflow-hidden border-2 border-rose-500 p-1 bg-white dark:bg-gray-950">
                         <img 
                           src={currentUser?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png'} 
