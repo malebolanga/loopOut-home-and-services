@@ -3339,21 +3339,21 @@ const FoodSpecialsStrip = ({ navigate }) => {
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="snap-start shrink-0 w-[102px] sm:w-[118px] hover:bg-gray-50 dark:hover:bg-gray-850 p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
+            className="snap-start shrink-0 w-[88px] sm:w-[102px] hover:bg-gray-50 dark:hover:bg-gray-850 p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1.5 border border-gray-100/80 dark:border-gray-700/50">
+            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1 border border-gray-100/80 dark:border-gray-700/50">
               <FoodMedia
                 src={item.image}
                 alt={item.name}
                 fallback="🍱"
-                className="text-2xl group-hover:scale-110 transition-transform duration-300 select-none"
+                className="text-xl group-hover:scale-110 transition-transform duration-300 select-none"
                 imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
               />
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-1 left-1 text-[7px] sm:text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
+                <span className={`absolute top-0.5 left-0.5 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3374,17 +3374,17 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
                     {qty > 1 ? (
-                      <span className="text-[11px] font-black leading-none" style={{ color: '#1ed760' }}>
+                      <span className="text-[10px] font-black leading-none" style={{ color: '#1ed760' }}>
                         {qty}
                       </span>
                     ) : (
                       <ShoppingBag
-                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5"
                         style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
                       />
                     )}
@@ -3394,20 +3394,20 @@ const FoodSpecialsStrip = ({ navigate }) => {
             </div>
 
             {/* Title */}
-            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[11px] sm:text-xs leading-tight group-hover:underline">
+            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[10px] sm:text-[11px] leading-tight group-hover:underline">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="text-gray-400 dark:text-gray-500 text-[9px] sm:text-[10px] truncate leading-tight mt-0.5">
+            <p className="text-gray-400 dark:text-gray-500 text-[8.5px] sm:text-[9px] truncate leading-tight mt-0.5">
               {item.shopName}
             </p>
 
             {/* Price & GPS distance */}
             <div className="flex items-center justify-between border-gray-100 dark:border-gray-800 mt-0.5">
-              <span className="font-black text-gray-900 dark:text-white text-[11px] sm:text-xs">R{item.price}</span>
+              <span className="font-black text-gray-900 dark:text-white text-[10px] sm:text-[11px]">R{item.price}</span>
               {getAccurateDistanceLabel(item, coords) && (
-                <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[55px]">
+                <span className="text-[7.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[50px]">
                   📍 {getAccurateDistanceLabel(item, coords)}
                 </span>
               )}
