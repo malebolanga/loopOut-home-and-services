@@ -840,23 +840,83 @@ export const resolveSmartFoodEmoji = (name = '', fallback = '🍱') => {
   return (typeof fallback === 'string' && fallback.length <= 4 && !fallback.startsWith('/') && !fallback.startsWith('http')) ? fallback : '🍱';
 };
 
+export const resolveFoodPhoto = (name = '', fallbackUrl = '') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('rib') || n.includes('pork') || n.includes('bbq') || n.includes('flame')) {
+    return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
+    return 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger') || n.includes('smash')) {
+    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('steak') || n.includes('beef') || n.includes('braai') || n.includes('t-bone') || n.includes('wors') || n.includes('boerewors') || n.includes('meat')) {
+    return 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('chicken') || n.includes('wing') || n.includes('drumstick') || n.includes('poultry')) {
+    return 'https://images.unsplash.com/photo-1562967914-608f82629710?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('chip') || n.includes('fries') || n.includes('slap chips') || n.includes('potato')) {
+    return 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('pap') || n.includes('stew') || n.includes('curry') || n.includes('mogodu') || n.includes('mala') || n.includes('samp') || n.includes('soup')) {
+    return 'https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('salad') || n.includes('greens') || n.includes('veg') || n.includes('caesar')) {
+    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('wrap') || n.includes('shawarma') || n.includes('burrito') || n.includes('roll') || n.includes('taco')) {
+    return 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('pizza') || n.includes('slice')) {
+    return 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('fish') || n.includes('hake') || n.includes('seafood') || n.includes('calamari')) {
+    return 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('drink') || n.includes('coke') || n.includes('soda') || n.includes('juice') || n.includes('smoothie') || n.includes('beverage')) {
+    return 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=600&q=80';
+  }
+  if (n.includes('cake') || n.includes('dessert') || n.includes('ice cream') || n.includes('waffle') || n.includes('pastry')) {
+    return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80';
+  }
+  return fallbackUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+};
+
+export const resolveShopPhoto = (name = '') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('grill') || n.includes('bbq') || n.includes('braai')) {
+    return 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80';
+  }
+  if (n.includes('green') || n.includes('salad') || n.includes('table')) {
+    return 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=300&q=80';
+  }
+  return 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80';
+};
+
 export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
   const [hasError, setHasError] = useState(false);
   useEffect(() => setHasError(false), [src]);
-  const isImg = !hasError && isFoodImageUrl(src);
 
-  if (isImg) {
-    return (
-      <img
-        src={src.trim()}
-        alt={alt}
-        onError={() => setHasError(true)}
-        className={`w-full h-full object-cover ${imgClassName}`}
-      />
-    );
-  }
-  const smartFallback = resolveSmartFoodEmoji(alt, fallback);
-  return <span className={className}>{isFoodImageUrl(src) ? smartFallback : (src || smartFallback)}</span>;
+  const isShop = fallback === '🏪' || String(alt || '').toLowerCase().includes('shop');
+  const effectiveSrc = (!hasError && isFoodImageUrl(src))
+    ? src.trim()
+    : isShop
+      ? resolveShopPhoto(alt)
+      : resolveFoodPhoto(alt || src);
+
+  return (
+    <img
+      src={effectiveSrc}
+      alt={alt || 'Food'}
+      onError={() => {
+        if (!hasError) setHasError(true);
+      }}
+      className={`w-full h-full object-cover ${imgClassName}`}
+      loading="lazy"
+    />
+  );
 };
 
 const detectFoodItemsInText = (text = '') => {
@@ -2367,10 +2427,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Flame BBQ Ribs',
     price: 145,
     tag: 'Hot Food',
-    image: '🍖',
+    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
     shopId: 'urban-grill',
     shopName: 'Urban Grill',
-    shopImage: '🥙',
+    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Grill & Flame',
     shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
     shopDistance: '1.2 km away',
@@ -2386,10 +2446,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Special Dagwood Kota',
     price: 55,
     tag: 'Popular',
-    image: '🥪',
+    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🥙',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Street Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
@@ -2405,10 +2465,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Beef Stew & Pap',
     price: 115,
     tag: 'Favorite',
-    image: '🥘',
+    image: 'https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=600&q=80',
     shopId: 'mamas-kitchen',
     shopName: "Mama's Kitchen",
-    shopImage: '🍛',
+    shopImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Local Favourites',
     shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
     shopDistance: '800 m away',
@@ -2424,10 +2484,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Steak & Chakalaka Pap',
     price: 99,
     tag: 'Hot Food',
-    image: '🥩',
+    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80',
     shopId: 'mapho',
     shopName: 'Mapho Kitchen',
-    shopImage: '🏪',
+    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Traditional',
     shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
     shopDistance: '4.8 km away',
@@ -2443,10 +2503,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Loaded Kota Special',
     price: 50,
     tag: 'Popular',
-    image: '🥪',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
     shopId: 'kota-joint',
     shopName: 'Kota Joint',
-    shopImage: '🥪',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Fast Food',
     shopAddress: '78 Biccard Street, Polokwane Central',
     shopDistance: '950 m away',
@@ -2462,10 +2522,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Chicken Caesar Salad',
     price: 105,
     tag: 'Favorite',
-    image: '🥗',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
     shopId: 'green-table',
     shopName: 'The Green Table',
-    shopImage: '🥗',
+    shopImage: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Healthy & Fresh',
     shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
     shopDistance: '2.5 km away',
@@ -2481,10 +2541,10 @@ const FALLBACK_FOOD_SPECIALS = [
     name: 'Crispy Seasoned Chips',
     price: 35,
     tag: 'Special',
-    image: '🍟',
+    image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
     shopId: 'lungile-food',
     shopName: 'Lungile & Son',
-    shopImage: '🍿',
+    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
     shopCuisine: 'Fast Food',
     shopAddress: 'Stand 204, Extension 44, Polokwane',
     shopDistance: '3.1 km away',
@@ -3153,28 +3213,31 @@ const FoodSpecialsStrip = ({ navigate }) => {
           const available = shop.meals.filter((m) => m.isAvailable !== false);
           if (!available.length) return;
 
-          // Inside shop: sort Hot Food first, Popular second, Favorite third
+          // Inside shop: sort items with actual photos first, then by priority tag
           const sorted = [...available].sort((a, b) => {
+            const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
+            const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
+            if (aHasImg !== bHasImg) return aHasImg - bHasImg;
             return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
           });
 
           // Take up to 2 items per shop to present a diverse range of foods across different shops
           sorted.slice(0, 2).forEach((meal) => {
-            const smartMealEmoji = resolveSmartFoodEmoji(meal.name, '🍱');
+            const resolvedImg = isFoodImageUrl(meal.image) ? meal.image : resolveFoodPhoto(meal.name);
             collected.push({
               id: meal.id,
               name: meal.name,
               price: meal.price,
               originalPrice: meal.originalPrice,
               tag: meal.tag || (getFoodPriorityRank('', meal.name) === 1 ? 'Hot Food' : 'Special'),
-              image: meal.image || smartMealEmoji,
+              image: resolvedImg,
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
               ingredients: meal.ingredients || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
-              shopImage: shop.image || '🏪',
+              shopImage: isFoodImageUrl(shop.image) ? shop.image : resolveShopPhoto(shop.name),
               shopCuisine: shop.cuisine || 'Local',
               shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
               shopDistance: shop.distance || '',
@@ -3185,8 +3248,13 @@ const FoodSpecialsStrip = ({ navigate }) => {
           });
         });
 
-        // Globally sort so Hot Food is 1st, Popular is 2nd, Favorite is 3rd
-        collected.sort((a, b) => getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name));
+        // Globally sort so items with real photos appear first, then by priority tag
+        collected.sort((a, b) => {
+          const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
+          const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
+          if (aHasImg !== bHasImg) return aHasImg - bHasImg;
+          return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
+        });
 
         if (isMounted && collected.length > 0) {
           // If database has only a few items, supplement with diverse fallback specials
