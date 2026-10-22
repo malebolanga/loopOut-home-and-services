@@ -7,20 +7,20 @@ const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/
 const isCapacitorApp = () => Capacitor.isNativePlatform() || window.location.origin.includes('localhost') || window.location.protocol === 'file:';
 
 /**
- * Resolves app API paths against a public backend when configured.
+ * Resolves API and uploaded-file paths against the configured backend.
  */
 export const resolveApiUrl = (input) => {
   if (!configuredApiBaseUrl) return input;
 
   if (typeof input === 'string') {
-    if (input.startsWith('/api/')) return `${configuredApiBaseUrl}${input}`;
-    if (input.startsWith('api/')) return `${configuredApiBaseUrl}/${input}`;
+    if (input.startsWith('/api/') || input.startsWith('/uploads/')) return `${configuredApiBaseUrl}${input}`;
+    if (input.startsWith('api/') || input.startsWith('uploads/')) return `${configuredApiBaseUrl}/${input}`;
     return input;
   }
 
   if (input && typeof input === 'object' && typeof input.url === 'string') {
-    if (input.url.startsWith('/api/')) return `${configuredApiBaseUrl}${input.url}`;
-    if (input.url.startsWith('api/')) return `${configuredApiBaseUrl}/${input.url}`;
+    if (input.url.startsWith('/api/') || input.url.startsWith('/uploads/')) return `${configuredApiBaseUrl}${input.url}`;
+    if (input.url.startsWith('api/') || input.url.startsWith('uploads/')) return `${configuredApiBaseUrl}/${input.url}`;
   }
 
   return input;

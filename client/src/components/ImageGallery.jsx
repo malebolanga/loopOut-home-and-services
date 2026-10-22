@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const FALLBACK_IMAGES = {
     property: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
@@ -21,7 +22,10 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   // Filter out empty strings or failed URLs
-  const validImages = imageUrls?.filter((url) => Boolean(url) && !failedUrls.has(url)) || [];
+  const validImages = imageUrls
+    ?.filter((url) => Boolean(url))
+    .map((url) => resolveApiUrl(url))
+    .filter((url) => !failedUrls.has(url)) || [];
   
   // Ensure we don't go out of bounds if validImages shrinks
   useEffect(() => {

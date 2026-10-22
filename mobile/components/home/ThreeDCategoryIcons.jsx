@@ -1,167 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-/**
- * 3D SVG Icon: Recent Added
- * Features multi-layered dimensional badge, rich gold star with depth,
- * specular radial glints, bevel lighting and cast shadows.
- */
+/** Clear clock-and-plus symbol for recently added listings. */
 export const RecentAdded3DIcon = ({ className = "w-7 h-7" }) => (
-  <svg viewBox="0 0 100 100" className={`${className} filter drop-shadow-[0_6px_8px_rgba(225,29,72,0.35)]`}>
-    <defs>
-      <linearGradient id="recBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FB7185" />
-        <stop offset="35%" stopColor="#E11D48" />
-        <stop offset="100%" stopColor="#9F1239" />
-      </linearGradient>
-      <linearGradient id="recStarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FEF08A" />
-        <stop offset="40%" stopColor="#FBBF24" />
-        <stop offset="100%" stopColor="#D97706" />
-      </linearGradient>
-      <radialGradient id="recHighlight" cx="30%" cy="25%" r="55%">
-        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
-        <stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.15" />
-        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-      </radialGradient>
-      <linearGradient id="recRimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#FFE4E6" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#881337" stopOpacity="0.6" />
-      </linearGradient>
-    </defs>
-
-    {/* 3D Extrusion base shadow layer */}
-    <rect x="12" y="18" width="76" height="70" rx="24" fill="#881337" />
-    
-    {/* 3D Bevel Rim */}
-    <rect x="12" y="12" width="76" height="70" rx="24" fill="url(#recRimGrad)" />
-    
-    {/* Main Dimensional Pill Body */}
-    <rect x="13" y="13" width="74" height="68" rx="23" fill="url(#recBadgeGrad)" />
-
-    {/* Specular curved gloss sheen */}
-    <path 
-      d="M14 36 C14 23.5 24 13.5 36.5 13.5 L63.5 13.5 C76 13.5 86 23.5 86 36 C78 44 60 48 50 48 C40 48 22 44 14 36 Z" 
-      fill="url(#recHighlight)" 
-    />
-
-    {/* 3D Star / Sparkle Shadow */}
-    <path 
-      d="M50 28 L55 42 L69 47 L55 52 L50 66 L45 52 L31 47 L45 42 Z" 
-      fill="#4C0519" 
-      opacity="0.35" 
-      transform="translate(1, 2.5)" 
-    />
-    
-    {/* 3D Star / Sparkle Body */}
-    <path 
-      d="M50 26 L55 40 L69 45 L55 50 L50 64 L45 50 L31 45 L45 40 Z" 
-      fill="url(#recStarGrad)" 
-      stroke="#FFFBEB" 
-      strokeWidth="1" 
-    />
-
-    {/* Center 3D Gem Highlight */}
-    <circle cx="50" cy="45" r="4.5" fill="#FFFFFF" opacity="0.95" />
-    <circle cx="48.5" cy="43.5" r="1.5" fill="#FFFFFF" />
-
-    {/* Top-Right Secondary Sparkle */}
-    <path 
-      d="M71 22 L73 28 L79 30 L73 32 L71 38 L69 32 L63 30 L69 28 Z" 
-      fill="#FEF08A" 
-      opacity="0.9"
-    />
+  <svg viewBox="0 0 48 48" className={`${className} text-rose-600`} fill="none" aria-hidden="true">
+    <circle cx="21" cy="24" r="16" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="2" />
+    <path d="M21 14v10l7 4" stroke="#E11D48" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="35" cy="34" r="9" fill="#E11D48" stroke="white" strokeWidth="2" />
+    <path d="M35 30v8M31 34h8" stroke="white" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
-/**
- * 3D SVG Icon: More Categories
- * Features isometric 3D stacked app cubes with illuminated top faces,
- * shaded side extrusions, glossy specular glints and ambient shadows.
- */
+/** Familiar grid symbol for browsing all categories. */
 export const MoreCategories3DIcon = ({ className = "w-7 h-7" }) => (
-  <svg viewBox="0 0 100 100" className={`${className} filter drop-shadow-[0_6px_8px_rgba(79,70,229,0.35)]`}>
-    <defs>
-      {/* Indigo Cube */}
-      <linearGradient id="cubeTopInd" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#C7D2FE" />
-        <stop offset="100%" stopColor="#818CF8" />
-      </linearGradient>
-      <linearGradient id="cubeLeftInd" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#6366F1" />
-        <stop offset="100%" stopColor="#4F46E5" />
-      </linearGradient>
-      <linearGradient id="cubeRightInd" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4338CA" />
-        <stop offset="100%" stopColor="#312E81" />
-      </linearGradient>
-
-      {/* Rose/Pink Hero Cube */}
-      <linearGradient id="cubeTopRose" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FECDD3" />
-        <stop offset="100%" stopColor="#FB7185" />
-      </linearGradient>
-      <linearGradient id="cubeLeftRose" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#F43F5E" />
-        <stop offset="100%" stopColor="#E11D48" />
-      </linearGradient>
-      <linearGradient id="cubeRightRose" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#BE123C" />
-        <stop offset="100%" stopColor="#881337" />
-      </linearGradient>
-
-      {/* Amber/Gold Accent Cube */}
-      <linearGradient id="cubeTopAmb" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FEF08A" />
-        <stop offset="100%" stopColor="#FBBF24" />
-      </linearGradient>
-      <linearGradient id="cubeLeftAmb" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#F59E0B" />
-        <stop offset="100%" stopColor="#D97706" />
-      </linearGradient>
-      <linearGradient id="cubeRightAmb" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#B45309" />
-        <stop offset="100%" stopColor="#78350F" />
-      </linearGradient>
-
-      <radialGradient id="cubeGloss" cx="30%" cy="30%" r="50%">
-        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.75" />
-        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-      </radialGradient>
-    </defs>
-
-    {/* Drop shadows of cubes */}
-    <ellipse cx="50" cy="85" rx="36" ry="8" fill="#1E1B4B" opacity="0.25" />
-
-    {/* Top Center Hero Cube (Rose) */}
-    <g transform="translate(0, -6)">
-      {/* Top Face */}
-      <polygon points="50,14 70,25 50,36 30,25" fill="url(#cubeTopRose)" />
-      <polygon points="50,14 70,25 50,36 30,25" fill="url(#cubeGloss)" />
-      {/* Left Face */}
-      <polygon points="30,25 50,36 50,56 30,45" fill="url(#cubeLeftRose)" />
-      {/* Right Face */}
-      <polygon points="50,36 70,25 70,45 50,56" fill="url(#cubeRightRose)" />
-      {/* Edges */}
-      <line x1="30" y1="25" x2="50" y2="36" stroke="#FFFFFF" strokeOpacity="0.4" strokeWidth="1" />
-      <line x1="50" y1="36" x2="70" y2="25" stroke="#FFFFFF" strokeOpacity="0.2" strokeWidth="1" />
-    </g>
-
-    {/* Bottom Left Cube (Indigo) */}
-    <g transform="translate(-18, 22)">
-      <polygon points="50,18 66,27 50,36 34,27" fill="url(#cubeTopInd)" />
-      <polygon points="50,18 66,27 50,36 34,27" fill="url(#cubeGloss)" />
-      <polygon points="34,27 50,36 50,52 34,43" fill="url(#cubeLeftInd)" />
-      <polygon points="50,36 66,27 66,43 50,52" fill="url(#cubeRightInd)" />
-    </g>
-
-    {/* Bottom Right Cube (Amber) */}
-    <g transform="translate(18, 22)">
-      <polygon points="50,18 66,27 50,36 34,27" fill="url(#cubeTopAmb)" />
-      <polygon points="50,18 66,27 50,36 34,27" fill="url(#cubeGloss)" />
-      <polygon points="34,27 50,36 50,52 34,43" fill="url(#cubeLeftAmb)" />
-      <polygon points="50,36 66,27 66,43 50,52" fill="url(#cubeRightAmb)" />
-    </g>
+  <svg viewBox="0 0 48 48" className={`${className} text-indigo-600`} fill="none" aria-hidden="true">
+    <rect x="5" y="5" width="38" height="38" rx="12" fill="#EEF2FF" stroke="#C7D2FE" strokeWidth="2" />
+    <rect x="12" y="12" width="9" height="9" rx="2.5" fill="#4F46E5" />
+    <rect x="27" y="12" width="9" height="9" rx="2.5" fill="#818CF8" />
+    <rect x="12" y="27" width="9" height="9" rx="2.5" fill="#818CF8" />
+    <rect x="27" y="27" width="9" height="9" rx="2.5" fill="#4F46E5" />
   </svg>
 );
 

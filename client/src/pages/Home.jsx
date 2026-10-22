@@ -4094,7 +4094,7 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1 relative"
+                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1 relative"
                 aria-label={tab.label}
               >
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
@@ -4104,8 +4104,8 @@ function MobileAppHomepage({
                     <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
                   )}
                 </div>
-                <span className={`text-[10px] font-black uppercase tracking-wider mt-1 text-center truncate ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
-                  {tab.label}
+                <span className={`text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-center whitespace-normal ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
+                  {isRecentAdded ? 'New listings' : tab.label}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1 right-2 animate-pulse" />
@@ -4119,14 +4119,14 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[56px] py-1"
-            aria-label="More categories"
+            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1"
+            aria-label="Browse all categories"
           >
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
               <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-wider mt-1 text-rose-600 text-center truncate">
-              More
+            <span className="text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-rose-600 text-center whitespace-normal">
+              Categories
             </span>
           </motion.button>
         </div>
@@ -4572,10 +4572,10 @@ function DesktopHomepage({
                   </div>
                   <div className="text-left">
                     <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
-                      {tab.label}
+                      {isRecentAdded ? 'New listings' : tab.label}
                     </span>
                     <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
-                      {tab.desc || (isRecentAdded ? 'New listings' : '')}
+                      {isRecentAdded ? 'Just added' : (tab.desc || '')}
                     </span>
                   </div>
                   {isRecentAdded && activeSubcategory !== 'all' && (
@@ -4591,17 +4591,17 @@ function DesktopHomepage({
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.92 }}
               className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
-              aria-label="More categories"
+              aria-label="Browse all categories"
             >
               <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
                 <MoreCategories3DIcon className="w-8 h-8" />
               </div>
               <div className="text-left">
                 <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">
-                  More categories
+                  Browse categories
                 </span>
                 <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
-                  Browse all
+                  See everything
                 </span>
               </div>
             </motion.button>

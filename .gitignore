@@ -44,3 +44,8 @@ Thumbs.db
 *-firebase-adminsdk-*.json
 client_secret*.json
 firebase-service-account.json
+
+# Android Gradle cache
+.gradle/
+.gradle-build-home/
+client/android/.gradle-build-home/

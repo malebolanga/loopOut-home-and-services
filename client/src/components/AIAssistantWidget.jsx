@@ -18,7 +18,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  HelpCircle
+  HelpCircle,
+  Move
 } from 'lucide-react';
 
 const QUICK_STARTERS = [
@@ -55,7 +56,10 @@ export default function AIAssistantWidget() {
   const [inputVal, setInputVal] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef(null);
+  const dragAreaRef = useRef(null);
+  const isDraggingRef = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -168,38 +172,84 @@ export default function AIAssistantWidget() {
 
   return (
     <>
-      {/* ── Floating Launcher Trigger Button ── */}
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className={`fixed ${isNativeApp() ? 'bottom-44' : 'bottom-24'} right-4 sm:bottom-8 sm:right-8 z-50`}
-          >
-            <motion.button
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              onClick={() => setIsOpen(true)}
-              aria-label="Open LoopBot AI Assistant"
-              className="relative h-[3.25rem] w-[3.25rem] rounded-full bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-400 p-[2px] shadow-[0_8px_22px_rgba(244,63,94,0.32)] flex items-center justify-center group focus:outline-none sm:h-14 sm:w-14"
-            >
-              <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-95">
-                <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/30 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Bot className="h-6 w-6 text-white stroke-[2.2] transition-transform duration-300 group-hover:rotate-12 sm:h-7 sm:w-7" />
-                <div className="absolute bottom-2 right-2 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full" />
-              </div>
+      {/* ── Viewport boundary constraints for dragging LoopBot AI ── */}
+      <div
+        ref={dragAreaRef}
+        className="fixed inset-3 sm:inset-6 pointer-events-none -z-50"
+        aria-hidden="true"
+      />
 
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                  {unreadCount}
-                </span>
-              )}
-            </motion.button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Floating Draggable Launcher Trigger Button ── */}
+      <motion.div
+        drag
+        dragConstraints={dragAreaRef}
+        dragElastic={0.12}
+        dragMomentum={false}
+        onDragStart={() => {
+          isDraggingRef.current = true;
+          setIsDragging(true);
+        }}
+        onDragEnd={(_e, info) => {
+          const distance = Math.hypot(info.offset.x, info.offset.y);
+          if (distance > 6) {
+            isDraggingRef.current = true;
+            setTimeout(() => {
+              isDraggingRef.current = false;
+              setIsDragging(false);
+            }, 180);
+          } else {
+            isDraggingRef.current = false;
+            setIsDragging(false);
+          }
+        }}
+        initial={{ scale: 0, opacity: 0, y: 20 }}
+        animate={
+          isOpen
+            ? { scale: 0, opacity: 0, pointerEvents: 'none' }
+            : { scale: 1, opacity: 1, pointerEvents: 'auto' }
+        }
+        whileHover={{ scale: isDragging ? 1.15 : 1.08 }}
+        whileDrag={{
+          scale: 1.16,
+          rotate: 12,
+          cursor: 'grabbing'
+        }}
+        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+        className={`fixed ${isNativeApp() ? 'bottom-44' : 'bottom-24'} right-4 sm:bottom-8 sm:right-8 z-50 touch-none select-none cursor-grab active:cursor-grabbing`}
+        title="Hold & drag anywhere to move LoopBot • Tap to open"
+      >
+        <button
+          type="button"
+          onClick={(e) => {
+            if (isDraggingRef.current) {
+              e.preventDefault();
+              e.stopPropagation();
+              return;
+            }
+            setIsOpen(true);
+          }}
+          aria-label="Open LoopBot AI Assistant (drag to reposition)"
+          className="relative h-[3.25rem] w-[3.25rem] rounded-full bg-gradient-to-tr from-rose-600 via-orange-500 to-amber-400 p-[2px] shadow-[0_8px_25px_rgba(244,63,94,0.36)] flex items-center justify-center group focus:outline-none sm:h-14 sm:w-14 cursor-grab active:cursor-grabbing transition-shadow duration-300 hover:shadow-[0_12px_30px_rgba(244,63,94,0.45)]"
+        >
+          {/* Desktop tooltip indicating it can be dragged */}
+          <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-slate-950/90 text-white text-[10px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-md border border-white/10 hidden sm:flex items-center gap-1">
+            <Move className="w-2.5 h-2.5 text-rose-400" />
+            Drag to move
+          </span>
+
+          <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center relative overflow-hidden transition-transform group-hover:scale-95 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/30 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <Bot className={`h-6 w-6 text-white stroke-[2.2] transition-transform duration-300 ${isDragging ? 'rotate-12 scale-110' : 'group-hover:rotate-12'} sm:h-7 sm:w-7`} />
+            <div className="absolute bottom-2 right-2 w-2.5 h-2.5 bg-emerald-400 border-2 border-slate-950 rounded-full" />
+          </div>
+
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-md pointer-events-none">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </motion.div>
 
       {/* ── Slide-Up / Expandable Chat Window ── */}
       <AnimatePresence>
