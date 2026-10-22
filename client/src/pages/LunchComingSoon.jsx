@@ -54,6 +54,7 @@ import {
   deleteMealFromShop,
   rateShop
 } from '../services/lunchService';
+import { uploadFiles } from '../services/upload.service';
 import {
   FOOD_EMOJIS,
   generateVendorMealAI
@@ -65,6 +66,16 @@ const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
 const uploadFoodImage = async (file) => {
   if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
   if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
+
+  // Primary: Upload directly to Firebase Cloud Storage for permanent cloud persistence
+  try {
+    const urls = await uploadFiles([file]);
+    if (urls && urls[0]) return urls[0];
+  } catch (cloudErr) {
+    console.warn('Firebase cloud upload failed, falling back to server upload:', cloudErr);
+  }
+
+  // Fallback: upload to server endpoint
   const formData = new FormData();
   formData.append('files', file);
   const token = localStorage.getItem('access_token') || localStorage.getItem('token');

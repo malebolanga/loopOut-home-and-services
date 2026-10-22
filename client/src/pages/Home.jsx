@@ -823,6 +823,23 @@ export const isFoodImageUrl = (val) => {
   );
 };
 
+export const resolveSmartFoodEmoji = (name = '', fallback = '🍱') => {
+  const n = String(name || '').toLowerCase();
+  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
+  if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger')) return '🍔';
+  if (n.includes('pizza') || n.includes('slice')) return '🍕';
+  if (n.includes('wing') || n.includes('chicken') || n.includes('drumstick')) return '🍗';
+  if (n.includes('chip') || n.includes('fries') || n.includes('slap chips')) return '🍟';
+  if (n.includes('wrap') || n.includes('shawarma') || n.includes('burrito')) return '🌯';
+  if (n.includes('drink') || n.includes('coke') || n.includes('soda') || n.includes('juice') || n.includes('beverage')) return '🥤';
+  if (n.includes('steak') || n.includes('beef') || n.includes('ribs') || n.includes('pork') || n.includes('wors') || n.includes('braai')) return '🥩';
+  if (n.includes('fish') || n.includes('hake') || n.includes('seafood')) return '🐟';
+  if (n.includes('pap') || n.includes('stew') || n.includes('curry') || n.includes('mogodu') || n.includes('mala') || n.includes('samp')) return '🍲';
+  if (n.includes('salad') || n.includes('greens') || n.includes('veg')) return '🥗';
+  if (n.includes('cake') || n.includes('dessert') || n.includes('ice cream') || n.includes('waffle')) return '🍰';
+  return (typeof fallback === 'string' && fallback.length <= 4 && !fallback.startsWith('/') && !fallback.startsWith('http')) ? fallback : '🍱';
+};
+
 export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
   const [hasError, setHasError] = useState(false);
   useEffect(() => setHasError(false), [src]);
@@ -838,9 +855,8 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
       />
     );
   }
-  // If an image URL is invalid or the request fails, show the intended emoji
-  // fallback instead of leaking the full URL into the food card.
-  return <span className={className}>{isFoodImageUrl(src) ? fallback : (src || fallback)}</span>;
+  const smartFallback = resolveSmartFoodEmoji(alt, fallback);
+  return <span className={className}>{isFoodImageUrl(src) ? smartFallback : (src || smartFallback)}</span>;
 };
 
 const detectFoodItemsInText = (text = '') => {
@@ -3144,13 +3160,14 @@ const FoodSpecialsStrip = ({ navigate }) => {
 
           // Take up to 2 items per shop to present a diverse range of foods across different shops
           sorted.slice(0, 2).forEach((meal) => {
+            const smartMealEmoji = resolveSmartFoodEmoji(meal.name, '🍱');
             collected.push({
               id: meal.id,
               name: meal.name,
               price: meal.price,
               originalPrice: meal.originalPrice,
               tag: meal.tag || (getFoodPriorityRank('', meal.name) === 1 ? 'Hot Food' : 'Special'),
-              image: meal.image || '🍱',
+              image: meal.image || smartMealEmoji,
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
@@ -3172,7 +3189,15 @@ const FoodSpecialsStrip = ({ navigate }) => {
         collected.sort((a, b) => getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name));
 
         if (isMounted && collected.length > 0) {
-          setFoodItems(collected);
+          // If database has only a few items, supplement with diverse fallback specials
+          // so cards never vanish or leave the carousel sparse upon refresh
+          if (collected.length < 8) {
+            const existingNames = new Set(collected.map(c => c.name.toLowerCase()));
+            const supplement = FALLBACK_FOOD_SPECIALS.filter(f => !existingNames.has(f.name.toLowerCase()));
+            setFoodItems([...collected, ...supplement]);
+          } else {
+            setFoodItems(collected);
+          }
         }
       } catch (err) {
         // Keep fallback list smoothly
@@ -3243,24 +3268,24 @@ const FoodSpecialsStrip = ({ navigate }) => {
         {foodItems.map((item, i) => (
           <motion.div
             key={`carousel-${item.shopId}-${item.id || i}`}
-            whileHover={{ y: -4 }}
+            whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="snap-start shrink-0 w-[124px] sm:w-[142px]  hover:bg-gray-50 dark:hover:bg-gray-850 p-2.5 rounded-xl transition-all duration-200 cursor-pointer relative  hover:shadow-md  dark:border-gray-800 flex flex-col"
+            className="snap-start shrink-0 w-[102px] sm:w-[118px] hover:bg-gray-50 dark:hover:bg-gray-850 p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-2 border border-gray-100/80 dark:border-gray-700/50">
+            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1.5 border border-gray-100/80 dark:border-gray-700/50">
               <FoodMedia
                 src={item.image}
                 alt={item.name}
                 fallback="🍱"
-                className="text-3xl group-hover:scale-110 transition-transform duration-300 select-none"
+                className="text-2xl group-hover:scale-110 transition-transform duration-300 select-none"
                 imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
               />
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-1.5 left-1.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full shadow-xs ${
+                <span className={`absolute top-1 left-1 text-[7px] sm:text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3281,17 +3306,17 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center absolute right-1.5 bottom-1.5 transition-all duration-200 active:scale-90 z-10"
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
                     {qty > 1 ? (
-                      <span className="text-[13px] font-black leading-none" style={{ color: '#1ed760' }}>
+                      <span className="text-[11px] font-black leading-none" style={{ color: '#1ed760' }}>
                         {qty}
                       </span>
                     ) : (
                       <ShoppingBag
-                        className="w-[18px] h-[18px]"
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4"
                         style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
                       />
                     )}
@@ -3301,20 +3326,20 @@ const FoodSpecialsStrip = ({ navigate }) => {
             </div>
 
             {/* Title */}
-            <p className="font-extrabold text-gray-900 dark:text-white truncate text-xs leading-tight group-hover:underline">
+            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[11px] sm:text-xs leading-tight group-hover:underline">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="text-gray-400 dark:text-gray-500 text-[10px] truncate leading-tight mt-0.5">
+            <p className="text-gray-400 dark:text-gray-500 text-[9px] sm:text-[10px] truncate leading-tight mt-0.5">
               {item.shopName}
             </p>
 
             {/* Price & GPS distance */}
-            <div className="flex items-center justify-between  border-gray-100 dark:border-gray-800">
-              <span className="font-black text-gray-900 dark:text-white text-xs">R{item.price}</span>
+            <div className="flex items-center justify-between border-gray-100 dark:border-gray-800 mt-0.5">
+              <span className="font-black text-gray-900 dark:text-white text-[11px] sm:text-xs">R{item.price}</span>
               {getAccurateDistanceLabel(item, coords) && (
-                <span className="text-[8.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[65px]">
+                <span className="text-[8px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[55px]">
                   📍 {getAccurateDistanceLabel(item, coords)}
                 </span>
               )}

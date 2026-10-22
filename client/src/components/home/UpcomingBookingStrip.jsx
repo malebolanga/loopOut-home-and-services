@@ -88,31 +88,41 @@ export const FoodSpecialsStrip = ({ navigate }) => {
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/lunch', { state: { selectedShopId: item.shopId, highlightMealId: item.id } })}
-            className="snap-start shrink-0 w-[140px] sm:w-[160px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
+            className="snap-start shrink-0 w-[104px] sm:w-[118px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
           >
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50/50 to-rose-50 dark:from-gray-800 dark:to-gray-900 mb-1.5 border border-amber-100/70 dark:border-gray-800 shadow-2xs">
+            <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50/50 to-rose-50 dark:from-gray-800 dark:to-gray-900 mb-1 border border-amber-100/70 dark:border-gray-800 shadow-2xs flex items-center justify-center">
               {item.image && (item.image.startsWith('http') || item.image.startsWith('/')) ? (
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-3xl select-none group-hover:scale-110 transition-transform duration-300">{item.image || '🍱'}</div>
-              )}
-              <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md text-[7.5px] sm:text-[8px] font-black uppercase tracking-wider shadow-sm bg-gradient-to-r from-amber-500 to-rose-500 text-white">{item.tag || 'SPECIAL'}</div>
-              <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/65 backdrop-blur-md text-white rounded-md text-[8px] font-bold flex items-center gap-1 shadow-sm max-w-[90px] truncate">
-                <span className="text-[9px]">{item.shopImage || '🏪'}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider truncate">{item.shopName}</span>
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div className={`w-full h-full ${item.image && (item.image.startsWith('http') || item.image.startsWith('/')) ? 'hidden' : 'flex'} items-center justify-center text-2xl select-none group-hover:scale-110 transition-transform duration-300`}>
+                {(typeof item.image === 'string' && item.image.length <= 4 && !item.image.startsWith('/') && !item.image.startsWith('http')) ? item.image : '🍱'}
+              </div>
+              <div className="absolute top-1.5 right-1.5 px-1 py-0.5 rounded text-[7px] font-black uppercase tracking-wider shadow-sm bg-gradient-to-r from-amber-500 to-rose-500 text-white">{item.tag || 'SPECIAL'}</div>
+              <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-black/65 backdrop-blur-md text-white rounded text-[7px] font-bold flex items-center gap-0.5 shadow-sm max-w-[70px] truncate">
+                <span className="text-[8px]">{(typeof item.shopImage === 'string' && item.shopImage.length <= 4) ? item.shopImage : '🏪'}</span>
+                <span className="text-[6.5px] font-black uppercase tracking-wider truncate">{item.shopName}</span>
               </div>
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
             </div>
             <div className="flex flex-col">
-              <p className="font-bold text-gray-900 dark:text-white truncate text-[12px] sm:text-[13px] leading-tight mb-0.5 group-hover:text-amber-600 transition-colors">{item.name}</p>
-              <p className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-[10.5px] truncate leading-tight flex items-center gap-1">
+              <p className="font-bold text-gray-900 dark:text-white truncate text-[11px] sm:text-xs leading-tight mb-0.5 group-hover:text-amber-600 transition-colors">{item.name}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-[9px] sm:text-[9.5px] truncate leading-tight flex items-center gap-1">
                 <span className="truncate font-medium text-gray-700 dark:text-gray-300">{item.shopName}</span>
                 <span className="text-gray-300 dark:text-gray-600">·</span>
                 <span className="truncate text-gray-400">{item.shopCuisine}</span>
               </p>
-              <div className="flex items-center justify-between mt-1">
-                <span className="font-black text-gray-900 dark:text-white text-[11.5px] sm:text-[12px]">R{item.price}</span>
-                <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 group-hover:bg-amber-500 group-hover:text-white transition-colors">Order</span>
+              <div className="flex items-center justify-between mt-0.5">
+                <span className="font-black text-gray-900 dark:text-white text-[11px] sm:text-xs">R{item.price}</span>
+                <span className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 group-hover:bg-amber-500 group-hover:text-white transition-colors">Order</span>
               </div>
             </div>
           </motion.div>
