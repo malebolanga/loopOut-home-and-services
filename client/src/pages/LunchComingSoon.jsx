@@ -81,7 +81,9 @@ const uploadFoodImage = async (file) => {
 const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const isImage = typeof value === 'string' && (/^https?:\/\//i.test(value) || value.startsWith('/uploads/'));
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => setImgError(false), [value]);
+  const isImage = !imgError && typeof value === 'string' && (/^https?:\/\//i.test(value) || value.startsWith('/uploads/'));
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -96,7 +98,16 @@ const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">{label}</label>
       <div className="flex items-center gap-3">
         <div className="h-14 w-14 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-3xl">
-          {isImage ? <img src={value} alt={`${label} preview`} className="h-full w-full object-cover" /> : (value || '🍱')}
+          {isImage ? (
+            <img
+              src={value}
+              alt={`${label} preview`}
+              className="h-full w-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            (typeof value === 'string' && value.length <= 4 && !value.startsWith('/') && !value.startsWith('http')) ? value : '🍱'
+          )}
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -118,8 +129,9 @@ const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
   );
 };
 
-const ShopImage = ({ image, className = '' }) => {
+export const ShopImage = ({ image, className = '' }) => {
   const [error, setError] = useState(false);
+  useEffect(() => setError(false), [image]);
   const isImage = !error && typeof image === 'string' && (
     image.startsWith('http://') ||
     image.startsWith('https://') ||
@@ -127,9 +139,34 @@ const ShopImage = ({ image, className = '' }) => {
     image.startsWith('/') ||
     image.startsWith('data:image/')
   );
+  const fallbackEmoji = (typeof image === 'string' && image.length <= 4 && !image.startsWith('/') && !image.startsWith('http')) ? image : '🏪';
   return isImage
-    ? <img src={image.trim()} alt="Shop" className={`object-cover ${className}`} onError={() => setError(true)} />
-    : <span className={className}>{image || '🏪'}</span>;
+    ? <img src={image.trim()} alt="Shop" className={`object-cover ${className}`} onError={() => setError(true)} loading="lazy" />
+    : <span className={className}>{fallbackEmoji}</span>;
+};
+
+export const FoodVisual = ({ visual, alt = 'Food', className = 'h-full w-full object-cover rounded-lg', emojiClassName = 'text-2xl' }) => {
+  const [error, setError] = useState(false);
+  useEffect(() => setError(false), [visual?.src]);
+  const showImage = !error && Boolean(visual?.isImage && visual?.src);
+
+  if (showImage) {
+    return (
+      <img
+        src={visual.src.trim()}
+        alt={alt}
+        className={className}
+        onError={() => setError(true)}
+        loading="lazy"
+      />
+    );
+  }
+
+  return (
+    <span className={emojiClassName} role="img" aria-label={alt}>
+      {visual?.emoji || '🍱'}
+    </span>
+  );
 };
 
 const PRESET_MOODS = [
@@ -360,53 +397,60 @@ function getShopTheme(shop) {
 // Visual Picture / Avatar resolver for Food Items on Receipts
 export const getItemVisual = (it) => {
   if (!it) return { emoji: '🍱', isImage: false, src: '' };
+
+  const resolveFallbackEmoji = () => {
+    if (it.image && typeof it.image === 'string' && it.image.length <= 4 && !it.image.startsWith('/') && !it.image.startsWith('http')) {
+      return it.image;
+    }
+    const name = String(it.name || '').toLowerCase();
+    if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) {
+      return '🥪';
+    }
+    if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) {
+      return '🍔';
+    }
+    if (name.includes('pizza') || name.includes('slice')) {
+      return '🍕';
+    }
+    if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick') || name.includes('grilled chicken')) {
+      return '🍗';
+    }
+    if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) {
+      return '🍟';
+    }
+    if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) {
+      return '🌯';
+    }
+    if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice') || name.includes('beverage') || name.includes('water')) {
+      return '🥤';
+    }
+    if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors') || name.includes('braai')) {
+      return '🥩';
+    }
+    if (name.includes('fish') || name.includes('hake') || name.includes('seafood') || name.includes('prawn')) {
+      return '🐟';
+    }
+    if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu') || name.includes('mala') || name.includes('samp')) {
+      return '🍲';
+    }
+    if (name.includes('salad') || name.includes('greens') || name.includes('veg')) {
+      return '🥗';
+    }
+    if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream') || name.includes('waffle') || name.includes('donut')) {
+      return '🍰';
+    }
+    return '🍱';
+  };
+
+  const fallbackEmoji = resolveFallbackEmoji();
+
   if (it.image && (typeof it.image === 'string') && (it.image.startsWith('http') || it.image.startsWith('/') || it.image.startsWith('data:'))) {
-    return { emoji: '', isImage: true, src: it.image };
+    return { emoji: fallbackEmoji, isImage: true, src: it.image };
   }
   if (it.imageUrl && (typeof it.imageUrl === 'string') && (it.imageUrl.startsWith('http') || it.imageUrl.startsWith('/'))) {
-    return { emoji: '', isImage: true, src: it.imageUrl };
+    return { emoji: fallbackEmoji, isImage: true, src: it.imageUrl };
   }
-  if (it.image && typeof it.image === 'string' && it.image.length <= 4) {
-    return { emoji: it.image, isImage: false, src: '' };
-  }
-  const name = String(it.name || '').toLowerCase();
-  if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) {
-    return { emoji: '🥪', isImage: false, src: '' };
-  }
-  if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) {
-    return { emoji: '🍔', isImage: false, src: '' };
-  }
-  if (name.includes('pizza') || name.includes('slice')) {
-    return { emoji: '🍕', isImage: false, src: '' };
-  }
-  if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick') || name.includes('grilled chicken')) {
-    return { emoji: '🍗', isImage: false, src: '' };
-  }
-  if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) {
-    return { emoji: '🍟', isImage: false, src: '' };
-  }
-  if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) {
-    return { emoji: '🌯', isImage: false, src: '' };
-  }
-  if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice') || name.includes('beverage') || name.includes('water')) {
-    return { emoji: '🥤', isImage: false, src: '' };
-  }
-  if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors') || name.includes('braai')) {
-    return { emoji: '🥩', isImage: false, src: '' };
-  }
-  if (name.includes('fish') || name.includes('hake') || name.includes('seafood') || name.includes('prawn')) {
-    return { emoji: '🐟', isImage: false, src: '' };
-  }
-  if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu') || name.includes('mala') || name.includes('samp')) {
-    return { emoji: '🍲', isImage: false, src: '' };
-  }
-  if (name.includes('salad') || name.includes('greens') || name.includes('veg')) {
-    return { emoji: '🥗', isImage: false, src: '' };
-  }
-  if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream') || name.includes('waffle') || name.includes('donut')) {
-    return { emoji: '🍰', isImage: false, src: '' };
-  }
-  return { emoji: it.image || '🍱', isImage: false, src: '' };
+  return { emoji: fallbackEmoji, isImage: false, src: '' };
 };
 
 // Dynamic Receipt Themes (Distinct colored paper backgrounds for receipts)
@@ -1920,11 +1964,7 @@ export default function LunchComingSoon() {
                         >
                           <div className="flex items-start gap-3">
                             <div className="shrink-0 h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                              {visual.isImage ? (
-                                <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
-                              ) : (
-                                <span className="text-2xl">{visual.emoji}</span>
-                              )}
+                              <FoodVisual visual={visual} alt={meal.name} className="h-full w-full object-cover rounded-lg" emojiClassName="text-2xl" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2">
@@ -2474,11 +2514,7 @@ export default function LunchComingSoon() {
                       <div key={meal.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="shrink-0 h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-                            {visual.isImage ? (
-                              <img src={visual.src} alt={meal.name} className="h-full w-full object-cover rounded-lg" />
-                            ) : (
-                              <span className="text-xl">{visual.emoji}</span>
-                            )}
+                            <FoodVisual visual={visual} alt={meal.name} className="h-full w-full object-cover rounded-lg" emojiClassName="text-xl" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{meal.name}</p>
@@ -2584,11 +2620,7 @@ export default function LunchComingSoon() {
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                            {getItemVisual(item).isImage ? (
-                              <img src={getItemVisual(item).src} alt={item.name} className="h-full w-full object-cover" />
-                            ) : (
-                              <span className="text-lg">{getItemVisual(item).emoji || '🍱'}</span>
-                            )}
+                            <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-lg" />
                           </div>
                           <div className="min-w-0">
                             <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
@@ -2763,11 +2795,7 @@ export default function LunchComingSoon() {
                           <div key={i} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
                             <div className="flex items-center gap-2">
                               <div className="w-6 h-6 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                                {iv.isImage ? (
-                                  <img src={iv.src} alt={item.name} className="h-full w-full object-cover" />
-                                ) : (
-                                  <span className="text-base">{iv.emoji || '🍱'}</span>
-                                )}
+                                <FoodVisual visual={iv} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-base" />
                               </div>
                               <div>
                                 <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{item.name}</p>
@@ -3276,11 +3304,7 @@ export default function LunchComingSoon() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
-                          {getItemVisual(item).isImage ? (
-                            <img src={getItemVisual(item).src} alt={item.name} className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="text-xl shrink-0">{getItemVisual(item).emoji || '🍱'}</span>
-                          )}
+                          <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-xl shrink-0" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>

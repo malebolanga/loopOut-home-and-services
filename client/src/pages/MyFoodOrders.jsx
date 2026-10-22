@@ -55,6 +55,26 @@ const isFoodImageUrl = (val) => {
   );
 };
 
+const getItemEmojiFallback = (item) => {
+  if (item?.image && typeof item.image === 'string' && item.image.length <= 4 && !item.image.startsWith('/') && !item.image.startsWith('http')) {
+    return item.image;
+  }
+  const name = String(item?.name || item?.title || '').toLowerCase();
+  if (name.includes('kota') || name.includes('quarter') || name.includes('sphatlo') || name.includes('sandwich') || name.includes('dagwood')) return '🥪';
+  if (name.includes('burger') || name.includes('patty') || name.includes('cheeseburger')) return '🍔';
+  if (name.includes('pizza') || name.includes('slice')) return '🍕';
+  if (name.includes('wing') || name.includes('chicken') || name.includes('drumstick')) return '🍗';
+  if (name.includes('chip') || name.includes('fries') || name.includes('slap chips')) return '🍟';
+  if (name.includes('wrap') || name.includes('shawarma') || name.includes('burrito')) return '🌯';
+  if (name.includes('drink') || name.includes('coke') || name.includes('soda') || name.includes('juice')) return '🥤';
+  if (name.includes('steak') || name.includes('beef') || name.includes('ribs') || name.includes('pork') || name.includes('wors')) return '🥩';
+  if (name.includes('fish') || name.includes('hake') || name.includes('seafood')) return '🐟';
+  if (name.includes('pap') || name.includes('stew') || name.includes('curry') || name.includes('mogodu')) return '🍲';
+  if (name.includes('salad') || name.includes('greens') || name.includes('veg')) return '🥗';
+  if (name.includes('cake') || name.includes('dessert') || name.includes('ice cream')) return '🍰';
+  return '🍱';
+};
+
 export default function MyFoodOrders() {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user || {});
@@ -377,12 +397,23 @@ export default function MyFoodOrders() {
                         >
                           <div className="flex items-start gap-2.5 min-w-0">
                             {isFoodImageUrl(item.image) ? (
-                              <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <span className="hidden text-lg">
+                                  {getItemEmojiFallback(item)}
+                                </span>
                               </div>
                             ) : (
                               <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 flex items-center justify-center text-lg shrink-0">
-                                {item.image || '🍱'}
+                                {getItemEmojiFallback(item)}
                               </div>
                             )}
                             <div className="min-w-0">
