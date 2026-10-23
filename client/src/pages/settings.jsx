@@ -59,6 +59,10 @@ export default function SettingsPage() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem('theme', theme);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      'content',
+      theme === 'dark' ? '#030712' : '#ffffff'
+    );
   }, [theme]);
 
   const handleSaveAccount = (e) => {
