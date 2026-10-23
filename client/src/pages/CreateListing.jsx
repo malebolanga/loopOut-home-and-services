@@ -761,21 +761,38 @@ export default function CreateListing() {
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
+      const normalizedTab = tabFromUrl.trim().toLowerCase();
+      const categoryByTab = {
+        property: 'property',
+        stay: 'property',
+        stays: 'property',
+        experiences: 'experiences',
+        service: 'experiences',
+        services: 'experiences',
+        online: 'online',
+        helper: 'online',
+        helpers: 'online',
+        events: 'events',
+        selling: 'selling',
+        goods: 'selling',
+      };
+      const requestedCategory = categoryByTab[normalizedTab];
+
       if (currentUser?.offeringType === 'services') {
-        if (tabFromUrl === 'experiences' || tabFromUrl === 'service' || tabFromUrl === 'services') {
-          setSelectedCategory('experiences');
-          setCurrentStep(2);
-        } else if (tabFromUrl === 'online' || tabFromUrl === 'helper' || tabFromUrl === 'helpers') {
-          setSelectedCategory('online');
+        if (requestedCategory === 'experiences' || requestedCategory === 'online') {
+          setSelectedCategory(requestedCategory);
           setCurrentStep(2);
         } else {
           // Service providers can only post services and helpers; disallow properties/goods/events
           setSelectedCategory('');
           setCurrentStep(1);
         }
-      } else {
-        setSelectedCategory(tabFromUrl);
+      } else if (requestedCategory) {
+        setSelectedCategory(requestedCategory);
         setCurrentStep(2);
+      } else {
+        setSelectedCategory('');
+        setCurrentStep(1);
       }
     }
   }, [searchParams, currentUser?.offeringType]);

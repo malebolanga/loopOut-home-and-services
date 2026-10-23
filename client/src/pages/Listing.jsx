@@ -356,27 +356,27 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
   if (!isOpen) return null;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex flex-col bg-black">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-black">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 text-white">
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2.5 pt-[max(env(safe-area-inset-top),0.5rem)] text-white sm:p-4">
+        <button onClick={onClose} aria-label="Close photo viewer" className="shrink-0 rounded-full p-2 transition-colors hover:bg-white/10">
           <MdClose className="text-2xl" />
         </button>
-        <span className="font-medium">{currentIndex + 1} / {images.length}</span>
-        <div className="flex gap-2">
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+        <span className="min-w-0 truncate text-sm font-medium">{currentIndex + 1} / {images.length}</span>
+        <div className="flex shrink-0 gap-1 sm:gap-2">
+          <button aria-label="Share photo" className="rounded-full p-2 transition-colors hover:bg-white/10">
             <FiShare2 className="text-xl" />
           </button>
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button aria-label="Add photo to wishlist" className="rounded-full p-2 transition-colors hover:bg-white/10">
             <FiHeart className="text-xl" />
           </button>
         </div>
       </div>
 
       {/* Main Image */}
-      <div className="flex-1 flex items-center justify-center relative px-16">
-        <button onClick={onPrev} className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-          <FaChevronLeft className="text-xl" />
+      <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-11 sm:px-16">
+        <button onClick={onPrev} aria-label="Previous photo" className="absolute left-2 z-20 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3">
+          <FaChevronLeft className="text-base sm:text-xl" />
         </button>
 
         <ImageWithFallback
@@ -384,16 +384,17 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
           imageUrls={images.slice(currentIndex)}
           alt={`Photo ${currentIndex + 1}`}
           type="property"
-          className="max-h-full max-w-full object-contain"
+          className="h-full w-full min-w-0 max-w-full"
+          imageClassName="object-contain"
         />
 
-        <button onClick={onNext} className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-          <FaChevronRight className="text-xl" />
+        <button onClick={onNext} aria-label="Next photo" className="absolute right-2 z-20 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3">
+          <FaChevronRight className="text-base sm:text-xl" />
         </button>
       </div>
 
       {/* Thumbnails */}
-      <div className="p-4 bg-black/50">
+      <div className="shrink-0 bg-black/50 px-3 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:p-4">
         <Swiper modules={[FreeMode]} spaceBetween={8} slidesPerView="auto" freeMode={true} className="thumbs-swiper">
           {images.map((img, index) => (
             <SwiperSlide key={index} style={{ width: '100px' }}>
@@ -434,36 +435,36 @@ const AirbnbFloatGallery = ({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: "100%", opacity: 0 }}
       transition={{ type: "spring", damping: 28, stiffness: 220, mass: 0.85 }}
-      className="fixed inset-0 z-[1000] bg-white text-slate-900 overflow-y-auto flex flex-col"
+      className="fixed inset-0 z-[1000] flex h-[100dvh] min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-white text-slate-900"
     >
       {/* Sticky Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white/95 px-3 py-2.5 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-md sm:px-8 sm:py-3.5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onClose}
             aria-label="Back to listing"
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
-          <div>
-            <h2 className="text-sm sm:text-base font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+          <div className="min-w-0">
+            <h2 className="max-w-[34vw] truncate text-sm font-semibold text-slate-900 sm:max-w-md sm:text-base">
               {listingName}
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="truncate text-[11px] font-medium text-slate-500 sm:text-xs">
               Photo tour · {images.length} {images.length === 1 ? 'photo' : 'photos'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {handleShare && (
             <button
               type="button"
               onClick={handleShare}
               aria-label="Share listing"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
             >
               <ShareIcon className="w-4 h-4" />
             </button>
@@ -473,7 +474,7 @@ const AirbnbFloatGallery = ({
               type="button"
               onClick={toggleFavorite}
               aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
             >
               {isFavorite ? (
                 <HeartIconSolid className="w-5 h-5 text-rose-500" />
@@ -486,7 +487,7 @@ const AirbnbFloatGallery = ({
             type="button"
             onClick={onClose}
             aria-label="Close photo tour"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -494,19 +495,19 @@ const AirbnbFloatGallery = ({
       </header>
 
       {/* Gallery Content */}
-      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 flex-1">
+      <div className="mx-auto w-full min-w-0 max-w-5xl flex-1 space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Intro */}
         <div className="border-b border-slate-100 pb-5">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 mb-2">
             Property Photo Tour
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="break-words text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             {listingName}
           </h1>
           {listingAddress && (
-            <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+            <p className="mt-1 flex min-w-0 items-start gap-1.5 break-words text-sm text-slate-500">
               <MapPinIcon className="w-4 h-4 text-slate-400 shrink-0" />
-              <span>{listingAddress}</span>
+              <span className="min-w-0 break-words">{listingAddress}</span>
             </p>
           )}
         </div>
@@ -517,7 +518,7 @@ const AirbnbFloatGallery = ({
           {images.length > 0 && (
             <div
               onClick={() => onImageClick?.(0)}
-              className="group relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+              className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-300 hover:shadow-md sm:aspect-[16/9]"
             >
               <ImageWithFallback
                 src={images[0]}

@@ -39,6 +39,47 @@ const createNotification = async (userId, title, message, data) => {
   await Notification.create({ userId, type: 'booking', title, message, data });
 };
 
+const PICKUP_AUTO_COMPLETE_MS = 2 * 60 * 60 * 1000;
+
+export const autoCompletePickupOrders = async () => {
+  if (mongoose.connection.readyState !== 1) return 0;
+  const cutoff = new Date(Date.now() - PICKUP_AUTO_COMPLETE_MS);
+  const overdueOrders = await FoodOrder.find({
+    status: 'Ready for Collection',
+    fulfilment: 'pickup',
+    $or: [
+      { pickupReadyAt: { $lte: cutoff } },
+      { pickupReadyAt: { $exists: false }, updatedAt: { $lte: cutoff } },
+    ],
+  }).select('_id customerId orderCode');
+
+  let completedCount = 0;
+  for (const order of overdueOrders) {
+    const completed = await FoodOrder.findOneAndUpdate(
+      {
+        _id: order._id,
+        status: 'Ready for Collection',
+        fulfilment: 'pickup',
+        $or: [
+          { pickupReadyAt: { $lte: cutoff } },
+          { pickupReadyAt: { $exists: false }, updatedAt: { $lte: cutoff } },
+        ],
+      },
+      { $set: { status: 'Completed', completedAt: new Date(), completionMethod: 'auto_timeout' } },
+      { new: true }
+    );
+    if (!completed) continue;
+    completedCount += 1;
+    await createNotification(
+      completed.customerId,
+      'Pickup order closed',
+      `Order #${completed.orderCode} was automatically completed two hours after it was ready for collection.`,
+      { orderId: completed._id, status: completed.status }
+    ).catch(() => {});
+  }
+  return completedCount;
+};
+
 export const getShops = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
@@ -137,6 +178,7 @@ export const deleteMealFromShop = async (req, res, next) => {
 export const getOrders = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
+    await autoCompletePickupOrders();
     const ownedShops = await Shop.find({ ownerId: userId(req) }).select('_id');
     const orders = await FoodOrder.find({ $or: [{ customerId: userId(req) }, { shopId: { $in: ownedShops.map((shop) => shop._id.toString()) } }] }).sort({ createdAt: -1 });
     return res.json(orders.map(format));
@@ -178,8 +220,19 @@ export const updateOrderStatus = async (req, res, next) => {
     const shop = await Shop.findById(order.shopId);
     const isShopManager = shop && isOwner(shop, req);
     const isCustomer = order.customerId === userId(req);
-    if (!isShopManager && !(isCustomer && status === 'Completed')) return res.status(403).json({ success: false, message: 'You do not manage this order.' });
-    order.status = status; if (status === 'Completed') order.completedAt = new Date(); await order.save();
+    if (status === 'Completed') {
+      if (!isCustomer) return res.status(403).json({ success: false, message: 'Only the customer who placed this order can confirm receipt.' });
+      if (order.status === 'Completed') return res.json(format(order));
+      if (order.status !== 'Ready for Collection') return res.status(409).json({ success: false, message: 'You can complete this order after the shop marks it ready.' });
+      order.completionMethod = 'customer';
+      order.completedAt = new Date();
+    } else if (!isShopManager) {
+      return res.status(403).json({ success: false, message: 'You do not manage this order.' });
+    }
+    order.status = status;
+    if (status === 'Ready for Collection') order.pickupReadyAt = new Date();
+    else if (status !== 'Completed') order.pickupReadyAt = undefined;
+    await order.save();
     await createNotification(order.customerId, 'Food order update', `Order #${order.orderCode} is now ${status}.`, { orderId: order._id, status }); return res.json(format(order));
   } catch (error) { return next(error); }
 };
@@ -201,24 +254,16 @@ export const rateShop = async (req, res, next) => {
     const shop = await Shop.findById(req.params.id);
     if (!shop) return res.status(404).json({ success: false, message: 'Shop not found.' });
 
-    let order = null;
     const orderId = req.body.orderId;
-    if (validId(orderId)) {
-      order = await FoodOrder.findById(orderId);
-    }
-    if (!order && orderId) {
-      order = await FoodOrder.findOne({ orderCode: orderId });
-    }
-
-    if (order) {
-      if (order.isRated) {
-        return res.status(400).json({ success: false, message: 'This order has already been reviewed.' });
-      }
-      if (order.status !== 'Completed') {
-        order.status = 'Completed';
-        order.completedAt = order.completedAt || new Date();
-      }
-    }
+    if (!orderId) return res.status(400).json({ success: false, message: 'A completed food order is required to leave a review.' });
+    const order = validId(orderId)
+      ? await FoodOrder.findById(orderId)
+      : await FoodOrder.findOne({ orderCode: orderId });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+    if (order.shopId !== shop._id.toString()) return res.status(403).json({ success: false, message: 'This order does not belong to this shop.' });
+    if (order.customerId !== userId(req)) return res.status(403).json({ success: false, message: 'Only the customer who placed this order can leave a review.' });
+    if (order.status !== 'Completed') return res.status(409).json({ success: false, message: 'Complete the order before leaving a review.' });
+    if (order.isRated) return res.status(400).json({ success: false, message: 'This order has already been reviewed.' });
 
     const rating = Number(req.body.shopRating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
@@ -227,7 +272,7 @@ export const rateShop = async (req, res, next) => {
 
     const review = {
       id: crypto.randomUUID(),
-      userName: cleanText(req.body.userName, 50) || 'Customer',
+      userName: cleanText(order.customerName, 50) || 'Customer',
       shopRating: rating,
       foodRating: Math.min(Math.max(Number(req.body.foodRating) || rating, 1), 5),
       comment: cleanText(req.body.comment, 500),
@@ -239,13 +284,9 @@ export const rateShop = async (req, res, next) => {
     shop.ratingsCount = shop.reviews.length;
     shop.rating = (shop.reviews.reduce((sum, entry) => sum + entry.shopRating, 0) / shop.reviews.length).toFixed(1);
 
-    if (order) {
-      order.isRated = true;
-      order.ratingDetails = review;
-      await Promise.all([shop.save(), order.save()]);
-    } else {
-      await shop.save();
-    }
+    order.isRated = true;
+    order.ratingDetails = review;
+    await Promise.all([shop.save(), order.save()]);
 
     return res.json({ success: true, review });
   } catch (error) { return next(error); }

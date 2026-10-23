@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const FALLBACK_IMAGES = {
     property: 'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=800',
@@ -15,10 +15,20 @@ const FALLBACK_IMAGES = {
 };
 
 const ImageWithFallback = ({ src, alt, className = "", imageClassName = "", type = 'default', imageUrls, onLoad, ...props }) => {
-    const [imgSrc, setImgSrc] = useState(src);
+    const imageUrlsKey = Array.isArray(imageUrls) ? imageUrls.join('|') : '';
+    const [imgSrc, setImgSrc] = useState(src || imageUrls?.[0] || '');
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
+    const [fallbackFailed, setFallbackFailed] = useState(false);
     const [fallbackIndex, setFallbackIndex] = useState(1);
+
+    useEffect(() => {
+        setImgSrc(src || imageUrls?.[0] || '');
+        setIsLoading(true);
+        setHasError(false);
+        setFallbackFailed(false);
+        setFallbackIndex(1);
+    }, [src, imageUrlsKey]);
 
     const handleError = () => {
         if (imageUrls && fallbackIndex < imageUrls.length) {
@@ -26,9 +36,14 @@ const ImageWithFallback = ({ src, alt, className = "", imageClassName = "", type
             setFallbackIndex(prev => prev + 1);
             setIsLoading(true);
         } else {
-            setHasError(true);
-            setImgSrc(FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default);
-            if (onLoad) onLoad();
+            if (!hasError) {
+                setHasError(true);
+                setImgSrc(FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default);
+            } else {
+                setFallbackFailed(true);
+                setIsLoading(false);
+                if (onLoad) onLoad();
+            }
         }
     };
 
@@ -42,14 +57,20 @@ const ImageWithFallback = ({ src, alt, className = "", imageClassName = "", type
             {isLoading && !hasError && (
                 <div className="absolute inset-0 bg-gray-200 animate-pulse z-0 rounded-[inherit]" />
             )}
-            <img loading="lazy"
-                src={imgSrc || FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default}
-                alt={alt}
-                className={`w-full h-full object-cover transition-opacity duration-500 z-10 relative ${imageClassName} ${isLoading && !hasError ? 'opacity-0' : 'opacity-100'}`}
-                onError={handleError}
-                onLoad={handleLoad}
-                {...props}
-            />
+            {fallbackFailed ? (
+                <div role="img" aria-label={alt || 'Image unavailable'} className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-2xl dark:from-slate-800 dark:to-slate-900 ${imageClassName}`}>
+                    <span aria-hidden="true">{({ property: '🏡', apartment: '🏢', rent: '🏠', sale: '🏠', service: '🛠️', helper: '🤝', event: '🎉', avatar: '👤', category: '✨' })[type] || '📷'}</span>
+                </div>
+            ) : (
+                <img loading="lazy"
+                    src={imgSrc || FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default}
+                    alt={alt}
+                    className={`w-full h-full object-cover transition-opacity duration-500 z-10 relative ${imageClassName} ${isLoading && !hasError ? 'opacity-0' : 'opacity-100'}`}
+                    onError={handleError}
+                    onLoad={handleLoad}
+                    {...props}
+                />
+            )}
         </div>
     );
 };

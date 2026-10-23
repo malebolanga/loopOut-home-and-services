@@ -837,14 +837,11 @@ export default function LunchComingSoon() {
     e.preventDefault();
     if (!ratingTargetOrder) return;
     const orderId = ratingTargetOrder.id || ratingTargetOrder._id;
+    if (ratingTargetOrder.status !== 'Completed') {
+      setNotice({ type: 'error', message: 'Confirm that you received your order before rating the shop.' });
+      return;
+    }
     try {
-      if (ratingTargetOrder.status !== 'Completed') {
-        try {
-          await updateOrderStatus(orderId, 'Completed');
-        } catch {
-          // ignore if already completed
-        }
-      }
       await rateShop(ratingTargetOrder.shopId, {
         orderId: orderId,
         shopRating,
@@ -860,20 +857,15 @@ export default function LunchComingSoon() {
       setRatingComment('');
     } catch (err) {
       console.error("Rate shop error:", err);
-      // Ensure rating modal closes and receipt modal closes so user isn't trapped
-      setShowRateModal(false);
-      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
-      setActiveReceiptOrder(null);
-      setNotice({ type: 'success', message: '⭐ Thank you! Your review has been saved and archived.' });
-      setRatingComment('');
+      setNotice({ type: 'error', message: err.message || 'We could not save your review. Please try again.' });
     }
   };
 
-  // Handle Order Status Progression (Received -> Preparing Food -> Ready for Collection -> Collected)
+  // Only the customer confirms receipt. A pickup order left ready will be closed by the server after two hours.
   const handleStatusUpdate = async (orderId, newStatus) => {
     if (!orderId) return;
     try {
-      await updateOrderStatus(orderId, newStatus);
+      const savedOrder = await updateOrderStatus(orderId, newStatus);
       // Optimistically update orders in local state
       setOrders((prev) =>
         prev.map((o) =>
@@ -890,11 +882,14 @@ export default function LunchComingSoon() {
       if (newStatus === 'Completed') {
         setNotice({
           type: 'success',
-          message: '🎉 Order confirmed as Collected! Hope you enjoy your meal.'
+          message: 'Order completed. You can now rate the shop and your meal.'
         });
         const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
         if (target && !target.isRated) {
-          setRatingTargetOrder({ ...target, status: 'Completed' });
+          setShopRating(5);
+          setFoodRating(5);
+          setRatingComment('');
+          setRatingTargetOrder({ ...target, ...savedOrder, status: 'Completed' });
           setShowRateModal(true);
         }
       } else {
@@ -905,26 +900,7 @@ export default function LunchComingSoon() {
       }
     } catch (err) {
       console.error("Update order status error:", err);
-      // Optimistic fallback for immediate UX
-      setOrders((prev) =>
-        prev.map((o) =>
-          (o.id === orderId || o._id === orderId)
-            ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
-            : o
-        )
-      );
-      if (activeReceiptOrder && (activeReceiptOrder.id === orderId || activeReceiptOrder._id === orderId)) {
-        setActiveReceiptOrder((prev) =>
-          prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null
-        );
-      }
-      if (newStatus === 'Completed') {
-        const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
-        if (target && !target.isRated) {
-          setRatingTargetOrder({ ...target, status: 'Completed' });
-          setShowRateModal(true);
-        }
-      }
+      setNotice({ type: 'error', message: err.message || 'Could not update this order. Please try again.' });
     }
   };
 
@@ -2236,6 +2212,25 @@ export default function LunchComingSoon() {
                       <div className="mt-2 text-[10px] text-gray-400 flex items-center gap-1">
                         <Clock3 className="h-3 w-3" /> {collectionInfo.label}: {collectionInfo.full}
                       </div>
+                      {order.status === 'Ready for Collection' && (
+                        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                            {order.fulfilment === 'delivery'
+                              ? 'Confirm once your delivery has arrived.'
+                              : 'Confirm after you collect your order. Unconfirmed pickup orders close automatically after 2 hours.'}
+                          </p>
+                          {String(order.customerId || '') === String(currentUser?._id || currentUser?.id || '') && <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleStatusUpdate(order.id || order._id, 'Completed');
+                            }}
+                            className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                          >
+                            {order.fulfilment === 'delivery' ? 'Confirm received & complete' : 'I collected it — complete order'}
+                          </button>}
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -2422,8 +2417,8 @@ export default function LunchComingSoon() {
                   {(showAllKitchenQueue ? filteredShopOrders : filteredShopOrders.slice(0, 8)).map((order) => {
                     const statusConfig = {
                       'Pending': { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', next: 'Preparing', label: 'Start Preparing' },
-                      'Preparing': { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', next: 'Ready for Collection', label: 'Mark Ready' },
-                      'Ready for Collection': { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200', next: 'Completed', label: 'Collected' },
+                      'Preparing': { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', next: 'Ready for Collection', label: order.fulfilment === 'delivery' ? 'Ready for delivery' : 'Ready for pickup' },
+                      'Ready for Collection': { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200', next: null, label: 'Waiting for customer' },
                       'Completed': { color: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', next: null, label: 'Done' }
                     };
                     const config = statusConfig[order.status] || statusConfig['Pending'];
@@ -2747,10 +2742,7 @@ export default function LunchComingSoon() {
                   'Ready for Collection': 'bg-emerald-100 text-emerald-800',
                   'Completed': 'bg-gray-200 text-gray-600',
                 };
-                const isMyOrder = currentUser && (
-                  String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '') ||
-                  (currentUser.phone && ord.customerPhone === currentUser.phone)
-                );
+                const isMyOrder = currentUser && String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '');
                 const ownsShopOrder = isCurrentShopOwner && String(ord.shopId || '') === String(dashboardShop?.id || dashboardShop?._id || '');
 
                 return (
@@ -2841,15 +2833,25 @@ export default function LunchComingSoon() {
                         )}
                         {ord.status === 'Preparing' && (
                           <button type="button" onClick={() => handleStatusUpdate(ordId, 'Ready for Collection')} className="flex-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 py-2 text-xs font-bold text-white shadow transition">
-                            Mark Ready
+                            {ord.fulfilment === 'delivery' ? 'Ready for delivery' : 'Ready for pickup'}
                           </button>
                         )}
                         {ord.status === 'Ready for Collection' && (
-                          <button type="button" onClick={() => handleStatusUpdate(ordId, 'Completed')} className="flex-1 rounded-lg bg-gray-700 hover:bg-gray-800 py-2 text-xs font-bold text-white shadow transition">
-                            Confirm Collected
-                          </button>
+                          <p className="flex-1 rounded-lg bg-emerald-50 px-3 py-2 text-center text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                            Waiting for the customer to confirm collection. Pickup orders auto-close after 2 hours.
+                          </p>
                         )}
                       </div>
+                    )}
+
+                    {isMyOrder && ord.status === 'Ready for Collection' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusUpdate(ordId, 'Completed')}
+                        className="w-full rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-white shadow transition hover:bg-emerald-700"
+                      >
+                        {ord.fulfilment === 'delivery' ? 'Confirm delivery received' : 'I collected it — complete order'}
+                      </button>
                     )}
 
                     {/* Rate Button (Customer, Completed) */}
@@ -2857,6 +2859,9 @@ export default function LunchComingSoon() {
                       <button
                         type="button"
                         onClick={() => {
+                          setShopRating(5);
+                          setFoodRating(5);
+                          setRatingComment('');
                           setRatingTargetOrder(ord);
                           setShowRateModal(true);
                         }}

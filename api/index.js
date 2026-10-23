@@ -35,6 +35,7 @@ import verificationRouter from './routes/verification.route.js';
 import sosRouter from './routes/sos.route.js';
 import aiRouter from './routes/ai.route.js';
 import lunchRouter from './routes/lunch.route.js';
+import { autoCompletePickupOrders } from './controllers/lunch.controller.js';
 import uploadRouter from './routes/upload.route.js';
 import statsRouter from './routes/stats.route.js';
 import searchRouter from './routes/search.route.js';
@@ -169,6 +170,12 @@ const startServer = async () => {
 
     try {
         await connectDatabase();
+        const sweepPickupOrders = () => autoCompletePickupOrders().catch((error) => {
+            console.error('Could not auto-complete overdue pickup orders:', error.message);
+        });
+        sweepPickupOrders();
+        const pickupOrderSweep = setInterval(sweepPickupOrders, 60_000);
+        pickupOrderSweep.unref?.();
         const port = process.env.PORT || 3000;
         const server = app.listen(port, () => console.log(`Server is running on port ${port}!`));
         server.on('error', (error) => {

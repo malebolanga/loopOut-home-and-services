@@ -31,7 +31,9 @@ const foodOrderSchema = new mongoose.Schema({
     enum: ['Pending', 'Preparing', 'Ready for Collection', 'Completed', 'Cancelled'],
     default: 'Pending'
   },
+  pickupReadyAt: { type: Date },
   completedAt: { type: Date },
+  completionMethod: { type: String, enum: ['customer', 'auto_timeout'], default: undefined },
   isRated: { type: Boolean, default: false },
   ratingDetails: {
     shopRating: Number,
@@ -40,6 +42,8 @@ const foodOrderSchema = new mongoose.Schema({
     createdAt: Date
   }
 }, { timestamps: true });
+
+foodOrderSchema.index({ status: 1, fulfilment: 1, pickupReadyAt: 1 });
 
 const FoodOrder = mongoose.model('FoodOrder', foodOrderSchema);
 export default FoodOrder;

@@ -42,6 +42,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 import { isNativeApp, isAndroidApp } from '../utils/nativeApp';
 
 
@@ -57,6 +58,7 @@ import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 import CaughtUpHub from '../components/home/CaughtUpHub';
 import { TOP_CATEGORIES } from '../data/categories';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import DownloadAppSection from '../components/home/DownloadAppSection';
@@ -80,7 +82,7 @@ import {
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENTLY_VIEWED = 12;
-const DATA_FETCH_LIMIT = 50;
+const DATA_FETCH_LIMIT = 24;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 45000;
@@ -513,7 +515,12 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
       className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
       <div className="home-image-card relative aspect-[4/3] overflow-hidden bg-gray-50">
-        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover brightness-90 saturate-90 group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
+        <ImageGallery
+          imageUrls={[...(Array.isArray(item.imageUrls) ? item.imageUrls : []), item.image, item.images?.[0]].filter(Boolean)}
+          alt={item.name || 'Marketplace listing'}
+          type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : 'property') : type}
+          className="brightness-90 saturate-90"
+        />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-slate-950/45 via-slate-950/10 to-transparent" />
 
         {/* Top Badges */}
@@ -608,10 +615,11 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5 shadow-sm">
-            <img loading="lazy"
+            <ImageWithFallback
               src={request.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
               alt="user"
-              className="w-full h-full object-cover rounded-lg"
+              type="avatar"
+              className="w-full h-full rounded-lg"
             />
           </div>
           <div>
@@ -908,7 +916,7 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
 
   return (
     <img
-      src={effectiveSrc}
+      src={resolveApiUrl(effectiveSrc)}
       alt={alt || 'Food'}
       onError={() => {
         if (!hasError) setHasError(true);
@@ -3046,6 +3054,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
+  const [previewFood, setPreviewFood] = useState(null);
   const { coords } = useLocationCoords();
 
   // ── Shared multi-item cart state ─────────────────────────────────────────────
@@ -3343,17 +3352,27 @@ const FoodSpecialsStrip = ({ navigate }) => {
           >
             {/* Square cover artwork */}
             <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1 border border-gray-100/80 dark:border-gray-700/50">
-              <FoodMedia
-                src={item.image}
-                alt={item.name}
-                fallback="🍱"
-                className="text-xl group-hover:scale-110 transition-transform duration-300 select-none"
-                imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
-              />
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setPreviewFood(item);
+                }}
+                aria-label={`Zoom in on ${item.name} photo`}
+                className="absolute inset-0 z-0 h-full w-full cursor-zoom-in"
+              >
+                <FoodMedia
+                  src={item.image}
+                  alt={item.name}
+                  fallback="🍱"
+                  className="text-xl select-none"
+                  imgClassName="rounded-lg transition-transform duration-300 hover:scale-105"
+                />
+              </button>
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-0.5 left-0.5 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
+                <span className={`absolute top-0.5 left-0.5 z-10 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3374,7 +3393,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-20"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
@@ -3415,6 +3434,36 @@ const FoodSpecialsStrip = ({ navigate }) => {
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {previewFood && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/90 p-4 sm:p-8"
+            onClick={() => setPreviewFood(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${previewFood.name} photo`}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewFood(null)}
+              aria-label="Close food photo"
+              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl text-white backdrop-blur hover:bg-white/25 sm:right-6 sm:top-6"
+            >
+              ×
+            </button>
+            <div className="flex max-h-full w-full max-w-3xl flex-col items-center gap-3" onClick={(event) => event.stopPropagation()}>
+              <div className="h-[min(72dvh,680px)] w-full overflow-hidden rounded-2xl bg-black/20 sm:rounded-3xl">
+                <FoodMedia src={previewFood.image} alt={previewFood.name} fallback="🍱" className="text-7xl" imgClassName="!object-contain" />
+              </div>
+              <p className="max-w-full truncate text-center text-sm font-semibold text-white sm:text-base">{previewFood.name}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {/* ── Cross-Shop Guard Dialog ── */}
@@ -4066,7 +4115,7 @@ function MobileAppHomepage({
 
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '92px' : '8px' }}
+        style={{ top: isHeaderVisible ? '92px' : '-1px' }}
         className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
       >
         <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
@@ -4531,7 +4580,7 @@ function DesktopHomepage({
 
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '96px' : '0px' }}
+        style={{ top: isHeaderVisible ? '96px' : '-1px' }}
         className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
       >
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
@@ -5137,7 +5186,7 @@ const Home = () => {
       }
 
       const fetchPromises = [
-        fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5147,7 +5196,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingProperties(false); }),
 
-        fetch(`/api/service/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5157,7 +5206,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingServices(false); }),
 
-        fetch(`/api/helper/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5167,7 +5216,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
-        fetch(`/api/event/get?limit=50&sort=date&order=asc`, {
+        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5177,7 +5226,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingEvents(false); }),
 
-        fetch(`/api/sell?limit=50`, {
+        fetch(`/api/sell?limit=${DATA_FETCH_LIMIT}`, {
           signal: controllers.sell.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {

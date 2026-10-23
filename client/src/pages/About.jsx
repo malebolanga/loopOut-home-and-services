@@ -4,22 +4,14 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   House,
-  ShieldCheck,
   Sparkles,
-  Users,
   Compass,
-  Building2,
   HeartHandshake,
   UtensilsCrossed,
   Wrench,
   BedDouble,
   ArrowRight,
-  PhoneCall,
-  CheckCircle2,
-  Star,
-  MapPin,
-  Clock,
-  Award
+  CheckCircle2
 } from 'lucide-react';
 
 // Animation variants matching Home.jsx performance patterns
@@ -43,18 +35,11 @@ const staggerContainer = {
   }
 };
 
-const STATS = [
-  { label: 'Verified Listings', value: '1,500+', icon: Building2 },
-  { label: 'Active Users', value: '10,000+', icon: Users },
-  { label: 'Quality Stays & Services', value: '99.4%', icon: Star },
-  { label: 'Local Communities', value: '50+', icon: MapPin },
-];
-
 const OFFERINGS = [
   {
     icon: House,
     title: 'Property Sales & Rentals',
-    desc: 'Explore an extensive collection of verified homes for sale, long-term rentals, apartments, and commercial spaces with crystal-clear pricing and high-res tours.',
+    desc: 'Browse homes and commercial spaces listed for sale or rent. Review each listing’s details, price, location, and terms before you contact or make a request.',
     color: 'from-blue-500/10 to-indigo-500/10 border-blue-200 dark:border-blue-900/50',
     iconColor: 'text-blue-600 dark:text-blue-400',
     badge: 'Properties'
@@ -62,7 +47,7 @@ const OFFERINGS = [
   {
     icon: BedDouble,
     title: 'Short-Term Stays & BNB',
-    desc: 'Find guesthouses, cozy BnBs, holiday homes, and hourly suites designed for weekend getaways, business trips, or restful vacations across South Africa.',
+    desc: 'Discover places to stay and review the accommodation details, availability, price, and booking conditions provided by each host.',
     color: 'from-amber-500/10 to-orange-500/10 border-amber-200 dark:border-amber-900/50',
     iconColor: 'text-amber-600 dark:text-amber-400',
     badge: 'Hospitality'
@@ -70,7 +55,7 @@ const OFFERINGS = [
   {
     icon: Wrench,
     title: 'Local Services & Helpers',
-    desc: 'Connect directly with reliable domestic helpers, beauty professionals, certified technicians, tutors, cleaners, and automotive care experts.',
+    desc: 'Find local providers across categories such as home help, beauty, tutoring, photography, repairs, and vehicle care.',
     color: 'from-emerald-500/10 to-teal-500/10 border-emerald-200 dark:border-emerald-900/50',
     iconColor: 'text-emerald-600 dark:text-emerald-400',
     badge: 'Services'
@@ -78,7 +63,7 @@ const OFFERINGS = [
   {
     icon: UtensilsCrossed,
     title: 'Food & Lunch Hub',
-    desc: 'Discover fresh local meals, hot platters, and artisanal food kitchens. Order ahead for quick pickup or register your own culinary shop to reach local customers.',
+    desc: 'Explore food shops and menus in your area, then place an order for collection where the shop offers it.',
     color: 'from-rose-500/10 to-pink-500/10 border-rose-200 dark:border-rose-900/50',
     iconColor: 'text-rose-600 dark:text-rose-400',
     badge: 'Food Hub'
@@ -87,19 +72,19 @@ const OFFERINGS = [
 
 const PILLARS = [
   {
-    title: 'Verified Listings',
-    desc: 'Every stay, property, and service provider is screened to ensure authenticity, safety, and reliability for total peace of mind.',
-    icon: ShieldCheck
+    title: 'Clear listing details',
+    desc: 'Compare the information, prices, and conditions providers publish before you make a booking or request.',
+    icon: House
   },
   {
-    title: 'Transparent Pricing',
-    desc: 'No hidden surprise fees. Clear booking costs, honest estimates, and direct connections between customers and hosts.',
-    icon: Award
+    title: 'Direct communication',
+    desc: 'Use LoopOut’s available messaging and contact features to discuss an offering with its provider.',
+    icon: Compass
   },
   {
-    title: 'Real-Time Connections',
-    desc: 'Instant messaging, live availability calendars, and direct WhatsApp support facilitate effortless communication.',
-    icon: Clock
+    title: 'Provider verification',
+    desc: 'Some provider accounts may complete identity checks. A verification status is not a guarantee of service quality or performance.',
+    icon: CheckCircle2
   },
   {
     title: 'Empowering Communities',
@@ -115,7 +100,7 @@ export default function About() {
         <title>About LoopOut — Redefining Local Stays, Services & Living</title>
         <meta
           name="description"
-          content="Learn about LoopOut: our mission, our story, and how we empower communities through verified property rentals, local services, BnBs, and food hubs."
+            content="Learn about LoopOut, a local marketplace for property, stays, services, food, and goods."
         />
         <link rel="canonical" href="https://loupeout-home-7rlt.onrender.com/about" />
       </Helmet>
@@ -153,7 +138,7 @@ export default function About() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-6 text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
-            LoopOut is an all-in-one local marketplace built to connect verified properties, BnB getaways, skilled service providers, and neighborhood food kitchens with the people who need them.
+            LoopOut is a local marketplace where people can discover property, places to stay, services, food, and goods, and where providers can share what they offer.
           </motion.p>
 
           <motion.div
@@ -180,37 +165,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* ── STATS STRIP ── */}
-      <section className="py-12 bg-white dark:bg-gray-900/60 border-b border-gray-200/70 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {STATS.map((stat, i) => {
-              const Icon = stat.icon;
-              return (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.4 }}
-                  className="p-4 rounded-2xl bg-gray-50/80 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800"
-                >
-                  <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white">
-                    {stat.value}
-                  </div>
-                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">
-                    {stat.label}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
       {/* ── WHO WE ARE & OUR MISSION ── */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -227,21 +181,21 @@ export default function About() {
             </div>
 
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-950 dark:text-white leading-snug">
-              Making real estate, local services & food accessible to everyone.
+              Helping people find local offerings and helping providers reach customers.
             </h2>
 
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base">
-              Founded on the belief that finding a place to stay, renting a property, or securing trusted local help should never be stressful, LoopOut brings modern technology to local South African communities.
+              LoopOut brings property listings, accommodation, local services, food, and goods together in one place. People can browse offerings, contact providers, and use available booking or order features.
             </p>
 
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm sm:text-base">
-              Whether you are an independent property owner showcasing a guesthouse, a domestic specialist building your business, or a traveler looking for a comfortable weekend lodge, LoopOut delivers an intuitive, secure platform tailored to your needs.
+              Customers can compare the details providers share before making a request. Providers can create a profile and publish offerings for people in their area to discover.
             </p>
 
             <div className="pt-2 flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm font-bold text-gray-800 dark:text-gray-200">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <span>Zero Hidden Fees</span>
+                <span>Review prices before you confirm</span>
               </div>
               <div className="flex items-center gap-2 text-sm font-bold text-gray-800 dark:text-gray-200">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
@@ -263,28 +217,28 @@ export default function About() {
                 Our Mission & Vision
               </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
-                To bridge the gap between high-demand local services, verified accommodation, and community convenience through AI-powered search, fair opportunities, and transparent booking.
+                To make it easier for people to find local offerings and for independent providers to share their work with nearby customers.
               </p>
               <div className="space-y-3.5">
                 <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/80 dark:bg-gray-900/80 border border-gray-100 dark:border-gray-800">
                   <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 font-bold text-xs">01</span>
                   <div>
                     <h4 className="font-bold text-sm text-gray-900 dark:text-white">Empower Local Hosts & Workers</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Direct monetization tools without unfair middleman cuts.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tools to create profiles and publish offerings on the marketplace.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/80 dark:bg-gray-900/80 border border-gray-100 dark:border-gray-800">
                   <span className="p-2 rounded-xl bg-orange-500/10 text-orange-600 font-bold text-xs">02</span>
                   <div>
                     <h4 className="font-bold text-sm text-gray-900 dark:text-white">Seamless User Experience</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Fast, responsive browsing with instant GPS radius discovery.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Search and browse listings by category and location.</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/80 dark:bg-gray-900/80 border border-gray-100 dark:border-gray-800">
                   <span className="p-2 rounded-xl bg-rose-500/10 text-rose-600 font-bold text-xs">03</span>
                   <div>
                     <h4 className="font-bold text-sm text-gray-900 dark:text-white">Trust & Verification</h4>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Rigorous validation for properties, helpers, and listings.</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Some provider accounts can submit identity documents for review.</p>
                   </div>
                 </div>
               </div>
@@ -390,7 +344,7 @@ export default function About() {
               Ready to explore LoopOut or list your own service?
             </h2>
             <p className="mt-3 text-sm sm:text-base text-white/90 leading-relaxed">
-              Join thousands of community members across the country finding stays, hiring local helpers, and enjoying fresh local food today.
+            Browse LoopOut to find an offering, or create a provider account to share what you do.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center justify-center sm:justify-start gap-4">

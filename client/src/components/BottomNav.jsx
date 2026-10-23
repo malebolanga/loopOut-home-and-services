@@ -306,6 +306,23 @@ const BottomNav = () => {
                   ))}
                 </div>
 
+                <button
+                  onClick={() => {
+                    navigate('/become');
+                    setShowProfileDropup(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
+                    <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+                  </span>
+                  <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+                </button>
+
                 {/* Sign Out Button */}
                 <div className="border-t border-slate-100 dark:border-gray-800 pt-3 mt-1">
                   <button

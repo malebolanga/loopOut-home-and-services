@@ -24,9 +24,10 @@ import {
   Sparkles,
   AlertCircle,
   RefreshCw,
-  X
+  X,
+  Star
 } from 'lucide-react';
-import { subscribeToOrders } from '../services/lunchService';
+import { subscribeToOrders, updateOrderStatus, rateShop } from '../services/lunchService';
 
 const STATUS_STEPS = [
   { key: 'received', label: 'Order Received', desc: 'Shop acknowledged order', icon: CheckCircle2, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200' },
@@ -84,6 +85,57 @@ export default function MyFoodOrders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeReceiptOrder, setActiveReceiptOrder] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [ratingTargetOrder, setRatingTargetOrder] = useState(null);
+  const [shopRating, setShopRating] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingError, setRatingError] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [orderActionError, setOrderActionError] = useState('');
+
+  const completeCustomerOrder = async (order) => {
+    const orderId = order._id || order.id || order.orderId;
+    try {
+      setOrderActionError('');
+      const savedOrder = await updateOrderStatus(orderId, 'Completed');
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, ...savedOrder } : entry
+      ));
+      if (!order.isRated) {
+        setShopRating(5);
+        setRatingComment('');
+        setRatingError('');
+        setRatingTargetOrder({ ...order, ...savedOrder });
+      }
+    } catch (error) {
+      setOrderActionError(error.message || 'Could not complete this order. Please try again.');
+    }
+  };
+
+  const submitOrderRating = async (event) => {
+    event.preventDefault();
+    if (!ratingTargetOrder) return;
+    setRatingSubmitting(true);
+    setRatingError('');
+    try {
+      const orderId = ratingTargetOrder._id || ratingTargetOrder.id || ratingTargetOrder.orderId;
+      await rateShop(ratingTargetOrder.shopId, {
+        orderId,
+        shopRating,
+        foodRating: shopRating,
+        comment: ratingComment,
+        userName: currentUser?.username || currentUser?.name || 'Customer',
+      });
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, isRated: true } : entry
+      ));
+      setRatingTargetOrder(null);
+      setRatingComment('');
+    } catch (error) {
+      setRatingError(error.message || 'Could not save your rating. Please try again.');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   // Load orders from API + fallback to localStorage cached orders
   useEffect(() => {
@@ -288,6 +340,7 @@ export default function MyFoodOrders() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
+            {orderActionError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">{orderActionError}</p>}
             {filteredOrders.map((order, idx) => {
               const orderId = order._id || order.id || `ORD-${idx + 1}`;
               const currentStep = getStepIndex(order.status);
@@ -299,6 +352,7 @@ export default function MyFoodOrders() {
               const shopPhone = order.shopPhone || order.shop?.phone || '';
               const fulfilment = order.fulfilment || order.type || 'pickup';
               const items = order.items || (order.mealName ? [{ name: order.mealName, qty: order.qty || 1, price: order.price }] : []);
+              const isCustomerOrder = Boolean(currentUser?._id || currentUser?.id) && String(order.customerId || '') === String(currentUser?._id || currentUser?.id);
 
               return (
                 <motion.div
@@ -343,6 +397,38 @@ export default function MyFoodOrders() {
                       </span>
                     </div>
                   </div>
+
+                  {isCustomerOrder && order.status === 'Ready for Collection' && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        {fulfilment === 'delivery'
+                          ? 'Confirm after your delivery arrives.'
+                          : 'Confirm after collection. Unconfirmed pickup orders close automatically 2 hours after the shop marks them ready.'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => completeCustomerOrder(order)}
+                        className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700"
+                      >
+                        {fulfilment === 'delivery' ? 'Confirm delivery received' : 'I collected it — complete order'}
+                      </button>
+                    </div>
+                  )}
+
+                  {isCustomerOrder && order.status === 'Completed' && !order.isRated && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShopRating(5);
+                        setRatingComment('');
+                        setRatingError('');
+                        setRatingTargetOrder(order);
+                      }}
+                      className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-white transition hover:bg-amber-600"
+                    >
+                      Rate your meal and shop
+                    </button>
+                  )}
 
                   {/* Real-time 4-step progress tracker */}
                   <div className="px-2 py-3 rounded-2xl bg-gray-50/80 dark:bg-gray-950/50 border border-gray-100 dark:border-gray-800">
@@ -497,6 +583,30 @@ export default function MyFoodOrders() {
           </div>
         )}
       </main>
+
+      {ratingTargetOrder && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setRatingTargetOrder(null)}>
+          <form onSubmit={submitOrderRating} onClick={(event) => event.stopPropagation()} className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-5 shadow-2xl dark:bg-gray-900">
+            <div>
+              <h2 className="text-base font-black text-gray-900 dark:text-white">How was {ratingTargetOrder.shopName}?</h2>
+              <p className="mt-1 text-xs text-gray-500">Only the customer who placed this order can leave a review.</p>
+            </div>
+            <div className="flex justify-center gap-2" aria-label={`Rating: ${shopRating} out of 5 stars`}>
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button key={value} type="button" onClick={() => setShopRating(value)} aria-label={`${value} star${value === 1 ? '' : 's'}`}>
+                  <Star className={`h-8 w-8 ${value <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                </button>
+              ))}
+            </div>
+            <textarea value={ratingComment} onChange={(event) => setRatingComment(event.target.value)} rows={3} maxLength={500} placeholder="Share a few words (optional)" className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800" />
+            {ratingError && <p role="alert" className="text-xs font-semibold text-rose-600">{ratingError}</p>}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setRatingTargetOrder(null)} className="flex-1 rounded-xl bg-gray-100 px-3 py-2.5 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-200">Later</button>
+              <button type="submit" disabled={ratingSubmitting} className="flex-1 rounded-xl bg-amber-500 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-60">{ratingSubmitting ? 'Saving…' : 'Submit rating'}</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* ── DIGITAL RECEIPT MODAL ── */}
       <AnimatePresence>

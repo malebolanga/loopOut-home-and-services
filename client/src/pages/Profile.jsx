@@ -1131,6 +1131,12 @@ export default function Profile() {
                       onClick={() => setActiveSection("host-account")}
                     />}
                     <MenuItem
+                      icon={FaUserPlus}
+                      label="Become a provider"
+                      active={false}
+                      onClick={() => navigate('/become')}
+                    />
+                    <MenuItem
                       icon={HeartIcon}
                       label="Wishlist Vault"
                       active={activeSection === "wishlist"}
