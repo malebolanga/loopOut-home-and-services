@@ -1,228 +1,195 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  XMarkIcon, 
-  ChevronRightIcon, 
-  ChevronLeftIcon,
-  PlusCircleIcon,
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
   CalendarDaysIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+  MapPinIcon,
+  PlusCircleIcon,
   SparklesIcon,
-  MapIcon,
-  UserCircleIcon
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
+
+const steps = [
+  {
+    eyebrow: 'Discover nearby',
+    title: 'One place for local finds.',
+    description: 'LoopOut brings together places to stay, services, helpers, food, events, and items for sale.',
+    detail: 'Start with search or browse the categories on the home page.',
+    icon: SparklesIcon,
+    tint: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300',
+  },
+  {
+    eyebrow: 'Choose with confidence',
+    title: 'Check the details first.',
+    description: 'Open a listing to see its photos, price, location, reviews, and what is included.',
+    detail: 'For questions, message the person offering it before you continue.',
+    icon: MapPinIcon,
+    tint: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300',
+  },
+  {
+    eyebrow: 'Book or order',
+    title: 'Follow the steps shown.',
+    description: 'Send a booking request or place an order, depending on the listing. Review the price and details before confirming.',
+    detail: 'Find your updates later in My LoopOut or My Orders.',
+    icon: CalendarDaysIcon,
+    tint: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300',
+  },
+  {
+    eyebrow: 'Offer something',
+    title: 'Share what you do or sell.',
+    description: 'Sign in, tap Become, choose what you want to offer, then create a listing with your details and price.',
+    detail: 'You can manage your listing and requests from your account.',
+    icon: PlusCircleIcon,
+    tint: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300',
+  },
+];
 
 const OnboardingGuide = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const current = steps[currentStep];
+  const StepIcon = current.icon;
 
   useEffect(() => {
-    const hasSeenGuide = localStorage.getItem('hasSeenOnboardingGuide');
-    if (!hasSeenGuide && location.pathname === '/') {
-      // Small delay to let the initial splash screen finish
-      const timer = setTimeout(() => {
-        setIsVisible(true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
+    if (location.pathname !== '/' || localStorage.getItem('hasSeenOnboardingGuide')) return undefined;
+    const timer = window.setTimeout(() => setIsVisible(true), 3000);
+    return () => window.clearTimeout(timer);
   }, [location.pathname]);
 
-  const steps = [
-    {
-      title: "Welcome to loopOut",
-      description: "Your immersive gateway to homes, services, and local experiences. Let's show you how to navigate the future of community commerce.",
-      icon: <SparklesIcon className="w-12 h-12 text-rose-500" />,
-      image: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
-      accent: "bg-rose-500"
-    },
-    {
-      title: "Seamless Navigation",
-      description: "Explore categories through our dynamic header. Switch between Homes, Services, and Events with a single tap. Use the 'Explore' tab to find hidden gems near you.",
-      icon: <MapIcon className="w-12 h-12 text-indigo-500" />,
-      image: "https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800",
-      accent: "bg-indigo-500"
-    },
-    {
-      title: "Empower Your Skills",
-      description: "Ready to share? Click 'Become a Host' or use the 'Create' button in your profile to list your space, service, or upcoming event. Our Neural guide will walk you through the setup.",
-      icon: <PlusCircleIcon className="w-12 h-12 text-emerald-500" />,
-      image: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
-      accent: "bg-emerald-500"
-    },
-    {
-      title: "Master the Booking",
-      description: "Found something perfect? Select your dates, review the details, and book instantly. You can track all your upcoming trips and bookings in your personal dashboard.",
-      icon: <CalendarDaysIcon className="w-12 h-12 text-amber-500" />,
-      image: "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800",
-      accent: "bg-amber-500"
-    },
-    {
-      title: "Your Neural Identity",
-      description: "Your profile is your hub. Manage listings, view mutual connections, and keep your preferences synced across the platform.",
-      icon: <UserCircleIcon className="w-12 h-12 text-violet-500" />,
-      image: "https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=800",
-      accent: "bg-violet-500"
-    }
-  ];
-
-  const handleClose = () => {
+  const closeGuide = () => {
     localStorage.setItem('hasSeenOnboardingGuide', 'true');
     setIsVisible(false);
   };
 
-  // Let users escape the tour intuitively — clicking the backdrop or
-  // pressing Escape are both standard, expected ways to dismiss a modal.
-  // Without these, a user who doesn't spot the small X button could
-  // reasonably think the whole app had frozen.
   useEffect(() => {
-    if (!isVisible) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') handleClose();
+    if (!isVisible) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') closeGuide();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isVisible]);
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      handleClose();
-    }
-  };
-
-  const prevStep = () => {
-    setCurrentStep(prev => Math.max(0, prev - 1));
+  const startExploring = () => {
+    closeGuide();
+    navigate('/search');
   };
 
   if (!isVisible) return null;
 
   return (
     <AnimatePresence>
-      {isVisible && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-6 bg-black/60 backdrop-blur-xl"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={closeGuide}
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+        role="presentation"
+      >
+        <motion.section
+          initial={{ opacity: 0, y: 18, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="loopout-intro-title"
+          className="relative max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950"
         >
-          <motion.div 
-            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.9, y: 20, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[80vh] md:h-[600px]"
+          <div className="h-1.5 bg-slate-100 dark:bg-gray-800">
+            <motion.div
+              className="h-full bg-rose-500"
+              animate={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={closeGuide}
+            aria-label="Close introduction"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
           >
-            {/* Image Side */}
-            <div className="w-full md:w-1/2 h-1/3 md:h-full relative overflow-hidden bg-gray-900">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={currentStep}
-                  initial={{ scale: 1.2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 1.1, opacity: 0 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  src={steps[currentStep].image}
-                  className="absolute inset-0 w-full h-full object-cover opacity-60"
-                  alt="Onboarding"
-                />
-              </AnimatePresence>
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
-              
-              <div className="absolute bottom-8 left-8 right-8">
-                <motion.div
-                  key={currentStep}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  className="flex items-center gap-4"
-                >
-                  <div className={`w-1 h-12 ${steps[currentStep].accent} rounded-full`} />
-                  <span className="text-white text-4xl font-black tracking-tighter">
-                    0{currentStep + 1}
-                  </span>
-                </motion.div>
-              </div>
-            </div>
+            <XMarkIcon className="h-5 w-5" />
+          </button>
 
-            {/* Content Side */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-between bg-white">
-              <button 
-                onClick={handleClose}
-                aria-label="Skip onboarding tour"
-                className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors"
+          <div className="p-6 sm:p-9">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.18 }}
               >
-                <XMarkIcon className="w-6 h-6 text-gray-400" />
-              </button>
-
-              <div className="flex-1 flex flex-col justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentStep}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -20, opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="space-y-6"
-                  >
-                    <div className="mb-2">
-                       {steps[currentStep].icon}
-                    </div>
-                    <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-none tracking-tight">
-                      {steps[currentStep].title}
-                    </h2>
-                    <p className="text-gray-500 text-lg leading-relaxed font-medium">
-                      {steps[currentStep].description}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Navigation */}
-              <div className="pt-8 flex items-center justify-between">
-                <div className="flex gap-2">
-                  {steps.map((_, idx) => (
-                    <div 
-                      key={idx}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        idx === currentStep ? 'w-8 bg-gray-900' : 'w-2 bg-gray-200'
-                      }`}
-                    />
-                  ))}
+                <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${current.tint}`}>
+                  <StepIcon className="h-7 w-7" aria-hidden="true" />
                 </div>
-
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={handleClose}
-                    className="px-3 py-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors"
-                  >
-                    Skip tour
-                  </button>
-                  {currentStep > 0 && (
-                    <button
-                      onClick={prevStep}
-                      className="p-4 rounded-2xl border-2 border-gray-100 text-gray-400 hover:border-gray-200 hover:text-gray-600 transition-all"
-                    >
-                      <ChevronLeftIcon className="w-6 h-6" />
-                    </button>
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-400">
+                  {current.eyebrow}
+                </p>
+                <h2 id="loopout-intro-title" className="mt-2 max-w-md text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-3xl">
+                  {current.title}
+                </h2>
+                <p className="mt-3 text-base leading-7 text-slate-600 dark:text-gray-300">
+                  {current.description}
+                </p>
+                <div className="mt-5 flex items-start gap-2.5 rounded-2xl bg-slate-50 p-3.5 text-sm leading-6 text-slate-600 dark:bg-gray-900 dark:text-gray-300">
+                  {currentStep === 1 ? (
+                    <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
+                  ) : currentStep === 0 ? (
+                    <MagnifyingGlassIcon className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
+                  ) : (
+                    <SparklesIcon className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
                   )}
-                  <button
-                    onClick={nextStep}
-                    className={`
-                      px-8 py-4 rounded-2xl flex items-center gap-2 font-black uppercase tracking-widest text-sm shadow-xl transition-all active:scale-95
-                      ${currentStep === steps.length - 1 ? 'bg-rose-500 text-white shadow-rose-200' : 'bg-gray-900 text-white shadow-gray-200'}
-                    `}
-                  >
-                    {currentStep === steps.length - 1 ? "Get Started" : "Next"}
-                    <ChevronRightIcon className="w-5 h-5" />
-                  </button>
+                  <span>{current.detail}</span>
                 </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5 dark:border-gray-800">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-gray-400" aria-live="polite">
+                <span>{currentStep + 1} of {steps.length}</span>
+                <span aria-hidden="true">·</span>
+                <button type="button" onClick={() => { closeGuide(); navigate('/how-it-works'); }} className="underline underline-offset-2 hover:text-rose-600">
+                  How LoopOut works
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                {currentStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep((step) => Math.max(0, step - 1))}
+                    aria-label="Previous introduction step"
+                    className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-900"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                  </button>
+                )}
+                {currentStep === steps.length - 1 ? (
+                  <>
+                    <button type="button" onClick={() => { closeGuide(); navigate('/become'); }} className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 sm:px-4 sm:text-sm dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900">
+                      Offer
+                    </button>
+                    <button type="button" onClick={startExploring} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-rose-600 px-5 text-sm font-extrabold text-white transition hover:bg-rose-700">
+                      Start exploring <ChevronRightIcon className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" onClick={() => setCurrentStep((step) => Math.min(steps.length - 1, step + 1))} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-gray-200">
+                    Next <ChevronRightIcon className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
+          </div>
+        </motion.section>
+      </motion.div>
     </AnimatePresence>
   );
 };

@@ -141,7 +141,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
     : needsRating ? (isFood ? 'Rate this order' : 'Rate your provider') : isFood ? 'View food orders' : isGoods ? 'Item request' : 'View details';
 
   return (
-    <motion.article layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+    <motion.article layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
       <div className="flex items-start gap-3">
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl ${isFood ? 'bg-amber-50 dark:bg-amber-950/50' : 'bg-rose-50 dark:bg-rose-950/50'}`}>
           {item.image ? <img src={item.image} alt="" className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none'; }} /> : isFood ? <UtensilsCrossed className="h-5 w-5 text-amber-600" /> : isGoods ? <ShoppingBag className="h-5 w-5 text-rose-600" /> : <CalendarDays className="h-5 w-5 text-rose-600" />}
@@ -158,7 +158,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
             {isFood ? (item.items.length ? item.items.map((entry) => `${entry.quantity || entry.qty || 1}× ${entry.name || entry.title || 'Item'}`).join(', ') : `Order #${item.id.slice(-6).toUpperCase()}`) : isGoods ? `With ${item.role === 'seller' ? item.buyerName : item.sellerName}` : `With ${item.provider}`}
           </p>
         </div>
-        {item.price != null && <span className="shrink-0 text-xs font-black text-slate-800 dark:text-gray-200">R{Number(item.price).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>}
+        {item.price != null && <span className="max-w-[38%] shrink-0 truncate text-right text-xs font-black text-slate-800 dark:text-gray-200">R{Number(item.price).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>}
       </div>
 
       {item.location && <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-gray-400"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{item.location}</span></p>}
@@ -168,7 +168,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
       <div className="mt-4 rounded-2xl bg-slate-50 p-3 dark:bg-gray-950/70">
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-gray-400">{item.cancelled ? 'Status' : 'Progress'}</span>
-          <span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide ${item.cancelled ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : item.needsAction ? 'bg-violet-100 text-violet-800 dark:bg-violet-950/60 dark:text-violet-300' : item.completed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-200 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>
+          <span className={`min-w-0 max-w-[58%] truncate rounded-full px-2.5 py-1 text-right text-[9px] font-black uppercase tracking-wide ${item.cancelled ? 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300' : item.needsAction ? 'bg-violet-100 text-violet-800 dark:bg-violet-950/60 dark:text-violet-300' : item.completed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-slate-200 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>
             {item.cancelled ? 'Cancelled' : item.needsAction ? 'Needs your attention' : item.completed ? 'Complete' : item.status}
           </span>
         </div>
@@ -464,7 +464,7 @@ export default function MyLoopOut() {
   const loading = bookingsLoading || ordersLoading;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 pb-24 text-slate-900 transition-colors dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-gray-100 md:pb-12">
+    <div className="min-h-screen w-full min-w-0 overflow-x-clip bg-gradient-to-b from-slate-50 via-white to-slate-50 pb-24 text-slate-900 transition-colors dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-gray-100 md:pb-12">
       <Helmet><title>My LoopOut · Bookings and Orders</title><meta name="description" content="Track your LoopOut bookings, food orders, deliveries and collections in one place." /></Helmet>
 
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/90 sm:px-6">
@@ -477,7 +477,7 @@ export default function MyLoopOut() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         {!userId ? (
           <section className="mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-gray-800 dark:bg-gray-900">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-300"><Sparkles className="h-6 w-6" /></div>

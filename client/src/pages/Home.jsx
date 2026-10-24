@@ -3745,6 +3745,7 @@ function MobileAppHomepage({
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const lastScrollYRef = useRef(0);
+  const lastHeaderDirectionYRef = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -3753,10 +3754,10 @@ function MobileAppHomepage({
 
       if (currentScrollY < 50) {
         setIsHeaderVisible(true);
-      } else if (isScrollingUp) {
-        setIsHeaderVisible(true);
-      } else {
-        setIsHeaderVisible(false);
+        lastHeaderDirectionYRef.current = currentScrollY;
+      } else if (Math.abs(currentScrollY - lastHeaderDirectionYRef.current) >= 8) {
+        setIsHeaderVisible(isScrollingUp);
+        lastHeaderDirectionYRef.current = currentScrollY;
       }
 
       setIsScrolled(currentScrollY > 60);
@@ -4116,7 +4117,7 @@ function MobileAppHomepage({
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '92px' : '-1px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-[350ms] ease-in-out"
       >
         <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
           {visibleTabs.map((tab) => {
@@ -4146,9 +4147,9 @@ function MobileAppHomepage({
                 className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1 relative"
                 aria-label={tab.label}
               >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+                <div className={`${isRecentAdded ? 'w-11 h-11 sm:w-12 sm:h-12' : 'w-9 h-9 sm:w-10 sm:h-10'} rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105`}>
                   {isRecentAdded ? (
-                    <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+                    <RecentAdded3DIcon className="w-10 h-10 sm:w-11 sm:h-11" />
                   ) : (
                     <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
                   )}
@@ -4171,8 +4172,8 @@ function MobileAppHomepage({
             className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1"
             aria-label="Browse all categories"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-              <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+              <MoreCategories3DIcon className="w-10 h-10 sm:w-11 sm:h-11" />
             </div>
             <span className="text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-rose-600 text-center whitespace-normal">
               Categories
@@ -4185,7 +4186,7 @@ function MobileAppHomepage({
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
         {/* Spacer: height of categories bar only */}
-        <div className="h-[68px]" />
+        <div className="h-[80px]" />
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -4581,7 +4582,7 @@ function DesktopHomepage({
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '96px' : '-1px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
         <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
@@ -4612,9 +4613,9 @@ function DesktopHomepage({
                   className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={tab.label}
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <div className={`${isRecentAdded ? 'w-11 h-11' : 'w-9 h-9'} rounded-2xl bg-white dark:bg-gray-950 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105`}>
                     {isRecentAdded ? (
-                      <RecentAdded3DIcon className="w-8 h-8" />
+                      <RecentAdded3DIcon className="w-10 h-10" />
                     ) : (
                       <Category3DIcon type={tab.id} className="w-8 h-8" />
                     )}
@@ -4642,8 +4643,8 @@ function DesktopHomepage({
               className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
               aria-label="Browse all categories"
             >
-              <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-                <MoreCategories3DIcon className="w-8 h-8" />
+              <div className="w-11 h-11 rounded-2xl bg-white dark:bg-gray-950 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
+                <MoreCategories3DIcon className="w-10 h-10" />
               </div>
               <div className="text-left">
                 <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">

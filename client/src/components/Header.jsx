@@ -188,6 +188,7 @@ export default function Header() {
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const lastNavDirectionY = useRef(0);
 
   const playNotificationChime = useCallback(() => {
     if (!isSoundEnabled) return;
@@ -456,10 +457,10 @@ export default function Header() {
 
       if (currentScrollY < 50) {
         setIsNavVisible(true);
-      } else if (isScrollingUp) {
-        setIsNavVisible(true);
-      } else {
-        setIsNavVisible(false);
+        lastNavDirectionY.current = currentScrollY;
+      } else if (Math.abs(currentScrollY - lastNavDirectionY.current) >= 8) {
+        setIsNavVisible(isScrollingUp);
+        lastNavDirectionY.current = currentScrollY;
       }
 
       setScrolled(currentScrollY > 20);
@@ -787,7 +788,7 @@ export default function Header() {
           transition={{ type: 'spring', damping: 25, stiffness: 120, opacity: { duration: 0.2 } }}
           ref={headerRef}
         className={`app-safe-top fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
-          scrolled ? 'bg-white/90 dark:bg-gray-950/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
+          scrolled ? 'shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : ''
         } ${hideHeader ? 'pointer-events-none' : ''}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">

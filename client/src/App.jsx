@@ -431,6 +431,9 @@ function AppContent() {
     '/inbox',
   ];
   const hideHeaderPaths = [
+    '/sign-in',
+    '/sign-up',
+    '/forgot-password',
     '/calendar',
     '/schedule',
     '/host-dashboard',
@@ -498,9 +501,11 @@ function AppContent() {
       <PhoneNotificationManager />
       <AuthSessionManager />
       {!hideHeader && <Header />}
-      <Suspense fallback={<NeuralLoader fullScreen={true} />}>
-        <AnimatedRoutes />
-      </Suspense>
+      <div className={hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}>
+        <Suspense fallback={<NeuralLoader fullScreen={true} />}>
+          <AnimatedRoutes />
+        </Suspense>
+      </div>
       {!isStoragePage && !isInboxPage && <BottomNav />}
       {!hideFooter && <Footer />}
     </div>

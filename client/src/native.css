@@ -23,6 +23,17 @@ html, body {
     padding-top: max(28px, calc(8px + env(safe-area-inset-top, 28px))) !important;
   }
 
+  /* Reserve the fixed app header height for every route where it is shown.
+     Page roots that also use app-safe-top already get the status-bar inset from
+     this wrapper, so clear their duplicate top padding. */
+  .app-route-content-with-header {
+    padding-top: calc(5rem + max(28px, calc(8px + env(safe-area-inset-top, 28px))));
+  }
+
+  .app-route-content-with-header > div > .app-safe-top:first-child {
+    padding-top: 0 !important;
+  }
+
   /* Baseline protection for every route: pages without their own explicit
      mobile bottom padding still scroll above the fixed navigation bar. */
   html {
@@ -104,6 +115,12 @@ html, body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Keep the mobile menu flush with the screen's bottom edge. */
+.app-safe-bottom.bottom-nav-edge,
+.glass-bottom-nav.bottom-nav-edge {
+  padding-bottom: 0 !important;
 }
 
 /* App-like transitions */

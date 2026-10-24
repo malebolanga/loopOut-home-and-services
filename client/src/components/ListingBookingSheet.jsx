@@ -530,6 +530,8 @@ export default function ListingBookingSheet({
 
   const propertyType = listing?.type || '';
   const isDailyStay = DAILY_STAY_TYPES.includes(propertyType);
+  const selectedRoomType = listing?.roomTypes?.find(room => room.name === bookingDetails.selectedUnit);
+  const availableRoomCount = Math.max(1, Number(selectedRoomType?.count || listing?.totalUnits || listing?.numberOfRooms || listing?.numberOfApartments || 1));
   const isHourlyRoom = HOURLY_ROOM_TYPES.includes(propertyType);
   const isRent = RENT_TYPES.includes(propertyType);
   const serviceConfig = getServiceConfig(listing);
@@ -771,6 +773,7 @@ export default function ListingBookingSheet({
           message: `${bookingDetails.selectedUnit ? `[${config.unitLabel}: ${bookingDetails.selectedUnit}] ` : ''}${bookingDetails.specialRequests || ''}`.trim(),
           subtype: bookingDetails.selectedUnit || undefined,
           numberOfGuests: Number(bookingDetails.numberOfGuests || bookingDetails.guests) || 1,
+          numberOfRooms: isDailyStay ? Number(bookingDetails.rooms) || 1 : undefined,
         })
       });
 
@@ -1176,7 +1179,11 @@ export default function ListingBookingSheet({
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => setBookingDetails(p => ({ ...p, selectedUnit: item.name }))}
+                            onClick={() => setBookingDetails(p => ({
+                              ...p,
+                              selectedUnit: item.name,
+                              rooms: Math.min(Number(p.rooms) || 1, Math.max(1, Number(item.count || listing?.totalUnits || listing?.numberOfRooms || 1)))
+                            }))}
                             className={`p-3 rounded-2xl border-2 text-left transition-all flex items-center justify-between ${isSelected ? `${accentCls.border}` : 'border-gray-200 dark:border-gray-800 hover:border-gray-300'}`}
                           >
                             <div className="min-w-0 flex-1">
@@ -1266,9 +1273,10 @@ export default function ListingBookingSheet({
                       </div>
                       <div>
                         <label className={labelCls}>Rooms</label>
-                        <select name="rooms" value={bookingDetails.rooms} onChange={handleChange} className={inputCls(false)}>
-                          {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Room{n > 1 ? 's' : ''}</option>)}
+                        <select name="rooms" value={Math.min(bookingDetails.rooms, availableRoomCount)} onChange={handleChange} className={inputCls(false)}>
+                          {Array.from({ length: Math.min(availableRoomCount, 20) }, (_, index) => index + 1).map(n => <option key={n} value={n}>{n} Room{n > 1 ? 's' : ''}</option>)}
                         </select>
+                        <p className="mt-1 text-[10px] text-gray-500">Up to {availableRoomCount} {selectedRoomType ? `${selectedRoomType.name} ` : ''}room{availableRoomCount === 1 ? '' : 's'} at this property</p>
                       </div>
                     </div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 pt-1">Add-ons</h3>

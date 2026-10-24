@@ -54,7 +54,7 @@ export const createBooking = async (req, res) => {
       startDate, endDate,
       totalPrice, price,
       phone, message, subtype, numberOfGuests, functionType,
-      selectedPerformer, performerExperience, performerImage
+      selectedPerformer, performerExperience, performerImage, numberOfRooms
     } = req.body;
 
     const mainId = listingId || helperId || serviceId || eventId;
@@ -68,6 +68,10 @@ export const createBooking = async (req, res) => {
       : Number(numberOfGuests);
     if (parsedGuestCount !== undefined && (!Number.isInteger(parsedGuestCount) || parsedGuestCount < 1)) {
       return res.status(400).json({ error: 'Number of guests must be a positive whole number.' });
+    }
+    const parsedRoomCount = numberOfRooms === '' || numberOfRooms === undefined ? 1 : Number(numberOfRooms);
+    if (!Number.isInteger(parsedRoomCount) || parsedRoomCount < 1) {
+      return res.status(400).json({ error: 'Number of rooms must be a positive whole number.' });
     }
 
     // Fetch item from DB to calculate server-authoritative price fallback
@@ -121,10 +125,34 @@ export const createBooking = async (req, res) => {
     else if (serviceId) overlapQuery.service = serviceId;
     else if (eventId) overlapQuery.event = eventId;
 
-    const existingBooking = await Booking.findOne(overlapQuery);
-    if (existingBooking) {
-      console.warn('[createBooking] validation failed: time slot already reserved', { overlapQuery, existingBookingId: existingBooking._id });
-      return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+    if (listingId) {
+      const roomTypes = Array.isArray(item.roomTypes) ? item.roomTypes : [];
+      const selectedRoomType = subtype && roomTypes.find(room => room.name === subtype);
+      const inventory = Math.max(1, Number(selectedRoomType?.count || item.totalUnits || item.numberOfRooms || item.numberOfApartments || 1));
+      if (parsedRoomCount > inventory) {
+        return res.status(400).json({ error: `Only ${inventory} ${selectedRoomType ? 'of this room type' : 'room(s)'} are available.` });
+      }
+      const overlappingBookings = await Booking.find({ ...overlapQuery, ...(selectedRoomType ? { subtype } : {}) })
+        .select('startDate endDate numberOfRooms');
+      const occupancyPoints = [slotStart.getTime(), ...overlappingBookings.map(b => new Date(b.startDate).getTime())]
+        .filter(time => time >= slotStart.getTime() && time < slotEnd.getTime());
+      const maxOccupied = occupancyPoints.reduce((max, time) => {
+        const occupied = overlappingBookings.reduce((sum, b) => {
+          const starts = new Date(b.startDate).getTime();
+          const ends = new Date(b.endDate).getTime();
+          return sum + (starts <= time && ends > time ? Math.max(1, Number(b.numberOfRooms) || 1) : 0);
+        }, 0);
+        return Math.max(max, occupied);
+      }, 0);
+      if (maxOccupied + parsedRoomCount > inventory) {
+        return res.status(400).json({ error: `Only ${Math.max(0, inventory - maxOccupied)} room(s) remain available for some of those dates.` });
+      }
+    } else {
+      const existingBooking = await Booking.findOne(overlapQuery);
+      if (existingBooking) {
+        console.warn('[createBooking] validation failed: time slot already reserved', { overlapQuery, existingBookingId: existingBooking._id });
+        return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+      }
     }
 
     // Create booking with user-selected price
@@ -141,6 +169,7 @@ export const createBooking = async (req, res) => {
       message,
       subtype,
       numberOfGuests: parsedGuestCount,
+      numberOfRooms: listingId ? parsedRoomCount : undefined,
       functionType,
       selectedPerformer,
       performerExperience,
@@ -268,7 +297,7 @@ export const getHostBookings = async (req, res) => {
     })
       // Return only fields the host dashboard renders. Populating a User
       // without a projection would expose private profile fields to the API.
-      .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
+      .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef totalUnits numberOfRooms numberOfApartments roomTypes', populate: { path: 'userRef', select: 'username avatar location' } })
       .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
       .populate({ path: 'service', select: 'name title imageUrls address regularPrice price userRef creator', populate: [{ path: 'userRef', select: 'username avatar location' }, { path: 'creator', select: 'username avatar location' }] })
       .populate({ path: 'event', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })

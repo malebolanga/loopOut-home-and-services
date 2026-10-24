@@ -53,6 +53,10 @@ const Footer = () => {
             Terms
           </Link>
           <span className="mx-1 opacity-40">·</span>
+          <Link to="/how-it-works" className="hover:underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+            How it works
+          </Link>
+          <span className="mx-1 opacity-40">·</span>
           <Link to="/sitemap" className="hover:underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
             Sitemap
           </Link>
@@ -120,8 +124,10 @@ const Footer = () => {
 
       {/* ── Mobile Footer Bar ── */}
       {!isFoodRoute && (
-        <footer className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
+        <footer data-app-mobile-footer className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-x-4 text-[11px] font-bold text-gray-500 dark:text-gray-400">
+            <Link to="/how-it-works" className="hover:underline">How it works</Link>
+            <span className="text-gray-300 dark:text-gray-700">·</span>
             <Link to="/terms" className="hover:underline">Terms</Link>
             <span className="text-gray-300 dark:text-gray-700">·</span>
             <Link to="/privacy" className="hover:underline">Privacy</Link>
