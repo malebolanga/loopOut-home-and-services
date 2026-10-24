@@ -16,6 +16,13 @@ const format = (document) => ({ id: document._id.toString(), ...document.toObjec
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
 const userId = (req) => String(req.user?.id || req.user?._id || '');
 const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
+const isOwner = async (shop, req) => {
+  const currentUid = userId(req);
+  if (!currentUid || !shop) return false;
+  if (String(shop.ownerId || '') === currentUid) return true;
+  const user = await User.findById(currentUid).select('isAdmin role').lean();
+  return Boolean(user && (user.isAdmin === true || user.role === 'admin'));
+};
 const cleanImage = (value, fallback = '') => {
   const image = cleanText(value, 2048);
   if (/^https?:\/\//i.test(image) || image.startsWith('/') || image.startsWith('data:image/')) return image;
@@ -218,7 +225,7 @@ export const updateOrderStatus = async (req, res, next) => {
     const status = req.body.status; if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ success: false, message: 'Invalid order status.' });
     const order = validId(req.params.id) ? await FoodOrder.findById(req.params.id) : null; if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
     const shop = await Shop.findById(order.shopId);
-    const isShopManager = shop && isOwner(shop, req);
+    const isShopManager = shop ? await isOwner(shop, req) : false;
     const isCustomer = order.customerId === userId(req);
     if (status === 'Completed') {
       if (!isCustomer) return res.status(403).json({ success: false, message: 'Only the customer who placed this order can confirm receipt.' });
