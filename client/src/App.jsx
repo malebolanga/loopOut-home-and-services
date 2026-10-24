@@ -140,6 +140,7 @@ const Radar = lazy(() => import('./pages/Radar'));
 const QuickBook = lazy(() => import('./pages/QuickBook'));
 const LunchComingSoon = lazy(() => import('./pages/LunchComingSoon'));
 const MyFoodOrders = lazy(() => import('./pages/MyFoodOrders'));
+const MyLoopOut = lazy(() => import('./pages/MyLoopOut'));
 const Splitter = lazy(() => import('./pages/Splitter'));
 
 // Photography Helper Page
@@ -248,6 +249,7 @@ const AnimatedRoutes = () => {
         <Route path="/upcoming-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
         <Route path="/my-bookings" element={<PageTransition><UpcomingBookings /></PageTransition>} />
         <Route path="/upcoming" element={<PageTransition><UpcomingBookings /></PageTransition>} />
+        <Route path="/my-loopout" element={<PageTransition><MyLoopOut /></PageTransition>} />
         <Route path="/users" element={<PageTransition><Users /></PageTransition>} />
         <Route path="/events/:id" element={<PageTransition><Events /></PageTransition>} />
         <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
@@ -424,6 +426,7 @@ function AppContent() {
     '/notifications',
     '/my-orders',
     '/food-orders',
+    '/my-loopout',
     '/messages',
     '/inbox',
   ];
@@ -456,6 +459,7 @@ function AppContent() {
     '/neighborhood-gigs',
     '/my-orders',
     '/food-orders',
+    '/my-loopout',
     '/messages',
     '/inbox'
   ];
@@ -471,6 +475,7 @@ function AppContent() {
   const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
   const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');
   const isInboxPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/inbox');
+  const isMyLoopOutPage = location.pathname === '/my-loopout';
   const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage || isInboxPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
@@ -485,7 +490,7 @@ function AppContent() {
   return (
     <div className="loopout-app">
       <OnboardingGuide />
-      <AIAssistantWidget />
+      {!isMyLoopOutPage && <AIAssistantWidget />}
       <NeuralSplash />
       <CompareWidget />
 

@@ -8,7 +8,7 @@ import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
 
 export const sendMessage = async (req, res, next) => {
-  const { receiverId, content, isReference, referenceDetails, serviceContext } = req.body;
+  const { receiverId, content, isReference, referenceDetails, serviceContext, conversationId } = req.body;
   const senderId = req.user.id;
 
   try {
@@ -89,9 +89,14 @@ export const sendMessage = async (req, res, next) => {
     } : undefined;
 
     // Find or create conversation
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
-    });
+    let conversation = null;
+    if (conversationId) {
+      if (!mongoose.Types.ObjectId.isValid(conversationId)) return res.status(400).json({ message: 'Invalid conversation.' });
+      conversation = await Conversation.findOne({ _id: conversationId, participants: { $all: [senderId, receiverId] } });
+      if (!conversation) return res.status(403).json({ message: 'You cannot send a message in this conversation.' });
+    } else {
+      conversation = await Conversation.findOne({ participants: { $all: [senderId, receiverId] } });
+    }
 
     if (!conversation) {
       conversation = await Conversation.create({
@@ -169,6 +174,7 @@ export const sendMessage = async (req, res, next) => {
           providerId: providerId || '',
           bookerName: receiver.username,
           messageContent: content,
+          ...(conversation.goodsOrderId ? { goodsOrderId: conversation.goodsOrderId, link: '/my-loopout' } : {}),
         },
       });
 

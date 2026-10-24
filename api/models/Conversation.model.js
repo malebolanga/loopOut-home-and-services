@@ -43,9 +43,13 @@ const conversationSchema = new mongoose.Schema(
       category: { type: String },
       price: { type: Number },
     },
+    goodsOrderId: { type: mongoose.Schema.Types.ObjectId, ref: 'GoodsOrder' },
+    goodsOrderTitle: { type: String, trim: true },
   },
   { timestamps: true }
 );
+
+conversationSchema.index({ goodsOrderId: 1 }, { unique: true, sparse: true });
 
 const Conversation = mongoose.model('Conversation', conversationSchema);
 

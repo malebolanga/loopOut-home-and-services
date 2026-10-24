@@ -520,6 +520,7 @@ export default function Header() {
   // Command Center Navigation
   const MASTER_COMMANDS = [
     { label: 'FOOD & LUNCH', route: '/food', icon: <UtensilsCrossed className="w-5 h-5" />, color: 'bg-gradient-to-tr from-amber-500 to-orange-500' },
+    { label: 'MY LOOP OUT', route: '/my-loopout', icon: <CalendarDaysIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-purple-500' },
     { label: 'LOOPBOT AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
     { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'ELITE REWARDS', route: '/rewards', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
@@ -643,7 +644,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders', '/my-loopout'];
   const hiddenPrefixes = ['/food', '/lunch', '/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 
@@ -698,6 +699,21 @@ export default function Header() {
             ))}
           </div>
 
+          <button
+            type="button"
+            onClick={() => handleNavigate('/become')}
+            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+            </span>
+            <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+          </button>
+
           <div className="sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md pt-3 border-t border-slate-100 dark:border-gray-800 mt-3 -mx-4 px-4 pb-3">
   <button
     onClick={handleSignOut}
@@ -728,6 +744,20 @@ export default function Header() {
             onClick={() => handleNavigate('/sign-up')}
             className="w-full py-4 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >Create Account</button>
+          <button
+            type="button"
+            onClick={() => handleNavigate('/become')}
+            className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+            </span>
+            <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+          </button>
           <div className="text-center text-[9px] text-slate-400 dark:text-gray-500 font-bold mt-3 uppercase tracking-[0.15em]">
   <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
   <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>

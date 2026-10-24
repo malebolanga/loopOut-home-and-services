@@ -110,7 +110,7 @@ export default function Inbox() {
       const res = await authenticatedFetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiverId, content: sentText }),
+        body: JSON.stringify({ receiverId, content: sentText, conversationId: selectedConversation._id }),
       });
 
       if (res.ok) {
@@ -239,6 +239,9 @@ export default function Inbox() {
                     <div className="flex justify-between items-start mb-1">
                       <div className="min-w-0">
                         <h3 className="font-semibold text-gray-900 dark:text-white truncate">{otherUser?.username}</h3>
+                        {conv.goodsOrderTitle && (
+                          <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold truncate">Item request: {conv.goodsOrderTitle}</p>
+                        )}
                         {isRef && refDet?.providerName && (
                           <p className="text-[10px] text-purple-600 dark:text-purple-400 font-bold truncate">Re: {refDet.providerName}</p>
                         )}
@@ -296,6 +299,7 @@ export default function Inbox() {
                   />
                   <div>
                     <h2 className="font-bold text-gray-900 dark:text-white">{selectedConversation.participants.find(p => p._id !== currentUser._id)?.username}</h2>
+                    {selectedConversation.goodsOrderTitle && <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">Item request: {selectedConversation.goodsOrderTitle}</p>}
                     <span className="text-xs text-green-500 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Online
                     </span>

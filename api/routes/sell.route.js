@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSellListing, getSellListings, getSellListingById, updateSellListing, deleteSellListing } from '../controllers/sell.controller.js';
+import { createSellListing, getSellListings, getSellListingById, updateSellListing, deleteSellListing, createGoodsOrder, getGoodsOrders, updateGoodsOrderStatus, getGoodsOrderConversation, reportGoodsOrderIssue } from '../controllers/sell.controller.js';
 import { verifyToken } from '../utils/verifyUser.js';
 import { upload } from '../utils/upload.js';
 import { requireOfferingType } from '../utils/requireOfferingType.js';
@@ -9,6 +9,11 @@ import multer from 'multer';
 const router = express.Router();
 
 router.post('/', verifyToken, requireOfferingType('goods'), createSellListing);
+router.get('/orders', verifyToken, getGoodsOrders);
+router.post('/orders', verifyToken, createGoodsOrder);
+router.get('/orders/:orderId/conversation', verifyToken, getGoodsOrderConversation);
+router.post('/orders/:orderId/issues', verifyToken, reportGoodsOrderIssue);
+router.patch('/orders/:orderId/status', verifyToken, updateGoodsOrderStatus);
 router.get('/', getSellListings);
 router.get('/:id', getSellListingById);
 router.put('/:id', verifyToken, requireOfferingType('goods'), updateSellListing);

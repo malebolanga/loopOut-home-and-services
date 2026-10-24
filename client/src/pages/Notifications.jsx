@@ -319,7 +319,7 @@ export default function Notifications() {
         localStorage.removeItem('loopout_local_notifications');
     };
 
-    const getNotificationIcon = (type) => {
+    const getNotificationIcon = (type, data = {}) => {
         switch (type) {
             case 'reference':
                 return <span className="text-2xl">🤝</span>;
@@ -336,7 +336,7 @@ export default function Notifications() {
             case 'comment':
                 return <span className="text-2xl">💭</span>;
             case 'food_order':
-                return <span className="text-2xl">🍱</span>;
+                return <span className="text-2xl">{data.goodsOrderId ? '🛍️' : '🍱'}</span>;
             default:
                 return <span className="text-2xl">🔔</span>;
         }
@@ -359,9 +359,11 @@ export default function Notifications() {
         }
 
         if (notification.data) {
-            const { itemType, itemId, orderId, orderCode, canReview } = notification.data;
+            const { itemType, itemId, orderId, orderCode, goodsOrderId, canReview } = notification.data;
             
-            if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
+            if (goodsOrderId) {
+                navigate('/my-loopout');
+            } else if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
                 navigate('/lunch');
             } else if (notification.type === 'review' || canReview) {
                 if (itemType && itemId) {
@@ -591,7 +593,7 @@ export default function Notifications() {
                                     )}
 
                                     <div className="flex-shrink-0 mt-1">
-                                        {getNotificationIcon(notification.type)}
+                                        {getNotificationIcon(notification.type, notification.data)}
                                     </div>
 
                                     <div className="flex-1 min-w-0 pr-2 sm:pr-8">
@@ -646,7 +648,7 @@ export default function Notifications() {
                                             </div>
                                         )}
 
-                                        {(notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) && (
+                            {(notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) && (
                                             <div className="mb-3 flex items-center gap-2">
                                                 <button
                                                     onClick={(e) => {
@@ -700,7 +702,7 @@ export default function Notifications() {
 
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pr-8 sm:pr-0">
                                 <div className="p-3 sm:p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 scale-100 sm:scale-125 flex-shrink-0">
-                                    {getNotificationIcon(selectedNotification.type)}
+                                    {getNotificationIcon(selectedNotification.type, selectedNotification.data)}
                                 </div>
                                 <div>
                                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{selectedNotification.title}</h2>
@@ -1018,7 +1020,9 @@ export default function Notifications() {
                                     selectedNotification.type === 'booking' ||
                                     selectedNotification.type === 'reference' ||
                                     selectedNotification.type === 'message' ||
-                                    selectedNotification.data?.conversationId
+                                    selectedNotification.data?.conversationId ||
+                                    selectedNotification.data?.goodsOrderId ||
+                                    (selectedNotification.type === 'food_order' && (selectedNotification.data?.orderId || selectedNotification.data?.orderCode))
                                 ) && (
                                     <button
                                         onClick={() => handleNotificationAction(selectedNotification)}
@@ -1030,6 +1034,8 @@ export default function Notifications() {
                                             ? '💬 Open Message'
                                             : selectedNotification.type === 'review' || selectedNotification.data?.canReview 
                                             ? '⭐ Write Review' 
+                                            : selectedNotification.data?.goodsOrderId || selectedNotification.type === 'food_order'
+                                            ? '🛍️ Track Order'
                                             : 'View Details'}
                                     </button>
                                 )}

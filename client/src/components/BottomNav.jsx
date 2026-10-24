@@ -69,7 +69,8 @@ const BottomNav = () => {
     '/food',
     '/notifications',
     '/my-orders',
-    '/food-orders'
+    '/food-orders',
+    '/my-loopout'
   ];
   const hiddenBottomNavPrefixes = [
     '/food',
@@ -284,6 +285,7 @@ const BottomNav = () => {
                     { label: 'Calendar', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
                     { label: 'Listings', route: `/${currentUser._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
                     { label: 'Wishlist', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
+                    { label: 'Activity', route: '/my-loopout', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-purple-500' },
                     { label: 'Inbox', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
                     { label: 'Planner', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-orange-500' },
                     { label: 'Settings', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-gray-600' }

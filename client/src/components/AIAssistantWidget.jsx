@@ -86,8 +86,8 @@ export default function AIAssistantWidget() {
     return () => window.removeEventListener('open-loopbot', handleOpenLoopBot);
   }, []);
 
-  // Hide widget on full-screen AI page to avoid duplication
-  if (location.pathname === '/ai-help-center' || location.pathname === '/loopbot') {
+  // Hide the floating widget on pages where it obstructs the page controls.
+  if (location.pathname === '/ai-help-center' || location.pathname === '/loopbot' || location.pathname === '/my-loopout') {
     return null;
   }
 

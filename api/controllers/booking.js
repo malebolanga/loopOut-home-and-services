@@ -302,10 +302,10 @@ export const getUserBookings = async (req, res) => {
     let bookings;
     try {
       bookings = await Booking.find({ user: userId })
-        .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
-        .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar' } })
-        .populate({ path: 'service', select: 'name title imageUrls address price userRef creator', populate: { path: 'userRef', select: 'username avatar' } })
-        .populate({ path: 'event', select: 'name title imageUrls address price userRef', populate: { path: 'userRef', select: 'username avatar' } })
+        .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'service', select: 'name title imageUrls address price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
+        .populate({ path: 'event', select: 'name title imageUrls address price userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
         .populate('user', 'username avatar email phone')
         .sort({ createdAt: -1 })
         .lean();

@@ -44,6 +44,22 @@ const getStepIndex = (status) => {
   return 0;
 };
 
+const getOrderTotal = (order) => {
+  const savedTotals = [order?.total, order?.totalAmount, order?.grandTotal];
+  const savedTotal = savedTotals.map(Number).find((value) => Number.isFinite(value) && value > 0);
+  if (savedTotal !== undefined) return savedTotal;
+
+  const legacyPrice = Number(order?.price);
+  if (Number.isFinite(legacyPrice) && legacyPrice > 0) return legacyPrice;
+
+  const itemsTotal = (order?.items || []).reduce((sum, item) => {
+    const quantity = Number(item.quantity ?? item.qty ?? 1) || 1;
+    return sum + (Number(item.price ?? item.unitPrice) || 0) * quantity;
+  }, 0);
+  if (itemsTotal > 0) return itemsTotal;
+  return savedTotals.map(Number).find(Number.isFinite) ?? 0;
+};
+
 const isFoodImageUrl = (val) => {
   if (!val || typeof val !== 'string') return false;
   const trimmed = val.trim();
@@ -91,6 +107,7 @@ export default function MyFoodOrders() {
   const [ratingError, setRatingError] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [orderActionError, setOrderActionError] = useState('');
+  const [orderSyncError, setOrderSyncError] = useState('');
 
   const completeCustomerOrder = async (order) => {
     const orderId = order._id || order.id || order.orderId;
@@ -154,24 +171,22 @@ export default function MyFoodOrders() {
     const unsubscribe = subscribeToOrders((apiOrders, error) => {
       if (!isMounted) return;
       setLoading(false);
-      
-      let merged = [];
-      if (Array.isArray(apiOrders) && apiOrders.length > 0) {
-        merged = apiOrders;
+      if (error) {
+        setOrderSyncError('Could not sync the latest order updates. Showing saved orders until the connection returns.');
+      } else {
+        setOrderSyncError('');
       }
-      
-      // Merge with localStorage orders ensuring uniqueness by _id / id
-      const seen = new Set();
-      const combined = [];
-      [...localOrders, ...merged].forEach((ord) => {
-        const id = ord._id || ord.id || ord.orderId;
-        if (id && !seen.has(id)) {
-          seen.add(id);
-          combined.push(ord);
-        } else if (!id) {
-          combined.push(ord);
-        }
+
+      // Keep offline-only cached orders, but let the server replace duplicates
+      // so status changes made on Lunch are always the source of truth here.
+      const ordersById = new Map();
+      const withoutId = [];
+      [...localOrders, ...(Array.isArray(apiOrders) ? apiOrders : [])].forEach((order) => {
+        const id = order._id || order.id || order.orderId;
+        if (id) ordersById.set(String(id), order);
+        else withoutId.push(order);
       });
+      const combined = [...ordersById.values(), ...withoutId];
 
       // Sort newest first
       combined.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
@@ -184,11 +199,23 @@ export default function MyFoodOrders() {
     };
   }, [refreshKey]);
 
+  // Match Lunch's customer receipt list. The API also returns shop orders
+  // for vendors; those belong in the shop dashboard, not personal history.
+  const customerOrders = useMemo(() => {
+    if (!currentUser) return [];
+    const userId = String(currentUser._id || currentUser.id || '');
+    return orders.filter((order) => {
+      const matchesUser = userId && String(order.customerId || order.customer?._id || order.userId || '') === userId;
+      const matchesPhone = currentUser.phone && order.customerPhone && order.customerPhone === currentUser.phone;
+      return matchesUser || matchesPhone;
+    });
+  }, [orders, currentUser]);
+
   // Filtered orders list
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    return customerOrders.filter((order) => {
       const stepIdx = getStepIndex(order.status);
-      const isCompleted = stepIdx === 3 || order.status === 'cancelled';
+      const isCompleted = stepIdx === 3 || String(order.status || '').toLowerCase() === 'cancelled';
       const isActive = !isCompleted;
 
       if (filter === 'active' && !isActive) return false;
@@ -207,11 +234,11 @@ export default function MyFoodOrders() {
 
       return true;
     });
-  }, [orders, filter, searchQuery]);
+  }, [customerOrders, filter, searchQuery]);
 
   const activeCount = useMemo(() => {
-    return orders.filter((o) => getStepIndex(o.status) < 3 && o.status !== 'cancelled').length;
-  }, [orders]);
+    return customerOrders.filter((order) => getStepIndex(order.status) < 3 && String(order.status || '').toLowerCase() !== 'cancelled').length;
+  }, [customerOrders]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
@@ -267,6 +294,8 @@ export default function MyFoodOrders() {
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+
+        {(orderSyncError || orderActionError) && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">{orderActionError || orderSyncError}</p>}
         
         {/* Search & Filter Bar */}
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
@@ -340,14 +369,13 @@ export default function MyFoodOrders() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {orderActionError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">{orderActionError}</p>}
             {filteredOrders.map((order, idx) => {
               const orderId = order._id || order.id || `ORD-${idx + 1}`;
               const currentStep = getStepIndex(order.status);
               const isCompleted = currentStep === 3;
               const dateStr = order.createdAt || order.date ? new Date(order.createdAt || order.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently placed';
               
-              const totalAmount = order.totalAmount || order.price || order.grandTotal || 0;
+              const totalAmount = getOrderTotal(order);
               const shopName = order.shopName || order.shop?.name || 'Local Kitchen';
               const shopPhone = order.shopPhone || order.shop?.phone || '';
               const fulfilment = order.fulfilment || order.type || 'pickup';
@@ -504,7 +532,7 @@ export default function MyFoodOrders() {
                             )}
                             <div className="min-w-0">
                               <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                                {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
+                                {item.name || item.title || 'Special Meal'} {(item.quantity || item.qty || 1) > 1 ? `× ${item.quantity || item.qty}` : ''}
                               </p>
                               {Array.isArray(item.sides) && item.sides.length > 0 && (
                                 <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
@@ -519,7 +547,7 @@ export default function MyFoodOrders() {
                             </div>
                           </div>
                           <span className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
-                            R{Number(item.price || (item.qty * (item.unitPrice || 0))).toFixed(2)}
+                            R{((Number(item.price ?? item.unitPrice) || 0) * Number(item.quantity || item.qty || 1)).toFixed(2)}
                           </span>
                         </div>
                       ))}
@@ -653,16 +681,17 @@ export default function MyFoodOrders() {
                 <div className="flex flex-col gap-1.5 py-1">
                   {(activeReceiptOrder.items || [{ name: activeReceiptOrder.mealName, qty: activeReceiptOrder.qty || 1, price: activeReceiptOrder.price }]).map((it, idx) => (
                     <div key={idx} className="flex justify-between">
-                      <span className="truncate pr-2">{it.name || 'Meal'} x{it.qty || 1}</span>
-                      <span>R{Number(it.price || 0).toFixed(2)}</span>
+                      <span className="truncate pr-2">{it.name || 'Meal'} x{it.quantity || it.qty || 1}</span>
+                      <span>R{((Number(it.price ?? it.unitPrice) || 0) * Number(it.quantity || it.qty || 1)).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-800 flex justify-between font-black text-sm text-gray-900 dark:text-white">
-                  <span>TOTAL PAID</span>
-                  <span className="text-amber-600">R{Number(activeReceiptOrder.totalAmount || activeReceiptOrder.price || 0).toFixed(2)}</span>
+                  <span>ORDER TOTAL</span>
+                  <span className="text-amber-600">R{getOrderTotal(activeReceiptOrder).toFixed(2)}</span>
                 </div>
+                {activeReceiptOrder.paymentStatus && <div className="flex justify-between text-[10px] text-gray-500"><span>PAYMENT</span><span>{activeReceiptOrder.paymentStatus}</span></div>}
               </div>
 
               <div className="flex items-center gap-2 pt-2">
