@@ -644,14 +644,6 @@ export default function LunchComingSoon() {
   const location = useLocation();
   const { currentUser } = useSelector((state) => state.user || {});
 
-  // Ref for the horizontal shop slider
-  const shopSliderRef = useRef(null);
-  const scrollShops = (dir) => {
-    if (shopSliderRef.current) {
-      shopSliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
-    }
-  };
-
   // Track whether we've auto-set the initial shop selection (prevents stale-closure reset)
   const hasInitializedShopRef = useRef(false);
 
@@ -685,6 +677,7 @@ export default function LunchComingSoon() {
   // when the persisted Redux currentUser._id is stale.
   const [serverMyShops, setServerMyShops] = useState(null); // null = not yet loaded
   const [selectedShopId, setSelectedShopId] = useState('');
+  const [isShopDetailOpen, setIsShopDetailOpen] = useState(Boolean(location.state?.selectedShopId));
   const [cart, setCart] = useState([]);
   const [selectedMealSides, setSelectedMealSides] = useState({});
   const [orders, setOrders] = useState([]);
@@ -915,7 +908,7 @@ export default function LunchComingSoon() {
         hasInitializedShopRef.current = true;
         const targetId = location.state?.selectedShopId;
         const matched = targetId && fetchedShops.find(s => String(s.id || s._id) === String(targetId));
-        setSelectedShopId(matched ? (matched.id || matched._id) : fetchedShops[0].id);
+        setSelectedShopId(matched ? (matched.id || matched._id) : (fetchedShops[0].id || fetchedShops[0]._id));
       }
     });
 
@@ -977,7 +970,7 @@ export default function LunchComingSoon() {
 
   // Selected active shop
   const currentShop = useMemo(() => {
-    return shops.find((s) => s.id === selectedShopId) || shops[0] || null;
+    return shops.find((shop) => String(shop.id || shop._id) === String(selectedShopId)) || shops[0] || null;
   }, [shops, selectedShopId]);
 
   // A closed shop remains visible, but customers cannot change or submit an order.
@@ -1274,7 +1267,7 @@ export default function LunchComingSoon() {
       if (existingIndex > -1) {
         return items.map((item, idx) => idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...items, { ...meal, sides: chosenSides, cartKey, quantity: 1 }];
+      return [...items, { ...meal, shopId: currentShop.id || currentShop._id, sides: chosenSides, cartKey, quantity: 1 }];
     });
     // Auto-show basket preview popup
     setShowBasketPreview(true);
@@ -1436,6 +1429,24 @@ export default function LunchComingSoon() {
       console.error("Add meal error:", err);
       setNotice({ type: 'error', message: err.message || 'Error adding meal' });
     }
+  };
+
+  const openShopEditor = (shop) => {
+    if (!shop) return;
+    setEditShopForm({
+      id: shop.id || shop._id,
+      name: shop.name || '',
+      cuisine: shop.cuisine || '',
+      distance: shop.distance || '',
+      time: shop.time || '',
+      image: shop.image || '🏪',
+      address: shop.address || '',
+      phone: shop.phone || '',
+      whatsapp: shop.whatsapp || '',
+      operatingHours: shop.operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+      isOpen: shop.isOpen !== false
+    });
+    setShowEditShopModal(true);
   };
 
   // Handle Edit Shop Submit
@@ -1673,50 +1684,87 @@ export default function LunchComingSoon() {
         {(activeTab === 'explore' || activeTab === 'other-shops') && (
           <div className="space-y-5">
 
-            {/* Shop Selector — Horizontal scroll */}
-            {shops.length > 0 && (
-              <div>
-                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2.5 flex items-center gap-2">
-                  <Store className="h-4 w-4 text-amber-500" /> Restaurants & Food Shops
-                  <span className="text-[10px] font-medium text-gray-400">({shops.length})</span>
-                </h2>
-                <div
-                  ref={shopSliderRef}
-                  className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
+            {/* Browse shops first; opening a card shows only that shop's menu. */}
+            {shops.length > 0 && !isShopDetailOpen && (
+              <section aria-labelledby="food-shops-heading">
+                <div className="mb-3">
+                  <h2 id="food-shops-heading" className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                    <Store className="h-5 w-5 text-amber-500" /> Food shops near you
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{shops.length}</span>
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose a shop to see its menu and place an order.</p>
+                </div>
+                <div className="space-y-2.5">
                   {shops.map((shop) => {
-                    const isSelected = (shop.id || shop._id) === selectedShopId;
+                    const shopId = shop.id || shop._id;
                     const isClosed = shop.isOpen === false;
+                    const mealCount = Array.isArray(shop.meals) ? shop.meals.length : 0;
+                    const uid = String(currentUser?._id || currentUser?.id || '');
+                    const canManageThisShop = Boolean(
+                      myShops.some((ownedShop) => String(ownedShop.id || ownedShop._id) === String(shopId)) ||
+                      (uid && String(shop.ownerId || '') === uid) ||
+                      currentUser?.isAdmin || currentUser?.role === 'admin'
+                    );
                     return (
-                      <button
-                        key={shop.id || shop._id}
-                        type="button"
-                        onClick={() => setSelectedShopId(shop.id || shop._id)}
-                        className={`relative shrink-0 snap-start flex flex-col items-center gap-1.5 rounded-xl px-4 py-3 min-w-[120px] transition border ${
-                          isSelected
-                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 ring-2 ring-amber-300 shadow-md'
-                            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-amber-300 shadow-sm'
-                        } ${isClosed ? 'opacity-60' : ''}`}
-                      >
-                        <ShopImage image={shop.image} className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
-                        <span className={`text-xs font-semibold truncate max-w-[100px] ${isSelected ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {shop.name}
-                        </span>
-                        {shop.cuisine && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[100px]">{shop.cuisine}</span>
+                      <div key={shopId} className="flex w-full items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition hover:border-amber-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-amber-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentCartShopId = cart[0]?.shopId || currentShop?.id || currentShop?._id;
+                            if (cart.length > 0 && String(currentCartShopId) !== String(shopId)) {
+                              setNotice({ type: 'error', message: 'Finish or clear your current shop basket before switching shops.' });
+                              return;
+                            }
+                            setSelectedShopId(shopId);
+                            setSelectedFoodCategory('all');
+                            setMenuSearch('');
+                            setMenuTagFilter('All');
+                            setIsShopDetailOpen(true);
+                          }}
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          aria-label={`Open ${shop.name || 'food shop'} menu`}
+                        >
+                          <ShopImage image={shop.image} className="h-16 w-16 shrink-0 rounded-xl bg-amber-50 object-cover text-3xl dark:bg-gray-800" />
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center justify-between gap-2">
+                              <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{shop.name || 'Food shop'}</span>
+                              <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold ${isClosed ? 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'}`}>
+                                {isClosed ? 'Closed' : 'Open'}
+                              </span>
+                            </span>
+                            <span className="mt-1 block truncate text-xs text-gray-500 dark:text-gray-400">
+                              {shop.cuisine || shop.description || 'Local food and favourites'}
+                            </span>
+                            <span className="mt-1.5 block text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                              {mealCount} menu item{mealCount === 1 ? '' : 's'} · Tap to view menu
+                            </span>
+                          </span>
+                        </button>
+                        {canManageThisShop && (
+                          <div className="flex shrink-0 flex-col gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openShopEditor(shop)}
+                              aria-label={`Edit ${shop.name || 'shop'}`}
+                              className="inline-flex min-h-8 items-center justify-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                              <Edit3 className="h-3 w-3" /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleShopOpen(shop)}
+                              aria-label={`${isClosed ? 'Open' : 'Close'} ${shop.name || 'shop'}`}
+                              className={`inline-flex min-h-8 items-center justify-center rounded-full px-2.5 text-[10px] font-bold text-white shadow-sm transition ${isClosed ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+                            >
+                              {isClosed ? 'Open shop' : 'Close shop'}
+                            </button>
+                          </div>
                         )}
-                        {isClosed && (
-                          <span className="absolute top-1 right-1 text-[8px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-1.5 py-0.5 rounded-full">Closed</span>
-                        )}
-                        {!isClosed && (
-                          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-gray-900" />
-                        )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
+              </section>
             )}
 
             {/* Empty state */}
@@ -1741,17 +1789,26 @@ export default function LunchComingSoon() {
               </div>
             )}
 
-            {/* Selected Shop Info Bar */}
-            {currentShop && (
-              <div className="flex items-center justify-between gap-3 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+            {/* Selected shop header and back-to-shops navigation */}
+            {currentShop && isShopDetailOpen && (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setIsShopDetailOpen(false)}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800 dark:hover:bg-gray-800"
+                >
+                  <ArrowLeft className="h-4 w-4" /> All food shops
+                </button>
+                <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
                 <div className="flex items-center gap-3 min-w-0">
-                  <ShopImage image={currentShop.image} className="h-12 w-12 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
+                  <ShopImage image={currentShop.image} className="h-14 w-14 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
                   <div className="min-w-0">
                     <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
                       {currentShop.cuisine && <span>{currentShop.cuisine}</span>}
                       {currentShop.distance && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{currentShop.distance}</span>}
                       {currentShop.time && <span className="flex items-center gap-0.5"><Clock3 className="h-3 w-3" />{currentShop.time}</span>}
+                      <span>{currentShop.meals?.length || 0} menu items</span>
                     </div>
                   </div>
                 </div>
@@ -1773,11 +1830,12 @@ export default function LunchComingSoon() {
                     </button>
                   )}
                 </div>
+                </div>
               </div>
             )}
 
             {/* Active Customer Orders (on browse tab) */}
-            {myCustomerOrders.length > 0 && (
+            {myCustomerOrders.length > 0 && !isShopDetailOpen && (
               <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                   <Bell className="h-4 w-4 text-amber-500" /> Active Orders
@@ -1830,7 +1888,7 @@ export default function LunchComingSoon() {
             )}
 
             {/* Order / Table Mode Toggle */}
-            {currentShop && (
+            {currentShop && isShopDetailOpen && (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -1858,7 +1916,7 @@ export default function LunchComingSoon() {
             )}
 
             {/* ── MENU GRID (Order Mode) ── */}
-            {currentShop && orderMode === 'order' && (
+            {currentShop && isShopDetailOpen && orderMode === 'order' && (
               <div>
                 {/* ── FOOD CATEGORIES BAR (Full Menu, African Cuisines, Light Food, Soft Drinks, Fruits) ── */}
                 <div className="mb-3.5">
@@ -2101,7 +2159,7 @@ export default function LunchComingSoon() {
             )}
 
             {/* ── TABLE BOOKING MODE ── */}
-            {currentShop && orderMode === 'table' && (
+            {currentShop && isShopDetailOpen && orderMode === 'table' && (
               <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
