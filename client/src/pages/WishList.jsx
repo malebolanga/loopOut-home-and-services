@@ -373,7 +373,7 @@ const WishList = () => {
       </header>
 
       {/* ── Content ── */}
-      <main className="max-w-[1280px] mx-auto px-6 sm:px-10 xl:px-20 pt-8">
+      <main className="max-w-[1280px] mx-auto px-6 sm:px-10 xl:px-20 pt-6 sm:pt-6">
 
         {/* Error banner */}
         <AnimatePresence>

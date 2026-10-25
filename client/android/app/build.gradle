@@ -1,17 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.loupeout.app"
-    compileSdk = rootProject.ext.compileSdkVersion
+    namespace "com.loupeout.app"
+    compileSdk rootProject.ext.compileSdkVersion
 
     defaultConfig {
-        applicationId = "com.loupeout.app"
-        minSdk = rootProject.ext.minSdkVersion
-        targetSdk = rootProject.ext.targetSdkVersion
-        versionCode = 1
-        versionName = "1.0"
+        applicationId "com.loupeout.app"
+        minSdk rootProject.ext.minSdkVersion
+        targetSdk rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     androidResources {
@@ -21,14 +21,14 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled = false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
 }
 

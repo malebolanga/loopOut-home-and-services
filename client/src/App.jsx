@@ -455,6 +455,7 @@ function AppContent() {
     '/upcoming-bookings',
     '/my-bookings',
     '/upcoming',
+    '/wishlist',
     '/notifications',
     '/settings',
     '/micro-gigs',
@@ -479,6 +480,7 @@ function AppContent() {
   const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');
   const isInboxPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/inbox');
   const isMyLoopOutPage = location.pathname === '/my-loopout';
+  const isHomePage = location.pathname === '/';
   const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage || isInboxPage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
@@ -501,7 +503,7 @@ function AppContent() {
       <PhoneNotificationManager />
       <AuthSessionManager />
       {!hideHeader && <Header />}
-      <div className={hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}>
+      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}`}>
         <Suspense fallback={<NeuralLoader fullScreen={true} />}>
           <AnimatedRoutes />
         </Suspense>

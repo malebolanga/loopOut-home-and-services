@@ -151,6 +151,7 @@ export default function DashBoard() {
   const [scheduleView, setScheduleView] = useState('list'); // 'list', 'calendar', or 'sliding'
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showDashboardControls, setShowDashboardControls] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 640);
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return { date: 'N/A', time: 'N/A' };
@@ -395,50 +396,65 @@ export default function DashBoard() {
   return (
     <div className="app-safe-top min-h-screen app-safe-content-bottom pb-36 md:pb-8 bg-[#f7f7f7] dark:bg-gray-950 dashboard-container">
       <style>{hideScrollbarStyle}</style>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
-        <header className="mb-7">
-          <button onClick={() => navigate(-1)} aria-label="Go back" className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-            <span className="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"><ChevronLeftIcon className="h-4 w-4" /></span>
-            Back
-          </button>
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-rose-600">loopOut hosting</p>
-              <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+      <div className="max-w-6xl mx-auto px-4 pb-5 pt-0 sm:px-6 sm:py-8 lg:px-8">
+        <header className="mb-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm shadow-slate-900/[0.03] dark:border-gray-800 dark:bg-gray-900 sm:mb-7 sm:p-7">
+          <div className="flex flex-row items-center justify-between gap-2 sm:items-end sm:gap-5">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <button onClick={() => navigate(-1)} aria-label="Go back" className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-gray-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+                <ChevronLeftIcon className="h-4 w-4" />
+              </button>
+              <div className="min-w-0">
+              <div className="mb-1 hidden flex-wrap items-center gap-2 sm:mb-2 sm:flex">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">{dashboardMode === 'hosting' ? 'HOST DASHBOARD' : 'GUEST DASHBOARD'}</p>
+                {dashboardMode === 'hosting' && stats.pending > 0 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900">
+                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />{stats.pending} request{stats.pending === 1 ? '' : 's'} to review
+                  </span>
+                )}
+              </div>
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-4xl">
                 {dashboardMode === 'hosting' ? 'Bookings' : 'Your trips'}
               </h1>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 hidden max-w-xl text-[13px] leading-6 text-slate-500 dark:text-gray-400 sm:block">
                 {dashboardMode === 'hosting' ? 'Review requests, manage guest stays and keep your calendar up to date.' : 'See the status and details of your booking requests.'}
               </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex rounded-full border border-gray-200 bg-white p-1 dark:border-gray-800 dark:bg-gray-900">
-                <button onClick={() => setDashboardMode('hosting')} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${dashboardMode === 'hosting' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>Hosting</button>
-                <button onClick={() => setDashboardMode('requests')} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${dashboardMode === 'requests' ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>My trips</button>
               </div>
-              <ImageWithFallback src={currentUser?.avatar} alt={currentUser?.username || 'Your profile'} type="avatar" className="h-10 w-10 rounded-full border border-gray-200 dark:border-gray-700" />
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+              <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 sm:p-1 dark:border-gray-800 dark:bg-gray-950">
+                <button onClick={() => setDashboardMode('hosting')} className={`rounded-lg px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-4 sm:py-2 sm:text-xs ${dashboardMode === 'hosting' ? 'bg-white text-slate-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white'}`}>Hosting</button>
+                <button onClick={() => setDashboardMode('requests')} className={`rounded-lg px-2.5 py-1.5 text-[10px] font-semibold transition sm:px-4 sm:py-2 sm:text-xs ${dashboardMode === 'requests' ? 'bg-white text-slate-900 shadow-sm dark:bg-gray-800 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white'}`}>My trips</button>
+              </div>
+              <ImageWithFallback src={currentUser?.avatar} alt={currentUser?.username || 'Your profile'} type="avatar" className="h-7 w-7 rounded-full border border-gray-200 dark:border-gray-700 sm:h-10 sm:w-10" />
             </div>
           </div>
+          <button type="button" aria-expanded={showDashboardControls} onClick={() => setShowDashboardControls((open) => !open)} className="mt-1 flex w-full items-center justify-between rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] font-semibold text-slate-600 transition hover:bg-slate-50 sm:hidden dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+            <span>Booking filters</span>
+            <span className="flex items-center gap-2 text-slate-400"><span>{showDashboardControls ? 'Hide' : 'Show'}</span><span aria-hidden="true" className={`text-base leading-none transition-transform ${showDashboardControls ? 'rotate-180' : ''}`}>⌄</span></span>
+          </button>
         </header>
-
-        <section aria-label="Booking summary" className="mb-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <section aria-label="Booking summary" className="mb-5 mt-24 grid grid-cols-2 gap-3 sm:mb-7 sm:mt-24 sm:grid-cols-4 sm:gap-4">
           {[
-            { label: 'Needs response', value: stats.pending, detail: 'Requests to review' },
-            { label: 'Upcoming', value: bookings.filter(b => ['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(b.status)).length, detail: 'Confirmed or active' },
-            { label: 'Completed', value: bookings.filter(b => b.status === 'completed').length, detail: 'Finished bookings' },
-            { label: 'Total bookings', value: bookings.length, detail: 'All time' }
+            { label: 'Needs response', shortLabel: 'Pending', value: stats.pending, detail: 'Requests to review' },
+            { label: 'Upcoming', shortLabel: 'Upcoming', value: bookings.filter(b => ['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(b.status)).length, detail: 'Confirmed or active' },
+            { label: 'Finished', shortLabel: 'Finished', value: bookings.filter(b => b.status === 'completed').length, detail: 'Completed bookings' },
+            { label: 'Total bookings', shortLabel: 'Total', value: bookings.length, detail: 'All time' }
           ].map((stat, index) => (
-            <div key={stat.label} className={`rounded-2xl border bg-white p-4 dark:bg-gray-900 ${index === 0 && stats.pending ? 'border-rose-200 dark:border-rose-900/60' : 'border-gray-200 dark:border-gray-800'}`}>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
-              <p className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white">{stat.value}</p>
-              <p className="mt-1 text-[11px] text-gray-400">{stat.detail}</p>
+            <div key={stat.label} className={`min-w-0 rounded-2xl border bg-white p-4 shadow-sm shadow-slate-900/[0.03] transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-950/60 sm:p-5 ${index === 0 && stats.pending ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-gray-800'}`}>
+              <div className="flex min-h-8 items-start justify-between gap-2">
+                <p className="text-[11px] font-semibold leading-4 text-slate-600 dark:text-gray-300 sm:text-xs">{stat.label}</p>
+                <span aria-hidden="true" className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold ${index === 0 ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300' : index === 1 ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300' : index === 2 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-gray-800 dark:text-gray-300'}`}>{['!', '↗', '✓', '∑'][index]}</span>
+              </div>
+              <p className="mt-3 text-2xl font-semibold leading-none tracking-tight text-slate-900 dark:text-white sm:text-3xl">{stat.value}</p>
+              <p className="mt-2 text-[10px] leading-4 text-slate-500 dark:text-gray-400 sm:text-[11px]">{stat.detail}</p>
             </div>
           ))}
-        </section>
+          </section>
 
-        <section className="mb-5 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Booking type">
+        <div className={`${showDashboardControls ? 'block' : 'hidden'} sm:block`}>
+          <section aria-label="Booking filters" className="mt-4 border-t border-slate-100 pt-3 dark:border-gray-800 sm:mt-5 sm:pt-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Booking type">
               {[
                 { id: 'all', label: 'All bookings' },
                 { id: 'stays', label: 'Stays' },
@@ -446,31 +462,32 @@ export default function DashBoard() {
               ].map(tab => (
                 <button key={tab.id} onClick={() => setViewType(tab.id)} className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition ${viewType === tab.id ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}>{tab.label}</button>
               ))}
-            </div>
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Booking status">
+              </div>
+              <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Booking status">
                 {[
                   { id: 'all', label: 'All' },
                   { id: 'pending', label: 'Needs response' },
                   { id: 'upcoming', label: 'Upcoming' },
-                  { id: 'completed', label: 'Completed' },
+                  { id: 'completed', label: 'Finished' },
                   { id: 'declined', label: 'Cancelled' }
                 ].map(tab => (
                   <button key={tab.id} onClick={() => setFilter(tab.id)} className={`shrink-0 border-b-2 px-3 py-2 text-xs font-semibold transition ${filter === tab.id ? 'border-gray-900 text-gray-900 dark:border-white dark:text-white' : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>{tab.label}{tab.id === 'pending' && stats.pending > 0 && <span className="ml-1.5 rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] text-rose-700">{stats.pending}</span>}</button>
                 ))}
-              </div>
-              <div className="flex gap-2">
-                <div className="relative min-w-0 flex-1 lg:w-64 lg:flex-none">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input type="search" placeholder="Search guest or listing" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
                 </div>
-                <button onClick={() => setScheduleView(scheduleView === 'calendar' ? 'list' : 'calendar')} className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800">
-                  <CalendarIcon className="h-4 w-4" />{scheduleView === 'calendar' ? 'Bookings list' : 'Calendar'}
-                </button>
+                <div className="flex gap-2">
+                  <div className="relative min-w-0 flex-1 lg:w-64 lg:flex-none">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input type="search" placeholder="Search bookings" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-2 text-xs outline-none focus:border-gray-400 sm:py-2.5 sm:pr-3 sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                  </div>
+                  <button onClick={() => setScheduleView(scheduleView === 'calendar' ? 'list' : 'calendar')} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-2.5 py-2 text-[10px] font-semibold text-gray-700 hover:bg-gray-50 sm:gap-2 sm:px-3 sm:py-2.5 sm:text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800">
+                    <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />{scheduleView === 'calendar' ? 'List' : 'Calendar'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {scheduleView === 'calendar' && (
           <div className="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">

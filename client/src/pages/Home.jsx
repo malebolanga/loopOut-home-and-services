@@ -65,12 +65,6 @@ import DownloadAppSection from '../components/home/DownloadAppSection';
 import CategoriesBottomSheet from '../components/home/CategoriesBottomSheet';
 import RecentPopoutMenu from '../components/home/RecentPopoutMenu';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
-import {
-  RecentAdded3DIcon,
-  MoreCategories3DIcon,
-  Category3DIcon,
-  ThreeDButton
-} from '../components/home/ThreeDCategoryIcons';
 
 import {
   DISTANCE_TIERS,
@@ -3048,15 +3042,13 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
   );
 };
 
-const FoodSpecialsStrip = ({ navigate }) => {
+const FoodSpecialsStrip = ({ navigate, className = '' }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
   const [previewFood, setPreviewFood] = useState(null);
-  const { coords } = useLocationCoords();
-
   // ── Shared multi-item cart state ─────────────────────────────────────────────
   // cart: [{ item, qty, sideNames, drinks }]  — accumulates as user taps "Add More"
   // cartMeta: { name, phone, fulfilment, deliveryAddress } — filled once, shared
@@ -3288,33 +3280,35 @@ const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-6">
+    <section className={`mb-6 bg-white transition-[margin] duration-300 dark:bg-gray-950 ${className}`}>
       {/* ── Header: Made For You • Fresh & Fast, and See All ── */}
-      <div className="flex items-center justify-between mb-3 px-0.5">
-        <div>
-          <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-         
+      <div className="mb-3 flex items-center justify-between gap-2 px-0.5">
+        <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
               onClick={() => cart.length > 0 && setShowOrderReview(true)}
-              className="relative flex items-center justify-center w-7 h-7 rounded-xl bg-rose-100 dark:bg-rose-900/30 transition hover:bg-rose-200 dark:hover:bg-rose-800/40"
+              aria-label={`View basket${totalCartItems ? `, ${totalCartItems} items` : ''}`}
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 ring-1 ring-inset ring-rose-100 transition hover:bg-rose-100 dark:bg-rose-950/40 dark:ring-rose-900/50 dark:hover:bg-rose-900/50"
               title="View basket"
             >
-              <Flame className="w-4 h-4 text-rose-500" />
+              <Flame className="h-4 w-4 text-rose-600 dark:text-rose-300" />
               {totalCartItems > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] font-black min-w-[14px] h-[14px] px-0.5 rounded-full flex items-center justify-center border border-white shadow-sm">
                   {totalCartItems}
                 </span>
               )}
             </button>
-          </h3>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">Food near you</h3>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">Local favourites, ready to order</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/my-orders')}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500 text-white text-xs font-black hover:bg-amber-600 transition cursor-pointer shadow-xs"
+            className="flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-amber-600 cursor-pointer sm:text-xs"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>My Orders</span>
@@ -3332,7 +3326,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-black uppercase tracking-wider dark:border-gray-700 transition-all cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 cursor-pointer dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:px-3 sm:text-xs"
           >
             <span>See All</span>
             <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
@@ -3341,17 +3335,17 @@ const FoodSpecialsStrip = ({ navigate }) => {
       </div>
 
       {/* ── Horizontal Carousel: Spotify-style Food Cards ── */}
-      <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide pb-2 pt-1 flex gap-2.5 sm:gap-3 snap-x snap-mandatory">
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 scrollbar-hide sm:gap-4">
         {foodItems.map((item, i) => (
           <motion.div
             key={`carousel-${item.shopId}-${item.id || i}`}
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="snap-start shrink-0 w-[88px] sm:w-[102px] hover:bg-gray-50 dark:hover:bg-gray-850 p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
+            className="relative flex w-[112px] shrink-0 snap-start flex-col rounded-2xl bg-white p-1.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer dark:bg-gray-900 sm:w-[136px] sm:p-2"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1 border border-gray-100/80 dark:border-gray-700/50">
+            <div className="relative mb-1.5 flex aspect-[1.12/1] w-full items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
               <button
                 type="button"
                 onClick={(event) => {
@@ -3372,7 +3366,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-0.5 left-0.5 z-10 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
+                <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-1 text-[8px] font-bold uppercase tracking-wide shadow-sm ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3384,6 +3378,10 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   {/hot/i.test(item.tag || '') ? '🔥 Hot' : /popular/i.test(item.tag || '') ? '⭐ Top' : /fav/i.test(item.tag || '') ? '❤️ Fav' : item.tag}
                 </span>
               )}
+
+              <span className="absolute bottom-1.5 left-1.5 z-10 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-gray-950/90 dark:text-white">
+                R{item.price}
+              </span>
 
               {/* Basket Button */}
               {(() => {
@@ -3413,24 +3411,14 @@ const FoodSpecialsStrip = ({ navigate }) => {
             </div>
 
             {/* Title */}
-            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[10px] sm:text-[11px] leading-tight group-hover:underline">
+            <p className="truncate text-[10px] font-semibold leading-tight text-gray-900 dark:text-white sm:text-[11px]">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="text-gray-400 dark:text-gray-500 text-[8.5px] sm:text-[9px] truncate leading-tight mt-0.5">
+            <p className="mt-0.5 truncate text-[8px] leading-tight text-gray-500 dark:text-gray-400 sm:text-[9px]">
               {item.shopName}
             </p>
-
-            {/* Price & GPS distance */}
-            <div className="flex items-center justify-between border-gray-100 dark:border-gray-800 mt-0.5">
-              <span className="font-black text-gray-900 dark:text-white text-[10px] sm:text-[11px]">R{item.price}</span>
-              {getAccurateDistanceLabel(item, coords) && (
-                <span className="text-[7.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[50px]">
-                  📍 {getAccurateDistanceLabel(item, coords)}
-                </span>
-              )}
-            </div>
           </motion.div>
         ))}
       </div>
@@ -3943,16 +3931,15 @@ function MobileAppHomepage({
     }
   ];
 
-  // Pinned tabs on the sticky header bar:
-  // - "Recent" is always pinned on the header.
-  // - If user selects another category from the bottom sheet, it sticks on the homepage header as active.
+  // Keep the main discovery routes visible in the horizontal belt. Less-used
+  // categories selected from More remain pinned there until another is chosen.
   const visibleTabs = useMemo(() => {
-    const recentTab = tabs.find(t => t.id === 'RecentAdded' || t.id === 'Recent') || tabs[0];
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
-      return [recentTab];
-    }
+    const pinnedIds = ['RecentAdded', 'Property', 'Services', 'Helper', 'Lunch', 'Selling'];
+    const pinnedTabs = pinnedIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean);
     const currentTab = tabs.find(t => t.id === activeTab);
-    return currentTab ? [recentTab, currentTab] : [recentTab];
+    return currentTab && !pinnedIds.includes(currentTab.id)
+      ? [...pinnedTabs, currentTab]
+      : pinnedTabs;
   }, [tabs, activeTab]);
 
   const currentTabLabel = useMemo(() => {
@@ -4117,12 +4104,18 @@ function MobileAppHomepage({
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '92px' : '-1px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-[350ms] ease-in-out"
+        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 py-1.5 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
+        <div className="flex items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+            const shortcutEmoji = {
+              Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲', Selling: '🛍️',
+            }[tab.id] || tab.emoji || '✨';
+            const shortcutLabel = {
+              Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food', Selling: 'Sell',
+            }[tab.id] || tab.label;
             return (
               <motion.button
                 key={tab.id}
@@ -4144,21 +4137,17 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1 relative"
-                aria-label={tab.label}
+                className={`relative flex min-w-[46px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
+                aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
-                <div className={`${isRecentAdded ? 'w-11 h-11 sm:w-12 sm:h-12' : 'w-9 h-9 sm:w-10 sm:h-10'} rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105`}>
-                  {isRecentAdded ? (
-                    <RecentAdded3DIcon className="w-10 h-10 sm:w-11 sm:h-11" />
-                  ) : (
-                    <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
-                  )}
+                <div className={`${isRecentAdded ? 'h-8 w-8 bg-rose-100/80 dark:bg-rose-900/40' : 'h-8 w-8'} flex items-center justify-center rounded-xl text-[22px] transition-transform group-hover:scale-105`} aria-hidden="true">
+                  <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
                 </div>
-                <span className={`text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-center whitespace-normal ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
-                  {isRecentAdded ? 'New listings' : tab.label}
+                <span className={`mt-0.5 text-center text-[8px] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-gray-300'}`}>
+                  {isRecentAdded ? 'New' : shortcutLabel}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1 right-2 animate-pulse" />
+                  <span className="absolute right-2 top-1 h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
                 )}
               </motion.button>
             );
@@ -4169,24 +4158,23 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1"
+            className="flex min-w-[46px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
             aria-label="Browse all categories"
           >
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-              <MoreCategories3DIcon className="w-10 h-10 sm:w-11 sm:h-11" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl text-[22px] transition-transform group-hover:scale-105" aria-hidden="true">
+              <span role="img" aria-label="Browse categories">🗂️</span>
             </div>
-            <span className="text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-rose-600 text-center whitespace-normal">
-              Categories
+            <span className="mt-0.5 text-center text-[8px] font-semibold leading-tight text-slate-600 whitespace-nowrap dark:text-gray-300">
+              More
             </span>
           </motion.button>
         </div>
       </div>
 
-      <main className="px-4 pb-4 w-full">
+      <main className="w-full bg-white px-4 pb-4 pt-[56px] dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
-        {/* Spacer: height of categories bar only */}
-        <div className="h-[80px]" />
+        {/* The fixed category belt already provides the visual separation. */}
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -4220,7 +4208,7 @@ function MobileAppHomepage({
         </AnimatePresence>
 
         {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
-        <FoodSpecialsStrip navigate={navigate} />
+        <FoodSpecialsStrip navigate={navigate} className="-mt-[92px]" />
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
@@ -4589,6 +4577,12 @@ function DesktopHomepage({
             {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+              const shortcutEmoji = {
+                Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲', Selling: '🛍️',
+              }[tab.id] || tab.emoji || '✨';
+              const shortcutLabel = {
+                Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food', Selling: 'Sell',
+              }[tab.id] || tab.label;
               return (
                 <motion.button
                   key={tab.id}
@@ -4611,18 +4605,14 @@ function DesktopHomepage({
                   whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
                   className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
-                  aria-label={tab.label}
+                  aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
                 >
-                  <div className={`${isRecentAdded ? 'w-11 h-11' : 'w-9 h-9'} rounded-2xl bg-white dark:bg-gray-950 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105`}>
-                    {isRecentAdded ? (
-                      <RecentAdded3DIcon className="w-10 h-10" />
-                    ) : (
-                      <Category3DIcon type={tab.id} className="w-8 h-8" />
-                    )}
+                  <div className={`${isRecentAdded ? 'w-11 h-11 bg-rose-100/80 dark:bg-rose-900/40' : 'w-9 h-9 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl text-[24px] shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
+                    <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
                   </div>
                   <div className="text-left">
                     <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
-                      {isRecentAdded ? 'New listings' : tab.label}
+                      {isRecentAdded ? 'New listings' : shortcutLabel}
                     </span>
                     <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
                       {isRecentAdded ? 'Just added' : (tab.desc || '')}
@@ -4643,8 +4633,8 @@ function DesktopHomepage({
               className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
               aria-label="Browse all categories"
             >
-              <div className="w-11 h-11 rounded-2xl bg-white dark:bg-gray-950 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-                <MoreCategories3DIcon className="w-10 h-10" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100/80 text-[24px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
+                <span role="img" aria-label="Browse categories">🗂️</span>
               </div>
               <div className="text-left">
                 <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">

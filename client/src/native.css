@@ -30,6 +30,12 @@ html, body {
     padding-top: calc(5rem + max(28px, calc(8px + env(safe-area-inset-top, 28px))));
   }
 
+  /* The mobile header is 3.5rem tall; avoid leaving the larger desktop-sized
+     reservation above the dashboard's Back row. */
+  .app-route-content-with-header.dashboard-route-content {
+    padding-top: calc(0.1875rem + max(28px, calc(8px + env(safe-area-inset-top, 28px))));
+  }
+
   .app-route-content-with-header > div > .app-safe-top:first-child {
     padding-top: 0 !important;
   }
