@@ -3,8 +3,25 @@ import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FiSend, FiMoreVertical, FiArrowLeft, FiMessageCircle, FiTrash2, FiSearch } from 'react-icons/fi';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 
-const FALLBACK_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+function getImageSource(value) {
+  const raw = typeof value === 'string' ? value : value?.url || value?.imageUrl || value?.path || '';
+  if (!raw || /^(null|undefined)$/i.test(raw.trim())) return '';
+  return resolveApiUrl(raw.trim());
+}
+
+function ChatImage({ src, alt = '', className = '', fallback = '👤' }) {
+  const resolvedSrc = getImageSource(src);
+  const [failedSrc, setFailedSrc] = useState('');
+  useEffect(() => setFailedSrc(''), [resolvedSrc]);
+
+  if (!resolvedSrc || failedSrc === resolvedSrc) {
+    return <div role="img" aria-label={alt || 'Image unavailable'} className={`${className} flex items-center justify-center bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500`}>{fallback}</div>;
+  }
+
+  return <img src={resolvedSrc} alt={alt} className={className} onError={() => setFailedSrc(resolvedSrc)} loading="lazy" />;
+}
 
 // Derive display sender _id robustly (sender may be a populated object or a raw ID string)
 function getSenderId(msg) {
@@ -219,11 +236,7 @@ export default function Inbox() {
                   className={`flex items-center gap-4 p-4 cursor-pointer transition-all border-l-4 group ${isSelected ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500' : 'hover:bg-gray-100 dark:hover:bg-gray-800/50 border-transparent'}`}
                 >
                   <div className="relative flex-shrink-0">
-                    <img 
-                      src={otherUser?.avatar || FALLBACK_AVATAR} 
-                      alt="" 
-                      className="w-14 h-14 rounded-2xl object-cover shadow-sm"
-                    />
+                    <ChatImage src={otherUser?.avatar} alt={otherUser?.username || 'User'} className="w-14 h-14 rounded-2xl object-cover shadow-sm" />
                     {unread > 0 && (
                       <div className="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border-2 border-white font-bold">
                         {unread}
@@ -292,11 +305,7 @@ export default function Inbox() {
                   <FiArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex items-center gap-3">
-                  <img 
-                    src={selectedConversation.participants.find(p => p._id !== currentUser._id)?.avatar || FALLBACK_AVATAR} 
-                    alt="" 
-                    className="w-10 h-10 rounded-xl object-cover"
-                  />
+                  <ChatImage src={selectedConversation.participants.find(p => p._id !== currentUser._id)?.avatar} alt={selectedConversation.participants.find(p => p._id !== currentUser._id)?.username || 'User'} className="w-10 h-10 rounded-xl object-cover" />
                   <div>
                     <h2 className="font-bold text-gray-900 dark:text-white">{selectedConversation.participants.find(p => p._id !== currentUser._id)?.username}</h2>
                     {selectedConversation.goodsOrderTitle && <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400">Item request: {selectedConversation.goodsOrderTitle}</p>}
@@ -315,10 +324,11 @@ export default function Inbox() {
             {isRefConv && (refDetails || serviceCtx) && (
               <div className="mx-4 mt-4 p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border border-purple-200/80 dark:border-purple-800/60 flex gap-4 items-center flex-shrink-0">
                 {(refDetails?.providerImage || serviceCtx?.image) ? (
-                  <img 
-                    src={refDetails?.providerImage || serviceCtx?.image} 
-                    alt={refDetails?.providerName || serviceCtx?.name || 'Provider'} 
+                  <ChatImage
+                    src={refDetails?.providerImage || serviceCtx?.image}
+                    alt={refDetails?.providerName || serviceCtx?.name || 'Provider'}
                     className="w-14 h-14 rounded-2xl object-cover border-2 border-purple-200 dark:border-purple-700 flex-shrink-0 shadow-sm"
+                    fallback="🤝"
                   />
                 ) : (
                   <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center flex-shrink-0 text-2xl">🤝</div>
@@ -350,7 +360,7 @@ export default function Inbox() {
                 return (
                   <div key={msg._id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
                     {!isOwn && (
-                      <img src={senderAvatar || FALLBACK_AVATAR} alt="" className="w-7 h-7 rounded-full object-cover mr-2 mt-auto flex-shrink-0" />
+                      <ChatImage src={senderAvatar} alt="Message sender" className="w-7 h-7 rounded-full object-cover mr-2 mt-auto flex-shrink-0" />
                     )}
                     <div className={`max-w-[80%] md:max-w-[60%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
                       <div className={`px-4 py-3 rounded-2xl shadow-sm ${

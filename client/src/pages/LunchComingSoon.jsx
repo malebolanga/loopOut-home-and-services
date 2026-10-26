@@ -63,6 +63,20 @@ import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
 
+const getFoodRatingSummary = (shop, meal) => {
+  const mealId = String(meal?.id || meal?._id || '');
+  if (!shop || !mealId) return { average: 0, count: 0 };
+  const ratings = (shop.reviews || [])
+    .flatMap((review) => Array.isArray(review.itemRatings) ? review.itemRatings : [])
+    .filter((entry) => String(entry.mealId || '') === mealId)
+    .map((entry) => Number(entry.rating))
+    .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+  return {
+    average: ratings.length ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 0,
+    count: ratings.length
+  };
+};
+
 const uploadFoodImage = async (file) => {
   if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
   if (file.size > 8 * 1024 * 1024) throw new Error('Choose an image smaller than 8 MB.');
@@ -113,7 +127,7 @@ const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
             <img
               src={value}
               alt={`${label} preview`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
               onError={() => setImgError(true)}
             />
           ) : (
@@ -160,13 +174,15 @@ export const FoodVisual = ({ visual, alt = 'Food', className = 'h-full w-full ob
   const [error, setError] = useState(false);
   useEffect(() => setError(false), [visual?.src]);
   const showImage = !error && Boolean(visual?.isImage && visual?.src);
+  const imageClassName = className.replace(/\bobject-cover\b/g, 'object-contain');
 
   if (showImage) {
     return (
       <img
         src={visual.src.trim()}
         alt={alt}
-        className={className}
+        className={`block h-full w-full object-contain ${imageClassName}`}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center' }}
         onError={() => setError(true)}
         loading="lazy"
       />
@@ -664,6 +680,7 @@ export default function LunchComingSoon() {
 
   // Filter & Search states for orders & menus
   const [orderFilterTab, setOrderFilterTab] = useState('all'); // 'all' | 'pending' | 'preparing' | 'ready' | 'completed'
+  const [ownerFoodTab, setOwnerFoodTab] = useState('kitchen'); // 'kitchen' | 'menu'
   const [orderSearchText, setOrderSearchText] = useState('');
   const [myMenuSearchText, setMyMenuSearchText] = useState('');
   const [myMenuTagFilter, setMyMenuTagFilter] = useState('All');
@@ -699,6 +716,7 @@ export default function LunchComingSoon() {
   // Form states for checkout & delivery
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showBasketPreview, setShowBasketPreview] = useState(false);
+  const [selectedFeaturedMeal, setSelectedFeaturedMeal] = useState(null);
   const [checkoutData, setCheckoutData] = useState({
     customerName: currentUser?.username || currentUser?.name || '',
     customerPhone: currentUser?.phone || '',
@@ -738,6 +756,7 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     category: 'Full Menu',
+    itemType: 'meal',
     image: '🍱',
     sides: []
   });
@@ -770,6 +789,7 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     category: 'Full Menu',
+    itemType: 'meal',
     image: '🍱',
     sides: []
   });
@@ -784,7 +804,7 @@ export default function LunchComingSoon() {
   const [showRateModal, setShowRateModal] = useState(false);
   const [ratingTargetOrder, setRatingTargetOrder] = useState(null);
   const [shopRating, setShopRating] = useState(5);
-  const [foodRating, setFoodRating] = useState(5);
+  const [itemRatings, setItemRatings] = useState({});
   const [ratingComment, setRatingComment] = useState('');
   const [showReviewsTab, setShowReviewsTab] = useState(false);
 
@@ -834,16 +854,35 @@ export default function LunchComingSoon() {
       setNotice({ type: 'error', message: 'Confirm that you received your order before rating the shop.' });
       return;
     }
+    const itemsToRate = ratingTargetOrder.items || [];
+    const itemRatingsPayload = itemsToRate.map((item, itemIndex) => ({
+      itemIndex,
+      mealId: item.id || '',
+      mealName: item.name || 'Food item',
+      rating: Number(itemRatings[itemIndex]) || 0
+    }));
+    if (!itemsToRate.length || itemRatingsPayload.some((item) => item.rating < 1 || item.rating > 5)) {
+      setNotice({ type: 'error', message: 'Please rate every food item in this order before submitting.' });
+      return;
+    }
+    const foodRating = Math.round(itemRatingsPayload.reduce((total, item) => total + item.rating, 0) / itemRatingsPayload.length);
+    const submittedRating = { shopRating, foodRating, itemRatings: itemRatingsPayload, comment: ratingComment };
     try {
       await rateShop(ratingTargetOrder.shopId, {
         orderId: orderId,
         shopRating,
         foodRating,
+        itemRatings: itemRatingsPayload,
         comment: ratingComment,
         userName: currentUser?.username || currentUser?.name || 'Valued Customer'
       });
       setShowRateModal(false);
-      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
+      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? {
+        ...o,
+        isRated: true,
+        status: 'Completed',
+        ratingDetails: submittedRating
+      } : o));
       // Close receipt modal so it completely disappears from the screen
       setActiveReceiptOrder(null);
       setNotice({ type: 'success', message: '⭐ Thank you for rating! Receipt archived to Dashboard & Order History.' });
@@ -880,7 +919,7 @@ export default function LunchComingSoon() {
         const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
         if (target && !target.isRated) {
           setShopRating(5);
-          setFoodRating(5);
+          setItemRatings(Object.fromEntries((target.items || []).map((_, index) => [index, 0])));
           setRatingComment('');
           setRatingTargetOrder({ ...target, ...savedOrder, status: 'Completed' });
           setShowRateModal(true);
@@ -975,17 +1014,9 @@ export default function LunchComingSoon() {
 
   // A closed shop remains visible, but customers cannot change or submit an order.
   const isCurrentShopClosed = currentShop?.isOpen === false;
+  const shopCommentReviews = (currentShop?.reviews || []).filter((review) => String(review.comment || '').trim().length > 0);
 
   const menuTags = useMemo(() => ['All', ...new Set((currentShop?.meals || []).map((meal) => meal.tag).filter(Boolean))], [currentShop]);
-
-  const categoryCounts = useMemo(() => {
-    const counts = { all: (currentShop?.meals || []).length, african: 0, light: 0, drinks: 0, fruits: 0 };
-    (currentShop?.meals || []).forEach((meal) => {
-      const cat = detectMealCategory(meal);
-      if (counts[cat] !== undefined) counts[cat] += 1;
-    });
-    return counts;
-  }, [currentShop]);
 
   const visibleMeals = useMemo(() => {
     const search = menuSearch.trim().toLowerCase();
@@ -1139,8 +1170,36 @@ export default function LunchComingSoon() {
   // Active kitchen queue for currently selected shop (visible to all customers)
   const activeKitchenOrders = useMemo(() => {
     if (!currentShop) return [];
-    return orders.filter((o) => o.shopId === currentShop.id && o.status !== 'Completed');
+    const shopId = String(currentShop.id || currentShop._id || '');
+    return orders.filter((o) => String(o.shopId || '') === shopId && o.status !== 'Completed');
   }, [orders, currentShop]);
+
+  const popularShopMeals = useMemo(() => {
+    if (!currentShop) return [];
+    const shopId = String(currentShop.id || currentShop._id || '');
+    const salesByName = orders
+      .filter((order) => String(order.shopId || '') === shopId && order.status === 'Completed')
+      .flatMap((order) => order.items || [])
+      .reduce((sales, item) => {
+        const name = String(item.name || '').trim().toLowerCase();
+        if (name) sales[name] = (sales[name] || 0) + Number(item.quantity || 1);
+        return sales;
+      }, {});
+    const meals = currentShop.meals || [];
+    const bestSellers = meals
+      .map((meal) => ({ ...meal, completedSales: salesByName[String(meal.name || '').trim().toLowerCase()] || 0 }))
+      .filter((meal) => meal.completedSales > 0)
+      .sort((a, b) => b.completedSales - a.completedSales)
+      .slice(0, 3);
+    const taggedPicks = meals
+      .filter((meal) => meal.isPopular || meal.isFeatured || meal.isSpecial || ['combo', 'special'].includes(String(meal.itemType || '').toLowerCase()) || /popular|special|combo|meal deal|bundle/i.test(`${meal.name || ''} ${meal.tag || ''} ${meal.category || ''} ${meal.description || ''}`))
+      .map((meal) => ({ ...meal, completedSales: 0 }));
+    const bestSellerNames = new Set(bestSellers.map((meal) => String(meal.name || '').trim().toLowerCase()));
+    return [
+      ...bestSellers.slice(0, 2),
+      ...taggedPicks.filter((meal) => !bestSellerNames.has(String(meal.name || '').trim().toLowerCase()))
+    ].slice(0, 3);
+  }, [currentShop, orders]);
 
   // Completed orders history for shop owner
   const completedStoreOrders = completedOrders;
@@ -1423,7 +1482,7 @@ export default function LunchComingSoon() {
         );
       }
       setShowAddMealModal(false);
-      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [] });
+      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', category: 'Full Menu', itemType: 'meal', image: '🍱', sides: [] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
@@ -1589,37 +1648,66 @@ export default function LunchComingSoon() {
     }
   };
 
+  const selectedFoodSides = selectedFeaturedMeal ? getAvailableSides(selectedFeaturedMeal) : [];
+  const selectedFoodMaxSides = selectedFeaturedMeal ? getMaxSides(selectedFeaturedMeal) : 0;
+  const selectedFoodActiveSides = selectedFeaturedMeal
+    ? getActiveSides(selectedFeaturedMeal, selectedFoodSides, selectedFoodMaxSides)
+    : [];
+
   return (
     <main className={`app-safe-top min-h-screen app-safe-content-bottom ${cart.length > 0 ? 'pb-28 sm:pb-24' : 'pb-12 sm:pb-8'} bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden`}>
       <div className="mx-auto max-w-5xl w-full">
 
         {/* ── CLEAN HEADER ── */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+        <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
             <button
               type="button"
-              onClick={() => navigate(-1)}
-              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              onClick={() => isShopDetailOpen ? setIsShopDetailOpen(false) : navigate(-1)}
+              aria-label={isShopDetailOpen ? 'Back to all food shops' : 'Go back'}
+              className="inline-flex h-9 w-9 items-center justify-self-start justify-center rounded-full bg-white text-gray-600 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-gray-700"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <UtensilsCrossed className="h-5 w-5 text-amber-500" />
-                Food Hub
-              </h1>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Browse menus · Order food · Track orders</p>
+            <div className="min-w-0 text-center">
+              {isShopDetailOpen && currentShop ? (
+                <>
+                  <ShopImage image={currentShop.image} className="mx-auto mb-1 h-9 w-9 rounded-lg bg-amber-50 object-cover text-2xl dark:bg-gray-800" />
+                  <h1 className="truncate text-base font-bold text-gray-900 dark:text-white">{currentShop.name || 'Food shop'}</h1>
+                  {(currentShop.address || currentShop.location || currentShop.distance) && (
+                    <p className="mt-0.5 flex items-center justify-center gap-1 truncate text-[10px] text-gray-500 dark:text-gray-400">
+                      <MapPin className="h-3 w-3 shrink-0 text-amber-500" /> {currentShop.address || currentShop.location || currentShop.distance}
+                    </p>
+                  )}
+                  <div className="mt-0.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                    {(currentShop.contactName || currentShop.ownerName) && <span>Contact: {currentShop.contactName || currentShop.ownerName}</span>}
+                    {(currentShop.phone || currentShop.whatsapp) && (
+                      <button type="button" onClick={() => setShowContactCard(true)} className="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+                        <Phone className="h-3 w-3" /> Contact shop
+                      </button>
+                    )}
+                    <span className={isCurrentShopClosed ? 'font-semibold text-rose-600 dark:text-rose-400' : 'font-semibold text-emerald-700 dark:text-emerald-400'}>
+                      {isCurrentShopClosed ? 'Closed' : 'Open'}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="flex items-center justify-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
+                    <UtensilsCrossed className="h-5 w-5 text-amber-500" /> Food Hub
+                  </h1>
+                  <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500">Browse menus · Order food · Track orders</p>
+                </>
+              )}
             </div>
-          </div>
-          {canCreateFor(currentUser, 'food') && (
+          {canCreateFor(currentUser, 'food') ? (
             <button
               type="button"
               onClick={() => setShowAddShopModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+              className="inline-flex items-center justify-self-end gap-1.5 rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-amber-600"
             >
               <PlusCircle className="h-3.5 w-3.5" /> Register Shop
             </button>
-          )}
+          ) : <span aria-hidden="true" className="w-9 justify-self-end" />}
         </div>
 
         {/* ── NOTICE BANNER ── */}
@@ -1699,6 +1787,26 @@ export default function LunchComingSoon() {
                     const shopId = shop.id || shop._id;
                     const isClosed = shop.isOpen === false;
                     const mealCount = Array.isArray(shop.meals) ? shop.meals.length : 0;
+                    const shopAddress = shop.address || shop.location || shop.distance;
+                    const shopContactName = shop.contactName || shop.ownerName;
+                    const shopContactNumber = shop.phone || shop.whatsapp;
+                    const shopReviews = Array.isArray(shop.reviews) ? shop.reviews : [];
+                    const reviewRatings = shopReviews
+                      .map((review) => Number(review.shopRating ?? review.rating))
+                      .filter((rating) => Number.isFinite(rating) && rating > 0 && rating <= 5);
+                    const foodReviewRatings = shopReviews
+                      .map((review) => Number(review.foodRating))
+                      .filter((rating) => Number.isFinite(rating) && rating > 0 && rating <= 5);
+                    const averageFoodRating = foodReviewRatings.length
+                      ? foodReviewRatings.reduce((total, rating) => total + rating, 0) / foodReviewRatings.length
+                      : null;
+                    const rawRating = Number(shop.averageRating ?? shop.rating);
+                    const shopRating = Number.isFinite(rawRating) && rawRating > 0
+                      ? rawRating
+                      : reviewRatings.length
+                        ? reviewRatings.reduce((total, rating) => total + rating, 0) / reviewRatings.length
+                        : null;
+                    const shopReviewCount = Number(shop.reviewCount ?? shop.ratingsCount ?? shopReviews.length) || 0;
                     const uid = String(currentUser?._id || currentUser?.id || '');
                     const canManageThisShop = Boolean(
                       myShops.some((ownedShop) => String(ownedShop.id || ownedShop._id) === String(shopId)) ||
@@ -1735,7 +1843,36 @@ export default function LunchComingSoon() {
                             <span className="mt-1 block truncate text-xs text-gray-500 dark:text-gray-400">
                               {shop.cuisine || shop.description || 'Local food and favourites'}
                             </span>
-                            <span className="mt-1.5 block text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                            {shopAddress && (
+                              <span className="mt-1 flex min-w-0 items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                <MapPin className="h-3 w-3 shrink-0 text-amber-500" />
+                                <span className="truncate">{shopAddress}</span>
+                              </span>
+                            )}
+                            {(shopContactName || shopContactNumber) && (
+                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                                {shopContactName && <span className="truncate">Owner: <span className="font-semibold text-gray-700 dark:text-gray-200">{shopContactName}</span></span>}
+                                {shopContactNumber && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{shopContactNumber}</span>}
+                              </span>
+                            )}
+                            <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                              <span className="inline-flex items-center gap-1">
+                                <Star className={`h-3.5 w-3.5 ${shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                                <span className="text-gray-900 dark:text-white">{shopRating ? shopRating.toFixed(1) : 'New'}</span>
+                                <span className="font-medium text-gray-500 dark:text-gray-400">Shop</span>
+                              </span>
+                              {averageFoodRating && (
+                                <span className="inline-flex items-center gap-1">
+                                  <UtensilsCrossed className="h-3 w-3 text-amber-500" />
+                                  <span className="text-gray-900 dark:text-white">{averageFoodRating.toFixed(1)}</span>
+                                  <span className="font-medium text-gray-500 dark:text-gray-400">Food</span>
+                                </span>
+                              )}
+                              <span className="font-medium text-gray-500 dark:text-gray-400">
+                                {shopReviewCount ? `(${shopReviewCount} ${shopReviewCount === 1 ? 'review' : 'reviews'})` : 'No reviews yet'}
+                              </span>
+                            </span>
+                            <span className="mt-1 block text-[10px] font-semibold text-amber-700 dark:text-amber-400">
                               {mealCount} menu item{mealCount === 1 ? '' : 's'} · Tap to view menu
                             </span>
                           </span>
@@ -1789,49 +1926,47 @@ export default function LunchComingSoon() {
               </div>
             )}
 
-            {/* Selected shop header and back-to-shops navigation */}
+            {/* Popular food from the selected shop */}
             {currentShop && isShopDetailOpen && (
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setIsShopDetailOpen(false)}
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800 dark:hover:bg-gray-800"
-                >
-                  <ArrowLeft className="h-4 w-4" /> All food shops
-                </button>
-                <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-                <div className="flex items-center gap-3 min-w-0">
-                  <ShopImage image={currentShop.image} className="h-14 w-14 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
-                  <div className="min-w-0">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
-                      {currentShop.cuisine && <span>{currentShop.cuisine}</span>}
-                      {currentShop.distance && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{currentShop.distance}</span>}
-                      {currentShop.time && <span className="flex items-center gap-0.5"><Clock3 className="h-3 w-3" />{currentShop.time}</span>}
-                      <span>{currentShop.meals?.length || 0} menu items</span>
-                    </div>
+              popularShopMeals.length > 0 ? (
+                <section aria-label={`Popular food at ${currentShop.name}`} className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h2 className="text-xs font-bold text-gray-800 dark:text-gray-100">Popular & special picks</h2>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400">From this shop</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isCurrentShopClosed ? (
-                    <span className="text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-2.5 py-1 rounded-full">Closed</span>
-                  ) : (
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Open
-                    </span>
-                  )}
-                  {(currentShop.phone || currentShop.whatsapp) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowContactCard(true)}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-amber-500 transition"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-                </div>
-              </div>
+                  <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {popularShopMeals.map((meal, index) => (
+                      <button
+                        key={meal.id || meal._id || `${meal.name}-${index}`}
+                        type="button"
+                        onClick={() => setSelectedFeaturedMeal(meal)}
+                        aria-label={`View details for ${meal.name}`}
+                        className="flex min-w-[220px] snap-start items-center gap-2 rounded-lg bg-gray-50 p-2 text-left transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:min-w-[250px] dark:bg-gray-800/60 dark:hover:bg-gray-800"
+                      >
+                        {(() => {
+                          const mealRating = getFoodRatingSummary(currentShop, meal);
+                          return (
+                            <>
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white dark:bg-gray-700">
+                          <FoodVisual visual={getItemVisual(meal)} alt={meal.name} className="h-full w-full object-cover" emojiClassName="text-xl" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[11px] font-semibold text-gray-800 dark:text-gray-100">{meal.name}</p>
+                          {mealRating.count > 0 && <p className="flex items-center gap-0.5 text-[10px] font-semibold text-gray-600 dark:text-gray-300"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} · {mealRating.count} {mealRating.count === 1 ? 'rating' : 'ratings'}</p>}
+                          <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                            {formatPrice(meal.price)} · {meal.completedSales > 0 ? `${meal.completedSales} sold` : meal.itemType === 'combo' ? 'Combo' : meal.itemType === 'special' || meal.isSpecial ? 'Special' : 'Popular'}
+                          </p>
+                          {meal.itemType === 'combo' && meal.description && <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">{meal.description}</p>}
+                        </div>
+                        <span className="ml-auto shrink-0 text-[10px] font-semibold text-amber-700 dark:text-amber-400">Details</span>
+                            </>
+                          );
+                        })()}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : null
             )}
 
             {/* Active Customer Orders (on browse tab) */}
@@ -1912,63 +2047,25 @@ export default function LunchComingSoon() {
                 >
                   🪑 Book Table
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderMode('reviews')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    orderMode === 'reviews'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-800 hover:bg-gray-50'
+                  }`}
+                >
+                  ⭐ Reviews{shopCommentReviews.length ? ` (${shopCommentReviews.length})` : ''}
+                </button>
               </div>
             )}
 
             {/* ── MENU GRID (Order Mode) ── */}
             {currentShop && isShopDetailOpen && orderMode === 'order' && (
               <div>
-                {/* ── FOOD CATEGORIES BAR (Full Menu, African Cuisines, Light Food, Soft Drinks, Fruits) ── */}
-                <div className="mb-3.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                      <UtensilsCrossed className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Food Categories</span>
-                    </h3>
-                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                      {selectedFoodCategory === 'all'
-                        ? 'Full Menu · All Items'
-                        : `${FOOD_CATEGORIES.find((c) => c.id === selectedFoodCategory)?.name || ''} (${categoryCounts[selectedFoodCategory] || 0})`}
-                    </span>
-                  </div>
-
-                  <div
-                    className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {FOOD_CATEGORIES.map((cat) => {
-                      const isSelected = selectedFoodCategory === cat.id;
-                      const count = categoryCounts[cat.id] || 0;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setSelectedFoodCategory(cat.id)}
-                          className={`shrink-0 snap-start flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
-                            isSelected
-                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-500 text-white shadow-amber-500/25 shadow-md scale-[1.02]'
-                              : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-gray-800/60'
-                          }`}
-                        >
-                          <span className="text-base leading-none">{cat.icon}</span>
-                          <span className="whitespace-nowrap">{cat.name}</span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-black leading-none ${
-                              isSelected
-                                ? 'bg-white/25 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Search & Tag Filter */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="mb-3 flex min-w-0 items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <input
@@ -1979,11 +2076,22 @@ export default function LunchComingSoon() {
                       className="w-full rounded-lg bg-white dark:bg-gray-900 pl-9 pr-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none transition placeholder:text-gray-400"
                     />
                   </div>
+                  <select
+                    aria-label="Filter menu by food category"
+                    value={selectedFoodCategory}
+                    onChange={(e) => setSelectedFoodCategory(e.target.value)}
+                    className="max-w-[112px] rounded-lg bg-white px-2.5 py-2 text-xs text-gray-700 ring-1 ring-gray-200 focus:outline-none focus:ring-amber-400 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800"
+                  >
+                    {FOOD_CATEGORIES.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
                   {menuTags.length > 2 && (
                     <select
+                      aria-label="Filter menu by tag"
                       value={menuTagFilter}
                       onChange={(e) => setMenuTagFilter(e.target.value)}
-                      className="rounded-lg bg-white dark:bg-gray-900 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none"
+                      className="max-w-[92px] rounded-lg bg-white px-2.5 py-2 text-xs ring-1 ring-gray-200 focus:outline-none focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800"
                     >
                       {menuTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
                     </select>
@@ -1994,18 +2102,17 @@ export default function LunchComingSoon() {
                 {visibleMeals.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {visibleMeals.map((meal) => {
-                      const availableSides = getAvailableSides(meal);
-                      const maxSides = getMaxSides(meal);
-                      const activeSides = availableSides.length > 0 ? getActiveSides(meal, availableSides, maxSides) : [];
-                      const cartKey = meal.id + (activeSides.length ? '-' + activeSides.slice().sort().join('-') : '');
-                      const inCart = cart.find((c) => (c.cartKey && c.cartKey === cartKey) || c.id === meal.id);
                       const soldOut = meal.isAvailable === false;
                       const visual = getItemVisual(meal);
                       const catBadge = getCategoryBadge(meal);
+                      const mealRating = getFoodRatingSummary(currentShop, meal);
                       return (
-                        <div
+                        <button
                           key={meal.id}
-                          className={`relative bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 transition hover:shadow-md ${soldOut ? 'opacity-50' : ''}`}
+                          type="button"
+                          onClick={() => setSelectedFeaturedMeal(meal)}
+                          aria-label={`View ${meal.name} details and order options`}
+                          className={`relative w-full rounded-xl bg-white p-3.5 text-left shadow-sm ring-1 ring-gray-200 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800 ${soldOut ? 'opacity-75' : ''}`}
                         >
                           <div className="flex items-start gap-3">
                             <div className="shrink-0 h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
@@ -2020,6 +2127,11 @@ export default function LunchComingSoon() {
                                       <span>{catBadge.icon}</span>
                                       <span>{catBadge.name}</span>
                                     </span>
+                                    {['combo', 'special'].includes(String(meal.itemType || '').toLowerCase()) && (
+                                      <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+                                        {meal.itemType === 'combo' ? 'Combo' : 'Special'}
+                                      </span>
+                                    )}
                                     {meal.tag && (
                                       <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{meal.tag}</span>
                                     )}
@@ -2030,64 +2142,21 @@ export default function LunchComingSoon() {
                               {meal.description && (
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">{meal.description}</p>
                               )}
+                              {mealRating.count > 0 && (
+                                <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} <span className="font-normal text-gray-400">({mealRating.count})</span>
+                                </span>
+                              )}
                             </div>
                           </div>
 
-                          {/* ── SIDES SELECTOR — only shown when vendor explicitly added sides ── */}
-                          {availableSides.length > 0 && maxSides > 0 && !soldOut && (
-                            <div className="mt-2.5">
-                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
-                                Choose sides <span className="text-amber-500">({activeSides.length}/{maxSides})</span>
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {availableSides.map((side) => {
-                                  const isSelected = activeSides.includes(side);
-                                  return (
-                                    <button
-                                      key={side}
-                                      type="button"
-                                      onClick={() => toggleSideForMeal(meal.id, side, availableSides, maxSides)}
-                                      className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
-                                        isSelected
-                                          ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
-                                          : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-amber-300'
-                                      }`}
-                                    >
-                                      {isSelected && <Check className="h-2.5 w-2.5" />}
-                                      {side}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Add to cart */}
-                          <div className="mt-2.5 flex items-center justify-end gap-2">
-                            {soldOut ? (
-                              <span className="text-[10px] font-bold text-red-500">Sold Out</span>
-                            ) : inCart ? (
-                              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-1">
-                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, -1)} className="p-1 text-gray-500 hover:text-red-500 transition">
-                                  <Minus className="h-3.5 w-3.5" />
-                                </button>
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 min-w-[20px] text-center">{inCart.quantity}</span>
-                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, 1)} className="p-1 text-gray-500 hover:text-emerald-500 transition">
-                                  <Plus className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => addToCart(meal)}
-                                disabled={isCurrentShopClosed}
-                                className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition"
-                              >
-                                <Plus className="h-3 w-3" /> Add
-                              </button>
-                            )}
+                          <div className="mt-2.5 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-800">
+                            <span className={`text-[10px] font-semibold ${soldOut ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {soldOut ? 'Sold out' : isCurrentShopClosed ? 'Shop closed' : 'Tap for details & order'}
+                            </span>
+                            {!soldOut && <ShoppingBag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -2132,39 +2201,17 @@ export default function LunchComingSoon() {
                   </div>
                 )}
 
-                {/* Shop Reviews Summary */}
-                {currentShop?.reviews?.length > 0 && (
-                  <div className="mt-4 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
-                    <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5 mb-2">
-                      <Star className="h-3.5 w-3.5 text-amber-500" /> Reviews ({currentShop.reviews.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {currentShop.reviews.slice(0, 3).map((review, i) => (
-                        <div key={i} className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
-                          <div className="flex gap-0.5">
-                            {[1,2,3,4,5].map((s) => (
-                              <Star key={s} className={`h-3 w-3 ${s <= (review.shopRating || review.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
-                            ))}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{review.userName || 'Customer'}</p>
-                            {review.comment && <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{review.comment}</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
             {/* ── TABLE BOOKING MODE ── */}
             {currentShop && isShopDetailOpen && orderMode === 'table' && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
-                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
-                </h3>
-                <form onSubmit={handleTableBooking} className="space-y-3">
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                  <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
+                  </h3>
+                  <form onSubmit={handleTableBooking} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
@@ -2215,8 +2262,56 @@ export default function LunchComingSoon() {
                   >
                     {isCurrentShopClosed ? 'Shop is Closed' : 'Request Table'}
                   </button>
-                </form>
+                  </form>
+                </div>
+
               </div>
+            )}
+
+            {/* ── SHOP REVIEWS MODE ── */}
+            {currentShop && isShopDetailOpen && orderMode === 'reviews' && (
+              <section aria-label={`Reviews for ${currentShop.name}`} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-gray-800 dark:text-gray-100">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> Guest reviews
+                  </h3>
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    {shopCommentReviews.length} {shopCommentReviews.length === 1 ? 'review' : 'reviews'}
+                  </span>
+                </div>
+                {shopCommentReviews.length ? (
+                  <div className="space-y-2.5">
+                    {shopCommentReviews.map((review, index) => {
+                      const shopScore = Math.max(0, Math.min(5, Number(review.shopRating || review.rating || 0)));
+                      const foodScore = Math.max(0, Math.min(5, Number(review.foodRating || 0)));
+                      return (
+                        <article key={review._id || review.id || index} className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-xs font-semibold text-gray-700 dark:text-gray-200">{review.userName || 'Customer'}</p>
+                            <div className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                              <span className="inline-flex items-center gap-0.5" title="Shop rating"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {shopScore ? shopScore.toFixed(1) : '—'}</span>
+                              {foodScore > 0 && <span className="inline-flex items-center gap-0.5" title="Food rating"><UtensilsCrossed className="h-3 w-3 text-amber-500" /> {foodScore.toFixed(1)}</span>}
+                            </div>
+                          </div>
+                          <p className="mt-1.5 text-xs leading-relaxed text-gray-600 dark:text-gray-300">{String(review.comment).trim()}</p>
+                          {review.itemRatings?.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {review.itemRatings.map((itemRating, itemIndex) => (
+                                <span key={`${itemRating.mealId || itemRating.mealName}-${itemIndex}`} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-medium text-gray-600 dark:bg-gray-900 dark:text-gray-300">
+                                  <span className="max-w-32 truncate">{itemRating.mealName}</span>
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {itemRating.rating}/5
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">No written reviews yet.</p>
+                )}
+              </section>
             )}
           </div>
         )}
@@ -2320,6 +2415,21 @@ export default function LunchComingSoon() {
                         <div>
                           <p className="text-xs font-bold text-gray-700 dark:text-gray-300">#{order.orderCode} · {order.shopName}</p>
                           <p className="text-[10px] text-gray-400">{(order.items || []).length} items · {formatPrice(order.total)}</p>
+                          {Number(order.ratingDetails?.foodRating) > 0 && (
+                            <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                              <UtensilsCrossed className="h-3 w-3" /> Food rating: {Number(order.ratingDetails.foodRating).toFixed(1)}/5
+                            </p>
+                          )}
+                          {order.ratingDetails?.itemRatings?.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {order.ratingDetails.itemRatings.map((itemRating, itemIndex) => (
+                                <span key={`${itemRating.mealId || itemRating.mealName}-${itemIndex}`} className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-gray-600 dark:bg-amber-950/30 dark:text-gray-300">
+                                  <span className="max-w-24 truncate">{itemRating.mealName}</span>
+                                  <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {itemRating.rating}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full flex items-center gap-1">
@@ -2423,7 +2533,34 @@ export default function LunchComingSoon() {
               ))}
             </div>
 
+            {/* Owner workspace tabs */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 dark:bg-gray-800 p-1.5" role="tablist" aria-label="Shop management">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={ownerFoodTab === 'kitchen'}
+                onClick={() => setOwnerFoodTab('kitchen')}
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${ownerFoodTab === 'kitchen' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              >
+                <Bell className="h-4 w-4 text-amber-500" />
+                Kitchen Queue
+                <span className={`rounded-full px-2 py-0.5 text-xs ${ownerFoodTab === 'kitchen' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200' : 'bg-gray-200 dark:bg-gray-700'}`}>{liveKitchenQueue.length}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={ownerFoodTab === 'menu'}
+                onClick={() => setOwnerFoodTab('menu')}
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${ownerFoodTab === 'menu' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              >
+                <UtensilsCrossed className="h-4 w-4 text-amber-500" />
+                Your Menu
+                <span className={`rounded-full px-2 py-0.5 text-xs ${ownerFoodTab === 'menu' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200' : 'bg-gray-200 dark:bg-gray-700'}`}>{(dashboardShop?.meals || []).length}</span>
+              </button>
+            </div>
+
             {/* Kitchen Queue (Live Orders) */}
+            {ownerFoodTab === 'kitchen' && (
             <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -2529,8 +2666,10 @@ export default function LunchComingSoon() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Menu Management */}
+            {ownerFoodTab === 'menu' && (
             <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -2609,7 +2748,7 @@ export default function LunchComingSoon() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal) });
+                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal), itemType: meal.itemType || 'meal' });
                               setShowEditMealModal(true);
                             }}
                             className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition"
@@ -2635,9 +2774,10 @@ export default function LunchComingSoon() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Shop Insights */}
-            {shopInsights.length > 0 && (
+            {ownerFoodTab === 'menu' && shopInsights.length > 0 && (
               <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-3">
                   <Lightbulb className="h-4 w-4 text-amber-500" /> Tips to Grow
@@ -2918,7 +3058,7 @@ export default function LunchComingSoon() {
                         type="button"
                         onClick={() => {
                           setShopRating(5);
-                          setFoodRating(5);
+                          setItemRatings(Object.fromEntries((ord.items || []).map((_, index) => [index, 0])));
                           setRatingComment('');
                           setRatingTargetOrder(ord);
                           setShowRateModal(true);
@@ -2941,7 +3081,7 @@ export default function LunchComingSoon() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
+              className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -3081,6 +3221,15 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={newMealForm.description} onChange={(e) => setNewMealForm({...newMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} placeholder="Brief description..." />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Menu item type</label>
+                  <select value={newMealForm.itemType} onChange={(e) => setNewMealForm({ ...newMealForm, itemType: e.target.value })} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                    <option value="meal">Regular menu item</option>
+                    <option value="combo">Combo meal</option>
+                    <option value="special">Shop special</option>
+                  </select>
+                  {newMealForm.itemType === 'combo' && <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">List everything included in the combo in the description or sides.</p>}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
@@ -3217,6 +3366,15 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={editMealForm.description} onChange={(e) => setEditMealForm({...editMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Menu item type</label>
+                  <select value={editMealForm.itemType || 'meal'} onChange={(e) => setEditMealForm({ ...editMealForm, itemType: e.target.value })} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                    <option value="meal">Regular menu item</option>
+                    <option value="combo">Combo meal</option>
+                    <option value="special">Shop special</option>
+                  </select>
+                  {editMealForm.itemType === 'combo' && <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">List everything included in the combo in the description or sides.</p>}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
@@ -3293,17 +3451,28 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Food Rating</label>
-                  <div className="flex gap-1">
-                    {[1,2,3,4,5].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setFoodRating(s)}
-                        className="p-1 transition hover:scale-110"
-                      >
-                        <Star className={`h-7 w-7 ${s <= foodRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
-                      </button>
+                  <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Rate each food item</label>
+                  <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                    {(ratingTargetOrder.items || []).map((item, itemIndex) => (
+                      <div key={`${item.id || item.name}-${itemIndex}`} className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 p-2.5 dark:bg-gray-800/60">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-gray-800 dark:text-gray-100">{item.name || 'Food item'}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">Quantity: {item.quantity || 1}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((score) => (
+                            <button
+                              key={score}
+                              type="button"
+                              onClick={() => setItemRatings((previous) => ({ ...previous, [itemIndex]: score }))}
+                              aria-label={`Rate ${item.name || 'food item'} ${score} out of 5`}
+                              className="p-0.5 transition hover:scale-110"
+                            >
+                              <Star className={`h-4 w-4 ${score <= (itemRatings[itemIndex] || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300 dark:text-gray-600'}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -3324,6 +3493,107 @@ export default function LunchComingSoon() {
             </motion.div>
           </div>
         )}
+
+        <AnimatePresence>
+          {selectedFeaturedMeal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+              onClick={() => setSelectedFeaturedMeal(null)}
+            >
+              <motion.section
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${selectedFeaturedMeal.name} details`}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                onClick={(event) => event.stopPropagation()}
+                className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl"
+              >
+                <div className="relative flex h-56 items-center justify-center bg-amber-50 dark:bg-gray-800 sm:h-64">
+                  <FoodVisual visual={getItemVisual(selectedFeaturedMeal)} alt={selectedFeaturedMeal.name} className="h-full w-full object-contain p-3" emojiClassName="text-7xl" />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFeaturedMeal(null)}
+                    aria-label="Close food details"
+                    className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-950/90 dark:text-gray-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-3 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        {selectedFeaturedMeal.itemType === 'combo' ? 'Combo meal' : selectedFeaturedMeal.itemType === 'special' || selectedFeaturedMeal.isSpecial ? 'Shop special' : 'Popular pick'}
+                      </p>
+                      <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">{selectedFeaturedMeal.name}</h2>
+                      {(() => {
+                        const mealRating = getFoodRatingSummary(currentShop, selectedFeaturedMeal);
+                        return mealRating.count > 0 ? (
+                          <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} <span className="font-normal text-gray-400">({mealRating.count} {mealRating.count === 1 ? 'rating' : 'ratings'} for this food)</span>
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+                    <span className="shrink-0 text-lg font-black text-amber-600 dark:text-amber-400">{formatPrice(selectedFeaturedMeal.price)}</span>
+                  </div>
+                  {selectedFeaturedMeal.description && <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{selectedFeaturedMeal.description}</p>}
+                  {selectedFeaturedMeal.itemType === 'combo' && selectedFeaturedMeal.sides?.length > 0 && (
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">Included in this combo</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedFeaturedMeal.sides.map((side) => (
+                          <span key={side} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">{side}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedFeaturedMeal.itemType !== 'combo' && selectedFoodSides.length > 0 && selectedFoodMaxSides > 0 && selectedFeaturedMeal.isAvailable !== false && (
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
+                        Choose sides <span className="font-medium text-gray-500 dark:text-gray-400">({selectedFoodActiveSides.length}/{selectedFoodMaxSides})</span>
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedFoodSides.map((side) => {
+                          const isSelected = selectedFoodActiveSides.includes(side);
+                          return (
+                            <button
+                              key={side}
+                              type="button"
+                              onClick={() => toggleSideForMeal(selectedFeaturedMeal.id, side, selectedFoodSides, selectedFoodMaxSides)}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${isSelected ? 'border-amber-500 bg-amber-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
+                            >
+                              {isSelected && <Check className="h-3 w-3" />}{side}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mealToOrder = selectedFeaturedMeal;
+                      setSelectedFeaturedMeal(null);
+                      addToCart(mealToOrder);
+                    }}
+                    disabled={isCurrentShopClosed || selectedFeaturedMeal.isAvailable === false}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    {selectedFeaturedMeal.isAvailable === false ? 'Sold out' : isCurrentShopClosed ? 'Shop is closed' : `Order · ${formatPrice(selectedFeaturedMeal.price)}`}
+                  </button>
+                </div>
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 

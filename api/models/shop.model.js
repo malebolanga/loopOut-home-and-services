@@ -7,10 +7,18 @@ const mealSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   tag: { type: String, default: 'Popular' },
   category: { type: String, default: '' },
+  itemType: { type: String, enum: ['meal', 'combo', 'special'], default: 'meal' },
   image: { type: String, default: '🍱' },
   isAvailable: { type: Boolean, default: true },
   addOns: [{ name: String, price: Number }],
   sides: { type: [String], default: [] }
+}, { _id: false });
+
+const itemRatingSchema = new mongoose.Schema({
+  itemIndex: { type: Number, required: true },
+  mealId: { type: String, default: '' },
+  mealName: { type: String, required: true },
+  rating: { type: Number, min: 1, max: 5, required: true }
 }, { _id: false });
 
 const reviewSchema = new mongoose.Schema({
@@ -18,6 +26,7 @@ const reviewSchema = new mongoose.Schema({
   userName: { type: String, default: 'Customer' },
   shopRating: { type: Number, default: 5 },
   foodRating: { type: Number, default: 5 },
+  itemRatings: { type: [itemRatingSchema], default: [] },
   comment: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 }, { _id: false });

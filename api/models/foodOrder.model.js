@@ -1,5 +1,12 @@
 import mongoose from 'mongoose';
 
+const itemRatingSchema = new mongoose.Schema({
+  itemIndex: Number,
+  mealId: String,
+  mealName: String,
+  rating: { type: Number, min: 1, max: 5 }
+}, { _id: false });
+
 const orderItemSchema = new mongoose.Schema({
   id: { type: String },
   name: { type: String, required: true },
@@ -38,6 +45,7 @@ const foodOrderSchema = new mongoose.Schema({
   ratingDetails: {
     shopRating: Number,
     foodRating: Number,
+    itemRatings: { type: [itemRatingSchema], default: [] },
     comment: String,
     createdAt: Date
   }

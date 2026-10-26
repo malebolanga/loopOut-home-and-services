@@ -150,7 +150,8 @@ export const addMealToShop = async (req, res, next) => {
     const name = cleanText(req.body.name, 100); const price = Number(req.body.price);
     if (!name || !Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid meal name and price.' });
     const sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
-    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
+    const itemType = ['combo', 'special'].includes(String(req.body.itemType || '').toLowerCase()) ? String(req.body.itemType).toLowerCase() : 'meal';
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', itemType, image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
     shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
   } catch (error) { return next(error); }
 };
@@ -164,6 +165,7 @@ export const updateMealInShop = async (req, res, next) => {
     if (req.body.description !== undefined) meal.description = cleanText(req.body.description, 500);
     if (req.body.tag !== undefined) meal.tag = cleanText(req.body.tag, 40);
     if (req.body.category !== undefined) meal.category = cleanText(req.body.category, 60);
+    if (req.body.itemType !== undefined) meal.itemType = ['combo', 'special'].includes(String(req.body.itemType).toLowerCase()) ? String(req.body.itemType).toLowerCase() : 'meal';
     if (req.body.image !== undefined) meal.image = cleanImage(req.body.image, meal.image || '🍽️');
     if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
     if (req.body.sides !== undefined) meal.sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
@@ -277,11 +279,30 @@ export const rateShop = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Choose a rating from 1 to 5.' });
     }
 
+    const requestedItemRatings = Array.isArray(req.body.itemRatings) ? req.body.itemRatings : [];
+    const orderItems = order.items || [];
+    const itemRatings = orderItems.map((item, itemIndex) => {
+      const requested = requestedItemRatings.find((entry) => Number(entry.itemIndex) === itemIndex);
+      const itemRating = Number(requested?.rating);
+      if (!requested || String(requested.mealId || '') !== String(item.id || '') || !Number.isInteger(itemRating) || itemRating < 1 || itemRating > 5) return null;
+      return {
+        itemIndex,
+        mealId: item.id || '',
+        mealName: cleanText(item.name, 100),
+        rating: itemRating
+      };
+    });
+    if (!orderItems.length || itemRatings.some((entry) => !entry) || requestedItemRatings.length !== orderItems.length) {
+      return res.status(400).json({ success: false, message: 'Rate every food item in this order individually.' });
+    }
+    const averageFoodRating = Math.round((itemRatings.reduce((sum, entry) => sum + entry.rating, 0) / itemRatings.length) * 10) / 10;
+
     const review = {
       id: crypto.randomUUID(),
       userName: cleanText(order.customerName, 50) || 'Customer',
       shopRating: rating,
-      foodRating: Math.min(Math.max(Number(req.body.foodRating) || rating, 1), 5),
+      foodRating: averageFoodRating,
+      itemRatings,
       comment: cleanText(req.body.comment, 500),
       createdAt: new Date()
     };
