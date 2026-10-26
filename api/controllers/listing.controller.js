@@ -1,4 +1,5 @@
 import Listing from '../models/listing.model.js';
+import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
@@ -133,9 +134,18 @@ export const deleteListing = async (req, res, next) => {
       return next(errorHandler(404, 'Listing not found!'));
     }
 
-    // Ensure userRef comparison is done with toString()
-    if (req.user.id !== listing.userRef.toString()) {
-      return next(errorHandler(401, 'You can only delete your own listings!'));
+    const ownerId = (listing.userRef?._id || listing.userRef)?.toString();
+    let isAuthorized = Boolean(req.user?.id && ownerId && req.user.id === ownerId);
+
+    if (!isAuthorized && req.user?.id) {
+      const user = await User.findById(req.user.id).select('isAdmin role');
+      if (user?.isAdmin === true || user?.role === 'admin') {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return next(errorHandler(403, 'You can only delete your own listings!'));
     }
 
     // Permanent deletion from database

@@ -503,7 +503,7 @@ function AppContent() {
       <PhoneNotificationManager />
       <AuthSessionManager />
       {!hideHeader && <Header />}
-      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}`}>
+      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
         <Suspense fallback={<NeuralLoader fullScreen={true} />}>
           <AnimatedRoutes />
         </Suspense>

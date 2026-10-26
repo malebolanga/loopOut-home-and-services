@@ -270,7 +270,7 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className={`${className} group relative bg-white dark:bg-gray-900 sm:rounded-[2rem] md:rounded-[2.5rem] rounded-xl sm:mx-0 -mx-4 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 cursor-pointer flex flex-col`}
+      className={`${className} relative bg-white dark:bg-gray-900 sm:rounded-[2rem] md:rounded-[2.5rem] rounded-xl sm:mx-0 -mx-4 border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] transition-all duration-500 cursor-pointer flex flex-col`}
       onClick={handleCardClick}
     >
       {/* ── Image Thumbnail ── */}

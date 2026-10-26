@@ -1,9 +1,10 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, X, Check } from 'lucide-react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
 import { canCreateListings, getCreationRoute } from '../utils/offeringPermissions';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 /* ─── helpers ────────────────────────────────────────────────────────────────── */
 const getItemPath = (listing) =>
@@ -42,7 +43,7 @@ function ListingCard({ listing, onEdit, onDelete, deletingId, navigate }) {
   const isDeleting = deletingId === listing._id;
 
   return (
-    <div className="cursor-pointer" onClick={() => navigate(getItemPath(listing))}>
+    <div className="relative cursor-pointer" onClick={() => navigate(getItemPath(listing))}>
       {/* Image – 3:2 */}
       <div className="relative w-full rounded-2xl overflow-hidden bg-gray-200" style={{ aspectRatio: '3/2' }}>
         {imgSrc && !imgError ? (
@@ -67,7 +68,7 @@ function ListingCard({ listing, onEdit, onDelete, deletingId, navigate }) {
 
         {/* Edit / Delete – top right */}
         <div
-          className="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute top-3 right-3 flex gap-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -110,6 +111,11 @@ export default function UserListings() {
   const [loading,       setLoading]       = useState(true);
   const [confirmTarget, setConfirmTarget] = useState(null); // { id, category, title }
   const [deleteError,   setDeleteError]   = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', price: '', category: 'furniture', condition: '', contact: '', address: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editError, setEditError] = useState('');
+  const userId = currentUser?._id || currentUser?.id;
 
   useEffect(() => {
     if (!currentUser) navigate('/sign-in');
@@ -127,17 +133,17 @@ export default function UserListings() {
 
       const [listingsData, servicesData, helpersData, sellsData] = await Promise.all([
         !isServicesProvider 
-          ? fetch(`/api/user/listings/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => [])
+          ? fetch(`/api/user/listings/${userId}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => [])
           : Promise.resolve([]),
-        fetch(`/api/user/services/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
-        fetch(`/api/user/helpers/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
-        fetch(`/api/user/sell/${currentUser._id}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/services/${userId}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/helpers/${userId}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
+        fetch(`/api/user/sell/${userId}`, { headers: authHeaders, credentials: 'include' }).then(r => r.json()).catch(() => []),
       ]);
       const allItems = [
         ...(Array.isArray(listingsData) ? listingsData : (listingsData.listings || [])).map(l => ({ ...l, category: 'stays' })),
         ...(Array.isArray(servicesData) ? servicesData : (servicesData.services || [])).map(s => ({ ...s, category: 'experiences' })),
         ...(Array.isArray(helpersData)  ? helpersData  : (helpersData.helpers   || [])).map(h => ({ ...h, category: 'online' })),
-        ...(Array.isArray(sellsData)    ? sellsData    : (sellsData.data || sellsData.sells || [])).map(g => ({ ...g, category: 'selling' })),
+        ...(Array.isArray(sellsData)    ? sellsData    : (sellsData.data || sellsData.sells || [])).map(g => ({ ...g, itemCategory: g.category || g.itemCategory || 'furniture', category: 'selling' })),
       ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setUserListings(allItems);
     } catch (err) {
@@ -157,16 +163,10 @@ export default function UserListings() {
         : category === 'experiences' ? `/api/service/delete/${id}`
         : category === 'selling'     ? `/api/sell/${id}`
         : `/api/helper/delete/${id}`;
-      const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || '';
-      const res = await fetch(endpoint, {
+      const res = await authenticatedFetch(endpoint, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        credentials: 'include',
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Failed to delete');
       setUserListings(prev => prev.filter(l => l._id !== id));
     } catch (err) {
@@ -177,8 +177,49 @@ export default function UserListings() {
   };
 
   useEffect(() => {
-    if (currentUser?._id) fetchListings();
-  }, []);
+    if (userId) fetchListings();
+  }, [userId]);
+
+  const startEdit = (listing) => {
+    if (listing.category === 'selling') {
+      setEditError('');
+      setEditingItem(listing);
+      setEditForm({
+        title: listing.title || listing.name || '',
+        description: listing.description || '',
+        price: listing.price ?? '',
+        category: listing.categoryType || listing.itemCategory || listing.productCategory || 'furniture',
+        condition: listing.condition || '',
+        contact: listing.contact || '',
+        address: listing.address || '',
+      });
+      return;
+    }
+    navigate(getEditPath(listing));
+  };
+
+  const saveSellEdit = async (event) => {
+    event.preventDefault();
+    if (!editingItem) return;
+    setSavingEdit(true);
+    setEditError('');
+    try {
+      const response = await authenticatedFetch(`/api/sell/${editingItem._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editForm, price: Number(editForm.price) }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || 'Could not update this item.');
+      const updated = payload.data || payload;
+      setUserListings((items) => items.map((item) => item._id === editingItem._id ? { ...item, ...updated, itemCategory: updated.category || editForm.category, category: 'selling' } : item));
+      setEditingItem(null);
+    } catch (error) {
+      setEditError(error.message || 'Could not update this item. Please try again.');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const FILTERS = [
     { key: 'stays',       label: 'Stays' },
@@ -298,7 +339,7 @@ export default function UserListings() {
               <ListingCard
                 key={listing._id}
                 listing={listing}
-                onEdit={(l) => navigate(getEditPath(l))}
+                onEdit={startEdit}
                 onDelete={(id, cat) => {
                   const item = userListings.find(l => l._id === id);
                   setConfirmTarget({ id, category: cat, title: item?.name || item?.title || 'this item' });
@@ -355,6 +396,30 @@ export default function UserListings() {
       </main>
 
       {/* ── Delete error banner ── */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => !savingEdit && setEditingItem(null)}>
+          <form onSubmit={saveSellEdit} onClick={(event) => event.stopPropagation()} className="max-h-[92dvh] w-full max-w-lg space-y-4 overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-gray-900 sm:rounded-3xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit item for sale</h2><p className="mt-1 text-sm text-gray-500">Update the details buyers see.</p></div>
+              <button type="button" onClick={() => setEditingItem(null)} disabled={savingEdit} aria-label="Close editor" className="rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"><X className="h-5 w-5" /></button>
+            </div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Item name<input required maxLength={120} value={editForm.title} onChange={(event) => setEditForm((form) => ({ ...form, title: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Description<textarea required rows={4} maxLength={3000} value={editForm.description} onChange={(event) => setEditForm((form) => ({ ...form, description: event.target.value }))} className="mt-1.5 w-full resize-y rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Price (R)<input required type="number" min="0" step="0.01" value={editForm.price} onChange={(event) => setEditForm((form) => ({ ...form, price: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Condition<input maxLength={60} value={editForm.condition} onChange={(event) => setEditForm((form) => ({ ...form, condition: event.target.value }))} placeholder="New, excellent, used…" className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Category<select value={editForm.category} onChange={(event) => setEditForm((form) => ({ ...form, category: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800"><option value="furniture">Furniture</option><option value="electronics">Electronics</option><option value="clothes">Clothes</option><option value="universities">University items</option><option value="books">Books</option></select></label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Contact number<input required type="tel" value={editForm.contact} onChange={(event) => setEditForm((form) => ({ ...form, contact: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+            </div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Location<input value={editForm.address} onChange={(event) => setEditForm((form) => ({ ...form, address: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
+            {editError && <p role="alert" className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">{editError}</p>}
+            <div className="flex gap-3 pt-1"><button type="button" onClick={() => setEditingItem(null)} disabled={savingEdit} className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200">Cancel</button><button type="submit" disabled={savingEdit} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white hover:bg-rose-700 disabled:opacity-60">{savingEdit ? <FaSpinner className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Save changes</button></div>
+          </form>
+        </div>
+      )}
+
       {deleteError && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-red-600 text-white px-5 py-3 rounded-2xl shadow-xl text-sm font-medium max-w-sm w-full mx-4">
           <span className="flex-1">{deleteError}</span>

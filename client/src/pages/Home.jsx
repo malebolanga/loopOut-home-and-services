@@ -4103,10 +4103,10 @@ function MobileAppHomepage({
 
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '92px' : '-1px' }}
-        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 py-1.5 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
+        style={{ top: isHeaderVisible ? '92px' : '0px' }}
+        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-[21px] shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+        <div className="flex translate-y-[18px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
@@ -4208,7 +4208,7 @@ function MobileAppHomepage({
         </AnimatePresence>
 
         {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
-        <FoodSpecialsStrip navigate={navigate} className="-mt-[92px]" />
+        <FoodSpecialsStrip navigate={navigate} className="-mt-[57px]" />
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
@@ -4569,10 +4569,10 @@ function DesktopHomepage({
 
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '96px' : '-1px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
+        style={{ top: isHeaderVisible ? '96px' : '0px' }}
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 pt-2.5 pb-[25px] shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
+        <div className="max-w-7xl mx-auto translate-y-[18px] px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
             {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;

@@ -4,6 +4,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { X, Camera } from 'lucide-react';
 import { useSelector } from "react-redux";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { useRef, useState, useEffect } from "react";
 import {
   getDownloadURL,
@@ -80,7 +81,6 @@ import {
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
-import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 import { 
   CameraIcon, 
@@ -845,12 +845,13 @@ export default function Profile() {
 
   const handleListingDelete = async (listingId) => {
     try {
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
+      const res = await authenticatedFetch(`/api/listing/delete/${listingId}`, {
         method: "DELETE",
       });
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        console.error('Delete listing failed:', data.message);
+        alert(data.message || 'Failed to delete listing. Please sign in again.');
         return;
       }
 
@@ -865,12 +866,13 @@ export default function Profile() {
 
   const handleEventDelete = async (eventId) => {
     try {
-      const res = await fetch(`/api/event/delete/${eventId}`, {
+      const res = await authenticatedFetch(`/api/event/delete/${eventId}`, {
         method: "DELETE",
       });
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        console.error('Delete event failed:', data.message);
+        alert(data.message || 'Failed to delete event.');
         return;
       }
 
@@ -990,8 +992,9 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen app-safe-content-bottom pb-36 md:pb-32 bg-slate-50 dark:bg-gray-950">
-      {/* Sticky Back Bar */}
-      <div className="app-safe-top sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-slate-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      {/* Profile page header */}
+      <header className="app-safe-top relative z-10 bg-white dark:bg-gray-950 border-b border-slate-100 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
           aria-label="Go back"
@@ -1002,11 +1005,15 @@ export default function Profile() {
           </span>
           <span className="hidden sm:inline">Back</span>
         </button>
-        <span className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-gray-500">Profile</span>
-      </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Profile</h1>
+            <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">Manage your account and preferences</p>
+          </div>
+        </div>
+      </header>
       {/* Masterpiece Elite Account Header */}
-      <div className="max-w-7xl mx-auto px-6 pt-32 mb-12">
-        <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 p-12 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 md:pt-7 mb-8 md:mb-10">
+        <div className="relative group overflow-hidden rounded-3xl bg-gray-950 p-5 sm:p-8 lg:p-12 shadow-xl shadow-slate-900/10 border border-white/5">
           {/* Animated Background Elements */}
           <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-500/10 to-transparent blur-[80px] -z-10" />
           <div className="absolute bottom-0 left-0 w-1/4 h-1/2 bg-blue-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
@@ -1038,9 +1045,9 @@ export default function Profile() {
             {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-                <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
+                  <h2 className="text-3xl lg:text-5xl font-black text-white tracking-tighter italic">
                   {currentUser?.username || 'ELITE USER'}
-                </h1>
+                  </h2>
                 {currentUser?.isVerified && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                     <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
@@ -1135,12 +1142,6 @@ export default function Profile() {
                       label="Become a provider"
                       active={false}
                       onClick={() => navigate('/become')}
-                    />
-                    <MenuItem
-                      icon={HeartIcon}
-                      label="Wishlist Vault"
-                      active={activeSection === "wishlist"}
-                      onClick={() => setActiveSection("wishlist")}
                     />
                     {isProvider && <MenuItem
                       icon={ListBulletIcon}
@@ -1735,14 +1736,6 @@ export default function Profile() {
                   </div>
                 </SectionCard>
               </>
-            )}
-
-            {/* Wishlist Section */}
-            {activeSection === "wishlist" && (
-              <SectionCard title="Wishlists" icon={HeartIcon}>
-                <p className="text-[#767676] dark:text-white mb-6">Places you've saved for future trips</p>
-                <WishList />
-              </SectionCard>
             )}
 
             {/* My Listings Section */}

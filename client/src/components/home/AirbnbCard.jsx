@@ -204,6 +204,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           alt={item.name}
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
           className="home-media-gallery"
+          compactIndicator
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-t from-slate-950/50 via-slate-950/12 to-transparent" />
         {isVerified && (
@@ -235,31 +236,28 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <p className={`font-semibold text-gray-900 dark:text-white truncate ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
-              {item.address?.split(',')[0] || item.name || 'South Africa'}
+            <p className={`min-h-[2rem] line-clamp-2 font-semibold leading-4 text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
+              {item.name || item.title || item.address?.split(',')[0] || 'South Africa'}
             </p>
 
-            <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight mt-0.5">
-              {item.name}
-            </p>
-
-            <p className="text-gray-500 dark:text-white text-[11px] truncate leading-tight">
-              {getCategoryLabel()}
-            </p>
-            {/* GPS Distance badge */}
-            {!hideDistance && distanceLabel && (
-              <span className="inline-flex items-center gap-0.5 mt-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                <Navigation2 className="w-2.5 h-2.5 shrink-0" />
-                {distanceLabel}
-              </span>
+            {(item.address || item.location) && (
+              <p className="mt-0.5 truncate text-[11px] leading-tight text-gray-500 dark:text-gray-400">
+                {String(item.address || item.location).split(',')[0]}
+              </p>
             )}
-            {responseTime && (
-              <span className="block mt-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-300 truncate">
-                Replies {responseTime}
+            <div className="mt-1 flex min-h-[18px] items-center gap-1.5 overflow-hidden">
+              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold leading-none text-slate-600 dark:bg-gray-800 dark:text-gray-300">
+                {getCategoryLabel()}
               </span>
-            )}
+              {!hideDistance && distanceLabel && (
+                <span className="inline-flex min-w-0 items-center gap-0.5 truncate text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <Navigation2 className="h-2.5 w-2.5 shrink-0" />{distanceLabel}
+                </span>
+              )}
+              {responseTime && <span className="min-w-0 truncate text-[9px] text-gray-500 dark:text-gray-400">Replies {responseTime}</span>}
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             {/* Rating on right */}
             <div className="flex items-center gap-0.5">
               {item.rating > 0 ? (
@@ -277,7 +275,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
               <Link
                 to={`/user/${owner._id}`}
                 onClick={(e) => e.stopPropagation()}
-                className={`${reducedSize ? 'w-4 h-4' : 'w-5 h-5'} rounded-full border border-gray-200 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0`}
+                className={`${reducedSize ? 'w-4 h-4' : 'w-6 h-6'} rounded-full border border-gray-200 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0`}
                 title={`Posted by ${owner.username}`}
               >
                 <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />

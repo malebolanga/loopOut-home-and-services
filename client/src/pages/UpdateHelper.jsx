@@ -4,6 +4,8 @@ import { FaTimes } from 'react-icons/fa';
 import { HiOutlineClock as ClockIcon } from 'react-icons/hi';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from '../firebase';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 export default function UpdateHelper() {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ export default function UpdateHelper() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [imageUploadError, setImageUploadError] = useState(null);
   const [formData, setFormData] = useState({
     imageUrls: [],
@@ -202,30 +205,31 @@ export default function UpdateHelper() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      setLoading(true);
-      const res = await fetch(`/api/helper/update/${helperId}`, {
+      setSubmitLoading(true);
+      setError(false);
+      const res = await authenticatedFetch(`/api/helper/update/${helperId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
-      if (data.success === false) {
-        setError(data.message);
-        setLoading(false);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        setError(data.message || 'Failed to update helper profile.');
+        setSubmitLoading(false);
         return;
       }
-      setLoading(false);
+      setSubmitLoading(false);
       navigate(`/helper/${helperId}`);
-    } catch (error) {
-      setError(error.message);
-      setLoading(false);
+    } catch (err) {
+      setError(err.message || 'Failed to update helper profile.');
+      setSubmitLoading(false);
     }
   };
 
   if (loading) return <p className='text-center my-7 text-2xl'>Loading...</p>;
-  if (error) return <p className='text-center my-7 text-2xl'>Something went wrong!</p>;
+  if (error && !helper) return <p className='text-center my-7 text-2xl'>Something went wrong!</p>;
 
   return (
     <main className='max-w-4xl mx-auto p-3'>
@@ -588,7 +592,7 @@ export default function UpdateHelper() {
                         <span className='text-xs text-rose-500 font-bold animate-pulse'>Uploading...</span>
                       )}
                       {service.image && (
-                        <img src={service.image} alt="Service preview" className='w-16 h-16 object-cover rounded-lg border shadow-sm' />
+                        <img src={resolveApiUrl(service.image)} alt="Service preview" className='w-16 h-16 object-cover rounded-lg border shadow-sm' onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }} />
                       )}
                     </div>
                   </div>
@@ -647,7 +651,7 @@ export default function UpdateHelper() {
                     <div className='flex items-center gap-4 mt-2'>
                       {performer.image ? (
                         <div className='relative w-16 h-16 rounded-lg overflow-hidden border'>
-                          <img src={performer.image} alt="performer" className='w-full h-full object-cover' />
+                          <img src={resolveApiUrl(performer.image)} alt="performer" className='w-full h-full object-cover' onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }} />
                           <button
                             type='button'
                             onClick={() => handlePerformerChange(index, 'image', '')}
@@ -698,12 +702,12 @@ export default function UpdateHelper() {
           </div>
 
           <button
-            disabled={loading || uploading}
+            disabled={submitLoading || uploading}
             className='p-3 bg-airbnb-red text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 mt-4'
           >
-            {loading ? 'Updating...' : 'Update Helper Listing'}
+            {submitLoading ? 'Updating...' : 'Update Helper Listing'}
           </button>
-          {error && <p className='text-red-700 text-sm'>{error}</p>}
+          {error && <p className='text-red-700 text-sm font-semibold'>{error}</p>}
         </div>
         <div className='flex flex-col flex-1 gap-4'>
           <p className='font-semibold'>
@@ -740,9 +744,10 @@ export default function UpdateHelper() {
                 className='flex justify-between p-3 border items-center'
               >
                 <img
-                  src={url}
+                  src={resolveApiUrl(url)}
                   alt='helper image'
                   className='w-20 h-20 object-contain rounded-lg'
+                  onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
                 />
                 <button
                   type='button'

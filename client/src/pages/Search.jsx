@@ -79,6 +79,14 @@ import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
+const QUICK_SEARCH_TYPES = [
+  { id: 'all', label: 'All', icon: Sparkles },
+  { id: 'properties', label: 'Stays', icon: HomeIcon },
+  { id: 'services', label: 'Services', icon: WrenchIcon },
+  { id: 'helpers', label: 'Helpers', icon: UserGroupIcon },
+  { id: 'food', label: 'Food', icon: UtensilsCrossed },
+  { id: 'events', label: 'Events', icon: CalendarIcon },
+];
 
 const CITY_COORDS = {
   'polokwane': { lat: -23.9058, lng: 29.4505 },
@@ -270,7 +278,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    transition: { staggerChildren: 0.025 }
   }
 };
 
@@ -551,8 +559,8 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
   const getLocation = () => item.address || item.location || item.city || 'Private Location';
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: "easeOut" } }
+    hidden: { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: 'easeOut' } }
   };
 
   if (type === 'looking-for') {
@@ -673,12 +681,7 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      return 'grid';
-    }
-    return 'map';
-  });
+  const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
   const [loadingMoreResults, setLoadingMoreResults] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -696,6 +699,7 @@ const SearchPage = () => {
   });
 
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categorySearch, setCategorySearch] = useState('');
 
   // Map center state
   const [mapCenter, setMapCenter] = useState({ lat: -26.1076, lng: 28.0567 }); // Default Sandton
@@ -894,11 +898,21 @@ const SearchPage = () => {
     if (matchedCity) {
       setMapCenter(CITY_COORDS[matchedCity]);
     } else {
-      import('../utils/geocoding').then(({ geocodeAddress }) => {
-        geocodeAddress(filters.location).then(coords => {
-          if (coords) setMapCenter(coords);
-        });
-      });
+      let cancelled = false;
+      const timer = window.setTimeout(async () => {
+        try {
+          const { geocodeAddress } = await import('../utils/geocoding');
+          if (cancelled) return;
+          const coords = await geocodeAddress(filters.location.trim());
+          if (!cancelled && coords) setMapCenter(coords);
+        } catch {
+          // The map is optional; search results remain usable if geocoding fails.
+        }
+      }, 350);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(timer);
+      };
     }
   }, [filters.location]);
 
@@ -931,28 +945,12 @@ const SearchPage = () => {
     const maxPrice = Number(filters.maxPrice);
     if ((filters.minPrice && (!Number.isFinite(minPrice) || minPrice < 0)) ||
         (filters.maxPrice && (!Number.isFinite(maxPrice) || maxPrice < 0)) ||
-        (Number.isFinite(minPrice) && Number.isFinite(maxPrice) && minPrice > maxPrice)) {
+        (filters.minPrice && filters.maxPrice && minPrice > maxPrice)) {
       setSearchError('Enter a valid price range where the minimum is not greater than the maximum.');
-      return;
+      return false;
     }
     setSearchError('');
     const urlParams = buildSearchParams();
-
-    // Geocode location if searching for a specific place
-    if (filters.location) {
-      const lowerLoc = filters.location.toLowerCase();
-      const matchedCity = Object.keys(CITY_COORDS).find(city => lowerLoc.includes(city));
-
-      if (matchedCity) {
-        setMapCenter(CITY_COORDS[matchedCity]);
-      } else {
-        import('../utils/geocoding').then(({ geocodeAddress }) => {
-          geocodeAddress(filters.location).then(coords => {
-            if (coords) setMapCenter(coords);
-          });
-        });
-      }
-    }
 
     navigate(`/search?${urlParams.toString()}`);
 
@@ -962,6 +960,7 @@ const SearchPage = () => {
       setRecentSearches(newRecent);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
     }
+    return true;
   }, [buildSearchParams, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
 
   const clearFilters = () => {
@@ -1006,6 +1005,18 @@ const SearchPage = () => {
     navigate(`/search?${urlParams.toString()}`);
   };
 
+  const handleTypeSelect = (type) => {
+    setSelectedCategory(null);
+    setSearchType(type);
+    setSearchSubType('');
+    const params = buildSearchParams({ searchType: type, searchSubType: '' });
+    navigate(`/search?${params.toString()}`);
+  };
+
+  const visibleFilterCategories = ALL_CATEGORIES.filter((category) =>
+    `${category.label} ${category.description}`.toLowerCase().includes(categorySearch.trim().toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col relative overflow-x-hidden no-scrollbar">
       <style>{`
@@ -1015,7 +1026,7 @@ const SearchPage = () => {
 
       {/* Clean Airbnb-style Header */}
       <div className="app-safe-top sticky top-0 z-[60] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
+        <div className="max-w-[2520px] mx-auto px-3 sm:px-6 py-2.5 flex items-center gap-3 sm:gap-4">
 
           {/* Logo */}
           <button onClick={() => navigate('/')} aria-label="Go to home" className="hidden md:flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -1025,27 +1036,31 @@ const SearchPage = () => {
             <span className="text-lg font-black tracking-tighter">loopOut</span>
           </button>
 
-          {/* Compact Search Bar */}
-          <div className="flex-1 max-w-2xl mx-auto">
-            <button
-              type="button"
-              onClick={() => setShowFilters(true)}
-              aria-label="Open search filters"
-              className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <SearchIconLucide className="w-4 h-4 text-gray-500 dark:text-white flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-800 dark:text-white truncate block">
-                  {searchTerm || filters.location
-                    ? `${searchTerm || 'Anywhere'} / ${filters.location || 'Anywhere'}`
-                    : 'Search services, venues...'}
-                </span>
-              </div>
-              <div className="flex-shrink-0 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center">
-                <AdjustmentsHorizontalIcon className="w-4 h-4 text-white" />
-              </div>
+          {/* Search directly from the header; filters stay one tap away. */}
+          <form onSubmit={(event) => { event.preventDefault(); handleSearch(); }} className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-gray-200 bg-white p-1.5 shadow-sm transition-shadow focus-within:shadow-md dark:border-gray-700 dark:bg-gray-900">
+            <SearchIconLucide className="ml-3 h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={filters.location ? `Search near ${filters.location}` : 'Search services, places, food…'}
+              aria-label="Search LoopOut"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
+            />
+            {searchTerm && (
+              <button type="button" onClick={() => setSearchTerm('')} aria-label="Clear search" className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800">
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            )}
+            <button type="submit" className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-4 text-xs font-bold text-white transition hover:bg-rose-700 active:scale-95">
+              <SearchIconLucide className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Search</span>
             </button>
-          </div>
+            <button type="button" onClick={() => setShowFilters(true)} aria-label="Open filters" className="mr-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+              <AdjustmentsHorizontalIcon className="h-4 w-4" />
+            </button>
+          </form>
 
           {/* Map Toggle - Desktop */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
@@ -1061,40 +1076,26 @@ const SearchPage = () => {
         </div>
       </div>
 
-      {/* Airbnb-style Category Bar */}
-      <div className="sticky top-[61px] z-[50] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-[2520px] mx-auto">
-          <div className="overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1 px-6 py-3">
-              {/* All / Universe */}
+      {/* Simple quick categories; detailed categories remain in Filters. */}
+      <div className="sticky top-[61px] z-[50] border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="mx-auto flex max-w-[2520px] items-center gap-2 overflow-x-auto px-3 py-2.5 no-scrollbar sm:px-6">
+          {QUICK_SEARCH_TYPES.map(({ id, label, icon: Icon }) => {
+            const isActive = searchType === id && (id !== 'all' || !selectedCategory);
+            return (
               <button
-                onClick={() => handleCategorySelect(null)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
-                  !selectedCategory
-                    ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
-                    : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
-                }`}
+                key={id}
+                type="button"
+                onClick={() => id === 'all' ? handleCategorySelect(null) : handleTypeSelect(id)}
+                aria-pressed={isActive}
+                className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${isActive ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}
               >
-                <Sparkles className="w-5 h-5" />
-                <span className="text-[10px] font-semibold whitespace-nowrap">All</span>
+                <Icon className="h-4 w-4" />{label}
               </button>
-
-              {ALL_CATEGORIES.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat)}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
-                    selectedCategory === cat.id
-                      ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
-                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
-                  }`}
-                >
-                  <cat.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold whitespace-nowrap">{cat.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+            );
+          })}
+          <button type="button" onClick={() => setShowFilters(true)} className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-gray-200 px-4 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-400 dark:border-gray-700 dark:text-gray-300">
+            <AdjustmentsHorizontalIcon className="h-4 w-4" />More categories
+          </button>
         </div>
       </div>
 
@@ -1103,7 +1104,7 @@ const SearchPage = () => {
 
         {/* Left Column: Results List */}
         <div
-          className={`overflow-y-auto no-scrollbar transition-all duration-500 ${
+          className={`overflow-y-auto no-scrollbar transition-all duration-200 ${
             viewMode === 'map'
               ? 'hidden lg:block lg:w-[45%] xl:w-[40%] flex-shrink-0'
               : 'w-full'
@@ -1239,7 +1240,7 @@ const SearchPage = () => {
 
         {/* Right Column: Map */}
         <div
-          className={`transition-all duration-500 overflow-hidden relative ${
+          className={`transition-all duration-200 overflow-hidden relative ${
             viewMode === 'map'
               ? 'w-full lg:flex-1 fixed inset-0 lg:relative lg:inset-auto z-[150] lg:z-auto h-[100dvh] lg:h-auto'
               : 'hidden'
@@ -1361,11 +1362,18 @@ const SearchPage = () => {
                   {/* Category */}
                   <div className="space-y-3">
                     <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Category</label>
+                    <input
+                      type="search"
+                      value={categorySearch}
+                      onChange={(event) => setCategorySearch(event.target.value)}
+                      placeholder="Find a category"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    />
                     <div className="grid grid-cols-2 gap-2">
-                      {ALL_CATEGORIES.slice(0, 10).map(cat => (
+                      {visibleFilterCategories.map(cat => (
                         <button
                           key={cat.id}
-                          onClick={() => handleCategorySelect(cat)}
+                          onClick={() => { handleCategorySelect(cat); setShowFilters(false); }}
                           className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left ${
                             selectedCategory === cat.id
                               ? 'bg-gray-900 text-white border-gray-900'
@@ -1376,6 +1384,7 @@ const SearchPage = () => {
                           <span className="text-xs font-semibold truncate">{cat.label}</span>
                         </button>
                       ))}
+                      {visibleFilterCategories.length === 0 && <p className="col-span-2 py-5 text-center text-sm text-gray-500">No categories match that search.</p>}
                     </div>
                   </div>
 
@@ -1446,7 +1455,7 @@ const SearchPage = () => {
                   Clear all
                 </button>
                 <button
-                  onClick={() => { handleSearch(); setShowFilters(false); }}
+                  onClick={() => { if (handleSearch()) setShowFilters(false); }}
                   className="flex-1 bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-md hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <SearchIconLucide className="w-4 h-4" />

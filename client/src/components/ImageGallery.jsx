@@ -16,7 +16,7 @@ const FALLBACK_IMAGES = {
     default: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'
 };
 
-const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
+const ImageGallery = ({ imageUrls, alt, type, className = "", compactIndicator = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedUrls, setFailedUrls] = useState(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -112,17 +112,22 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
             <ChevronRightIcon className="w-4 h-4 text-gray-800" />
           </button>
           
-          {/* Dots Indicator */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-            {validImages.map((_, idx) => (
-              <div 
-                key={idx}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  idx === currentIndex ? 'bg-white w-2' : 'bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
+          {compactIndicator ? (
+            <span className="absolute bottom-2 right-2 z-20 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold leading-none text-white backdrop-blur-sm">
+              {currentIndex + 1} / {validImages.length}
+            </span>
+          ) : (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+              {validImages.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    idx === currentIndex ? 'bg-white w-2' : 'bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

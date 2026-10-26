@@ -16,7 +16,7 @@ router.post('/create', verifyToken, requireOfferingType('property', 'goods'), cr
 router.get('/get', getEvents);
 router.get('/:id', getEvent);
 router.put('/:id', verifyToken, requireOfferingType('property', 'goods'), updateEvent);
-router.delete('/:id', verifyToken, requireOfferingType('property', 'goods'), deleteEvent);
+router.delete('/:id', verifyToken, deleteEvent);
 router.get('/similar/:id', getSimilarEvents);
 
 export default router;

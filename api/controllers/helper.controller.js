@@ -1,4 +1,5 @@
 import Helper from '../models/helper.model.js';
+import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { validateListingText, validateImages } from '../utils/moderationHelper.js';
@@ -99,8 +100,18 @@ export const updateHelper = async (req, res, next) => {
   if (!helper) {
     return next(errorHandler(404, 'Helper not found!'));
   }
-  if (req.user.id !== helper.userRef) {
-    return next(errorHandler(401, 'You can only update your own helper listing!'));
+  const ownerId = (helper.userRef?._id || helper.userRef)?.toString();
+  let isAuthorized = Boolean(req.user?.id && ownerId && req.user.id === ownerId);
+
+  if (!isAuthorized && req.user?.id) {
+    const user = await User.findById(req.user.id).select('isAdmin role');
+    if (user?.isAdmin === true || user?.role === 'admin') {
+      isAuthorized = true;
+    }
+  }
+
+  if (!isAuthorized) {
+    return next(errorHandler(403, 'You can only update your own helper listing!'));
   }
 
   try {
@@ -138,8 +149,18 @@ export const deleteHelper = async (req, res, next) => {
     // The main error was here. The check for ownership must use 'userRef',
     // which is the field defined in your helper.model.js schema.
     // Using 'helper.creator' would cause a crash because it does not exist.
-    if (req.user.id !== helper.userRef.toString()) {
-      return next(errorHandler(401, 'You can only delete your own helper listing!'));
+    const ownerId = (helper.userRef?._id || helper.userRef)?.toString();
+    let isAuthorized = Boolean(req.user?.id && ownerId && req.user.id === ownerId);
+
+    if (!isAuthorized && req.user?.id) {
+      const user = await User.findById(req.user.id).select('isAdmin role');
+      if (user?.isAdmin === true || user?.role === 'admin') {
+        isAuthorized = true;
+      }
+    }
+
+    if (!isAuthorized) {
+      return next(errorHandler(403, 'You can only delete your own helper listing!'));
     }
 
     await Helper.findByIdAndDelete(req.params.id);

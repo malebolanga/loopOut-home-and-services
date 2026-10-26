@@ -2,41 +2,76 @@ import jwt from 'jsonwebtoken';
 import { errorHandler } from './error.js';
 
 export const verifyToken = (req, res, next) => {
-  let token = req.cookies?.access_token;
-  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+  const candidateTokens = [];
+
+  // Check Authorization header first (most explicit from SPA client)
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     const candidate = req.headers.authorization.split(' ')[1];
     if (candidate && candidate !== 'undefined' && candidate !== 'null') {
-      token = candidate;
+      candidateTokens.push(candidate);
     }
   }
-  
-  if (!token) return next(errorHandler(401, 'Unauthorized'));
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return next(errorHandler(403, 'Forbidden'));
+  // Then check cookies
+  if (req.cookies && req.cookies.access_token) {
+    const cookieToken = req.cookies.access_token;
+    if (cookieToken && cookieToken !== 'undefined' && cookieToken !== 'null') {
+      candidateTokens.push(cookieToken);
+    }
+  }
 
-    req.user = user;
-    next();
-  });
+  if (candidateTokens.length === 0) return next(errorHandler(401, 'Unauthorized'));
+
+  let verifiedUser = null;
+  for (const token of candidateTokens) {
+    try {
+      verifiedUser = jwt.verify(token, process.env.JWT_SECRET);
+      if (verifiedUser) break;
+    } catch (err) {
+      // Continue to next candidate
+    }
+  }
+
+  if (!verifiedUser) {
+    return next(errorHandler(403, 'Forbidden'));
+  }
+
+  req.user = verifiedUser;
+  next();
 };
 
 export const verifyTokenOptional = (req, res, next) => {
-  let token = req.cookies?.access_token;
-  if (!token && req.headers.authorization?.startsWith('Bearer ')) {
+  const candidateTokens = [];
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     const candidate = req.headers.authorization.split(' ')[1];
     if (candidate && candidate !== 'undefined' && candidate !== 'null') {
-      token = candidate;
+      candidateTokens.push(candidate);
     }
   }
 
-  if (!token) {
+  if (req.cookies && req.cookies.access_token) {
+    const cookieToken = req.cookies.access_token;
+    if (cookieToken && cookieToken !== 'undefined' && cookieToken !== 'null') {
+      candidateTokens.push(cookieToken);
+    }
+  }
+
+  if (candidateTokens.length === 0) {
     return next();
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (!err && user) {
-      req.user = user;
+  for (const token of candidateTokens) {
+    try {
+      const user = jwt.verify(token, process.env.JWT_SECRET);
+      if (user) {
+        req.user = user;
+        break;
+      }
+    } catch (err) {
+      // Continue to next candidate
     }
-    next();
-  });
+  }
+
+  next();
 };

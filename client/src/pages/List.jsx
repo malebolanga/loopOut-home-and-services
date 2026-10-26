@@ -5,6 +5,7 @@ import { MdLocationOn, MdStar, MdFilterList, MdRefresh, MdMoreVert, MdEdit, MdDe
 import { FaSpinner, FaPlus, FaHome, FaBuilding, FaTree, FaKey, FaMoneyBillWave, FaBed, FaBath } from 'react-icons/fa';
 import { Star, Sparkles, Edit2, Trash2, Home as HomeIcon } from 'lucide-react';
 import { canCreateListings } from '../utils/offeringPermissions';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const ListingTypeConfig = {
   rent: {
@@ -97,12 +98,8 @@ export default function List() {
     
     try {
       setDeletingId(listingId);
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
+      const res = await authenticatedFetch(`/api/listing/delete/${listingId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
       });
   
       const data = await res.json();
@@ -248,7 +245,7 @@ export default function List() {
           {filteredListings.map((listing) => (
             <div
               key={listing._id}
-              className="group relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
+              className=" relative aspect-square bg-white dark:bg-gray-900 rounded-[3rem] border border-gray-100 dark:border-gray-800 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.01)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.08)] transition-all duration-700 h-full cursor-pointer"
             >
               <div className="absolute inset-0 z-0">
                 <img

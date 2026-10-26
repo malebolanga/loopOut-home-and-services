@@ -14,8 +14,9 @@ import { requireOfferingType } from '../utils/requireOfferingType.js';
 const router = express.Router();
 
 router.post('/create', verifyToken, requireOfferingType('services'), createService);
-router.delete('/delete/:id', verifyToken, requireOfferingType('services'), deleteService);
-router.put('/update/:id', verifyToken, requireOfferingType('services'), updateService);
+router.delete('/delete/:id', verifyToken, deleteService);
+router.put('/update/:id', verifyToken, updateService);
+router.post('/update/:id', verifyToken, updateService);
 router.post('/:id/performer/rate', verifyToken, rateServicePerformer);
 router.get('/get/:id', getService);
 router.get('/get', getServices);

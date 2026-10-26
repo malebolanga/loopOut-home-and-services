@@ -21,6 +21,8 @@ const foodOrderSchema = new mongoose.Schema({
   customerId: { type: String, default: 'guest' },
   customerName: { type: String, default: 'Valued Customer' },
   customerPhone: { type: String, default: '' },
+  whatsappUpdatesOptIn: { type: Boolean, default: false },
+  whatsappUpdatesOptInAt: { type: Date },
   shopId: { type: String, required: true },
   shopName: { type: String, required: true },
   shopImage: { type: String, default: '🍱' },

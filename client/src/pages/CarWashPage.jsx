@@ -736,6 +736,26 @@ export default function CarWashPage() {
               </button>}
             </div>
 
+            {/* Car wash booking experience */}
+            <section aria-labelledby="carwash-experience-title" className="rounded-2xl bg-slate-50 p-5 sm:p-6 dark:bg-gray-800/60">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-400">A smoother car care visit</p>
+              <h2 id="carwash-experience-title" className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-white">A car wash experience that works for you</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">Choose the service your vehicle needs, select its type to see an estimate, then send a reservation request. You can message the provider to confirm the location, timing and any special requirements before your visit.</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  { icon: <FaCar className="h-4 w-4" />, title: 'Choose your service', detail: 'Compare the available wash and detailing options.' },
+                  { icon: <FaCheckCircle className="h-4 w-4" />, title: 'See your estimate', detail: 'Select your vehicle type and review the total.' },
+                  { icon: <FaComment className="h-4 w-4" />, title: 'Confirm the details', detail: 'Message the provider about your appointment.' }
+                ].map((step) => (
+                  <div key={step.title} className="rounded-xl bg-white p-4 ring-1 ring-slate-200/80 dark:bg-gray-900 dark:ring-gray-700">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">{step.icon}</span>
+                    <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">{step.title}</h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
           </div>
 
           {/* Right Column - Booking Card */}

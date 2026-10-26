@@ -8,6 +8,7 @@ import { Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
 import "../styles/ListingDetails.scss";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 
 const ListingItem = ({ listing, distance, hideBedroom = false }) => { // Added hideBedroom prop
   const [isFavorite, setIsFavorite] = useState(false);
@@ -64,13 +65,14 @@ const ListingItem = ({ listing, distance, hideBedroom = false }) => { // Added h
 
   const handleListingDelete = async (listingId) => {
     try {
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
+      const res = await authenticatedFetch(`/api/listing/delete/${listingId}`, {
         method: "DELETE",
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
-      if (!data.success) {
-        console.log(data.message);
+      if (!res.ok || data.success === false) {
+        console.error("Delete listing failed:", data.message);
+        alert(data.message || "Failed to delete listing. Please try again.");
         return;
       }
 

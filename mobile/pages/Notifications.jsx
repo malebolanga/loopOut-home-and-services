@@ -362,7 +362,7 @@ export default function Notifications() {
             const { itemType, itemId, orderId, orderCode, canReview } = notification.data;
             
             if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
-                navigate('/lunch');
+                navigate(notification.data?.link || '/food');
             } else if (notification.type === 'review' || canReview) {
                 if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
@@ -1018,7 +1018,8 @@ export default function Notifications() {
                                     selectedNotification.type === 'booking' ||
                                     selectedNotification.type === 'reference' ||
                                     selectedNotification.type === 'message' ||
-                                    selectedNotification.data?.conversationId
+                                    selectedNotification.data?.conversationId ||
+                                    (selectedNotification.type === 'food_order' && (selectedNotification.data?.orderId || selectedNotification.data?.orderCode))
                                 ) && (
                                     <button
                                         onClick={() => handleNotificationAction(selectedNotification)}
@@ -1030,6 +1031,8 @@ export default function Notifications() {
                                             ? '💬 Open Message'
                                             : selectedNotification.type === 'review' || selectedNotification.data?.canReview 
                                             ? '⭐ Write Review' 
+                                            : selectedNotification.type === 'food_order'
+                                            ? '🍱 Track Order'
                                             : 'View Details'}
                                     </button>
                                 )}
