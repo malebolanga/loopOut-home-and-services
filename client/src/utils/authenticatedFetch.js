@@ -40,6 +40,19 @@ export const persistSessionToken = (session) => {
 
 export const clearPersistedSessionToken = () => {
   if (typeof window === 'undefined') return;
+  const sessionToken = getStoredToken();
+  const pushToken = localStorage.getItem('loopout_fcm_token');
+  if (sessionToken && pushToken) {
+    window.fetch('/api/user/push-token', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token: pushToken }),
+    }).catch(() => {});
+  }
   localStorage.removeItem('access_token');
   localStorage.removeItem('token');
 };

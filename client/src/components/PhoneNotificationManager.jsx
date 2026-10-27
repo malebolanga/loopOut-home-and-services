@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Bell, X, CheckCircle2, AlertCircle, MessageSquare, Calendar, Sparkles, ChevronRight, ShieldCheck } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 // Global helper function to trigger a top phone notification from anywhere in the app
 export const pushPhoneNotification = (notificationData) => {
@@ -12,13 +16,21 @@ export const pushPhoneNotification = (notificationData) => {
 
 const PhoneNotificationManager = () => {
   const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.user?.currentUser);
+  const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   const [activeNotification, setActiveNotification] = useState(null);
   const [permissionState, setPermissionState] = useState(
-    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied'
+    isNativeAndroid ? 'prompt' : (typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied')
   );
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
   const audioRef = useRef(null);
   const hasUserActivatedRef = useRef(false);
+  const nativeListenersInstalledRef = useRef(false);
+  const nativeListenersReadyRef = useRef(Promise.resolve());
+  const lastRegisteredTokenRef = useRef('');
+  const [nativePushToken, setNativePushToken] = useState(() => (
+    typeof window !== 'undefined' ? localStorage.getItem('loopout_fcm_token') || '' : ''
+  ));
 
   // Browsers only permit haptics after the page has received a user gesture.
   // Keep this state locally so background notifications never trigger a console
@@ -37,8 +49,29 @@ const PhoneNotificationManager = () => {
     };
   }, []);
 
-  // Check permission on mount and trigger prompt if default
+  // Check native notification permission and show an in-app prompt when needed.
   useEffect(() => {
+    if (isNativeAndroid) {
+      let active = true;
+      let promptTimer;
+      PushNotifications.checkPermissions()
+        .then(({ receive }) => {
+          if (!active) return;
+          setPermissionState(receive);
+          if (receive === 'denied' || receive === 'prompt' || receive === 'prompt-with-rationale') {
+            const hasPrompted = sessionStorage.getItem('phone_notif_prompted');
+            if (receive === 'denied' || !hasPrompted) {
+              promptTimer = setTimeout(() => setShowPermissionPrompt(true), 3000);
+            }
+          }
+        })
+        .catch((error) => console.warn('Could not check Android notification permission:', error));
+      return () => {
+        active = false;
+        if (promptTimer) clearTimeout(promptTimer);
+      };
+    }
+
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermissionState(Notification.permission);
       if (Notification.permission === 'default') {
@@ -49,9 +82,117 @@ const PhoneNotificationManager = () => {
         }
       }
     }
-  }, []);
+  }, [isNativeAndroid]);
+
+  // Install Capacitor listeners before the user grants permission and registers with FCM.
+  useEffect(() => {
+    if (!isNativeAndroid || nativeListenersInstalledRef.current) return undefined;
+    const handles = [];
+    nativeListenersInstalledRef.current = true;
+
+    const installListeners = async () => {
+      try {
+        handles.push(await PushNotifications.addListener('registration', ({ value }) => {
+          if (value) {
+            localStorage.setItem('loopout_fcm_token', value);
+            setNativePushToken(value);
+          }
+        }));
+        handles.push(await PushNotifications.addListener('registrationError', ({ error }) => {
+          console.warn('Android push registration failed:', error);
+        }));
+        handles.push(await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          pushPhoneNotification({
+            title: notification.title || 'LoopOut update',
+            message: notification.body || 'You have a new LoopOut update.',
+            type: 'info',
+            link: notification.data?.link || '/notifications',
+          });
+        }));
+        handles.push(await PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
+          const link = notification.data?.link;
+          navigate(typeof link === 'string' && link.startsWith('/') ? link : '/notifications');
+        }));
+      } catch (error) {
+        console.warn('Could not initialize Android push listeners:', error);
+      }
+    };
+
+    nativeListenersReadyRef.current = installListeners();
+    return () => {
+      nativeListenersInstalledRef.current = false;
+      handles.forEach((handle) => handle.remove());
+    };
+  }, [isNativeAndroid, navigate]);
+
+  // Attach this installation's FCM token to the signed-in account. The API moves
+  // a token off any other account so a shared phone cannot leak alerts between users.
+  useEffect(() => {
+    const userId = currentUser?._id || currentUser?.id;
+    if (!userId) lastRegisteredTokenRef.current = '';
+    if (!isNativeAndroid || !userId || !nativePushToken) return undefined;
+
+    const registrationKey = `${userId}:${nativePushToken}`;
+    if (lastRegisteredTokenRef.current === registrationKey) return undefined;
+    let cancelled = false;
+    let retryTimer;
+    let attempts = 0;
+
+    const registerToken = async () => {
+      try {
+        const response = await authenticatedFetch('/api/user/push-token', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: nativePushToken, platform: 'android' }),
+        });
+        if (!response.ok) throw new Error(`Push-token registration failed (${response.status}).`);
+        if (!cancelled) lastRegisteredTokenRef.current = registrationKey;
+      } catch (error) {
+        attempts += 1;
+        if (attempts < 3 && !cancelled) retryTimer = setTimeout(registerToken, 2000 * attempts);
+        else if (!cancelled) console.warn('Could not register this phone for LoopOut alerts:', error.message);
+      }
+    };
+
+    registerToken();
+    return () => {
+      cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [currentUser?._id, currentUser?.id, isNativeAndroid, nativePushToken]);
 
   const requestPhonePermission = async () => {
+    if (isNativeAndroid) {
+      try {
+        await nativeListenersReadyRef.current;
+        const permission = await PushNotifications.requestPermissions();
+        setPermissionState(permission.receive);
+        setShowPermissionPrompt(permission.receive === 'denied');
+        sessionStorage.setItem('phone_notif_prompted', 'true');
+
+        if (permission.receive !== 'granted') return;
+
+        await PushNotifications.createChannel({
+          id: 'loopout_updates',
+          name: 'LoopOut updates',
+          description: 'Food order, booking, and message alerts',
+          importance: 5,
+          visibility: 1,
+          vibration: true,
+        });
+        await PushNotifications.register();
+        pushPhoneNotification({
+          title: '🔔 Phone notifications enabled',
+          message: 'Notifications are enabled for LoopOut on this phone.',
+          type: 'success',
+        });
+      } catch (err) {
+        console.error('Android push permission or registration failed:', err);
+        setShowPermissionPrompt(false);
+      }
+      return;
+    }
+
     if (typeof window !== 'undefined' && 'Notification' in window) {
       try {
         const permission = await Notification.requestPermission();
@@ -208,7 +349,7 @@ const PhoneNotificationManager = () => {
 
       {/* 2. SYNC PHONE NOTIFICATIONS PROMPT BANNER */}
       <AnimatePresence>
-        {showPermissionPrompt && permissionState === 'default' && (
+        {showPermissionPrompt && ['default', 'prompt', 'prompt-with-rationale', 'denied'].includes(permissionState) && (
           <motion.div
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -223,7 +364,7 @@ const PhoneNotificationManager = () => {
                   </div>
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-wider text-white">Enable Phone Alerts</h3>
-                    <p className="text-[11px] text-slate-300 font-medium">Sync with your phone to receive instant booking and message alerts at the top of your screen.</p>
+                    <p className="text-[11px] text-slate-300 font-medium">Allow alerts so LoopOut can notify you about food orders, bookings, and messages.</p>
                   </div>
                 </div>
                 <button
@@ -235,12 +376,18 @@ const PhoneNotificationManager = () => {
               </div>
 
               <div className="flex items-center gap-2 pt-1">
-                <button
-                  onClick={requestPhonePermission}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-[#FF5A5F] to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-md active:scale-95 transition-all text-center"
-                >
-                  Allow Phone Alerts
-                </button>
+                {permissionState === 'denied' ? (
+                  <p className="flex-1 text-[11px] leading-relaxed text-amber-200">
+                    Notifications are blocked. Turn them on in Android Settings → Apps → LoopOut → Notifications.
+                  </p>
+                ) : (
+                  <button
+                    onClick={requestPhonePermission}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-[#FF5A5F] to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl shadow-md active:scale-95 transition-all text-center"
+                  >
+                    Allow Phone Alerts
+                  </button>
+                )}
                 <button
                   onClick={dismissPermissionPrompt}
                   className="px-4 py-2.5 bg-white/10 hover:bg-white/15 text-slate-300 text-xs font-bold uppercase tracking-wider rounded-2xl active:scale-95 transition-all"

@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 
+const pushTokenSchema = new mongoose.Schema({
+    token: { type: String, required: true },
+    platform: { type: String, enum: ['android', 'ios', 'web'], default: 'android' },
+    updatedAt: { type: Date, default: Date.now }
+}, { _id: false });
+
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -199,6 +205,12 @@ const userSchema = new mongoose.Schema({
             specialOffers: { type: Boolean, default: false },
             platformUpdates: { type: Boolean, default: true }
         }
+    },
+    // Device tokens are private and must never be included in normal user API responses.
+    pushTokens: {
+        type: [pushTokenSchema],
+        default: [],
+        select: false
     },
     dataSharing: {
         marketing: { type: Boolean, default: false },

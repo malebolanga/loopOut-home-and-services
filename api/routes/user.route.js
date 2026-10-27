@@ -22,7 +22,9 @@ import {
     getFollowing,
     getMutualFriends,
     getUserByPhone,
-    downloadUserData
+    downloadUserData,
+    registerPushToken,
+    unregisterPushToken
 } from '../controllers/user.controller.js';
 
 import { verifyToken, verifyTokenOptional } from '../utils/verifyUser.js';
@@ -37,6 +39,8 @@ router.get('/test', test);
 // Route to update user (using PUT for RESTful convention)
 router.put('/update/:id', verifyToken, updateUser);
 router.post('/update/:id', verifyToken, updateUser);
+router.put('/push-token', verifyToken, registerPushToken);
+router.delete('/push-token', verifyToken, unregisterPushToken);
 
 // Route to delete user
 router.delete('/delete/:id', verifyToken, deleteUser);

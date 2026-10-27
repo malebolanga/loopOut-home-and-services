@@ -5,6 +5,7 @@ import User from '../models/user.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import TableBooking from '../models/tableBooking.model.js';
 import Notification from '../models/notification.model.js';
+import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 
 const ORDER_STATUSES = ['Pending', 'Preparing', 'Ready for Collection', 'Completed', 'Cancelled'];
 const requireDatabase = (res) => {
@@ -259,6 +260,28 @@ export const updateOrderStatus = async (req, res, next) => {
       status,
       link: '/food',
     }, 'food_order');
+    if (isReady) {
+      sendPushNotificationToUser(order.customerId, {
+        title: notificationTitle,
+        body: notificationMessage,
+        data: {
+          type: 'food_order',
+          orderId: order._id.toString(),
+          orderCode: order.orderCode,
+          status,
+          link: '/food',
+        },
+      }).then((result) => {
+        if (result.skipped === 'no_registered_devices') {
+          console.info('[PUSH] No registered device for this food order notification.');
+        } else if (result.failureCount) {
+          console.warn(`[PUSH] Some food order notifications could not be delivered (${result.failureCount}).`);
+        }
+      }).catch((error) => {
+        // Push delivery is best effort; the in-app order notification remains available.
+        console.warn('[PUSH] Food order notification send failed:', error.code || 'configuration_or_delivery_error');
+      });
+    }
     return res.json(format(order));
   } catch (error) { return next(error); }
 };

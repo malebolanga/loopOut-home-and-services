@@ -25,6 +25,45 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
+export const registerPushToken = async (req, res, next) => {
+  try {
+    const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+    const platform = ['android', 'ios', 'web'].includes(req.body?.platform) ? req.body.platform : 'android';
+    if (!token || token.length > 4096) {
+      return res.status(400).json({ success: false, message: 'A valid push token is required.' });
+    }
+
+    const user = await User.findById(req.user.id).select('+pushTokens');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+    // A mobile installation token belongs to one signed-in account at a time.
+    await User.updateMany(
+      { _id: { $ne: user._id }, 'pushTokens.token': token },
+      { $pull: { pushTokens: { token } } }
+    );
+    const tokens = (user.pushTokens || []).filter((entry) => entry.token !== token);
+    tokens.unshift({ token, platform, updatedAt: new Date() });
+    user.pushTokens = tokens.slice(0, 10);
+    await user.save();
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const unregisterPushToken = async (req, res, next) => {
+  try {
+    const token = typeof req.body?.token === 'string' ? req.body.token.trim() : '';
+    if (!token || token.length > 4096) {
+      return res.status(400).json({ success: false, message: 'A valid push token is required.' });
+    }
+    await User.updateOne({ _id: req.user.id }, { $pull: { pushTokens: { token } } });
+    return res.json({ success: true });
+  } catch (error) {
+    return next(error);
+  }
+};
+
 export const updateUser = async (req, res, next) => {
   if (req.user.id !== req.params.id)
     return next(errorHandler(401, 'You can only update your own account!'));
