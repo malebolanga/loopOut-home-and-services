@@ -709,7 +709,6 @@ export default function LunchComingSoon() {
   const [checkoutData, setCheckoutData] = useState({
     customerName: currentUser?.username || currentUser?.name || '',
     customerPhone: currentUser?.phone || '',
-    whatsappUpdatesOptIn: false,
     deliveryAddress: currentUser?.address || '',
     deliveryNotes: '',
     orderComments: '',
@@ -1347,7 +1346,6 @@ export default function LunchComingSoon() {
       const orderPayload = {
         customerName: checkoutData.customerName || 'Valued Customer',
         customerPhone: checkoutData.customerPhone,
-        whatsappUpdatesOptIn: checkoutData.whatsappUpdatesOptIn === true,
         shopId: currentShop.id,
         shopName: currentShop.name,
         shopImage: currentShop.image || '🍱',
@@ -2691,15 +2689,9 @@ export default function LunchComingSoon() {
                       placeholder="0XX XXX XXXX"
                     />
                   </div>
-                  <label className="flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
-                    <input
-                      type="checkbox"
-                      checked={checkoutData.whatsappUpdatesOptIn}
-                      onChange={(e) => setCheckoutData({ ...checkoutData, whatsappUpdatesOptIn: e.target.checked })}
-                      className="mt-0.5 accent-emerald-600"
-                    />
-                    <span>Send me WhatsApp updates about this order, including when it is ready. Standard message and data rates may apply.</span>
-                  </label>
+                  <p className="rounded-lg bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+                    We’ll notify you in LoopOut when your order is ready for collection.
+                  </p>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Order Notes (Optional)</label>
                     <textarea

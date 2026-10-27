@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "828543108648",
+    "firebase_url": "https://central-cinema-218106.firebaseio.com",
+    "project_id": "central-cinema-218106",
+    "storage_bucket": "central-cinema-218106.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:828543108648:android:9494691323881e1801971d",
+        "android_client_info": {
+          "package_name": "com.loupeout.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "828543108648-4t3v0sg13pjn0vldcs1nto79glo1tn8q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqDSy9nfen0tx5Sv87LKpgozbUiVcgXrQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "828543108648-4t3v0sg13pjn0vldcs1nto79glo1tn8q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

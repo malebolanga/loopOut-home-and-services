@@ -5,7 +5,6 @@ import User from '../models/user.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import TableBooking from '../models/tableBooking.model.js';
 import Notification from '../models/notification.model.js';
-import { sendFoodOrderWhatsAppReady } from '../utils/whatsapp.js';
 
 const ORDER_STATUSES = ['Pending', 'Preparing', 'Ready for Collection', 'Completed', 'Cancelled'];
 const requireDatabase = (res) => {
@@ -216,8 +215,7 @@ export const createOrder = async (req, res, next) => {
     const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const requestedTime = scheduledFor ? new Date(scheduledFor) : null;
     if (requestedTime && (Number.isNaN(requestedTime.getTime()) || requestedTime <= new Date())) return res.status(400).json({ success: false, message: 'Choose a future collection time.' });
-    const whatsappUpdatesOptIn = req.body.whatsappUpdatesOptIn === true;
-    const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, whatsappUpdatesOptIn, whatsappUpdatesOptInAt: whatsappUpdatesOptIn ? new Date() : undefined, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: requestedFulfilment, deliveryAddress: cleanDeliveryAddress, deliveryNotes: cleanText(deliveryNotes, 500), orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: requestedFulfilment === 'delivery' ? 'Delivery payment pending' : 'Pay at Counter', status: 'Pending' });
+    const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: requestedFulfilment, deliveryAddress: cleanDeliveryAddress, deliveryNotes: cleanText(deliveryNotes, 500), orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: requestedFulfilment === 'delivery' ? 'Delivery payment pending' : 'Pay at Counter', status: 'Pending' });
     await Promise.allSettled([createNotification(userId(req), 'Food order received', `Your order #${order.orderCode} has been sent to ${shop.name}.`, { orderId: order._id, status: order.status }), createNotification(shop.ownerId, 'New food order', `Order #${order.orderCode} is waiting for your confirmation.`, { orderId: order._id, status: order.status })]);
     return res.status(201).json(format(order));
   } catch (error) { return next(error); }
@@ -261,12 +259,6 @@ export const updateOrderStatus = async (req, res, next) => {
       status,
       link: '/food',
     }, 'food_order');
-    if (isReady && order.fulfilment === 'pickup' && order.whatsappUpdatesOptIn) {
-      sendFoodOrderWhatsAppReady(order).catch((error) => {
-        // Never log phone numbers or order contents; WhatsApp failure must not block order updates.
-        console.error('[LUNCH] WhatsApp ready alert failed:', error.message);
-      });
-    }
     return res.json(format(order));
   } catch (error) { return next(error); }
 };
