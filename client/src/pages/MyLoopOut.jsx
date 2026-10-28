@@ -70,6 +70,11 @@ function normalizeBooking(booking) {
   };
 }
 
+function isInsideBookingCancellationWindow(booking) {
+  const startsAt = new Date(booking?.startDate || booking?.date).getTime();
+  return Number.isFinite(startsAt) && Date.now() <= startsAt - 48 * 60 * 60 * 1000;
+}
+
 function normalizeFoodOrder(order) {
   const status = order.status || 'Pending';
   const fulfillment = order.fulfilment || order.type || 'pickup';
@@ -182,7 +187,8 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
           {actionText}
         </button>}
       </div>
-      {item.kind === 'booking' && item.providerId && !item.completed && !item.cancelled && <div className="mt-2 flex justify-end"><button type="button" onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message provider</button>{!['ongoing', 'work_completed', 'completed'].includes(normalizedStatus(item.status)) && <button type="button" onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800">Cancel</button>}</div>}
+      {item.kind === 'booking' && item.providerId && !item.completed && !item.cancelled && <div className="mt-2 flex flex-wrap items-center justify-end gap-2">{!['ongoing', 'work_completed', 'completed'].includes(normalizedStatus(item.status)) && <span className="mr-auto text-[10px] text-slate-500 dark:text-gray-400">Cancel up to 48 hours before the scheduled start.</span>}<button type="button" onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message provider</button>{!['ongoing', 'work_completed', 'completed'].includes(normalizedStatus(item.status)) && isInsideBookingCancellationWindow(item.raw) && <button type="button" onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800">Cancel</button>}</div>}
+      {isFood && ['pending', 'preparing'].includes(normalizedStatus(item.status)) && <div className="mt-2 flex flex-wrap items-center justify-end gap-2"><span className="mr-auto text-[10px] text-slate-500 dark:text-gray-400">Cancel before the shop marks your order ready.</span><button type="button" disabled={busy} onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800">Cancel order</button></div>}
       {isGoods && <div className="mt-2 flex flex-wrap justify-end gap-1"><button type="button" disabled={busy} onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message {item.role === 'seller' ? 'buyer' : 'seller'}</button>{!item.cancelled && !item.issueReports.some((issue) => issue.status === 'Open') && <button type="button" disabled={busy} onClick={() => onReportIssue(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-amber-700 hover:bg-amber-50 disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-950/30"><AlertTriangle className="h-3.5 w-3.5" />Report a problem</button>}</div>}
     </motion.article>
   );
@@ -383,12 +389,20 @@ export default function MyLoopOut() {
   };
 
   const cancelItem = async (item) => {
-    const label = item.kind === 'goods' ? 'item request' : 'booking';
+    const label = item.kind === 'goods' ? 'item request' : item.kind === 'food' ? 'food order' : 'booking';
     if (!window.confirm(`Cancel this ${label}?`)) return;
     setBusyId(item.id);
     setNotice('');
     try {
-      if (item.kind === 'goods') {
+      if (item.kind === 'food') {
+        const response = await authenticatedFetch(`/api/lunch/orders/${item.id}/status`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'Cancelled' }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.message || 'Could not cancel this food order.');
+        setOrders((current) => current.map((entry) => entry.id === item.id ? normalizeFoodOrder({ ...entry.raw, ...payload }) : entry));
+        setNotice('Food order cancelled.');
+      } else if (item.kind === 'goods') {
         await changeGoodsStatus(item, 'Cancelled');
       } else {
         const response = await authenticatedFetch(`/api/bookings/update/${item.id}`, {

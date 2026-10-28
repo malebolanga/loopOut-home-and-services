@@ -10,6 +10,8 @@ import { useWishlist } from '../hooks/useWishlist';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 import BookingTimeSlots from '../components/BookingTimeSlots';
 import BookingDateNotice from '../components/BookingDateNotice';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import { Link } from "react-router-dom";
 import {
@@ -2287,31 +2289,9 @@ export default function TattooPage() {
         </div>
       </nav>
 
-      {/* Image Gallery - Full Width */}
-      <div className="w-full">
-        {/* Airbnb-style image gallery layout */}
-        {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-            </div>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {helper.imageUrls.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </div>
-              ))}
-              {helper.imageUrls.length < 5 && Array(4 - Math.min(4, helper.imageUrls.length - 1)).fill(null).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-800 h-full" />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <ListingPhotoGallery images={helper.imageUrls} alt={helper.name} onOpen={openFullScreenGallery} emptyEmoji="🎨" emptyTitle="Portfolio photos coming soon" emptyDescription="This artist has not added portfolio photos yet." />
 
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         {/* Content Section */}
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
@@ -2647,7 +2627,7 @@ export default function TattooPage() {
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'tattoo'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (

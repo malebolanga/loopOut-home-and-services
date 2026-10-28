@@ -14,6 +14,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   const wishlistType = type === 'property' ? 'listing' : type;
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
   const owner = typeof (item.userRef || item.creator) === 'object' ? (item.userRef || item.creator) : null;
+  const ownerName = owner?.username || owner?.name || owner?.fullName || 'Account owner';
   const isVerified = Boolean(item.isVerified || item.verified || owner?.isVerified || owner?.verified);
   const responseTime = item.responseTimeLabel || item.responseTime || owner?.responseTimeLabel || owner?.responseTime;
 
@@ -237,7 +238,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
             <p className={`min-h-[2rem] line-clamp-2 font-semibold leading-4 text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
-              {item.name || item.title || item.address?.split(',')[0] || 'South Africa'}
+              {type === 'helper' ? 'Worker: ' : ''}{item.name || item.title || item.address?.split(',')[0] || 'South Africa'}
             </p>
 
             {(item.address || item.location) && (
@@ -256,6 +257,11 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
               )}
               {responseTime && <span className="min-w-0 truncate text-[9px] text-gray-500 dark:text-gray-400">Replies {responseTime}</span>}
             </div>
+            {type === 'helper' && ownerName && (
+              <p className="mt-1 truncate text-[10px] leading-tight text-gray-500 dark:text-gray-400">
+                Account owner: <span className="font-medium text-gray-700 dark:text-gray-300">{ownerName}</span>
+              </p>
+            )}
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             {/* Rating on right */}

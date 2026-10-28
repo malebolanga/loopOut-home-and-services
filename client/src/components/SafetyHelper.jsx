@@ -105,11 +105,9 @@ export default function ComprehensiveSafetyPolicy() {
               <div className="flex items-start mb-6">
                 <FaInfoCircle className="text-blue-600 mt-1 mr-4" />
                 <div>
-                  <h3 className="text-xl font-semibold mb-3">Advertising Service Only</h3>
+                  <h3 className="text-xl font-semibold mb-3">Marketplace intermediary</h3>
                   <p className="text-gray-600 mb-4">
-                    loopOut operates solely as an advertising platform connecting service providers 
-                    with customers. We are NOT a service provider and do not employ the individuals 
-                    offering services through our platform.
+                    LoopOut connects independent service providers with customers and offers booking, messaging, and support tools. Providers deliver and are responsible for their own work. LoopOut can review platform activity and safety reports, but does not collect payment for these direct service bookings.
                   </p>
                 </div>
               </div>
@@ -246,16 +244,15 @@ export default function ComprehensiveSafetyPolicy() {
           <section id="location-sharing">
             <h2 className="text-3xl font-bold mb-6 flex items-center">
               <FaMapMarkerAlt className="mr-3 text-blue-600" />
-              Mandatory Location Sharing Policy
+              Safe Arrival & Location Updates
             </h2>
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="flex items-start mb-6">
                 <FaShareAlt className="text-blue-600 mt-1 mr-4 text-2xl" />
                 <div>
-                  <h3 className="text-xl font-semibold mb-3">Safety First: Always Share Your Location</h3>
+                  <h3 className="text-xl font-semibold mb-3">Keep each other informed</h3>
                   <p className="text-gray-600 mb-4">
-                    For your personal safety and security, we require all service providers to share their 
-                    real-time location with trusted contacts before visiting any service location.
+                    Customers should be at the agreed service address or arrange access in advance. Providers should message when travelling. For an accepted service booking, the provider can start sharing device-reported location with that customer and can stop at any time. Sharing ends when the booking ends; stale updates expire after two minutes. A trusted-contact check-in is encouraged but voluntary.
                   </p>
                 </div>
               </div>
@@ -279,11 +276,9 @@ export default function ComprehensiveSafetyPolicy() {
                     What to Share
                   </h4>
                   <ul className="list-disc pl-5 space-y-3">
-                    <li className="font-semibold">Real-time map location</li>
-                    <li>Service address and expected arrival time</li>
-                    <li>Customer contact information</li>
-                    <li>Expected duration of service</li>
-                    <li>Check-in and check-out times</li>
+                    <li>Booking reference and agreed service address</li>
+                    <li>Expected arrival time and delay updates</li>
+                    <li>Optional trip details with a trusted contact</li>
                   </ul>
                 </div>
               </div>
@@ -321,9 +316,7 @@ export default function ComprehensiveSafetyPolicy() {
               <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
                 <h4 className="font-semibold mb-2 text-red-800">Zero Tolerance Policy</h4>
                 <p className="text-red-700">
-                  Failure to share your location with trusted contacts before providing services may result 
-                  in immediate account suspension. Your safety is our priority, and this requirement is 
-                  non-negotiable.
+                  Do not publish live location publicly. LoopOut location sharing is limited to the customer on the accepted booking, requires the provider to start it, and can be stopped at any time.
                 </p>
               </div>
             </div>
@@ -489,7 +482,7 @@ export default function ComprehensiveSafetyPolicy() {
                   </div>
                   <h4 className="font-semibold mb-2">Confirm Satisfaction</h4>
                   <p className="text-gray-600 text-sm">
-                    Only proceed with payment when you are completely satisfied with the work performed
+                    Pay the agreed amount promptly after the agreed work is performed; raise any concern promptly so both parties can discuss it.
                   </p>
                 </div>
                 <div className="border p-4 rounded-lg text-center">
@@ -506,9 +499,7 @@ export default function ComprehensiveSafetyPolicy() {
               <div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                 <h4 className="font-semibold mb-2 text-yellow-800">Important Notice</h4>
                 <p className="text-yellow-700">
-                  loopOut does not process payments for services. All financial transactions 
-                  occur directly between customers and service providers. We recommend using traceable payment 
-                  methods and obtaining receipts for all transactions.
+                  For in-person services, customers pay providers directly after the agreed work is performed, unless the booking clearly shows another arrangement. Agree the scope and total price before work starts, use a traceable method where possible, and keep a receipt. LoopOut does not collect, hold, or refund these direct payments.
                 </p>
               </div>
             </div>
@@ -524,11 +515,9 @@ export default function ComprehensiveSafetyPolicy() {
               <div className="flex items-start mb-6">
                 <FaShieldAlt className="text-blue-600 mt-1 mr-4" />
                 <div>
-                  <h3 className="text-xl font-semibold mb-3">No Platform Liability</h3>
+                  <h3 className="text-xl font-semibold mb-3">Responsibilities & support</h3>
                   <p className="text-gray-600 mb-4">
-                    loopOut explicitly disclaims any liability for damages, injuries, or disputes that may 
-                    arise between customers and service providers. As an advertising platform only, we are 
-                    not responsible for:
+                    Providers remain responsible for their work and customers for agreed payments. LoopOut can review platform records and act on platform misuse, but cannot automatically determine fault in every private dispute. Nothing here removes rights or remedies that apply by law. Users should:
                   </p>
                 </div>
               </div>
@@ -601,7 +590,7 @@ export default function ComprehensiveSafetyPolicy() {
                   <div className="border p-4 rounded-lg">
                     <h4 className="font-semibold mb-2">Report Serious Issues</h4>
                     <p className="text-gray-600 text-sm">
-                      Contact us for platform violations, but understand we cannot mediate financial disputes
+                      Contact LoopOut support with the booking reference and evidence. We may review platform records and help communication, but do not process direct payments or promise a legal decision.
                     </p>
                   </div>
                 </div>
@@ -623,18 +612,13 @@ export default function ComprehensiveSafetyPolicy() {
             <div className="bg-red-50 border border-red-200 p-6 rounded-xl">
               <h3 className="text-xl font-semibold mb-4 text-red-800 flex items-center">
                 <FaExclamationTriangle className="mr-3" />
-                Important Disclaimer
+                Important Information
               </h3>
               <p className="text-red-700 mb-4">
-                By using loopOut to book or provide services, you acknowledge and agree that loopOut acts 
-                solely as an advertising platform. You assume all risks associated with arranging and 
-                receiving services, and release loopOut from any liability for damages, injuries, or 
-                disputes that may occur between users.
+                LoopOut is a marketplace intermediary for services provided by independent users. Both parties should confirm the scope, price, time, and access arrangements in writing before work begins, then keep messages and receipts.
               </p>
               <p className="text-red-700">
-                Your safety and satisfaction are important to us, but ultimately the responsibility for 
-                service quality, payment agreements, and personal safety rests with the individuals directly 
-                involved in the service transaction.
+                LoopOut can provide support with platform records and safety reports. These terms do not remove consumer rights or other duties that cannot lawfully be excluded.
               </p>
             </div>
           </section>

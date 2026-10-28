@@ -128,6 +128,20 @@ export default function MyFoodOrders() {
     }
   };
 
+  const cancelCustomerOrder = async (order) => {
+    const orderId = order._id || order.id || order.orderId;
+    if (!window.confirm('Cancel this food order? You can cancel before the shop marks it ready.')) return;
+    try {
+      setOrderActionError('');
+      const savedOrder = await updateOrderStatus(orderId, 'Cancelled');
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, ...savedOrder } : entry
+      ));
+    } catch (error) {
+      setOrderActionError(error.message || 'Could not cancel this order. Please try again.');
+    }
+  };
+
   const submitOrderRating = async (event) => {
     event.preventDefault();
     if (!ratingTargetOrder) return;
@@ -439,6 +453,15 @@ export default function MyFoodOrders() {
                         className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700"
                       >
                         {fulfilment === 'delivery' ? 'Confirm delivery received' : 'I collected it — complete order'}
+                      </button>
+                    </div>
+                  )}
+
+                  {isCustomerOrder && ['Pending', 'Preparing'].includes(order.status) && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-gray-800/70">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Cancel before the shop marks your order ready.</p>
+                      <button type="button" onClick={() => cancelCustomerOrder(order)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-rose-950/30">
+                        Cancel order
                       </button>
                     </div>
                   )}

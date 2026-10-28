@@ -19,6 +19,7 @@ export default function BookingProgress({ property = false }) {
         })}
       </ol>
       <p className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Your booking is saved before WhatsApp opens.</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">You can cancel up to 48 hours before the scheduled start. After that, contact the provider to discuss your options.</p>
     </div>
   );
 }

@@ -35,6 +35,7 @@ import {
 import { FaWhatsapp } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import ImageWithFallback from '../components/ImageWithFallback';
+import BookingLiveLocation from '../components/BookingLiveLocation';
 
 const statusConfig = {
   pending: { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', label: 'Pending Approval' },
@@ -613,6 +614,15 @@ export default function DashBoard() {
                       R{Number(booking.totalAmount).toLocaleString()}<span className="ml-1 text-xs font-normal text-gray-500">total</span>
                     </span>
                   </div>
+
+                  {(booking.type === 'helper' || booking.type === 'service') && (
+                    <BookingLiveLocation
+                      bookingId={booking._id}
+                      booking={booking}
+                      status={booking.status}
+                      viewerRole={isHostView ? 'provider' : 'customer'}
+                    />
+                  )}
 
                   {/* ── Special Notes / Performer ── */}
                   {booking.selectedPerformer && (

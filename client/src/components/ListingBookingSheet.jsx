@@ -1330,6 +1330,7 @@ export default function ListingBookingSheet({
             {/* ─── STEP 3 ─── */}
             {step === 3 && (
               <div className="space-y-5">
+                <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-3 text-xs leading-relaxed text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">You can cancel up to 48 hours before the scheduled start or check-in. Any payment or refund is arranged directly with the host.</p>
                 <div className="bg-slate-900 rounded-3xl p-5 text-white space-y-3 shadow-xl">
                   {isServiceMode && (
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r ${config.color} text-white text-xs font-black mb-1`}>

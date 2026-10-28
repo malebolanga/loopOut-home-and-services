@@ -19,6 +19,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingProgress from '../components/BookingProgress';
 import ListingBookingSheet from '../components/ListingBookingSheet';
+import ListingDetailShell from '../components/ListingDetailShell';
 
 
 import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
@@ -1288,8 +1289,8 @@ export default function Listing() {
       detail: 'Host verification is on file with LoopOut.',
     },
   ].filter(Boolean);
-  const cancellationSummary = !isSaleOrRent && /free/i.test(String(listing.cancel || ''))
-    ? 'Free cancellation up to 72 hours before check-in'
+  const cancellationSummary = !isSaleOrRent
+    ? 'Cancel up to 48 hours before the scheduled start or check-in'
     : null;
   return (
     <div className="min-h-screen overflow-x-hidden p-0 app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
@@ -1448,7 +1449,7 @@ export default function Listing() {
       )}
 
       {/* Main Content - Overlapping sheet matching Helper and Services standard */}
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
           <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">{listingType.label}{listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''}</p>
@@ -2042,7 +2043,7 @@ export default function Listing() {
                       ))
                     ) : (
                       <>
-                        <p className="leading-relaxed">Free cancellation before check-in. Cancel before arrival for a partial refund.</p>
+                        <p className="leading-relaxed">Cancel up to 48 hours before the scheduled start or check-in. Any payment or refund is arranged directly with the host.</p>
                       </>
                     )}
                     <button className="text-gray-900 dark:text-white font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
@@ -2316,7 +2317,7 @@ export default function Listing() {
             </div>
           </div>
         </div>
-      </main>
+      </ListingDetailShell>
 
       {/* WhatsApp Booking Modal */}
       <WhatsAppBookingModal

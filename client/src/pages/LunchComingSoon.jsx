@@ -3055,6 +3055,21 @@ export default function LunchComingSoon() {
                       </button>
                     )}
 
+                    {isMyOrder && ['Pending', 'Preparing'].includes(ord.status) && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-gray-800/70">
+                        <p className="text-xs text-gray-600 dark:text-gray-300">Cancel before the shop marks your order ready.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Cancel this food order? You can cancel before the shop marks it ready.')) handleStatusUpdate(ordId, 'Cancelled');
+                          }}
+                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-rose-950/30"
+                        >
+                          Cancel order
+                        </button>
+                      </div>
+                    )}
+
                     {/* Rate Button (Customer, Completed) */}
                     {isMyOrder && ord.status === 'Completed' && !ord.isRated && (
                       <button

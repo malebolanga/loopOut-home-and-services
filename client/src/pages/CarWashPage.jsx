@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useMemo } from 'react';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
@@ -560,28 +562,10 @@ export default function CarWashPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      {carWash.imageUrls?.length > 0 && (
-        <div className="relative w-full">
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <button type="button" aria-label="View first photo" className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }}>
-              <img src={carWash.imageUrls[0]} alt={carWash.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-            </button>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {carWash.imageUrls.slice(1, 5).map((url, index) => (
-                <button type="button" key={url + index} aria-label={`View photo ${index + 2}`} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(index + 1); setShowImageModal(true); }}>
-                  <img src={url} alt={`${carWash.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </button>
-              ))}
-              {carWash.imageUrls.length < 5 && Array(4 - Math.min(4, carWash.imageUrls.length - 1)).fill(null).map((_, index) => <div key={`empty-${index}`} className="bg-slate-800 h-full" />)}
-            </div>
-          </div>
-        </div>
-      )}
+      <ListingPhotoGallery images={carWash.imageUrls} alt={carWash.name} onOpen={(index) => { setActiveImageIndex(index); setShowImageModal(true); }} emptyEmoji="🚘" emptyTitle="Car wash photos coming soon" emptyDescription="This provider has not added service photos yet." />
 
       {/* Main Content Grid */}
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
             {carWash.userRef?.avatar ? <img src={carWash.userRef.avatar} alt={carWash.userRef?.username || carWash.name} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaUser className="text-xl text-slate-400" />}
@@ -779,7 +763,7 @@ export default function CarWashPage() {
           </div>
 
         </div>
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Image Modal */}
       {showImageModal && (

@@ -779,6 +779,7 @@ export default function HelperBookingSheet({
             {/* ── SECTION 3: Provisions (Electricity/Food), Price & WhatsApp Booking ── */}
             {step === 3 && (
               <div className="space-y-6">
+                <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-3 text-xs leading-relaxed text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">You can cancel up to 48 hours before the scheduled service. After that, contact the provider to discuss your options.</p>
                 {/* Provisions: Food & Electricity */}
                 <div className="rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4 space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-gray-400">Provisions on site</h4>

@@ -533,6 +533,18 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     const previousStatus = booking.status;
+    // Guests may cancel only up to 48 hours before the scheduled start.
+    // Providers can still cancel when they are unable to fulfil a booking.
+    if (status === 'cancelled' && callerId === bookingUserId && !req.user.isAdmin) {
+      const startsAt = new Date(booking.startDate);
+      const cancellationDeadline = startsAt.getTime() - (48 * 60 * 60 * 1000);
+      if (!Number.isFinite(startsAt.getTime()) || Date.now() > cancellationDeadline) {
+        return res.status(409).json({ error: 'This booking can only be cancelled at least 48 hours before its scheduled start.' });
+      }
+      if (['cancelled', 'declined', 'completed', 'ongoing', 'work_completed'].includes(previousStatus)) {
+        return res.status(409).json({ error: 'This booking can no longer be cancelled.' });
+      }
+    }
     booking.status = status;
     await booking.save();
     if (['completed', 'cancelled', 'declined', 'work_completed'].includes(status)) {

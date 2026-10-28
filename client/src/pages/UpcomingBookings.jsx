@@ -19,6 +19,7 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 import RatingModal from '../components/RatingModal';
+import BookingLiveLocation from '../components/BookingLiveLocation';
 
 export default function UpcomingBookings() {
   const navigate = useNavigate();
@@ -547,6 +548,15 @@ export default function UpcomingBookings() {
                     )}
                   </div>
                 </div>
+
+                {(selectedBooking.type === 'helper' || selectedBooking.type === 'service') && (
+                  <BookingLiveLocation
+                    bookingId={selectedBooking.id}
+                    booking={selectedBooking.raw}
+                    status={selectedBooking.status}
+                    viewerRole="customer"
+                  />
+                )}
 
                 {/* Price & Escrow Protection */}
                 {selectedBooking.price && (

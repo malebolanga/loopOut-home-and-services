@@ -230,7 +230,18 @@ export const updateOrderStatus = async (req, res, next) => {
     const shop = await Shop.findById(order.shopId);
     const isShopManager = shop ? await isOwner(shop, req) : false;
     const isCustomer = order.customerId === userId(req);
-    if (status === 'Completed') {
+    if (status === 'Cancelled') {
+      if (isCustomer) {
+        if (!['Pending', 'Preparing'].includes(order.status)) {
+          return res.status(409).json({ success: false, message: 'You can cancel this order only before it is ready.' });
+        }
+      } else if (!isShopManager) {
+        return res.status(403).json({ success: false, message: 'You do not manage this order.' });
+      }
+      if (['Completed', 'Cancelled', 'Ready for Collection'].includes(order.status)) {
+        return res.status(409).json({ success: false, message: 'This order can no longer be cancelled.' });
+      }
+    } else if (status === 'Completed') {
       if (!isCustomer) return res.status(403).json({ success: false, message: 'Only the customer who placed this order can confirm receipt.' });
       if (order.status === 'Completed') return res.json(format(order));
       if (order.status !== 'Ready for Collection') return res.status(409).json({ success: false, message: 'You can complete this order after the shop marks it ready.' });

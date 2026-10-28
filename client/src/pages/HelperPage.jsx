@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -104,6 +106,13 @@ export default function HelperPage() {
   const [loading, setLoading] = useState(true);
 
   const params = useParams();
+  const isPhaleaddiListing = String(params.id || params.helperId || '') === '6a889887ad769bb5a3e6c341';
+  const providerDisplayName = isPhaleaddiListing ? 'Phaleaddi' : helper?.name;
+  const accountOwnerName = helper?.userRef?.username || helper?.userRef?.name || helper?.userRef?.fullName || 'Account owner';
+  const accountOwnerId = helper?.userRef?._id || helper?.userRef;
+  const description = isPhaleaddiListing
+    ? 'Phaleaddi offers domestic support for South African homes, including tidying, laundry, kitchen upkeep, and guest-ready living areas. Confirm the service scope, schedule, and final price with the provider before reserving.'
+    : helper?.description || '';
   const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(helper?._id || params.id || params.helperId);
   const [error, setError] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
@@ -126,7 +135,7 @@ export default function HelperPage() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: helper?.name || 'Helper Profile',
+        title: providerDisplayName || 'Helper Profile',
         text: helper?.description,
         url: window.location.href,
       }).catch((err) => console.error('Error sharing:', err));
@@ -1807,7 +1816,7 @@ export default function HelperPage() {
     }
 
     const clientPhone = formatContactForWhatsApp(bookingData.phone);
-    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${providerDisplayName}. See you then!`;
     const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
@@ -1828,7 +1837,7 @@ export default function HelperPage() {
     message += `━━━━━━━━━━━━━━━━━━━━%0A`;
     message += `*💼 SERVICE SUMMARY*%0A`;
     message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `⚒️ *Provider:* ${helper.name}%0A`;
+    message += `⚒️ *Provider:* ${providerDisplayName}%0A`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
@@ -1895,7 +1904,7 @@ export default function HelperPage() {
       if (res.ok) {
         pushPhoneNotification({
           title: '🎉 Booking Request Sent',
-          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
         });
@@ -1926,7 +1935,7 @@ export default function HelperPage() {
            name: currentUser.username,
            email: currentUser.email,
            serviceId: helper ? helper._id : (service ? service._id : ''),
-           providerName: helper ? helper.name : (service ? service.name : '')
+           providerName: helper ? providerDisplayName : (service ? service.name : '')
         })
       });
       const data = await res.json();
@@ -2045,7 +2054,7 @@ export default function HelperPage() {
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
     // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${providerDisplayName} on ${bookingData.date} at ${bookingData.time}. See you then!`;
     const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
@@ -2074,7 +2083,7 @@ export default function HelperPage() {
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
     message += `*💼 SERVICE SUMMARY*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `⚒️ *Service:* ${helper.name}\n`;
+    message += `⚒️ *Service:* ${providerDisplayName}\n`;
     message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
 
     // Add selected services
@@ -2226,7 +2235,7 @@ export default function HelperPage() {
       if (res.ok) {
         pushPhoneNotification({
           title: '🎉 Booking Request Sent',
-          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
         });
@@ -2335,7 +2344,7 @@ export default function HelperPage() {
 
   const whatsappNumber = helper ? formatContactForWhatsApp(helper.contact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
+    ? `https://wa.me/${whatsappNumber}?text=Hi ${providerDisplayName}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
     : null;
 
   const handleInternalMessage = async () => {
@@ -2345,7 +2354,7 @@ export default function HelperPage() {
     }
     
     // Check if the user is trying to message themselves
-    if (currentUser._id === helper.userRef) {
+    if (String(currentUser._id) === String(accountOwnerId)) {
       alert("You cannot message yourself.");
       return;
     }
@@ -2358,8 +2367,8 @@ export default function HelperPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          receiverId: helper.userRef,
-          content: `Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`,
+          receiverId: accountOwnerId,
+          content: `Hi ${providerDisplayName}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`,
         }),
       });
       const data = await res.json();
@@ -2434,7 +2443,6 @@ export default function HelperPage() {
     );
   }
 
-  const description = helper.description || '';
   const displayText = showFullDescription
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
@@ -2502,47 +2510,17 @@ export default function HelperPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      <div className="w-full relative">
-        {galleryImages.length > 0 ? (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <div className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(0)}>
-              <img src={galleryImages[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent pointer-events-none" />
-            </div>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {galleryImages.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </div>
-              ))}
-              {galleryImages.length < 5 && Array(4 - Math.min(4, galleryImages.length - 1)).fill(null).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-900 h-full" />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="h-[45svh] md:h-[430px] bg-slate-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-3 text-center px-6">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-              <PhotoIcon className="w-7 h-7 text-slate-400" />
-            </div>
-            <div>
-              <p className="font-black text-slate-900 dark:text-white">Photos coming soon</p>
-              <p className="text-sm text-slate-500 mt-1">This provider has not added portfolio photos yet.</p>
-            </div>
-          </div>
-        )}
-      </div>
+      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="🧰" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
 
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         {/* Content Section */}
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
-            {helper.userRef?.avatar ? <img src={helper.userRef.avatar} alt={helper.userRef?.username || helper.name} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
+            {helper.imageUrls?.[0] ? <img src={helper.imageUrls[0]} alt={providerDisplayName} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
           </div>
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-600">{getCategoryIcon(helper.type)}<span>{getProfessionalTitle(helper.type)}</span></div>
           <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
-            {helper.name}
+            {providerDisplayName}
           </h1>
           <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Professional services in ${helper.address || 'your area'}`}</p>
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
@@ -2568,6 +2546,9 @@ export default function HelperPage() {
                 From R{helper.regularPrice}
               </span>
             )}
+            <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-xs font-medium text-emerald-800">
+              Cancel up to 48 hours before the service
+            </span>
             {operatingStatus?.isClosed ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-600">
                 <ClockIcon className="w-3.5 h-3.5" /> Closed
@@ -2587,42 +2568,33 @@ export default function HelperPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Host Info Bar */}
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            {/* Host row: account owner is the host; named worker is shown separately. */}
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-6">
               <Link
-                to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit"
+                to={accountOwnerId ? `/user-profile/${accountOwnerId}` : '#'}
+                onClick={(event) => { if (!accountOwnerId) event.preventDefault(); }}
+                className="flex min-w-0 items-center gap-4 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                aria-label={`View host profile: ${accountOwnerName}`}
               >
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    Hosted by {helper.userRef?.username || helper.name}
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    {isSuperhelper ? 'Superhelper' : (isVerifiedProvider ? 'Verified provider' : 'Provider')}
-                  </p>
-                  {helper.providerType === 'company' && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm font-medium">Company</p>
-                  )}
-                  {helper.providerType === 'individual' && helper.citizenship && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm font-medium">Citizenship: {helper.citizenship}</p>
-                  )}
-                </div>
-                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-slate-400 ring-1 ring-slate-200">
                   {helper.userRef?.avatar ? (
-                    <img
-                      src={helper.userRef.avatar}
-                      alt={helper.userRef?.username || helper.name}
-                      className="h-full w-full object-cover object-center"
-                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
-                    />
-                  ) : (
-                    <FaUser className="text-2xl text-gray-400" />
-                  )}
-                </div>
+                    <img src={helper.userRef.avatar} alt="" className="h-full w-full object-cover" />
+                  ) : <FaUser className="text-xl" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-semibold text-slate-900">Hosted by {accountOwnerName}</span>
+                  <span className="mt-1 block text-sm text-slate-500">Account owner · Worker: {providerDisplayName}</span>
+                </span>
               </Link>
-
-              
-              <button type="button" onClick={handleInternalMessage} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"><ChatBubbleLeftRightIcon className="h-4 w-4" />Message</button>
+              <button
+                type="button"
+                onClick={handleInternalMessage}
+                aria-label={`Chat with host ${accountOwnerName}`}
+                title="Chat with host"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:border-slate-500 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+              >
+                <ChatBubbleLeftRightIcon className="h-5 w-5" />
+              </button>
             </div>
 
             {(isSuperhelper || isVerifiedProvider || helper.operatingHours) && (
@@ -2837,7 +2809,7 @@ export default function HelperPage() {
                 <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
                   {galleryImages.slice(0, 3).map((url, index) => (
                     <button key={`portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
-                      <img src={url} alt={`${helper.name} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                      <img src={url} alt={`${providerDisplayName} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                     </button>
                   ))}
                 </div>
@@ -2865,7 +2837,7 @@ export default function HelperPage() {
                 <div className="h-[360px] sm:h-[420px] border-t border-slate-100 dark:border-gray-800 bg-slate-950">
                   <GoogleMapComponent
                     address={helper.address}
-                    title={`${helper.name}'s Location`}
+                    title={`${providerDisplayName}'s Location`}
                   />
                 </div>
                 {helper.near && (
@@ -3102,7 +3074,7 @@ export default function HelperPage() {
                     })
                   ) : (
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 italic">Base Deployment</span>
+                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Base service</span>
                       <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.regularPrice}</span>
                     </div>
                   )}
@@ -3138,7 +3110,7 @@ export default function HelperPage() {
         {/* Recent Bookers Section */}
         <BookingHistory 
           bookingSummary={bookingSummary} 
-          providerName={helper?.name} 
+          providerName={providerDisplayName}
           providerType={helper?.type || 'domestic'} 
           providerImage={helper?.imageUrls?.[0]} 
           providerId={helper?._id} 
@@ -3160,7 +3132,7 @@ export default function HelperPage() {
               </div>
             </div>
           )}
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && galleryImages.length > 0 && (
@@ -3226,10 +3198,10 @@ export default function HelperPage() {
           <div className="flex-1 mr-4">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-black text-slate-900 tracking-tighter">R{totalPrice}</span>
-              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic">Total Est.</span>
+              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Est. total incl. 10% fee</span>
             </div>
             <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
-              {helper?.name}
+              {providerDisplayName}
             </div>
           </div>
           <button
