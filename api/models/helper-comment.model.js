@@ -32,6 +32,10 @@ const helperCommentSchema = new mongoose.Schema({
     ref: 'Helper',
     required: [true, 'Helper ID is required']
   },
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking'
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -52,17 +56,23 @@ const helperCommentSchema = new mongoose.Schema({
   cleanlinessRating: {
     type: Number,
     min: 1,
-    max: 5,
-    default: 5
+    max: 5
   },
   communicationRating: {
     type: Number,
     min: 1,
-    max: 5,
-    default: 5
+    max: 5
   },
+  punctualityRating: { type: Number, min: 1, max: 5 },
+  qualityRating: { type: Number, min: 1, max: 5 },
+  respectfulnessRating: { type: Number, min: 1, max: 5 },
+  valueRating: { type: Number, min: 1, max: 5 },
+  recommendationRating: { type: Number, min: 1, max: 5 },
   replies: [replySchema]
 }, { timestamps: true });
+
+// Historical comments may have no booking ID; new booking-linked reviews are unique per booking.
+helperCommentSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 
 const HelperComment = mongoose.model('HelperComment', helperCommentSchema);
 

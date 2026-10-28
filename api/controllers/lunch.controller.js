@@ -323,7 +323,7 @@ export const rateShop = async (req, res, next) => {
     if (order.shopId !== shop._id.toString()) return res.status(403).json({ success: false, message: 'This order does not belong to this shop.' });
     if (order.customerId !== userId(req)) return res.status(403).json({ success: false, message: 'Only the customer who placed this order can leave a review.' });
     if (order.status !== 'Completed') return res.status(409).json({ success: false, message: 'Complete the order before leaving a review.' });
-    if (order.isRated) return res.status(400).json({ success: false, message: 'This order has already been reviewed.' });
+    if (order.isRated) return res.status(409).json({ success: false, message: 'This order has already been reviewed.' });
 
     const rating = Number(req.body.shopRating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
@@ -358,14 +358,24 @@ export const rateShop = async (req, res, next) => {
       createdAt: new Date()
     };
 
+    const claimedOrder = await FoodOrder.findOneAndUpdate(
+      { _id: order._id, customerId: userId(req), status: 'Completed', isRated: { $ne: true } },
+      { $set: { isRated: true, ratingDetails: review } },
+      { new: true }
+    );
+    if (!claimedOrder) return res.status(409).json({ success: false, message: 'This order has already been reviewed.' });
+
     shop.reviews = shop.reviews || [];
     shop.reviews.push(review);
     shop.ratingsCount = shop.reviews.length;
     shop.rating = (shop.reviews.reduce((sum, entry) => sum + entry.shopRating, 0) / shop.reviews.length).toFixed(1);
 
-    order.isRated = true;
-    order.ratingDetails = review;
-    await Promise.all([shop.save(), order.save()]);
+    try {
+      await shop.save();
+    } catch (saveError) {
+      await FoodOrder.updateOne({ _id: claimedOrder._id, isRated: true }, { $set: { isRated: false }, $unset: { ratingDetails: 1 } });
+      throw saveError;
+    }
 
     return res.json({ success: true, review });
   } catch (error) { return next(error); }

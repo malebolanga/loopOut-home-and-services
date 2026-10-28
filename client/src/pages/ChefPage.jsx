@@ -1697,6 +1697,7 @@ export default function ChefPage() {
       functionType: bookingData.functionType || undefined,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -2029,6 +2030,7 @@ export default function ChefPage() {
       functionType: bookingData.functionType || undefined,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };

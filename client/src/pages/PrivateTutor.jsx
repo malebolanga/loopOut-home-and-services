@@ -1777,6 +1777,7 @@ export default function PrivateTutor() {
       subtype: helper.type,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -2122,6 +2123,7 @@ export default function PrivateTutor() {
       subtype: bookingSubtype,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };

@@ -2,12 +2,14 @@ import Listing from '../models/listing.model.js';
 import LookingFor from '../models/lookingFor.model.js';
 import Comment from '../models/comment.model.js';
 import Sell from '../models/sell.model.js';
+import Booking from '../models/Booking.js';
+import mongoose from 'mongoose';
 import { errorHandler } from '../utils/error.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createComment = async (req, res, next) => {
   try {
-    const { content, listingId, userName, userAvatar, rating } = req.body;
+    const { content, listingId, bookingId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !listingId) {
@@ -31,13 +33,21 @@ export const createComment = async (req, res, next) => {
       return next(errorHandler(404, 'Listing or Request not found'));
     }
 
+    if (targetType === 'listing' && rating !== undefined && rating !== null) {
+      if (!bookingId || !mongoose.Types.ObjectId.isValid(bookingId)) return next(errorHandler(400, 'A completed booking is required to leave a listing review'));
+      const completedBooking = await Booking.findOne({ _id: bookingId, user: userId, listing: listingId, status: 'completed' }).select('_id');
+      if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this booking can review the listing'));
+      if (await Comment.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
+    }
+
     const comment = new Comment({
       content,
       listingId, // keeping the field name as listingId in the DB for now to avoid migration
       userId,
       userName: userName || req.user.username,
       userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
-      rating: rating ? Number(rating) : undefined
+      rating: rating ? Number(rating) : undefined,
+      bookingId: targetType === 'listing' && rating ? bookingId : undefined
     });
 
     await comment.save();
@@ -77,6 +87,7 @@ export const createComment = async (req, res, next) => {
 
     res.status(201).json(comment);
   } catch (error) {
+    if (error?.code === 11000) return next(errorHandler(409, 'This booking already has a review'));
     next(errorHandler(500, error.message || 'Failed to create comment'));
   }
 };

@@ -39,6 +39,7 @@ const reviewSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
     helpfulCount: {
       type: Number,
       default: 0
@@ -54,6 +55,8 @@ const reviewSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+reviewSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 
 const Review = mongoose.model('Review', reviewSchema);
 export default Review;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   StarIcon, 
@@ -23,6 +23,16 @@ const QUICK_TAGS = [
   '🔁 Highly Recommended'
 ];
 
+const HELPER_RATING_CATEGORIES = [
+  { field: 'punctualityRating', label: '⏱️ Punctual & on time' },
+  { field: 'qualityRating', label: '✨ Exceptional quality' },
+  { field: 'communicationRating', label: '💬 Great communication' },
+  { field: 'cleanlinessRating', label: '🧹 Clean & organised' },
+  { field: 'respectfulnessRating', label: '🤝 Friendly & respectful' },
+  { field: 'valueRating', label: '💰 Great value' },
+  { field: 'recommendationRating', label: '⭐ Highly recommended' }
+];
+
 export default function RatingModal({ 
   isOpen, 
   onClose, 
@@ -31,12 +41,25 @@ export default function RatingModal({
 }) {
   const { currentUser } = useSelector((state) => state.user);
   const [rating, setRating] = useState(5);
+  const [categoryRatings, setCategoryRatings] = useState(() => Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setRating(5);
+    setCategoryRatings(Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
+    setHoverRating(0);
+    setComment('');
+    setSelectedTags([]);
+    setSubmitting(false);
+    setSuccess(false);
+    setError('');
+  }, [isOpen, booking]);
 
   if (!isOpen || !booking) return null;
 
@@ -67,8 +90,21 @@ export default function RatingModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!rating) {
-      setError('Please select a star rating.');
+    const isHelperRating = targetType === 'helper';
+    const bookingId = booking.bookingId || booking.id || booking.raw?._id || booking._id;
+    const selectedCategoryRatings = Object.fromEntries(Object.entries(categoryRatings).filter(([, value]) => Number(value) >= 1 && Number(value) <= 5));
+    const selectedCategoryCount = Object.keys(selectedCategoryRatings).length;
+    const submittedRating = isHelperRating
+      ? selectedCategoryCount
+        ? Math.round(Object.values(selectedCategoryRatings).reduce((sum, value) => sum + value, 0) / selectedCategoryCount)
+        : 0
+      : rating;
+    if (!submittedRating) {
+      setError(isHelperRating ? 'Please rate at least one service category.' : 'Please select a star rating.');
+      return;
+    }
+    if (!targetId || !bookingId) {
+      setError('We could not identify this completed booking. Close this form and try again from your booking.');
       return;
     }
 
@@ -83,13 +119,14 @@ export default function RatingModal({
         fullContent = fullContent ? `${fullContent}\n\nHighlights: ${tagsHeader}` : `Highlights: ${tagsHeader}`;
       }
       if (!fullContent) {
-        fullContent = `Rated ${rating} stars for ${targetTitle}.`;
+        fullContent = `Rated ${submittedRating} stars for ${targetTitle}.`;
       }
 
       let endpoint = '/api/service-comments';
       let payload = {
         content: fullContent,
         rating,
+        bookingId,
         userName: currentUser?.username || 'Client',
         userAvatar: currentUser?.avatar || '/default-avatar.jpg'
       };
@@ -99,8 +136,9 @@ export default function RatingModal({
         payload = {
           ...payload,
           helperId: targetId,
-          cleanlinessRating: rating,
-          communicationRating: rating
+          bookingId,
+          rating: submittedRating,
+          ...selectedCategoryRatings
         };
       } else if (targetType === 'listing') {
         endpoint = '/api/comments';
@@ -249,33 +287,54 @@ export default function RatingModal({
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Star Rating Section */}
                 <div className="text-center space-y-2">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">
-                    How was your experience?
-                  </p>
-                  
-                  <div className="flex items-center justify-center gap-2 py-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        type="button"
-                        key={star}
-                        onClick={() => setRating(star)}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        className="p-1 transition-transform hover:scale-125 active:scale-95 focus:outline-none cursor-pointer"
-                        aria-label={`Rate ${star} star`}
-                      >
-                        {star <= currentStars ? (
-                          <StarIcon className="w-9 h-9 text-amber-400 drop-shadow-sm transition-colors" />
-                        ) : (
-                          <StarOutline className="w-9 h-9 text-gray-300 transition-colors" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  <p className={`text-xs font-black uppercase tracking-wider transition-colors ${sentiment.color}`}>
-                    {sentiment.text}
-                  </p>
+                  {targetType === 'helper' ? (
+                    <div className="space-y-4 rounded-2xl bg-slate-50 p-4 text-left">
+                      <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">Rate each part of the service</p>
+                      {HELPER_RATING_CATEGORIES.map((category) => (
+                        <div key={category.field} className="flex items-center justify-between gap-3">
+                          <span className="text-xs font-bold text-slate-700">{category.label}</span>
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                type="button"
+                                key={star}
+                                onClick={() => setCategoryRatings((previous) => ({ ...previous, [category.field]: star }))}
+                                aria-label={`Rate ${category.label.replace(/^\S+\s/, '')} ${star} stars`}
+                                className="p-1 focus:outline-none"
+                              >
+                                {star <= categoryRatings[category.field]
+                                  ? <StarIcon className="h-6 w-6 text-amber-400" />
+                                  : <StarOutline className="h-6 w-6 text-gray-300" />}
+                              </button>
+                            ))}
+                          </div>
+                          <span className="w-10 text-right text-[10px] font-bold tabular-nums text-slate-500">
+                            {categoryRatings[category.field] ? `${categoryRatings[category.field]}/5` : '—/5'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-gray-400">How was your experience?</p>
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            type="button"
+                            key={star}
+                            onClick={() => setRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="p-1 transition-transform hover:scale-125 active:scale-95 focus:outline-none cursor-pointer"
+                            aria-label={`Rate ${star} star`}
+                          >
+                            {star <= currentStars ? <StarIcon className="w-9 h-9 text-amber-400 drop-shadow-sm transition-colors" /> : <StarOutline className="w-9 h-9 text-gray-300 transition-colors" />}
+                          </button>
+                        ))}
+                      </div>
+                      <p className={`text-xs font-black uppercase tracking-wider transition-colors ${sentiment.color}`}>{sentiment.text}</p>
+                    </>
+                  )}
                 </div>
 
                 {/* Quick Highlights Tag Pills */}

@@ -111,6 +111,7 @@ export default function HelperPage() {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [showAllReviewsPanel, setShowAllReviewsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -1001,6 +1002,11 @@ export default function HelperPage() {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
+                punctuality: data.ratings.punctuality || 0,
+                quality: data.ratings.quality || 0,
+                respectfulness: data.ratings.respectfulness || 0,
+                value: data.ratings.value || 0,
+                recommendation: data.ratings.recommendation || 0,
                 overall: data.ratings.overall || 0
               });
             }
@@ -2191,7 +2197,9 @@ export default function HelperPage() {
 
     // Determine device type
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+    const requestLocation = bookingData.locationOption === 'comeToYou'
+      ? (bookingData.address || locationInfo.address || '')
+      : (bookingData.address || '');
 
     const bookingToSave = {
       userId: currentUser?._id || "guest",
@@ -2200,7 +2208,7 @@ export default function HelperPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message: message,
       subtype: bookingSubtype,
       numberOfGuests: bookingData.numberOfGuests || undefined,
       functionType: bookingData.functionType || undefined,
@@ -2209,6 +2217,7 @@ export default function HelperPage() {
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption || 'comeToYou',
       status: 'pending',
       type: 'helper'
     };
@@ -2883,47 +2892,48 @@ export default function HelperPage() {
 
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex items-center gap-2 mb-8">
+              <button type="button" onClick={() => document.getElementById('helper-review-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-slate-200 px-4 py-4 text-left transition hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-900" aria-label="Browse client reviews">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {hasRating ? ratingValue.toFixed(1) : 'New'} · {commentCount} reviews
-                </h2>
-              </div>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                    <span>{hasRating ? ratingValue.toFixed(1) : 'New'}</span>
+                    <span className="text-slate-400" aria-hidden="true">&middot;</span>
+                    <span>{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-gray-400">Swipe through client reviews</span>
+                </span>
+                <span className="text-xl text-slate-400" aria-hidden="true">›</span>
+              </button>
+
+              <Swiper
+                aria-label="Average ratings by category"
+                slidesPerView={3.15}
+                spaceBetween={8}
+                breakpoints={{ 640: { slidesPerView: 5.2 }, 1024: { slidesPerView: 7 } }}
+                freeMode={true}
+                modules={[FreeMode]}
+                className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0"
+              >
+                {[
+                  ['⏱️', 'Punctual & on time', ratings?.punctuality],
+                  ['✨', 'Exceptional quality', ratings?.quality],
+                  ['💬', 'Great communication', ratings?.communication],
+                  ['🧹', 'Clean & organised', ratings?.cleanliness],
+                  ['🤝', 'Friendly & respectful', ratings?.respectfulness],
+                  ['💰', 'Great value', ratings?.value],
+                  ['⭐', 'Highly recommended', ratings?.recommendation]
+                ].map(([emoji, label, rawScore]) => {
+                  const score = Number(rawScore) || 0;
+                  return <SwiperSlide key={label} className="h-auto"><div title={label} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1.5 py-2 text-center dark:border-gray-700 dark:bg-gray-900"><span aria-hidden="true" className="text-lg">{emoji}</span><span className="text-[10px] font-bold tabular-nums text-slate-800 dark:text-gray-100">{score ? `${score.toFixed(1)}/5` : '—/5'}</span><span className="sr-only">{label}</span></div></SwiperSlide>;
+                })}
+              </Swiper>
 
               {commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 dark:bg-gray-700 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 dark:bg-white rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 dark:bg-gray-700 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 dark:bg-white rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Top Comments Swiper */}
                   {topComments.length > 0 && (
-                    <div className="mb-8">
+                    <>
+                    <div id="helper-review-cards" className="mb-8 scroll-mt-24">
                       <Swiper
                         spaceBetween={16}
                         slidesPerView={1.1}
@@ -2936,7 +2946,8 @@ export default function HelperPage() {
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
                         {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          const scores = ['punctualityRating', 'qualityRating', 'communicationRating', 'cleanlinessRating', 'respectfulnessRating', 'valueRating', 'recommendationRating'].map((field) => Number(comment[field])).filter((score) => Number.isFinite(score) && score >= 1 && score <= 5);
+                          const rating = scores.length ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
@@ -2959,13 +2970,14 @@ export default function HelperPage() {
                                 </div>
                                 <div className="flex items-center gap-4 mb-4">
                                   <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => (
+                                  {[...Array(5)].map((_, i) => (
                                       <FaStar 
                                         key={i} 
                                         className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`} 
                                       />
                                     ))}
                                   </div>
+                                  <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{rating ? `${rating.toFixed(1)} / 5` : 'Review'}</span>
                                   {comment.likes?.length > 0 && (
                                     <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
                                       <FaHeart />
@@ -2982,6 +2994,12 @@ export default function HelperPage() {
                         )})}
                       </Swiper>
                     </div>
+                    {commentCount > 10 && (
+                      <button type="button" onClick={() => setShowAllReviewsPanel(true)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 sm:w-auto">
+                        See all {commentCount} reviews
+                      </button>
+                    )}
+                    </>
                   )}
                 </>
               ) : (
@@ -2990,9 +3008,12 @@ export default function HelperPage() {
 
               <button
                 onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 dark:border-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
+                aria-haspopup="dialog"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 sm:w-auto"
               >
-                Show all {commentCount} reviews
+                <ChatBubbleLeftRightIcon className="h-4 w-4" />
+                Read guest comments
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-gray-800 dark:text-gray-300">{commentCount}</span>
               </button>
             </div>
 
@@ -3246,11 +3267,22 @@ export default function HelperPage() {
         <CommentsSidePanelHelper
           helperId={helper._id}
           onClose={() => setShowCommentsPanel(false)}
+          totalComments={commentCount}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
           onAnalyzeComments={analyzeCommentsWithAI}
           commentAnalysis={commentAnalysis}
           analyzingComments={analyzingComments}
+        />
+      )}
+      {showAllReviewsPanel && (
+        <CommentsSidePanelHelper
+          helperId={helper._id}
+          onClose={() => setShowAllReviewsPanel(false)}
+          totalComments={commentCount}
+          onTotalComments={setCommentCount}
+          onRatingsChange={setRatings}
+          presentation="bottom"
         />
       )}
 

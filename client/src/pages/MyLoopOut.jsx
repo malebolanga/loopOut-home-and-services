@@ -186,8 +186,15 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
           {busy ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : needsRating ? <Star className="h-3.5 w-3.5" /> : item.needsAction ? <CheckCircle2 className="h-3.5 w-3.5" /> : isFood ? <ShoppingBag className="h-3.5 w-3.5" /> : <ArrowRight className="h-3.5 w-3.5" />}
           {actionText}
         </button>}
+        {item.kind === 'booking' && (item.needsAction || needsRating) && <button type="button" onClick={() => onOpen(item)} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-[10px] font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">View details</button>}
       </div>
-      {item.kind === 'booking' && item.providerId && !item.completed && !item.cancelled && <div className="mt-2 flex flex-wrap items-center justify-end gap-2">{!['ongoing', 'work_completed', 'completed'].includes(normalizedStatus(item.status)) && <span className="mr-auto text-[10px] text-slate-500 dark:text-gray-400">Cancel up to 48 hours before the scheduled start.</span>}<button type="button" onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message provider</button>{!['ongoing', 'work_completed', 'completed'].includes(normalizedStatus(item.status)) && isInsideBookingCancellationWindow(item.raw) && <button type="button" onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800">Cancel</button>}</div>}
+      {item.kind === 'booking' && !item.completed && !item.cancelled && <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+        {!['ongoing', 'work_completed', 'completed', 'declined'].includes(normalizedStatus(item.status)) && <>
+          <span className="mr-auto text-[10px] text-slate-500 dark:text-gray-400">{isInsideBookingCancellationWindow(item.raw) ? 'Cancel up to 48 hours before the scheduled start.' : 'The 48-hour cancellation window has closed.'}</span>
+          <button type="button" disabled={!isInsideBookingCancellationWindow(item.raw) || busy} onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800">{isInsideBookingCancellationWindow(item.raw) ? 'Cancel' : 'Cancel closed'}</button>
+        </>}
+        {item.providerId && <button type="button" onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message provider</button>}
+      </div>}
       {isFood && ['pending', 'preparing'].includes(normalizedStatus(item.status)) && <div className="mt-2 flex flex-wrap items-center justify-end gap-2"><span className="mr-auto text-[10px] text-slate-500 dark:text-gray-400">Cancel before the shop marks your order ready.</span><button type="button" disabled={busy} onClick={() => onCancel(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-500 hover:bg-slate-100 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800">Cancel order</button></div>}
       {isGoods && <div className="mt-2 flex flex-wrap justify-end gap-1"><button type="button" disabled={busy} onClick={() => onMessage(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-800"><MessageCircle className="h-3.5 w-3.5" />Message {item.role === 'seller' ? 'buyer' : 'seller'}</button>{!item.cancelled && !item.issueReports.some((issue) => issue.status === 'Open') && <button type="button" disabled={busy} onClick={() => onReportIssue(item)} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3 text-[10px] font-black uppercase text-amber-700 hover:bg-amber-50 disabled:opacity-50 dark:text-amber-300 dark:hover:bg-amber-950/30"><AlertTriangle className="h-3.5 w-3.5" />Report a problem</button>}</div>}
     </motion.article>
@@ -207,6 +214,7 @@ export default function MyLoopOut() {
   const [filter, setFilter] = useState('all');
   const [busyId, setBusyId] = useState('');
   const [notice, setNotice] = useState('');
+  const [detailsBooking, setDetailsBooking] = useState(null);
   const [ratingBooking, setRatingBooking] = useState(null);
   const [ratingOrder, setRatingOrder] = useState(null);
   const [foodRating, setFoodRating] = useState(5);
@@ -338,6 +346,7 @@ export default function MyLoopOut() {
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.message || payload.error || 'Could not close this booking.');
         setBookings((current) => current.map((entry) => entry.id === item.id ? { ...entry, status: 'completed', step: 3, needsAction: false, completed: true, raw: { ...entry.raw, status: 'completed' } } : entry));
+        setDetailsBooking(null);
         setRatingBooking({ ...item.raw, id: item.id, type: item.resourceType, itemId: item.resourceId, title: item.title, proName: item.provider });
       }
     } catch (error) {
@@ -411,6 +420,7 @@ export default function MyLoopOut() {
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.message || payload.error || 'Could not cancel this booking.');
         setBookings((current) => current.map((entry) => entry.id === item.id ? { ...entry, status: 'cancelled', cancelled: true, needsAction: false, raw: { ...entry.raw, status: 'cancelled' } } : entry));
+        setDetailsBooking(null);
         setNotice('Booking cancelled.');
       }
     } catch (error) { setNotice(error.message || `Could not cancel this ${label}.`); }
@@ -466,6 +476,10 @@ export default function MyLoopOut() {
       navigate('/my-orders');
       return;
     }
+    if (item.kind === 'booking') {
+      setDetailsBooking(item);
+      return;
+    }
     if (item.resourceId) navigate(`/${item.resourceType}/${item.resourceId}`);
     else navigate('/upcoming-bookings');
   };
@@ -476,6 +490,27 @@ export default function MyLoopOut() {
   };
 
   const loading = bookingsLoading || ordersLoading;
+  const detailRaw = detailsBooking?.raw || {};
+  const detailResource = detailRaw.listing || detailRaw.helper || detailRaw.service || detailRaw.event || {};
+  const detailServices = String(detailRaw.subtype || detailRaw.functionType || '').split(/[,;]+/).map((service) => service.trim()).filter(Boolean);
+  const detailStart = formatDate(detailRaw.startDate || detailRaw.date);
+  const detailEnd = detailRaw.endDate && new Date(detailRaw.endDate).getTime() !== new Date(detailRaw.startDate).getTime() ? formatDate(detailRaw.endDate) : '';
+  const clientWorkAddress = detailRaw.requestLocation || detailRaw.clientAddress || '';
+  const providerVisitAddress = detailResource.businessAddress || detailResource.address || detailResource.location || '';
+  // Keep the booking details consistent with the address included in the WhatsApp request.
+  const detailLocation = detailRaw.locationOption === 'comeToYou'
+    ? clientWorkAddress
+    : detailRaw.locationOption === 'goToThem'
+      ? providerVisitAddress
+      : clientWorkAddress;
+  const detailTravelLabel = detailRaw.locationOption === 'comeToYou'
+    ? '🚗 Provider comes to you'
+    : detailRaw.locationOption === 'goToThem'
+      ? '🚶 You go to the provider'
+      : '';
+  const detailStatus = normalizedStatus(detailsBooking?.status);
+  const detailCanCancel = Boolean(detailsBooking && !['cancelled', 'declined', 'completed', 'ongoing', 'work_completed'].includes(detailStatus) && isInsideBookingCancellationWindow(detailRaw));
+  const detailMayCancel = Boolean(detailsBooking && !['cancelled', 'declined', 'completed', 'ongoing', 'work_completed'].includes(detailStatus));
 
   return (
     <div className="min-h-screen w-full min-w-0 overflow-x-clip bg-gradient-to-b from-slate-50 via-white to-slate-50 pb-24 text-slate-900 transition-colors dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-gray-100 md:pb-12">
@@ -540,6 +575,73 @@ export default function MyLoopOut() {
       </main>
 
       <RatingModal isOpen={Boolean(ratingBooking)} onClose={() => setRatingBooking(null)} booking={ratingBooking} onReviewSubmitted={() => setRatingBooking(null)} />
+
+      <AnimatePresence>
+        {detailsBooking && <motion.div
+          className="fixed inset-0 z-[1000] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onMouseDown={(event) => { if (event.target === event.currentTarget) setDetailsBooking(null); }}
+        >
+          <motion.section
+            role="dialog" aria-modal="true" aria-labelledby="booking-details-title"
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 260 }}
+            className="max-h-[90svh] w-full max-w-xl overflow-y-auto rounded-t-3xl border border-slate-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900 sm:rounded-3xl"
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-600">📋 Booking details · {detailsBooking.resourceType}</p>
+                <h2 id="booking-details-title" className="mt-1 truncate text-xl font-black text-slate-900 dark:text-white">{detailsBooking.title}</h2>
+                <p className="mt-1 text-xs font-semibold capitalize text-slate-500 dark:text-gray-400">📌 Status: {String(detailsBooking.status).replaceAll('_', ' ')}</p>
+              </div>
+              <button type="button" onClick={() => setDetailsBooking(null)} aria-label="Close booking details" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800"><X className="h-5 w-5" /></button>
+            </div>
+
+            <div className="space-y-5 px-5 py-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-4 dark:bg-gray-800/70">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">📅 Date &amp; time</p>
+                  <p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">{detailStart}</p>
+                  {detailEnd && <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">Until {detailEnd}</p>}
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4 dark:bg-gray-800/70">
+                  <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500"><MapPin className="h-3.5 w-3.5" />📍 Location</p>
+                  {detailTravelLabel && <p className="mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-300">{detailTravelLabel}</p>}
+                  <p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">{detailLocation || (detailRaw.locationOption === 'comeToYou' ? 'Client work address was not saved with this booking' : detailRaw.locationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with the provider')}</p>
+                  {detailRaw.locationOption === 'comeToYou' && <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">The provider comes to your address</p>}
+                </div>
+              </div>
+
+              <section>
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">🧰 What you booked</h3>
+                {detailServices.length > 0 ? <div className="mt-2 flex flex-wrap gap-2">{detailServices.map((service, index) => <span key={`${service}-${index}`} className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">{service}</span>)}</div> : <p className="mt-2 text-sm text-slate-600 dark:text-gray-300">{detailsBooking.title}</p>}
+                {(detailRaw.numberOfGuests || detailRaw.numberOfRooms || detailRaw.selectedPerformer || detailRaw.functionType) && <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-gray-300">
+                  {detailRaw.numberOfGuests && <span>👥 {detailRaw.numberOfGuests} guest{Number(detailRaw.numberOfGuests) === 1 ? '' : 's'}</span>}
+                  {detailRaw.numberOfRooms && <span>🛏️ {detailRaw.numberOfRooms} room{Number(detailRaw.numberOfRooms) === 1 ? '' : 's'}</span>}
+                  {detailRaw.selectedPerformer && <span>👤 Requested worker: {detailRaw.selectedPerformer}</span>}
+                  {detailRaw.functionType && <span>🎉 {detailRaw.functionType}</span>}
+                </div>}
+              </section>
+
+              {detailRaw.message && <section className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">📝 Notes for the provider</h3>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-gray-200">{String(detailRaw.message).slice(0, 700)}</p>
+              </section>}
+
+              {detailsBooking.price != null && <div className="flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800"><span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span><span className="text-lg font-black text-slate-900 dark:text-white">R{Number(detailsBooking.price).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span></div>}
+
+              <p className="text-[11px] leading-relaxed text-slate-500 dark:text-gray-400">LoopOut does not collect payment for this service. Confirm the final scope and payment arrangements directly with the provider.</p>
+            </div>
+
+            <div className="sticky bottom-0 flex flex-wrap gap-2 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+              {detailMayCancel && <button type="button" disabled={!detailCanCancel || busyId === detailsBooking.id} onClick={() => cancelItem(detailsBooking)} className="min-h-11 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">{detailCanCancel ? 'Cancel booking' : '48-hour cancellation window closed'}</button>}
+              {detailsBooking.needsAction && <button type="button" disabled={busyId === detailsBooking.id} onClick={() => finishItem(detailsBooking)} className="min-h-11 flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white hover:bg-emerald-700 disabled:opacity-50">Complete &amp; rate</button>}
+              {detailsBooking.completed && <button type="button" onClick={() => { setRatingBooking({ ...detailRaw, id: detailsBooking.id, type: detailsBooking.resourceType, itemId: detailsBooking.resourceId, title: detailsBooking.title, proName: detailsBooking.provider }); setDetailsBooking(null); }} className="min-h-11 flex-1 rounded-xl bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-wide text-white hover:bg-amber-600">Rate provider</button>}
+              {detailsBooking.providerId && <button type="button" onClick={() => messageProvider(detailsBooking)} className="min-h-11 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Message provider</button>}
+            </div>
+          </motion.section>
+        </motion.div>}
+      </AnimatePresence>
 
       <AnimatePresence>
         {issueOrder && <motion.div className="fixed inset-0 z-[1000] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={(event) => { if (event.target === event.currentTarget) setIssueOrder(null); }}>

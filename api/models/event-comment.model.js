@@ -22,6 +22,7 @@ const replySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const eventCommentSchema = new mongoose.Schema({
+  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   content: {
     type: String,
     required: [true, 'Comment content is required'],
@@ -57,6 +58,8 @@ const eventCommentSchema = new mongoose.Schema({
   }],
   replies: [replySchema]
 }, { timestamps: true });
+
+eventCommentSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 
 const EventComment = mongoose.model('EventComment', eventCommentSchema);
 export default EventComment;

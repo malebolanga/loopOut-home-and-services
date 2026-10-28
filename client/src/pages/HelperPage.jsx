@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+﻿/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import ListingPhotoGallery from '../components/ListingPhotoGallery';
@@ -120,6 +120,7 @@ export default function HelperPage() {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
+  const [showAllReviewsPanel, setShowAllReviewsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -388,9 +389,10 @@ export default function HelperPage() {
     }
   };
 
-  // Only show services that this provider has actually added to their profile.
-  // Generic defaults can make it look as though a provider offers or charges for work they do not.
-  const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
+  // Prefer the provider's saved menu. This specific domestic-work listing
+  // describes these services but has no saved serviceList, so show its stated
+  // scope as quote-based options instead of leaving the section empty.
+  const savedServiceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
         id: s._id ? String(s._id) : (s.id ? String(s.id) : `${s.name || 'service'}-${index}`), 
         name: s.name, 
@@ -401,6 +403,13 @@ export default function HelperPage() {
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
     : [];
+  const domesticWorkOptions = isPhaleaddiListing ? [
+    { id: 'ironing', name: 'Ironing', type: 'Home care', description: 'Ironing for everyday clothing and household linen.', icon: <FaTshirt className="text-purple-500" /> },
+    { id: 'laundry', name: 'Laundry', type: 'Home care', description: 'Laundry support for your household.', icon: <FaTshirt className="text-blue-500" /> },
+    { id: 'houseCleaning', name: 'House cleaning', type: 'Cleaning', description: 'Tidying and cleaning for living areas.', icon: <FaBroom className="text-emerald-500" /> },
+    { id: 'kitchenUpkeep', name: 'Kitchen upkeep', type: 'Home care', description: 'Help keeping kitchen areas clean and organised.', icon: <FaUtensils className="text-amber-500" /> },
+  ] : [];
+  const serviceOptions = savedServiceOptions.length > 0 ? savedServiceOptions : domesticWorkOptions;
 
   // Full page overlay state for booking form
   const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
@@ -653,16 +662,16 @@ export default function HelperPage() {
 
   // Chef-specific options
   const mealTypes = [
-    { id: 'breakfast', name: 'Breakfast & Brunch', icon: '🥞', description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices' },
-    { id: 'desserts', name: 'Desserts & High Tea', icon: '🍰', description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies' },
-    { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: '👑', description: 'Multi-course fine dining: starter, palate cleanser, gourmet main & decadent dessert' },
-    { id: 'lunch', name: 'Lunch Feast Banquet', icon: '🍱', description: 'Plated 2-course hearty lunch or corporate feast with fresh salads and sides' },
-    { id: 'dinner', name: 'Private Dinner Experience', icon: '🍷', description: 'Intimate evening fine-dining experience cooked and plated fresh at your table' },
-    { id: 'braai', name: 'Braai / BBQ Smokehouse', icon: '🥩', description: 'Braai master experience with premium meats, gourmet marinades and fresh sides' },
-    { id: 'buffet', name: 'Buffet Spread', icon: '🍲', description: 'Generous hot and cold buffet spread for gatherings, functions and parties' },
-    { id: 'appetizers', name: 'Canapés & Finger Food', icon: '🍢', description: 'Cocktail finger foods, gourmet skewers, sliders & elegant bite-sized platters' },
-    { id: 'meal-prep', name: 'Meal Prep / Batch Cooking', icon: '🥗', description: 'Weekly portioned and packaged meal prep designed for healthy home dining' },
-    { id: 'vegan', name: 'Vegan / Plant-Based Feast', icon: '🥑', description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition' }
+    { id: 'breakfast', name: 'Breakfast & Brunch', icon: 'ðŸ¥ž', description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices' },
+    { id: 'desserts', name: 'Desserts & High Tea', icon: 'ðŸ°', description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies' },
+    { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: 'ðŸ‘‘', description: 'Multi-course fine dining: starter, palate cleanser, gourmet main & decadent dessert' },
+    { id: 'lunch', name: 'Lunch Feast Banquet', icon: 'ðŸ±', description: 'Plated 2-course hearty lunch or corporate feast with fresh salads and sides' },
+    { id: 'dinner', name: 'Private Dinner Experience', icon: 'ðŸ·', description: 'Intimate evening fine-dining experience cooked and plated fresh at your table' },
+    { id: 'braai', name: 'Braai / BBQ Smokehouse', icon: 'ðŸ¥©', description: 'Braai master experience with premium meats, gourmet marinades and fresh sides' },
+    { id: 'buffet', name: 'Buffet Spread', icon: 'ðŸ²', description: 'Generous hot and cold buffet spread for gatherings, functions and parties' },
+    { id: 'appetizers', name: 'CanapÃ©s & Finger Food', icon: 'ðŸ¢', description: 'Cocktail finger foods, gourmet skewers, sliders & elegant bite-sized platters' },
+    { id: 'meal-prep', name: 'Meal Prep / Batch Cooking', icon: 'ðŸ¥—', description: 'Weekly portioned and packaged meal prep designed for healthy home dining' },
+    { id: 'vegan', name: 'Vegan / Plant-Based Feast', icon: 'ðŸ¥‘', description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition' }
   ];
 
   const cuisineTypes = [
@@ -807,6 +816,7 @@ export default function HelperPage() {
     address: '',
     date: '',
     time: '',
+    durationHours: '',
     bringFood: 'no',
     message: '',
     selectedHaircut: '',
@@ -924,12 +934,24 @@ export default function HelperPage() {
 
     const [selH, selM] = bookingData.time.split(':').map(Number);
     const selectedTime = selH * 60 + selM;
+    const durationHours = bookingData.durationHours === 'all-day' ? 8 : Math.max(1, Number(bookingData.durationHours) || 1);
     const [openH, openM] = schedule.open.split(':').map(Number);
     const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
     const openTime = openH * 60 + openM;
     const closeTime = closeH * 60 + closeM;
 
-    return selectedTime < openTime || selectedTime >= closeTime;
+    return selectedTime < openTime || selectedTime + durationHours * 60 > closeTime;
+  };
+
+  const getSelectedDurationHours = () => bookingData.durationHours === 'all-day' ? 8 : Math.max(1, Number(bookingData.durationHours) || 1);
+  const getSelectedDurationLabel = () => bookingData.durationHours === 'all-day'
+    ? 'All day (8 hours)'
+    : `${getSelectedDurationHours()} ${getSelectedDurationHours() === 1 ? 'hour' : 'hours'}`;
+  const getBookingEndDateTime = () => {
+    const start = new Date(`${bookingData.date || '2000-01-01'}T${bookingData.time || '00:00'}`);
+    const end = new Date(start.getTime() + getSelectedDurationHours() * 60 * 60 * 1000);
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`;
   };
 
   // Calculate total price with per-guest multiplier for chef/catering
@@ -1001,7 +1023,7 @@ export default function HelperPage() {
     const fetchRatings = async () => {
       if (helper && helper._id) {
         try {
-          const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`);
+          const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`, { cache: 'no-store' });
           const data = await res.json();
           if (res.ok) {
             setCommentCount(data.totalComments || 0);
@@ -1010,6 +1032,11 @@ export default function HelperPage() {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
+                punctuality: data.ratings.punctuality || 0,
+                quality: data.ratings.quality || 0,
+                respectfulness: data.ratings.respectfulness || 0,
+                value: data.ratings.value || 0,
+                recommendation: data.ratings.recommendation || 0,
                 overall: data.ratings.overall || 0
               });
             }
@@ -1163,22 +1190,22 @@ export default function HelperPage() {
   const getLocationSpecificMessage = (bookingData, provider) => {
     const locationInfo = handleLocationInfo(bookingData, provider);
 
-    let locationMessage = `📍 *Location Details:*%0A`;
-    locationMessage += `• Type: ${locationInfo.displayName}%0A`;
+    let locationMessage = `ðŸ“ *Location Details:*%0A`;
+    locationMessage += `â€¢ Type: ${locationInfo.displayName}%0A`;
 
     if (locationInfo.address) {
-      locationMessage += `• Address: ${locationInfo.address}%0A`;
+      locationMessage += `â€¢ Address: ${locationInfo.address}%0A`;
       if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        locationMessage += `• Navigation: ${locationInfo.mapLink}%0A`;
+        locationMessage += `â€¢ Navigation: ${locationInfo.mapLink}%0A`;
       }
     }
 
     if (locationInfo.instructions) {
-      locationMessage += `• Instructions: ${locationInfo.instructions}%0A`;
+      locationMessage += `â€¢ Instructions: ${locationInfo.instructions}%0A`;
     }
 
     if (locationInfo.travelFee > 0) {
-      locationMessage += `• Travel Fee: R${locationInfo.travelFee}%0A`;
+      locationMessage += `â€¢ Travel Fee: R${locationInfo.travelFee}%0A`;
     }
 
     return locationMessage;
@@ -1584,10 +1611,10 @@ export default function HelperPage() {
 
   const handleBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setBookingData({
-      ...bookingData,
+    setBookingData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value
-    });
+    }));
   };
 
   // Handle service selection
@@ -1825,47 +1852,48 @@ export default function HelperPage() {
     // Enhanced location handling for quick booking
     const locationInfo = handleLocationInfo(bookingData, helper);
 
-    let message = `*📅 QUICK BOOKING REQUEST*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*👤 CLIENT DETAILS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `👤 *Name:* ${bookingData.name}%0A`;
-    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
-    if (bookingData.date) message += `📅 *Date:* ${bookingData.date}%0A`;
-    if (bookingData.time) message += `⏰ *Time:* ${bookingData.time}%0A%0A`;
+    let message = `*ðŸ“… QUICK BOOKING REQUEST*%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `*ðŸ‘¤ CLIENT DETAILS*%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `ðŸ‘¤ *Name:* ${bookingData.name}%0A`;
+    message += `ðŸ“ž *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
+    if (bookingData.date) message += `ðŸ“… *Date:* ${bookingData.date}%0A`;
+    if (bookingData.time) message += `â° *Time:* ${bookingData.time}%0A%0A`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*💼 SERVICE SUMMARY*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `⚒️ *Provider:* ${providerDisplayName}%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `*ðŸ’¼ SERVICE SUMMARY*%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `âš’ï¸ *Provider:* ${providerDisplayName}%0A`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `📜 *${s.name}:* R${s.price}%0A`;
+          const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
+          message += `ðŸ“œ *${s.name}:* ${priceStr}%0A`;
         } else {
-          message += `📜 *${id}*%0A`;
+          message += `ðŸ“œ *${id}*%0A`;
         }
       });
     }
-    message += `💵 *TOTAL: R${totalPrice}*%0A%0A`;
+    message += `ðŸ’µ *TOTAL: R${totalPrice}*%0A%0A`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*📍 LOCATION*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `📌 *Type:* ${locationInfo.displayName}%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `*ðŸ“ LOCATION*%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `ðŸ“Œ *Type:* ${locationInfo.displayName}%0A`;
     if (locationInfo.address) {
-      message += `🏠 *Address:* ${locationInfo.address}%0A`;
+      message += `ðŸ  *Address:* ${locationInfo.address}%0A`;
       const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
+      if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}%0A`;
     }
     message += `%0A`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `*⚡ QUICK ACTIONS*%0A`;
-    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
-    if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    message += `*âš¡ QUICK ACTIONS*%0A`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
+    if (acceptLink) message += `âœ… *ACCEPT:*%0A${acceptLink}%0A%0A`;
+    if (declineLink) message += `âŒ *REJECT:*%0A${declineLink}%0A%0A`;
 
     message += `_Sent via loopOut_`;
 
@@ -1873,7 +1901,9 @@ export default function HelperPage() {
     
     // Determine device type
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+    const requestLocation = bookingData.locationOption === 'comeToYou'
+      ? (bookingData.address || locationInfo.address || '')
+      : (bookingData.address || '');
 
     const bookingToSave = {
       userId: currentUser?._id || "guest",
@@ -1886,6 +1916,7 @@ export default function HelperPage() {
       subtype: helper.type,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption || 'comeToYou',
       status: 'pending',
       type: 'helper'
     };
@@ -1903,7 +1934,7 @@ export default function HelperPage() {
     }).then(async (res) => {
       if (res.ok) {
         pushPhoneNotification({
-          title: '🎉 Booking Request Sent',
+          title: 'ðŸŽ‰ Booking Request Sent',
           message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
@@ -1970,8 +2001,14 @@ export default function HelperPage() {
       return;
     }
 
-    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, 60)) {
-      alert("This time slot is already booked. Please choose an available time.");
+    if (!bookingData.date || !bookingData.time || !bookingData.durationHours) {
+      alert("Please choose a booking date, start time, and service duration.");
+      return;
+    }
+
+    const durationMinutes = getSelectedDurationHours() * 60;
+    if (isTimeSlotBooked(bookingData.date, bookingData.time, durationMinutes)) {
+      alert("That time overlaps another booking for the selected duration. Please choose another time.");
       return;
     }
 
@@ -2067,111 +2104,113 @@ export default function HelperPage() {
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
     // Build the main WhatsApp message with premium structure
-    let message = `*✨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* ✨\n\n`;
+    let message = `*âœ¨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* âœ¨\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*👤 CLIENT DETAILS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `👤 *Name:* ${bookingData.name}\n`;
-    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
-    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
-    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n`;
-    if (bookingData.selectedPerformer) message += `👤 *Performer:* ${bookingData.selectedPerformer}\n\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*ðŸ‘¤ CLIENT DETAILS*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `ðŸ‘¤ *Name:* ${bookingData.name}\n`;
+    message += `ðŸ“ž *Phone:* ${bookingData.phone || 'Not provided'}\n`;
+    message += `ðŸ“… *Date:* ${bookingData.date || 'Not specified'}\n`;
+    message += `â° *Time:* ${bookingData.time || 'Not specified'}\n`;
+    message += `âŒ› *Duration:* ${getSelectedDurationLabel()}\n`;
+    if (bookingData.serviceFrequency) message += `ðŸ”„ *Frequency:* ${bookingData.serviceFrequency}\n`;
+    if (bookingData.selectedPerformer) message += `ðŸ‘¤ *Performer:* ${bookingData.selectedPerformer}\n\n`;
     else message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💼 SERVICE SUMMARY*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `⚒️ *Service:* ${providerDisplayName}\n`;
-    message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*ðŸ’¼ SERVICE SUMMARY*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `âš’ï¸ *Service:* ${providerDisplayName}\n`;
+    message += `ðŸ“‹ *Type:* ${getProfessionalTitle(helper.type)}\n`;
 
     // Add selected services
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `📜 *${s.name}:* R${s.price}\n`;
+          const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
+          message += `ðŸ“œ *${s.name}:* ${priceStr}\n`;
         } else {
-          message += `📜 *${id}*\n`;
+          message += `ðŸ“œ *${id}*\n`;
         }
       });
-      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `ðŸ’µ *TOTAL PRICE: R${totalPrice}*\n`;
     } else {
-      message += `💵 *Base Price:* R${helper.regularPrice}\n`;
-      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `ðŸ’µ *Base Price:* R${helper.regularPrice}\n`;
+      message += `ðŸ’µ *TOTAL PRICE: R${totalPrice}*\n`;
     }
 
     // Add service-specific details (Barber, Chef, etc.)
     if (helper.type === 'barber' || helper.type === 'barbar') {
-      if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
-      if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
+      if (bookingData.selectedHaircut) message += `âœ‚ï¸ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
+      if (bookingData.beardStyle) message += `ðŸ§” *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
     } else if (helper.type === 'chef' || helper.type === 'cooking') {
-      message += `\n🎉 *EVENT & FUNCTION DETAILS:*\n`;
-      if (bookingData.functionType) message += `🎈 *Function Type:* ${bookingData.functionType}\n`;
-      if (bookingData.numberOfGuests) message += `👥 *Number of Guests:* ${bookingData.numberOfGuests} Guests\n`;
-      if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `🌍 *Cuisine Preference:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
-      if (bookingData.dietaryRestrictions) message += `🥗 *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
-      if (bookingData.cookingEquipment) message += `🍳 *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
-      if (bookingData.ingredientsProvided) message += `🛒 *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
+      message += `\nðŸŽ‰ *EVENT & FUNCTION DETAILS:*\n`;
+      if (bookingData.functionType) message += `ðŸŽˆ *Function Type:* ${bookingData.functionType}\n`;
+      if (bookingData.numberOfGuests) message += `ðŸ‘¥ *Number of Guests:* ${bookingData.numberOfGuests} Guests\n`;
+      if (bookingData.mealType) message += `ðŸ½ï¸ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
+      if (bookingData.cuisinePreference) message += `ðŸŒ *Cuisine Preference:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.dietaryRestrictions) message += `ðŸ¥— *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
+      if (bookingData.cookingEquipment) message += `ðŸ³ *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
+      if (bookingData.ingredientsProvided) message += `ðŸ›’ *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
     } else if (helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') {
-      message += `\n🧹 *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
-      if (bookingData.houseSize) message += `🏠 *Property Size:* ${bookingData.houseSize}\n`;
-      if (bookingData.numberOfBedrooms) message += `🛏️ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
-      if (bookingData.numberOfBathrooms) message += `🚿 *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
-      if (bookingData.cleaningSuppliesProvided) message += `🧼 *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
-      if (bookingData.hasPets) message += `🐾 *Pets in House:* ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
-      if (bookingData.ironingLoad) message += `👔 *Ironing/Laundry Load:* ${bookingData.ironingLoad}\n`;
+      message += `\nðŸ§¹ *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
+      if (bookingData.houseSize) message += `ðŸ  *Property Size:* ${bookingData.houseSize}\n`;
+      if (bookingData.numberOfBedrooms) message += `ðŸ›ï¸ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
+      if (bookingData.numberOfBathrooms) message += `ðŸš¿ *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
+      if (bookingData.cleaningSuppliesProvided) message += `ðŸ§¼ *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
+      if (bookingData.hasPets) message += `ðŸ¾ *Pets in House:* ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
+      if (bookingData.ironingLoad) message += `ðŸ‘” *Ironing/Laundry Load:* ${bookingData.ironingLoad}\n`;
     } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
-      if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
-      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
-      message += `⚡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? '🔴 URGENT — Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible — No rush' : '🟡 Normal priority'}\n`;
-      if (bookingData.handymanJobDescription) message += `📋 *Job Description:* ${bookingData.handymanJobDescription}\n`;
+      if (bookingData.handymanJobType) message += `ðŸ”¨ *Job Type:*      ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `ðŸ›’ *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
+      message += `âš¡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? 'ðŸ”´ URGENT â€” Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? 'ðŸŸ¢ Flexible â€” No rush' : 'ðŸŸ¡ Normal priority'}\n`;
+      if (bookingData.handymanJobDescription) message += `ðŸ“‹ *Job Description:* ${bookingData.handymanJobDescription}\n`;
     }
     message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*📍 LOCATION & NAVIGATION*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📌 *Type:* ${locationInfo.displayName}\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*ðŸ“ LOCATION & NAVIGATION*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `ðŸ“Œ *Type:* ${locationInfo.displayName}\n`;
     if (locationInfo.address && locationInfo.address !== 'Address not specified') {
-      message += `🏠 *Address:* ${locationInfo.address}\n`;
+      message += `ðŸ  *Address:* ${locationInfo.address}\n`;
       const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}\n`;
     }
-    if (locationInfo.travelFee > 0) message += `🚗 *Travel Fee:* R${locationInfo.travelFee}\n`;
+    if (locationInfo.travelFee > 0) message += `ðŸš— *Travel Fee:* R${locationInfo.travelFee}\n`;
     message += `\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*🍴 PROVISIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
-    message += `⚡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*ðŸ´ PROVISIONS*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `ðŸ½ï¸ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? 'âœ… Yes' : 'âŒ No'}\n`;
+    message += `âš¡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? 'âœ… Yes' : 'âŒ No'}\n\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💬 COMMENTS & NOTES*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*ðŸ’¬ COMMENTS & NOTES*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `ðŸ“ ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n\n`;
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📎 ATTACHMENTS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+      message += `*ðŸ“Ž ATTACHMENTS*\n`;
+      message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
       uploadedFiles.forEach((file) => {
-        message += `• ${file.name}: ${file.url}\n`;
+        message += `â€¢ ${file.name}: ${file.url}\n`;
       });
       message += `\n`;
     }
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*⚡ QUICK ACTIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    message += `*âš¡ QUICK ACTIONS*\n`;
+    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+    if (acceptLink) message += `âœ… *ACCEPT:*\n${acceptLink}\n\n`;
+    if (declineLink) message += `âŒ *REJECT:*\n${declineLink}\n\n`;
 
-    message += `🔐 *Verification Code:* ${verificationCode}\n`;
+    message += `ðŸ” *Verification Code:* ${verificationCode}\n`;
     message += `_Sent via loopOut_`;
 
     // Open WhatsApp with properly encoded message
@@ -2194,22 +2233,24 @@ export default function HelperPage() {
     if (helper.type === 'transport' && bookingData.specialRequirements) {
       const requirements = bookingData.specialRequirements.toLowerCase();
       if (requirements.includes('pretor') && requirements.includes('johan')) {
-        bookingSubtype = `Route: Pretoria ↔ JHB`;
+        bookingSubtype = `Route: Pretoria â†” JHB`;
       }
     }
 
     // Determine device type
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+    const requestLocation = bookingData.locationOption === 'comeToYou'
+      ? (bookingData.address || locationInfo.address || '')
+      : (bookingData.address || '');
 
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
       startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
-      endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      endDate: getBookingEndDateTime(),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message: message, // Save full structured message preserving client details, services, location, provisions, and comments & notes
       subtype: bookingSubtype,
       numberOfGuests: bookingData.numberOfGuests || undefined,
       functionType: bookingData.functionType || undefined,
@@ -2218,6 +2259,7 @@ export default function HelperPage() {
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption || 'comeToYou',
       status: 'pending',
       type: 'helper'
     };
@@ -2234,7 +2276,7 @@ export default function HelperPage() {
     }).then(async (res) => {
       if (res.ok) {
         pushPhoneNotification({
-          title: '🎉 Booking Request Sent',
+          title: 'ðŸŽ‰ Booking Request Sent',
           message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
@@ -2510,7 +2552,7 @@ export default function HelperPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="🧰" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
+      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="ðŸ§°" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
 
       <ListingDetailShell>
         {/* Content Section */}
@@ -2558,8 +2600,8 @@ export default function HelperPage() {
                 <ClockIcon className="w-3.5 h-3.5" /> Open
               </span>
             )}
-            <button onClick={() => setShowCommentsPanel(true)} className="text-sm text-rose-500 underline hover:text-rose-700 ml-1 font-medium">
-              View reviews
+            <button onClick={() => document.getElementById('helper-review-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="text-sm text-rose-500 underline hover:text-rose-700 ml-1 font-medium">
+              Browse reviews
             </button>
           </div>
         </div>
@@ -2583,7 +2625,7 @@ export default function HelperPage() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-base font-semibold text-slate-900">Hosted by {accountOwnerName}</span>
-                  <span className="mt-1 block text-sm text-slate-500">Account owner · Worker: {providerDisplayName}</span>
+                  <span className="mt-1 block text-sm text-slate-500">Account owner Â· Worker: {providerDisplayName}</span>
                 </span>
               </Link>
               <button
@@ -2608,7 +2650,7 @@ export default function HelperPage() {
                 {isVerifiedProvider && (
                   <div className="flex items-start gap-4">
                     <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">This provider’s account has been verified by LoopOut.</p></div>
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">This providerâ€™s account has been verified by LoopOut.</p></div>
                   </div>
                 )}
                 {helper.operatingHours && (
@@ -2803,7 +2845,7 @@ export default function HelperPage() {
             {galleryImages.length > 0 && (
               <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-portfolio-title">
                 <div className="mb-4 flex items-end justify-between gap-4">
-                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider’s work</p></div>
+                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this providerâ€™s work</p></div>
                   <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {galleryImages.length}</button>
                 </div>
                 <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
@@ -2855,117 +2897,120 @@ export default function HelperPage() {
 
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
-              <div className="flex items-center gap-2 mb-8">
+              <button type="button" onClick={() => document.getElementById('helper-review-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-slate-200 px-4 py-4 text-left transition hover:bg-slate-50 dark:border-gray-700 dark:hover:bg-gray-900" aria-label="Browse client reviews">
                 <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {hasRating ? ratingValue.toFixed(1) : 'New'} · {commentCount} reviews
-                </h2>
-              </div>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                    <span>{hasRating ? ratingValue.toFixed(1) : 'New'}</span>
+                    <span className="text-slate-400" aria-hidden="true">&middot;</span>
+                    <span>{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-gray-400">Swipe through client reviews</span>
+                </span>
+                <ChevronRightIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
+              </button>
+
+              <Swiper
+                aria-label="Average ratings by category"
+                slidesPerView={3.15}
+                spaceBetween={8}
+                breakpoints={{ 640: { slidesPerView: 5.2 }, 1024: { slidesPerView: 7 } }}
+                freeMode={true}
+                modules={[FreeMode]}
+                className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0"
+              >
+                {[
+                  ['⏱️', 'Punctual & on time', ratings?.punctuality],
+                  ['✨', 'Exceptional quality', ratings?.quality],
+                  ['💬', 'Great communication', ratings?.communication],
+                  ['🧹', 'Clean & organised', ratings?.cleanliness],
+                  ['🤝', 'Friendly & respectful', ratings?.respectfulness],
+                  ['💰', 'Great value', ratings?.value],
+                  ['⭐', 'Highly recommended', ratings?.recommendation]
+                ].map(([emoji, label, rawScore]) => {
+                  const score = Number(rawScore) || 0;
+                  return <SwiperSlide key={label} className="h-auto"><div title={label} className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white px-1.5 py-2 text-center dark:border-gray-700 dark:bg-gray-900"><span aria-hidden="true" className="text-lg">{emoji}</span><span className="text-[10px] font-bold tabular-nums text-slate-800 dark:text-gray-100">{score ? `${score.toFixed(1)}/5` : '—/5'}</span><span className="sr-only">{label}</span></div></SwiperSlide>;
+                })}
+              </Swiper>
 
               {commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 dark:bg-gray-700 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 dark:bg-white rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm text-gray-900 dark:text-white">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 dark:bg-gray-700 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 dark:bg-white rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Top Comments Swiper */}
+                  {/* Fade-in comment cards */}
                   {topComments.length > 0 && (
-                    <div className="mb-8">
-                      <Swiper
-                        spaceBetween={16}
-                        slidesPerView={1.1}
-                        breakpoints={{ 
-                          640: { slidesPerView: 2.1 },
-                          1024: { slidesPerView: 3.2 }
-                        }}
-                        freeMode={true}
-                        modules={[FreeMode]}
-                        className="-mx-4 px-4 sm:mx-0 sm:px-0"
-                      >
-                        {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
-                          
-                          return (
+                    <>
+                    <Swiper
+                      id="helper-review-cards"
+                      spaceBetween={16}
+                      slidesPerView={1.08}
+                      breakpoints={{ 640: { slidesPerView: 2.1 }, 1024: { slidesPerView: 2.4 } }}
+                      freeMode={true}
+                      modules={[FreeMode]}
+                      className="mb-8 -mx-4 px-4 scroll-mt-24 sm:mx-0 sm:px-0"
+                    >
+                      {topComments.map((comment, idx) => {
+                        const commentRatingFields = ['cleanlinessRating', 'communicationRating', 'punctualityRating', 'qualityRating', 'respectfulnessRating', 'valueRating', 'recommendationRating'];
+                        const commentRatings = commentRatingFields.map((field) => Number(comment[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+                        const rating = commentRatings.length ? commentRatings.reduce((sum, value) => sum + value, 0) / commentRatings.length : 0;
+
+                        return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white dark:from-gray-900 dark:to-gray-800 border border-[#EBEBEB] dark:border-gray-700 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                              <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-4">
-                                  <div className="flex items-center gap-3">
-                                    <img 
-                                      src={comment.userAvatar || '/default-avatar.jpg'} 
-                                      alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-700 shadow-sm"
-                                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
-                                    />
-                                    <div>
-                                      <h4 className="font-semibold text-[#222222] dark:text-white leading-tight">{comment.userName}</h4>
-                                      <p className="text-sm text-[#717171] dark:text-gray-400 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4 mb-4">
+                          <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-40px' }}
+                            transition={{ duration: 0.45, delay: idx * 0.07, ease: 'easeOut' }}
+                            className="h-full rounded-2xl border border-[#EBEBEB] dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm"
+                          >
+                            {/* Header */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <img
+                                src={comment.userAvatar || '/default-avatar.jpg'}
+                                alt={comment.userName}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-gray-700 shadow-sm flex-shrink-0"
+                                onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{comment.userName}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
                                   <div className="flex items-center">
                                     {[...Array(5)].map((_, i) => (
-                                      <FaStar 
-                                        key={i} 
-                                        className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`} 
+                                      <FaStar
+                                        key={i}
+                                        className={`text-[10px] ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`}
                                       />
                                     ))}
                                   </div>
-                                  {comment.likes?.length > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
-                                      <FaHeart />
-                                      {comment.likes.length}
-                                    </div>
-                                  )}
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">{getRelativeTime(comment.createdAt)}</span>
                                 </div>
-                                <p className="text-gray-700 dark:text-gray-300 line-clamp-4 leading-relaxed whitespace-pre-line">
-                                  {comment.content}
-                                </p>
                               </div>
                             </div>
+                              <div className="mb-3 flex items-center gap-2">
+                                <div className="flex items-center">
+                                  {[...Array(5)].map((_, i) => <FaStar key={i} className={`text-[10px] ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`} />)}
+                                </div>
+                                <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{rating ? `${rating.toFixed(1)} / 5` : 'Review'}</span>
+                              </div>
+                            {/* Comment text only */}
+                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line line-clamp-5">
+                              {comment.content}
+                            </p>
+                          </motion.div>
                           </SwiperSlide>
-                        )})}
-                      </Swiper>
-                    </div>
+                        );
+                      })}
+                    </Swiper>
+                    {commentCount > 10 && (
+                      <button type="button" onClick={() => setShowAllReviewsPanel(true)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 sm:w-auto">
+                        See all {commentCount} reviews
+                      </button>
+                    )}
+                    </>
                   )}
                 </>
               ) : (
                 <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 dark:border-gray-700 dark:text-white rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
             </div>
 
           </div>
@@ -3218,11 +3263,22 @@ export default function HelperPage() {
         <CommentsSidePanelHelper
           helperId={helper._id}
           onClose={() => setShowCommentsPanel(false)}
+          totalComments={commentCount}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
           onAnalyzeComments={analyzeCommentsWithAI}
           commentAnalysis={commentAnalysis}
           analyzingComments={analyzingComments}
+        />
+      )}
+      {showAllReviewsPanel && (
+        <CommentsSidePanelHelper
+          helperId={helper._id}
+          onClose={() => setShowAllReviewsPanel(false)}
+          totalComments={commentCount}
+          onTotalComments={setCommentCount}
+          onRatingsChange={setRatings}
+          presentation="bottom"
         />
       )}
 

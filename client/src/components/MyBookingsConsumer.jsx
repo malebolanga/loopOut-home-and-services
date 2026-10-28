@@ -232,8 +232,9 @@ const BookingCard = ({ booking, onCancel, onCloseWork, onRate }) => {
           <div className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500">
             <div className="flex items-center gap-4">
                <div className="relative">
-                 <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center">
-                   <img src={booking.selectedPerformer ? (booking.performerImage || 'https://i.pravatar.cc/150?u=pro') : booking.proAvatar} alt={booking.selectedPerformer || booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
+                 <div className="relative w-14 h-14 rounded-full bg-emerald-50 border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center text-emerald-800 font-bold">
+                   <span aria-hidden="true">{(booking.selectedPerformer || booking.proName || 'P').trim().charAt(0).toUpperCase()}</span>
+                   {(booking.performerImage || booking.proAvatar) && <img src={booking.performerImage || booking.proAvatar} alt={`${booking.selectedPerformer || booking.proName}'s profile`} className="absolute inset-0 h-full w-full object-cover" onError={(e) => e.currentTarget.remove()} />}
                  </div>
                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
                     <FaWhatsapp className="text-white text-[10px]" />
@@ -312,14 +313,15 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
               date: new Date(b.startDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }),
               time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               proName: b.listing ? (b.listing.userRef?.username || 'Host') : (b.helper?.name || b.service?.name || 'Pro'),
-              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.listing?.userRef?.avatar || b.helper?.userRef?.avatar || b.service?.userRef?.avatar || b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || '',
               proWhatsapp: b.phone || 'N/A',
               icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
               color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
               subtype: b.subtype || '',
               selectedPerformer: b.selectedPerformer,
               performerExperience: b.performerExperience,
-              performerImage: b.performerImage,
+              performerImage: b.performerImage || b.helper?.performers?.find((performer) => performer.name === b.selectedPerformer)?.image,
+              helper: b.helper,
               type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
               itemId: b.listing?._id || b.helper?._id || b.service?._id
             }));

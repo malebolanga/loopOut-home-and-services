@@ -18,6 +18,44 @@ const parsePriceFromText = (text) => {
     return null;
 };
 
+const extractAddressFromBookingMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return '';
+    const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
+
+    // 1. Try explicit "Address:" line (with optional emoji, markdown asterisks, or underscores)
+    const match = normalized.match(/(?:🏠|📍)?\s*(?:\*|_)?Address:?(?:\*|_)?\s*([^\r\n]+)/i);
+    if (match?.[1]?.trim()) {
+        const addr = match[1].trim().replace(/^[*_]+|[*_]+$/g, '');
+        if (addr && !addr.toLowerCase().startsWith('not specified') && !addr.toLowerCase().startsWith('undefined')) {
+            return addr;
+        }
+    }
+
+    // 2. Try extracting from Navigate URL query parameter
+    // e.g. Navigate: https://www.google.com/maps/search/?api=1&query=5%20tungstate%20street%20Madiba%20Park%20Polokwane%200600
+    const navMatch = normalized.match(/query=([^&\s\r\n]+)/i);
+    if (navMatch?.[1]) {
+        try {
+            const decoded = decodeURIComponent(navMatch[1]).replace(/\+/g, ' ').trim();
+            if (decoded) return decoded;
+        } catch (_e) {}
+    }
+
+    return '';
+};
+
+const extractLocationOptionFromMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return '';
+    const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
+    if (/client address|come to me|come to client|home service/i.test(normalized)) {
+        return 'comeToYou';
+    }
+    if (/provider(?:'s)? location|go to them|at the provider/i.test(normalized)) {
+        return 'goToThem';
+    }
+    return '';
+};
+
 const extractPriceInfo = (notification, priceMap = {}) => {
     if (!notification) return null;
 
@@ -73,6 +111,13 @@ const extractPriceInfo = (notification, priceMap = {}) => {
     };
 };
 
+const formatScheduleTime = (value) => {
+    if (!value) return 'Not provided';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Not provided';
+    return date.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
 export default function Notifications() {
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
@@ -81,6 +126,9 @@ export default function Notifications() {
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [bookingDetails, setBookingDetails] = useState(null);
     const [loadingBooking, setLoadingBooking] = useState(false);
+    const [foodOrderDetails, setFoodOrderDetails] = useState(null);
+    const [foodShopDetails, setFoodShopDetails] = useState(null);
+    const [loadingFoodOrder, setLoadingFoodOrder] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -167,6 +215,45 @@ export default function Notifications() {
         };
 
         fetchBookingDetails();
+    }, [selectedNotification, getToken]);
+
+    useEffect(() => {
+        let active = true;
+        const fetchFoodOrderDetails = async () => {
+            const notification = selectedNotification;
+            const orderId = notification?.data?.orderId;
+            const orderCode = notification?.data?.orderCode;
+            const isFoodNotification = notification?.type === 'food_order' || Boolean(orderId || orderCode);
+            setFoodOrderDetails(null);
+            setFoodShopDetails(null);
+            if (!isFoodNotification || (!orderId && !orderCode)) return;
+            setLoadingFoodOrder(true);
+            try {
+                const token = getToken();
+                const [ordersResponse, shopsResponse] = await Promise.all([
+                    fetch('/api/lunch/orders', { credentials: 'include', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
+                    fetch('/api/lunch/shops'),
+                ]);
+                const orders = ordersResponse.ok ? await ordersResponse.json() : [];
+                const shops = shopsResponse.ok ? await shopsResponse.json() : [];
+                const order = (Array.isArray(orders) ? orders : []).find((entry) =>
+                    String(entry._id || entry.id || '') === String(orderId || '') ||
+                    (orderCode && String(entry.orderCode || '') === String(orderCode))
+                );
+                if (!active) return;
+                if (order) {
+                    setFoodOrderDetails(order);
+                    const shop = (Array.isArray(shops) ? shops : []).find((entry) => String(entry._id || entry.id || '') === String(order.shopId || ''));
+                    setFoodShopDetails(shop || null);
+                }
+            } catch (err) {
+                console.error('Failed to fetch food order notification details:', err);
+            } finally {
+                if (active) setLoadingFoodOrder(false);
+            }
+        };
+        fetchFoodOrderDetails();
+        return () => { active = false; };
     }, [selectedNotification, getToken]);
 
     const fetchNotifications = async () => {
@@ -364,7 +451,7 @@ export default function Notifications() {
             if (goodsOrderId) {
                 navigate('/my-loopout');
             } else if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
-                navigate('/lunch');
+                navigate('/my-orders');
             } else if (notification.type === 'review' || canReview) {
                 if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
@@ -464,9 +551,35 @@ export default function Notifications() {
     const isPending = bookingDetails?.status === 'pending';
     const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
     const isCompleted = bookingDetails?.status === 'completed';
+    const cancelDeadline = bookingDetails?.startDate ? new Date(bookingDetails.startDate).getTime() - (48 * 60 * 60 * 1000) : NaN;
+    const canRequesterCancel = Number.isFinite(cancelDeadline) && Date.now() <= cancelDeadline;
 
     const itemType = bookingDetails?.listing ? 'listing' : bookingDetails?.helper ? 'helper' : bookingDetails?.service ? 'service' : 'event';
     const itemId = bookingDetails?.listing?._id || bookingDetails?.helper?._id || bookingDetails?.service?._id || bookingDetails?.event?._id;
+    // Show the image the host posted for this service/listing, not a worker or account avatar.
+    const bookingProviderImage = bookingDetails?.helper?.imageUrls?.[0] || bookingDetails?.service?.imageUrls?.[0] || bookingDetails?.event?.imageUrls?.[0] || bookingDetails?.listing?.imageUrls?.[0] || '';
+    const bookingProviderName = bookingDetails?.selectedPerformer || bookingDetails?.helper?.name || bookingDetails?.service?.name || bookingDetails?.service?.title || bookingDetails?.event?.title || bookingDetails?.listing?.userRef?.username || 'Service provider';
+    const messageAddress = extractAddressFromBookingMessage(bookingDetails?.message) || extractAddressFromBookingMessage(selectedNotification?.message);
+    const parsedLocOption = bookingDetails?.locationOption || selectedNotification?.data?.locationOption || extractLocationOptionFromMessage(bookingDetails?.message) || extractLocationOptionFromMessage(selectedNotification?.message) || '';
+    const customerWorkAddress = bookingDetails?.requestLocation || selectedNotification?.data?.requestLocation || selectedNotification?.data?.clientAddress || messageAddress || '';
+    const providerLocation = bookingDetails?.listing?.businessAddress || bookingDetails?.listing?.address || bookingDetails?.helper?.businessAddress || bookingDetails?.helper?.address || bookingDetails?.service?.businessAddress || bookingDetails?.service?.address || bookingDetails?.event?.businessAddress || bookingDetails?.event?.address || '';
+
+    // Match the WhatsApp booking format:
+    // When the client requested home service (comeToYou): client's address is used
+    // When the client visits the provider (goToThem): provider's location is used
+    const resolvedLocationOption = parsedLocOption || (customerWorkAddress ? 'comeToYou' : (providerLocation ? 'goToThem' : ''));
+    const isClientWorkLocation = resolvedLocationOption === 'comeToYou' || Boolean(customerWorkAddress);
+    const bookingLocation = isClientWorkLocation
+        ? (customerWorkAddress || providerLocation)
+        : (resolvedLocationOption === 'goToThem' ? (providerLocation || customerWorkAddress) : (customerWorkAddress || providerLocation));
+    const bookingTravelLabel = isClientWorkLocation
+        ? (isRequester ? 'Provider comes to you' : 'Client requested: Come to his place')
+        : (resolvedLocationOption === 'goToThem' ? (isRequester ? 'You go to the provider' : 'Client is coming to you') : '');
+
+    const foodLocation = foodOrderDetails?.fulfilment === 'delivery' ? foodOrderDetails?.deliveryAddress : foodShopDetails?.address;
+    const isFoodDetails = selectedNotification?.type === 'food_order' || Boolean(selectedNotification?.data?.orderId || selectedNotification?.data?.orderCode);
+    const detailLocation = isFoodDetails ? (foodLocation || '') : bookingLocation;
+    const detailMapLink = selectedNotification?.data?.mapLink || (detailLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detailLocation)}` : '');
 
     if (loading) {
         return (
@@ -683,15 +796,16 @@ export default function Notifications() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-end justify-center bg-gray-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
                         onClick={() => setSelectedNotification(null)}
                     >
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            initial={{ y: '100%', opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0 }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 260 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative"
+                            className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[92svh] overflow-hidden flex flex-col shadow-2xl relative"
                         >
                             <button
                                 onClick={() => setSelectedNotification(null)}
@@ -771,17 +885,28 @@ export default function Notifications() {
 
                                 {bookingDetails && !loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Booking Request Details</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">📋 Booking Request Details</h3>
+                                        <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-2xl dark:bg-gray-800">
+                                                <span aria-hidden="true">👤</span>
+                                                {bookingProviderImage && <img src={bookingProviderImage} alt={`${bookingProviderName}, service provider`} className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.remove(); }} />}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Service photo</p>
+                                                <p className="truncate font-semibold text-gray-900 dark:text-white">{bookingProviderName}</p>
+                                                {bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
+                                            </div>
+                                        </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Service / Listing</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">🧰 Service / Listing</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">
-                                                    {isRequester ? 'Provider / Host' : 'Client Name'}
+                                                    {isRequester ? '👤 Provider / Host' : '👤 Client Name'}
                                                 </p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {isRequester
@@ -790,7 +915,7 @@ export default function Notifications() {
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Total Price</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">💰 Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">
                                                     ZAR {Number(
                                                         selectedNotification?.data?.price ||
@@ -802,23 +927,83 @@ export default function Notifications() {
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Dates</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">📅 Date &amp; time</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
-                                                    {bookingDetails.startDate ? new Date(bookingDetails.startDate).toLocaleDateString() : 'N/A'} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `- ${new Date(bookingDetails.endDate).toLocaleDateString()}` : ''}
+                                                    {formatScheduleTime(bookingDetails.startDate)} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `– ${formatScheduleTime(bookingDetails.endDate)}` : ''}
                                                 </p>
                                             </div>
                                             {bookingDetails.phone && (
                                                 <div>
-                                                    <p className="text-sm text-gray-500 dark:text-white">Contact Number</p>
+                                                    <p className="text-sm text-gray-500 dark:text-white">📞 Contact Number</p>
                                                     <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.phone}</p>
                                                 </div>
                                             )}
-                                            {bookingDetails.requestLocation && (
-                                                <div>
-                                                    <p className="text-sm text-gray-500 dark:text-white">Location</p>
-                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.requestLocation}</p>
+                                            <div className="sm:col-span-2 rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 sm:p-5 dark:border-rose-900/50 dark:bg-rose-950/20 shadow-xs">
+                                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5 mb-3">
+                                                    <p className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                                                        <span>📍</span>
+                                                        <span>LOCATION &amp; NAVIGATION</span>
+                                                    </p>
+                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                                                        isClientWorkLocation
+                                                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
+                                                            : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300'
+                                                    }`}>
+                                                        {isClientWorkLocation
+                                                            ? (isRequester ? '🏠 Provider comes to you' : '🏠 Client requested: Come to his place')
+                                                            : (resolvedLocationOption === 'goToThem' ? (isRequester ? '🚶 You go to provider' : '🚶 Client is coming to you') : '📍 Service location')}
+                                                    </span>
                                                 </div>
-                                            )}
+
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                            📍 Type
+                                                        </p>
+                                                        <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                                            {isClientWorkLocation
+                                                                ? (isRequester ? "Client Address (Provider comes to your address)" : "Client Address (Client requested: Come to his place)")
+                                                                : (resolvedLocationOption === 'goToThem' ? "Provider Location (Client is coming to you)" : "Service Location")}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                            🏠 Address
+                                                        </p>
+                                                        <p className="mt-0.5 text-sm font-bold text-gray-900 dark:text-white break-words">
+                                                            {detailLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}
+                                                        </p>
+                                                        {isClientWorkLocation && detailLocation && (
+                                                            <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-300">
+                                                                This is the address the client entered for the service visit.
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {detailMapLink && (
+                                                        <div className="pt-1">
+                                                            <a
+                                                                href={detailMapLink}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs"
+                                                            >
+                                                                <span>🗺️</span>
+                                                                <span>Navigate in Google Maps</span>
+                                                                <span aria-hidden="true">&rarr;</span>
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {(bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.message) && <div className="sm:col-span-2 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                <p className="text-sm text-gray-500 dark:text-white">📝 Services and booking details</p>
+                                                {bookingDetails.subtype && <p className="mt-1 font-semibold text-gray-900 dark:text-white">{bookingDetails.subtype}</p>}
+                                                {bookingDetails.functionType && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{bookingDetails.functionType}</p>}
+                                                {bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
+                                                {bookingDetails.message && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message).slice(0, 800)}</p>}
+                                            </div>}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
                                                     <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>
@@ -895,7 +1080,9 @@ export default function Notifications() {
                                                         {/* 2. REQUESTER ACTIONS: If user requested the booking, show ONLY "Cancel your booking" */}
                                                         {isRequester && (isPending || isConfirmed) && (
                                                             <button
+                                                                disabled={!canRequesterCancel}
                                                                 onClick={async () => {
+                                                                    if (!canRequesterCancel) return;
                                                                     if (!window.confirm('Are you sure you want to cancel your booking?')) return;
                                                                     try {
                                                                         const token = getToken();
@@ -917,9 +1104,9 @@ export default function Notifications() {
                                                                         console.error('Failed to cancel booking:', err);
                                                                     }
                                                                 }}
-                                                                className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200 shadow-sm"
+                                                                className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200 shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                                                             >
-                                                                Cancel your booking
+                                                                {canRequesterCancel ? 'Cancel your booking' : 'Cancellation closes 48 hours before start'}
                                                             </button>
                                                         )}
 
@@ -1000,6 +1187,51 @@ export default function Notifications() {
                                         </div>
                                     </div>
                                 )}
+                                {(selectedNotification.type === 'food_order' || selectedNotification.data?.orderId || selectedNotification.data?.orderCode) && (
+                                    <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">Food order details</p>
+                                                <h3 className="mt-1 text-base font-bold text-slate-900 dark:text-white">{foodOrderDetails?.shopName || foodShopDetails?.name || 'Your food order'}</h3>
+                                                {(foodOrderDetails?.orderCode || selectedNotification.data?.orderCode) && <p className="mt-1 text-xs text-slate-500 dark:text-gray-300">Order #{foodOrderDetails?.orderCode || selectedNotification.data.orderCode}</p>}
+                                            </div>
+                                            {(foodOrderDetails?.status || selectedNotification.data?.status) && <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:bg-gray-900 dark:text-amber-200">{foodOrderDetails?.status || selectedNotification.data.status}</span>}
+                                        </div>
+
+                                        {loadingFoodOrder ? <div className="mt-4 animate-pulse space-y-2"><div className="h-4 w-2/3 rounded bg-amber-100 dark:bg-amber-900/50" /><div className="h-4 w-1/2 rounded bg-amber-100 dark:bg-amber-900/50" /></div> : foodOrderDetails ? <>
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{foodOrderDetails.fulfilment === 'delivery' ? 'Delivery' : 'Collection'} time</p>
+                                                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{foodOrderDetails.scheduledFor ? formatScheduleTime(foodOrderDetails.scheduledFor) : 'As soon as the shop can prepare it'}</p>
+                                                    {foodOrderDetails.createdAt && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">Placed {formatScheduleTime(foodOrderDetails.createdAt)}</p>}
+                                                </div>
+                                                <div className="rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{foodOrderDetails.fulfilment === 'delivery' ? 'Delivery address' : 'Shop location'}</p>
+                                                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{detailLocation || 'Location not available'}</p>
+                                                    {foodShopDetails?.phone && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">Shop contact: {foodShopDetails.phone}</p>}
+                                                    {detailMapLink && <a href={detailMapLink} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 underline underline-offset-2 dark:text-rose-300">📍 Open location in map</a>}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Items in your order</p>
+                                                <div className="mt-2 space-y-2">
+                                                    {(foodOrderDetails.items || []).map((item, index) => <div key={`${item.id || item.name}-${index}`} className="flex items-start justify-between gap-3 text-sm">
+                                                        <div><span className="font-semibold text-slate-900 dark:text-white">{item.quantity || 1} × {item.name}</span>{item.sides?.length > 0 && <p className="text-xs text-slate-500 dark:text-gray-400">{item.sides.join(', ')}</p>}</div>
+                                                        <span className="shrink-0 font-semibold text-slate-700 dark:text-gray-200">R{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</span>
+                                                    </div>)}
+                                                </div>
+                                                <div className="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm dark:border-gray-800"><span className="font-bold text-slate-600 dark:text-gray-300">Order total</span><span className="font-black text-slate-900 dark:text-white">R{Number(foodOrderDetails.total || 0).toFixed(2)}</span></div>
+                                            </div>
+
+                                            {(foodOrderDetails.orderComments || foodOrderDetails.deliveryNotes) && <div className="mt-3 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Order description &amp; instructions</p>
+                                                {foodOrderDetails.orderComments && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-gray-200">{foodOrderDetails.orderComments}</p>}
+                                                {foodOrderDetails.deliveryNotes && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-gray-300">Delivery: {foodOrderDetails.deliveryNotes}</p>}
+                                            </div>}
+                                        </> : <p className="mt-3 text-sm text-slate-600 dark:text-gray-300">Order details could not be loaded. Check your orders page for the latest status.</p>}
+                                    </section>
+                                )}
                             </div>
 
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 sm:gap-4 mt-4 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
@@ -1036,6 +1268,8 @@ export default function Notifications() {
                                             ? '⭐ Write Review' 
                                             : selectedNotification.data?.goodsOrderId || selectedNotification.type === 'food_order'
                                             ? '🛍️ Track Order'
+                                            : selectedNotification.type === 'booking'
+                                            ? 'Open booking page'
                                             : 'View Details'}
                                     </button>
                                 )}

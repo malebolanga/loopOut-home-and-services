@@ -1,11 +1,13 @@
 import Event from '../models/event.model.js';
+import Booking from '../models/Booking.js';
 import EventComment from '../models/event-comment.model.js';
+import mongoose from 'mongoose';
 import { errorHandler } from '../utils/error.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createEventComment = async (req, res, next) => {
   try {
-    const { content, eventId, userName, userAvatar, rating } = req.body;
+    const { content, eventId, bookingId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !eventId) {
@@ -17,8 +19,14 @@ export const createEventComment = async (req, res, next) => {
       return next(errorHandler(404, 'Event not found'));
     }
 
+    if (!bookingId || !mongoose.Types.ObjectId.isValid(bookingId)) return next(errorHandler(400, 'A completed booking is required to leave an event review'));
+    const completedBooking = await Booking.findOne({ _id: bookingId, user: userId, event: eventId, status: 'completed' }).select('_id');
+    if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this event booking can review it'));
+    if (await EventComment.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
+
     const comment = new EventComment({
       content,
+      bookingId,
       eventId,
       userId,
       userName: userName || req.user.username,
@@ -50,6 +58,7 @@ export const createEventComment = async (req, res, next) => {
 
     res.status(201).json(comment);
   } catch (error) {
+    if (error?.code === 11000) return next(errorHandler(409, 'This booking already has a review'));
     next(errorHandler(500, error.message || 'Failed to create event comment'));
   }
 };

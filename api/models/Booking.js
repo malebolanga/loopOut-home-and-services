@@ -25,6 +25,9 @@ const bookingSchema = new mongoose.Schema({
   performerImage: { type: String },
   deviceType: { type: String },
   requestLocation: { type: String },
+  locationOption: { type: String, enum: ['comeToYou', 'goToThem'] },
+  remindersSent: { type: [String], default: [] },
+  // Legacy flag retained for old records; new reminders use remindersSent per stage.
   reminderSent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });

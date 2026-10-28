@@ -55,7 +55,8 @@ export const createBooking = async (req, res) => {
       startDate, endDate,
       totalPrice, price,
       phone, message, subtype, numberOfGuests, functionType,
-      selectedPerformer, performerExperience, performerImage, numberOfRooms
+      selectedPerformer, performerExperience, performerImage, numberOfRooms,
+      requestLocation, locationOption
     } = req.body;
 
     const mainId = listingId || helperId || serviceId || eventId;
@@ -175,6 +176,8 @@ export const createBooking = async (req, res) => {
       selectedPerformer,
       performerExperience,
       performerImage,
+      requestLocation: typeof requestLocation === 'string' ? requestLocation.trim().slice(0, 500) : undefined,
+      locationOption: ['comeToYou', 'goToThem'].includes(locationOption) ? locationOption : undefined,
       status: 'pending'
     });
 
@@ -191,6 +194,10 @@ export const createBooking = async (req, res) => {
     const itemType = listingId ? 'listing' : helperId ? 'helper' : serviceId ? 'service' : 'event';
     const itemId = listingId || helperId || serviceId || eventId;
     const hostUserId = item ? (item.userRef?._id || item.userRef || item.creator?._id || item.creator) : null;
+    const bookingAddress = newBooking.requestLocation;
+    const bookingLocationOption = newBooking.locationOption;
+    const bookingMapLink = bookingAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingAddress)}` : undefined;
+
     try {
       if (hostUserId) {
         await new Notification({
@@ -198,7 +205,17 @@ export const createBooking = async (req, res) => {
           type: 'booking',
           title: 'New Booking Request',
           message: `You have a new booking request for "${itemName}" - ZAR ${resolvedTotalPrice.toLocaleString()}`,
-          data: { bookingId: newBooking._id, itemType, itemId, price: resolvedTotalPrice, totalPrice: resolvedTotalPrice }
+          data: {
+            bookingId: newBooking._id,
+            itemType,
+            itemId,
+            price: resolvedTotalPrice,
+            totalPrice: resolvedTotalPrice,
+            requestLocation: bookingAddress,
+            clientAddress: bookingAddress,
+            locationOption: bookingLocationOption,
+            mapLink: bookingMapLink
+          }
         }).save();
       }
     } catch (notifErr) {
@@ -212,7 +229,17 @@ export const createBooking = async (req, res) => {
           type: 'booking',
           title: 'Booking Request Placed',
           message: `Your booking request for "${itemName}" has been submitted (ZAR ${resolvedTotalPrice.toLocaleString()}).`,
-          data: { bookingId: newBooking._id, itemType, itemId, price: resolvedTotalPrice, totalPrice: resolvedTotalPrice }
+          data: {
+            bookingId: newBooking._id,
+            itemType,
+            itemId,
+            price: resolvedTotalPrice,
+            totalPrice: resolvedTotalPrice,
+            requestLocation: bookingAddress,
+            clientAddress: bookingAddress,
+            locationOption: bookingLocationOption,
+            mapLink: bookingMapLink
+          }
         }).save();
       }
     } catch (notifErr) {
@@ -332,10 +359,10 @@ export const getUserBookings = async (req, res) => {
     let bookings;
     try {
       bookings = await Booking.find({ user: userId })
-        .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
-        .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
-        .populate({ path: 'service', select: 'name title imageUrls address price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
-        .populate({ path: 'event', select: 'name title imageUrls address price userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'listing', select: 'name title imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'helper', select: 'name title imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'service', select: 'name title imageUrls address businessAddress location price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
+        .populate({ path: 'event', select: 'name title imageUrls address businessAddress location price userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
         .populate('user', 'username avatar email phone')
         .sort({ createdAt: -1 })
         .lean();

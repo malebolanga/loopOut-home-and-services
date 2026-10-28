@@ -1672,6 +1672,7 @@ export default function PhotographyHelperPage() {
       subtype: helper.type,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -1942,6 +1943,7 @@ export default function PhotographyHelperPage() {
       subtype: bookingSubtype,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };

@@ -18,6 +18,43 @@ const parsePriceFromText = (text) => {
     return null;
 };
 
+const extractAddressFromBookingMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return '';
+    const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
+    
+    // 1. Try explicit "Address:" line
+    const match = normalized.match(/(?:🏠|📍)?\s*(?:\*|_)?Address:?(?:\*|_)?\s*([^\r\n]+)/i);
+    if (match?.[1]?.trim()) {
+        const addr = match[1].trim().replace(/^[*_]+|[*_]+$/g, '');
+        if (addr && !addr.toLowerCase().startsWith('not specified') && !addr.toLowerCase().startsWith('undefined')) {
+            return addr;
+        }
+    }
+
+    // 2. Try extracting from Navigate URL query parameter
+    const navMatch = normalized.match(/query=([^&\s\r\n]+)/i);
+    if (navMatch?.[1]) {
+        try {
+            const decoded = decodeURIComponent(navMatch[1]).replace(/\+/g, ' ').trim();
+            if (decoded) return decoded;
+        } catch (_e) {}
+    }
+
+    return '';
+};
+
+const extractLocationOptionFromMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return '';
+    const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
+    if (/client address|come to me|come to client|home service/i.test(normalized)) {
+        return 'comeToYou';
+    }
+    if (/provider(?:'s)? location|go to them|at the provider/i.test(normalized)) {
+        return 'goToThem';
+    }
+    return '';
+};
+
 const extractPriceInfo = (notification, priceMap = {}) => {
     if (!notification) return null;
 
@@ -466,6 +503,17 @@ export default function Notifications() {
     const itemType = bookingDetails?.listing ? 'listing' : bookingDetails?.helper ? 'helper' : bookingDetails?.service ? 'service' : 'event';
     const itemId = bookingDetails?.listing?._id || bookingDetails?.helper?._id || bookingDetails?.service?._id || bookingDetails?.event?._id;
 
+    const messageAddress = extractAddressFromBookingMessage(bookingDetails?.message) || extractAddressFromBookingMessage(selectedNotification?.message);
+    const parsedLocOption = bookingDetails?.locationOption || selectedNotification?.data?.locationOption || extractLocationOptionFromMessage(bookingDetails?.message) || extractLocationOptionFromMessage(selectedNotification?.message) || '';
+    const customerWorkAddress = bookingDetails?.requestLocation || selectedNotification?.data?.requestLocation || selectedNotification?.data?.clientAddress || messageAddress || '';
+    const providerLocation = bookingDetails?.listing?.businessAddress || bookingDetails?.listing?.address || bookingDetails?.helper?.businessAddress || bookingDetails?.helper?.address || bookingDetails?.service?.businessAddress || bookingDetails?.service?.address || bookingDetails?.event?.businessAddress || bookingDetails?.event?.address || '';
+    const resolvedLocationOption = parsedLocOption || (customerWorkAddress ? 'comeToYou' : (providerLocation ? 'goToThem' : ''));
+    const isClientWorkLocation = resolvedLocationOption === 'comeToYou' || Boolean(customerWorkAddress);
+    const bookingLocation = isClientWorkLocation
+        ? (customerWorkAddress || providerLocation)
+        : (resolvedLocationOption === 'goToThem' ? (providerLocation || customerWorkAddress) : (customerWorkAddress || providerLocation));
+    const detailMapLink = selectedNotification?.data?.mapLink || (bookingLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingLocation)}` : '');
+
     if (loading) {
         return (
             <div className="app-safe-top max-w-4xl mx-auto px-4 py-8 animate-pulse">
@@ -811,12 +859,65 @@ export default function Notifications() {
                                                     <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.phone}</p>
                                                 </div>
                                             )}
-                                            {bookingDetails.requestLocation && (
-                                                <div>
-                                                    <p className="text-sm text-gray-500 dark:text-white">Location</p>
-                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.requestLocation}</p>
+                                            <div className="sm:col-span-2 rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 sm:p-5 dark:border-rose-900/50 dark:bg-rose-950/20 shadow-xs">
+                                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5 mb-3">
+                                                    <p className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+                                                        <span>📍</span>
+                                                        <span>LOCATION &amp; NAVIGATION</span>
+                                                    </p>
+                                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                                                        isClientWorkLocation
+                                                            ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
+                                                            : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300'
+                                                    }`}>
+                                                        {isClientWorkLocation
+                                                            ? (isRequester ? '🏠 Provider comes to you' : '🏠 Client requested: Come to his place')
+                                                            : (resolvedLocationOption === 'goToThem' ? (isRequester ? '🚶 You go to provider' : '🚶 Client is coming to you') : '📍 Service location')}
+                                                    </span>
                                                 </div>
-                                            )}
+
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                            📍 Type
+                                                        </p>
+                                                        <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                                            {isClientWorkLocation
+                                                                ? (isRequester ? "Client Address (Provider comes to your address)" : "Client Address (Client requested: Come to his place)")
+                                                                : (resolvedLocationOption === 'goToThem' ? "Provider Location (Client is coming to you)" : "Service Location")}
+                                                        </p>
+                                                    </div>
+
+                                                    <div>
+                                                        <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                                            🏠 Address
+                                                        </p>
+                                                        <p className="mt-0.5 text-sm font-bold text-gray-900 dark:text-white break-words">
+                                                            {bookingLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}
+                                                        </p>
+                                                        {isClientWorkLocation && bookingLocation && (
+                                                            <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-300">
+                                                                This is the address the client entered for the service visit.
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {detailMapLink && (
+                                                        <div className="pt-1">
+                                                            <a
+                                                                href={detailMapLink}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs"
+                                                            >
+                                                                <span>🗺️</span>
+                                                                <span>Navigate in Google Maps</span>
+                                                                <span aria-hidden="true">&rarr;</span>
+                                                            </a>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
                                                     <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>

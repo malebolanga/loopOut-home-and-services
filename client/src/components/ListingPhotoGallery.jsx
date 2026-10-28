@@ -35,7 +35,7 @@ export default function ListingPhotoGallery({
               src={photos[0]}
               alt={alt}
               className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.02]"
-              fetchPriority="high"
+              fetchpriority="high"
             />
             <span className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" aria-hidden="true" />
             <span className="absolute bottom-4 right-4 rounded-full bg-black/65 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm">

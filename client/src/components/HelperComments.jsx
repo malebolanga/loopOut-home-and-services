@@ -8,7 +8,9 @@ import { authenticatedFetch } from '../utils/authenticatedFetch';
 const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsChange, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
-  const [hasBooked, setHasBooked] = useState(false);
+  const [completedBookings, setCompletedBookings] = useState([]);
+  const [ratedBookingIds, setRatedBookingIds] = useState([]);
+  const [selectedBookingId, setSelectedBookingId] = useState('');
   const [isCheckingBooking, setIsCheckingBooking] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -30,15 +32,43 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
   const [ratings, setRatings] = useState({
     cleanliness: 0,
     staff: 0,
+    communication: 0,
+    punctuality: 0,
+    quality: 0,
+    respectfulness: 0,
+    value: 0,
+    recommendation: 0,
     overall: 0
   });
-  const [cleanlinessInput, setCleanlinessInput] = useState(5);
-  const [communicationInput, setCommunicationInput] = useState(5);
-
+  const [categoryRatings, setCategoryRatings] = useState({
+    punctualityRating: 0,
+    qualityRating: 0,
+    communicationRating: 0,
+    cleanlinessRating: 0,
+    respectfulnessRating: 0,
+    valueRating: 0,
+    recommendationRating: 0
+  });
+  const ratingCategories = [
+    { field: 'punctualityRating', label: '⏱️ Punctual & on time' },
+    { field: 'qualityRating', label: '✨ Work quality' },
+    { field: 'communicationRating', label: '💬 Communication' },
+    { field: 'cleanlinessRating', label: '🧹 Clean & organised' },
+    { field: 'respectfulnessRating', label: '🤝 Friendly & respectful' },
+    { field: 'valueRating', label: '💰 Great value' },
+    { field: 'recommendationRating', label: '⭐ Would recommend' }
+  ];
   const RATING_CATEGORIES = [
     { name: 'Cleanliness', icon: FaBroom },
-    { name: 'Staff', icon: FaUserFriends },
+    { name: 'Staff', icon: FaUserFriends }
   ];
+  const availableBookings = completedBookings.filter((booking) => !ratedBookingIds.includes(String(booking._id)));
+
+  useEffect(() => {
+    if (!availableBookings.some((booking) => String(booking._id) === selectedBookingId)) {
+      setSelectedBookingId(String(availableBookings[0]?._id || ''));
+    }
+  }, [availableBookings, selectedBookingId]);
 
   const fetchComments = useCallback(async () => {
     if (!helperId) return;
@@ -47,12 +77,13 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     setError(null);
     try {
       // If maxComments is 0, fetch all comments without limit
-      const url = maxComments > 0 
+      const url = maxComments > 0
         ? `/api/helper-comments/${helperId}?limit=${maxComments}`
-        : `/api/helper-comments/${helperId}`;
+        : `/api/helper-comments/${helperId}?all=true`;
       
       const res = await fetch(url, {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       });
       
       if (!res.ok) {
@@ -68,12 +99,19 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       const data = await res.json();
       setComments(data.comments || []);
       setTotalComments(data.totalComments || 0);
+      setRatedBookingIds(data.ratedBookingIds || (data.comments || []).map((comment) => String(comment.bookingId || '')).filter(Boolean));
       
       // Set ratings from API response
       if (data.ratings) {
         setRatings({
           cleanliness: data.ratings.cleanliness || 0,
           staff: data.ratings.staff || 0,
+          communication: data.ratings.communication || data.ratings.staff || 0,
+          punctuality: data.ratings.punctuality || 0,
+          quality: data.ratings.quality || 0,
+          respectfulness: data.ratings.respectfulness || 0,
+          value: data.ratings.value || 0,
+          recommendation: data.ratings.recommendation || 0,
           overall: data.ratings.overall || 0
         });
       }
@@ -88,6 +126,11 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         onRatingsChange({
           cleanliness: data.ratings.cleanliness || 0,
           communication: data.ratings.staff || 0, 
+          punctuality: data.ratings.punctuality || 0,
+          quality: data.ratings.quality || 0,
+          respectfulness: data.ratings.respectfulness || 0,
+          value: data.ratings.value || 0,
+          recommendation: data.ratings.recommendation || 0,
           overall: data.ratings.overall || 0
         });
       }
@@ -115,11 +158,11 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          const booked = data.some(b => 
-            (b.listing?._id === helperId || b.service?._id === helperId || b.helper?._id === helperId || b.event?._id === helperId) &&
-            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+          const completed = data.filter((booking) =>
+            String(booking.helper?._id || booking.helper || '') === String(helperId)
+            && String(booking.status || '').toLowerCase() === 'completed'
           );
-          setHasBooked(booked);
+          setCompletedBookings(completed);
         }
       }
     } catch (err) {
@@ -137,6 +180,15 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     e.preventDefault();
     setError(null);
     
+    if (!selectedBookingId) {
+      setError('Choose a completed booking that has not already been reviewed.');
+      return;
+    }
+    const selectedRatings = Object.fromEntries(Object.entries(categoryRatings).filter(([, value]) => Number(value) >= 1 && Number(value) <= 5));
+    if (!Object.keys(selectedRatings).length) {
+      setError('Rate at least one service category.');
+      return;
+    }
     if (!commentContent.trim()) {
       setError('Comment cannot be empty');
       return;
@@ -158,10 +210,10 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         body: JSON.stringify({
           content: commentContent,
           helperId,
+          bookingId: selectedBookingId,
           userName: currentUser.username,
           userAvatar: currentUser.avatar || '/default-avatar.jpg',
-          cleanlinessRating: cleanlinessInput,
-          communicationRating: communicationInput
+          ...selectedRatings
         })
       });
 
@@ -172,8 +224,17 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       }
 
       setCommentContent('');
-      setCleanlinessInput(5);
-      setCommunicationInput(5);
+      setCategoryRatings({
+        punctualityRating: 0,
+        qualityRating: 0,
+        communicationRating: 0,
+        cleanlinessRating: 0,
+        respectfulnessRating: 0,
+        valueRating: 0,
+        recommendationRating: 0
+      });
+      setRatedBookingIds((previous) => [...new Set([...previous, selectedBookingId])]);
+      setSelectedBookingId('');
       setRefreshTrigger(prev => prev + 1);
     } catch (err) {
       setError(err.message || 'Failed to post comment');
@@ -306,6 +367,45 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     }));
   };
 
+  const renderBookingAndRatingFields = () => (
+    <div className="mb-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+      <label className="block text-xs font-semibold text-slate-700 dark:text-gray-200">
+        Which completed booking are you reviewing?
+        <select
+          value={selectedBookingId}
+          onChange={(event) => setSelectedBookingId(event.target.value)}
+          disabled={loading.submitting || availableBookings.length === 0}
+          className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-rose-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+        >
+          {availableBookings.map((booking) => {
+            const date = new Date(booking.startDate || booking.createdAt);
+            const dateLabel = Number.isNaN(date.getTime()) ? 'Completed booking' : date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+            return <option key={booking._id} value={booking._id}>{dateLabel} · {booking.helper?.name || 'Helper service'}</option>;
+          })}
+        </select>
+      </label>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-slate-700 dark:text-gray-200">Rate each part of the service</p>
+        {ratingCategories.map((category) => {
+          const score = categoryRatings[category.field];
+          return (
+            <div key={category.field} className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 dark:border-gray-800">
+              <span className="min-w-0 text-xs font-medium text-slate-700 dark:text-gray-200">{category.label}</span>
+              <div className="flex shrink-0 items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button key={star} type="button" disabled={loading.submitting} onClick={() => setCategoryRatings((previous) => ({ ...previous, [category.field]: star }))} aria-label={`${category.label} ${star} out of 5`} className="p-0.5 disabled:opacity-50">
+                    <FaStar className={`text-base ${star <= score ? 'text-amber-400' : 'text-slate-300 dark:text-gray-700'}`} />
+                  </button>
+                ))}
+                <span className="ml-1 w-8 text-right text-[10px] font-bold tabular-nums text-slate-500">{score ? `${score}/5` : '—/5'}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
   if (loading.comments && comments.length === 0) {
     return (
       <div className="flex justify-center items-center py-4">
@@ -328,31 +428,29 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">Cleanliness</span>
-                <span className="font-medium">{ratings.cleanliness.toFixed(1)}</span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full mt-1">
-                <div 
-                  className="h-full bg-blue-500 rounded-full" 
-                  style={{ width: `${(ratings.cleanliness / 5) * 100}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">Staff</span>
-                <span className="font-medium">{ratings.staff.toFixed(1)}</span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full mt-1">
-                <div 
-                  className="h-full bg-blue-500 rounded-full" 
-                  style={{ width: `${(ratings.staff / 5) * 100}%` }}
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {[
+              { key: 'punctuality', label: '⏱️ Punctuality' },
+              { key: 'quality', label: '✨ Work quality' },
+              { key: 'communication', label: '💬 Communication' },
+              { key: 'cleanliness', label: '🧹 Cleanliness & organisation' },
+              { key: 'respectfulness', label: '🤝 Friendly & respectful' },
+              { key: 'value', label: '💰 Value for money' },
+              { key: 'recommendation', label: '⭐ Would recommend' }
+            ].map(({ key, label }) => {
+              const value = Number(ratings[key]) || 0;
+              return (
+                <div key={key}>
+                  <div className="flex justify-between gap-2 text-sm">
+                    <span className="text-gray-700">{label}</span>
+                    <span className="font-medium">{value ? value.toFixed(1) : '—'}</span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-gray-200">
+                    <div className="h-full rounded-full bg-blue-500" style={{ width: `${(value / 5) * 100}%` }} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
           
           {totalComments > 0 && (
@@ -398,229 +496,86 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         </div>
       )}
 
+      {cardStyle && showSummary && (
+        <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900" aria-label="Average review scores">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-600">Guest ratings</p>
+              <h3 className="mt-1 text-2xl font-bold leading-none text-slate-900 dark:text-white">{ratings.overall ? ratings.overall.toFixed(1) : '—'} <span className="text-sm font-medium text-slate-500">/ 5</span></h3>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-gray-400">{totalComments} {totalComments === 1 ? 'review' : 'reviews'}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+            {ratingCategories.map(({ field, label }) => {
+              const key = field.replace('Rating', '').toLowerCase();
+              const score = Number(ratings[key]) || 0;
+              return (
+                <div key={field}>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-xs font-medium text-slate-700 dark:text-gray-200">{label}</span>
+                    <span className="shrink-0 text-xs font-bold tabular-nums text-slate-900 dark:text-white">{score ? `${score.toFixed(1)}/5` : '—/5'}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-gray-800">
+                    <div className="h-full rounded-full bg-rose-500 transition-[width]" style={{ width: `${Math.max(0, Math.min(100, (score / 5) * 100))}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Function to render star inputs */}
       {currentUser && (
         <div style={{ display: 'none' }} />
       )}
       
 
-      {/* Comment form for non-card style */}
       {!cardStyle && currentUser ? (
         isCheckingBooking ? (
-          <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse">
-            <p className="text-gray-400 text-sm">Verifying booking history...</p>
-          </div>
-        ) : hasBooked ? (
-          <form onSubmit={handleSubmitComment} className="mb-6">
-            <div className="flex items-start gap-3">
-              <img 
-                src={currentUser.avatar || '/default-avatar.jpg'} 
-                alt={currentUser.username}
-                className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                onError={(e) => {
-                  e.target.src = '/default-avatar.jpg';
-                }}
-              />
-              <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="mb-3 pb-3 border-b border-gray-200">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-gray-600 w-24">Cleanliness</span>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <button key={star} type="button" onClick={() => setCleanlinessInput(star)} className="focus:outline-none p-0.5">
-                            <FaStar className={`text-xs ${star <= cleanlinessInput ? 'text-yellow-400' : 'text-gray-300'}`} />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-600 w-24">Communication</span>
-                      <div className="flex">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <button key={star} type="button" onClick={() => setCommunicationInput(star)} className="focus:outline-none p-0.5">
-                            <FaStar className={`text-xs ${star <= communicationInput ? 'text-yellow-400' : 'text-gray-300'}`} />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Write a comment..."
-                  className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 min-h-[80px]"
-                  rows={3}
-                  disabled={loading.submitting}
-                  onFocus={() => setFocusedInput('comment')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-                {(focusedInput === 'comment' || commentContent) && (
-                  <div className="flex justify-end mt-1">
-                    <button
-                      type="submit"
-                      className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
-                      disabled={!commentContent.trim() || loading.submitting}
-                    >
-                      {loading.submitting ? (
-                        <FaSpinner className="animate-spin" />
-                      ) : (
-                        <FiSend size={16} />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+          <div className="mb-4 animate-pulse rounded-xl bg-gray-50 p-4 text-center"><p className="text-sm text-gray-400">Checking completed bookings…</p></div>
+        ) : availableBookings.length > 0 ? (
+          <form onSubmit={handleSubmitComment} className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            {renderBookingAndRatingFields()}
+            <textarea value={commentContent} onChange={(event) => setCommentContent(event.target.value)} placeholder="Share what went well or what could be better…" className="min-h-24 w-full resize-y rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 outline-none focus:border-rose-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100" rows={4} disabled={loading.submitting} />
+            <button type="submit" disabled={!commentContent.trim() || !selectedBookingId || loading.submitting} className="mt-3 min-h-11 w-full rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">
+              {loading.submitting ? 'Posting review…' : 'Post review for this booking'}
+            </button>
           </form>
         ) : (
-          <div className="mb-6 p-5 bg-rose-50 border border-rose-100 rounded-2xl text-center">
-             <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FaStar className="text-rose-500 text-xl" />
-             </div>
-             <h3 className="text-rose-900 font-bold mb-1">Exclusive Review Access</h3>
-             <p className="text-gray-600 text-xs px-4 mb-4">Sharing your experience helps the community. Please complete a booking first to unlock reviews for this listing.</p>
-             <button 
-               onClick={() => navigate(`/helper/${helperId}`)}
-               className="px-8 py-2.5 bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-200 active:scale-95"
-             >
-               Book Now
-             </button>
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="font-semibold text-slate-900 dark:text-white">{completedBookings.length ? 'You have reviewed your completed bookings' : 'Reviews are available after a completed booking'}</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">Each completed booking can receive one review.</p>
           </div>
         )
       ) : !cardStyle ? (
-        <div className="mb-6 p-3 bg-gray-100 rounded-lg text-center">
-          <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a comment</p>
-        </div>
+        <div className="mb-6 rounded-xl bg-gray-100 p-3 text-center"><p className="text-sm text-gray-600">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a review.</p></div>
       ) : null}
 
-      {/* Comment form for card style */}
       {cardStyle && currentUser ? (
         isCheckingBooking ? (
-          <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse">
-            <p className="text-gray-400 text-sm">Verifying booking history...</p>
-          </div>
-        ) : hasBooked ? (
-          <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-            <form onSubmit={handleSubmitComment}>
-              <div className="flex items-start gap-3">
-                <img 
-                  src={currentUser.avatar || '/default-avatar.jpg'} 
-                  alt={currentUser.username}
-                  className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                  onError={(e) => {
-                    e.target.src = '/default-avatar.jpg';
-                  }}
-                />
-                <div className="flex-1 bg-gray-100 rounded-2xl px-3 py-2">
-                  {(focusedInput === 'comment' || commentContent) && (
-                    <div className="mb-3 pb-3 border-b border-gray-200">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs text-gray-600 w-24">Cleanliness</span>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <button key={star} type="button" onClick={() => setCleanlinessInput(star)} className="focus:outline-none p-0.5">
-                              <FaStar className={`text-xs ${star <= cleanlinessInput ? 'text-yellow-400' : 'text-gray-300'}`} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 w-24">Communication</span>
-                        <div className="flex">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <button key={star} type="button" onClick={() => setCommunicationInput(star)} className="focus:outline-none p-0.5">
-                              <FaStar className={`text-xs ${star <= communicationInput ? 'text-yellow-400' : 'text-gray-300'}`} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <textarea
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    placeholder="Write a review..."
-                    className="w-full bg-transparent border-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500"
-                    rows={2}
-                    disabled={loading.submitting}
-                    onFocus={() => setFocusedInput('comment')}
-                    onBlur={() => setFocusedInput(null)}
-                  />
-                  {(focusedInput === 'comment' || commentContent) && (
-                    <div className="flex justify-end mt-1">
-                      <button
-                        type="submit"
-                        className="bg-blue-500 text-white p-1.5 rounded-full hover:bg-blue-600 disabled:opacity-50 transition-colors"
-                        disabled={!commentContent.trim() || loading.submitting}
-                      >
-                        {loading.submitting ? (
-                          <FaSpinner className="animate-spin" />
-                        ) : (
-                          <FiSend size={16} />
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </form>
-          </div>
+          <div className="mb-4 animate-pulse rounded-xl bg-gray-50 p-4 text-center"><p className="text-sm text-gray-400">Checking completed bookings…</p></div>
+        ) : availableBookings.length > 0 ? (
+          <form onSubmit={handleSubmitComment} className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Share your experience</p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">One review is allowed for each completed booking.</p>
+            </div>
+            {renderBookingAndRatingFields()}
+            <textarea value={commentContent} onChange={(event) => setCommentContent(event.target.value)} placeholder="Tell others about your experience…" className="min-h-24 w-full resize-y rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-800 outline-none focus:border-rose-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100" rows={4} disabled={loading.submitting} />
+            <button type="submit" disabled={!commentContent.trim() || !selectedBookingId || loading.submitting} className="mt-3 min-h-11 w-full rounded-xl bg-rose-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">
+              {loading.submitting ? 'Posting review…' : 'Post review for this booking'}
+            </button>
+          </form>
         ) : (
-          <div className="mb-4 bg-rose-50 border border-rose-100 rounded-2xl p-5 text-center">
-             <div className="w-10 h-10 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FaStar className="text-rose-500 text-lg" />
-             </div>
-             <h3 className="text-rose-900 font-bold mb-1">Review After Booking</h3>
-             <p className="text-gray-600 text-xs px-4 mb-3">Share your experience with the community. Complete a booking first to unlock reviews.</p>
-             <button 
-               onClick={() => navigate(`/helper/${helperId}`)}
-               className="px-6 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg active:scale-95"
-             >
-               Book Now
-             </button>
+          <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-gray-800 dark:bg-gray-900">
+            <h3 className="font-semibold text-slate-900 dark:text-white">{completedBookings.length ? 'You have reviewed your completed bookings' : 'Reviews are available after a completed booking'}</h3>
+            <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">Each completed booking can receive one review.</p>
           </div>
         )
       ) : cardStyle ? (
-        <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-center">
-          <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a comment</p>
-        </div>
+        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm dark:border-gray-700 dark:bg-gray-900"><p className="text-sm text-slate-600 dark:text-gray-300">Please <a href="/sign-in" className="text-rose-600 hover:underline">sign in</a> to leave a review.</p></div>
       ) : null}
-
-      {/* Card-style ratings summary when in card mode */}
-      {cardStyle && showSummary && (
-        <div className="mb-5 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center mb-4">
-            <span className="text-3xl font-bold">{ratings.overall.toFixed(1)}</span>
-            <div className="ml-3">
-              <div className="text-sm text-gray-600">out of 5</div>
-              <div className="text-gray-600 text-sm">{totalComments} reviews</div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {RATING_CATEGORIES.map(({ name, icon: Icon }) => (
-              <div key={name} className="flex items-center justify-between">
-                <div className="flex items-center text-gray-700">
-                  <Icon className="mr-2 text-blue-500" />
-                  <span>{name}</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${(ratings[name.toLowerCase()] / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="font-medium">{ratings[name.toLowerCase()].toFixed(1)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className={`space-y-4 ${cardStyle ? 'grid grid-cols-1 gap-4' : ''}`}>
         {comments.length === 0 && !loading.comments && totalComments === 0 ? (
           <div className={`text-center py-4 text-gray-500 ${cardStyle ? 'col-span-full' : ''}`}>
@@ -670,6 +625,16 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
                           </button>
                         )}
                       </div>
+                      {ratingCategories.some(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5) && (
+                        <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Booking review scores">
+                          {ratingCategories.filter(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5).map(({ field, label }) => (
+                            <span key={field} className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-gray-800 dark:text-gray-200">
+                              {label.split(' ').slice(0, 1).join('')} {Number(comment[field]).toFixed(1)}/5
+                            </span>
+                          ))}
+                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">✓ Completed booking</span>
+                        </div>
+                      )}
                       <p className={`${cardStyle ? 'mt-2' : 'mt-1'} text-gray-700 text-sm whitespace-pre-line break-words`}>
                         {comment.content}
                       </p>

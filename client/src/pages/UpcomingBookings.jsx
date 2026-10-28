@@ -93,12 +93,15 @@ export default function UpcomingBookings() {
               itemId: targetItem._id || b.itemId,
               emoji: type === 'listing' ? '🏡' : type === 'helper' ? '🧹' : type === 'event' ? '🎟️' : '🛠️',
               proName: type === 'listing' ? (targetItem.userRef?.username || targetItem.name || 'Host') : (targetItem.name || 'Professional'),
-              proAvatar: targetItem.userRef?.avatar || targetItem.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.performerImage || targetItem.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || targetItem.userRef?.avatar || targetItem.imageUrls?.[0] || '',
               proWhatsapp: b.phone || targetItem.phone || targetItem.contact || '',
               proPhone: b.phone || targetItem.phone || targetItem.contact || '',
               address: b.address || targetItem.address || targetItem.location || 'Polokwane, Limpopo',
               price: b.totalPrice || b.totalAmount || b.price || targetItem.price || null,
               notes: b.notes || b.specialInstructions || '',
+              selectedPerformer: b.selectedPerformer || null,
+              performerImage: b.performerImage || targetItem.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || null,
+              helper: b.helper || null,
               raw: b
             };
           });

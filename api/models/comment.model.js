@@ -33,6 +33,7 @@ const commentSchema = new mongoose.Schema({
     max: 5,
     required: false
   },
+  bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   listingId: {
     type: mongoose.Schema.Types.ObjectId,
     required: [true, 'Target ID is required']
@@ -56,6 +57,8 @@ const commentSchema = new mongoose.Schema({
   }],
   replies: [replySchema]
 }, { timestamps: true });
+
+commentSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 
 const Comment = mongoose.model('Comment', commentSchema);
 

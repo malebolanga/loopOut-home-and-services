@@ -289,7 +289,8 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <img src={booking.selectedPerformer ? (booking.performerImage || booking.proAvatar) : booking.proAvatar} alt={booking.proName} className="w-11 h-11 rounded-full object-cover border-2 border-slate-100" onError={(e) => { e.target.src = 'https://i.pravatar.cc/150?u=pro'; }} />
+                    <span className="w-11 h-11 rounded-full bg-rose-50 text-rose-700 flex items-center justify-center font-bold">{(booking.selectedPerformer || booking.proName || 'P').trim().charAt(0).toUpperCase()}</span>
+                    {(booking.performerImage || booking.proAvatar) && <img src={booking.performerImage || booking.proAvatar} alt={`${booking.selectedPerformer || booking.proName}'s profile`} className="absolute inset-0 h-11 w-11 rounded-full border-2 border-slate-100 object-cover" onError={(e) => e.currentTarget.remove()} />}
                     <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
                   </div>
                   <div>
@@ -396,12 +397,12 @@ export const UpcomingBookingStrip = ({ navigate }) => {
               itemId: b.listing?._id || b.helper?._id || b.service?._id || b.event?._id,
               emoji: b.listing ? '🏡' : b.helper ? '🧹' : b.event ? '🎟️' : '🛠️',
               proName: b.listing ? (b.listing.userRef?.username || b.listing.name || 'Host') : (b.helper?.name || b.service?.name || b.event?.name || 'Professional'),
-              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.listing?.userRef?.avatar || b.helper?.userRef?.avatar || b.service?.userRef?.avatar || b.event?.userRef?.avatar || b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || '',
               proWhatsapp: b.phone || b.helper?.phone || b.service?.phone || '',
               proPhone: b.phone || b.helper?.phone || b.service?.phone || '',
               selectedPerformer: b.selectedPerformer || null,
               performerExperience: b.performerExperience || null,
-              performerImage: b.performerImage || null,
+              performerImage: b.performerImage || b.helper?.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || null,
               address: b.address || b.listing?.address || b.service?.address || b.event?.address || b.location || '',
               price: b.totalPrice || b.totalAmount || b.price || b.listing?.price || b.service?.price || b.helper?.price || null,
               notes: b.notes || b.specialInstructions || '',

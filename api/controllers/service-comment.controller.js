@@ -1,11 +1,13 @@
 import Service from '../models/service.model.js';
+import Booking from '../models/Booking.js';
 import ServiceComment from '../models/service-comment.model.js';
+import mongoose from 'mongoose';
 import { errorHandler } from '../utils/error.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createServiceComment = async (req, res, next) => {
   try {
-    const { content, serviceId, userName, userAvatar, rating } = req.body;
+    const { content, serviceId, bookingId, userName, userAvatar, rating } = req.body;
     const userId = req.user.id;
 
     if (!content || !serviceId) {
@@ -17,8 +19,14 @@ export const createServiceComment = async (req, res, next) => {
       return next(errorHandler(404, 'Service not found'));
     }
 
+    if (!bookingId || !mongoose.Types.ObjectId.isValid(bookingId)) return next(errorHandler(400, 'A completed booking is required to leave a service review'));
+    const completedBooking = await Booking.findOne({ _id: bookingId, user: userId, service: serviceId, status: 'completed' }).select('_id');
+    if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this service booking can review it'));
+    if (await ServiceComment.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
+
     const comment = new ServiceComment({
       content,
+      bookingId,
       serviceId,
       userId,
       userName: userName || req.user.username,
@@ -49,6 +57,7 @@ export const createServiceComment = async (req, res, next) => {
 
     res.status(201).json(comment);
   } catch (error) {
+    if (error?.code === 11000) return next(errorHandler(409, 'This booking already has a review'));
     next(errorHandler(500, error.message || 'Failed to create service comment'));
   }
 };

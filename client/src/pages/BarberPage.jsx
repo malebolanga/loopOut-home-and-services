@@ -1672,6 +1672,7 @@ export default function BarberPage() {
       subtype: helper.type,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -1960,6 +1961,7 @@ export default function BarberPage() {
       subtype: bookingSubtype,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };

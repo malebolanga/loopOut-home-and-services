@@ -3,11 +3,13 @@ import Listing from '../models/listing.model.js';
 import Service from '../models/service.model.js';
 import Helper from '../models/helper.model.js';
 import Event from '../models/event.model.js';
+import Booking from '../models/Booking.js';
+import mongoose from 'mongoose';
 import { errorHandler } from '../utils/error.js';
 
 export const createReview = async (req, res, next) => {
   try {
-    const { content, rating, type } = req.body; // type: 'listing', 'service', 'helper', 'event'
+    const { content, rating, type, bookingId } = req.body; // type: 'listing', 'service', 'helper', 'event'
     const entityId = req.params.entityId;
     
     if (!content || content.trim() === '') {
@@ -41,7 +43,12 @@ export const createReview = async (req, res, next) => {
       return next(errorHandler(400, 'Invalid entity type'));
     }
 
-    const newReview = new Review(reviewData);
+    if (!bookingId || !mongoose.Types.ObjectId.isValid(bookingId)) return next(errorHandler(400, 'A completed booking is required to leave a review'));
+    const completedBooking = await Booking.findOne({ _id: bookingId, user: req.user.id, [type]: entityId, status: 'completed' }).select('_id');
+    if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this booking can review it'));
+    if (await Review.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
+
+    const newReview = new Review({ ...reviewData, bookingId });
     await newReview.save();
 
     // Update Entity Average Rating
@@ -55,6 +62,7 @@ export const createReview = async (req, res, next) => {
 
     res.status(201).json(newReview);
   } catch (error) {
+    if (error?.code === 11000) return next(errorHandler(409, 'This booking already has a review'));
     next(error);
   }
 };
