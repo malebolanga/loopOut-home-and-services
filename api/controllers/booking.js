@@ -6,6 +6,7 @@ import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 import Escrow from '../models/escrow.model.js';
+import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
@@ -380,6 +381,122 @@ export const getBookingById = async (req, res) => {
   }
 };
 
+const LIVE_LOCATION_BOOKING_STATUSES = ['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'];
+const LIVE_LOCATION_MAX_AGE_MS = 2 * 60 * 1000;
+
+const getServiceBookingForLocation = async (bookingId) => Booking.findById(bookingId)
+  .populate({ path: 'helper', select: 'userRef' })
+  .populate({ path: 'service', select: 'userRef creator' })
+  .populate({ path: 'user', select: '_id' });
+
+const getLocationParticipantRole = (booking, userId) => {
+  if (!booking || (!booking.helper && !booking.service)) return null;
+  const serviceItem = booking.helper || booking.service;
+  const providerId = serviceItem?.userRef?._id?.toString()
+    || serviceItem?.userRef?.toString()
+    || serviceItem?.creator?._id?.toString()
+    || serviceItem?.creator?.toString();
+  const customerId = booking.user?._id?.toString() || booking.user?.toString();
+  if (String(userId) === providerId) return 'provider';
+  if (String(userId) === customerId) return 'customer';
+  return null;
+};
+
+// Live coordinates are available only to the customer and provider on an active service booking.
+export const getProviderLocation = async (req, res) => {
+  try {
+    const booking = await getServiceBookingForLocation(req.params.bookingId);
+    const role = getLocationParticipantRole(booking, req.user.id);
+    if (!booking || !role) return res.status(404).json({ error: 'Booking not found' });
+
+    if (!LIVE_LOCATION_BOOKING_STATUSES.includes(booking.status)) {
+      await ProviderLiveLocation.deleteOne({ booking: booking._id });
+      return res.json({ sharing: false, status: booking.status });
+    }
+    const location = await ProviderLiveLocation.findOne({ booking: booking._id }).lean();
+    const isFresh = location?.expiresAt && new Date(location.expiresAt).getTime() > Date.now()
+      && location.updatedAt && Date.now() - new Date(location.updatedAt).getTime() <= LIVE_LOCATION_MAX_AGE_MS;
+    if (!location || !isFresh) {
+      if (location) await ProviderLiveLocation.deleteOne({ _id: location._id });
+      return res.json({ sharing: false, status: booking.status });
+    }
+    return res.json({
+      sharing: true,
+      status: booking.status,
+      updatedAt: location.updatedAt,
+      ...(role === 'customer' ? {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        accuracy: location.accuracy,
+      } : {}),
+    });
+  } catch (error) {
+    console.error('[getProviderLocation] error:', error.message);
+    return res.status(500).json({ error: 'Unable to load live location' });
+  }
+};
+
+// Only the provider on an accepted service booking can publish coordinates.
+export const updateProviderLocation = async (req, res) => {
+  try {
+    const { latitude, longitude, accuracy } = req.body || {};
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+    const accuracyMeters = accuracy === undefined ? undefined : Number(accuracy);
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+      return res.status(400).json({ error: 'A valid latitude and longitude are required.' });
+    }
+    if (accuracyMeters !== undefined && (!Number.isFinite(accuracyMeters) || accuracyMeters < 0 || accuracyMeters > 100000)) {
+      return res.status(400).json({ error: 'Invalid location accuracy.' });
+    }
+
+    const booking = await getServiceBookingForLocation(req.params.bookingId);
+    if (!booking) return res.status(404).json({ error: 'Service booking not found.' });
+    if (getLocationParticipantRole(booking, req.user.id) !== 'provider') {
+      return res.status(403).json({ error: 'Only the service provider can share this location.' });
+    }
+    if (!LIVE_LOCATION_BOOKING_STATUSES.includes(booking.status)) {
+      return res.status(409).json({ error: 'Location sharing is available only for an accepted, active booking.' });
+    }
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + LIVE_LOCATION_MAX_AGE_MS);
+    await ProviderLiveLocation.findOneAndUpdate(
+      { booking: booking._id },
+      { $set: {
+      provider: req.user.id,
+      customer: booking.user?._id || booking.user,
+      latitude: lat,
+      longitude: lng,
+      accuracy: accuracyMeters,
+      updatedAt: now,
+      expiresAt,
+      }, $setOnInsert: { booking: booking._id, startedAt: now } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    return res.json({ sharing: true, updatedAt: now });
+  } catch (error) {
+    console.error('[updateProviderLocation] error:', error.message);
+    return res.status(500).json({ error: 'Unable to update live location' });
+  }
+};
+
+// Providers can stop sharing at any time; clear coordinates immediately.
+export const stopProviderLocation = async (req, res) => {
+  try {
+    const booking = await getServiceBookingForLocation(req.params.bookingId);
+    if (!booking) return res.status(404).json({ error: 'Service booking not found.' });
+    if (getLocationParticipantRole(booking, req.user.id) !== 'provider') {
+      return res.status(403).json({ error: 'Only the service provider can stop this location share.' });
+    }
+    await ProviderLiveLocation.deleteOne({ booking: booking._id });
+    return res.json({ sharing: false });
+  } catch (error) {
+    console.error('[stopProviderLocation] error:', error.message);
+    return res.status(500).json({ error: 'Unable to stop live location sharing' });
+  }
+};
+
 // Update booking status (requires authentication; only host or booking owner may update)
 export const updateBookingStatus = async (req, res) => {
   try {
@@ -418,6 +535,9 @@ export const updateBookingStatus = async (req, res) => {
     const previousStatus = booking.status;
     booking.status = status;
     await booking.save();
+    if (['completed', 'cancelled', 'declined', 'work_completed'].includes(status)) {
+      await ProviderLiveLocation.deleteOne({ booking: booking._id });
+    }
 
     // If client closes and completes work, automatically release any held escrow to the provider
     if (status === 'completed') {
