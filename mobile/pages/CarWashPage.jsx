@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useMemo } from 'react';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Link } from "react-router-dom";
@@ -27,9 +29,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
-import Comment from '../components/Comment';
+import ServiceComments from '../components/ServiceComments';
 import HelperBookingSheet from '../components/HelperBookingSheet';
-import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 
 export default function CarWashPage() {
@@ -40,7 +41,6 @@ export default function CarWashPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -560,28 +560,10 @@ export default function CarWashPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      {carWash.imageUrls?.length > 0 && (
-        <div className="relative w-full">
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <button type="button" aria-label="View first photo" className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(0); setShowImageModal(true); }}>
-              <img src={carWash.imageUrls[0]} alt={carWash.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <span className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-            </button>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {carWash.imageUrls.slice(1, 5).map((url, index) => (
-                <button type="button" key={url + index} aria-label={`View photo ${index + 2}`} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => { setActiveImageIndex(index + 1); setShowImageModal(true); }}>
-                  <img src={url} alt={`${carWash.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <span className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </button>
-              ))}
-              {carWash.imageUrls.length < 5 && Array(4 - Math.min(4, carWash.imageUrls.length - 1)).fill(null).map((_, index) => <div key={`empty-${index}`} className="bg-slate-800 h-full" />)}
-            </div>
-          </div>
-        </div>
-      )}
+      <ListingPhotoGallery images={carWash.imageUrls} alt={carWash.name} onOpen={(index) => { setActiveImageIndex(index); setShowImageModal(true); }} emptyEmoji="🚘" emptyTitle="Car wash photos coming soon" emptyDescription="This provider has not added service photos yet." />
 
       {/* Main Content Grid */}
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
             {carWash.userRef?.avatar ? <img src={carWash.userRef.avatar} alt={carWash.userRef?.username || carWash.name} className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : <FaUser className="text-xl text-slate-400" />}
@@ -591,7 +573,7 @@ export default function CarWashPage() {
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <FaStar className="text-amber-400" />
-              <span className="font-semibold">{hasReviews ? ratingLabel : 'New'}</span>
+              <span className="font-semibold">{hasReviews ? ratingLabel : 'No ratings yet'}</span>
               <span className="text-slate-500">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaCheckCircle className="h-4 w-4 text-indigo-500" />{Number(carWash.bookingsCount) > 0 ? ` Booked ${carWash.bookingsCount} ${Number(carWash.bookingsCount) === 1 ? 'time' : 'times'}` : ' No bookings yet'}</span>
@@ -720,21 +702,40 @@ export default function CarWashPage() {
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-6">
                 <FaStar className="text-amber-400 text-xl" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{hasReviews ? `${ratingLabel} · ${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}` : 'New · 0 reviews'}</h2>
+                {hasReviews && <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{ratingLabel} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}</h2>}
               </div>
-              <Comment
+              <ServiceComments
                 serviceId={carWash._id}
                 onTotalComments={setCommentCount}
                 maxComments={2}
+                cardStyle
+                showSummary
+                readOnly
+                horizontalStyle
+                categoryMode="carwash"
+                hideEmptyState
               />
-              
-              {commentCount > 2 && <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>}
             </div>
+
+            {/* Car wash booking experience */}
+            <section aria-labelledby="carwash-experience-title" className="rounded-2xl bg-slate-50 p-5 sm:p-6 dark:bg-gray-800/60">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-400">A smoother car care visit</p>
+              <h2 id="carwash-experience-title" className="mt-2 text-xl font-semibold tracking-tight text-slate-900 dark:text-white">A car wash experience that works for you</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">Choose the service your vehicle needs, select its type to see an estimate, then send a reservation request. You can message the provider to confirm the location, timing and any special requirements before your visit.</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  { icon: <FaCar className="h-4 w-4" />, title: 'Choose your service', detail: 'Compare the available wash and detailing options.' },
+                  { icon: <FaCheckCircle className="h-4 w-4" />, title: 'See your estimate', detail: 'Select your vehicle type and review the total.' },
+                  { icon: <FaComment className="h-4 w-4" />, title: 'Confirm the details', detail: 'Message the provider about your appointment.' }
+                ].map((step) => (
+                  <div key={step.title} className="rounded-xl bg-white p-4 ring-1 ring-slate-200/80 dark:bg-gray-900 dark:ring-gray-700">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">{step.icon}</span>
+                    <h3 className="mt-3 text-sm font-semibold text-slate-900 dark:text-white">{step.title}</h3>
+                    <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">{step.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
 
           </div>
 
@@ -759,7 +760,7 @@ export default function CarWashPage() {
           </div>
 
         </div>
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Image Modal */}
       {showImageModal && (
@@ -841,14 +842,6 @@ export default function CarWashPage() {
         isTimeSlotBooked={isTimeSlotBooked}
         isDateFullyBooked={isDateFullyBooked}
       />
-
-      {/* Comments Side Panel */}
-      {showCommentsPanel && (
-        <CommentsSidePanelService
-          serviceId={carWash._id}
-          onClose={() => setShowCommentsPanel(false)}
-        />
-      )}
 
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40 safe-area-bottom mobile-booking-bar">

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
+import { getBarberBookingDetails, isBarberBooking } from '../utils/barberBookingDetails';
 import {
   CalendarIcon,
   ChevronLeftIcon,
@@ -271,7 +272,11 @@ export default function FreshaCalendarPage() {
     };
 
     loadBookings();
-    return () => controller.abort();
+    const refreshTimer = window.setInterval(loadBookings, 20000);
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshTimer);
+    };
   }, [currentUser?._id, refreshKey]);
 
   // Filter bookings based on selected role filter (All, Clients, My Bookings)
@@ -370,6 +375,9 @@ export default function FreshaCalendarPage() {
       year: 'numeric',
     });
   }, [selectedDate]);
+  const selectedBarberBooking = isBarberBooking(selectedBooking || {})
+    ? getBarberBookingDetails(selectedBooking || {})
+    : null;
 
   const handlePrevDay = () => {
     const d = new Date(selectedDate);
@@ -554,13 +562,14 @@ export default function FreshaCalendarPage() {
               const image = getBookingImage(booking);
               const status = String(booking.status || 'pending').toLowerCase();
               const statusClass = STATUS_COLOR[status] || STATUS_COLOR.pending;
+              const barberDetails = isBarberBooking(booking) ? getBarberBookingDetails(booking) : null;
               return <button key={booking._id} type="button" onClick={() => setSelectedBooking(booking)} className="group min-w-[258px] overflow-hidden rounded-2xl border border-gray-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:border-rose-300 hover:shadow-lg dark:border-gray-700 dark:bg-gray-800">
                 <div className="relative h-28 bg-gradient-to-br from-rose-100 to-orange-100 dark:from-rose-950 dark:to-gray-800">
                   {image ? <img src={image} alt="" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" onError={(event) => { event.currentTarget.style.display = 'none'; }} /> : <div className="flex h-full items-center justify-center"><Icon className="h-10 w-10 text-rose-400" /></div>}
                   <span className={`absolute left-3 top-3 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase shadow-sm ${statusClass}`}>{getBookingStatusLabel(status)}</span>
                   <span className="absolute bottom-3 right-3 rounded-xl bg-black/70 px-2.5 py-1.5 text-xs font-black text-white backdrop-blur-sm">{fmtTime(booking.startDate)}</span>
                 </div>
-                <div className="p-3"><div className="flex items-start justify-between gap-2"><p className="line-clamp-1 text-sm font-black text-gray-900 dark:text-white">{getBookingTitle(booking)}</p><span className="shrink-0 text-xs font-black text-emerald-600 dark:text-emerald-400">{getBookingCost(booking)}</span></div><p className="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">{new Date(booking.startDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p><p className="mt-2 text-[10px] font-black uppercase tracking-wider text-rose-500">Tap to view booking</p></div>
+                <div className="p-3"><div className="flex items-start justify-between gap-2"><p className="line-clamp-1 text-sm font-black text-gray-900 dark:text-white">{getBookingTitle(booking)}</p><span className="shrink-0 text-xs font-black text-emerald-600 dark:text-emerald-400">{getBookingCost(booking)}</span></div><p className="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">{new Date(booking.startDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>{barberDetails && <p className="mt-1 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">👤 {barberDetails.selectedPerformer || 'Any available member'}{barberDetails.selectedHaircut ? ` · ${barberDetails.selectedHaircut}` : ''}</p>}<p className="mt-2 text-[10px] font-black uppercase tracking-wider text-rose-500">Tap to view booking</p></div>
               </button>;
             })}
           </div> : <p className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm font-semibold text-gray-400 dark:border-gray-700">No upcoming bookings yet.</p>}
@@ -894,6 +903,21 @@ export default function FreshaCalendarPage() {
                     </span>
                   </div>
                 </div>
+
+                {selectedBarberBooking && (
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 dark:border-blue-900/50 dark:bg-blue-950/30">
+                    <h3 className="mb-3 text-[10px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">💈 Barber booking details</h3>
+                    <div className="grid grid-cols-1 gap-2 text-sm text-gray-700 dark:text-gray-200 sm:grid-cols-2">
+                      <span>👤 Selected member: {selectedBarberBooking.selectedPerformer || 'Any available member'}</span>
+                      {selectedBarberBooking.serviceDuration && <span>⏱️ Duration: {selectedBarberBooking.serviceDuration}</span>}
+                      {selectedBarberBooking.selectedHaircut && <span>✂️ Haircut: {selectedBarberBooking.selectedHaircut}</span>}
+                      {selectedBarberBooking.beardGrooming && <span>🧔 Beard grooming: {selectedBarberBooking.beardGrooming}</span>}
+                      {selectedBarberBooking.foodProvided && <span>🍽️ Food: {selectedBarberBooking.foodProvided === 'yes' ? 'Provided' : 'Not provided'}</span>}
+                      {selectedBarberBooking.electricityProvided && <span>⚡ Electricity: {selectedBarberBooking.electricityProvided === 'yes' ? 'Available' : 'Not available'}</span>}
+                      {selectedBarberBooking.specialRequirements && <span className="sm:col-span-2">📝 Special request: {selectedBarberBooking.specialRequirements}</span>}
+                    </div>
+                  </div>
+                )}
 
                 {/* Status Indicator & Management */}
                 <div className="space-y-3">

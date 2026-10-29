@@ -1,132 +1,53 @@
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import Comment from './Comment';
-import { FaChevronDown, FaChevronUp,  } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import ServiceComments from './ServiceComments';
 
-const CommentsSidePanel = ({ serviceId, onClose }) => {
-  const { currentUser } = useSelector((state) => state.user);
+const CommentsSidePanelService = ({ serviceId, onClose, totalComments = 0, categoryMode = 'service' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [showSummary, setShowSummary] = useState(true);
-  const [commentContent, setCommentContent] = useState('');
-  const [setLoading] = useState(false);
-  const [ setError] = useState(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Trigger slide-in animation on mount
   useEffect(() => {
-    setIsVisible(true);
+    const frame = requestAnimationFrame(() => setIsVisible(true));
+    const handleKeyDown = (event) => { if (event.key === 'Escape') handleClose(); };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('keydown', handleKeyDown); };
   }, []);
 
   const handleClose = () => {
+    if (isClosing) return;
     setIsClosing(true);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  };
-
-  const handleSubmitComment = async (e) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!commentContent.trim()) {
-      setError('Comment cannot be empty');
-      return;
-    }
-
-    if (!currentUser) {
-      setError('You must be logged in to comment');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      
-      const res = await fetch('/api/comment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentUser.token}`
-        },
-        body: JSON.stringify({
-          content: commentContent,
-          serviceId,
-          userName: currentUser.username,
-          userAvatar: currentUser.avatar || '/default-avatar.jpg'
-        })
-      });
-
-      const responseData = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(responseData.message || 'Failed to post comment');
-      }
-
-      setCommentContent('');
-      setRefreshTrigger(prev => prev + 1);
-    } catch (err) {
-      setError(err.message || 'Failed to post comment');
-      console.error('Post comment error:', err);
-    } finally {
-      setLoading(false);
-    }
+    setIsVisible(false);
+    window.setTimeout(onClose, 260);
   };
 
   return (
-    <div 
-      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
-        isClosing ? 'opacity-0' : 'opacity-100'
-      }`}
-      style={{ 
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        pointerEvents: isClosing ? 'none' : 'auto'
-      }}
-      onClick={handleClose}
+    <div
+      className={`fixed inset-0 z-[1200] flex justify-start bg-slate-950/55 p-0 backdrop-blur-[2px] transition-opacity duration-300 ${isVisible && !isClosing ? 'opacity-100' : 'opacity-0'}`}
+      onMouseDown={(event) => { if (event.target === event.currentTarget) handleClose(); }}
+      role="presentation"
     >
-      <div 
-        className={`w-full max-w-md h-full bg-white overflow-y-auto p-6 transform transition-transform duration-300 ease-in-out ${
-          isVisible && !isClosing ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        onClick={(e) => e.stopPropagation()}
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-reviews-title"
+        className={`flex h-full w-[92vw] max-w-xl transform flex-col overflow-hidden border-r border-slate-200 bg-white shadow-2xl transition-all duration-300 ease-out dark:border-gray-800 dark:bg-gray-950 ${isVisible && !isClosing ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">All Reviews</h2>
-          <button 
-            onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl transition-colors"
-            aria-label="Close panel"
-          >
-            &times;
+        <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-gray-800 sm:px-7">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-600">Client feedback</p>
+            <h2 id="service-reviews-title" className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Car wash reviews</h2>
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">{totalComments} {totalComments === 1 ? 'completed booking review' : 'completed booking reviews'}</p>
+          </div>
+          <button type="button" onClick={handleClose} aria-label="Close reviews" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+            <XMarkIcon className="h-5 w-5" />
           </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7 sm:py-6">
+          <ServiceComments serviceId={serviceId} showSummary cardStyle readOnly horizontalStyle categoryMode={categoryMode} maxComments={0} />
         </div>
-        
-        {/* Toggle button for summary */}
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={() => setShowSummary(!showSummary)}
-            className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            {showSummary ? 'Hide Summary' : 'Show Summary'}
-            {showSummary ? (
-              <FaChevronUp className="ml-1 text-xs" />
-            ) : (
-              <FaChevronDown className="ml-1 text-xs" />
-            )}
-          </button>
-        </div>
-        
-
-        {/* Comments with card styling - show all comments without limit */}
-        <Comment 
-          serviceId={serviceId} 
-          showSummary={showSummary}
-          cardStyle={true}
-          maxComments={0} // 0 means no limit - show all comments
-          externalRefreshTrigger={refreshTrigger}
-        />
-      </div>
+      </section>
     </div>
   );
 };
 
-export default CommentsSidePanel;
+export default CommentsSidePanelService;

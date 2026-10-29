@@ -13,6 +13,7 @@ import BookingDateNotice from '../components/BookingDateNotice';
 import ListingPhotoGallery from '../components/ListingPhotoGallery';
 import ListingDetailShell from '../components/ListingDetailShell';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { Link } from "react-router-dom";
 import {
   StarIcon,
@@ -74,6 +75,14 @@ import { MdCleanHands, MdOutlineGppGood, MdLogin, MdChat, MdLocationOn, MdAttach
 // Some icons might be double defined in Fi or Md, so I adjusted the list.
 // FaBroomClean doesn't exist in standard Fa, likely was a typo or specialized set. Using FaBroom.
 
+const BARBER_REVIEW_CATEGORIES = [
+  { key: 'barberCleaning', field: 'barberCleaningRating', label: '🧹 Cleaning' },
+  { key: 'haircut', field: 'haircutRating', label: '✂️ Haircut' },
+  { key: 'equipment', field: 'equipmentRating', label: '🧰 Equipment' },
+  { key: 'serviceCare', field: 'serviceCareRating', label: '💈 Service care' },
+  { key: 'barberCommunication', field: 'barberCommunicationRating', label: '💬 Communication' }
+];
+
 
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Zoom, Thumbs, Pagination, FreeMode } from 'swiper/modules';
@@ -88,8 +97,6 @@ import 'swiper/css/free-mode';
 
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
-import HelperComments from '../components/HelperComments';
-import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
 import BookingHistory from '../components/BookingHistory';
@@ -104,7 +111,6 @@ export default function BarberPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
@@ -116,7 +122,8 @@ export default function BarberPage() {
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0, barberCleaning: 0, haircut: 0, equipment: 0, serviceCare: 0, barberCommunication: 0 });
+  const [ratingCounts, setRatingCounts] = useState({});
   const [topComments, setTopComments] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
@@ -721,6 +728,7 @@ export default function BarberPage() {
     message: '',
     selectedHaircut: '',
     beardStyle: '',
+    beardGrooming: '',
     hairLength: '',
     specialRequirements: '',
     mealType: '',
@@ -769,7 +777,7 @@ export default function BarberPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(helper?._id || id);
+  const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice, refetch: refreshBookedSlots } = useBookedSlots(helper?._id || id);
 
   // AI Assessment States
   const [aiAssessment, setAiAssessment] = useState({
@@ -860,11 +868,17 @@ export default function BarberPage() {
           if (res.ok) {
             setCommentCount(data.totalComments || 0);
             setTopComments(data.comments || []);
+            setRatingCounts(data.ratingCounts || {});
             if (data.ratings) {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
-                overall: data.ratings.overall || 0
+                overall: data.ratings.overall || 0,
+                barberCleaning: data.ratings.barberCleaning || 0,
+                haircut: data.ratings.haircut || 0,
+                equipment: data.ratings.equipment || 0,
+                serviceCare: data.ratings.serviceCare || 0,
+                barberCommunication: data.ratings.barberCommunication || 0
               });
             }
           }
@@ -1670,6 +1684,13 @@ export default function BarberPage() {
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
+      selectedPerformer: bookingData.selectedPerformer || undefined,
+      serviceDuration: bookingData.serviceDuration || undefined,
+      selectedHaircut: bookingData.selectedHaircut || undefined,
+      beardGrooming: bookingData.beardGrooming || undefined,
+      specialRequirements: bookingData.specialRequirements?.trim() || undefined,
+      foodProvided: bookingData.foodProvided,
+      electricityProvided: bookingData.electricityProvided,
       deviceType,
       requestLocation,
       locationOption: bookingData.locationOption,
@@ -1762,8 +1783,13 @@ export default function BarberPage() {
   const handleBookingSubmit =async (e) => {
     e.preventDefault();
 
-    if (!helper?.contact) {
-      alert(`${getProfessionalTitle(helper?.type)} contact information is missing. Please try another contact method.`);
+    if (!currentUser) {
+      navigate('/sign-in');
+      return;
+    }
+
+    if (!bookingData.name?.trim() || !bookingData.phone?.trim() || !bookingData.date || !bookingData.time) {
+      alert('Please enter your name, phone number, booking date, and time before submitting.');
       return;
     }
 
@@ -1772,7 +1798,13 @@ export default function BarberPage() {
       return;
     }
 
-    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time)) {
+    const durationText = String(bookingData.serviceDuration || '').toLowerCase();
+    const durationMatch = durationText.match(/(\d+(?:\.\d+)?)\s*(hour|hr|minute|min)/);
+    const selectedDurationMinutes = durationMatch
+      ? Math.max(30, Math.round(Number(durationMatch[1]) * (durationMatch[2].startsWith('hour') || durationMatch[2] === 'hr' ? 60 : 1)))
+      : Math.max(60, Number(bookingData.durationHours === 'all-day' ? 8 : bookingData.durationHours || 1) * 60);
+
+    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, selectedDurationMinutes)) {
       alert("This time slot is already booked and not available. Please choose another time.");
       return;
     }
@@ -1818,7 +1850,9 @@ export default function BarberPage() {
       setIsUploading(false);
     }
 
-    // Format the client's phone number for the reply link
+    const whatsappWindow = helper?.contact ? window.open('about:blank', '_blank') : null;
+
+    // Format the client's phone number for the optional provider WhatsApp message.
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
     // Define the accept and decline messages and their corresponding links
@@ -1925,7 +1959,9 @@ export default function BarberPage() {
     message += `_Sent via loopOut_ 📱`;
 
     // Open WhatsApp with properly encoded message
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = helper?.contact
+      ? `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`
+      : '';
     
     // Save to Database first
     // Create a very descriptive subtype for the dashboard/cart
@@ -1953,12 +1989,19 @@ export default function BarberPage() {
     const bookingToSave = {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
-      startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
-      endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      startDate: new Date(`${bookingData.date}T${bookingData.time || '00:00'}`).toISOString(),
+      endDate: new Date(new Date(`${bookingData.date}T${bookingData.time || '00:00'}`).getTime() + selectedDurationMinutes * 60 * 1000).toISOString(),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message: message || bookingData.specialRequirements?.trim() || '',
       subtype: bookingSubtype,
+      selectedPerformer: bookingData.selectedPerformer || undefined,
+      serviceDuration: bookingData.serviceDuration || undefined,
+      selectedHaircut: bookingData.selectedHaircut || undefined,
+      beardGrooming: bookingData.beardGrooming || undefined,
+      specialRequirements: bookingData.specialRequirements?.trim() || undefined,
+      foodProvided: bookingData.foodProvided,
+      electricityProvided: bookingData.electricityProvided,
       deviceType,
       requestLocation,
       locationOption: bookingData.locationOption,
@@ -1966,36 +2009,34 @@ export default function BarberPage() {
       type: 'helper'
     };
 
-    const token = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token;
-    fetch('/api/bookings', {
+    try {
+      const response = await authenticatedFetch('/api/bookings', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
-      credentials: 'include',
       body: JSON.stringify(bookingToSave)
-    }).then(async (res) => {
-      if (res.ok) {
-        pushPhoneNotification({
-          title: '🎉 Booking Request Sent',
-          message: `Your booking for ${helper?.name || 'Barber Service'} has been placed. Check notifications for updates!`,
-          type: 'success',
-          link: '/notifications'
-        });
-      } else {
-        const err = await res.json().catch(() => ({}));
-        console.error('Booking save failed:', err?.error || res.status);
-      }
-    }).catch(err => console.error('Failed to save booking:', err));
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || result.message || 'Could not save your booking. Please try again.');
 
-    window.open(whatsappUrl, '_blank');
+      await refreshBookedSlots();
+      pushPhoneNotification({
+        title: '🎉 Booking Request Sent',
+        message: `Your booking for ${helper?.name || 'Barber Service'} has been saved. Check Notifications and MyLoopOut for updates.`,
+        type: 'success',
+        link: '/notifications'
+      });
+      window.dispatchEvent(new CustomEvent('loopout:notification-created'));
+      if (whatsappWindow && whatsappUrl) whatsappWindow.location.href = whatsappUrl;
 
-    // Close the booking form overlay after sending
-    closeBookingFormOverlay();
+      closeBookingFormOverlay();
+      setAttachments([]);
+    } catch (error) {
+      if (whatsappWindow) whatsappWindow.close();
+      alert(error.message || 'Could not save your booking. Please try again.');
+    }
 
-    // Reset attachments after sending
-    setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
 
@@ -2307,7 +2348,7 @@ export default function BarberPage() {
 
 
             {/* Description */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="pb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About {helper.name}</h2>
               <div className="text-gray-700 leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, index) => (
@@ -2425,43 +2466,50 @@ export default function BarberPage() {
 
             {/* Reviews Summary */}
             <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-8">
-                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
-                </h2>
+              <div className="mb-8 flex justify-center">
+                <div className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)] ring-1 ring-slate-100">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+                    <StarIconSolid className="h-5 w-5 text-amber-500" />
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+                    </h2>
+                    <span className="text-slate-300" aria-hidden="true">·</span>
+                    <span className="text-sm font-semibold text-slate-700">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
+                  </div>
+                </div>
               </div>
 
               {commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
+                  {isBarber ? (
+                    <div className="-mx-4 mb-8 overflow-x-auto scrollbar-hide px-4 pb-1 sm:mx-0 sm:px-0" aria-label="Barber service ratings">
+                      <div className="flex w-max gap-3">
+                        {BARBER_REVIEW_CATEGORIES.map(({ key, field, label }) => {
+                          const score = Number(ratings?.[key]) || 0;
+                          const count = Number(ratingCounts?.[key]) || 0;
+                          return (
+                            <div key={field} className="min-w-[132px] rounded-full bg-white px-4 py-3 shadow-[0_5px_20px_rgba(0,0,0,0.09)]">
+                              <p className="whitespace-nowrap text-sm font-semibold text-slate-800">{label}</p>
+                              <p className="mt-1 text-xs text-slate-500">{score ? score.toFixed(1) : '—'} / 5 · {count} {count === 1 ? 'rating' : 'ratings'}</p>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
+                      <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                        <div className="flex items-center gap-3 text-gray-800"><FaBroom className="text-xl" /><span>Cleanliness</span></div>
+                        <div className="flex items-center gap-4 w-1/2"><span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span><div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden"><div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} /></div></div>
+                      </div>
+                      <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
+                        <div className="flex items-center gap-3 text-gray-800"><ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" /><span>Communication</span></div>
+                        <div className="flex items-center gap-4 w-1/2"><span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span><div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden"><div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} /></div></div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Top Comments Swiper */}
                   {topComments.length > 0 && (
@@ -2478,12 +2526,14 @@ export default function BarberPage() {
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
                         {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          const reviewScores = isBarber
+                            ? BARBER_REVIEW_CATEGORIES.map(({ field }) => Number(comment[field])).filter((score) => score >= 1 && score <= 5)
+                            : [Number(comment.cleanlinessRating), Number(comment.communicationRating)].filter((score) => score >= 1 && score <= 5);
+                          const rating = reviewScores.length ? reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length : 5;
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="h-full bg-white rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
@@ -2530,12 +2580,6 @@ export default function BarberPage() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
-              </button>
             </div>
 
             {/* Location */}
@@ -2580,7 +2624,7 @@ export default function BarberPage() {
                   </p>
                 )}
                 <button onClick={openBookingFormOverlay} className="mt-6 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
-                  Review &amp; reserve
+                  Book
                 </button>
                 <button onClick={handleInternalMessage} className="mt-3 w-full rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800">
                   Message {helper.name}
@@ -2676,18 +2720,6 @@ export default function BarberPage() {
         </div>
       </div>
 
-      {/* Comments Side Panel */}
-      {showCommentsPanel && (
-        <CommentsSidePanelHelper
-          helperId={helper._id}
-          onClose={() => setShowCommentsPanel(false)}
-          onTotalComments={setCommentCount}
-          onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
-        />
-      )}
     </div>
   );
 }

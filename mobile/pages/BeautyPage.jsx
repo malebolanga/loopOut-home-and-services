@@ -87,10 +87,17 @@ import 'swiper/css/free-mode';
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
-import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
 import BookingHistory from '../components/BookingHistory';
+
+const BEAUTY_REVIEW_CATEGORIES = [
+  { key: 'beautyCleaning', field: 'beautyCleaningRating', label: '🧹 Cleaning' },
+  { key: 'beautyCommunication', field: 'beautyCommunicationRating', label: '💬 Communication' },
+  { key: 'beautyEquipment', field: 'beautyEquipmentRating', label: '🧰 Equipment' },
+  { key: 'hairdressing', field: 'hairdressingRating', label: '💇 Hairdressing' },
+  { key: 'timeliness', field: 'timelinessRating', label: '⏱️ On time' }
+];
 
 export default function BeautyPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
@@ -102,7 +109,6 @@ export default function BeautyPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
@@ -114,7 +120,8 @@ export default function BeautyPage() {
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0, beautyCleaning: 0, beautyCommunication: 0, beautyEquipment: 0, hairdressing: 0, timeliness: 0 });
+  const [ratingCounts, setRatingCounts] = useState({});
   const [topComments, setTopComments] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
@@ -845,11 +852,17 @@ export default function BeautyPage() {
           if (res.ok) {
             setCommentCount(data.totalComments || 0);
             setTopComments(data.comments || []);
+            setRatingCounts(data.ratingCounts || {});
             if (data.ratings) {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
-                overall: data.ratings.overall || 0
+                overall: data.ratings.overall || 0,
+                beautyCleaning: data.ratings.beautyCleaning || 0,
+                beautyCommunication: data.ratings.beautyCommunication || 0,
+                beautyEquipment: data.ratings.beautyEquipment || 0,
+                hairdressing: data.ratings.hairdressing || 0,
+                timeliness: data.ratings.timeliness || 0
               });
             }
           }
@@ -2306,7 +2319,7 @@ export default function BeautyPage() {
             </div>
 
             {/* Description */}
-            <div className="pb-6 border-b border-gray-200">
+            <div className="pb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About {helper.name}</h2>
               <div className="text-gray-700 leading-relaxed space-y-4">
                 {displayText.split('\n').map((paragraph, index) => (
@@ -2431,44 +2444,38 @@ export default function BeautyPage() {
             </div>
 
             {/* Reviews Summary */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-8">
-                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
-                </h2>
+            <div className="pb-6">
+              <div className="mb-8 flex justify-center">
+                <div className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)]">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
+                    <StarIconSolid className="h-5 w-5 text-amber-500" />
+                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                      {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
+                    </h2>
+                    <span className="text-slate-300" aria-hidden="true">·</span>
+                    <span className="text-sm font-semibold text-slate-700">{commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}</span>
+                  </div>
+                </div>
               </div>
 
               {commentsLoading ? (
                 <p className="mb-6 text-gray-500">Loading customer reviews…</p>
               ) : commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
+                  <div className="-mx-4 mb-8 overflow-x-auto scrollbar-hide px-4 pb-1 sm:mx-0 sm:px-0" aria-label="Beauty service rating categories">
+                    <div className="flex w-max gap-3">
+                      {BEAUTY_REVIEW_CATEGORIES.map(({ key, field, label }) => {
+                        const score = Number(ratings?.[key]) || 0;
+                        const count = Number(ratingCounts?.[key]) || 0;
+                        return (
+                          <div key={field} className="min-w-[132px] rounded-full bg-white px-4 py-3 shadow-[0_5px_20px_rgba(15,23,42,0.09)]">
+                            <p className="whitespace-nowrap text-sm font-semibold text-slate-800">{label}</p>
+                            <p className="mt-1 text-xs text-slate-500">{score ? score.toFixed(1) : '—'} / 5 · {count} {count === 1 ? 'rating' : 'ratings'}</p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -2487,19 +2494,19 @@ export default function BeautyPage() {
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
                         {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          const reviewScores = BEAUTY_REVIEW_CATEGORIES.map(({ field }) => Number(comment[field])).filter((score) => score >= 1 && score <= 5);
+                          const rating = reviewScores.length ? reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length : 5;
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="h-full bg-white rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
                                     <img 
                                       src={comment.userAvatar || '/default-avatar.jpg'} 
                                       alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
+                                      className="w-12 h-12 rounded-full object-cover shadow-sm"
                                       onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                     />
                                     <div>
@@ -2539,14 +2546,6 @@ export default function BeautyPage() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              {!commentsLoading && commentCount > 0 && (
-                <button
-                  onClick={() => setShowCommentsPanel(true)}
-                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-                >
-                  Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
-                </button>
-              )}
             </div>
 
             {/* Location */}
@@ -2645,18 +2644,6 @@ export default function BeautyPage() {
         </div>
       </div>
 
-      {/* Comments Side Panel */}
-      {showCommentsPanel && (
-        <CommentsSidePanelHelper
-          helperId={helper._id}
-          onClose={() => setShowCommentsPanel(false)}
-          onTotalComments={setCommentCount}
-          onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
-        />
-      )}
     </div>
   );
 }

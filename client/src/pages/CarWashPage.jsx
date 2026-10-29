@@ -29,10 +29,10 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
-import Comment from '../components/Comment';
+import ServiceComments from '../components/ServiceComments';
 import HelperBookingSheet from '../components/HelperBookingSheet';
-import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import { useBookedSlots } from '../hooks/useBookedSlots';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 export default function CarWashPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -42,7 +42,6 @@ export default function CarWashPage() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -349,6 +348,12 @@ export default function CarWashPage() {
   const handleBookingSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
+    if (!currentUser?._id && !currentUser?.id) {
+      alert('Please sign in before requesting a car wash so the booking and review stay linked to your account.');
+      navigate('/sign-in');
+      return;
+    }
+
     if (!carWash?.contact) {
       alert("Contact information is missing.");
       return;
@@ -367,6 +372,11 @@ export default function CarWashPage() {
 
     if (!bookingData.address) {
       alert("Please provide your address for mobile service.");
+      return;
+    }
+
+    if (!bookingData.date || !bookingData.time) {
+      alert('Please choose a booking date and time.');
       return;
     }
 
@@ -463,8 +473,42 @@ export default function CarWashPage() {
 
     message += `_Sent via loopOut Car Wash Booking_`;
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(carWash.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    const bookingMessage = message.replace(/%0A/g, '\n');
+    const bookingStart = new Date(`${bookingData.date}T${bookingData.time}`);
+    const bookingEnd = new Date(bookingStart.getTime() + 60 * 60 * 1000);
+    const bookingPayload = {
+      serviceId: carWash._id,
+      startDate: bookingStart.toISOString(),
+      endDate: bookingEnd.toISOString(),
+      totalPrice,
+      phone: bookingData.phone,
+      message: bookingMessage,
+      subtype: `${selectedServiceDetails}; Vehicle: ${vehicleTypeDetails}`,
+      requestLocation: bookingData.address,
+      locationOption: 'comeToYou',
+    };
+
+    // Open a temporary window during the user gesture so the browser does not
+    // block WhatsApp while the booking is being saved.
+    const whatsappWindow = window.open('about:blank', '_blank');
+    try {
+      const response = await authenticatedFetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload),
+      });
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(responseData.message || responseData.error || 'Could not save this booking request.');
+
+      const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(carWash.contact)}?text=${encodeURIComponent(bookingMessage)}`;
+      if (whatsappWindow) whatsappWindow.location.href = whatsappUrl;
+      else window.location.href = whatsappUrl;
+    } catch (saveError) {
+      if (whatsappWindow) whatsappWindow.close();
+      console.error('Car wash booking save failed:', saveError);
+      alert(saveError.message || 'Could not save this booking. Please try again.');
+      return;
+    }
 
     // Close the booking form overlay
     closeBookingFormOverlay();
@@ -575,7 +619,7 @@ export default function CarWashPage() {
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
             <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3.5 py-2 text-slate-800">
               <FaStar className="text-amber-400" />
-              <span className="font-semibold">{hasReviews ? ratingLabel : 'New'}</span>
+              <span className="font-semibold">{hasReviews ? ratingLabel : 'No ratings yet'}</span>
               <span className="text-slate-500">{commentCount} {commentCount === 1 ? 'review' : 'reviews'}</span>
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaCheckCircle className="h-4 w-4 text-indigo-500" />{Number(carWash.bookingsCount) > 0 ? ` Booked ${carWash.bookingsCount} ${Number(carWash.bookingsCount) === 1 ? 'time' : 'times'}` : ' No bookings yet'}</span>
@@ -704,20 +748,19 @@ export default function CarWashPage() {
             <div className="pb-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-2 mb-6">
                 <FaStar className="text-amber-400 text-xl" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{hasReviews ? `${ratingLabel} · ${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}` : 'New · 0 reviews'}</h2>
+                {hasReviews && <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{ratingLabel} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}</h2>}
               </div>
-              <Comment
+              <ServiceComments
                 serviceId={carWash._id}
                 onTotalComments={setCommentCount}
                 maxComments={2}
+                cardStyle
+                showSummary
+                readOnly
+                horizontalStyle
+                categoryMode="carwash"
+                hideEmptyState
               />
-              
-              {commentCount > 2 && <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="mt-6 px-6 py-3 border border-gray-900 rounded-lg font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>}
             </div>
 
             {/* Car wash booking experience */}
@@ -845,14 +888,6 @@ export default function CarWashPage() {
         isTimeSlotBooked={isTimeSlotBooked}
         isDateFullyBooked={isDateFullyBooked}
       />
-
-      {/* Comments Side Panel */}
-      {showCommentsPanel && (
-        <CommentsSidePanelService
-          serviceId={carWash._id}
-          onClose={() => setShowCommentsPanel(false)}
-        />
-      )}
 
       {/* Mobile Bottom Bar */}
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 lg:hidden z-40 safe-area-bottom mobile-booking-bar">

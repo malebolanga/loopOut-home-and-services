@@ -32,6 +32,30 @@ const HELPER_RATING_CATEGORIES = [
   { field: 'valueRating', label: '💰 Great value' },
   { field: 'recommendationRating', label: '⭐ Highly recommended' }
 ];
+const CAR_WASH_RATING_CATEGORIES = [
+  { field: 'tyresRating', label: '🛞 Tyres' },
+  { field: 'interiorRating', label: '🪑 Interior' },
+  { field: 'exteriorRating', label: '✨ Exterior & body' },
+  { field: 'dashboardRating', label: '🧽 Dashboard' },
+  { field: 'windowsRating', label: '🪟 Windows' },
+  { field: 'matsRating', label: '🧹 Mats & carpets' },
+  { field: 'serviceCommunicationRating', label: '💬 Communication' }
+];
+const BARBER_RATING_CATEGORIES = [
+  { field: 'barberCleaningRating', label: '🧹 Cleaning' },
+  { field: 'haircutRating', label: '✂️ Haircut' },
+  { field: 'equipmentRating', label: '🧰 Equipment' },
+  { field: 'serviceCareRating', label: '💈 Service care' },
+  { field: 'barberCommunicationRating', label: '💬 Communication' }
+];
+const BEAUTY_RATING_CATEGORIES = [
+  { field: 'beautyCleaningRating', label: '🧹 Cleaning' },
+  { field: 'beautyCommunicationRating', label: '💬 Communication' },
+  { field: 'beautyEquipmentRating', label: '🧰 Equipment' },
+  { field: 'hairdressingRating', label: '💇 Hairdressing' },
+  { field: 'timelinessRating', label: '⏱️ On time' }
+];
+const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES].map(({ field }) => [field, 0]));
 
 export default function RatingModal({ 
   isOpen, 
@@ -41,7 +65,7 @@ export default function RatingModal({
 }) {
   const { currentUser } = useSelector((state) => state.user);
   const [rating, setRating] = useState(5);
-  const [categoryRatings, setCategoryRatings] = useState(() => Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
+  const [categoryRatings, setCategoryRatings] = useState(EMPTY_CATEGORY_RATINGS);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
@@ -53,7 +77,7 @@ export default function RatingModal({
   useEffect(() => {
     if (!isOpen) return;
     setRating(5);
-    setCategoryRatings(Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
+    setCategoryRatings(EMPTY_CATEGORY_RATINGS);
     setHoverRating(0);
     setComment('');
     setSelectedTags([]);
@@ -68,7 +92,15 @@ export default function RatingModal({
   const targetType = booking.type || (booking.listing ? 'listing' : booking.helper ? 'helper' : booking.event ? 'event' : 'service');
   const targetId = booking.itemId || booking.listing?._id || booking.helper?._id || booking.service?._id || booking.event?._id || booking._id;
   const targetTitle = booking.title || booking.itemName || booking.listing?.name || booking.helper?.name || booking.service?.name || booking.event?.name || 'Service';
+  const serviceType = String(booking.service?.type || booking.raw?.service?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
+  const serviceTitle = String(booking.service?.name || booking.title || booking.itemName || '').toLowerCase();
+  const normalizedServiceType = serviceType.replace(/[^a-z]/g, '');
+  const isCarWashRating = targetType === 'service' && (normalizedServiceType.includes('carwash') || serviceTitle.includes('car wash') || serviceTitle.includes('carwash'));
   const helper = booking.helper || booking.raw?.helper;
+  const helperType = String(helper?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
+  const isBarberRating = targetType === 'helper' && ['barber', 'barbar'].includes(helperType);
+  const isBeautyRating = targetType === 'helper' && ['beauty', 'spa'].includes(helperType);
+  const activeRatingCategories = isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
   const selectedPerformerName = booking.selectedPerformer || booking.raw?.selectedPerformer;
   const selectedPerformer = helper?.performers?.find((performer) =>
     String(performer.name || '').trim().toLowerCase() === String(selectedPerformerName || '').trim().toLowerCase()
@@ -107,16 +139,17 @@ export default function RatingModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     const isHelperRating = targetType === 'helper';
+    const isCategorizedRating = isHelperRating || targetType === 'service';
     const bookingId = booking.bookingId || booking.id || booking.raw?._id || booking._id;
     const selectedCategoryRatings = Object.fromEntries(Object.entries(categoryRatings).filter(([, value]) => Number(value) >= 1 && Number(value) <= 5));
     const selectedCategoryCount = Object.keys(selectedCategoryRatings).length;
-    const submittedRating = isHelperRating
+    const submittedRating = isCategorizedRating
       ? selectedCategoryCount
         ? Math.round(Object.values(selectedCategoryRatings).reduce((sum, value) => sum + value, 0) / selectedCategoryCount)
         : 0
       : rating;
     if (!submittedRating) {
-      setError(isHelperRating ? 'Please rate at least one service category.' : 'Please select a star rating.');
+      setError(isCategorizedRating ? 'Please rate at least one service category.' : 'Please select a star rating.');
       return;
     }
     if (!targetId || !bookingId) {
@@ -172,7 +205,9 @@ export default function RatingModal({
         endpoint = '/api/service-comments';
         payload = {
           ...payload,
-          serviceId: targetId
+          serviceId: targetId,
+          rating: submittedRating,
+          ...selectedCategoryRatings
         };
       }
 
@@ -280,7 +315,7 @@ export default function RatingModal({
                 <p className="text-xs text-white/70 font-semibold truncate mt-0.5">{targetTitle}</p>
                 <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-emerald-400">
                   <ShieldCheckIcon className="w-3.5 h-3.5" />
-                  <span>Booking complete &bull; Your honest feedback helps future clients</span>
+                  <span>{isBarberRating && selectedPerformerName ? `Selected barber: ${selectedPerformerName} · ` : ''}Booking complete &bull; Your honest feedback helps future clients</span>
                 </div>
               </div>
             </div>
@@ -310,10 +345,10 @@ export default function RatingModal({
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Star Rating Section */}
                 <div className="text-center space-y-2">
-                  {targetType === 'helper' ? (
+                  {targetType === 'helper' || targetType === 'service' ? (
                     <div className="space-y-4 rounded-2xl bg-slate-50 p-4 text-left">
                       <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">Rate each part of the service</p>
-                      {HELPER_RATING_CATEGORIES.map((category) => (
+                      {activeRatingCategories.map((category) => (
                         <div key={category.field} className="flex items-center justify-between gap-3">
                           <span className="text-xs font-bold text-slate-700">{category.label}</span>
                           <div className="flex items-center gap-0.5">

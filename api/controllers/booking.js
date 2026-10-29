@@ -6,6 +6,8 @@ import Event from '../models/event.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 import Escrow from '../models/escrow.model.js';
+import HelperComment from '../models/helper-comment.model.js';
+import ServiceComment from '../models/service-comment.model.js';
 import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -56,6 +58,8 @@ export const createBooking = async (req, res) => {
       totalPrice, price,
       phone, message, subtype, numberOfGuests, functionType,
       selectedPerformer, performerExperience, performerImage, numberOfRooms,
+      serviceDuration, selectedHaircut, beardGrooming, specialRequirements,
+      foodProvided, electricityProvided,
       requestLocation, locationOption
     } = req.body;
 
@@ -176,6 +180,12 @@ export const createBooking = async (req, res) => {
       selectedPerformer,
       performerExperience,
       performerImage,
+      serviceDuration,
+      selectedHaircut,
+      beardGrooming,
+      specialRequirements,
+      foodProvided: ['yes', 'no'].includes(foodProvided) ? foodProvided : undefined,
+      electricityProvided: ['yes', 'no'].includes(electricityProvided) ? electricityProvided : undefined,
       requestLocation: typeof requestLocation === 'string' ? requestLocation.trim().slice(0, 500) : undefined,
       locationOption: ['comeToYou', 'goToThem'].includes(locationOption) ? locationOption : undefined,
       status: 'pending'
@@ -360,8 +370,8 @@ export const getUserBookings = async (req, res) => {
     try {
       bookings = await Booking.find({ user: userId })
         .populate({ path: 'listing', select: 'name title imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
-        .populate({ path: 'helper', select: 'name title imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
-        .populate({ path: 'service', select: 'name title imageUrls address businessAddress location price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
+        .populate({ path: 'helper', select: 'name title type imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'service', select: 'name title type imageUrls address businessAddress location price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
         .populate({ path: 'event', select: 'name title imageUrls address businessAddress location price userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
         .populate('user', 'username avatar email phone')
         .sort({ createdAt: -1 })
@@ -371,7 +381,14 @@ export const getUserBookings = async (req, res) => {
       bookings = await Booking.find({ user: userId }).sort({ createdAt: -1 }).lean();
     }
 
-    return res.json(bookings);
+    const bookingIds = bookings.map((booking) => booking._id).filter(Boolean);
+    const [helperReviews, serviceReviews] = await Promise.all([
+      HelperComment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
+      ServiceComment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
+    ]);
+    const reviewedBookingIds = new Set([...helperReviews, ...serviceReviews].map((review) => String(review.bookingId)));
+
+    return res.json(bookings.map((booking) => ({ ...booking, isReviewed: reviewedBookingIds.has(String(booking._id)) })));
   } catch (error) {
     console.error('[BOOKINGS] getUserBookings error:', error.message);
     return res.status(500).json({ error: 'Server error', details: error.message });
@@ -664,7 +681,7 @@ export const updateBookingStatus = async (req, res) => {
             type: status === 'completed' ? 'review' : 'booking',
             title,
             message: messageText,
-            data: { bookingId: booking._id, itemType, itemId, status, price: booking.totalPrice, totalPrice: booking.totalPrice, canReview: (status === 'completed' || status === 'confirmed') }
+            data: { bookingId: booking._id, itemType, itemId, status, price: booking.totalPrice, totalPrice: booking.totalPrice, canReview: status === 'completed' }
           }).save();
         }
       } catch (notifErr) {

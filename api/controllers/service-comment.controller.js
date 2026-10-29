@@ -7,7 +7,12 @@ import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createServiceComment = async (req, res, next) => {
   try {
-    const { content, serviceId, bookingId, userName, userAvatar, rating } = req.body;
+    const {
+      content, serviceId, bookingId, userName, userAvatar, rating,
+      punctualityRating, qualityRating, communicationRating, cleanlinessRating,
+      respectfulnessRating, valueRating, recommendationRating,
+      tyresRating, interiorRating, exteriorRating, dashboardRating, windowsRating, matsRating, serviceCommunicationRating
+    } = req.body;
     const userId = req.user.id;
 
     if (!content || !serviceId) {
@@ -24,6 +29,14 @@ export const createServiceComment = async (req, res, next) => {
     if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this service booking can review it'));
     if (await ServiceComment.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
 
+    const categoryRatings = { punctualityRating, qualityRating, communicationRating, cleanlinessRating, respectfulnessRating, valueRating, recommendationRating, tyresRating, interiorRating, exteriorRating, dashboardRating, windowsRating, matsRating, serviceCommunicationRating };
+    for (const [field, value] of Object.entries(categoryRatings)) {
+      if (value === undefined || value === null || value === '') continue;
+      const score = Number(value);
+      if (!Number.isFinite(score) || score < 1 || score > 5) return next(errorHandler(400, `${field} must be between 1 and 5`));
+      categoryRatings[field] = score;
+    }
+
     const comment = new ServiceComment({
       content,
       bookingId,
@@ -31,7 +44,8 @@ export const createServiceComment = async (req, res, next) => {
       userId,
       userName: userName || req.user.username,
       userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
-      rating: rating ? Number(rating) : 5
+      rating: rating ? Number(rating) : 5,
+      ...categoryRatings
     });
 
     await comment.save();
@@ -66,7 +80,7 @@ export const getServiceComments = async (req, res, next) => {
   try {
     const { serviceId } = req.params;
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
+    const limit = req.query.all === 'true' ? 0 : Math.max(1, parseInt(req.query.limit, 10) || 5);
     const skip = (page - 1) * limit;
 
     const serviceExists = await Service.exists({ _id: serviceId });
@@ -74,17 +88,32 @@ export const getServiceComments = async (req, res, next) => {
       return next(errorHandler(404, 'Service not found'));
     }
 
-    const comments = await ServiceComment.find({ serviceId })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    let commentsQuery = ServiceComment.find({ serviceId }).sort({ createdAt: -1 });
+    if (limit > 0) commentsQuery = commentsQuery.skip(skip).limit(limit);
+    const comments = await commentsQuery;
 
     const totalComments = await ServiceComment.countDocuments({ serviceId });
+    const allReviews = await ServiceComment.find({ serviceId }).select('rating bookingId punctualityRating qualityRating communicationRating cleanlinessRating respectfulnessRating valueRating recommendationRating tyresRating interiorRating exteriorRating dashboardRating windowsRating matsRating serviceCommunicationRating').lean();
+    const ratings = allReviews.map((review) => Number(review.rating)).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+    const overall = ratings.length ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length : 0;
+    const categoryFields = ['punctualityRating', 'qualityRating', 'communicationRating', 'cleanlinessRating', 'respectfulnessRating', 'valueRating', 'recommendationRating'];
+    const carWashCategoryFields = ['tyresRating', 'interiorRating', 'exteriorRating', 'dashboardRating', 'windowsRating', 'matsRating', 'serviceCommunicationRating'];
+    const categoryAverages = Object.fromEntries([...categoryFields, ...carWashCategoryFields].map((field) => {
+      const scores = allReviews.map((review) => Number(review[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+      return [field, scores.length ? scores.reduce((sum, value) => sum + value, 0) / scores.length : 0];
+    }));
+    const ratingCounts = Object.fromEntries([...categoryFields, ...carWashCategoryFields].map((field) => [
+      field,
+      allReviews.filter((review) => Number.isFinite(Number(review[field])) && Number(review[field]) >= 1 && Number(review[field]) <= 5).length
+    ]));
 
     res.status(200).json({
       comments,
       totalComments,
-      totalPages: Math.ceil(totalComments / limit),
+      ratings: { overall, ...categoryAverages },
+      ratingCounts,
+      ratedBookingIds: allReviews.map((review) => String(review.bookingId || '')).filter(Boolean),
+      totalPages: limit > 0 ? Math.ceil(totalComments / limit) : 1,
       currentPage: page
     });
   } catch (error) {

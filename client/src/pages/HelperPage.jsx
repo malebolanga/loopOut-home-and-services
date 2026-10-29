@@ -3251,9 +3251,9 @@ export default function HelperPage() {
           </div>
           <button
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-[0.12em] rounded-xl transition-all active:scale-95"
           >
-            Review & Reserve
+            Book
           </button>
         </div>
       </div>

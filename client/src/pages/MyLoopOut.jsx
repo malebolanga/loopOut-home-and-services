@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import {
   Star, UtensilsCrossed, X
 } from 'lucide-react';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } from '../utils/barberBookingDetails';
 import { rateShop, subscribeToOrders, updateOrderStatus } from '../services/lunchService';
 import RatingModal from '../components/RatingModal';
 
@@ -67,6 +68,7 @@ function normalizeBooking(booking) {
     needsAction: normalizedStatus(status) === 'work_completed',
     completed: isComplete(status),
     cancelled: isCancelled(status),
+    isReviewed: Boolean(booking.isReviewed),
   };
 }
 
@@ -140,10 +142,12 @@ function ProgressSteps({ labels, current, cancelled = false, tone = 'rose' }) {
 function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCancel, onGoodsStatus, onReportIssue }) {
   const isFood = item.kind === 'food';
   const isGoods = item.kind === 'goods';
-  const needsRating = item.completed && (isFood ? !item.raw.isRated : true);
+  const isBarberBooking = item.kind === 'booking' && isBarberBookingRecord(item.raw || {});
+  const barberBookingDetails = getBarberBookingDetails(item.raw || {});
+  const needsRating = item.completed && (isFood ? !item.raw.isRated : !item.isReviewed);
   const actionText = item.needsAction
     ? (isFood ? (item.fulfillment === 'delivery' ? 'Confirm delivery received' : 'I collected this order') : 'Confirm complete & rate')
-    : needsRating ? (isFood ? 'Rate this order' : 'Rate your provider') : isFood ? 'View food orders' : isGoods ? 'Item request' : 'View details';
+    : needsRating ? (isFood ? 'Rate this order' : isBarberBookingRecord(item.raw) && item.raw?.selectedPerformer ? `Rate ${item.raw.selectedPerformer}` : 'Rate your provider') : isFood ? 'View food orders' : isGoods ? 'Item request' : 'View details';
 
   return (
     <motion.article layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
@@ -167,6 +171,16 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
       </div>
 
       {item.location && <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-gray-400"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{item.location}</span></p>}
+
+      {isBarberBooking && <div className="mt-3 grid grid-cols-1 gap-1.5 rounded-xl bg-blue-50/70 p-3 text-[11px] text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+        <span>👤 Member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
+        {barberBookingDetails.serviceDuration && <span>⏱️ Duration: {barberBookingDetails.serviceDuration}</span>}
+        {barberBookingDetails.selectedHaircut && <span>✂️ Haircut: {barberBookingDetails.selectedHaircut}</span>}
+        {barberBookingDetails.beardGrooming && <span>🧔 Beard grooming: {barberBookingDetails.beardGrooming}</span>}
+        {barberBookingDetails.foodProvided && <span>🍽️ Food: {barberBookingDetails.foodProvided === 'yes' ? 'Provided' : 'Not provided'}</span>}
+        {barberBookingDetails.electricityProvided && <span>⚡ Electricity: {barberBookingDetails.electricityProvided === 'yes' ? 'Available' : 'Not available'}</span>}
+        {barberBookingDetails.specialRequirements && <span className="truncate sm:col-span-2" title={barberBookingDetails.specialRequirements}>📝 Special request: {barberBookingDetails.specialRequirements}</span>}
+      </div>}
 
       {isGoods && item.issueReports.some((issue) => issue.status === 'Open') && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><span className="inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />Issue reported · {item.issueReports.find((issue) => issue.status === 'Open')?.category}</span><p className="mt-1 font-medium">This report is saved with the request and shared with both parties.</p></div>}
 
@@ -203,6 +217,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
 
 export default function MyLoopOut() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useSelector((state) => state.user || {});
   const [bookings, setBookings] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -227,6 +242,18 @@ export default function MyLoopOut() {
   const previousStatuses = useRef(null);
 
   const userId = currentUser?._id || currentUser?.id;
+
+  useEffect(() => {
+    const requestedBookingId = location.state?.reviewBookingId;
+    if (!requestedBookingId || bookingsLoading) return;
+    const bookingToReview = bookings.find((item) => item.id === String(requestedBookingId) && item.completed && !item.isReviewed);
+    if (bookingToReview) {
+      setRatingBooking({ ...bookingToReview.raw, id: bookingToReview.id, type: bookingToReview.resourceType, itemId: bookingToReview.resourceId, title: bookingToReview.title, proName: bookingToReview.provider });
+    } else if (bookings.some((item) => item.id === String(requestedBookingId) && item.isReviewed)) {
+      setNotice('You have already reviewed this completed booking.');
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [bookings, bookingsLoading, location.pathname, location.state, navigate]);
 
   const loadBookings = useCallback(async (signal) => {
     if (!userId) return;
@@ -492,7 +519,17 @@ export default function MyLoopOut() {
   const loading = bookingsLoading || ordersLoading;
   const detailRaw = detailsBooking?.raw || {};
   const detailResource = detailRaw.listing || detailRaw.helper || detailRaw.service || detailRaw.event || {};
+  const isBarberBooking = isBarberBookingRecord(detailRaw);
+  const barberBookingDetails = getBarberBookingDetails(detailRaw);
   const detailServices = String(detailRaw.subtype || detailRaw.functionType || '').split(/[,;]+/).map((service) => service.trim()).filter(Boolean);
+  const detailProviderName = detailResource.name || detailResource.title || detailsBooking?.provider || 'Service provider';
+  const detailProviderImage = detailResource.imageUrls?.[0] || detailResource.images?.[0] || detailResource.image || '';
+  const detailDurationMinutes = Math.max(0, (new Date(detailRaw.endDate || 0).getTime() - new Date(detailRaw.startDate || 0).getTime()) / 60000);
+  const detailDuration = detailDurationMinutes >= 1440
+    ? `${Math.round(detailDurationMinutes / 1440)} day${Math.round(detailDurationMinutes / 1440) === 1 ? '' : 's'}`
+    : detailDurationMinutes >= 60
+      ? `${Math.round(detailDurationMinutes / 60)} hour${Math.round(detailDurationMinutes / 60) === 1 ? '' : 's'}`
+      : detailDurationMinutes > 0 ? `${Math.round(detailDurationMinutes)} minutes` : '';
   const detailStart = formatDate(detailRaw.startDate || detailRaw.date);
   const detailEnd = detailRaw.endDate && new Date(detailRaw.endDate).getTime() !== new Date(detailRaw.startDate).getTime() ? formatDate(detailRaw.endDate) : '';
   const clientWorkAddress = detailRaw.requestLocation || detailRaw.clientAddress || '';
@@ -503,6 +540,7 @@ export default function MyLoopOut() {
     : detailRaw.locationOption === 'goToThem'
       ? providerVisitAddress
       : clientWorkAddress;
+  const detailMapLink = detailRaw.mapLink || (detailLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detailLocation)}` : '');
   const detailTravelLabel = detailRaw.locationOption === 'comeToYou'
     ? '🚗 Provider comes to you'
     : detailRaw.locationOption === 'goToThem'
@@ -574,7 +612,7 @@ export default function MyLoopOut() {
         )}
       </main>
 
-      <RatingModal isOpen={Boolean(ratingBooking)} onClose={() => setRatingBooking(null)} booking={ratingBooking} onReviewSubmitted={() => setRatingBooking(null)} />
+      <RatingModal isOpen={Boolean(ratingBooking)} onClose={() => setRatingBooking(null)} booking={ratingBooking} onReviewSubmitted={() => { const reviewedId = String(ratingBooking?.id || ratingBooking?._id || ''); setRatingBooking(null); setBookings((current) => current.map((entry) => entry.id === reviewedId ? { ...entry, isReviewed: true } : entry)); }} />
 
       <AnimatePresence>
         {detailsBooking && <motion.div
@@ -598,6 +636,13 @@ export default function MyLoopOut() {
             </div>
 
             <div className="space-y-5 px-5 py-5">
+              <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-gray-800/70">
+                <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-2xl dark:bg-gray-700">
+                  <span aria-hidden="true">👤</span>
+                  {detailProviderImage && <img src={detailProviderImage} alt={`${detailProviderName} service`} className="absolute inset-0 h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} />}
+                </div>
+                <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-wider text-slate-500">Service provider</p><p className="truncate text-sm font-bold text-slate-900 dark:text-white">{detailProviderName}</p>{!isBarberBooking && detailsBooking.provider && detailRaw.selectedPerformer && <p className="truncate text-xs text-slate-500 dark:text-gray-400">Account: {detailsBooking.provider}</p>}</div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50 p-4 dark:bg-gray-800/70">
                   <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">📅 Date &amp; time</p>
@@ -609,23 +654,39 @@ export default function MyLoopOut() {
                   {detailTravelLabel && <p className="mt-1.5 text-xs font-bold text-rose-600 dark:text-rose-300">{detailTravelLabel}</p>}
                   <p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">{detailLocation || (detailRaw.locationOption === 'comeToYou' ? 'Client work address was not saved with this booking' : detailRaw.locationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with the provider')}</p>
                   {detailRaw.locationOption === 'comeToYou' && <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">The provider comes to your address</p>}
+                  {detailMapLink && <a href={detailMapLink} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-bold text-rose-600 hover:underline dark:text-rose-300">🗺️ Open in Maps</a>}
                 </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                {detailDuration && <div className="rounded-2xl bg-slate-50 p-4 dark:bg-gray-800/70"><p className="text-[10px] font-black uppercase tracking-wider text-slate-500">⏱️ Duration</p><p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">{detailDuration}</p></div>}
+                {detailRaw.phone && <div className="rounded-2xl bg-slate-50 p-4 dark:bg-gray-800/70"><p className="text-[10px] font-black uppercase tracking-wider text-slate-500">📞 Contact</p><p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">{detailRaw.phone}</p></div>}
               </div>
 
               <section>
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">🧰 What you booked</h3>
                 {detailServices.length > 0 ? <div className="mt-2 flex flex-wrap gap-2">{detailServices.map((service, index) => <span key={`${service}-${index}`} className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">{service}</span>)}</div> : <p className="mt-2 text-sm text-slate-600 dark:text-gray-300">{detailsBooking.title}</p>}
-                {(detailRaw.numberOfGuests || detailRaw.numberOfRooms || detailRaw.selectedPerformer || detailRaw.functionType) && <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-gray-300">
+                {(detailRaw.numberOfGuests || (detailRaw.listing && detailRaw.numberOfRooms) || detailRaw.selectedPerformer || detailRaw.functionType || detailRaw.performerExperience) && <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-gray-300">
                   {detailRaw.numberOfGuests && <span>👥 {detailRaw.numberOfGuests} guest{Number(detailRaw.numberOfGuests) === 1 ? '' : 's'}</span>}
-                  {detailRaw.numberOfRooms && <span>🛏️ {detailRaw.numberOfRooms} room{Number(detailRaw.numberOfRooms) === 1 ? '' : 's'}</span>}
+                  {detailRaw.listing && detailRaw.numberOfRooms && <span>🛏️ {detailRaw.numberOfRooms} room{Number(detailRaw.numberOfRooms) === 1 ? '' : 's'}</span>}
                   {detailRaw.selectedPerformer && <span>👤 Requested worker: {detailRaw.selectedPerformer}</span>}
                   {detailRaw.functionType && <span>🎉 {detailRaw.functionType}</span>}
+                  {detailRaw.performerExperience && <span>🏅 {detailRaw.performerExperience}</span>}
+                </div>}
+                {isBarberBooking && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                  <span>👤 Selected member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
+                  {(barberBookingDetails.serviceDuration || detailDuration) && <span>⏱️ Selected duration: {barberBookingDetails.serviceDuration || detailDuration}</span>}
+                  {barberBookingDetails.selectedHaircut && <span>✂️ Haircut style: {barberBookingDetails.selectedHaircut}</span>}
+                  {barberBookingDetails.beardGrooming && <span>🧔 Beard grooming: {barberBookingDetails.beardGrooming}</span>}
+                  {barberBookingDetails.foodProvided && <span>🍽️ Food provided: {barberBookingDetails.foodProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                  {barberBookingDetails.electricityProvided && <span>⚡ Electricity available: {barberBookingDetails.electricityProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                  {barberBookingDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {barberBookingDetails.specialRequirements}</p>}
                 </div>}
               </section>
 
-              {detailRaw.message && <section className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+              {detailRaw.message && !isBarberBooking && <section className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">📝 Notes for the provider</h3>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-gray-200">{String(detailRaw.message).slice(0, 700)}</p>
+                <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-gray-200">{String(detailRaw.message)}</p>
               </section>}
 
               {detailsBooking.price != null && <div className="flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800"><span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span><span className="text-lg font-black text-slate-900 dark:text-white">R{Number(detailsBooking.price).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span></div>}
@@ -636,7 +697,8 @@ export default function MyLoopOut() {
             <div className="sticky bottom-0 flex flex-wrap gap-2 border-t border-slate-100 bg-white/95 px-5 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
               {detailMayCancel && <button type="button" disabled={!detailCanCancel || busyId === detailsBooking.id} onClick={() => cancelItem(detailsBooking)} className="min-h-11 flex-1 rounded-xl border border-slate-300 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">{detailCanCancel ? 'Cancel booking' : '48-hour cancellation window closed'}</button>}
               {detailsBooking.needsAction && <button type="button" disabled={busyId === detailsBooking.id} onClick={() => finishItem(detailsBooking)} className="min-h-11 flex-1 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black uppercase tracking-wide text-white hover:bg-emerald-700 disabled:opacity-50">Complete &amp; rate</button>}
-              {detailsBooking.completed && <button type="button" onClick={() => { setRatingBooking({ ...detailRaw, id: detailsBooking.id, type: detailsBooking.resourceType, itemId: detailsBooking.resourceId, title: detailsBooking.title, proName: detailsBooking.provider }); setDetailsBooking(null); }} className="min-h-11 flex-1 rounded-xl bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-wide text-white hover:bg-amber-600">Rate provider</button>}
+              {detailsBooking.completed && !detailsBooking.isReviewed && <button type="button" onClick={() => { setRatingBooking({ ...detailRaw, id: detailsBooking.id, type: detailsBooking.resourceType, itemId: detailsBooking.resourceId, title: detailsBooking.title, proName: detailRaw.selectedPerformer || detailsBooking.provider }); setDetailsBooking(null); }} className="min-h-11 flex-1 rounded-xl bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-wide text-white hover:bg-amber-600">{isBarberBooking ? `Rate ${detailRaw.selectedPerformer || 'your barber'}` : 'Rate provider'}</button>}
+              {detailsBooking.isReviewed && <p className="flex flex-1 items-center justify-center rounded-xl bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">✓ Review submitted for this booking</p>}
               {detailsBooking.providerId && <button type="button" onClick={() => messageProvider(detailsBooking)} className="min-h-11 rounded-xl border border-slate-200 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Message provider</button>}
             </div>
           </motion.section>

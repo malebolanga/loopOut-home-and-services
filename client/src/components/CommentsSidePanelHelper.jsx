@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import HelperComments from './HelperComments';
 
-const CommentsSidePanel = ({ helperId, onClose, onTotalComments, onRatingsChange, totalComments = 0, presentation = 'side' }) => {
+const CommentsSidePanel = ({ helperId, helperType = '', onClose, onTotalComments, onRatingsChange, totalComments = 0, presentation = 'side' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const isBottomSheet = presentation === 'bottom';
@@ -59,6 +59,7 @@ const CommentsSidePanel = ({ helperId, onClose, onTotalComments, onRatingsChange
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7 sm:py-6">
           <HelperComments
             helperId={helperId}
+            helperType={helperType}
             showSummary={true}
             cardStyle={true}
             maxComments={0}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiBell, FiCheck, FiTrash2, FiClock, FiArrowLeft } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
+import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } from '../utils/barberBookingDetails';
 
 const parsePriceFromText = (text) => {
     if (!text || typeof text !== 'string') return null;
@@ -41,6 +42,16 @@ const extractAddressFromBookingMessage = (message) => {
         } catch (_e) {}
     }
 
+    return '';
+};
+
+const getNotificationDisplayMessage = (notification) => {
+    const message = notification?.message || '';
+    const isBarberBooking = notification?.type === 'booking' && /barber|barbar/i.test(message);
+    if (!isBarberBooking) return message;
+
+    // This is the WhatsApp-ready message saved with the booking. Keep it out of
+    // the notification UI, where the dedicated booking details are shown instead.
     return '';
 };
 
@@ -118,6 +129,16 @@ const formatScheduleTime = (value) => {
     return date.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
+const formatBarberScheduleTime = (value) => {
+    if (!value) return 'Not provided';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Not provided';
+    return date.toLocaleString('en-ZA', {
+        weekday: 'short', day: '2-digit', month: 'short',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    });
+};
+
 export default function Notifications() {
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
@@ -135,14 +156,6 @@ export default function Notifications() {
     const getToken = useCallback(() => {
         return localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.access_token || currentUser?.token || '';
     }, [currentUser?._id]);
-
-    useEffect(() => {
-        if (!currentUser) {
-            navigate('/sign-in');
-            return;
-        }
-        fetchNotifications();
-    }, [currentUser?._id, navigate]);
 
     useEffect(() => {
         if (!currentUser?._id) return;
@@ -256,10 +269,12 @@ export default function Notifications() {
         return () => { active = false; };
     }, [selectedNotification, getToken]);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async ({ silent = false } = {}) => {
         try {
-            setLoading(true);
-            setError(null);
+            if (!silent) {
+                setLoading(true);
+                setError(null);
+            }
             let apiNotifs = [];
             try {
                 const token = getToken();
@@ -272,9 +287,12 @@ export default function Notifications() {
                 if (res.ok) {
                     const data = await res.json();
                     apiNotifs = data.notifications || [];
+                } else {
+                    throw new Error(`Could not load notifications (${res.status}).`);
                 }
             } catch (err) {
                 console.warn('[NOTIF CLIENT] API fetch error, using local fallback:', err?.message);
+                if (silent) return;
             }
 
             // Fetch local storage notifications for current user
@@ -307,11 +325,33 @@ export default function Notifications() {
 
             setNotifications(combined);
         } catch (err) {
-            setError(err.message);
+            if (!silent) setError(err.message);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
-    };
+    }, [currentUser?._id, getToken]);
+
+    useEffect(() => {
+        if (!currentUser) {
+            navigate('/sign-in');
+            return;
+        }
+
+        fetchNotifications();
+
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === 'visible') {
+                fetchNotifications({ silent: true });
+            }
+        };
+        const intervalId = window.setInterval(refreshWhenVisible, 15000);
+        document.addEventListener('visibilitychange', refreshWhenVisible);
+
+        return () => {
+            window.clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', refreshWhenVisible);
+        };
+    }, [currentUser?._id, navigate, fetchNotifications]);
 
     const markAsRead = async (id) => {
         try {
@@ -453,7 +493,9 @@ export default function Notifications() {
             } else if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
                 navigate('/my-orders');
             } else if (notification.type === 'review' || canReview) {
-                if (itemType && itemId) {
+                if (notification.data.bookingId) {
+                    navigate('/my-loopout', { state: { reviewBookingId: String(notification.data.bookingId) } });
+                } else if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
                 } else {
                     navigate('/dashboard');
@@ -551,6 +593,8 @@ export default function Notifications() {
     const isPending = bookingDetails?.status === 'pending';
     const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
     const isCompleted = bookingDetails?.status === 'completed';
+    const isBarberBooking = isBarberBookingRecord(bookingDetails || {});
+    const barberBookingDetails = getBarberBookingDetails(bookingDetails || {}, selectedNotification?.message || '');
     const cancelDeadline = bookingDetails?.startDate ? new Date(bookingDetails.startDate).getTime() - (48 * 60 * 60 * 1000) : NaN;
     const canRequesterCancel = Number.isFinite(cancelDeadline) && Date.now() <= cancelDeadline;
 
@@ -558,7 +602,7 @@ export default function Notifications() {
     const itemId = bookingDetails?.listing?._id || bookingDetails?.helper?._id || bookingDetails?.service?._id || bookingDetails?.event?._id;
     // Show the image the host posted for this service/listing, not a worker or account avatar.
     const bookingProviderImage = bookingDetails?.helper?.imageUrls?.[0] || bookingDetails?.service?.imageUrls?.[0] || bookingDetails?.event?.imageUrls?.[0] || bookingDetails?.listing?.imageUrls?.[0] || '';
-    const bookingProviderName = bookingDetails?.selectedPerformer || bookingDetails?.helper?.name || bookingDetails?.service?.name || bookingDetails?.service?.title || bookingDetails?.event?.title || bookingDetails?.listing?.userRef?.username || 'Service provider';
+    const bookingProviderName = bookingDetails?.helper?.name || bookingDetails?.service?.name || bookingDetails?.service?.title || bookingDetails?.event?.title || bookingDetails?.listing?.userRef?.username || bookingDetails?.selectedPerformer || 'Service provider';
     const messageAddress = extractAddressFromBookingMessage(bookingDetails?.message) || extractAddressFromBookingMessage(selectedNotification?.message);
     const parsedLocOption = bookingDetails?.locationOption || selectedNotification?.data?.locationOption || extractLocationOptionFromMessage(bookingDetails?.message) || extractLocationOptionFromMessage(selectedNotification?.message) || '';
     const customerWorkAddress = bookingDetails?.requestLocation || selectedNotification?.data?.requestLocation || selectedNotification?.data?.clientAddress || messageAddress || '';
@@ -580,6 +624,14 @@ export default function Notifications() {
     const isFoodDetails = selectedNotification?.type === 'food_order' || Boolean(selectedNotification?.data?.orderId || selectedNotification?.data?.orderCode);
     const detailLocation = isFoodDetails ? (foodLocation || '') : bookingLocation;
     const detailMapLink = selectedNotification?.data?.mapLink || (detailLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detailLocation)}` : '');
+    const bookingDurationMinutes = bookingDetails?.startDate && bookingDetails?.endDate
+        ? Math.max(0, (new Date(bookingDetails.endDate).getTime() - new Date(bookingDetails.startDate).getTime()) / 60000)
+        : 0;
+    const bookingDuration = bookingDurationMinutes >= 1440
+        ? `${Math.round(bookingDurationMinutes / 1440)} day${Math.round(bookingDurationMinutes / 1440) === 1 ? '' : 's'}`
+        : bookingDurationMinutes >= 60
+            ? `${Math.round(bookingDurationMinutes / 60)} hour${Math.round(bookingDurationMinutes / 60) === 1 ? '' : 's'}`
+            : bookingDurationMinutes > 0 ? `${Math.round(bookingDurationMinutes)} minutes` : '';
 
     if (loading) {
         return (
@@ -740,9 +792,30 @@ export default function Notifications() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className={`text-xs sm:text-sm mb-2.5 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
-                                            {notification.message}
-                                        </p>
+                                        {getNotificationDisplayMessage(notification) && (
+                                            <p className={`text-xs sm:text-sm mb-2.5 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
+                                                {getNotificationDisplayMessage(notification)}
+                                            </p>
+                                        )}
+
+                                        {(() => {
+                                            const notifIsBarber = isBarberBookingRecord(notification) || (notification.type === 'booking' && /barber|barbar/i.test(`${notification.title || ''} ${notification.message || ''}`));
+                                            if (!notifIsBarber) return null;
+                                            const details = getBarberBookingDetails({ message: notification.message, ...(notification.data || {}) }, notification.message);
+                                            const hasAnyDetail = Boolean(details.selectedPerformer || details.serviceDuration || details.selectedHaircut || details.foodProvided || details.electricityProvided);
+                                            if (!hasAnyDetail) return null;
+                                            return (
+                                                <div className="mb-3 grid grid-cols-1 gap-1.5 rounded-xl bg-blue-50/70 p-3 text-[11px] text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    <span>👤 Member: {details.selectedPerformer || 'Any available member'}</span>
+                                                    {details.serviceDuration && <span>⏱️ Duration: {details.serviceDuration}</span>}
+                                                    {details.selectedHaircut && <span>✂️ Haircut: {details.selectedHaircut}</span>}
+                                                    {details.beardGrooming && <span>🧔 Beard grooming: {details.beardGrooming}</span>}
+                                                    {details.foodProvided && <span>🍽️ Food: {details.foodProvided === 'yes' ? 'Provided' : 'Not provided'}</span>}
+                                                    {details.electricityProvided && <span>⚡ Electricity: {details.electricityProvided === 'yes' ? 'Available' : 'Not available'}</span>}
+                                                    {details.specialRequirements && <span className="truncate sm:col-span-2" title={details.specialRequirements}>📝 Special request: {details.specialRequirements}</span>}
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Display price just below the notification information */}
                                         {priceInfo && (
@@ -828,9 +901,11 @@ export default function Notifications() {
                             </div>
 
                             <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-gray-800 mb-4 sm:mb-8 flex-1 overflow-y-auto">
-                                <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
-                                    {selectedNotification.message}
-                                </p>
+                                {getNotificationDisplayMessage(selectedNotification) && (
+                                    <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+                                        {getNotificationDisplayMessage(selectedNotification)}
+                                    </p>
+                                )}
 
                                 {(selectedNotification.type === 'reference' || selectedNotification.data?.isReference) && (
                                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60">
@@ -885,26 +960,27 @@ export default function Notifications() {
 
                                 {bookingDetails && !loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">📋 Booking Request Details</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{isBarberBooking ? '📋 Booking details · helper' : '📋 Booking Request Details'}</h3>
+                                        {isBarberBooking && <p className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase ${isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : isConfirmed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>📌 Status: {bookingDetails.status}</p>}
                                         <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3 dark:bg-gray-900">
                                             <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-2xl dark:bg-gray-800">
                                                 <span aria-hidden="true">👤</span>
                                                 {bookingProviderImage && <img src={bookingProviderImage} alt={`${bookingProviderName}, service provider`} className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.remove(); }} />}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Service photo</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{isBarberBooking ? 'Service provider' : 'Service photo'}</p>
                                                 <p className="truncate font-semibold text-gray-900 dark:text-white">{bookingProviderName}</p>
-                                                {bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
+                                                {!isBarberBooking && bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
+                                            {!isBarberBooking && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">🧰 Service / Listing</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
-                                            </div>
-                                            <div>
+                                            </div>}
+                                            {!isBarberBooking && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">
                                                     {isRequester ? '👤 Provider / Host' : '👤 Client Name'}
                                                 </p>
@@ -913,8 +989,8 @@ export default function Notifications() {
                                                         ? (bookingDetails.listing?.userRef?.username || bookingDetails.helper?.userRef?.username || bookingDetails.service?.userRef?.username || bookingDetails.service?.creator?.username || bookingDetails.helper?.name || bookingDetails.listing?.name || 'Provider / Host')
                                                         : (bookingDetails.user?.username || 'Client')}
                                                 </p>
-                                            </div>
-                                            <div>
+                                            </div>}
+                                            {!isBarberBooking && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">💰 Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">
                                                     ZAR {Number(
@@ -925,24 +1001,21 @@ export default function Notifications() {
                                                         0
                                                     ).toLocaleString()}
                                                 </p>
-                                            </div>
+                                            </div>}
                                             <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">📅 Date &amp; time</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
-                                                    {formatScheduleTime(bookingDetails.startDate)} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `– ${formatScheduleTime(bookingDetails.endDate)}` : ''}
+                                                    {isBarberBooking ? formatBarberScheduleTime(bookingDetails.startDate) : formatScheduleTime(bookingDetails.startDate)} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? (isBarberBooking ? <><br /><span className="text-xs text-gray-500 dark:text-gray-400">Until {formatBarberScheduleTime(bookingDetails.endDate)}</span></> : `– ${formatScheduleTime(bookingDetails.endDate)}`) : ''}
                                                 </p>
                                             </div>
-                                            {bookingDetails.phone && (
-                                                <div>
-                                                    <p className="text-sm text-gray-500 dark:text-white">📞 Contact Number</p>
-                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.phone}</p>
-                                                </div>
-                                            )}
+                                            {!isBarberBooking && bookingDuration && <div>
+                                                <p className="text-sm text-gray-500 dark:text-white">⏱️ Duration</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">{bookingDuration}</p>
+                                            </div>}
                                             <div className="sm:col-span-2 rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 sm:p-5 dark:border-rose-900/50 dark:bg-rose-950/20 shadow-xs">
                                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5 mb-3">
                                                     <p className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-                                                        <span>📍</span>
-                                                        <span>LOCATION &amp; NAVIGATION</span>
+                                                        <span>{isBarberBooking ? '📍 Location' : 'LOCATION & NAVIGATION'}</span>
                                                     </p>
                                                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                                                         isClientWorkLocation
@@ -955,7 +1028,11 @@ export default function Notifications() {
                                                     </span>
                                                 </div>
 
-                                                <div className="space-y-3">
+                                                {isBarberBooking ? <div className="space-y-2">
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{detailLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}</p>
+                                                    {isClientWorkLocation && detailLocation && <p className="text-xs text-gray-600 dark:text-gray-300">The provider comes to your address</p>}
+                                                    {detailMapLink && <a href={detailMapLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:underline dark:text-rose-300">🗺️ Open in Maps</a>}
+                                                </div> : <div className="space-y-3">
                                                     <div>
                                                         <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                             📍 Type
@@ -995,20 +1072,46 @@ export default function Notifications() {
                                                             </a>
                                                         </div>
                                                     )}
-                                                </div>
+                                                </div>}
                                             </div>
-                                            {(bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.message) && <div className="sm:col-span-2 rounded-xl bg-white p-3 dark:bg-gray-900">
-                                                <p className="text-sm text-gray-500 dark:text-white">📝 Services and booking details</p>
+                                            {isBarberBooking && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                {bookingDuration && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">⏱️ Duration</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDuration}</p></div>}
+                                                {bookingDetails.phone && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">📞 Contact</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDetails.phone}</p></div>}
+                                            </div>}
+                                            {(isBarberBooking || bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.performerExperience || bookingDetails.numberOfGuests || barberBookingDetails.serviceDuration || barberBookingDetails.selectedHaircut || barberBookingDetails.beardGrooming || barberBookingDetails.specialRequirements || barberBookingDetails.foodProvided || barberBookingDetails.electricityProvided || (bookingDetails.message && !isBarberBooking)) && <div className={`sm:col-span-2 rounded-xl p-3 ${isBarberBooking ? 'bg-blue-50/70 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'}`}>
+                                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isBarberBooking ? '🧰 What you booked' : '📝 Services and booking details'}</p>
                                                 {bookingDetails.subtype && <p className="mt-1 font-semibold text-gray-900 dark:text-white">{bookingDetails.subtype}</p>}
                                                 {bookingDetails.functionType && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{bookingDetails.functionType}</p>}
-                                                {bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
-                                                {bookingDetails.message && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message).slice(0, 800)}</p>}
+                                                {isBarberBooking && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    <span>👤 Selected member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
+                                                    {(barberBookingDetails.serviceDuration || bookingDuration) && <span>⏱️ Selected duration: {barberBookingDetails.serviceDuration || bookingDuration}</span>}
+                                                    {barberBookingDetails.selectedHaircut && <span>✂️ Haircut style: {barberBookingDetails.selectedHaircut}</span>}
+                                                    {barberBookingDetails.beardGrooming && <span>🧔 Beard grooming: {barberBookingDetails.beardGrooming}</span>}
+                                                    {barberBookingDetails.foodProvided && <span>🍽️ Food provided: {barberBookingDetails.foodProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                                                    {barberBookingDetails.electricityProvided && <span>⚡ Electricity available: {barberBookingDetails.electricityProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                                                    {barberBookingDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {barberBookingDetails.specialRequirements}</p>}
+                                                </div>}
+                                                {!isBarberBooking && bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
+                                                {bookingDetails.performerExperience && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Experience: {bookingDetails.performerExperience}</p>}
+                                                {bookingDetails.numberOfGuests && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">👥 {bookingDetails.numberOfGuests} guest{Number(bookingDetails.numberOfGuests) === 1 ? '' : 's'}</p>}
+                                                {!isBarberBooking && barberBookingDetails.serviceDuration && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">⏱️ Selected duration: {barberBookingDetails.serviceDuration}</p>}
+                                                {bookingDetails.message && !isBarberBooking && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message)}</p>}
+                                            </div>}
+                                            {isBarberBooking && <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800">
+                                                <span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white">R{Number(
+                                                    selectedNotification?.data?.price ||
+                                                    selectedNotification?.data?.totalPrice ||
+                                                    parsePriceFromText(selectedNotification?.message) ||
+                                                    bookingDetails.totalPrice ||
+                                                    0
+                                                ).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>
                                             </div>}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
-                                                    <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>
+                                                    {!isBarberBooking && <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>}
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
+                                                        {!isBarberBooking && <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
                                                             isConfirmed ? 'bg-green-100 text-green-800 border border-green-200' :
                                                             isPending ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
                                                             isCompleted ? 'bg-purple-100 text-purple-800 border border-purple-200' :
@@ -1017,7 +1120,7 @@ export default function Notifications() {
                                                             'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-800'
                                                         }`}>
                                                             {bookingDetails.status}
-                                                        </span>
+                                                        </span>}
 
                                                         {/* 1. PROVIDER ACTIONS: If user is the provider and booking is pending */}
                                                         {isPending && isProvider && !isRequester && (

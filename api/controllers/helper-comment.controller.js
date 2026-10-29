@@ -12,19 +12,40 @@ const HELPER_RATING_FIELDS = {
   quality: 'qualityRating',
   respectfulness: 'respectfulnessRating',
   value: 'valueRating',
-  recommendation: 'recommendationRating'
+  recommendation: 'recommendationRating',
+  barberCleaning: 'barberCleaningRating',
+  haircut: 'haircutRating',
+  equipment: 'equipmentRating',
+  serviceCare: 'serviceCareRating',
+  barberCommunication: 'barberCommunicationRating',
+  beautyCleaning: 'beautyCleaningRating',
+  beautyCommunication: 'beautyCommunicationRating',
+  beautyEquipment: 'beautyEquipmentRating',
+  hairdressing: 'hairdressingRating',
+  timeliness: 'timelinessRating'
 };
 
-const summarizeHelperRatings = (comments) => {
+const summarizeHelperRatings = (comments, helperType = '') => {
+  const normalizedType = String(helperType || '').toLowerCase();
+  const activeRatingKeys = normalizedType === 'barber' || normalizedType === 'barbar'
+    ? ['barberCleaning', 'haircut', 'equipment', 'serviceCare', 'barberCommunication']
+    : normalizedType === 'beauty' || normalizedType === 'spa'
+      ? ['beautyCleaning', 'beautyCommunication', 'beautyEquipment', 'hairdressing', 'timeliness']
+      : ['cleanliness', 'communication', 'punctuality', 'quality', 'respectfulness', 'value', 'recommendation'];
+  const activeRatingFields = activeRatingKeys.map((key) => HELPER_RATING_FIELDS[key]);
   const ratings = {};
   Object.entries(HELPER_RATING_FIELDS).forEach(([name, field]) => {
+    if (!activeRatingFields.includes(field)) {
+      ratings[name] = 0;
+      return;
+    }
     const values = comments.map((comment) => Number(comment[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
     ratings[name] = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   });
   ratings.staff = ratings.communication;
 
   const perReviewAverages = comments.map((comment) => {
-    const values = Object.values(HELPER_RATING_FIELDS)
+    const values = activeRatingFields
       .map((field) => Number(comment[field]))
       .filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
     return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
@@ -35,12 +56,22 @@ const summarizeHelperRatings = (comments) => {
   return ratings;
 };
 
+const summarizeHelperRatingCounts = (comments) => Object.fromEntries(
+  Object.entries(HELPER_RATING_FIELDS).map(([name, field]) => [
+    name,
+    comments.filter((comment) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5).length
+  ])
+);
+
 export const createHelperComment = async (req, res, next) => {
   try {
     const {
       content, helperId, bookingId, userName, userAvatar,
       cleanlinessRating, communicationRating, punctualityRating,
-      qualityRating, respectfulnessRating, valueRating, recommendationRating
+      qualityRating, respectfulnessRating, valueRating, recommendationRating,
+      barberCleaningRating, haircutRating, equipmentRating, serviceCareRating,
+      barberCommunicationRating, beautyCleaningRating, beautyCommunicationRating,
+      beautyEquipmentRating, hairdressingRating, timelinessRating
     } = req.body;
     const userId = req.user.id;
 
@@ -61,7 +92,7 @@ export const createHelperComment = async (req, res, next) => {
       user: userId,
       helper: helperId,
       status: 'completed'
-    }).select('_id');
+    }).select('_id selectedPerformer');
     if (!completedBooking) {
       return next(errorHandler(403, 'Only the customer who completed this helper booking can review it'));
     }
@@ -77,7 +108,17 @@ export const createHelperComment = async (req, res, next) => {
       qualityRating,
       respectfulnessRating,
       valueRating,
-      recommendationRating
+      recommendationRating,
+      barberCleaningRating,
+      haircutRating,
+      equipmentRating,
+      serviceCareRating,
+      barberCommunicationRating,
+      beautyCleaningRating,
+      beautyCommunicationRating,
+      beautyEquipmentRating,
+      hairdressingRating,
+      timelinessRating
     };
     for (const [field, value] of Object.entries(submittedRatings)) {
       if (value === undefined || value === null) continue;
@@ -95,6 +136,7 @@ export const createHelperComment = async (req, res, next) => {
       userId,
       userName: userName || req.user.username,
       userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
+      performerName: completedBooking.selectedPerformer || undefined,
       ...submittedRatings
     });
 
@@ -102,7 +144,7 @@ export const createHelperComment = async (req, res, next) => {
     
     // Keep the helper's profile average in sync with the submitted category scores.
     const allComments = await HelperComment.find({ helperId });
-    const ratings = summarizeHelperRatings(allComments);
+    const ratings = summarizeHelperRatings(allComments, helper.type);
 
     if (!helper.comments) helper.comments = [];
     helper.comments.push(comment._id);
@@ -151,7 +193,8 @@ export const getHelperComments = async (req, res, next) => {
         totalComments: 0,
         totalPages: 0,
         currentPage: page,
-        ratings: { cleanliness: 0, staff: 0, overall: 0 }
+        ratings: { cleanliness: 0, staff: 0, overall: 0 },
+        ratingCounts: {}
       });
     }
 
@@ -163,7 +206,8 @@ export const getHelperComments = async (req, res, next) => {
 
     // Calculate profile-wide averages for every rated category.
     const allComments = await HelperComment.find({ helperId });
-    const ratings = summarizeHelperRatings(allComments);
+    const helper = await Helper.findById(helperId).select('type').lean();
+    const ratings = summarizeHelperRatings(allComments, helper?.type);
 
     res.status(200).json({
       comments,
@@ -171,6 +215,7 @@ export const getHelperComments = async (req, res, next) => {
       totalPages: fetchAll ? 1 : Math.ceil(totalComments / limit),
       currentPage: page,
       ratedBookingIds: allComments.map((comment) => comment.bookingId).filter(Boolean).map((id) => id.toString()),
+      ratingCounts: summarizeHelperRatingCounts(allComments),
       ratings: {
         ...ratings
       }

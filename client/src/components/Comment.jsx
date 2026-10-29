@@ -2,12 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp, FaStar, FaBroom, FaUserFriends } from 'react-icons/fa';
 import { FiSend } from 'react-icons/fi';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const isService = !!serviceId;
   const entityId = serviceId || listingId;
   
   const { currentUser } = useSelector((state) => state.user);
+  const [completedBookingId, setCompletedBookingId] = useState('');
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
   const [rating, setRating] = useState(0);
@@ -35,6 +37,27 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
     { name: 'Cleanliness', icon: FaBroom, key: 'cleanliness' },
     { name: 'Staff', icon: FaUserFriends, key: 'staff' },
   ];
+
+  useEffect(() => {
+    let active = true;
+    const loadCompletedBooking = async () => {
+      if (!currentUser?._id || !entityId) return;
+      try {
+        const response = await authenticatedFetch(`/api/bookings/user/${currentUser._id}`);
+        if (!response.ok) return;
+        const bookings = await response.json();
+        const completed = Array.isArray(bookings) && bookings.find((booking) =>
+          String(booking.status || '').toLowerCase() === 'completed' &&
+          [booking.listing?._id, booking.service?._id, booking.helper?._id, booking.event?._id].some((id) => String(id || '') === String(entityId))
+        );
+        if (active) setCompletedBookingId(String(completed?._id || ''));
+      } catch (loadError) {
+        console.warn('Could not load completed booking for review:', loadError);
+      }
+    };
+    loadCompletedBooking();
+    return () => { active = false; };
+  }, [currentUser?._id, entityId]);
 
   const fetchComments = useCallback(async () => {
     if (!entityId) {
@@ -110,6 +133,11 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       return;
     }
 
+    if ((isService || rating > 0) && !completedBookingId) {
+      setError('You can leave one review after completing a booking.');
+      return;
+    }
+
     try {
       setLoading(prev => ({ ...prev, submitting: true }));
       
@@ -118,6 +146,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
         ? JSON.stringify({
             content: commentContent,
             rating,
+            bookingId: completedBookingId,
             serviceId: entityId,
             userName: currentUser.username,
             userAvatar: currentUser.avatar || '/default-avatar.jpg'
@@ -125,6 +154,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
         : JSON.stringify({
             content: commentContent,
             rating,
+            bookingId: completedBookingId,
             listingId: entityId,
             userName: currentUser.username,
             userAvatar: currentUser.avatar || '/default-avatar.jpg'

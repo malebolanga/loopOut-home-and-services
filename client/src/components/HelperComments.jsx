@@ -5,7 +5,7 @@ import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp
 import { FiSend } from 'react-icons/fi';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 
-const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsChange, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
+const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalComments, onRatingsChange, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [completedBookings, setCompletedBookings] = useState([]);
@@ -28,6 +28,10 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
   const [focusedInput, setFocusedInput] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [totalComments, setTotalComments] = useState(0);
+  const [ratingCounts, setRatingCounts] = useState({});
+  const normalizedHelperType = String(helperType).toLowerCase();
+  const isBarber = ['barber', 'barbar'].includes(normalizedHelperType);
+  const isBeauty = ['beauty', 'spa'].includes(normalizedHelperType);
   const hasFailed = useRef(false); // prevent infinite retry loop on 404/error
   const [ratings, setRatings] = useState({
     cleanliness: 0,
@@ -38,6 +42,16 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     respectfulness: 0,
     value: 0,
     recommendation: 0,
+    barberCleaning: 0,
+    haircut: 0,
+    equipment: 0,
+    serviceCare: 0,
+    barberCommunication: 0,
+    beautyCleaning: 0,
+    beautyCommunication: 0,
+    beautyEquipment: 0,
+    hairdressing: 0,
+    timeliness: 0,
     overall: 0
   });
   const [categoryRatings, setCategoryRatings] = useState({
@@ -47,7 +61,17 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     cleanlinessRating: 0,
     respectfulnessRating: 0,
     valueRating: 0,
-    recommendationRating: 0
+    recommendationRating: 0,
+    barberCleaningRating: 0,
+    haircutRating: 0,
+    equipmentRating: 0,
+    serviceCareRating: 0,
+    barberCommunicationRating: 0,
+    beautyCleaningRating: 0,
+    beautyCommunicationRating: 0,
+    beautyEquipmentRating: 0,
+    hairdressingRating: 0,
+    timelinessRating: 0
   });
   const ratingCategories = [
     { field: 'punctualityRating', label: '⏱️ Punctual & on time' },
@@ -58,6 +82,21 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
     { field: 'valueRating', label: '💰 Great value' },
     { field: 'recommendationRating', label: '⭐ Would recommend' }
   ];
+  const barberRatingCategories = [
+    { field: 'barberCleaningRating', key: 'barberCleaning', label: '🧹 Cleaning' },
+    { field: 'haircutRating', key: 'haircut', label: '✂️ Haircut' },
+    { field: 'equipmentRating', key: 'equipment', label: '🧰 Equipment' },
+    { field: 'serviceCareRating', key: 'serviceCare', label: '💈 Service care' },
+    { field: 'barberCommunicationRating', key: 'barberCommunication', label: '💬 Communication' }
+  ];
+  const beautyRatingCategories = [
+    { field: 'beautyCleaningRating', key: 'beautyCleaning', label: '🧹 Cleaning' },
+    { field: 'beautyCommunicationRating', key: 'beautyCommunication', label: '💬 Communication' },
+    { field: 'beautyEquipmentRating', key: 'beautyEquipment', label: '🧰 Equipment' },
+    { field: 'hairdressingRating', key: 'hairdressing', label: '💇 Hairdressing' },
+    { field: 'timelinessRating', key: 'timeliness', label: '⏱️ On time' }
+  ];
+  const activeRatingCategories = isBarber ? barberRatingCategories : isBeauty ? beautyRatingCategories : ratingCategories;
   const RATING_CATEGORIES = [
     { name: 'Cleanliness', icon: FaBroom },
     { name: 'Staff', icon: FaUserFriends }
@@ -100,6 +139,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       setComments(data.comments || []);
       setTotalComments(data.totalComments || 0);
       setRatedBookingIds(data.ratedBookingIds || (data.comments || []).map((comment) => String(comment.bookingId || '')).filter(Boolean));
+      setRatingCounts(data.ratingCounts || {});
       
       // Set ratings from API response
       if (data.ratings) {
@@ -112,6 +152,16 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
           respectfulness: data.ratings.respectfulness || 0,
           value: data.ratings.value || 0,
           recommendation: data.ratings.recommendation || 0,
+          barberCleaning: data.ratings.barberCleaning || 0,
+          haircut: data.ratings.haircut || 0,
+          equipment: data.ratings.equipment || 0,
+          serviceCare: data.ratings.serviceCare || 0,
+          barberCommunication: data.ratings.barberCommunication || 0,
+          beautyCleaning: data.ratings.beautyCleaning || 0,
+          beautyCommunication: data.ratings.beautyCommunication || 0,
+          beautyEquipment: data.ratings.beautyEquipment || 0,
+          hairdressing: data.ratings.hairdressing || 0,
+          timeliness: data.ratings.timeliness || 0,
           overall: data.ratings.overall || 0
         });
       }
@@ -131,6 +181,16 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
           respectfulness: data.ratings.respectfulness || 0,
           value: data.ratings.value || 0,
           recommendation: data.ratings.recommendation || 0,
+          barberCleaning: data.ratings.barberCleaning || 0,
+          haircut: data.ratings.haircut || 0,
+          equipment: data.ratings.equipment || 0,
+          serviceCare: data.ratings.serviceCare || 0,
+          barberCommunication: data.ratings.barberCommunication || 0,
+          beautyCleaning: data.ratings.beautyCleaning || 0,
+          beautyCommunication: data.ratings.beautyCommunication || 0,
+          beautyEquipment: data.ratings.beautyEquipment || 0,
+          hairdressing: data.ratings.hairdressing || 0,
+          timeliness: data.ratings.timeliness || 0,
           overall: data.ratings.overall || 0
         });
       }
@@ -231,7 +291,17 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
         cleanlinessRating: 0,
         respectfulnessRating: 0,
         valueRating: 0,
-        recommendationRating: 0
+        recommendationRating: 0,
+        barberCleaningRating: 0,
+        haircutRating: 0,
+        equipmentRating: 0,
+        serviceCareRating: 0,
+        barberCommunicationRating: 0,
+        beautyCleaningRating: 0,
+        beautyCommunicationRating: 0,
+        beautyEquipmentRating: 0,
+        hairdressingRating: 0,
+        timelinessRating: 0
       });
       setRatedBookingIds((previous) => [...new Set([...previous, selectedBookingId])]);
       setSelectedBookingId('');
@@ -386,7 +456,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       </label>
       <div className="space-y-3">
         <p className="text-xs font-semibold text-slate-700 dark:text-gray-200">Rate each part of the service</p>
-        {ratingCategories.map((category) => {
+        {activeRatingCategories.map((category) => {
           const score = categoryRatings[category.field];
           return (
             <div key={category.field} className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 dark:border-gray-800">
@@ -497,7 +567,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
       )}
 
       {cardStyle && showSummary && (
-        <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900" aria-label="Average review scores">
+        <section className="mb-5 rounded-2xl bg-white p-4 dark:bg-gray-900" aria-label="Average review scores">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-600">Guest ratings</p>
@@ -505,6 +575,22 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400">{totalComments} {totalComments === 1 ? 'review' : 'reviews'}</p>
           </div>
+          {isBarber || isBeauty ? (
+            <div className="-mx-4 overflow-x-auto scrollbar-hide px-4 pb-1" aria-label={`${isBarber ? 'Barber' : 'Beauty'} customer rating categories`}>
+              <div className="flex w-max gap-2">
+                {activeRatingCategories.map(({ field, key, label }) => {
+                  const score = Number(ratings[key]) || 0;
+                  const count = Number(ratingCounts[key]) || 0;
+                  return (
+                    <div key={field} className="min-w-[118px] rounded-full bg-white px-3 py-2 text-center shadow-[0_5px_18px_rgba(15,23,42,0.08)] dark:bg-gray-950">
+                      <p className="whitespace-nowrap text-xs font-semibold text-slate-800 dark:text-gray-100">{label}</p>
+                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-gray-400">{score ? `${score.toFixed(1)} / 5` : '—'} · {count}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
             {ratingCategories.map(({ field, label }) => {
               const key = field.replace('Rating', '').toLowerCase();
@@ -522,6 +608,7 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
               );
             })}
           </div>
+          )}
         </section>
       )}
 
@@ -625,9 +712,9 @@ const HelperComments = ({ helperId, maxComments = 3, onTotalComments, onRatingsC
                           </button>
                         )}
                       </div>
-                      {ratingCategories.some(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5) && (
+                      {activeRatingCategories.some(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5) && (
                         <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Booking review scores">
-                          {ratingCategories.filter(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5).map(({ field, label }) => (
+                          {activeRatingCategories.filter(({ field }) => Number(comment[field]) >= 1 && Number(comment[field]) <= 5).map(({ field, label }) => (
                             <span key={field} className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-semibold text-slate-700 dark:bg-gray-800 dark:text-gray-200">
                               {label.split(' ').slice(0, 1).join('')} {Number(comment[field]).toFixed(1)}/5
                             </span>

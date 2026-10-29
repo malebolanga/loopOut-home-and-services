@@ -504,6 +504,22 @@ export default function HelperBookingSheet({
                         ))}
                       </div>
                     </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Estimated Service Duration</label>
+                      <select
+                        name="serviceDuration"
+                        value={bookingData.serviceDuration || ''}
+                        onChange={handleBookingChange}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      >
+                        <option value="">Select duration...</option>
+                        <option value="30 minutes">30 minutes</option>
+                        <option value="1 hour">1 hour</option>
+                        <option value="90 minutes">90 minutes</option>
+                        <option value="2 hours">2 hours</option>
+                      </select>
+                    </div>
                   </div>
                 )}
 

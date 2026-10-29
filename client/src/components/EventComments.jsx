@@ -9,6 +9,7 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
   const navigate = useNavigate();
   const { currentUser } = useSelector((state) => state.user);
   const [hasBooked, setHasBooked] = useState(false);
+  const [completedBookingId, setCompletedBookingId] = useState('');
   const [isCheckingBooking, setIsCheckingBooking] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -99,11 +100,12 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          const booked = data.some(b => 
+          const completedBooking = data.find(b =>
             (b.listing?._id === eventId || b.service?._id === eventId || b.helper?._id === eventId || b.event?._id === eventId) &&
-            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+            String(b.status || '').toLowerCase() === 'completed'
           );
-          setHasBooked(booked);
+          setCompletedBookingId(String(completedBooking?._id || ''));
+          setHasBooked(Boolean(completedBooking));
         }
       }
     } catch (err) {
@@ -143,6 +145,7 @@ const EventComments = ({ eventId, maxComments = 3, onTotalComments, onRatings, s
         body: JSON.stringify({
           content: commentContent,
           eventId,
+          bookingId: completedBookingId,
           userName: currentUser.username,
           userAvatar: currentUser.avatar || '/default-avatar.jpg'
         })

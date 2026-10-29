@@ -36,6 +36,10 @@ const helperCommentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Booking'
   },
+  performerName: {
+    type: String,
+    trim: true
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -68,6 +72,16 @@ const helperCommentSchema = new mongoose.Schema({
   respectfulnessRating: { type: Number, min: 1, max: 5 },
   valueRating: { type: Number, min: 1, max: 5 },
   recommendationRating: { type: Number, min: 1, max: 5 },
+  barberCleaningRating: { type: Number, min: 1, max: 5 },
+  haircutRating: { type: Number, min: 1, max: 5 },
+  equipmentRating: { type: Number, min: 1, max: 5 },
+  serviceCareRating: { type: Number, min: 1, max: 5 },
+  barberCommunicationRating: { type: Number, min: 1, max: 5 },
+  beautyCleaningRating: { type: Number, min: 1, max: 5 },
+  beautyCommunicationRating: { type: Number, min: 1, max: 5 },
+  beautyEquipmentRating: { type: Number, min: 1, max: 5 },
+  hairdressingRating: { type: Number, min: 1, max: 5 },
+  timelinessRating: { type: Number, min: 1, max: 5 },
   replies: [replySchema]
 }, { timestamps: true });
 

@@ -32,6 +32,30 @@ const HELPER_RATING_CATEGORIES = [
   { field: 'valueRating', label: '💰 Great value' },
   { field: 'recommendationRating', label: '⭐ Highly recommended' }
 ];
+const CAR_WASH_RATING_CATEGORIES = [
+  { field: 'tyresRating', label: '🛞 Tyres' },
+  { field: 'interiorRating', label: '🪑 Interior' },
+  { field: 'exteriorRating', label: '✨ Exterior & body' },
+  { field: 'dashboardRating', label: '🧽 Dashboard' },
+  { field: 'windowsRating', label: '🪟 Windows' },
+  { field: 'matsRating', label: '🧹 Mats & carpets' },
+  { field: 'serviceCommunicationRating', label: '💬 Communication' }
+];
+const BARBER_RATING_CATEGORIES = [
+  { field: 'barberCleaningRating', label: '🧹 Cleaning' },
+  { field: 'haircutRating', label: '✂️ Haircut' },
+  { field: 'equipmentRating', label: '🧰 Equipment' },
+  { field: 'serviceCareRating', label: '💈 Service care' },
+  { field: 'barberCommunicationRating', label: '💬 Communication' }
+];
+const BEAUTY_RATING_CATEGORIES = [
+  { field: 'beautyCleaningRating', label: '🧹 Cleaning' },
+  { field: 'beautyCommunicationRating', label: '💬 Communication' },
+  { field: 'beautyEquipmentRating', label: '🧰 Equipment' },
+  { field: 'hairdressingRating', label: '💇 Hairdressing' },
+  { field: 'timelinessRating', label: '⏱️ On time' }
+];
+const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES].map(({ field }) => [field, 0]));
 
 export default function RatingModal({ 
   isOpen, 
@@ -41,24 +65,26 @@ export default function RatingModal({
 }) {
   const { currentUser } = useSelector((state) => state.user);
   const [rating, setRating] = useState(5);
-  const [categoryRatings, setCategoryRatings] = useState(() => Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
+  const [categoryRatings, setCategoryRatings] = useState(EMPTY_CATEGORY_RATINGS);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [proAvatarFailed, setProAvatarFailed] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setRating(5);
-    setCategoryRatings(Object.fromEntries(HELPER_RATING_CATEGORIES.map(({ field }) => [field, 0])));
+    setCategoryRatings(EMPTY_CATEGORY_RATINGS);
     setHoverRating(0);
     setComment('');
     setSelectedTags([]);
     setSubmitting(false);
     setSuccess(false);
     setError('');
+    setProAvatarFailed(false);
   }, [isOpen, booking]);
 
   if (!isOpen || !booking) return null;
@@ -66,8 +92,30 @@ export default function RatingModal({
   const targetType = booking.type || (booking.listing ? 'listing' : booking.helper ? 'helper' : booking.event ? 'event' : 'service');
   const targetId = booking.itemId || booking.listing?._id || booking.helper?._id || booking.service?._id || booking.event?._id || booking._id;
   const targetTitle = booking.title || booking.itemName || booking.listing?.name || booking.helper?.name || booking.service?.name || booking.event?.name || 'Service';
-  const proName = booking.proName || booking.ownerName || booking.selectedPerformer || 'Service Provider';
-  const proAvatar = booking.proAvatar || booking.ownerAvatar || booking.performerImage || 'https://i.pravatar.cc/150?u=pro';
+  const serviceType = String(booking.service?.type || booking.raw?.service?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
+  const serviceTitle = String(booking.service?.name || booking.title || booking.itemName || '').toLowerCase();
+  const normalizedServiceType = serviceType.replace(/[^a-z]/g, '');
+  const isCarWashRating = targetType === 'service' && (normalizedServiceType.includes('carwash') || serviceTitle.includes('car wash') || serviceTitle.includes('carwash'));
+  const helper = booking.helper || booking.raw?.helper;
+  const helperType = String(helper?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
+  const isBarberRating = targetType === 'helper' && ['barber', 'barbar'].includes(helperType);
+  const isBeautyRating = targetType === 'helper' && ['beauty', 'spa'].includes(helperType);
+  const activeRatingCategories = isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
+  const selectedPerformerName = booking.selectedPerformer || booking.raw?.selectedPerformer;
+  const selectedPerformer = helper?.performers?.find((performer) =>
+    String(performer.name || '').trim().toLowerCase() === String(selectedPerformerName || '').trim().toLowerCase()
+  );
+  const proName = selectedPerformerName || booking.proName || booking.ownerName || 'Service Provider';
+  const proAvatar = selectedPerformer?.image
+    || booking.performerImage
+    || booking.proAvatar
+    || helper?.userRef?.avatar
+    || booking.ownerAvatar
+    || booking.userRef?.avatar
+    || helper?.imageUrls?.[0]
+    || booking.listing?.imageUrls?.[0]
+    || booking.service?.imageUrls?.[0]
+    || '';
 
   const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
@@ -91,16 +139,17 @@ export default function RatingModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     const isHelperRating = targetType === 'helper';
+    const isCategorizedRating = isHelperRating || targetType === 'service';
     const bookingId = booking.bookingId || booking.id || booking.raw?._id || booking._id;
     const selectedCategoryRatings = Object.fromEntries(Object.entries(categoryRatings).filter(([, value]) => Number(value) >= 1 && Number(value) <= 5));
     const selectedCategoryCount = Object.keys(selectedCategoryRatings).length;
-    const submittedRating = isHelperRating
+    const submittedRating = isCategorizedRating
       ? selectedCategoryCount
         ? Math.round(Object.values(selectedCategoryRatings).reduce((sum, value) => sum + value, 0) / selectedCategoryCount)
         : 0
       : rating;
     if (!submittedRating) {
-      setError(isHelperRating ? 'Please rate at least one service category.' : 'Please select a star rating.');
+      setError(isCategorizedRating ? 'Please rate at least one service category.' : 'Please select a star rating.');
       return;
     }
     if (!targetId || !bookingId) {
@@ -156,7 +205,9 @@ export default function RatingModal({
         endpoint = '/api/service-comments';
         payload = {
           ...payload,
-          serviceId: targetId
+          serviceId: targetId,
+          rating: submittedRating,
+          ...selectedCategoryRatings
         };
       }
 
@@ -226,7 +277,7 @@ export default function RatingModal({
                   <SparklesIcon className="w-4 h-4" />
                 </span>
                 <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-400">
-                  Work Completed &amp; Verified
+                  Share your experience
                 </span>
               </div>
 
@@ -243,11 +294,18 @@ export default function RatingModal({
             {/* Provider Info preview */}
             <div className="flex items-center gap-4 mt-5 relative z-10">
               <div className="relative">
-                <img
-                  src={proAvatar}
-                  alt={proName}
-                  className="w-14 h-14 rounded-2xl object-cover border-2 border-white/20 shadow-md bg-slate-800"
-                />
+                {proAvatar && !proAvatarFailed ? (
+                  <img
+                    src={proAvatar}
+                    alt={`${proName}'s profile`}
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-white/20 shadow-md bg-slate-800"
+                    onError={() => setProAvatarFailed(true)}
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl border-2 border-white/20 bg-white/10 text-white/80 shadow-md flex items-center justify-center text-xl font-bold" aria-label={`${proName} profile photo unavailable`}>
+                    {proName.trim().charAt(0).toUpperCase() || 'P'}
+                  </div>
+                )}
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-[#020617] flex items-center justify-center">
                   <CheckBadgeIcon className="w-3 h-3 text-white" />
                 </div>
@@ -257,7 +315,7 @@ export default function RatingModal({
                 <p className="text-xs text-white/70 font-semibold truncate mt-0.5">{targetTitle}</p>
                 <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-emerald-400">
                   <ShieldCheckIcon className="w-3.5 h-3.5" />
-                  <span>Job Completed &bull; Payment Released</span>
+                  <span>Booking complete &bull; Your honest feedback helps future clients</span>
                 </div>
               </div>
             </div>
@@ -287,10 +345,10 @@ export default function RatingModal({
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Star Rating Section */}
                 <div className="text-center space-y-2">
-                  {targetType === 'helper' ? (
+                  {targetType === 'helper' || targetType === 'service' ? (
                     <div className="space-y-4 rounded-2xl bg-slate-50 p-4 text-left">
                       <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">Rate each part of the service</p>
-                      {HELPER_RATING_CATEGORIES.map((category) => (
+                      {activeRatingCategories.map((category) => (
                         <div key={category.field} className="flex items-center justify-between gap-3">
                           <span className="text-xs font-bold text-slate-700">{category.label}</span>
                           <div className="flex items-center gap-0.5">
@@ -391,7 +449,7 @@ export default function RatingModal({
                     className="w-full py-4 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-lg shadow-rose-200 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 cursor-pointer"
                   >
                     {submitting ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /><span>Submitting…</span></>
                     ) : (
                       <>
                         <SparklesIcon className="w-4 h-4" />

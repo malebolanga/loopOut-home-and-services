@@ -5,13 +5,29 @@ import { FaSpinner, FaEllipsisH, FaHeart, FaRegHeart, FaChevronDown, FaChevronUp
 import { FiSend } from 'react-icons/fi';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 
-const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, externalRefreshTrigger = 0 }) => {
+const SERVICE_RATING_CATEGORIES = [
+  { field: 'punctualityRating', label: '⏱️ Punctual & on time' }, { field: 'qualityRating', label: '✨ Exceptional quality' },
+  { field: 'communicationRating', label: '💬 Great communication' }, { field: 'cleanlinessRating', label: '🧹 Clean & organised' },
+  { field: 'respectfulnessRating', label: '🤝 Friendly & respectful' }, { field: 'valueRating', label: '💰 Great value' },
+  { field: 'recommendationRating', label: '⭐ Highly recommended' }
+];
+const CAR_WASH_RATING_CATEGORIES = [
+  { field: 'tyresRating', label: '🛞 Tyres' }, { field: 'interiorRating', label: '🪑 Interior' },
+  { field: 'exteriorRating', label: '✨ Exterior & body' }, { field: 'dashboardRating', label: '🧽 Dashboard' },
+  { field: 'windowsRating', label: '🪟 Windows' }, { field: 'matsRating', label: '🧹 Mats & carpets' },
+  { field: 'serviceCommunicationRating', label: '💬 Communication' }
+];
+const ALL_SERVICE_RATING_CATEGORIES = [...SERVICE_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES];
+
+const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, showSummary = false, cardStyle = false, readOnly = false, horizontalStyle = false, categoryMode = 'service', hideEmptyState = false, externalRefreshTrigger = 0 }) => {
   const navigate = useNavigate();
   const isService = !!serviceId;
+  const activeRatingCategories = categoryMode === 'carwash' ? CAR_WASH_RATING_CATEGORIES : SERVICE_RATING_CATEGORIES;
   const entityId = serviceId || listingId;
   
   const { currentUser } = useSelector((state) => state.user);
   const [hasBooked, setHasBooked] = useState(false);
+  const [completedBookingId, setCompletedBookingId] = useState('');
   const [isCheckingBooking, setIsCheckingBooking] = useState(true);
   const [comments, setComments] = useState([]);
   const [commentContent, setCommentContent] = useState('');
@@ -32,8 +48,10 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
   const [ratings, setRatings] = useState({
     cleanliness: 0,
     staff: 0,
-    overall: 0
+    overall: 0,
+    ...Object.fromEntries(ALL_SERVICE_RATING_CATEGORIES.map(({ field }) => [field, 0]))
   });
+  const [ratingCounts, setRatingCounts] = useState({});
 
   const RATING_CATEGORIES = [
     { name: 'Cleanliness', icon: FaBroom, key: 'cleanliness' },
@@ -53,7 +71,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       const url = isService 
         ? maxComments > 0 
           ? `/api/service-comments/${entityId}?limit=${maxComments}`
-          : `/api/service-comments/${entityId}`
+          : `/api/service-comments/${entityId}?all=true`
         : maxComments > 0 
           ? `/api/comment/${entityId}?limit=${maxComments}`
           : `/api/comment/${entityId}`;
@@ -73,12 +91,14 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       const data = await res.json();
       setComments(data.comments || []);
       setTotalComments(data.totalComments || 0);
+      setRatingCounts(data.ratingCounts || {});
       
       if (data.ratings) {
         setRatings({
           cleanliness: data.ratings.cleanliness || 0,
           staff: data.ratings.staff || 0,
-          overall: data.ratings.overall || 0
+          overall: data.ratings.overall || 0,
+          ...Object.fromEntries(ALL_SERVICE_RATING_CATEGORIES.map(({ field }) => [field, Number(data.ratings[field]) || 0]))
         });
       }
 
@@ -110,11 +130,12 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) {
-          const booked = data.some(b => 
+          const completedBooking = data.find(b =>
             (b.listing?._id === entityId || b.service?._id === entityId || b.helper?._id === entityId || b.event?._id === entityId) &&
-            ['confirmed', 'approved', 'assigned', 'ongoing', 'completed'].includes(b.status)
+            String(b.status || '').toLowerCase() === 'completed'
           );
-          setHasBooked(booked);
+          setCompletedBookingId(String(completedBooking?._id || ''));
+          setHasBooked(Boolean(completedBooking));
         }
       }
     } catch (err) {
@@ -149,6 +170,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       const body = isService
         ? JSON.stringify({
             content: commentContent,
+            bookingId: completedBookingId,
             serviceId: entityId,
             userName: currentUser.username,
             userAvatar: currentUser.avatar || '/default-avatar.jpg'
@@ -441,7 +463,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
       )}
 
       {/* Comment form for non-card style */}
-      {!cardStyle && currentUser && (
+      {!readOnly && !cardStyle && currentUser && (
         isCheckingBooking ? (
           <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse">
             <p className="text-gray-400 text-sm">Verifying booking history...</p>
@@ -504,14 +526,14 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
           </div>
         )
       )}
-      {!cardStyle && !currentUser && (
+      {!readOnly && !cardStyle && !currentUser && (
         <div className="mb-6 p-3 bg-gray-100 rounded-lg text-center">
           <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a {isService ? 'review' : 'comment'}</p>
         </div>
       )}
 
       {/* Comment form for card style */}
-      {cardStyle && currentUser && (
+      {!readOnly && cardStyle && currentUser && (
         isCheckingBooking ? (
           <div className="mb-4 p-4 bg-gray-50 rounded-xl text-center animate-pulse col-span-full">
             <p className="text-gray-400 text-sm">Verifying booking history...</p>
@@ -574,46 +596,29 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
           </div>
         )
       )}
-      {cardStyle && !currentUser && (
+      {!readOnly && cardStyle && !currentUser && (
         <div className="mb-4 bg-white rounded-xl p-4 shadow-sm border border-gray-200 text-center">
           <p className="text-gray-600 text-sm">Please <a href="/sign-in" className="text-blue-500 hover:underline">sign in</a> to leave a {isService ? 'review' : 'comment'}</p>
         </div>
       )}
 
       {cardStyle && showSummary && (
-        <div className="mb-5 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="flex items-center mb-4">
-            <span className="text-3xl font-bold">{ratings.overall.toFixed(1)}</span>
-            <div className="ml-3">
-              <div className="text-sm text-gray-600">out of 5</div>
-              <div className="text-gray-600 text-sm">{totalComments} reviews</div>
+        <section className="mb-5" aria-label="Guest mentions">
+          <h3 className="mb-3 text-base font-semibold text-slate-900 dark:text-white">What customers appreciated</h3>
+          <div className="-mx-1 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-2">
+              {activeRatingCategories.map(({ field, label }) => {
+                const [icon, ...name] = label.split(' ');
+                return <div key={field} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-3.5 py-2 text-sm shadow-[0_5px_18px_rgba(15,23,42,0.08)] dark:bg-gray-900"><span aria-hidden="true">{icon}</span><span className="font-semibold text-slate-800 dark:text-gray-100">{name.join(' ')}</span><span className="text-xs text-slate-500 dark:text-gray-400">{ratingCounts[field] || 0}</span></div>;
+              })}
             </div>
           </div>
-
-          <div className="space-y-3">
-            {RATING_CATEGORIES.map(({ name, icon: Icon, key }) => (
-              <div key={name} className="flex items-center justify-between">
-                <div className="flex items-center text-gray-700">
-                  <Icon className="mr-2 text-blue-500" />
-                  <span>{name}</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full" 
-                      style={{ width: `${(ratings[key] / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                  <span className="font-medium">{ratings[key].toFixed(1)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </section>
       )}
 
-      <div className={`space-y-4 ${cardStyle ? 'grid grid-cols-1 gap-4' : ''}`}>
+      <div className={horizontalStyle ? '-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : `space-y-4 ${cardStyle ? 'grid grid-cols-1 gap-4' : ''}`}>
         {comments.length === 0 && !loading.comments && totalComments === 0 ? (
+          hideEmptyState ? null :
           <div className={`text-center py-4 text-gray-500 ${cardStyle ? 'col-span-full' : ''}`}>
             {isService ? 'No reviews yet' : 'No comments yet. Be the first to comment!'}
           </div>
@@ -624,12 +629,16 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
             const displayedReplies = showLimitedReplies 
               ? comment.replies.slice(0, 2) 
               : comment.replies || [];
+            const reviewDate = new Date(comment.createdAt);
+            const reviewDateLabel = reviewDate.toDateString() === new Date().toDateString()
+              ? 'Today'
+              : reviewDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
 
             return (
               <div 
                 key={comment._id} 
                 className={cardStyle ? 
-                  'bg-white rounded-xl p-4 shadow-sm border border-gray-200' : 
+                  `min-w-0 bg-white px-4 py-2 dark:bg-gray-950 ${horizontalStyle ? `w-[min(78vw,320px)] shrink-0 snap-start ${categoryMode === 'carwash' ? '' : 'border-r border-slate-200 last:border-r-0 dark:border-gray-800'}` : 'rounded-xl border border-slate-200'}` :
                   'border-b border-gray-100 pb-4 last:border-0'
                 }
               >
@@ -645,7 +654,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                   <div className="flex-1">
                     <div className={cardStyle ? '' : 'bg-blue-50 rounded-2xl px-3 py-2'}>
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm text-gray-800">{comment.userName}</h4>
+                        <div><h4 className="font-semibold text-sm text-slate-900 dark:text-white">{comment.userName}</h4><p className="text-xs text-slate-500 dark:text-gray-400">LoopOut customer</p></div>
                         {currentUser?._id === comment.userId && (
                           <button 
                             onClick={() => handleDeleteComment(comment._id)}
@@ -661,13 +670,17 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                           </button>
                         )}
                       </div>
+                      <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-gray-300" aria-label={`${Number(comment.rating || 0).toFixed(1)} out of 5 stars, ${reviewDateLabel}`}>
+                        <span className="flex gap-0.5 text-[11px] text-slate-900 dark:text-white" aria-hidden="true">{[1, 2, 3, 4, 5].map((star) => <FaStar key={star} className={star <= Math.round(Number(comment.rating || 0)) ? '' : 'text-slate-300 dark:text-gray-700'} />)}</span>
+                        <span>·</span><span>{reviewDateLabel}</span>
+                      </div>
                       <p className={`${cardStyle ? 'mt-2' : 'mt-1'} text-gray-700 text-sm whitespace-pre-line break-words`}>
                         {comment.content}
                       </p>
                     </div>
                     
-                    <div className="mt-1 flex items-center gap-4 ml-2">
-                      <button 
+                    {!cardStyle && <div className="mt-1 flex items-center gap-4 ml-2">
+                      {!cardStyle && <button
                         onClick={() => handleLikeComment(comment._id)}
                         className={`flex items-center gap-1 text-xs ${comment.likes?.includes(currentUser?._id) ? 'text-blue-500 font-semibold' : 'text-gray-500'} disabled:opacity-50`}
                         disabled={loading.liking}
@@ -678,7 +691,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                           <FaRegHeart size={10} />
                         )}
                         Like
-                      </button>
+                      </button>}
                       {!cardStyle && (
                         <button
                           onClick={() => setReplyingTo(replyingTo === comment._id ? null : comment._id)}
@@ -699,7 +712,7 @@ const Comments = ({ serviceId, listingId, maxComments = 3, onTotalComments, show
                           {comment.likes.length} like{comment.likes.length !== 1 ? 's' : ''}
                         </span>
                       )}
-                    </div>
+                    </div>}
 
                     {!cardStyle && replyingTo === comment._id && (
                       <div className="mt-3 ml-2">
