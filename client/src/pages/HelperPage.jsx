@@ -1,4 +1,4 @@
-﻿/* eslint-disable no-undef */
+/* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import ListingPhotoGallery from '../components/ListingPhotoGallery';
@@ -1914,6 +1914,9 @@ export default function HelperPage() {
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
+      vehicleType: bookingData.vehicleType || undefined,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
       deviceType,
       requestLocation,
       locationOption: bookingData.locationOption || 'comeToYou',
@@ -2167,6 +2170,10 @@ export default function HelperPage() {
       if (bookingData.handymanMaterialsRequired) message += `ðŸ›’ *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
       message += `âš¡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? 'ðŸ”´ URGENT â€” Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? 'ðŸŸ¢ Flexible â€” No rush' : 'ðŸŸ¡ Normal priority'}\n`;
       if (bookingData.handymanJobDescription) message += `ðŸ“‹ *Job Description:* ${bookingData.handymanJobDescription}\n`;
+    } else if (helper.type === 'carwash') {
+      if (bookingData.vehicleType) message += `🚗 *Vehicle Type:* ${bookingData.vehicleType}\n`;
+      if (bookingData.vehicleMake) message += `🔖 *Vehicle Make:* ${bookingData.vehicleMake}\n`;
+      if (bookingData.vehicleModel) message += `🚘 *Vehicle Model:* ${bookingData.vehicleModel}\n`;
     }
     message += `\n`;
 
@@ -2257,6 +2264,9 @@ export default function HelperPage() {
       selectedPerformer: bookingData.selectedPerformer,
       performerExperience: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
+      vehicleType: bookingData.vehicleType || undefined,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
       deviceType,
       requestLocation,
       locationOption: bookingData.locationOption || 'comeToYou',

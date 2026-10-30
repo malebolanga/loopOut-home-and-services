@@ -24,7 +24,7 @@ export const checkBookingsAndActions = async () => {
     })
     .populate('user', 'username')
     .populate({ path: 'listing', populate: [{ path: 'userRef', select: 'username' }, { path: 'creator', select: 'username' }] })
-    .populate({ path: 'helper', populate: [{ path: 'userRef', select: 'username' }, { path: 'creator', select: 'username' }] })
+    .populate({ path: 'helper', populate: { path: 'userRef', select: 'username' } })
     .populate({ path: 'service', populate: [{ path: 'userRef', select: 'username' }, { path: 'creator', select: 'username' }] })
     .populate({ path: 'event', populate: { path: 'userRef', select: 'username' } });
 

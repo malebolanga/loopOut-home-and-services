@@ -5,6 +5,7 @@ import { FiBell, FiCheck, FiTrash2, FiClock, FiArrowLeft } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } from '../utils/barberBookingDetails';
+import { getCarWashBookingDetails, isCarWashBooking as isCarWashBookingRecord } from '../utils/carWashBookingDetails';
 
 const parsePriceFromText = (text) => {
     if (!text || typeof text !== 'string') return null;
@@ -45,13 +46,19 @@ const extractAddressFromBookingMessage = (message) => {
     return '';
 };
 
+const isWhatsAppBookingMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return false;
+    return /https?:\/\/(?:api\.)?whatsapp\.com\/send|https?:\/\/(?:www\.)?wa\.me\//i.test(message) ||
+        (/\*[^\n*]*(?:booking|service details|client details)[^\n*]*\*/i.test(message) &&
+            /\*ACTION REQUIRED\*/i.test(message));
+};
+
 const getNotificationDisplayMessage = (notification) => {
     const message = notification?.message || '';
-    const isBarberBooking = notification?.type === 'booking' && /barber|barbar/i.test(message);
-    if (!isBarberBooking) return message;
+    const isBookingNotification = notification?.type === 'booking' || Boolean(notification?.data?.bookingId);
+    if (!isBookingNotification || !isWhatsAppBookingMessage(message)) return message;
 
-    // This is the WhatsApp-ready message saved with the booking. Keep it out of
-    // the notification UI, where the dedicated booking details are shown instead.
+    // WhatsApp booking templates belong in WhatsApp, not in the notification UI.
     return '';
 };
 
@@ -595,6 +602,8 @@ export default function Notifications() {
     const isCompleted = bookingDetails?.status === 'completed';
     const isBarberBooking = isBarberBookingRecord(bookingDetails || {});
     const barberBookingDetails = getBarberBookingDetails(bookingDetails || {}, selectedNotification?.message || '');
+    const isCarWash = isCarWashBookingRecord(bookingDetails || {}) || isCarWashBookingRecord(selectedNotification || {});
+    const carWashDetails = isCarWash ? getCarWashBookingDetails(bookingDetails || {}, selectedNotification?.message || '') : null;
     const cancelDeadline = bookingDetails?.startDate ? new Date(bookingDetails.startDate).getTime() - (48 * 60 * 60 * 1000) : NaN;
     const canRequesterCancel = Number.isFinite(cancelDeadline) && Date.now() <= cancelDeadline;
 
@@ -817,6 +826,24 @@ export default function Notifications() {
                                             );
                                         })()}
 
+                                        {(() => {
+                                            const notifIsCarWash = isCarWashBookingRecord(notification) || (notification.type === 'booking' && /car\s*wash|carwash|auto\s*wash|valet/i.test(`${notification.title || ''} ${notification.message || ''}`));
+                                            if (!notifIsCarWash) return null;
+                                            const details = getCarWashBookingDetails({ message: notification.message, ...(notification.data || {}) }, notification.message);
+                                            const hasAnyDetail = Boolean(details.vehicleType || details.vehicleMake || details.vehicleModel || details.selectedServices || details.waterSource);
+                                            if (!hasAnyDetail) return null;
+                                            return (
+                                                <div className="mb-3 grid grid-cols-1 gap-1.5 rounded-xl bg-cyan-50/70 p-3 text-[11px] text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    {details.vehicleType && <span>🚗 Type: {details.vehicleType}</span>}
+                                                    {(details.vehicleMake || details.vehicleModel) && <span>🚘 Vehicle: {[details.vehicleMake, details.vehicleModel].filter(Boolean).join(' ')}</span>}
+                                                    {details.selectedServices && <span>🧼 Package: {details.selectedServices}</span>}
+                                                    {details.waterSource && <span>💧 Water: {details.waterSource}</span>}
+                                                    {details.electricityAccess && <span>⚡ Electricity: {details.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
+                                                    {details.specialRequirements && <span className="truncate sm:col-span-2" title={details.specialRequirements}>📝 Special request: {details.specialRequirements}</span>}
+                                                </div>
+                                            );
+                                        })()}
+
                                         {/* Display price just below the notification information */}
                                         {priceInfo && (
                                             <div className="mb-3 flex items-center gap-2.5 flex-wrap">
@@ -960,27 +987,27 @@ export default function Notifications() {
 
                                 {bookingDetails && !loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{isBarberBooking ? '📋 Booking details · helper' : '📋 Booking Request Details'}</h3>
-                                        {isBarberBooking && <p className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase ${isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : isConfirmed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>📌 Status: {bookingDetails.status}</p>}
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{isBarberBooking ? '📋 Booking details · helper' : isCarWash ? '📋 Booking details · car wash' : '📋 Booking Request Details'}</h3>
+                                        {(isBarberBooking || isCarWash) && <p className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase ${isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : isConfirmed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>📌 Status: {bookingDetails.status}</p>}
                                         <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3 dark:bg-gray-900">
                                             <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-2xl dark:bg-gray-800">
                                                 <span aria-hidden="true">👤</span>
                                                 {bookingProviderImage && <img src={bookingProviderImage} alt={`${bookingProviderName}, service provider`} className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.remove(); }} />}
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{isBarberBooking ? 'Service provider' : 'Service photo'}</p>
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{isBarberBooking || isCarWash ? 'Service provider' : 'Service photo'}</p>
                                                 <p className="truncate font-semibold text-gray-900 dark:text-white">{bookingProviderName}</p>
-                                                {!isBarberBooking && bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
+                                                {!isBarberBooking && !isCarWash && bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {!isBarberBooking && <div>
+                                            {!isBarberBooking && !isCarWash && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">🧰 Service / Listing</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
                                             </div>}
-                                            {!isBarberBooking && <div>
+                                            {!isBarberBooking && !isCarWash && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">
                                                     {isRequester ? '👤 Provider / Host' : '👤 Client Name'}
                                                 </p>
@@ -990,7 +1017,7 @@ export default function Notifications() {
                                                         : (bookingDetails.user?.username || 'Client')}
                                                 </p>
                                             </div>}
-                                            {!isBarberBooking && <div>
+                                            {!isBarberBooking && !isCarWash && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">💰 Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">
                                                     ZAR {Number(
@@ -1074,12 +1101,12 @@ export default function Notifications() {
                                                     )}
                                                 </div>}
                                             </div>
-                                            {isBarberBooking && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            {(isBarberBooking || isCarWash) && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                 {bookingDuration && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">⏱️ Duration</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDuration}</p></div>}
                                                 {bookingDetails.phone && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">📞 Contact</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDetails.phone}</p></div>}
                                             </div>}
-                                            {(isBarberBooking || bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.performerExperience || bookingDetails.numberOfGuests || barberBookingDetails.serviceDuration || barberBookingDetails.selectedHaircut || barberBookingDetails.beardGrooming || barberBookingDetails.specialRequirements || barberBookingDetails.foodProvided || barberBookingDetails.electricityProvided || (bookingDetails.message && !isBarberBooking)) && <div className={`sm:col-span-2 rounded-xl p-3 ${isBarberBooking ? 'bg-blue-50/70 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'}`}>
-                                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isBarberBooking ? '🧰 What you booked' : '📝 Services and booking details'}</p>
+                                            {(isBarberBooking || isCarWash || bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.performerExperience || bookingDetails.numberOfGuests || barberBookingDetails.serviceDuration || barberBookingDetails.selectedHaircut || barberBookingDetails.beardGrooming || barberBookingDetails.specialRequirements || barberBookingDetails.foodProvided || barberBookingDetails.electricityProvided || (bookingDetails.message && !isBarberBooking && !isCarWash)) && <div className={`sm:col-span-2 rounded-xl p-3 ${isBarberBooking ? 'bg-blue-50/70 dark:bg-blue-950/20' : isCarWash ? 'bg-cyan-50/70 dark:bg-cyan-950/20' : 'bg-white dark:bg-gray-900'}`}>
+                                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isBarberBooking || isCarWash ? '🧰 What you booked' : '📝 Services and booking details'}</p>
                                                 {bookingDetails.subtype && <p className="mt-1 font-semibold text-gray-900 dark:text-white">{bookingDetails.subtype}</p>}
                                                 {bookingDetails.functionType && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{bookingDetails.functionType}</p>}
                                                 {isBarberBooking && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
@@ -1091,13 +1118,21 @@ export default function Notifications() {
                                                     {barberBookingDetails.electricityProvided && <span>⚡ Electricity available: {barberBookingDetails.electricityProvided === 'yes' ? 'Yes' : 'No'}</span>}
                                                     {barberBookingDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {barberBookingDetails.specialRequirements}</p>}
                                                 </div>}
-                                                {!isBarberBooking && bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
+                                                {isCarWash && carWashDetails && <div className="mt-3 grid gap-2 rounded-xl bg-cyan-50/70 p-3 text-xs text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    {carWashDetails.vehicleType && <span>🚗 Vehicle type: {carWashDetails.vehicleType}</span>}
+                                                    {(carWashDetails.vehicleMake || carWashDetails.vehicleModel) && <span>🚘 Vehicle: {[carWashDetails.vehicleMake, carWashDetails.vehicleModel].filter(Boolean).join(' ')}</span>}
+                                                    {carWashDetails.selectedServices && <span>🧼 Wash package: {carWashDetails.selectedServices}</span>}
+                                                    {carWashDetails.waterSource && <span>💧 Water source: {carWashDetails.waterSource}</span>}
+                                                    {carWashDetails.electricityAccess && <span>⚡ Electricity access: {carWashDetails.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
+                                                    {carWashDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {carWashDetails.specialRequirements}</p>}
+                                                </div>}
+                                                {!isBarberBooking && !isCarWash && bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
                                                 {bookingDetails.performerExperience && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Experience: {bookingDetails.performerExperience}</p>}
                                                 {bookingDetails.numberOfGuests && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">👥 {bookingDetails.numberOfGuests} guest{Number(bookingDetails.numberOfGuests) === 1 ? '' : 's'}</p>}
-                                                {!isBarberBooking && barberBookingDetails.serviceDuration && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">⏱️ Selected duration: {barberBookingDetails.serviceDuration}</p>}
-                                                {bookingDetails.message && !isBarberBooking && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message)}</p>}
+                                                {!isBarberBooking && !isCarWash && barberBookingDetails.serviceDuration && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">⏱️ Selected duration: {barberBookingDetails.serviceDuration}</p>}
+                                                {bookingDetails.message && !isBarberBooking && !isCarWash && !isWhatsAppBookingMessage(bookingDetails.message) && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message)}</p>}
                                             </div>}
-                                            {isBarberBooking && <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800">
+                                            {(isBarberBooking || isCarWash) && <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800">
                                                 <span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span>
                                                 <span className="text-lg font-black text-slate-900 dark:text-white">R{Number(
                                                     selectedNotification?.data?.price ||
@@ -1109,9 +1144,9 @@ export default function Notifications() {
                                             </div>}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
-                                                    {!isBarberBooking && <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>}
+                                                    {!isBarberBooking && !isCarWash && <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>}
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                                        {!isBarberBooking && <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
+                                                        {!isBarberBooking && !isCarWash && <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
                                                             isConfirmed ? 'bg-green-100 text-green-800 border border-green-200' :
                                                             isPending ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
                                                             isCompleted ? 'bg-purple-100 text-purple-800 border border-purple-200' :
@@ -1175,7 +1210,7 @@ export default function Notifications() {
                                                                     }}
                                                                     className="flex-1 sm:flex-none px-5 py-2 text-white bg-green-600 hover:bg-green-700 font-semibold rounded-lg transition-colors shadow-sm"
                                                                 >
-                                                                    ✓ Accept Request
+                                                                    ✓ Accept
                                                                 </button>
                                                             </div>
                                                         )}

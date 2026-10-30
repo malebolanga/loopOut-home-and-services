@@ -427,6 +427,12 @@ export default function CarWashPage() {
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Selected Services: ${selectedServiceDetails}%0A`;
     message += `• Vehicle Type: ${vehicleTypeDetails}%0A`;
+    if (bookingData.vehicleMake) {
+      message += `• Vehicle Make: ${bookingData.vehicleMake}%0A`;
+    }
+    if (bookingData.vehicleModel) {
+      message += `• Vehicle Model: ${bookingData.vehicleModel}%0A`;
+    }
     message += `• Total Price: R${totalPrice}%0A%0A`;
 
     message += `*👤 CLIENT DETAILS*%0A`;
@@ -438,8 +444,8 @@ export default function CarWashPage() {
     message += `*📍 SERVICE LOCATION*%0A`;
     message += `• Address: ${bookingData.address}%0A`;
     
-    if (bookingData.vehicleMake) {
-      message += `• Vehicle Make/Model: ${bookingData.vehicleMake} ${bookingData.vehicleModel || ''}%0A`;
+    if (bookingData.vehicleMake || bookingData.vehicleModel) {
+      message += `• Vehicle Make/Model: ${[bookingData.vehicleMake, bookingData.vehicleModel].filter(Boolean).join(' ')}%0A`;
     }
     
     if (bookingData.specialRequirements) {
@@ -476,6 +482,7 @@ export default function CarWashPage() {
     const bookingMessage = message.replace(/%0A/g, '\n');
     const bookingStart = new Date(`${bookingData.date}T${bookingData.time}`);
     const bookingEnd = new Date(bookingStart.getTime() + 60 * 60 * 1000);
+    const resolvedVehicleType = (vehicleTypeDetails && vehicleTypeDetails !== 'Not specified') ? vehicleTypeDetails : (bookingData.vehicleType || undefined);
     const bookingPayload = {
       serviceId: carWash._id,
       startDate: bookingStart.toISOString(),
@@ -483,9 +490,12 @@ export default function CarWashPage() {
       totalPrice,
       phone: bookingData.phone,
       message: bookingMessage,
-      subtype: `${selectedServiceDetails}; Vehicle: ${vehicleTypeDetails}`,
+      subtype: `${selectedServiceDetails}${resolvedVehicleType ? `; Vehicle: ${resolvedVehicleType}` : ''}`,
       requestLocation: bookingData.address,
       locationOption: 'comeToYou',
+      vehicleType: resolvedVehicleType,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
     };
 
     // Open a temporary window during the user gesture so the browser does not

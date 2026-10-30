@@ -148,6 +148,10 @@ const helperSchema = new mongoose.Schema({
         ref: 'User',
         required: true,
     },
+    creator: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+    },
     rating: { 
         type: Number, 
         default: 0, 

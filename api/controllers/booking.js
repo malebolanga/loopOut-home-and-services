@@ -60,6 +60,7 @@ export const createBooking = async (req, res) => {
       selectedPerformer, performerExperience, performerImage, numberOfRooms,
       serviceDuration, selectedHaircut, beardGrooming, specialRequirements,
       foodProvided, electricityProvided,
+      vehicleType, vehicleMake, vehicleModel,
       requestLocation, locationOption
     } = req.body;
 
@@ -186,6 +187,9 @@ export const createBooking = async (req, res) => {
       specialRequirements,
       foodProvided: ['yes', 'no'].includes(foodProvided) ? foodProvided : undefined,
       electricityProvided: ['yes', 'no'].includes(electricityProvided) ? electricityProvided : undefined,
+      vehicleType: typeof vehicleType === 'string' ? vehicleType.trim() : undefined,
+      vehicleMake: typeof vehicleMake === 'string' ? vehicleMake.trim() : undefined,
+      vehicleModel: typeof vehicleModel === 'string' ? vehicleModel.trim() : undefined,
       requestLocation: typeof requestLocation === 'string' ? requestLocation.trim().slice(0, 500) : undefined,
       locationOption: ['comeToYou', 'goToThem'].includes(locationOption) ? locationOption : undefined,
       status: 'pending'
@@ -221,6 +225,9 @@ export const createBooking = async (req, res) => {
             itemId,
             price: resolvedTotalPrice,
             totalPrice: resolvedTotalPrice,
+            vehicleType: newBooking.vehicleType,
+            vehicleMake: newBooking.vehicleMake,
+            vehicleModel: newBooking.vehicleModel,
             requestLocation: bookingAddress,
             clientAddress: bookingAddress,
             locationOption: bookingLocationOption,
@@ -245,6 +252,9 @@ export const createBooking = async (req, res) => {
             itemId,
             price: resolvedTotalPrice,
             totalPrice: resolvedTotalPrice,
+            vehicleType: newBooking.vehicleType,
+            vehicleMake: newBooking.vehicleMake,
+            vehicleModel: newBooking.vehicleModel,
             requestLocation: bookingAddress,
             clientAddress: bookingAddress,
             locationOption: bookingLocationOption,
