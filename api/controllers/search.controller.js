@@ -143,7 +143,7 @@ const buildSourceQuery = ({ source, type, subType, searchRegex, locationRegex, m
 
 const fieldsForSource = (source) => {
   if (source.model === LookingFor) return 'title description location category urgency budget imageUrls userRef createdAt';
-  return 'name title description address near type kind regularPrice discountPrice imageUrls latitude longitude rating userRef creator createdAt bedrooms bathrooms bookingsCount isPromoted verified isVerified';
+  return 'name title description address near type listingType kind regularPrice pricePeriod discountPrice imageUrls latitude longitude rating userRef creator createdAt bedrooms bathrooms toilets garages parkingSpaces bookingsCount isPromoted verified isVerified';
 };
 
 const searchFood = async ({ searchRegex, locationRegex, minPrice, maxPrice, subType, page, limit }) => {
