@@ -19,6 +19,7 @@ import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingProgress from '../components/BookingProgress';
 import ListingBookingSheet from '../components/ListingBookingSheet';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 import ListingDetailShell from '../components/ListingDetailShell';
 
 
@@ -93,11 +94,12 @@ const RATING_CATEGORIES = [
   { name: "Value", icon: MdAttachMoney, key: "value" },
 ];
 
-const HOST_RATING_CATEGORIES = [
-  { name: "Cleanliness", icon: MdCleanHands, key: "host_cleanliness" },
-  { name: "Communication", icon: MdChat, key: "host_communication" },
-  { name: "Staff", icon: FaUserFriends, key: "staff" },
-  { name: "Location", icon: MdLocationOn, key: "location_rating" },
+const LISTING_EMOJI_RATINGS = [
+  { label: "Hospitality", emoji: "🛎️", key: "hospitality" },
+  { label: "Comfort", emoji: "🛋️", key: "comfort" },
+  { label: "Location", emoji: "📍", key: "location" },
+  { label: "Owner / host", emoji: "🧑‍💼", key: "host" },
+  { label: "Cleanliness", emoji: "🧹", key: "cleanliness" },
 ];
 
 const LISTING_TYPES = {
@@ -108,6 +110,15 @@ const LISTING_TYPES = {
   land: { label: 'Self Catering', color: 'bg-emerald-700 text-white', icon: FaHome, period: '/day' },
   resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-600 text-white', icon: FaUmbrellaBeach, period: '/day' },
   office: { label: 'Room Per Hour', color: 'bg-amber-600 text-white', icon: FaClock, period: '/hour' }
+};
+
+const getPropertyRatePeriod = (listing) => {
+  if (['hour', 'day', 'night', 'month'].includes(listing?.pricePeriod)) return listing.pricePeriod;
+  if (['office', 'hourly_room', 'room_hourly'].includes(listing?.type)) return 'hour';
+  if (listing?.type === 'over') return 'night';
+  if (listing?.kind === 'house' || listing?.kind === 'apartment') return 'day';
+  if (['rent', 'apartment'].includes(listing?.type)) return 'month';
+  return 'day';
 };
 
 const SOCIAL_PLATFORMS = [
@@ -594,7 +605,7 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, accuracy: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, accuracy: 0, overall: 0, hospitality: 0, comfort: 0, location: 0, host: 0 });
   const [topComments, setTopComments] = useState([]);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [extraBed, setExtraBed] = useState('no');
@@ -615,6 +626,7 @@ export default function Listing() {
   const [guestContact, setGuestContact] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [listing, setListing] = useState(null);
+  const [failedHostAvatar, setFailedHostAvatar] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [similarListings, setSimilarListings] = useState([]);
   const [bookedDates, setBookedDates] = useState([]);
@@ -702,12 +714,9 @@ export default function Listing() {
   });
 
   const [hostRatings, setHostRatings] = useState({
-    average: 4.9,
-    totalRatings: 87,
-    categoryRatings: HOST_RATING_CATEGORIES.reduce((acc, { key }) => {
-      acc[key] = 4.8;
-      return acc;
-    }, {}),
+    average: 0,
+    totalRatings: 0,
+    categoryRatings: {},
     userRating: null,
   });
 
@@ -763,7 +772,7 @@ export default function Listing() {
   };
 
   const totalHours = calculateTotalHours(startTime, endTime);
-  const isHourlyType = listing?.type === 'office' || listing?.type === 'hourly_room' || listing?.type === 'room_hourly';
+  const isHourlyType = getPropertyRatePeriod(listing) === 'hour';
   const totalPrice = isHourlyType
     ? (listing.regularPrice * totalHours).toFixed(2)
     : 0;
@@ -842,7 +851,7 @@ export default function Listing() {
       return;
     }
 
-    const isDailyStayType = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing?.type);
+    const isDailyStayType = getPropertyRatePeriod(listing) === 'day';
     if (isDailyStayType && dateRange && dateRange[0] && dateRange[1]) {
       const checkIn = new Date(dateRange[0]);
       const checkOut = new Date(dateRange[1]);
@@ -1219,7 +1228,11 @@ export default function Listing() {
             setRatings({
               cleanliness: data.ratings.cleanliness || 0,
               accuracy: data.ratings.staff || data.ratings.accuracy || 0,
-              overall: data.ratings.overall || 0
+              overall: data.ratings.overall || 0,
+              hospitality: data.ratings.hospitality || 0,
+              comfort: data.ratings.comfort || 0,
+              location: data.ratings.location || 0,
+              host: data.ratings.host || 0,
             });
           }
         } else setCommentCount(0);
@@ -1230,6 +1243,24 @@ export default function Listing() {
     };
     if (listingId) fetchCommentData();
   }, [listingId]);
+
+  useEffect(() => {
+    const fetchHostRatings = async () => {
+      const hostId = typeof listing?.userRef === 'string' ? listing.userRef : listing?.userRef?._id;
+      if (!hostId || !listingId) return;
+      try {
+        const query = new URLSearchParams({ listingId });
+        const headers = currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {};
+        const response = await fetch(`/api/user/host-ratings/${hostId}?${query}`, { headers });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (result?.success && result.data) setHostRatings(result.data);
+      } catch (error) {
+        console.error('Error fetching listing host ratings:', error);
+      }
+    };
+    fetchHostRatings();
+  }, [listing?.userRef, listingId, currentUser?.token]);
 
   // Loading and error states
   if (uiState.loading) {
@@ -1250,15 +1281,17 @@ export default function Listing() {
   }
 
   const listingType = LISTING_TYPES[listing.type] || LISTING_TYPES.over;
+  const pricePeriod = getPropertyRatePeriod(listing);
   const activeAmenities = getActiveAmenities();
   const displayContactNumber = listing?.contact || listing?.phone || '';
   const formattedDisplayNumber = formatPhoneNumberSafe(displayContactNumber);
   const displayEmail = listing?.email || listing?.userRef?.email || '';
+  const hostAvatarSrc = resolveApiUrl(listing?.userRef?.avatar || '');
 
   // Determine property type for UI
-  const isDailyStay = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing.type);
-  const isHourlyRoom = listing.type === 'office' || listing.type === 'hourly_room' || listing.type === 'room_hourly';
-  const isRent = listing.type === 'rent' || listing.type === 'apartment';
+  const isDailyStay = pricePeriod === 'day' || pricePeriod === 'night';
+  const isHourlyRoom = pricePeriod === 'hour';
+  const isRent = pricePeriod === 'month';
   const showCalendar = isDailyStay || isHourlyRoom;
   const isSaleOrRent = isRent;
 
@@ -1268,6 +1301,13 @@ export default function Listing() {
   const grandTotal = roomTotal + breakfastTotal;
   const hasListingImages = listing.imageUrls.length > 0;
   const hasReviews = commentCount > 0 && ratings?.overall > 0;
+  const listingRatingScores = {
+    hospitality: ratings.hospitality || hostRatings.categoryRatings?.staff || 0,
+    comfort: ratings.comfort || 0,
+    location: ratings.location || hostRatings.categoryRatings?.location_rating || 0,
+    host: ratings.host || hostRatings.average || 0,
+    cleanliness: ratings.cleanliness || hostRatings.categoryRatings?.host_cleanliness || 0,
+  };
   const isGuestFavourite = hasReviews && ratings.overall >= 4.8 && commentCount >= 5;
   const isVerifiedHost = Boolean(listing.userRef?.isVerified || listing.userRef?.verified || listing.userRef?.isSuperhost);
   const hasOfferPrice = !isRent && listing.offer && Number(listing.discountPrice) > 0 && Number(listing.discountPrice) < Number(listing.regularPrice);
@@ -1278,7 +1318,7 @@ export default function Listing() {
       title: 'Enjoy the pool',
       detail: 'A pool is available at this property.',
     },
-    listing.parking && {
+    (listing.parking || (Number(listing.garages) > 0) || (Number(listing.parkingSpaces) > 0)) && {
       icon: FaParking,
       title: 'Park for free',
       detail: 'Free parking is available at this property.',
@@ -1452,7 +1492,12 @@ export default function Listing() {
       <ListingDetailShell>
         <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
           <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">{listingType.label}{listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''}</p>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            {pricePeriod === 'night' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per night` : 'Per night') :
+             pricePeriod === 'day' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per day` : 'Per day') :
+             pricePeriod === 'hour' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per hour` : 'Per hour') :
+             `${listingType.label}${listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''} · Per month`}
+          </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-sm text-slate-700">
             <span className="inline-flex items-center gap-1.5">
               <StarIconSolid className="h-4 w-4 text-amber-400" />
@@ -1501,12 +1546,26 @@ export default function Listing() {
 
             {/* Property Highlights */}
             <div className="border-y border-gray-200 dark:border-gray-800 py-6">
-               <div className="flex flex-wrap gap-3 mt-6">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
-                  <FaBed className="text-slate-500" /> {listing.bedrooms} {listing.bedrooms === 1 ? "bedroom" : "bedrooms"}
-                </div>
-              )}
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Property details</h2>
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Bedrooms", value: listing.bedrooms ?? 1, icon: <FaBed className="text-slate-500" /> },
+                  { label: "Bathrooms", value: listing.bathrooms ?? 1, icon: <FaBath className="text-rose-400" /> },
+                  { label: "Toilets", value: (listing.toilets !== undefined && listing.toilets !== null && listing.toilets !== "") ? listing.toilets : (listing.bathrooms ?? 1), icon: <span aria-hidden="true">🚽</span> },
+                  { label: "Garages", value: (listing.garages !== undefined && listing.garages !== null && listing.garages !== "") ? listing.garages : 0, icon: <span aria-hidden="true">🚗</span> },
+                  { label: "Parking spaces", value: (listing.parkingSpaces !== undefined && listing.parkingSpaces !== null && listing.parkingSpaces !== "") ? listing.parkingSpaces : (listing.parking ? 1 : 0), icon: <FaParking className="text-slate-500" /> },
+                ].map((detail) => (
+                  <div key={detail.label} className="min-w-0 rounded-xl bg-gray-50 px-3 py-3 dark:bg-gray-800 sm:px-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      {detail.icon}<span>{detail.label}</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                      {detail.value === null || detail.value === undefined || detail.value === "" ? "Not provided" : detail.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
               {listing.numberOfApartments > 0 && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-2xl text-sm font-bold text-blue-700">
                   🏢 {listing.numberOfApartments} Apartment{listing.numberOfApartments > 1 ? "s" : ""} in complex
@@ -1515,11 +1574,6 @@ export default function Listing() {
               {listing.numberOfRooms > 1 && listing.numberOfRooms !== listing.bedrooms && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-2xl text-sm font-bold text-purple-700">
                   🛌 {listing.numberOfRooms} Guest Rooms Available
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
-                  <FaBath className="text-rose-400" /> {listing.bathrooms} bath{listing.bathrooms > 1 ? "s" : ""}
                 </div>
               )}
               {listing.kind && (
@@ -1541,17 +1595,18 @@ export default function Listing() {
                 to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
                 className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                {listing.userRef?.avatar ? (
-                  <img
-                    src={listing.userRef.avatar}
-                    alt={listing.userRef.username}
-                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 shadow-sm text-gray-400">
-                    <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
-                  </div>
-                )}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-100 text-2xl shadow-sm dark:border-gray-800 dark:bg-gray-800 lg:h-14 lg:w-14">
+                  {hostAvatarSrc && failedHostAvatar !== hostAvatarSrc ? (
+                    <img
+                      src={hostAvatarSrc}
+                      alt={listing.userRef?.username ? `${listing.userRef.username}'s profile photo` : 'Host profile photo'}
+                      className="h-full w-full rounded-full object-cover"
+                      onError={() => setFailedHostAvatar(hostAvatarSrc)}
+                    />
+                  ) : (
+                    <span role="img" aria-label="Host profile icon">👤</span>
+                  )}
+                </div>
                 <div>
                   <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
                   <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
@@ -1792,7 +1847,7 @@ export default function Listing() {
 
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5">
                   <BanknotesIcon className="w-3.5 h-3.5" />
-                  Monthly rent: <span className="font-semibold text-gray-900 dark:text-white">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                  Monthly rent: <span className="font-semibold text-gray-900 dark:text-white">R{Number(listing.regularPrice || 0).toLocaleString('en-ZA')}/month</span>
                 </p>
               </div>
             )}
@@ -1890,39 +1945,34 @@ export default function Listing() {
                 </> : <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Reviews</h2>}
               </div>
 
-              {commentCount > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <MdCleanHands className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Accuracy */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <MdOutlineGppGood className="text-xl" />
-                        <span>Accuracy</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.accuracy?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.accuracy / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <>
+                <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <Swiper
+                      spaceBetween={12}
+                      slidesPerView="auto"
+                      freeMode
+                      modules={[FreeMode]}
+                      className="listing-rating-carousel"
+                    >
+                      {LISTING_EMOJI_RATINGS.map(({ label, emoji, key }) => {
+                        const score = Number(listingRatingScores[key]) || 0;
+                        return (
+                          <SwiperSlide key={key} className="!w-[112px] sm:!w-[128px]">
+                            <div className="h-full min-h-[100px] rounded-2xl bg-gray-50 dark:bg-gray-900/60 px-3 py-3 flex flex-col items-center justify-center text-center">
+                              <span className="text-2xl leading-none" aria-hidden="true">{emoji}</span>
+                              <span className="mt-2 text-xs font-medium text-gray-700 dark:text-gray-200">{label}</span>
+                              <span className={`mt-1 text-center ${score > 0 ? 'text-sm font-semibold text-gray-950 dark:text-white' : 'text-[11px] font-medium text-gray-500 dark:text-gray-400'}`}>
+                                {score > 0 ? `${score.toFixed(1)} / 5` : 'Not rated yet'}
+                              </span>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                    </Swiper>
+                </div>
 
-                  {/* Top Comments Swiper */}
-                  {topComments.length > 0 && (
+                {/* Top Comments Swiper */}
+                {topComments.length > 0 && (
                     <div className="mb-8">
                       <Swiper
                         spaceBetween={16}
@@ -1982,11 +2032,11 @@ export default function Listing() {
                         })}
                       </Swiper>
                     </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
-              )}
+                )}
+                {commentCount === 0 && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
+                )}
+              </>
 
               <button
                 onClick={() => setShowCommentsPanel(true)}
@@ -2152,7 +2202,7 @@ export default function Listing() {
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
                     <span className="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white">R{displayedPrice.toLocaleString('en-ZA')}</span>
-                    <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">{listingType.period}</span>
+                    <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">/{pricePeriod}</span>
                   </div>
                   {hasOfferPrice && (
                     <span className="text-gray-400 line-through text-sm lg:text-base">R{Number(listing.regularPrice).toLocaleString('en-ZA')}</span>
@@ -2196,8 +2246,12 @@ export default function Listing() {
                     /* Non-rent: existing listing type info */
                     <>
                       <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">Rate:</span>
+                        <span className="capitalize font-bold text-gray-900 dark:text-white">Per {pricePeriod}</span>
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
                         <span className="font-semibold text-gray-600 dark:text-gray-400">Listing Type:</span>
-                        <span>{listingType.label}</span>
+                        <span>{pricePeriod === 'night' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} Stay` : 'Overnight Stay') : pricePeriod === 'day' ? (listing.kind === 'house' ? 'Full House Stay' : 'Daily Stay') : pricePeriod === 'hour' ? 'Hourly Room' : listingType.label}</span>
                       </p>
                       {listing.kind && (
                         <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
@@ -2334,7 +2388,8 @@ export default function Listing() {
           selectedDate: selectedDate ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
           startTime,
           endTime,
-          selectedUnit
+          selectedUnit,
+          guests: numberOfGuests || 2
         }}
       />
 
@@ -2368,7 +2423,7 @@ export default function Listing() {
             <span className="text-gray-600 dark:text-gray-400 text-sm">
               {isDailyStay ? (days > 0 ? ` (${days} day${days > 1 ? 's' : ''})` : ' / day') : 
                isHourlyRoom ? (totalHours > 0 ? ` (${totalHours} hr)` : ' / hour') : 
-               isRent ? ' / month' : ''}
+               isRent ? ' / month' : ` / ${pricePeriod}`}
             </span>
           </div>
           <button

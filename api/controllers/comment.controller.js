@@ -9,7 +9,10 @@ import { createUserNotification } from '../utils/notificationUtils.js';
 
 export const createComment = async (req, res, next) => {
   try {
-    const { content, listingId, bookingId, userName, userAvatar, rating } = req.body;
+    const {
+      content, listingId, bookingId, userName, userAvatar, rating,
+      hospitalityRating, comfortRating, locationRating, hostRating, cleanlinessRating,
+    } = req.body;
     const userId = req.user.id;
 
     if (!content || !listingId) {
@@ -35,8 +38,14 @@ export const createComment = async (req, res, next) => {
 
     if (targetType === 'listing' && rating !== undefined && rating !== null) {
       if (!bookingId || !mongoose.Types.ObjectId.isValid(bookingId)) return next(errorHandler(400, 'A completed booking is required to leave a listing review'));
-      const completedBooking = await Booking.findOne({ _id: bookingId, user: userId, listing: listingId, status: 'completed' }).select('_id');
+      const completedBooking = await Booking.findOne({ _id: bookingId, user: userId, listing: listingId, status: 'completed' }).select('_id endDate');
       if (!completedBooking) return next(errorHandler(403, 'Only the customer who completed this booking can review the listing'));
+      if (!completedBooking.endDate || new Date(completedBooking.endDate).getTime() > Date.now()) {
+        return next(errorHandler(409, 'You can review this stay after its scheduled end time.'));
+      }
+      const categoryScores = { hospitalityRating, comfortRating, locationRating, hostRating, cleanlinessRating };
+      const validScores = Object.values(categoryScores).every((score) => Number.isInteger(Number(score)) && Number(score) >= 1 && Number(score) <= 5);
+      if (!validScores) return next(errorHandler(400, 'Please submit a 1–5 score for all five stay categories.'));
       if (await Comment.exists({ bookingId })) return next(errorHandler(409, 'This booking already has a review'));
     }
 
@@ -47,6 +56,11 @@ export const createComment = async (req, res, next) => {
       userName: userName || req.user.username,
       userAvatar: userAvatar || req.user.avatar || '/default-avatar.jpg',
       rating: rating ? Number(rating) : undefined,
+      hospitalityRating: targetType === 'listing' && rating ? Number(hospitalityRating) : undefined,
+      comfortRating: targetType === 'listing' && rating ? Number(comfortRating) : undefined,
+      locationRating: targetType === 'listing' && rating ? Number(locationRating) : undefined,
+      hostRating: targetType === 'listing' && rating ? Number(hostRating) : undefined,
+      cleanlinessRating: targetType === 'listing' && rating ? Number(cleanlinessRating) : undefined,
       bookingId: targetType === 'listing' && rating ? bookingId : undefined
     });
 
@@ -117,24 +131,18 @@ export const getComments = async (req, res, next) => {
     // Calculate ratings summary based on comments
     const allComments = await Comment.find({ listingId, rating: { $exists: true, $ne: null } });
 
-    let ratings = {
-      cleanliness: 0,
-      staff: 0,
-      overall: 0
+    const averageFor = (field) => {
+      const values = allComments.map((comment) => Number(comment[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+      return values.length ? Number((values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)) : 0;
     };
-
-    if (allComments.length > 0) {
-      const sum = allComments.reduce((acc, curr) => acc + curr.rating, 0);
-      const avg = sum / allComments.length;
-
-      // We're assigning the same average to categories for now 
-      // since the comment only has a single overall rating
-      ratings = {
-        cleanliness: avg,
-        staff: avg,
-        overall: avg
-      };
-    }
+    const ratings = {
+      overall: averageFor('rating'),
+      hospitality: averageFor('hospitalityRating'),
+      comfort: averageFor('comfortRating'),
+      location: averageFor('locationRating'),
+      host: averageFor('hostRating'),
+      cleanliness: averageFor('cleanlinessRating'),
+    };
 
     res.status(200).json({
       comments,

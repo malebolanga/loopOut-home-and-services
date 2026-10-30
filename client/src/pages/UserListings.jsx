@@ -8,13 +8,13 @@ import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 /* ─── helpers ────────────────────────────────────────────────────────────────── */
 const getItemPath = (listing) =>
-  listing.category === 'stays'       ? `/listing/${listing._id}`
+  listing.category === 'stays' || listing.category === 'property' ? `/listing/${listing._id}`
   : listing.category === 'experiences' ? `/service/${listing._id}`
   : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/helper/${listing._id}`;
 
 const getEditPath = (listing) =>
-  listing.category === 'stays'       ? `/update-listing/${listing._id}`
+  listing.category === 'stays' || listing.category === 'property' ? `/update-listing/${listing._id}`
   : listing.category === 'experiences' ? `/update-service/${listing._id}`
   : listing.category === 'selling'     ? `/sell-item/${listing._id}`
   : `/update-helper/${listing._id}`;
@@ -29,7 +29,7 @@ const formatDate = (dateStr) => {
 };
 
 const CATEGORY_LABELS = {
-  stays: 'Stay', experiences: 'Service', online: 'Helper', selling: 'Item for Sale',
+  stays: 'Stay', property: 'Property', experiences: 'Service', online: 'Helper', selling: 'Item for Sale',
 };
 
 /* ─── Listing card ────────────────────────────────────────────────────────────── */

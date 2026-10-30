@@ -41,6 +41,11 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
+    if (item?.pricePeriod === 'night') return '/ night';
+    if (item?.pricePeriod === 'day') return '/ day';
+    if (item?.pricePeriod === 'hour') return '/ hour';
+    if (item?.pricePeriod === 'month') return '/ month';
+    if (item?.kind === 'house' || item?.kind === 'apartment') return '/ day';
     switch (item.type) {
       case 'rent':
       case 'rent-long':
@@ -63,6 +68,10 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
   const getCategoryLabel = () => {
     if (type === 'property' || type === 'listing') {
+      if (item.kind) {
+        const formattedKind = item.kind.replace(/_/g, ' ');
+        return formattedKind.charAt(0).toUpperCase() + formattedKind.slice(1);
+      }
       switch (item.type) {
         case 'rent':
         case 'rent-long':
@@ -84,7 +93,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         case 'resort':
           return 'Resort';
         default:
-          return item.kind ? item.kind.replace('_', ' ') : 'Property';
+          return 'Property';
       }
     }
     if (type === 'service') {
@@ -227,8 +236,8 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         </button>
         {/* Guest favorite badge */}
         {isGuestFavorite && type === 'property' && (
-          <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-lg shadow-sm border border-black/5 z-20">
-            <span className="text-[10px] font-bold text-gray-900 uppercase tracking-wider">Guest favorite</span>
+          <div className="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-md px-2 py-0.5 rounded-md shadow-sm border border-black/5 z-20">
+            <span className="text-[8px] font-bold text-gray-900 uppercase tracking-wide">Guest favorite</span>
           </div>
         )}
       </div>

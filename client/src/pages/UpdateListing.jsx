@@ -9,7 +9,7 @@ import {
 import { app } from '../firebase';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaCamera, FaVideo, FaTimes, FaParking, FaSwimmingPool,FaUsers,FaWifi, FaTv, FaUtensils, FaBed, FaBath, FaShower, FaDog, FaCookie, FaBackspace, FaShieldAlt, FaChair, FaBolt, FaBoxes,  FaRulerCombined, FaPercent, FaTag} from "react-icons/fa";
+import { FaCamera, FaVideo, FaTimes, FaParking, FaSwimmingPool,FaUsers,FaWifi, FaTv, FaUtensils, FaBed, FaBath, FaShower, FaDog, FaCookie, FaBackspace, FaShieldAlt, FaChair, FaBolt, FaBoxes, FaClock, FaRulerCombined, FaPercent, FaTag} from "react-icons/fa";
 import { ClockIcon } from '@heroicons/react/24/outline';
 
 export default function UpdateListing() {
@@ -34,8 +34,12 @@ export default function UpdateListing() {
     type: "rent",
     bedrooms: 1,
     bathrooms: 1,
+    toilets: 1,
+    garages: 0,
+    parkingSpaces: 0,
     numberOfGuests: 1,
     regularPrice: 50,
+    pricePeriod: 'day',
     discountPrice: 0,
     parking: false,
     pool: false,
@@ -81,7 +85,7 @@ export default function UpdateListing() {
           setError(data.message || 'Listing not found or could not be loaded.');
           return;
         }
-        setFormData(data);
+        setFormData({ ...data, toilets: data.toilets ?? data.bathrooms ?? 1, garages: data.garages ?? 0, parkingSpaces: data.parkingSpaces ?? 0, pricePeriod: data.pricePeriod || ((data.kind === 'house' || data.kind === 'apartment') ? 'day' : (data.type === 'office' ? 'hour' : ['rent', 'apartment'].includes(data.type) ? 'month' : 'day')) });
       } catch (err) {
         setError('Failed to fetch listing data.');
       }
@@ -277,6 +281,11 @@ export default function UpdateListing() {
           credentials: 'include',
           body: JSON.stringify({
             ...formData,
+            toilets: Math.max(0, Number(formData.toilets !== undefined && formData.toilets !== '' ? formData.toilets : (formData.bathrooms ?? 1))),
+            garages: Math.max(0, Number(formData.garages) || 0),
+            parkingSpaces: Math.max(0, Number(formData.parkingSpaces) || 0),
+            parking: Boolean(formData.parking) || (Number(formData.garages) || 0) > 0 || (Number(formData.parkingSpaces) || 0) > 0,
+            parkingAvailable: Boolean(formData.parkingAvailable) || (Number(formData.garages) || 0) > 0 || (Number(formData.parkingSpaces) || 0) > 0,
             userRef: currentUser._id,
           }),
         });
@@ -595,8 +604,6 @@ export default function UpdateListing() {
                      { id: "parking", label: "Parking", icon: <FaParking className="text-xl" /> },
                      { id: "pool", label: "Pool", icon: <FaSwimmingPool className="text-xl" /> },
                      { id: "tv", label: "TV", icon: <FaTv className="text-xl" /> },
-                     { id: "bedrooms", label: "Bedrooms", icon: <FaBed className="text-xl" /> },
-                     { id: "bathrooms", label: "Baths", icon: <FaBath className="text-xl" /> },
                      { id: "stove", label: "Stove", icon: <FaCookie className="text-xl" /> },
                      { id: "storage", label: "Wardrobe", icon: <FaBackspace className="text-xl" /> },
                      { id: "security", label: "Security", icon: <FaShieldAlt className="text-xl" /> },
@@ -714,6 +721,22 @@ export default function UpdateListing() {
    <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm">
      <h2 className="text-xl font-semibold mb-6">Property Details</h2>
      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div className="space-y-2">
+         <label htmlFor="pricePeriod" className="flex items-center gap-2 font-medium text-gray-700 dark:text-white">
+           <FaClock className="text-airbnb-red" /> Charge period
+         </label>
+         <select
+           id="pricePeriod"
+           value={formData.pricePeriod || 'day'}
+           onChange={handleChange}
+           className="w-full rounded-lg border border-gray-200 bg-white p-3 text-gray-900 dark:border-gray-800 dark:bg-gray-900 dark:text-white"
+         >
+           <option value="night">Per night (Overnight stay)</option>
+           <option value="hour">Per hour</option>
+           <option value="day">Per day</option>
+           <option value="month">Per month</option>
+         </select>
+       </div>
        {[
          {
            id: "bedrooms",
@@ -737,6 +760,9 @@ export default function UpdateListing() {
                },
              ]
            : []),
+         { id: "toilets", label: "Toilets", type: "number", min: 0, max: 100, value: formData.toilets ?? formData.bathrooms ?? 1, icon: <FaBath className="text-airbnb-red" /> },
+         { id: "garages", label: "Garages", type: "number", min: 0, max: 100, value: formData.garages ?? 0, icon: <FaParking className="text-airbnb-red" /> },
+         { id: "parkingSpaces", label: "Parking spaces", type: "number", min: 0, max: 100, value: formData.parkingSpaces ?? 0, icon: <FaParking className="text-airbnb-red" /> },
          {
            id: "regularPrice",
            label: "Price",
@@ -745,10 +771,7 @@ export default function UpdateListing() {
            max: 10000000,
            value: formData.regularPrice,
            icon: <FaTag className="text-airbnb-red" />,
-           additionalInfo: 
-             formData.type === "rent" ? "/ month" :
-             ['over', 'sale', 'land'].includes(formData.type) ? "/ night" :
-             formData.type === "office" ? "/ month" : "",
+           additionalInfo: `/ ${formData.pricePeriod || (formData.kind === 'house' ? 'day' : (formData.type === "office" ? "hour" : ['rent', 'apartment'].includes(formData.type) ? "month" : "day"))}`,
          },
        ].map((input) => (
          <div key={input.id} className="space-y-2">
@@ -796,7 +819,7 @@ export default function UpdateListing() {
              />
              {formData.type === "rent" && (
                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-white">
-                 / month
+                 / {formData.pricePeriod || (formData.kind === "house" ? "day" : "month")}
                </span>
              )}
            </div>

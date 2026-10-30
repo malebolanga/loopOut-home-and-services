@@ -2014,7 +2014,7 @@ export default function TattooPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       deviceType,
       requestLocation,

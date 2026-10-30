@@ -77,7 +77,7 @@ export const getHostRatings = async(req, res) => {
     try {
         const { hostId } = req.params;
         const { listingId } = req.query;
-        const userId = req.user ? .id;
+        const userId = req.user?.id;
 
         if (!hostId) {
             return res.status(400).json({

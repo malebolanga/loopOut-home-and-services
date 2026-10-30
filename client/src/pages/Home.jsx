@@ -493,6 +493,11 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
+    if (item?.pricePeriod === 'night') return '/ night';
+    if (item?.pricePeriod === 'day') return '/ day';
+    if (item?.pricePeriod === 'hour') return '/ hour';
+    if (item?.pricePeriod === 'month') return '/ month';
+    if (item?.kind === 'house' || item?.kind === 'apartment') return '/ day';
     switch (item.type) {
       case 'rent': return '/ month';
       case 'over': return '/ night';
@@ -1249,6 +1254,45 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
     setOrderStatus('submitting');
     setErrorMsg('');
 
+    const recordLocalOrder = (finalCode) => {
+      try {
+        const newOrderRecord = {
+          id: finalCode,
+          _id: finalCode,
+          orderCode: finalCode,
+          shopId: item.shopId,
+          shopName: item.shopName || 'Local Kitchen',
+          shopImage: item.shopImage || '🍲',
+          shopPhone: item.shopPhone || '',
+          items: [
+            ...cart.map((ci) => ({
+              name: ci.item.name,
+              qty: ci.qty,
+              price: ci.item.price * ci.qty,
+              sides: ci.sideNames || [],
+              drinks: ci.drinks || [],
+            })),
+            {
+              name: item.name,
+              qty: orderForm.qty,
+              price: itemTotal,
+              sides: selectedSideNames,
+              drinks: drinksList,
+            },
+          ],
+          fulfilment: orderForm.fulfilment,
+          deliveryAddress: orderForm.deliveryAddress.trim(),
+          totalAmount: allOrdersGrandTotal,
+          status: 'received',
+          createdAt: new Date().toISOString(),
+        };
+        const existing = JSON.parse(localStorage.getItem('loopout_food_orders') || '[]');
+        localStorage.setItem('loopout_food_orders', JSON.stringify([newOrderRecord, ...existing.slice(0, 49)]));
+      } catch {
+        // Keep the server order result even when local history cannot be updated.
+      }
+    };
+
     try {
       // Merge accumulated cart items with current item
       const allItems = [
@@ -1287,45 +1331,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
           selectedSides: allSides,
         }),
       });
-
-      const recordLocalOrder = (finalCode) => {
-        try {
-          const newOrderRecord = {
-            id: finalCode,
-            _id: finalCode,
-            orderCode: finalCode,
-            shopId: item.shopId,
-            shopName: item.shopName || 'Local Kitchen',
-            shopImage: item.shopImage || '🍲',
-            shopPhone: item.shopPhone || '',
-            items: [
-              ...cart.map((ci) => ({
-                name: ci.item.name,
-                qty: ci.qty,
-                price: ci.item.price * ci.qty,
-                sides: ci.sideNames || [],
-                drinks: ci.drinks || [],
-              })),
-              {
-                name: item.name,
-                qty: orderForm.qty,
-                price: itemTotal,
-                sides: selectedSideNames,
-                drinks: drinksList,
-              },
-            ],
-            fulfilment: orderForm.fulfilment,
-            deliveryAddress: orderForm.deliveryAddress.trim(),
-            totalAmount: allOrdersGrandTotal,
-            status: 'received',
-            createdAt: new Date().toISOString(),
-          };
-          const existing = JSON.parse(localStorage.getItem('loopout_food_orders') || '[]');
-          localStorage.setItem('loopout_food_orders', JSON.stringify([newOrderRecord, ...existing.slice(0, 49)]));
-        } catch {
-          // ignore
-        }
-      };
 
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -2582,8 +2587,6 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
   const [errorMsg, setErrorMsg] = useState('');
   const [orderId, setOrderId] = useState('');
 
-  if (!cart.length) return null;
-
   const shopName = cart[0]?.item.shopName || 'Shop';
   const shopImage = cart[0]?.item.shopImage || '🏪';
   const shopId = cart[0]?.item.shopId;
@@ -2627,6 +2630,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
     const formatTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     return `${formatTime(tMin)} – ${formatTime(tMax)}`;
   }, [sheetEstimate]);
+
+  if (!cart.length) return null;
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();

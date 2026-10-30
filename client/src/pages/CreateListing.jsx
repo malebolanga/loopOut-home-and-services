@@ -115,7 +115,7 @@ const SectionCard = ({ title, subtitle, children, className = "" }) => (
   </motion.div>
 );
 
-const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null }) => (
+const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null, showCurrency = true, min, max }) => (
   <div className={`group/form ${className}`}>
     {label && (
       <label htmlFor={id} className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -136,17 +136,17 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
         />
       ) : type === "number" ? (
         <div className="relative">
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">
-            R
-          </div>
+          {showCurrency && <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">R</div>}
           <input
             type="number"
             id={id}
+            min={min}
+            max={max}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full pl-9 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-semibold shadow-xs hover:border-gray-300 dark:hover:border-gray-600"
+            className={`w-full ${showCurrency ? 'pl-9' : 'pl-4'} pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-semibold shadow-xs hover:border-gray-300 dark:hover:border-gray-600`}
           />
         </div>
       ) : type === "select" ? (
@@ -361,11 +361,21 @@ const getVisibleSteps = (category, type) => {
     { id: 10, label: "Review", icon: CheckCircleIcon }
   ];
 
+  const placePhotosAfterBasics = (steps) => {
+    const ordered = [...steps];
+    const mediaIndex = ordered.findIndex((step) => step.id === 8);
+    if (mediaIndex < 0) return ordered;
+    const [mediaStep] = ordered.splice(mediaIndex, 1);
+    const detailsIndex = ordered.findIndex((step) => step.id === 3);
+    ordered.splice(detailsIndex < 0 ? 0 : detailsIndex + 1, 0, mediaStep);
+    return ordered;
+  };
+
   if (!category) {
-    return allSteps.filter(s => s.id <= 3 || s.id >= 8);
+    return placePhotosAfterBasics(allSteps.filter(s => s.id <= 3 || s.id >= 8));
   }
 
-  return allSteps.filter(step => {
+  const filteredSteps = allSteps.filter(step => {
     if (category === 'selling') {
       return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 8 || step.id === 9 || step.id === 10;
     }
@@ -382,6 +392,7 @@ const getVisibleSteps = (category, type) => {
     }
     return true;
   });
+  return placePhotosAfterBasics(filteredSteps);
 };
 
 const getCurrentPhase = (step) => {
@@ -400,7 +411,7 @@ const getPhaseMeta = (phase) => {
   if (phase === 2) {
     return {
       phase: 2,
-      label: 'Details & Photos',
+      label: 'Photos & Details',
     };
   }
   return {
@@ -572,11 +583,15 @@ export default function CreateListing() {
     // Property specific - ALL REQUIRED FIELDS
     near: "",
     rules: "",
-    kind: "apartment",
+    kind: "",
     period: "Immediate",
     cancel: "Flexible - Free cancellation 48 hours before check-in",
     bedrooms: 1,
     bathrooms: 1,
+    toilets: 1,
+    garages: 0,
+    parkingSpaces: 0,
+    pricePeriod: 'day',
     numberOfGuests: 2,
     numberOfApartments: 0,
     numberOfRooms: 1,
@@ -711,27 +726,27 @@ export default function CreateListing() {
   // Update form when category or type changes
   useEffect(() => {
     if (selectedCategory && selectedType) {
-      setListingForm(prev => ({
-        ...prev,
-        category: selectedCategory,
-        type: selectedType,
-        kind: selectedCategory === 'property' ? getDefaultKind(selectedType) : prev.kind,
-        near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
-      }));
+      setListingForm(prev => {
+        const isSameType = prev.category === selectedCategory && prev.type === selectedType;
+        const resolvedKind = isSameType ? prev.kind : (prev.kind || (selectedCategory === 'property' ? 'house' : ''));
+        const resolvedPricePeriod = prev.pricePeriod || (selectedCategory === 'property' ? ((resolvedKind === 'house' || resolvedKind === 'apartment') ? 'day' : getDefaultPricePeriod(selectedType)) : prev.pricePeriod);
+
+        return {
+          ...prev,
+          category: selectedCategory,
+          type: selectedType,
+          kind: resolvedKind,
+          pricePeriod: resolvedPricePeriod,
+          near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
+        };
+      });
     }
   }, [selectedCategory, selectedType]);
 
-  const getDefaultKind = (type) => {
-    switch(type) {
-      case 'rent': return 'apartment';
-      case 'over': return 'guest_house';
-      case 'hotel': return 'hotel';
-      case 'apartment': return 'apartment';
-      case 'office': return 'hourly_room';
-      case 'land': return 'self_catering';
-      case 'resort': return 'resort';
-      default: return 'apartment';
-    }
+  const getDefaultPricePeriod = (type) => {
+    if (type === 'office') return 'hour';
+    if (type === 'rent') return 'month';
+    return 'day';
   };
 
   const getDefaultNearPlaceholder = (category, type) => {
@@ -995,6 +1010,11 @@ export default function CreateListing() {
     
     if (currentStep === 2 && !selectedType) {
       setError("Please select a type");
+      return;
+    }
+
+    if (currentStep === 2 && selectedCategory === 'property' && !listingForm.kind.trim()) {
+      setError("Please choose a property classification");
       return;
     }
     
@@ -1513,6 +1533,18 @@ export default function CreateListing() {
         providerType: value,
         citizenship: value === "individual" ? listingForm.citizenship : "",
       });
+    } else if (['toilets', 'garages', 'parkingSpaces', 'bedrooms', 'bathrooms'].includes(id)) {
+      const numVal = value === '' ? '' : Math.max(0, parseInt(value, 10) || 0);
+      setListingForm(prev => {
+        const nextGarages = id === 'garages' ? (Number(numVal) || 0) : (Number(prev.garages) || 0);
+        const nextParkingSpaces = id === 'parkingSpaces' ? (Number(numVal) || 0) : (Number(prev.parkingSpaces) || 0);
+        return {
+          ...prev,
+          [id]: numVal,
+          parking: Boolean(prev.parking) || nextGarages > 0 || nextParkingSpaces > 0,
+          parkingAvailable: Boolean(prev.parkingAvailable) || nextGarages > 0 || nextParkingSpaces > 0,
+        };
+      });
     } else {
       setListingForm({ ...listingForm, [id]: value });
     }
@@ -1652,7 +1684,19 @@ export default function CreateListing() {
         type: selectedType,
         category: selectedCategory === 'selling' ? selectedType : selectedCategory,
         listingType: selectedCategory,
-        kind: listingForm.kind || "apartment",
+        pricePeriod: selectedCategory === 'property' ? (listingForm.pricePeriod || 'day') : undefined,
+        bedrooms: selectedCategory === 'property' ? Math.max(1, Number(listingForm.bedrooms) || 1) : (Number(listingForm.bedrooms) || 1),
+        bathrooms: selectedCategory === 'property' ? Math.max(1, Number(listingForm.bathrooms) || 1) : (Number(listingForm.bathrooms) || 1),
+        toilets: selectedCategory === 'property' ? Math.max(0, Number(listingForm.toilets !== undefined && listingForm.toilets !== '' ? listingForm.toilets : (listingForm.bathrooms ?? 1))) : undefined,
+        garages: selectedCategory === 'property' ? Math.max(0, Number(listingForm.garages) || 0) : undefined,
+        parkingSpaces: selectedCategory === 'property' ? Math.max(0, Number(listingForm.parkingSpaces) || 0) : undefined,
+        parking: selectedCategory === 'property'
+          ? (Boolean(listingForm.parking) || (Number(listingForm.garages) || 0) > 0 || (Number(listingForm.parkingSpaces) || 0) > 0)
+          : Boolean(listingForm.parking),
+        parkingAvailable: selectedCategory === 'property'
+          ? (Boolean(listingForm.parkingAvailable) || (Number(listingForm.garages) || 0) > 0 || (Number(listingForm.parkingSpaces) || 0) > 0)
+          : Boolean(listingForm.parkingAvailable),
+        kind: listingForm.kind || (selectedCategory === 'property' ? 'house' : 'apartment'),
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
         period: listingForm.period || "Immediate",
         near: listingForm.near || "",
@@ -1779,10 +1823,10 @@ export default function CreateListing() {
           { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
         
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       case 'experiences':
         if (selectedType === 'carwash') {
@@ -1799,10 +1843,10 @@ export default function CreateListing() {
           { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       case 'online':
         if (selectedType === 'sneaker') {
@@ -1832,10 +1876,10 @@ export default function CreateListing() {
           { id: "familyFriendly", label: "Family Friendly", emoji: "👨‍👩‍👧‍👦", checked: listingForm.familyFriendly },
         
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       default:
         return [];
@@ -1844,10 +1888,8 @@ export default function CreateListing() {
 
   const getPricingLabel = () => {
     if (selectedCategory === 'property') {
-      if (['over', 'hotel', 'land', 'resort'].includes(selectedType)) return "Regular Price (per day)";
-      if (['rent', 'rent-long', 'rent-short', 'apartment'].includes(selectedType)) return "Regular Price (per month)";
-      if (selectedType === 'office') return "Regular Price (per hour)";
-      return "Regular Price";
+      const period = listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : getDefaultPricePeriod(selectedType));
+      return `Price (per ${period})`;
     }
     if (selectedCategory === 'experiences' || selectedCategory === 'online') {
       if (['tutor', 'cleaner', 'domestic', 'maid', 'beauty', 'barber', 'chef'].includes(selectedType)) {
@@ -1868,13 +1910,9 @@ export default function CreateListing() {
     switch (selectedCategory) {
       case 'property':
         return [
-          { id: "rent", label: "Room / Home to Rent", emoji: "🏠", description: "Monthly & short/long-term rental" },
-          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "Per-day guest house & BnB stays" },
-          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "Hotels, lodges & multi-room suites (per day)" },
-          { id: "apartment", label: "Apartment / Complex", emoji: "🏢", description: "Single or multi-unit apartment complexes" },
-          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering chalets & houses (per day)" },
-          { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️", description: "Holiday resorts & vacation chalets (per day)" },
-          { id: "office", label: "Room Per Hour", emoji: "🚪", description: "Hourly rooms & private spaces (per hour)" },
+          { id: "rent", label: "Room / House", emoji: "🏠", description: "A whole home or private room for guests" },
+          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "A guest room or bed and breakfast stay" },
+          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "A hotel, lodge, or private guest unit" },
         ];
       case 'experiences':
         return [
@@ -2306,6 +2344,71 @@ export default function CreateListing() {
                     />
                   ))}
                 </div>
+                {selectedCategory === 'property' && (
+                  <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">
+                    <label className="mb-3 block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                      Choose the property style
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'house', label: '🏠 Full house' },
+                        { id: 'apartment', label: '🏢 Apartment' },
+                        { id: 'single_room', label: '🚪 Single room' },
+                        { id: 'townhouse', label: '🏘️ Townhouse' },
+                        { id: 'studio', label: '🛋️ Studio' },
+                        { id: 'penthouse', label: '🏙️ Penthouse' },
+                        { id: 'loft', label: '🪟 Loft' },
+                      ].map((kind) => (
+                        <button
+                          key={kind.id}
+                          type="button"
+                          onClick={() => setListingForm((prev) => ({
+                            ...prev,
+                            kind: kind.id,
+                            pricePeriod: (kind.id === 'house' || kind.id === 'apartment') && (!prev.pricePeriod || prev.pricePeriod === 'month')
+                              ? 'day'
+                              : (prev.pricePeriod || 'day')
+                          }))}
+                          aria-pressed={listingForm.kind === kind.id}
+                          className={`min-h-11 rounded-xl px-3 py-2 text-left text-xs font-bold transition-colors sm:text-sm ${
+                            listingForm.kind === kind.id
+                              ? 'bg-rose-500 text-white shadow-sm'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {kind.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-7">
+                      <label className="mb-3 block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                        Choose how you charge
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: 'night', label: 'Per night', icon: '🌙' },
+                          { id: 'day', label: 'Per day', icon: '🌤️' },
+                          { id: 'month', label: 'Per month', icon: '📅' },
+                          { id: 'hour', label: 'Per hour', icon: '⏱️' },
+                        ].map((rate) => (
+                          <button
+                            key={rate.id}
+                            type="button"
+                            onClick={() => setListingForm((prev) => ({ ...prev, pricePeriod: rate.id }))}
+                            aria-pressed={listingForm.pricePeriod === rate.id}
+                            className={`min-h-14 rounded-xl px-2 py-3 text-center text-xs font-bold transition-colors sm:text-sm ${
+                              listingForm.pricePeriod === rate.id
+                                ? 'bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            <span className="mr-1.5" aria-hidden="true">{rate.icon}</span>{rate.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </SectionCard>
             )}
 
@@ -2317,7 +2420,7 @@ export default function CreateListing() {
                   selectedCategory === 'experiences' ? 'service' :
                   selectedCategory === 'online' ? 'helper' : 
                   selectedCategory === 'selling' ? 'item' : 'event'}`}>
-                  <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                     <FormInput
                       label="Create a title"
                       icon={selectedCategory === 'property' ? HomeIcon : 
@@ -2341,6 +2444,7 @@ export default function CreateListing() {
                     
                     <FormInput
                       label="Describe your place"
+                      className="md:col-span-2"
                       type="textarea"
                       id="description"
                       value={listingForm.description}
@@ -2359,7 +2463,7 @@ export default function CreateListing() {
                       rows={5}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
                       <FormInput
                         label="Address"
                         icon={MapPinIcon}
@@ -2457,7 +2561,7 @@ export default function CreateListing() {
                     />
 
                     {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
                         <FormInput
                           label="Provider Type"
                           type="select"
@@ -2487,6 +2591,7 @@ export default function CreateListing() {
 
                     <FormInput
                       label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
+                      className="md:col-span-2"
                       type="textarea"
                       id="near"
                       value={listingForm.near}
@@ -2497,55 +2602,13 @@ export default function CreateListing() {
                     />
 
                     {selectedCategory === 'property' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <div>
-                          <label className="block text-xs font-black text-gray-500 dark:text-white uppercase tracking-wider mb-3">
-                            Property Classification / Kind *
-                          </label>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {[
-                              { id: 'apartment', label: '🏢 Apartment / Flat' },
-                              { id: 'guest_house', label: '🛌 Guest House / B&B' },
-                              { id: 'hotel', label: '🏨 Hotel / Lodge' },
-                              { id: 'room', label: '🚪 Room / Hourly Room' },
-                              { id: 'house', label: '🏠 Entire House' },
-                              { id: 'villa', label: '🏰 Villa / Mansion' },
-                              { id: 'townhouse', label: '🏘️ Townhouse' },
-                              { id: 'studio', label: '🛋️ Studio / Bachelor' },
-                              { id: 'cottage', label: '🏡 Cottage / Chalet' },
-                              { id: 'resort', label: '🏖️ Resort' },
-                              { id: 'complex', label: '🏬 Multi-Unit Complex' },
-                              { id: 'office', label: '💼 Office / Workspace' },
-                            ].map((k) => (
-                              <button
-                                key={k.id}
-                                type="button"
-                                onClick={() => setListingForm(prev => ({ ...prev, kind: k.id }))}
-                                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
-                                  listingForm.kind === k.id
-                                    ? 'bg-rose-500 text-white shadow-md shadow-rose-200 scale-105'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                                }`}
-                              >
-                                {k.label}
-                              </button>
-                            ))}
-                          </div>
-                          <FormInput
-                            label="Or Custom Property Type"
-                            id="kind"
-                            value={listingForm.kind}
-                            onChange={handleFormChange}
-                            placeholder="e.g., Apartment, Guest House, Hotel, Room"
-                            required
-                          />
-                        </div>
-
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800 md:col-span-2">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <FormInput
                             label="Max Guests / Capacity"
                             id="numberOfGuests"
                             type="number"
+                            showCurrency={false}
                             value={listingForm.numberOfGuests || 2}
                             onChange={handleFormChange}
                             placeholder="e.g., 2 Guests"
@@ -2567,6 +2630,33 @@ export default function CreateListing() {
                             placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
                             required
                           />
+                        </div>
+
+                        <div className="rounded-2xl bg-gray-50 dark:bg-gray-800/60 p-4 sm:p-5">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Rooms &amp; parking</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Enter the number available for guests.</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {[
+                              { id: 'bedrooms', label: 'Bedrooms', min: 0 },
+                              { id: 'bathrooms', label: 'Bathrooms', min: 0 },
+                              { id: 'toilets', label: 'Toilets', min: 0 },
+                              { id: 'garages', label: 'Garages', min: 0 },
+                              { id: 'parkingSpaces', label: 'Parking spaces', min: 0 },
+                            ].map((field) => (
+                              <FormInput
+                                key={field.id}
+                                label={field.label}
+                                id={field.id}
+                                type="number"
+                                min={field.min}
+                                max={100}
+                                showCurrency={false}
+                                value={listingForm[field.id] ?? 0}
+                                onChange={handleFormChange}
+                                placeholder="0"
+                              />
+                            ))}
+                          </div>
                         </div>
 
                         {/* Individual Units / Rooms / Apartments Builder */}
@@ -2914,6 +3004,7 @@ export default function CreateListing() {
                         <FormInput
                           label="Number of Times Used"
                           type="number"
+                          showCurrency={false}
                           id="numberOfUsed"
                           value={listingForm.numberOfUsed}
                           onChange={handleFormChange}
@@ -4060,16 +4151,32 @@ export default function CreateListing() {
                           <span className="text-gray-500 dark:text-gray-400">Location</span>
                           <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">{listingForm.address}</span>
                         </div>
+                        {selectedCategory === 'property' && (
+                          <>
+                            <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                              <span className="text-gray-500 dark:text-gray-400">Property Style &amp; Rate</span>
+                              <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                                {listingForm.kind || 'House'} · Per {listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                              <span className="text-gray-500 dark:text-gray-400">Rooms &amp; Parking</span>
+                              <span className="font-semibold text-gray-900 dark:text-white text-right">
+                                {listingForm.bedrooms || 1} bed · {listingForm.bathrooms || 1} bath · {listingForm.toilets !== undefined && listingForm.toilets !== '' ? listingForm.toilets : (listingForm.bathrooms || 1)} toilet · {listingForm.garages || 0} garage · {listingForm.parkingSpaces || 0} parking
+                              </span>
+                            </div>
+                          </>
+                        )}
                         <div className="flex justify-between items-center py-1.5">
                           <span className="text-gray-500 dark:text-gray-400">Base Price</span>
                           <div className="flex items-center gap-2">
                             {listingForm.offer && listingForm.discountPrice ? (
                               <>
-                                <span className="line-through text-gray-400 text-xs">R{listingForm.regularPrice}</span>
+                                <span className="line-through text-gray-400 text-xs">R{listingForm.regularPrice}{selectedCategory === 'property' ? `/${listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}` : ''}</span>
                                 <span className="font-bold text-rose-600 dark:text-rose-400 text-sm sm:text-base">R{listingForm.discountPrice}</span>
                               </>
                             ) : (
-                              <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">R{listingForm.regularPrice}</span>
+                              <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">R{listingForm.regularPrice}{selectedCategory === 'property' ? `/${listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}` : ''}</span>
                             )}
                             <button
                               type="button"

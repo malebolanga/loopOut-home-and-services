@@ -208,8 +208,7 @@ const ListingItem = ({ listing, distance, hideBedroom = false }) => { // Added h
           <div className="text-lg font-bold text-slate-700">
             R{listing.offer ? listing.discountPrice.toLocaleString() : listing.regularPrice.toLocaleString()}
             <span className="text-sm font-normal ml-1">
-              {listing.type === 'rent' && '/month'}
-              {listing.type === 'over' && '/night'}
+              {listing.pricePeriod ? ('/' + listing.pricePeriod) : (['house', 'apartment'].includes(listing.kind) ? '/day' : (listing.type === 'rent' ? '/month' : listing.type === 'over' ? '/night' : ''))}
             </span>
           </div>
         </div>

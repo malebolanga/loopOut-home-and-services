@@ -8,6 +8,8 @@ import User from '../models/user.model.js';
 import Escrow from '../models/escrow.model.js';
 import HelperComment from '../models/helper-comment.model.js';
 import ServiceComment from '../models/service-comment.model.js';
+import Comment from '../models/comment.model.js';
+import EventComment from '../models/event-comment.model.js';
 import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
@@ -57,7 +59,7 @@ export const createBooking = async (req, res) => {
       startDate, endDate,
       totalPrice, price,
       phone, message, subtype, numberOfGuests, functionType,
-      selectedPerformer, performerExperience, performerImage, numberOfRooms,
+      selectedPerformer, performerExperience, performerImage, numberOfRooms, accommodationSelection,
       serviceDuration, selectedHaircut, beardGrooming, specialRequirements,
       foodProvided, electricityProvided,
       vehicleType, vehicleMake, vehicleModel,
@@ -77,8 +79,12 @@ export const createBooking = async (req, res) => {
       return res.status(400).json({ error: 'Number of guests must be a positive whole number.' });
     }
     const parsedRoomCount = numberOfRooms === '' || numberOfRooms === undefined ? 1 : Number(numberOfRooms);
+    let bookingRoomCount = parsedRoomCount;
     if (!Number.isInteger(parsedRoomCount) || parsedRoomCount < 1) {
       return res.status(400).json({ error: 'Number of rooms must be a positive whole number.' });
+    }
+    if (accommodationSelection !== undefined && !['entire', 'rooms'].includes(accommodationSelection)) {
+      return res.status(400).json({ error: 'Choose the whole property or select rooms to book.' });
     }
 
     // Fetch item from DB to calculate server-authoritative price fallback
@@ -135,23 +141,28 @@ export const createBooking = async (req, res) => {
     if (listingId) {
       const roomTypes = Array.isArray(item.roomTypes) ? item.roomTypes : [];
       const selectedRoomType = subtype && roomTypes.find(room => room.name === subtype);
-      const inventory = Math.max(1, Number(selectedRoomType?.count || item.totalUnits || item.numberOfRooms || item.numberOfApartments || 1));
-      if (parsedRoomCount > inventory) {
+      const isEntireProperty = accommodationSelection === 'entire' && ['house', 'apartment'].includes(String(item.kind || '').toLowerCase());
+      const isResidence = ['house', 'apartment'].includes(String(item.kind || '').toLowerCase());
+      const inventory = Math.max(1, Number(selectedRoomType?.count || (isResidence ? (item.bedrooms || item.numberOfRooms || item.totalUnits) : (item.numberOfRooms || item.numberOfApartments || item.totalUnits || item.bedrooms)) || 1));
+      const requestedRoomCount = isEntireProperty ? inventory : parsedRoomCount;
+      bookingRoomCount = requestedRoomCount;
+      if (requestedRoomCount > inventory) {
         return res.status(400).json({ error: `Only ${inventory} ${selectedRoomType ? 'of this room type' : 'room(s)'} are available.` });
       }
       const overlappingBookings = await Booking.find({ ...overlapQuery, ...(selectedRoomType ? { subtype } : {}) })
-        .select('startDate endDate numberOfRooms');
+        .select('startDate endDate numberOfRooms accommodationSelection');
       const occupancyPoints = [slotStart.getTime(), ...overlappingBookings.map(b => new Date(b.startDate).getTime())]
         .filter(time => time >= slotStart.getTime() && time < slotEnd.getTime());
       const maxOccupied = occupancyPoints.reduce((max, time) => {
         const occupied = overlappingBookings.reduce((sum, b) => {
           const starts = new Date(b.startDate).getTime();
           const ends = new Date(b.endDate).getTime();
-          return sum + (starts <= time && ends > time ? Math.max(1, Number(b.numberOfRooms) || 1) : 0);
+          const bookedCount = b.accommodationSelection === 'entire' ? inventory : Math.max(1, Number(b.numberOfRooms) || 1);
+          return sum + (starts <= time && ends > time ? bookedCount : 0);
         }, 0);
         return Math.max(max, occupied);
       }, 0);
-      if (maxOccupied + parsedRoomCount > inventory) {
+      if (maxOccupied + requestedRoomCount > inventory) {
         return res.status(400).json({ error: `Only ${Math.max(0, inventory - maxOccupied)} room(s) remain available for some of those dates.` });
       }
     } else {
@@ -176,7 +187,8 @@ export const createBooking = async (req, res) => {
       message,
       subtype,
       numberOfGuests: parsedGuestCount,
-      numberOfRooms: listingId ? parsedRoomCount : undefined,
+      numberOfRooms: listingId ? bookingRoomCount : undefined,
+      accommodationSelection: listingId ? accommodationSelection : undefined,
       functionType,
       selectedPerformer,
       performerExperience,
@@ -345,7 +357,7 @@ export const getHostBookings = async (req, res) => {
     })
       // Return only fields the host dashboard renders. Populating a User
       // without a projection would expose private profile fields to the API.
-      .populate({ path: 'listing', select: 'name title imageUrls address regularPrice userRef totalUnits numberOfRooms numberOfApartments roomTypes', populate: { path: 'userRef', select: 'username avatar location' } })
+      .populate({ path: 'listing', select: 'name title kind bedrooms imageUrls address regularPrice userRef totalUnits numberOfRooms numberOfApartments roomTypes', populate: { path: 'userRef', select: 'username avatar location' } })
       .populate({ path: 'helper', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
       .populate({ path: 'service', select: 'name title imageUrls address regularPrice price userRef creator', populate: [{ path: 'userRef', select: 'username avatar location' }, { path: 'creator', select: 'username avatar location' }] })
       .populate({ path: 'event', select: 'name title imageUrls address regularPrice userRef', populate: { path: 'userRef', select: 'username avatar location' } })
@@ -379,7 +391,7 @@ export const getUserBookings = async (req, res) => {
     let bookings;
     try {
       bookings = await Booking.find({ user: userId })
-        .populate({ path: 'listing', select: 'name title imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
+        .populate({ path: 'listing', select: 'name title kind bedrooms imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
         .populate({ path: 'helper', select: 'name title type imageUrls address businessAddress location regularPrice userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
         .populate({ path: 'service', select: 'name title type imageUrls address businessAddress location price userRef creator contact phone', populate: [{ path: 'userRef', select: 'username avatar phone' }, { path: 'creator', select: 'username avatar phone' }] })
         .populate({ path: 'event', select: 'name title imageUrls address businessAddress location price userRef contact phone', populate: { path: 'userRef', select: 'username avatar phone' } })
@@ -392,11 +404,13 @@ export const getUserBookings = async (req, res) => {
     }
 
     const bookingIds = bookings.map((booking) => booking._id).filter(Boolean);
-    const [helperReviews, serviceReviews] = await Promise.all([
+    const [listingReviews, helperReviews, serviceReviews, eventReviews] = await Promise.all([
+      Comment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
       HelperComment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
       ServiceComment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
+      EventComment.find({ bookingId: { $in: bookingIds } }).select('bookingId').lean(),
     ]);
-    const reviewedBookingIds = new Set([...helperReviews, ...serviceReviews].map((review) => String(review.bookingId)));
+    const reviewedBookingIds = new Set([...listingReviews, ...helperReviews, ...serviceReviews, ...eventReviews].map((review) => String(review.bookingId)));
 
     return res.json(bookings.map((booking) => ({ ...booking, isReviewed: reviewedBookingIds.has(String(booking._id)) })));
   } catch (error) {
@@ -429,7 +443,16 @@ export const getBookingById = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json(booking);
+    const isReviewed = booking.listing
+      ? Boolean(await Comment.exists({ bookingId: booking._id }))
+      : booking.helper
+        ? Boolean(await HelperComment.exists({ bookingId: booking._id }))
+        : booking.service
+          ? Boolean(await ServiceComment.exists({ bookingId: booking._id }))
+          : booking.event
+            ? Boolean(await EventComment.exists({ bookingId: booking._id }))
+            : false;
+    res.json({ ...booking.toObject(), isReviewed });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }

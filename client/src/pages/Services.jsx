@@ -1286,7 +1286,7 @@ const ServicePage = () => {
           endDate: bookingData.date + "T" + bookingData.time, // Same day for services
           totalPrice: totalPrice,
           phone: bookingData.phone,
-          message: bookingData.specialRequirements || result.fullMessage,
+          message: result.fullMessage,
           subtype: bookingSubtype,
           selectedPerformers: bookingData.selectedPerformers,
           selectedPerformer: bookingData.selectedPerformers?.[0] || '',
@@ -3475,6 +3475,7 @@ const ServicePage = () => {
           serviceId={service._id}
           onClose={() => setShowCommentsPanel(false)}
           onCommentCountChange={setCommentCount}
+          title={`${service.name || 'Service'} reviews`}
         />
       )}
 

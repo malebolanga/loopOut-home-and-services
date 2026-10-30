@@ -47,7 +47,12 @@ const formatPrice = (price, context) => {
     maximumFractionDigits: 0,
   });
 
-  const suffix = context?.type === 'over' ? '/night' : 
+  const suffix = context?.pricePeriod === 'night' ? '/night' :
+    context?.pricePeriod === 'day' ? '/day' :
+    context?.pricePeriod === 'hour' ? '/hour' :
+    context?.pricePeriod === 'month' ? '/month' :
+    (context?.kind === 'house' || context?.kind === 'apartment') ? '/day' :
+                context?.type === 'over' ? '/night' : 
                 context?.type === 'resort' ? '/day' :
                 ['rent', 'office'].includes(context?.type) ? '/month' : '';
 

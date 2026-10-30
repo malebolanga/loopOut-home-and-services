@@ -19,6 +19,7 @@ const bookingSchema = new mongoose.Schema({
   subtype: { type: String },
   numberOfGuests: { type: Number, min: 1 },
   numberOfRooms: { type: Number, min: 1 },
+  accommodationSelection: { type: String, enum: ['entire', 'rooms'] },
   functionType: { type: String, trim: true },
   selectedPerformer: { type: String },
   serviceDuration: { type: String, trim: true },

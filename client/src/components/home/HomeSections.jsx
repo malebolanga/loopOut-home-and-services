@@ -2375,9 +2375,9 @@ export const CompareRecommendedSection = ({ navigate }) => {
             _id: p._id,
             name: p.name || p.title,
             itemType: 'property',
-            typeLabel: catKey === 'guesthouses' ? 'Guest House' : catKey === 'resorts' ? 'Resort' : catKey === 'hotels' ? (p.kind || 'Hotel') : 'Rental Room',
+            typeLabel: catKey === 'guesthouses' ? 'Guest House' : catKey === 'resorts' ? 'Resort' : catKey === 'hotels' ? (p.kind ? p.kind.replace(/_/g, ' ') : 'Hotel') : (p.kind ? p.kind.replace(/_/g, ' ') : 'Rental Room'),
             price: p.regularPrice || p.price || 0,
-            unit: p.period || (catKey === 'rental_rooms' ? 'mo' : 'night'),
+            unit: p.pricePeriod || (catKey === 'rental_rooms' ? (['house', 'apartment'].includes(p.kind) ? 'day' : 'month') : 'night'),
             address: p.address || 'South Africa',
             latitude: p.latitude,
             longitude: p.longitude,
@@ -2591,7 +2591,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
         {itemsToDisplay.map((item, idx) => {
           const isSelected = selectedItems.includes(item._id);
           const itemPrice = item.price || item.regularPrice || 0;
-          const unit = item.unit || activeTabMeta.defaultUnit;
+          const unit = item.unit || item.pricePeriod || activeTabMeta.defaultUnit;
 
           return (
             <motion.div
@@ -2687,7 +2687,7 @@ export const CompareRecommendedSection = ({ navigate }) => {
           if (!currentItem) return null;
 
           const price = currentItem.price || currentItem.regularPrice || 0;
-          const unit = currentItem.unit || activeTabMeta.defaultUnit;
+          const unit = currentItem.unit || currentItem.pricePeriod || activeTabMeta.defaultUnit;
 
           return (
             <motion.div

@@ -89,6 +89,7 @@ import 'swiper/css/free-mode';
 import ImageWithFallback from '../components/ImageWithFallback';
 import GoogleMapComponent from '../components/GoogleMapComponent';
 import HelperComments from '../components/HelperComments';
+import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingProgress from '../components/BookingProgress';
 import BookingHistory from '../components/BookingHistory';
@@ -112,6 +113,7 @@ export default function BeautyPage() {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [showBookingBelt, setShowBookingBelt] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -1961,7 +1963,7 @@ export default function BeautyPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       deviceType,
       requestLocation,
@@ -2527,6 +2529,7 @@ export default function BeautyPage() {
               ) : (
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
+              {commentCount > 0 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">View all {commentCount} reviews</button>}
 
             </div>
 
@@ -2550,6 +2553,8 @@ export default function BeautyPage() {
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'beauty'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
       </ListingDetailShell>
+
+      {showCommentsPanel && <CommentsSidePanelHelper helperId={helper?._id} helperType={helper?.type || 'beauty'} onClose={() => setShowCommentsPanel(false)} totalComments={commentCount} />}
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (

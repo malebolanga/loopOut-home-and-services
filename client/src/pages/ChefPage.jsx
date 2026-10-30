@@ -2024,7 +2024,7 @@ export default function ChefPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       numberOfGuests: bookingData.numberOfGuests || undefined,
       functionType: bookingData.functionType || undefined,

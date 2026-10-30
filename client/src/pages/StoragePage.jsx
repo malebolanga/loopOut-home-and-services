@@ -57,6 +57,7 @@ export default function StoragePage() {
   const [activeImg, setActiveImg]       = useState(0);
   const [lightbox, setLightbox]         = useState(false);
   const [isSaved, setIsSaved]           = useState(false);
+  const [shareCopied, setShareCopied]   = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [duration, setDuration]         = useState('monthly');
@@ -86,8 +87,15 @@ export default function StoragePage() {
         url: window.location.href,
       }).catch((error) => console.error('Error sharing:', error));
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => {
+          setShareCopied(true);
+          window.setTimeout(() => setShareCopied(false), 1800);
+        })
+        .catch((error) => {
+          console.error('Error copying storage link:', error);
+          alert('Could not copy the link. Please copy it from your browser address bar.');
+        });
     }
   };
 

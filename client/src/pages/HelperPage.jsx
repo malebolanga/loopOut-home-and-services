@@ -1883,7 +1883,7 @@ export default function HelperPage() {
     message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
     message += `ðŸ“Œ *Type:* ${locationInfo.displayName}%0A`;
     if (locationInfo.address) {
-      message += `ðŸ  *Address:* ${locationInfo.address}%0A`;
+      message += `ðŸ  *Address:* ${locationInfo.address}%0A`;
       const mapLink = generateMapLink(locationInfo.address);
       if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}%0A`;
     }
@@ -2159,7 +2159,7 @@ export default function HelperPage() {
       if (bookingData.ingredientsProvided) message += `ðŸ›’ *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
     } else if (helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') {
       message += `\nðŸ§¹ *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
-      if (bookingData.houseSize) message += `ðŸ  *Property Size:* ${bookingData.houseSize}\n`;
+      if (bookingData.houseSize) message += `ðŸ  *Property Size:* ${bookingData.houseSize}\n`;
       if (bookingData.numberOfBedrooms) message += `ðŸ›ï¸ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
       if (bookingData.numberOfBathrooms) message += `ðŸš¿ *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
       if (bookingData.cleaningSuppliesProvided) message += `ðŸ§¼ *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
@@ -2182,7 +2182,7 @@ export default function HelperPage() {
     message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
     message += `ðŸ“Œ *Type:* ${locationInfo.displayName}\n`;
     if (locationInfo.address && locationInfo.address !== 'Address not specified') {
-      message += `ðŸ  *Address:* ${locationInfo.address}\n`;
+      message += `ðŸ  *Address:* ${locationInfo.address}\n`;
       const mapLink = generateMapLink(locationInfo.address);
       if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}\n`;
     }

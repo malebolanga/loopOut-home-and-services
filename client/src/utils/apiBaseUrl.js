@@ -1,7 +1,15 @@
 import { Capacitor } from '@capacitor/core';
 import { getStoredToken } from './authenticatedFetch.js';
 
-const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const isLocalBrowser = typeof window !== 'undefined'
+  && !Capacitor.isNativePlatform()
+  && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+// Local web development should use Vite's /api and /uploads proxies so the
+// frontend reads the same local backend code being edited. Native builds keep
+// using the configured remote API URL.
+const configuredApiBaseUrl = isLocalBrowser
+  ? ''
+  : (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 // Native app check or explicit configured base URL
 const isCapacitorApp = () => Capacitor.isNativePlatform() || window.location.origin.includes('localhost') || window.location.protocol === 'file:';

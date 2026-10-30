@@ -33,6 +33,11 @@ const commentSchema = new mongoose.Schema({
     max: 5,
     required: false
   },
+  hospitalityRating: { type: Number, min: 1, max: 5 },
+  comfortRating: { type: Number, min: 1, max: 5 },
+  locationRating: { type: Number, min: 1, max: 5 },
+  hostRating: { type: Number, min: 1, max: 5 },
+  cleanlinessRating: { type: Number, min: 1, max: 5 },
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' },
   listingId: {
     type: mongoose.Schema.Types.ObjectId,

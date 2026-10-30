@@ -68,6 +68,9 @@ export const createListing = async (req, res, next) => {
       numberOfGuests,
       totalUnits,
       roomTypes,
+      bookAuthor,
+      bookYear,
+      bookUsageHistory,
     } = req.body;
 
     // Always assign the authenticated user as the owner — ignore client-supplied userRef
@@ -88,15 +91,20 @@ export const createListing = async (req, res, next) => {
       cancel,
       type,
       listingType,
-      bedrooms: Number(bedrooms) || 1,
-      bathrooms: Number(bathrooms) || 1,
-      ...(toilets !== undefined && { toilets: Math.max(0, Number(toilets) || 0) }),
+      bedrooms: Math.max(1, Number(bedrooms) || 1),
+      bathrooms: Math.max(1, Number(bathrooms) || 1),
+      toilets: toilets !== undefined ? Math.max(0, Number(toilets) || 0) : (Number(bathrooms) || 1),
       garages: Math.max(0, Number(garages) || 0),
       parkingSpaces: Math.max(0, Number(parkingSpaces) || 0),
-      regularPrice,
-      pricePeriod,
-      discountPrice,
-      parking,
+      regularPrice: Number(regularPrice) || 0,
+      pricePeriod: pricePeriod || (
+        type === 'rent' ? 'month' :
+        type === 'over' ? 'night' :
+        (kind === 'house' || kind === 'apartment') ? 'day' :
+        'day'
+      ),
+      discountPrice: Number(discountPrice) || 0,
+      parking: (parking !== undefined) ? (Boolean(parking) || (Number(garages) > 0) || (Number(parkingSpaces) > 0)) : ((Number(garages) > 0) || (Number(parkingSpaces) > 0)),
       pool,
       wifi,
       kitchen,
@@ -124,9 +132,12 @@ export const createListing = async (req, res, next) => {
       numberOfGuests: Number(numberOfGuests) || 1,
       totalUnits: Number(totalUnits) || 1,
       roomTypes: Array.isArray(roomTypes) ? roomTypes : [],
+      bookAuthor: bookAuthor || '',
+      bookYear: bookYear || '',
+      bookUsageHistory: bookUsageHistory || '',
     });
 
-    createAreaNotifications(listing, 'listing');
+    try { await createAreaNotifications(listing, 'listing'); } catch(e) { console.error('[createListing] createAreaNotifications failed:', e); }
 
     return res.status(201).json(listing);
   } catch (error) {
@@ -172,7 +183,12 @@ export const deleteListing = async (req, res, next) => {
 
 // Update Listing
 export const updateListing = async (req, res, next) => {
-  const listing = await Listing.findById(req.params.id);
+  let listing;
+  try {
+    listing = await Listing.findById(req.params.id);
+  } catch (e) {
+    return next(e);
+  }
   if (!listing) {
     return next(errorHandler(404, 'Listing not found!'));
   }
@@ -215,6 +231,38 @@ export const updateListing = async (req, res, next) => {
 
     // Strip undefined values to avoid clearing existing fields unintentionally
     Object.keys(allowedUpdate).forEach(k => allowedUpdate[k] === undefined && delete allowedUpdate[k]);
+    // Strip empty strings for enum fields to avoid Mongoose validation errors
+    if (allowedUpdate.pricePeriod === '') delete allowedUpdate.pricePeriod;
+    if (allowedUpdate.kind === '') delete allowedUpdate.kind;
+
+    if (allowedUpdate.regularPrice !== undefined) {
+      allowedUpdate.regularPrice = Number(allowedUpdate.regularPrice) || 0;
+    }
+    if (allowedUpdate.discountPrice !== undefined) {
+      allowedUpdate.discountPrice = Number(allowedUpdate.discountPrice) || 0;
+    }
+    if (allowedUpdate.bedrooms !== undefined) {
+      allowedUpdate.bedrooms = Math.max(1, Number(allowedUpdate.bedrooms) || 1);
+    }
+    if (allowedUpdate.bathrooms !== undefined) {
+      allowedUpdate.bathrooms = Math.max(1, Number(allowedUpdate.bathrooms) || 1);
+    }
+    if (allowedUpdate.toilets !== undefined) {
+      allowedUpdate.toilets = Math.max(0, Number(allowedUpdate.toilets) || 0);
+    }
+    if (allowedUpdate.garages !== undefined) {
+      allowedUpdate.garages = Math.max(0, Number(allowedUpdate.garages) || 0);
+    }
+    if (allowedUpdate.parkingSpaces !== undefined) {
+      allowedUpdate.parkingSpaces = Math.max(0, Number(allowedUpdate.parkingSpaces) || 0);
+    }
+    if ((allowedUpdate.garages !== undefined && allowedUpdate.garages > 0) || (allowedUpdate.parkingSpaces !== undefined && allowedUpdate.parkingSpaces > 0)) {
+      allowedUpdate.parking = true;
+      allowedUpdate.parkingAvailable = true;
+    }
+    if (allowedUpdate.kind && (allowedUpdate.kind === 'house' || allowedUpdate.kind === 'apartment') && !allowedUpdate.pricePeriod && !listing.pricePeriod) {
+      allowedUpdate.pricePeriod = 'day';
+    }
 
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,

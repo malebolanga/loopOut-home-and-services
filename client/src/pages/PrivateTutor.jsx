@@ -2119,7 +2119,7 @@ export default function PrivateTutor() {
       endDate: dbEndDate,
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       deviceType,
       requestLocation,

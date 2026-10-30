@@ -13,6 +13,8 @@ import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } fro
 import { getCarWashBookingDetails, isCarWashBooking as isCarWashBookingRecord } from '../utils/carWashBookingDetails';
 import { rateShop, subscribeToOrders, updateOrderStatus } from '../services/lunchService';
 import RatingModal from '../components/RatingModal';
+import BookingRequestDetails from '../components/BookingRequestDetails';
+import { parseBookingMessageDetails } from '../utils/bookingMessageDetails';
 
 const BOOKING_STEPS = ['Request sent', 'Confirmed', 'In progress', 'Complete'];
 const FOOD_STEPS = ['Order sent', 'Preparing', 'Ready', 'Complete'];
@@ -152,6 +154,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
   const barberBookingDetails = getBarberBookingDetails(item.raw || {});
   const isCarWash = item.kind === 'booking' && isCarWashBookingRecord(item.raw || {});
   const carWashDetails = isCarWash ? getCarWashBookingDetails(item.raw || {}) : null;
+  const requestMessageDetails = parseBookingMessageDetails(item.raw?.message);
   const needsRating = item.completed && (isFood ? !item.raw.isRated : !item.isReviewed);
   const actionText = item.needsAction
     ? (isFood ? (item.fulfillment === 'delivery' ? 'Confirm delivery received' : 'I collected this order') : 'Confirm complete & rate')
@@ -180,7 +183,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
 
       {item.location && <p className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-gray-400"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{item.location}</span></p>}
 
-      {isBarberBooking && <div className="mt-3 grid grid-cols-1 gap-1.5 rounded-xl bg-blue-50/70 p-3 text-[11px] text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+      {isBarberBooking && requestMessageDetails.length === 0 && <div className="mt-3 grid grid-cols-1 gap-1.5 rounded-xl bg-blue-50/70 p-3 text-[11px] text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
         <span>👤 Member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
         {barberBookingDetails.serviceDuration && <span>⏱️ Duration: {barberBookingDetails.serviceDuration}</span>}
         {barberBookingDetails.selectedHaircut && <span>✂️ Haircut: {barberBookingDetails.selectedHaircut}</span>}
@@ -190,7 +193,7 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
         {barberBookingDetails.specialRequirements && <span className="truncate sm:col-span-2" title={barberBookingDetails.specialRequirements}>📝 Special request: {barberBookingDetails.specialRequirements}</span>}
       </div>}
 
-      {isCarWash && carWashDetails && <div className="mt-3 grid grid-cols-1 gap-1.5 rounded-xl bg-cyan-50/70 p-3 text-[11px] text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+      {isCarWash && carWashDetails && requestMessageDetails.length === 0 && <div className="mt-3 grid grid-cols-1 gap-1.5 rounded-xl bg-cyan-50/70 p-3 text-[11px] text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
         {carWashDetails.vehicleType && <span>🚗 Type: {carWashDetails.vehicleType}</span>}
         {(carWashDetails.vehicleMake || carWashDetails.vehicleModel) && <span>🚘 Vehicle: {[carWashDetails.vehicleMake, carWashDetails.vehicleModel].filter(Boolean).join(' ')}</span>}
         {carWashDetails.selectedServices && <span>🧼 Package: {carWashDetails.selectedServices}</span>}
@@ -198,6 +201,8 @@ function ActivityCard({ item, busy, onComplete, onRate, onOpen, onMessage, onCan
         {carWashDetails.electricityAccess && <span>⚡ Electricity: {carWashDetails.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
         {carWashDetails.specialRequirements && <span className="truncate sm:col-span-2" title={carWashDetails.specialRequirements}>📝 Note: {carWashDetails.specialRequirements}</span>}
       </div>}
+
+      {item.kind === 'booking' && requestMessageDetails.length > 0 && <BookingRequestDetails message={item.raw?.message} compact maxEntries={4} />}
 
       {isGoods && item.issueReports.some((issue) => issue.status === 'Open') && <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"><span className="inline-flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />Issue reported · {item.issueReports.find((issue) => issue.status === 'Open')?.category}</span><p className="mt-1 font-medium">This report is saved with the request and shared with both parties.</p></div>}
 
@@ -543,6 +548,7 @@ export default function MyLoopOut() {
   const detailServices = String(detailRaw.subtype || detailRaw.functionType || '').split(/[,;]+/).map((service) => service.trim()).filter(Boolean);
   const detailProviderName = detailResource.name || detailResource.title || detailsBooking?.provider || 'Service provider';
   const detailProviderImage = detailResource.imageUrls?.[0] || detailResource.images?.[0] || detailResource.image || '';
+  const requestMessageDetails = parseBookingMessageDetails(detailRaw.message);
   const detailDurationMinutes = Math.max(0, (new Date(detailRaw.endDate || 0).getTime() - new Date(detailRaw.startDate || 0).getTime()) / 60000);
   const detailDuration = detailDurationMinutes >= 1440
     ? `${Math.round(detailDurationMinutes / 1440)} day${Math.round(detailDurationMinutes / 1440) === 1 ? '' : 's'}`
@@ -687,12 +693,12 @@ export default function MyLoopOut() {
                 {detailServices.length > 0 ? <div className="mt-2 flex flex-wrap gap-2">{detailServices.map((service, index) => <span key={`${service}-${index}`} className="rounded-full bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">{service}</span>)}</div> : <p className="mt-2 text-sm text-slate-600 dark:text-gray-300">{detailsBooking.title}</p>}
                 {(detailRaw.numberOfGuests || (detailRaw.listing && detailRaw.numberOfRooms) || detailRaw.selectedPerformer || detailRaw.functionType || detailRaw.performerExperience) && <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 dark:text-gray-300">
                   {detailRaw.numberOfGuests && <span>👥 {detailRaw.numberOfGuests} guest{Number(detailRaw.numberOfGuests) === 1 ? '' : 's'}</span>}
-                  {detailRaw.listing && detailRaw.numberOfRooms && <span>🛏️ {detailRaw.numberOfRooms} room{Number(detailRaw.numberOfRooms) === 1 ? '' : 's'}</span>}
+                  {detailRaw.listing && detailRaw.numberOfRooms && <span>🛏️ {detailRaw.accommodationSelection === 'entire' ? `Full ${String(detailRaw.listing.kind || 'property').toLowerCase()} · ${detailRaw.numberOfRooms} bedrooms` : `${detailRaw.numberOfRooms} room${Number(detailRaw.numberOfRooms) === 1 ? '' : 's'} booked`}</span>}
                   {detailRaw.selectedPerformer && <span>👤 Requested worker: {detailRaw.selectedPerformer}</span>}
                   {detailRaw.functionType && <span>🎉 {detailRaw.functionType}</span>}
                   {detailRaw.performerExperience && <span>🏅 {detailRaw.performerExperience}</span>}
                 </div>}
-                {isBarberBooking && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                {isBarberBooking && requestMessageDetails.length === 0 && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
                   <span>👤 Selected member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
                   {(barberBookingDetails.serviceDuration || detailDuration) && <span>⏱️ Selected duration: {barberBookingDetails.serviceDuration || detailDuration}</span>}
                   {barberBookingDetails.selectedHaircut && <span>✂️ Haircut style: {barberBookingDetails.selectedHaircut}</span>}
@@ -701,7 +707,7 @@ export default function MyLoopOut() {
                   {barberBookingDetails.electricityProvided && <span>⚡ Electricity available: {barberBookingDetails.electricityProvided === 'yes' ? 'Yes' : 'No'}</span>}
                   {barberBookingDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {barberBookingDetails.specialRequirements}</p>}
                 </div>}
-                {isCarWash && carWashDetails && <div className="mt-3 grid gap-2 rounded-xl bg-cyan-50/70 p-3 text-xs text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+                {isCarWash && carWashDetails && requestMessageDetails.length === 0 && <div className="mt-3 grid gap-2 rounded-xl bg-cyan-50/70 p-3 text-xs text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
                   {carWashDetails.vehicleType && <span>🚗 Vehicle type: {carWashDetails.vehicleType}</span>}
                   {(carWashDetails.vehicleMake || carWashDetails.vehicleModel) && <span>🚘 Vehicle: {[carWashDetails.vehicleMake, carWashDetails.vehicleModel].filter(Boolean).join(' ')}</span>}
                   {carWashDetails.selectedServices && <span>🧼 Wash package: {carWashDetails.selectedServices}</span>}
@@ -711,7 +717,8 @@ export default function MyLoopOut() {
                 </div>}
               </section>
 
-              {detailRaw.message && !isBarberBooking && !isCarWash && !isWhatsAppBookingMessage(detailRaw.message) && <section className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+              {requestMessageDetails.length > 0 && <BookingRequestDetails message={detailRaw.message} />}
+              {detailRaw.message && requestMessageDetails.length === 0 && !isBarberBooking && !isCarWash && !isWhatsAppBookingMessage(detailRaw.message) && <section className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">📝 Notes for the provider</h3>
                 <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700 dark:text-gray-200">{String(detailRaw.message)}</p>
               </section>}

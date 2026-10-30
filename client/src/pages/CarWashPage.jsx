@@ -30,6 +30,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 import ServiceComments from '../components/ServiceComments';
+import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
@@ -43,6 +44,7 @@ export default function CarWashPage() {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const hasReviews = commentCount > 0 && Number(carWash?.rating) > 0;
@@ -771,6 +773,7 @@ export default function CarWashPage() {
                 categoryMode="carwash"
                 hideEmptyState
               />
+              {commentCount > 0 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">View all {commentCount} reviews</button>}
             </div>
 
             {/* Car wash booking experience */}
@@ -817,6 +820,8 @@ export default function CarWashPage() {
 
         </div>
       </ListingDetailShell>
+
+      {showCommentsPanel && <CommentsSidePanelService serviceId={carWash?._id} onClose={() => setShowCommentsPanel(false)} totalComments={commentCount} categoryMode="carwash" title="Car wash reviews" />}
 
       {/* Full Screen Image Modal */}
       {showImageModal && (

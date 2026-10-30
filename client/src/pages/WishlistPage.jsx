@@ -734,9 +734,11 @@ export default function CreateListing() {
                     value: formData.regularPrice,
                     icon: <FaTag className="text-airbnb-red" />,
                     additionalInfo: 
+                      formData.pricePeriod ? `/ ${formData.pricePeriod}` :
+                      formData.kind === 'house' ? "/ day" :
                       formData.type === "rent" ? "/ month" :
                       formData.type === "over" ? "/ night" :
-                      formData.type === "office" ? "/ month" : "",
+                      formData.type === "office" ? "/ hour" : "",
                   },
                 ].map((input) => (
                   <div key={input.id} className="space-y-2">
@@ -783,7 +785,7 @@ export default function CreateListing() {
                       />
                       {formData.type === "rent" && (
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
-                          / month
+                          / {formData.pricePeriod || (formData.kind === 'house' ? 'day' : 'month')}
                         </span>
                       )}
                     </div>

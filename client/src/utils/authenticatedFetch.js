@@ -17,7 +17,9 @@ export const getStoredToken = () => {
           try {
             localStorage.setItem('access_token', userToken);
             localStorage.setItem('token', userToken);
-          } catch (e) {}
+          } catch (e) {
+            // The token is still returned for this request if local storage is unavailable.
+          }
           return userToken;
         }
       }

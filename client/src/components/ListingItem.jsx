@@ -39,7 +39,12 @@ const formatPrice = (price, context = {}) => {
     maximumFractionDigits: 0,
   });
 
-  const suffix = context?.type === 'over' ? '/night' :
+  const suffix = context?.pricePeriod === 'night' ? '/night' :
+    context?.pricePeriod === 'day' ? '/day' :
+    context?.pricePeriod === 'hour' ? '/hour' :
+    context?.pricePeriod === 'month' ? '/month' :
+    (context?.kind === 'house' || context?.kind === 'apartment') ? '/day' :
+    context?.type === 'over' ? '/night' :
     context?.type === 'resort' ? '/day' :
     context?.type === 'office' ? '/hour' :
       ['rent', 'rent-short', 'rent-long'].includes(context?.type) ? '/month' :
@@ -341,6 +346,9 @@ function ListingItem({ listing, onClick, className = "", compactMode = false }) 
         <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 dark:border-gray-800">
           <div className="font-black text-gray-900 dark:text-white text-sm tracking-tight">
             R{listing.regularPrice?.toLocaleString()}
+            <span className="text-xs font-normal text-gray-500 ml-1">
+              {listing.pricePeriod ? `/${listing.pricePeriod}` : (['house', 'apartment'].includes(listing.kind) ? '/day' : (listing.type === 'rent' ? '/month' : ''))}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             {listing.userRef?.avatar && (

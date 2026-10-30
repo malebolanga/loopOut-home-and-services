@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import ServiceComments from './ServiceComments';
 
-const CommentsSidePanelService = ({ serviceId, onClose, totalComments = 0, categoryMode = 'service' }) => {
+const CommentsSidePanelService = ({ serviceId, onClose, totalComments = 0, categoryMode = 'service', title = 'Service reviews' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -35,7 +35,7 @@ const CommentsSidePanelService = ({ serviceId, onClose, totalComments = 0, categ
         <header className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-gray-800 sm:px-7">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-600">Client feedback</p>
-            <h2 id="service-reviews-title" className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Car wash reviews</h2>
+            <h2 id="service-reviews-title" className="mt-1 text-xl font-bold text-slate-900 dark:text-white">{title}</h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">{totalComments} {totalComments === 1 ? 'completed booking review' : 'completed booking reviews'}</p>
           </div>
           <button type="button" onClick={handleClose} aria-label="Close reviews" className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
