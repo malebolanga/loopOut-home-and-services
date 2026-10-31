@@ -6,13 +6,13 @@ const SVG_PATH = path.join(__dirname, 'public', 'loopout_icon.svg');
 
 // Web app targets inside client/public and client root
 const WEB_TARGETS = [
-  { name: 'apple-touch-icon.png', size: 180, isTransparent: false, bgColor: '#FFFFFF', writeToRoot: true },
+  { name: 'apple-touch-icon.png', size: 180, isTransparent: true, writeToRoot: true },
   { name: 'favicon-32x32.png', size: 32, isTransparent: true, writeToRoot: true },
   { name: 'favicon-16x16.png', size: 16, isTransparent: true, writeToRoot: true },
   { name: 'logo192.png', size: 192, isTransparent: true },
   { name: 'logo512.png', size: 512, isTransparent: true },
   { name: 'android-chrome-512x512.png', size: 512, isTransparent: true, writeToRoot: true },
-  { name: 'maskable.png', size: 512, isTransparent: false, bgColor: '#FFFFFF', paddingRatio: 0.25, writeToRoot: true },
+  { name: 'maskable.png', size: 512, isTransparent: false, bgColor: '#0F172A', paddingRatio: 0.25, writeToRoot: true },
   // JPG versions in root
   { name: 'logo192.jpg', size: 192, isTransparent: false, bgColor: '#FFFFFF', isJpg: true, writeToRootOnly: true },
   { name: 'logo256.jpg', size: 256, isTransparent: false, bgColor: '#FFFFFF', isJpg: true, writeToRootOnly: true },

@@ -2586,12 +2586,14 @@ export default function ChefPage() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
+              {commentCount >= 10 && (
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                >
+                  Show all {commentCount} reviews
+                </button>
+              )}
             </div>
 
             {/* Location */}

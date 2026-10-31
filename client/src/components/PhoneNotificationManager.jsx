@@ -243,7 +243,7 @@ const PhoneNotificationManager = () => {
         try {
           new window.Notification(newNotif.title, {
             body: newNotif.message,
-            icon: '/favicon.ico'
+            icon: '/apple-touch-icon.png'
           });
         } catch (e) {
           console.warn('Native notification failed', e);
@@ -305,11 +305,9 @@ const PhoneNotificationManager = () => {
             onClick={handleNotificationClick}
           >
             <div className="bg-gray-950/90 backdrop-blur-2xl text-white rounded-3xl p-3.5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/15 flex items-start gap-3">
-              {/* App Icon Container */}
-              <div className="relative shrink-0 mt-0.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF5A5F] via-rose-500 to-pink-600 flex items-center justify-center shadow-lg shadow-rose-500/20 border border-white/20">
-                  {getNotificationIcon(activeNotification.type)}
-                </div>
+              {/* App logo stays transparent against the notification surface. */}
+              <div className="relative mt-0.5 shrink-0">
+                <img src="/apple-touch-icon.png" alt="LoopOut" className="h-10 w-10 rounded-2xl object-contain" />
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-gray-950" />
               </div>
 

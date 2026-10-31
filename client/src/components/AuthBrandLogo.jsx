@@ -84,7 +84,7 @@ export default function AuthBrandLogo() {
             animate={{ scale: [1, 1.2], opacity: [0.45, 0] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
           />
-          <img src={appIcon} alt="" className="relative z-[1] h-12 w-12 rounded-2xl bg-white object-contain shadow-sm ring-1 ring-slate-100" />
+          <img src={appIcon} alt="" className="relative z-[1] h-12 w-12 rounded-2xl object-contain" />
           <motion.span
             aria-hidden="true"
             className="absolute -right-1 -top-1 z-[2] flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white shadow-md ring-2 ring-white"
@@ -118,7 +118,7 @@ export default function AuthBrandLogo() {
                 animate={{ width: '160vmax', height: '160vmax', rotate: 360, borderRadius: '50%', opacity: [1, 0.96, 0.96, 0] }}
                 transition={{ duration: 1.15, ease: [0.2, 0.72, 0.2, 1] }}
                 onAnimationComplete={() => { setIsZooming(false); setShowIntro(true); }}
-                className="max-w-none shrink-0 bg-white object-cover shadow-[0_0_100px_rgba(255,255,255,0.55)]"
+                className="max-w-none shrink-0 object-contain drop-shadow-[0_0_28px_rgba(255,255,255,0.24)]"
               />
             </motion.div>
           )}
@@ -150,7 +150,7 @@ export default function AuthBrandLogo() {
 
               <div className="relative z-[1] w-full max-w-xl">
                 <div className="mb-7 flex items-center justify-center gap-3">
-                  <img src={appIcon} alt="" className="h-10 w-10 rounded-xl bg-white object-contain" />
+                  <img src={appIcon} alt="" className="h-10 w-10 rounded-xl object-contain" />
                   <span className="text-xl font-black tracking-tight"><span className="text-rose-400">loop</span><span className="text-orange-300">Out</span></span>
                 </div>
 

@@ -22,7 +22,17 @@ const HELPER_RATING_FIELDS = {
   beautyCommunication: 'beautyCommunicationRating',
   beautyEquipment: 'beautyEquipmentRating',
   hairdressing: 'hairdressingRating',
-  timeliness: 'timelinessRating'
+  timeliness: 'timelinessRating',
+  tattooCleaning: 'tattooCleaningRating',
+  tattooCommunication: 'tattooCommunicationRating',
+  tattooEquipment: 'tattooEquipmentRating',
+  tattooArtist: 'tattooArtistRating',
+  tattooTimeliness: 'tattooTimelinessRating',
+  photographyCleanliness: 'photographyCleanlinessRating',
+  cameras: 'camerasRating',
+  studio: 'studioRating',
+  photographer: 'photographerRating',
+  photographyCommunication: 'photographyCommunicationRating'
 };
 
 const summarizeHelperRatings = (comments, helperType = '') => {
@@ -31,7 +41,11 @@ const summarizeHelperRatings = (comments, helperType = '') => {
     ? ['barberCleaning', 'haircut', 'equipment', 'serviceCare', 'barberCommunication']
     : normalizedType === 'beauty' || normalizedType === 'spa'
       ? ['beautyCleaning', 'beautyCommunication', 'beautyEquipment', 'hairdressing', 'timeliness']
-      : ['cleanliness', 'communication', 'punctuality', 'quality', 'respectfulness', 'value', 'recommendation'];
+      : normalizedType === 'tattoo' || normalizedType === 'tattoo_artist'
+        ? ['tattooCleaning', 'tattooCommunication', 'tattooEquipment', 'tattooArtist', 'tattooTimeliness']
+        : normalizedType === 'photography' || normalizedType === 'photographer' || normalizedType === 'photo'
+          ? ['photographyCleanliness', 'cameras', 'studio', 'photographer', 'photographyCommunication']
+          : ['cleanliness', 'communication', 'punctuality', 'quality', 'respectfulness', 'value', 'recommendation'];
   const activeRatingFields = activeRatingKeys.map((key) => HELPER_RATING_FIELDS[key]);
   const ratings = {};
   Object.entries(HELPER_RATING_FIELDS).forEach(([name, field]) => {
@@ -39,7 +53,16 @@ const summarizeHelperRatings = (comments, helperType = '') => {
       ratings[name] = 0;
       return;
     }
-    const values = comments.map((comment) => Number(comment[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+    const values = comments.map((comment) => {
+      let val = Number(comment[field]);
+      if (!Number.isFinite(val) || val < 1 || val > 5) {
+        if (name === 'photographyCleanliness') val = Number(comment.cleanlinessRating);
+        else if (name === 'photographyCommunication') val = Number(comment.communicationRating);
+        else if (name === 'photographer') val = Number(comment.qualityRating);
+        else if (name === 'cameras') val = Number(comment.equipmentRating);
+      }
+      return Number.isFinite(val) && val >= 1 && val <= 5 ? val : null;
+    }).filter(Boolean);
     ratings[name] = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
   });
   ratings.staff = ratings.communication;
@@ -71,7 +94,11 @@ export const createHelperComment = async (req, res, next) => {
       qualityRating, respectfulnessRating, valueRating, recommendationRating,
       barberCleaningRating, haircutRating, equipmentRating, serviceCareRating,
       barberCommunicationRating, beautyCleaningRating, beautyCommunicationRating,
-      beautyEquipmentRating, hairdressingRating, timelinessRating
+      beautyEquipmentRating, hairdressingRating, timelinessRating,
+      tattooCleaningRating, tattooCommunicationRating, tattooEquipmentRating,
+      tattooArtistRating, tattooTimelinessRating,
+      photographyCleanlinessRating, camerasRating, studioRating,
+      photographerRating, photographyCommunicationRating
     } = req.body;
     const userId = req.user.id;
 
@@ -118,7 +145,17 @@ export const createHelperComment = async (req, res, next) => {
       beautyCommunicationRating,
       beautyEquipmentRating,
       hairdressingRating,
-      timelinessRating
+      timelinessRating,
+      tattooCleaningRating,
+      tattooCommunicationRating,
+      tattooEquipmentRating,
+      tattooArtistRating,
+      tattooTimelinessRating,
+      photographyCleanlinessRating,
+      camerasRating,
+      studioRating,
+      photographerRating,
+      photographyCommunicationRating
     };
     for (const [field, value] of Object.entries(submittedRatings)) {
       if (value === undefined || value === null) continue;

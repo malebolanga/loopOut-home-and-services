@@ -3009,7 +3009,7 @@ export default function HelperPage() {
                         );
                       })}
                     </Swiper>
-                    {commentCount > 10 && (
+                    {commentCount >= 10 && (
                       <button type="button" onClick={() => setShowAllReviewsPanel(true)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 sm:w-auto">
                         See all {commentCount} reviews
                       </button>

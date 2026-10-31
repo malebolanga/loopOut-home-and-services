@@ -773,7 +773,7 @@ export default function CarWashPage() {
                 categoryMode="carwash"
                 hideEmptyState
               />
-              {commentCount > 0 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">View all {commentCount} reviews</button>}
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">View all {commentCount} reviews</button>}
             </div>
 
             {/* Car wash booking experience */}

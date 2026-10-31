@@ -2038,12 +2038,14 @@ export default function Listing() {
                 )}
               </>
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
+              {commentCount >= 10 && (
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
+                >
+                  Show all {commentCount} reviews
+                </button>
+              )}
             </div>
 
             {/* Location */}

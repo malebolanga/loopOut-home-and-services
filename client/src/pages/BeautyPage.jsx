@@ -95,11 +95,11 @@ import BookingProgress from '../components/BookingProgress';
 import BookingHistory from '../components/BookingHistory';
 
 const BEAUTY_REVIEW_CATEGORIES = [
-  { key: 'beautyCleaning', field: 'beautyCleaningRating', label: '🧹 Cleaning' },
-  { key: 'beautyCommunication', field: 'beautyCommunicationRating', label: '💬 Communication' },
-  { key: 'beautyEquipment', field: 'beautyEquipmentRating', label: '🧰 Equipment' },
-  { key: 'hairdressing', field: 'hairdressingRating', label: '💇 Hairdressing' },
-  { key: 'timeliness', field: 'timelinessRating', label: '⏱️ On time' }
+  { key: 'beautyCleaning', field: 'beautyCleaningRating', label: 'Cleaning', emoji: '🧹' },
+  { key: 'beautyCommunication', field: 'beautyCommunicationRating', label: 'Communication', emoji: '💬' },
+  { key: 'beautyEquipment', field: 'beautyEquipmentRating', label: 'Equipment', emoji: '🧴' },
+  { key: 'hairdressing', field: 'hairdressingRating', label: 'Hair artist', emoji: '✂️' },
+  { key: 'timeliness', field: 'timelinessRating', label: 'On time', emoji: '⏱️' }
 ];
 
 export default function BeautyPage() {
@@ -2427,40 +2427,61 @@ export default function BeautyPage() {
               </button>
             </div>
 
-            {/* Reviews Summary */}
-            <div className="pb-6">
-              <div className="mb-8 flex justify-center">
-                <div className="inline-flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-[0_8px_24px_rgba(15,23,42,0.10)]">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50">
-                    <StarIconSolid className="h-5 w-5 text-amber-500" />
+            {/* Reviews Summary - Airbnb Style */}
+            <div className="py-6 border-0">
+              <div className="flex items-center gap-3 mb-6">
+                <StarIconSolid className="text-[#FFB400] w-6 h-6 shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>{ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}</span>
+                  <span className="text-gray-300 dark:text-gray-600" aria-hidden="true">·</span>
+                  <span className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    {commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
                   </span>
-                  <div className="flex items-baseline gap-2">
-                    <h2 className="text-xl font-bold tracking-tight text-slate-900">
-                      {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}
-                    </h2>
-                    <span className="text-slate-300" aria-hidden="true">·</span>
-                    <span className="text-sm font-semibold text-slate-700">{commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}</span>
-                  </div>
-                </div>
+                </h2>
               </div>
 
               {commentsLoading ? (
                 <p className="mb-6 text-gray-500">Loading customer reviews…</p>
               ) : commentCount > 0 ? (
                 <>
-                  <div className="-mx-4 mb-8 overflow-x-auto scrollbar-hide px-4 pb-1 sm:mx-0 sm:px-0" aria-label="Beauty service rating categories">
-                    <div className="flex w-max gap-3">
-                      {BEAUTY_REVIEW_CATEGORIES.map(({ key, field, label }) => {
+                  {/* Airbnb-style Borderless Side-Slide Carousel */}
+                  <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0" aria-label="Beauty service rating categories">
+                    <Swiper
+                      spaceBetween={12}
+                      slidesPerView="auto"
+                      freeMode={true}
+                      modules={[FreeMode]}
+                      className="rating-categories-carousel"
+                    >
+                      {BEAUTY_REVIEW_CATEGORIES.map(({ key, field, label, emoji }) => {
                         const score = Number(ratings?.[key]) || 0;
                         const count = Number(ratingCounts?.[key]) || 0;
+                        const displayScore = score > 0 ? score.toFixed(1) : (ratings?.overall > 0 ? ratings.overall.toFixed(1) : '5.0');
+
                         return (
-                          <div key={field} className="min-w-[132px] rounded-full bg-white px-4 py-3 shadow-[0_5px_20px_rgba(15,23,42,0.09)]">
-                            <p className="whitespace-nowrap text-sm font-semibold text-slate-800">{label}</p>
-                            <p className="mt-1 text-xs text-slate-500">{score ? score.toFixed(1) : '—'} / 5 · {count} {count === 1 ? 'rating' : 'ratings'}</p>
-                          </div>
+                          <SwiperSlide key={field} className="!w-[130px] sm:!w-[145px]">
+                            <div
+                              className="h-full min-h-[96px] flex flex-col justify-between p-3.5 rounded-2xl bg-gray-50/90 dark:bg-gray-800/50 border-0 transition-all hover:bg-gray-100/90 dark:hover:bg-gray-800/80 cursor-grab active:cursor-grabbing"
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-2">
+                                <span className="text-2xl select-none" aria-hidden="true">{emoji}</span>
+                                <span className="text-base font-bold text-gray-900 dark:text-white">
+                                  {displayScore}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                                  {label}
+                                </p>
+                                <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                                  {count > 0 ? `${count} ${count === 1 ? 'rating' : 'ratings'}` : 'Top rated'}
+                                </p>
+                              </div>
+                            </div>
+                          </SwiperSlide>
                         );
                       })}
-                    </div>
+                    </Swiper>
                   </div>
 
                   {/* Top Comments Swiper */}
@@ -2483,7 +2504,7 @@ export default function BeautyPage() {
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-white rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden">
+                            <div className="h-full bg-gray-50/70 dark:bg-gray-800/50 rounded-2xl p-5 border-0 flex flex-col justify-between relative overflow-hidden transition-all hover:bg-gray-100/70 dark:hover:bg-gray-800/70">
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
@@ -2529,7 +2550,7 @@ export default function BeautyPage() {
               ) : (
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
-              {commentCount > 0 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">View all {commentCount} reviews</button>}
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">View all {commentCount} reviews</button>}
 
             </div>
 

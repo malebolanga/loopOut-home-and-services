@@ -93,6 +93,14 @@ import CommentsSidePanelHelper from '../components/CommentsSidePanelHelper';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import BookingHistory from '../components/BookingHistory';
 
+const TATTOO_REVIEW_CATEGORIES = [
+  { key: 'tattooCleaning',       field: 'tattooCleaningRating',       label: 'Cleaning',      emoji: '🧹' },
+  { key: 'tattooCommunication',  field: 'tattooCommunicationRating',  label: 'Communication', emoji: '💬' },
+  { key: 'tattooEquipment',      field: 'tattooEquipmentRating',      label: 'Equipment',     emoji: '🧰' },
+  { key: 'tattooArtist',         field: 'tattooArtistRating',         label: 'Tattoo artist', emoji: '✍️' },
+  { key: 'tattooTimeliness',     field: 'tattooTimelinessRating',     label: 'On time',       emoji: '⏱️' },
+];
+
 export default function TattooPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
@@ -115,7 +123,8 @@ export default function TattooPage() {
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, tattooCleaning: 0, tattooCommunication: 0, tattooEquipment: 0, tattooArtist: 0, tattooTimeliness: 0, overall: 0 });
+  const [ratingCounts, setRatingCounts] = useState({});
   const [topComments, setTopComments] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
@@ -851,8 +860,14 @@ export default function TattooPage() {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
+                tattooCleaning: data.ratings.tattooCleaning || 0,
+                tattooCommunication: data.ratings.tattooCommunication || 0,
+                tattooEquipment: data.ratings.tattooEquipment || 0,
+                tattooArtist: data.ratings.tattooArtist || 0,
+                tattooTimeliness: data.ratings.tattooTimeliness || 0,
                 overall: data.ratings.overall || 0
               });
+              if (data.ratingCounts) setRatingCounts(data.ratingCounts);
             }
           }
         } catch (error) {
@@ -2457,44 +2472,61 @@ export default function TattooPage() {
               </div>
             </section>
 
-            {/* Reviews Summary */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-8">
-                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
+            {/* Reviews Summary - Airbnb Style */}
+            <div className="py-6 border-0">
+              <div className="flex items-center gap-3 mb-6">
+                <StarIconSolid className="text-[#FFB400] w-6 h-6 shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>{ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}</span>
+                  <span className="text-gray-300 dark:text-gray-600" aria-hidden="true">·</span>
+                  <span className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    {commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
+                  </span>
                 </h2>
               </div>
 
-              {commentCount > 0 ? (
+              {commentsLoading ? (
+                <p className="mb-6 text-gray-500">Loading customer reviews…</p>
+              ) : commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
+                  {/* Airbnb-style Borderless Side-Slide Carousel */}
+                  <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0" aria-label="Tattoo artist rating categories">
+                    <Swiper
+                      spaceBetween={12}
+                      slidesPerView="auto"
+                      freeMode={true}
+                      modules={[FreeMode]}
+                      className="rating-categories-carousel"
+                    >
+                      {TATTOO_REVIEW_CATEGORIES.map(({ key, field, label, emoji }) => {
+                        const score = Number(ratings?.[key]) || 0;
+                        const count = Number(ratingCounts?.[key]) || 0;
+                        const displayScore = score > 0 ? score.toFixed(1) : (ratings?.overall > 0 ? ratings.overall.toFixed(1) : '5.0');
+
+                        return (
+                          <SwiperSlide key={field} className="!w-[130px] sm:!w-[145px]">
+                            <div
+                              className="h-full min-h-[96px] flex flex-col justify-between p-3.5 rounded-2xl bg-gray-50/90 dark:bg-gray-800/50 border-0 transition-all hover:bg-gray-100/90 dark:hover:bg-gray-800/80 cursor-grab active:cursor-grabbing"
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-2">
+                                <span className="text-2xl select-none" aria-hidden="true">{emoji}</span>
+                                <span className="text-base font-bold text-gray-900 dark:text-white">
+                                  {displayScore}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                                  {label}
+                                </p>
+                                <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                                  {count > 0 ? `${count} ${count === 1 ? 'rating' : 'ratings'}` : 'Top rated'}
+                                </p>
+                              </div>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                    </Swiper>
                   </div>
 
                   {/* Top Comments Swiper */}
@@ -2512,19 +2544,19 @@ export default function TattooPage() {
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
                         {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          const reviewScores = TATTOO_REVIEW_CATEGORIES.map(({ field }) => Number(comment[field])).filter((score) => score >= 1 && score <= 5);
+                          const rating = reviewScores.length ? reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length : 5;
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="h-full bg-gray-50/70 dark:bg-gray-800/50 rounded-2xl p-5 border-0 flex flex-col justify-between relative overflow-hidden transition-all hover:bg-gray-100/70 dark:hover:bg-gray-800/70">
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
                                     <img 
                                       src={comment.userAvatar || '/default-avatar.jpg'} 
                                       alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
+                                      className="w-12 h-12 rounded-full object-cover shadow-sm"
                                       onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                     />
                                     <div>
@@ -2563,13 +2595,8 @@ export default function TattooPage() {
               ) : (
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}</button>}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
-              </button>
             </div>
 
             {/* Location */}

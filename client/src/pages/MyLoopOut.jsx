@@ -368,6 +368,11 @@ export default function MyLoopOut() {
     completed: items.filter((item) => item.completed).length,
   }), [items]);
 
+  const unreviewedItems = useMemo(() => items.filter((item) => {
+    if (!item.completed || item.cancelled) return false;
+    return item.kind === 'food' ? !item.raw?.isRated : !item.isReviewed;
+  }), [items]);
+
   const visibleItems = useMemo(() => items.filter((item) => {
     if (filter === 'needs') return item.needsAction;
     if (filter === 'active') return !item.completed && !item.cancelled;
@@ -609,6 +614,43 @@ export default function MyLoopOut() {
             </section>
 
             {(bookingError || orderError || notice) && <div role="status" className={`mb-4 flex items-start justify-between gap-3 rounded-2xl border px-4 py-3 text-xs font-semibold ${notice && !bookingError && !orderError ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200' : 'border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200'}`}><span>{notice || [bookingError, orderError].filter(Boolean).join(' ')}</span>{(bookingError || orderError) && <button type="button" onClick={refresh} className="shrink-0 underline">Retry</button>}</div>}
+
+            {/* Notification to Review on MyLoopOut */}
+            {unreviewedItems.length > 0 && (
+              <div className="mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-2xl border border-amber-200 bg-amber-50/90 p-4 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/30">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
+                    <Star className="h-5 w-5 fill-white" />
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                      Rate &amp; review your experience with {unreviewedItems[0].provider || unreviewedItems[0].title}
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-gray-300">
+                      You have {unreviewedItems.length} completed {unreviewedItems.length === 1 ? 'booking' : 'bookings'} waiting for your review.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const item = unreviewedItems[0];
+                    if (item.kind === 'food') {
+                      setFoodRating(5);
+                      setFoodComment('');
+                      setFoodRatingError('');
+                      setRatingOrder(item);
+                    } else {
+                      setRatingBooking({ ...item.raw, id: item.id, type: item.resourceType, itemId: item.resourceId, title: item.title, proName: item.provider });
+                    }
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition active:scale-95"
+                >
+                  <Star className="h-3.5 w-3.5 fill-white" />
+                  Review now
+                </button>
+              </div>
+            )}
 
             <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {[

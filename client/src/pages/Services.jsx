@@ -1975,7 +1975,7 @@ const ServicePage = () => {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              {commentCount > 0 && <button
+              {commentCount >= 10 && <button
                 onClick={() => setShowCommentsPanel(true)}
                 className="px-6 py-3 border-2 border-slate-900 text-slate-900 font-semibold rounded-xl hover:bg-slate-900 hover:text-white transition-all duration-300 w-full sm:w-auto active:scale-95"
               >

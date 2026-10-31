@@ -82,6 +82,16 @@ const helperCommentSchema = new mongoose.Schema({
   beautyEquipmentRating: { type: Number, min: 1, max: 5 },
   hairdressingRating: { type: Number, min: 1, max: 5 },
   timelinessRating: { type: Number, min: 1, max: 5 },
+  tattooCleaningRating: { type: Number, min: 1, max: 5 },
+  tattooCommunicationRating: { type: Number, min: 1, max: 5 },
+  tattooEquipmentRating: { type: Number, min: 1, max: 5 },
+  tattooArtistRating: { type: Number, min: 1, max: 5 },
+  tattooTimelinessRating: { type: Number, min: 1, max: 5 },
+  photographyCleanlinessRating: { type: Number, min: 1, max: 5 },
+  camerasRating: { type: Number, min: 1, max: 5 },
+  studioRating: { type: Number, min: 1, max: 5 },
+  photographerRating: { type: Number, min: 1, max: 5 },
+  photographyCommunicationRating: { type: Number, min: 1, max: 5 },
   replies: [replySchema]
 }, { timestamps: true });
 

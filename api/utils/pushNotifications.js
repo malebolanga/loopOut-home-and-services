@@ -59,7 +59,7 @@ export const sendPushNotificationToUser = async (userId, { title, body, data = {
     data: messageData,
     android: {
       priority: 'high',
-      notification: { channelId, sound: 'default' },
+      notification: { channelId, sound: 'default', icon: 'ic_stat_loopout' },
     },
   });
 

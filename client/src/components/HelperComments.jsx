@@ -32,6 +32,8 @@ const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalCom
   const normalizedHelperType = String(helperType).toLowerCase();
   const isBarber = ['barber', 'barbar'].includes(normalizedHelperType);
   const isBeauty = ['beauty', 'spa'].includes(normalizedHelperType);
+  const isTattoo = ['tattoo', 'tattoo_artist', 'tattooartist', 'piercing'].includes(normalizedHelperType);
+  const isPhotography = ['photography', 'photographer', 'photo'].includes(normalizedHelperType);
   const hasFailed = useRef(false); // prevent infinite retry loop on 404/error
   const [ratings, setRatings] = useState({
     cleanliness: 0,
@@ -52,6 +54,16 @@ const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalCom
     beautyEquipment: 0,
     hairdressing: 0,
     timeliness: 0,
+    tattooCleaning: 0,
+    tattooCommunication: 0,
+    tattooEquipment: 0,
+    tattooArtist: 0,
+    tattooTimeliness: 0,
+    photographyCleanliness: 0,
+    cameras: 0,
+    studio: 0,
+    photographer: 0,
+    photographyCommunication: 0,
     overall: 0
   });
   const [categoryRatings, setCategoryRatings] = useState({
@@ -71,7 +83,17 @@ const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalCom
     beautyCommunicationRating: 0,
     beautyEquipmentRating: 0,
     hairdressingRating: 0,
-    timelinessRating: 0
+    timelinessRating: 0,
+    tattooCleaningRating: 0,
+    tattooCommunicationRating: 0,
+    tattooEquipmentRating: 0,
+    tattooArtistRating: 0,
+    tattooTimelinessRating: 0,
+    photographyCleanlinessRating: 0,
+    camerasRating: 0,
+    studioRating: 0,
+    photographerRating: 0,
+    photographyCommunicationRating: 0
   });
   const ratingCategories = [
     { field: 'punctualityRating', label: '⏱️ Punctual & on time' },
@@ -92,11 +114,25 @@ const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalCom
   const beautyRatingCategories = [
     { field: 'beautyCleaningRating', key: 'beautyCleaning', label: '🧹 Cleaning' },
     { field: 'beautyCommunicationRating', key: 'beautyCommunication', label: '💬 Communication' },
-    { field: 'beautyEquipmentRating', key: 'beautyEquipment', label: '🧰 Equipment' },
-    { field: 'hairdressingRating', key: 'hairdressing', label: '💇 Hairdressing' },
+    { field: 'beautyEquipmentRating', key: 'beautyEquipment', label: '🧴 Equipment' },
+    { field: 'hairdressingRating', key: 'hairdressing', label: '✂️ Hair artist' },
     { field: 'timelinessRating', key: 'timeliness', label: '⏱️ On time' }
   ];
-  const activeRatingCategories = isBarber ? barberRatingCategories : isBeauty ? beautyRatingCategories : ratingCategories;
+  const tattooRatingCategories = [
+    { field: 'tattooCleaningRating', key: 'tattooCleaning', label: '🧹 Cleaning' },
+    { field: 'tattooCommunicationRating', key: 'tattooCommunication', label: '💬 Communication' },
+    { field: 'tattooEquipmentRating', key: 'tattooEquipment', label: '🧰 Equipment' },
+    { field: 'tattooArtistRating', key: 'tattooArtist', label: '✍️ Tattoo artist' },
+    { field: 'tattooTimelinessRating', key: 'tattooTimeliness', label: '⏱️ On time' }
+  ];
+  const photographyRatingCategories = [
+    { field: 'photographyCleanlinessRating', key: 'photographyCleanliness', label: '🧹 Cleanliness' },
+    { field: 'camerasRating', key: 'cameras', label: '📷 Cameras' },
+    { field: 'studioRating', key: 'studio', label: '🏢 Studio' },
+    { field: 'photographerRating', key: 'photographer', label: '📸 Photography' },
+    { field: 'photographyCommunicationRating', key: 'photographyCommunication', label: '💬 Communication' }
+  ];
+  const activeRatingCategories = isBarber ? barberRatingCategories : isBeauty ? beautyRatingCategories : isTattoo ? tattooRatingCategories : isPhotography ? photographyRatingCategories : ratingCategories;
   const RATING_CATEGORIES = [
     { name: 'Cleanliness', icon: FaBroom },
     { name: 'Staff', icon: FaUserFriends }
@@ -582,7 +618,7 @@ const HelperComments = ({ helperId, helperType = '', maxComments = 3, onTotalCom
                   const score = Number(ratings[key]) || 0;
                   const count = Number(ratingCounts[key]) || 0;
                   return (
-                    <div key={field} className="min-w-[118px] rounded-full bg-white px-3 py-2 text-center shadow-[0_5px_18px_rgba(15,23,42,0.08)] dark:bg-gray-950">
+                    <div key={field} className="min-w-[118px] rounded-2xl bg-gray-50 px-3 py-2.5 text-center border-0 dark:bg-gray-800/60">
                       <p className="whitespace-nowrap text-xs font-semibold text-slate-800 dark:text-gray-100">{label}</p>
                       <p className="mt-0.5 text-[11px] text-slate-500 dark:text-gray-400">{score ? `${score.toFixed(1)} / 5` : '—'} · {count}</p>
                     </div>

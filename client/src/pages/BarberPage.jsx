@@ -2581,7 +2581,7 @@ export default function BarberPage() {
               ) : (
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
-              {commentCount > 0 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">View all {commentCount} reviews</button>}
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">View all {commentCount} reviews</button>}
 
             </div>
 

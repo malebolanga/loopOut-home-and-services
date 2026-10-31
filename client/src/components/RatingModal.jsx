@@ -55,6 +55,20 @@ const BEAUTY_RATING_CATEGORIES = [
   { field: 'hairdressingRating', label: '💇 Hairdressing' },
   { field: 'timelinessRating', label: '⏱️ On time' }
 ];
+const TATTOO_RATING_CATEGORIES = [
+  { field: 'tattooCleaningRating', label: '🧹 Cleaning' },
+  { field: 'tattooCommunicationRating', label: '💬 Communication' },
+  { field: 'tattooEquipmentRating', label: '🧰 Equipment' },
+  { field: 'tattooArtistRating', label: '✍️ Tattoo artist' },
+  { field: 'tattooTimelinessRating', label: '⏱️ On time' }
+];
+const PHOTOGRAPHY_RATING_CATEGORIES = [
+  { field: 'photographyCleanlinessRating', label: '🧹 Cleanliness' },
+  { field: 'camerasRating', label: '📷 Cameras' },
+  { field: 'studioRating', label: '🏢 Studio' },
+  { field: 'photographerRating', label: '📸 Photography' },
+  { field: 'photographyCommunicationRating', label: '💬 Communication' }
+];
 const LISTING_RATING_CATEGORIES = [
   { field: 'hospitalityRating', label: '🛎️ Hospitality' },
   { field: 'comfortRating', label: '🛋️ Comfort' },
@@ -62,7 +76,7 @@ const LISTING_RATING_CATEGORIES = [
   { field: 'hostRating', label: '🧑‍💼 Owner / host' },
   { field: 'cleanlinessRating', label: '🧹 Cleanliness' },
 ];
-const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES, ...LISTING_RATING_CATEGORIES].map(({ field }) => [field, 0]));
+const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES, ...TATTOO_RATING_CATEGORIES, ...PHOTOGRAPHY_RATING_CATEGORIES, ...LISTING_RATING_CATEGORIES].map(({ field }) => [field, 0]));
 
 export default function RatingModal({ 
   isOpen, 
@@ -107,7 +121,9 @@ export default function RatingModal({
   const helperType = String(helper?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
   const isBarberRating = targetType === 'helper' && ['barber', 'barbar'].includes(helperType);
   const isBeautyRating = targetType === 'helper' && ['beauty', 'spa'].includes(helperType);
-  const activeRatingCategories = targetType === 'listing' ? LISTING_RATING_CATEGORIES : isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
+  const isTattooRating = targetType === 'helper' && ['tattoo', 'tattoo_artist', 'tattooartist', 'piercing'].includes(helperType);
+  const isPhotographyRating = targetType === 'helper' && ['photography', 'photographer', 'photo'].includes(helperType);
+  const activeRatingCategories = targetType === 'listing' ? LISTING_RATING_CATEGORIES : isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : isTattooRating ? TATTOO_RATING_CATEGORIES : isPhotographyRating ? PHOTOGRAPHY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
   const selectedPerformerName = booking.selectedPerformer || booking.raw?.selectedPerformer;
   const selectedPerformer = helper?.performers?.find((performer) =>
     String(performer.name || '').trim().toLowerCase() === String(selectedPerformerName || '').trim().toLowerCase()
