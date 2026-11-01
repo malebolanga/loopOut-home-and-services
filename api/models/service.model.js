@@ -27,7 +27,7 @@ const serviceSchema = new mongoose.Schema(
       required: true,
     },
     contact: {
-      type: Number,
+      type: mongoose.Schema.Types.Mixed,
       required: true,
     },
     host: {

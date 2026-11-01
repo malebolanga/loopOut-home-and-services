@@ -32,7 +32,26 @@ const SERVICE_TYPES = new Set([
 const HELPER_TYPES = new Set([
   'domestic', 'handyman', 'errand', 'tutor', 'chef', 'beauty', 'tattoo',
   'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals',
+  'carwash', 'moving', 'other',
 ]);
+
+const PROPERTY_CATEGORY_RULES = {
+  apartment: { kind: /^(apartment|complex)$/i, text: /apartment|complex|flat/i },
+  full_house: { kind: /^(house|full_house)$/i, text: /full house|entire house|whole house|standalone house/i },
+  single_room: { kind: /^(room|single_room)$/i, text: /single room|room to rent|room for rent|private room/i },
+  studio: { kind: /^studio$/i, text: /studio|bachelor apartment/i },
+  townhouse: { kind: /^(townhouse|town_house)$/i, text: /town\s?house/i },
+  loft: { kind: /^loft$/i, text: /\bloft\b/i },
+  penthouse: { kind: /^penthouse$/i, text: /penthouse/i },
+};
+
+const PROPERTY_PERIOD_CATEGORIES = {
+  per_day: 'day',
+  per_month: 'month',
+  per_hour: 'hour',
+};
+
+const PROPERTY_PRICE_PERIODS = new Set(['hour', 'day', 'night', 'month']);
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -86,10 +105,11 @@ const sources = {
   community: makeSource({ model: LookingFor, itemType: 'looking-for', fields: ['title', 'description'], locationFields: ['location', 'requestLocation'], subtypeField: 'category', priceField: 'budget' }),
 };
 
-const selectedSources = (type) => {
+const selectedSources = (type, subType) => {
   if (type === 'all') return [sources.properties, sources.services, sources.helpers, sources.events];
   if (type === 'food') return [];
   if (type === 'looking-for') return [sources.community];
+  if (type === 'helpers' && ['carwash', 'moving'].includes(subType)) return [sources.helpers, sources.services];
   const source = sources[type];
   if (!source) {
     const error = new Error('Unsupported search type.');
@@ -112,7 +132,7 @@ const categoryType = (type, subType) => {
   return boundedText(subType, 60);
 };
 
-const buildSourceQuery = ({ source, type, subType, searchRegex, locationRegex, minPrice, maxPrice, minRating, bedroomsMin, bathroomsMin }) => {
+const buildSourceQuery = ({ source, type, subType, searchRegex, locationRegex, minPrice, maxPrice, minRating, bedroomsMin, bathroomsMin, pricePeriod }) => {
   const query = {};
   const searchMatch = matchesText(source.fields, searchRegex);
   if (searchMatch) query.$or = searchMatch.$or;
@@ -124,13 +144,41 @@ const buildSourceQuery = ({ source, type, subType, searchRegex, locationRegex, m
   }
 
   const normalizedSubType = categoryType(type, subType);
-  if (normalizedSubType) query[source.subtypeField] = normalizedSubType;
+  const propertyCategoryRule = source.model === Listing ? PROPERTY_CATEGORY_RULES[subType] : null;
+  const categoryPricePeriod = source.model === Listing ? PROPERTY_PERIOD_CATEGORIES[subType] : null;
+  if (propertyCategoryRule) {
+    query.$and = (query.$and || []).concat({
+      $or: [
+        { kind: propertyCategoryRule.kind },
+        { type: propertyCategoryRule.text },
+        { name: propertyCategoryRule.text },
+        { description: propertyCategoryRule.text },
+      ],
+    });
+  } else if (normalizedSubType && !categoryPricePeriod) {
+    query[source.subtypeField] = normalizedSubType;
+  }
 
   const price = {};
   if (minPrice !== undefined) price.$gte = minPrice;
   if (maxPrice !== undefined) price.$lte = maxPrice;
   if (Object.keys(price).length) query[source.priceField] = price;
 
+  const requestedPricePeriod = categoryPricePeriod || pricePeriod;
+  if (source.model === Listing && requestedPricePeriod) {
+    const legacyPeriodMatches = {
+      hour: { type: 'office' },
+      day: { $or: [{ kind: /^(house|apartment)$/i }, { type: 'resort' }] },
+      night: { type: { $in: ['over', 'hotel', 'land', 'guest_house', 'guesthouse'] } },
+      month: { type: 'rent' },
+    };
+    const periodMatches = [{ pricePeriod: requestedPricePeriod }];
+    if (legacyPeriodMatches[requestedPricePeriod]) {
+      const legacyMatch = legacyPeriodMatches[requestedPricePeriod];
+      periodMatches.push({ pricePeriod: { $exists: false }, ...legacyMatch });
+    }
+    query.$and = (query.$and || []).concat({ $or: periodMatches });
+  }
   if (minRating !== undefined && source.model !== LookingFor) query.rating = { $gte: minRating };
   if (source.model === Listing && bedroomsMin !== undefined) query.bedrooms = { $gte: bedroomsMin };
   if (source.model === Listing && bathroomsMin !== undefined) query.bathrooms = { $gte: bathroomsMin };
@@ -215,6 +263,10 @@ export const searchListings = async (req, res, next) => {
     const minRating = parseBoundedNumber(req.query.minRating, 'minRating');
     const bedroomsMin = parseBoundedNumber(req.query.bedroomsMin, 'bedroomsMin');
     const bathroomsMin = parseBoundedNumber(req.query.bathroomsMin, 'bathroomsMin');
+    const pricePeriod = boundedText(req.query.pricePeriod || '', 20);
+    if (pricePeriod && !PROPERTY_PRICE_PERIODS.has(pricePeriod)) {
+      return res.status(400).json({ success: false, message: 'pricePeriod must be hour, day, night, or month.' });
+    }
     const { page, limit } = parsePagination(req.query);
 
     if (minPrice !== undefined && maxPrice !== undefined && minPrice > maxPrice) {
@@ -224,11 +276,11 @@ export const searchListings = async (req, res, next) => {
     const regexOptions = 'i';
     const searchRegex = searchTerm ? new RegExp(escapeRegex(searchTerm), regexOptions) : null;
     const locationRegex = location ? new RegExp(escapeRegex(location), regexOptions) : null;
-    const sourcesForRequest = selectedSources(type);
+    const sourcesForRequest = selectedSources(type, subType);
     const includeFood = type === 'all' || type === 'food';
 
     const sourceResults = await Promise.all(sourcesForRequest.map(async (source) => {
-      const query = buildSourceQuery({ source, type, subType, searchRegex, locationRegex, minPrice, maxPrice, minRating, bedroomsMin, bathroomsMin });
+      const query = buildSourceQuery({ source, type, subType, searchRegex, locationRegex, minPrice, maxPrice, minRating, bedroomsMin, bathroomsMin, pricePeriod });
       const documents = await source.model.find(query)
         .select(fieldsForSource(source))
         .sort({ createdAt: -1, _id: -1 })

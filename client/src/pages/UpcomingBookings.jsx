@@ -76,6 +76,16 @@ export default function UpcomingBookings() {
 
             const type = b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service';
             const targetItem = b.listing || b.helper || b.service || b.event || {};
+            // Determine the correct navigation path for specialized helper types
+            const SPECIALIZED_HELPER_TYPES = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+            const helperSubtype = b.helper?.type || '';
+            const itemRoute = type === 'helper'
+              ? SPECIALIZED_HELPER_TYPES.includes(helperSubtype)
+                ? `/${helperSubtype}/${targetItem._id || b.itemId}`
+                : helperSubtype === 'tutor'
+                ? `/privatetutor/${targetItem._id || b.itemId}`
+                : `/helper/${targetItem._id || b.itemId}`
+              : `/${type}/${targetItem._id || b.itemId}`;
 
             return {
               id: b._id,
@@ -91,6 +101,7 @@ export default function UpcomingBookings() {
               isTomorrow,
               type,
               itemId: targetItem._id || b.itemId,
+              itemRoute,
               emoji: type === 'listing' ? '🏡' : type === 'helper' ? '🧹' : type === 'event' ? '🎟️' : '🛠️',
               proName: type === 'listing' ? (targetItem.userRef?.username || targetItem.name || 'Host') : (targetItem.name || 'Professional'),
               proAvatar: b.performerImage || targetItem.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || targetItem.userRef?.avatar || targetItem.imageUrls?.[0] || '',
@@ -644,12 +655,9 @@ export default function UpcomingBookings() {
                     <span>Close Work &amp; Rate</span>
                   </button>
                 )}
-                {selectedBooking.itemId && (
+                {selectedBooking.itemRoute && (
                   <button
-                    onClick={() => {
-                      const type = selectedBooking.type === 'listing' ? 'listing' : selectedBooking.type;
-                      navigate(`/${type}/${selectedBooking.itemId}`);
-                    }}
+                    onClick={() => navigate(selectedBooking.itemRoute)}
                     className="flex-1 py-3 bg-slate-900 hover:bg-black text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
                   >
                     <span>View Details</span>

@@ -30,12 +30,6 @@ const SEARCH_TYPE_CONFIG = {
     color: 'from-blue-500 to-cyan-500',
     bgColor: 'bg-gradient-to-r from-blue-500 to-cyan-500'
   },
-  services: {
-    label: 'Services',
-    icon: Wrench,
-    color: 'from-green-500 to-emerald-500',
-    bgColor: 'bg-gradient-to-r from-green-500 to-emerald-500'
-  },
   helpers: {
     label: 'Helpers',
     icon: Users,

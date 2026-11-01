@@ -151,6 +151,7 @@ const ContinueSearchingCard = ({ navigate }) => {
               src={cardImage}
               alt={displayTitle}
               className="w-full h-full object-cover"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
             <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/10 transition-colors" />
             <div className="absolute top-2 left-2 p-1.5 bg-white/90 backdrop-blur-md rounded-xl shadow-sm">

@@ -82,11 +82,13 @@ const DEFAULT_LISTING_LIMIT = 12;
 const QUICK_SEARCH_TYPES = [
   { id: 'all', label: 'All', icon: Sparkles },
   { id: 'properties', label: 'Stays', icon: HomeIcon },
-  { id: 'services', label: 'Services', icon: WrenchIcon },
   { id: 'helpers', label: 'Helpers', icon: UserGroupIcon },
   { id: 'food', label: 'Food', icon: UtensilsCrossed },
   { id: 'events', label: 'Events', icon: CalendarIcon },
 ];
+
+// Quick search types shown in the Search page tab bar (Services removed per user request)
+const VISIBLE_QUICK_SEARCH_TYPES = QUICK_SEARCH_TYPES.filter(t => t.id !== 'services');
 
 const CITY_COORDS = {
   'polokwane': { lat: -23.9058, lng: 29.4505 },
@@ -108,14 +110,21 @@ const ALL_CATEGORIES = [
   { id: 'resort', label: 'Resort & Holiday Park', type: 'properties', icon: Sparkles, color: 'bg-cyan-100 text-cyan-800', description: 'Holiday resorts & parks (per day)' },
   { id: 'office', label: 'Room Per Hour', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-purple-100 text-purple-800', description: 'Hourly rooms & short stays' },
   { id: 'rent', label: 'Room / Home to Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties (monthly)' },
+  { id: 'apartment', label: 'Apartment', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Apartments, flats & complexes' },
+  { id: 'full_house', label: 'Full House', type: 'properties', icon: HomeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Entire houses and homes' },
+  { id: 'single_room', label: 'Single Room', type: 'properties', icon: HomeModernIcon, color: 'bg-sky-100 text-sky-800', description: 'Private rooms for rent' },
+  { id: 'studio', label: 'Studio', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-violet-100 text-violet-800', description: 'Studio and bachelor apartments' },
+  { id: 'townhouse', label: 'Townhouse', type: 'properties', icon: HomeModernIcon, color: 'bg-teal-100 text-teal-800', description: 'Townhouses and cluster homes' },
+  { id: 'loft', label: 'Loft', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Loft apartments' },
+  { id: 'penthouse', label: 'Penthouse', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-fuchsia-100 text-fuchsia-800', description: 'Penthouses and top-floor homes' },
 
   // Services
   { id: 'photography', label: 'Photography', type: 'helper', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
-  { id: 'carwash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
+  { id: 'carwash', label: 'Car Wash', type: 'helper', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
   { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
   { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
   { id: 'catering', label: 'Catering', type: 'services', icon: BriefcaseIcon, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
-  { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
+  { id: 'moving', label: 'Moving & Transport', type: 'helper', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
   // Helpers
   { id: 'domestic', label: 'Domestic Help', type: 'helper', icon: HomeIcon, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
@@ -130,6 +139,7 @@ const ALL_CATEGORIES = [
   { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
   { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
   { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', description: 'Repair & maintenance' },
+  { id: 'other', label: 'Other Services', type: 'helper', icon: Sparkles, color: 'bg-rose-100 text-rose-800', description: 'Other skills and local services' },
   { id: 'storage', label: 'Booking Storage', type: 'services', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Secure storage units' },
 
   // Transport
@@ -154,7 +164,13 @@ const PROPERTY_TYPE_CONFIG = {
   land: { label: 'Self Catering', color: 'bg-amber-100 text-amber-800', icon: '🍳', endpoint: 'listing' },
   resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-100 text-cyan-800', icon: '🏖️', endpoint: 'listing' },
   office: { label: 'Room Per Hour', color: 'bg-purple-100 text-purple-800', icon: '🚪', endpoint: 'listing' },
-  apartment: { label: 'Apartment / Complex', color: 'bg-indigo-100 text-indigo-800', icon: '🏢', endpoint: 'listing' }
+  apartment: { label: 'Apartment', color: 'bg-indigo-100 text-indigo-800', icon: '🏢', endpoint: 'listing' },
+  full_house: { label: 'Full House', color: 'bg-emerald-100 text-emerald-800', icon: '🏡', endpoint: 'listing' },
+  single_room: { label: 'Single Room', color: 'bg-sky-100 text-sky-800', icon: '🛏️', endpoint: 'listing' },
+  studio: { label: 'Studio', color: 'bg-violet-100 text-violet-800', icon: '🪴', endpoint: 'listing' },
+  townhouse: { label: 'Townhouse', color: 'bg-teal-100 text-teal-800', icon: '🏘️', endpoint: 'listing' },
+  loft: { label: 'Loft', color: 'bg-slate-100 text-slate-800', icon: '🏙️', endpoint: 'listing' },
+  penthouse: { label: 'Penthouse', color: 'bg-fuchsia-100 text-fuchsia-800', icon: '🌇', endpoint: 'listing' }
 };
 
 // Helper Categories Configuration
@@ -176,6 +192,9 @@ const HELPER_CATEGORY_CONFIG = {
   animals: { label: 'Animal Care', color: 'bg-amber-100 text-amber-800', icon: '🐾', endpoint: 'helper' },
   cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
   handyman: { label: 'Handyman', color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', icon: '🔧', endpoint: 'helper' },
+  carwash: { label: 'Car Wash', color: 'bg-cyan-100 text-cyan-800', icon: '🚗', endpoint: 'helper' },
+  moving: { label: 'Moving & Transport', color: 'bg-amber-100 text-amber-800', icon: '🚚', endpoint: 'helper' },
+  other: { label: 'Other Services', color: 'bg-rose-100 text-rose-800', icon: '✨', endpoint: 'helper' },
   maintenance: { label: 'Maintenance', color: 'bg-amber-100 text-amber-800', icon: '🔧', endpoint: 'helper' }
 };
 
@@ -355,12 +374,14 @@ const fetchLegacySearchResults = async (urlParams, signal) => {
       params.set('address', location);
       params.set('location', location);
     }
-    ['minPrice', 'maxPrice', 'minRating'].forEach((key) => {
+    ['minPrice', 'maxPrice', 'minRating', 'pricePeriod'].forEach((key) => {
       const value = urlParams.get(key) || (key === 'maxPrice' ? urlParams.get('priceMax') : '');
       if (value) params.set(key, value);
     });
 
-    if (endpoint === 'listing' && subType && PROPERTY_TYPE_CONFIG[subType]) params.set('type', subType);
+    const propertyPeriodCategory = { per_day: 'day', per_month: 'month', per_hour: 'hour' }[subType];
+    if (endpoint === 'listing' && propertyPeriodCategory) params.set('pricePeriod', propertyPeriodCategory);
+    if (endpoint === 'listing' && ['rent', 'over', 'hotel', 'land', 'resort', 'office', 'apartment'].includes(subType)) params.set('type', subType);
     if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
       params.set('type', ({ maid: 'domestic', nanny: 'domestic', hair: 'beauty', nail: 'beauty' })[subType] || subType);
     }
@@ -550,9 +571,13 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     const val = item.regularPrice || item.price || item.cost || item.pricePerHour || item.ticketPrice;
     if (!val) return 'Contact';
     const formatted = typeof val === 'number' ? `R${val.toLocaleString()}` : val;
-    if (type === 'properties' && item.type === 'rent') return `${formatted} / mo`;
-    if (type === 'properties' && item.type === 'resort') return `${formatted} / day`;
-    if (type === 'properties' && ['over', 'sale', 'land'].includes(item.type)) return `${formatted} / night`;
+    if (type === 'properties') {
+      const period = item.pricePeriod || (item.type === 'rent' ? 'month' : item.type === 'resort' ? 'day' : ['over', 'hotel', 'land'].includes(item.type) ? 'night' : '');
+      if (period === 'hour') return `${formatted} / hour`;
+      if (period === 'day') return `${formatted} / day`;
+      if (period === 'month') return `${formatted} / month`;
+      if (period === 'night') return `${formatted} / night`;
+    }
     return formatted;
   };
 
@@ -695,7 +720,8 @@ const SearchPage = () => {
     minRating: '',
     location: '',
     bedroomsMin: '',
-    bathroomsMin: ''
+    bathroomsMin: '',
+    pricePeriod: ''
   });
 
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -737,6 +763,7 @@ const SearchPage = () => {
       location: urlParams.get('location') || urlParams.get('address') || '',
       bedroomsMin: urlParams.get('bedroomsMin') || '',
       bathroomsMin: urlParams.get('bathroomsMin') || '',
+      pricePeriod: urlParams.get('pricePeriod') || '',
       center: urlParams.get('center') || '',
       distance: urlParams.get('distance') || '',
       mode: urlParams.get('mode') || ''
@@ -828,10 +855,12 @@ const SearchPage = () => {
       });
       const subType = urlParams.get('subType') || urlParams.get('category') || '';
       const searchTerm = urlParams.get('searchTerm') || '';
-      const locationQuery = urlParams.get('location') || urlParams.get('address') || '';
+      // When the user did not type a location, use the town detected from the
+      // device GPS so the initial results are local as well as the filter UI.
+      const locationQuery = urlParams.get('location') || urlParams.get('address') || detectedCity || '';
       const maxPrice = urlParams.get('maxPrice') || urlParams.get('priceMax') || '';
 
-      ['minPrice', 'minRating', 'bedroomsMin', 'bathroomsMin'].forEach((key) => {
+      ['minPrice', 'minRating', 'bedroomsMin', 'bathroomsMin', 'pricePeriod'].forEach((key) => {
         const value = urlParams.get(key);
         if (value) params.set(key, value);
       });
@@ -878,7 +907,7 @@ const SearchPage = () => {
         setLoadingMoreResults(false);
       }
     }
-  }, [location.search]);
+  }, [location.search, detectedCity]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -933,6 +962,7 @@ const SearchPage = () => {
     if (nextFilters.minRating) urlParams.set('minRating', nextFilters.minRating);
     if (nextFilters.bedroomsMin) urlParams.set('bedroomsMin', nextFilters.bedroomsMin);
     if (nextFilters.bathroomsMin) urlParams.set('bathroomsMin', nextFilters.bathroomsMin);
+    if (nextFilters.pricePeriod) urlParams.set('pricePeriod', nextFilters.pricePeriod);
     if (nextFilters.center) urlParams.set('center', nextFilters.center);
     if (nextFilters.distance) urlParams.set('distance', nextFilters.distance);
     if (nextViewMode === 'map') urlParams.set('mode', 'map');
@@ -968,7 +998,7 @@ const SearchPage = () => {
     setSearchType('all');
     setSearchSubType('');
     setSelectedCategory(null);
-    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '', bedroomsMin: '', bathroomsMin: '' });
+    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '', bedroomsMin: '', bathroomsMin: '', pricePeriod: '' });
     navigate('/search');
   };
 
@@ -1079,7 +1109,7 @@ const SearchPage = () => {
       {/* Simple quick categories; detailed categories remain in Filters. */}
       <div className="sticky top-[61px] z-[50] border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
         <div className="mx-auto flex max-w-[2520px] items-center gap-2 overflow-x-auto px-3 py-2.5 no-scrollbar sm:px-6">
-          {QUICK_SEARCH_TYPES.map(({ id, label, icon: Icon }) => {
+          {VISIBLE_QUICK_SEARCH_TYPES.map(({ id, label, icon: Icon }) => {
             const isActive = searchType === id && (id !== 'all' || !selectedCategory);
             return (
               <button
@@ -1409,6 +1439,23 @@ const SearchPage = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Property price period */}
+                  {searchType === 'properties' && <div className="space-y-3">
+                    <label htmlFor="property-price-period" className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-white">Price period</label>
+                    <select
+                      id="property-price-period"
+                      value={filters.pricePeriod}
+                      onChange={(event) => setFilters((prev) => ({ ...prev, pricePeriod: event.target.value }))}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-800"
+                    >
+                      <option value="">Any period</option>
+                      <option value="hour">Per hour</option>
+                      <option value="day">Per day</option>
+                      <option value="night">Per night</option>
+                      <option value="month">Per month</option>
+                    </select>
+                  </div>}
 
                   {/* Property Basics */}
                   <div className="space-y-3">

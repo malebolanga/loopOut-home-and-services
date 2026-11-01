@@ -49,8 +49,13 @@ export default function CategoriesBottomSheet({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, selectedCategoryTab, onClose]);
 
+  // Filter out Events from More sheet
+  const availableTabs = tabs.filter(
+    (t) => t.id !== 'Events' && t.id !== 'events' && t.id?.toLowerCase() !== 'events'
+  );
+
   // Tabs that have drill-down subcategories
-  const categoriesWithSubcategories = tabs.filter(
+  const categoriesWithSubcategories = availableTabs.filter(
     (t) => t.subcategories && t.subcategories.length > 0 && t.id !== 'RecentAdded' && t.id !== 'Recent'
   );
 
@@ -247,7 +252,7 @@ export default function CategoriesBottomSheet({
                     transition={{ duration: 0.18 }}
                   >
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {tabs.map((tab) => {
+                      {availableTabs.map((tab) => {
                         const isActive = activeTab === tab.id;
                         const TabIcon = tab.icon || Sparkles;
                         const hasSub = tab.subcategories && tab.subcategories.length > 0 && tab.id !== 'RecentAdded' && tab.id !== 'Recent';

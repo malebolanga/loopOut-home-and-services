@@ -293,7 +293,8 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
                 className={`${reducedSize ? 'w-4 h-4' : 'w-6 h-6'} rounded-full border border-gray-200 overflow-hidden shadow-sm hover:scale-110 transition-transform pointer-events-auto shrink-0`}
                 title={`Posted by ${owner.username}`}
               >
-                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover" />
+                <img src={owner.avatar} alt={owner.username} loading="lazy" className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               </Link>
             )}
           </div>

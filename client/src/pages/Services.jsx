@@ -598,7 +598,30 @@ const ServicePage = () => {
       try {
         setLoading(true);
         const res = await fetch(`/api/service/get/${serviceId}`);
-        if (!res.ok) throw new Error('Failed to fetch service details');
+        if (!res.ok) {
+          // Check if this ID belongs to a helper or specialized provider
+          try {
+            const helperRes = await fetch(`/api/helper/get/${serviceId}`);
+            if (helperRes.ok) {
+              const helperData = await helperRes.json();
+              const type = String(helperData.type || '').toLowerCase();
+              const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+              if (specializedTypes.includes(type)) {
+                navigate(`/${type}/${serviceId}`, { replace: true });
+                return;
+              } else if (type === 'tutor') {
+                navigate(`/privatetutor/${serviceId}`, { replace: true });
+                return;
+              } else {
+                navigate(`/helper/${serviceId}`, { replace: true });
+                return;
+              }
+            }
+          } catch (helperErr) {
+            // ignore helper fallback check error
+          }
+          throw new Error('Failed to fetch service details');
+        }
         const data = await res.json();
         setService(data);
         setLoading(false);
@@ -608,7 +631,7 @@ const ServicePage = () => {
       }
     };
     fetchService();
-  }, [serviceId]);
+  }, [serviceId, navigate]);
 
   const getOperatingStatus = () => {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -661,9 +684,9 @@ const ServicePage = () => {
   // Fetch ratings and top comments
   useEffect(() => {
     const fetchCommentData = async () => {
-      if (!serviceId) return;
+      if (!service?._id) return;
       try {
-        const res = await fetch(`/api/service-comments/${serviceId}?limit=6`);
+        const res = await fetch(`/api/service-comments/${service._id}?limit=6`);
         if (res.ok) {
           const data = await res.json();
           setCommentCount(data.totalComments || 0);
@@ -680,8 +703,8 @@ const ServicePage = () => {
         console.error('Error fetching comment data:', err);
       }
     };
-    if (serviceId) fetchCommentData();
-  }, [serviceId]);
+    if (service?._id) fetchCommentData();
+  }, [service?._id]);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 100);

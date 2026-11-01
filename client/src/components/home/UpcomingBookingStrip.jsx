@@ -250,7 +250,8 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
           {/* Header Image */}
           <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 flex-shrink-0">
             {booking.image ? (
-              <img src={booking.image} alt={booking.title} className="w-full h-full object-cover opacity-85" />
+              <img src={booking.image} alt={booking.title} className="w-full h-full object-cover opacity-85"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl">{booking.emoji}</div>
             )}
@@ -332,7 +333,7 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
           {/* Footer */}
           <div className="p-4 bg-slate-50 dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800 flex items-center gap-2.5 flex-shrink-0">
             <button
-              onClick={() => { const r = `/${booking.type === 'listing' ? 'listing' : booking.type}/${booking.itemId}`; onClose(); navigate(r); }}
+              onClick={() => { onClose(); navigate(booking.itemRoute || `/${booking.type}/${booking.itemId}`); }}
               className="flex-1 py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-200 active:scale-98 transition-all cursor-pointer"
             >
               View Item Details
@@ -395,6 +396,19 @@ export const UpcomingBookingStrip = ({ navigate }) => {
               diffDays, urgency, isToday, isTomorrow,
               type: b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service',
               itemId: b.listing?._id || b.helper?._id || b.service?._id || b.event?._id,
+              itemRoute: (() => {
+                const id = b.listing?._id || b.helper?._id || b.service?._id || b.event?._id;
+                if (b.listing) return `/listing/${id}`;
+                if (b.event) return `/event/${id}`;
+                if (b.service) return b.service.type === 'carwash' ? `/carwash/${id}` : b.service.type === 'storage' ? `/storage/${id}` : `/service/${id}`;
+                if (b.helper) {
+                  const ht = b.helper.type;
+                  if (['beauty','photography','barber','tattoo','chef'].includes(ht)) return `/${ht}/${id}`;
+                  if (ht === 'tutor') return `/privatetutor/${id}`;
+                  return `/helper/${id}`;
+                }
+                return `/service/${id}`;
+              })(),
               emoji: b.listing ? '🏡' : b.helper ? '🧹' : b.event ? '🎟️' : '🛠️',
               proName: b.listing ? (b.listing.userRef?.username || b.listing.name || 'Host') : (b.helper?.name || b.service?.name || b.event?.name || 'Professional'),
               proAvatar: b.listing?.userRef?.avatar || b.helper?.userRef?.avatar || b.service?.userRef?.avatar || b.event?.userRef?.avatar || b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || '',
@@ -485,7 +499,7 @@ export const UpcomingBookingStrip = ({ navigate }) => {
                     >
                       {/* Image / Emoji */}
                       <div className="relative shrink-0 w-10 h-10 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xl">
-                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" /> : b.emoji}
+                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : b.emoji}
                         <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-950 ${u.dot}`} />
                       </div>
 
@@ -533,7 +547,7 @@ export const UpcomingBookingStrip = ({ navigate }) => {
                       className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-rose-300 transition-colors"
                     >
                       <div className="w-9 h-9 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xl shrink-0">
-                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" /> : b.emoji}
+                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : b.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-black text-gray-900 dark:text-white truncate">{b.title}</p>

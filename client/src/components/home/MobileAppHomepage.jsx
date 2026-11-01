@@ -379,16 +379,6 @@ export default function MobileAppHomepage({
                 border: 'border-rose-100',
               },
               {
-                id: 'services',
-                label: 'Services',
-                route: '/services-home-page',
-                emoji: '🔧',
-                gradient: 'from-blue-500 to-indigo-600',
-                bg: 'bg-blue-50',
-                text: 'text-blue-700',
-                border: 'border-blue-100',
-              },
-              {
                 id: 'helpers',
                 label: 'Helpers',
                 route: '/helper-home-page',
@@ -475,7 +465,13 @@ export default function MobileAppHomepage({
                     >
                       <div className="relative h-[72px] bg-slate-100">
                         {thumb ? (
-                          <img src={thumb} alt={item.name || item.title} className="w-full h-full object-cover" />
+                          <img
+                            src={thumb}
+                            alt={item.name || item.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
                         ) : (
                           <div className={`w-full h-full bg-gradient-to-br ${typeColors[item.itemType] || 'bg-rose-500'} opacity-20`} />
                         )}
@@ -670,11 +666,20 @@ export default function MobileAppHomepage({
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <img
-                            src={item.imageUrls?.[0] || item.avatar || '/profile.png'}
-                            alt={item.name || 'Provider'}
-                            className="w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-slate-200"
-                          />
+                          {(item.imageUrls?.[0] || item.avatar) ? (
+                            <img
+                              src={item.imageUrls?.[0] || item.avatar}
+                              alt={item.name || 'Provider'}
+                              className="w-12 h-12 rounded-2xl object-cover bg-slate-100 border border-slate-200"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling && (e.currentTarget.nextElementSibling.style.display = 'flex'); }}
+                            />
+                          ) : null}
+                          <div
+                            className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center text-white font-black text-lg border border-rose-200"
+                            style={{ display: (item.imageUrls?.[0] || item.avatar) ? 'none' : 'flex' }}
+                          >
+                            {(item.name || item.title || 'B').charAt(0).toUpperCase()}
+                          </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="font-black text-slate-900 text-base leading-tight truncate">
                               {item.name || item.title || 'Scheduled Booking'}

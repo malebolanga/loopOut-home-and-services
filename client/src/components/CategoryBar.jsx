@@ -90,7 +90,6 @@ const CategoryBar = () => {
   const navigate = useNavigate();
   const categories = [
     { id: 'homes', label: 'Homes', route: '/search?category=homes', icon: 'homes' },
-    { id: 'services', label: 'Services', route: '/search?category=services', icon: 'services' },
     { id: 'helpers', label: 'Helpers', route: '/helper-home-page', icon: 'helpers' },
     { id: 'events', label: 'Events', route: '/search?category=events', icon: 'events' },
   ];

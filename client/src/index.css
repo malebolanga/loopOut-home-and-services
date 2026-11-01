@@ -473,6 +473,19 @@ body.hide-bottom-nav .glass-bottom-nav {
   scrollbar-width: none;
 }
 
+html.create-listing-scrollbars-hidden,
+body.create-listing-scrollbars-hidden,
+body.create-listing-scrollbars-hidden * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+html.create-listing-scrollbars-hidden::-webkit-scrollbar,
+body.create-listing-scrollbars-hidden::-webkit-scrollbar,
+body.create-listing-scrollbars-hidden *::-webkit-scrollbar {
+  display: none !important;
+}
+
 .side-panel-transition {
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }

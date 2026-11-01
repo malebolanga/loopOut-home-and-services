@@ -410,6 +410,8 @@ export const getListings = async (req, res, next) => {
     const address = req.query.address || '';
     const minPrice = Number(req.query.minPrice);
     const maxPrice = Number(req.query.maxPrice);
+    const requestedPricePeriod = String(req.query.pricePeriod || '');
+    const pricePeriod = ['hour', 'day', 'night', 'month'].includes(requestedPricePeriod) ? requestedPricePeriod : '';
     const price = {};
     if (Number.isFinite(minPrice)) price.$gte = minPrice;
     if (Number.isFinite(maxPrice)) price.$lte = maxPrice;
@@ -451,6 +453,7 @@ export const getListings = async (req, res, next) => {
       breakfast,
       party,
       type,
+      ...(pricePeriod && { pricePeriod }),
       bedrooms,
       bathrooms,
       ...(Object.keys(price).length && { regularPrice: price }),

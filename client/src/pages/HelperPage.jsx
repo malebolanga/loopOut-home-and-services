@@ -437,6 +437,9 @@ export default function HelperPage() {
       sneaker: 'Sneaker Cleaner',
       washingmat: 'Mat Washer',
       animals: 'Animal Care Professional',
+      carwash: 'Car Wash Professional',
+      moving: 'Moving Service',
+      other: 'Other Service Provider',
       transport: 'Transport Service',
       handyman: 'Handyman Service',
       maintenance: 'Handyman Service'
@@ -461,6 +464,9 @@ export default function HelperPage() {
       sneaker: 'indigo',
       washingmat: 'cyan',
       animals: 'amber',
+      carwash: 'cyan',
+      moving: 'orange',
+      other: 'red',
       transport: 'orange',
       handyman: 'amber',
       maintenance: 'amber',
@@ -2703,6 +2709,32 @@ export default function HelperPage() {
                 </div>
               </div>
             </section>
+
+            {helper.type === 'carwash' && (helper.vehicleTypes || helper.serviceDuration || helper.carWashPackages) && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-carwash-title">
+                <h2 id="helper-carwash-title" className="mb-4 text-xl font-semibold text-slate-900">Car wash details</h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {helper.vehicleTypes && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Vehicles serviced</p><p className="mt-1 text-sm text-slate-700">{helper.vehicleTypes}</p></div>}
+                  {helper.serviceDuration && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Typical duration</p><p className="mt-1 text-sm text-slate-700">{helper.serviceDuration}</p></div>}
+                  {helper.mobileService && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-sm font-semibold text-slate-700">🚗 Mobile service available</p></div>}
+                </div>
+              </section>
+            )}
+
+            {helper.type === 'moving' && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-moving-title">
+                <h2 id="helper-moving-title" className="mb-4 text-xl font-semibold text-slate-900">Moving rates</h2>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {[
+                    ['By box', helper.moveCostPerBox], ['By kilo', helper.moveCostPerKilo], ['Van', helper.movePriceVan],
+                    ['Van with trailer', helper.movePriceVanTrailer], ['Mini truck', helper.movePriceMiniTruck],
+                    ['Other truck', helper.movePriceOtherTruck], ['Big truck with trailer', helper.movePriceBigTruckTrailer],
+                  ].filter(([, price]) => Number(price) > 0).map(([label, price]) => (
+                    <div key={label} className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-amber-700">{label}</p><p className="mt-1 text-sm font-semibold text-slate-800">R{Number(price).toLocaleString()}</p></div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Sneaker Cleaning Details */}
             {helper.type === 'sneaker' && (helper.shoeTypes || helper.cleaningMethod || helper.turnaroundTime) && (

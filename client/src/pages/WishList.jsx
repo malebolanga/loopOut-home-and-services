@@ -12,11 +12,28 @@ import { setWishlistCount } from '../redux/frontendSlice';
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 const getItemPath = (item) => {
-  const type = item.type || item.itemType || 'listing';
-  if (type === 'listing') return `/listing/${item._id}`;
-  if (type === 'event')   return `/event/${item._id}`;
-  if (type === 'helper')  return `/helper/${item._id}`;
-  return `/service/${item._id}`;
+  if (!item) return '/';
+  const id = item._id || item.id || item.itemId;
+  const rawType = String(item.type || item.itemType || '').toLowerCase();
+
+  if (rawType === 'listing' || item.listing) return `/listing/${id}`;
+  if (rawType === 'event' || item.event) return `/event/${id}`;
+
+  const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+  if (specializedTypes.includes(rawType)) return `/${rawType}/${id}`;
+  if (rawType === 'tutor') return `/privatetutor/${id}`;
+
+  if (rawType === 'helper' || item.itemType === 'helper') {
+    const helperType = String(item.type || '').toLowerCase();
+    if (specializedTypes.includes(helperType)) return `/${helperType}/${id}`;
+    if (helperType === 'tutor') return `/privatetutor/${id}`;
+    return `/helper/${id}`;
+  }
+
+  if (rawType === 'carwash') return `/carwash/${id}`;
+  if (rawType === 'storage') return `/storage/${id}`;
+
+  return `/service/${id}`;
 };
 
 const getImg = (item) =>
@@ -497,7 +514,7 @@ const WishList = () => {
                   {confirmedBookings.map((b) => (
                     <div
                       key={b.id}
-                      onClick={() => navigate(getItemPath({ _id: b.itemId, type: b.type }))}
+                      onClick={() => navigate(getItemPath({ _id: b.itemId, type: b.type, itemType: b.resourceType }))}
                       className="flex-shrink-0 w-44 cursor-pointer"
                     >
                       <div

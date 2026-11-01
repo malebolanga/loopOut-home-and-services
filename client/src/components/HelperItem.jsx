@@ -51,6 +51,9 @@ const HELPER_ICON_CONFIG = {
   tattoo:       { icon: Sparkles,      bg: 'bg-zinc-100',   text: 'text-zinc-700',   label: 'Artistry' },
   photography:  { icon: Camera,        bg: 'bg-violet-50',  text: 'text-violet-700',  label: 'Media' },
   chef:         { icon: User,          bg: 'bg-orange-50',  text: 'text-orange-700',  label: 'Culinary' },
+  carwash:      { icon: Sparkles,      bg: 'bg-cyan-50',     text: 'text-cyan-700',    label: 'Car Wash' },
+  moving:       { icon: Wrench,        bg: 'bg-amber-50',    text: 'text-amber-700',   label: 'Moving' },
+  other:        { icon: Briefcase,     bg: 'bg-rose-50',     text: 'text-rose-700',    label: 'Other Services' },
 };
 
 function HelperTypePill({ type }) {
@@ -97,7 +100,7 @@ function HelperItem({ helper, className = "", reducedSize = false }) {
     storedClicks[helper._id] = (storedClicks[helper._id] || 0) + 1;
     localStorage.setItem('helperClicks', JSON.stringify(storedClicks));
     // Use specific route based on helper type if it exists in App.jsx
-    const typeRoutes = ['beauty', 'photography', 'carwash', 'barber', 'tattoo', 'chef'];
+    const typeRoutes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
     let path = `/helper/${helper._id}`;
     
     if (typeRoutes.includes(helper.type)) {

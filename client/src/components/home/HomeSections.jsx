@@ -813,7 +813,8 @@ const BookingDetailsModal = ({ booking, onClose, currentUser }) => {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200/50 flex items-center justify-center">
                       {booking.performerImage ? (
-                        <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-full h-full object-cover" />
+                        <img src={booking.performerImage} alt={booking.selectedPerformer} className="w-full h-full object-cover"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                       ) : (
                         <span className="text-rose-500 font-bold text-sm">👤</span>
                       )}

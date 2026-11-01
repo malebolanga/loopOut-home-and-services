@@ -223,26 +223,26 @@ const CategoryCard = ({ id, emoji, label, description, selected, onSelect }) => 
   </div>
 );
 
-const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect }) => (
+const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect, compact = false }) => (
   <div
     onClick={() => onSelect(id)}
     className={`
-      p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center relative group
+      ${compact ? 'min-h-[68px] flex-row justify-start gap-3 px-3 py-3 text-left' : 'p-4 sm:p-5 flex-col items-center justify-center text-center'} rounded-2xl border-2 transition-all duration-200 cursor-pointer flex relative group
       ${selected 
         ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-gray-800 text-white shadow-md' 
         : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-xs'}
     `}
   >
     <div className={`
-      w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors
+      ${compact ? 'w-10 h-10 shrink-0 rounded-lg' : 'w-12 h-12 mb-3 rounded-xl'} flex items-center justify-center transition-colors
       ${selected ? 'bg-rose-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
     `}>
-       {emoji ? <span className="text-2xl">{emoji}</span> : <Icon className="w-6 h-6" />}
+       {emoji ? <span className={compact ? 'text-xl' : 'text-2xl'}>{emoji}</span> : <Icon className="w-6 h-6" />}
     </div>
     <span className={`text-xs sm:text-sm font-semibold tracking-tight ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
 
     {selected && (
-      <div className="absolute top-2.5 right-2.5">
+      <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2.5 right-2.5'}`}>
         <div className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center">
           <CheckCircleIcon className="w-3 h-3" />
         </div>
@@ -499,6 +499,17 @@ export default function CreateListing() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const helperTypesScrollerRef = useRef(null);
+
+  useEffect(() => {
+    const className = 'create-listing-scrollbars-hidden';
+    document.documentElement.classList.add(className);
+    document.body.classList.add(className);
+    return () => {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+    };
+  }, []);
 
   // Verification state for service providers / helpers
   const [verificationStatus, setVerificationStatus] = useState(() => getServiceProviderVerificationStatus(currentUser));
@@ -781,13 +792,12 @@ export default function CreateListing() {
         property: 'property',
         stay: 'property',
         stays: 'property',
-        experiences: 'experiences',
-        service: 'experiences',
-        services: 'experiences',
+        experiences: 'online',
+        service: 'online',
+        services: 'online',
         online: 'online',
         helper: 'online',
         helpers: 'online',
-        events: 'events',
         selling: 'selling',
         goods: 'selling',
       };
@@ -1066,7 +1076,7 @@ export default function CreateListing() {
         }
       }
       
-      if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+      if ((selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash') {
         if (!listingForm.carWashPackages) {
           setError("Please select at least one car wash package");
           return;
@@ -1603,7 +1613,7 @@ export default function CreateListing() {
       }
     }
     
-    if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+    if ((selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash') {
       if (!listingForm.carWashPackages) {
         return setError("Please select at least one car wash package");
       }
@@ -1754,11 +1764,12 @@ export default function CreateListing() {
         storagePolicyDocUrl: selectedType === 'storage' ? listingForm.storagePolicyDocUrl : undefined,
       };
 
+      const authToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token || '';
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {})
         },
         credentials: 'include',
         body: JSON.stringify(requestBody),
@@ -1786,9 +1797,22 @@ export default function CreateListing() {
         if (selectedCategory === 'selling') {
           navigate('/listing-success', { state: { listingId: data._id || data.listing?._id, type: selectedCategory } });
         } else if (selectedCategory !== 'property') {
-          const path = selectedCategory === 'experiences' ? `/service/${data._id || data.listing?._id}` :
-                       selectedCategory === 'online' ? `/helper/${data._id || data.listing?._id}` :
-                       `/event/${data._id || data.listing?._id}`;
+          const id = data._id || data.listing?._id;
+          let path = `/service/${id}`;
+          if (selectedCategory === 'experiences') {
+            if (selectedType === 'carwash') path = `/carwash/${id}`;
+            else if (selectedType === 'storage') path = `/storage/${id}`;
+            else path = `/service/${id}`;
+          } else if (selectedCategory === 'online') {
+            const specialized = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+            if (specialized.includes(selectedType)) path = `/${selectedType}/${id}`;
+            else if (selectedType === 'tutor') path = `/privatetutor/${id}`;
+            else if (selectedType === 'carwash') path = `/carwash/${id}`;
+            else if (selectedType === 'storage') path = `/storage/${id}`;
+            else path = `/helper/${id}`;
+          } else {
+            path = `/event/${id}`;
+          }
           navigate(path);
         } else {
           setShowPromotionPopup(true);
@@ -1927,15 +1951,15 @@ export default function CreateListing() {
         ];
       case 'online':
         return [
-          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
-          { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
-          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
-          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
-          { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
           { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
+          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
+          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
+          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
           { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
-          { id: "animals", label: "Animal Care", emoji: "🐕", description: "Pet sitting, walking, grooming" },
+          { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Mobile car cleaning and detailing" },
+          { id: "moving", label: "Moving", emoji: "🚚", description: "Home and office relocation" },
+          { id: "other", label: "Other Services", emoji: "✨", description: "Offer another skill or local service" },
         ];
       case 'events':
         return [
@@ -2262,28 +2286,28 @@ export default function CreateListing() {
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a place</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
 
-                    {(!currentUser?.offeringType || currentUser.offeringType === 'services') && <button
+                    {!currentUser?.offeringType && <button
                       type="button"
-                      onClick={() => setSelectedCategory('experiences')}
-                      aria-pressed={selectedCategory === 'experiences'}
+                      onClick={() => setSelectedCategory('online')}
+                      aria-pressed={selectedCategory === 'online'}
                       className={`group relative min-h-52 sm:min-h-60 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/25 ${
-                        selectedCategory === 'experiences'
+                        selectedCategory === 'online'
                           ? 'border-rose-500 bg-rose-50 text-gray-950 shadow-lg shadow-rose-500/10 dark:bg-rose-950/25 dark:text-white'
                           : 'border-gray-200 bg-white text-gray-950 shadow-sm hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600'
                       }`}
                     >
                       <div className="flex items-start justify-between">
-                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'experiences' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}><BriefcaseIcon className="h-6 w-6" /></div>
-                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'experiences' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
-                          {selectedCategory === 'experiences' && <CheckCircleIcon className="h-4 w-4" />}
+                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'online' ? 'bg-rose-500 text-white' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'}`}><UserGroupIcon className="h-6 w-6" /></div>
+                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'online' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {selectedCategory === 'online' && <CheckCircleIcon className="h-4 w-4" />}
                         </div>
                       </div>
                       <div className="mt-7">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">Services</p>
-                        <p className="mt-1 text-xl font-bold tracking-tight">A service to offer</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Beauty, transport, trades, cleaning, and professional local services.</p>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Offer your skills, personal support, car wash, moving, and other local services.</p>
                       </div>
-                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a service</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
 
                     {/* For Service Providers, display Helper as a prominent, matching top-level card */}
@@ -2306,7 +2330,7 @@ export default function CreateListing() {
                       <div className="mt-7">
                         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
                         <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Tutors, domestic help, animal care, sneaker cleaning, and personal support.</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Barbering, beauty, domestic help, car wash, moving, and more.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
@@ -2317,8 +2341,6 @@ export default function CreateListing() {
                     <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
                       <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {!currentUser?.offeringType && <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />}
-                        {(!currentUser?.offeringType || currentUser.offeringType === 'property' || currentUser.offeringType === 'goods') && <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />}
                         {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
                       </div>
                     </div>
@@ -2334,15 +2356,45 @@ export default function CreateListing() {
                 selectedCategory === 'experiences' ? 'service' :
                 selectedCategory === 'online' ? 'helper' : 
                 selectedCategory === 'selling' ? 'item' : 'event'}?`}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getTypesByCategory().map((type) => (
-                    <TypeCard
-                      key={type.id}
-                      {...type}
-                      selected={selectedType === type.id}
-                      onSelect={setSelectedType}
-                    />
-                  ))}
+                <div className={selectedCategory === 'online' ? 'space-y-2' : ''}>
+                  {selectedCategory === 'online' && (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => helperTypesScrollerRef.current?.scrollBy({ left: -360, behavior: 'smooth' })}
+                        aria-label="Scroll helper options left"
+                        title="Scroll left"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => helperTypesScrollerRef.current?.scrollBy({ left: 360, behavior: 'smooth' })}
+                        aria-label="Scroll helper options right"
+                        title="Scroll right"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                  <div
+                    ref={selectedCategory === 'online' ? helperTypesScrollerRef : null}
+                    className={selectedCategory === 'online'
+                      ? 'grid grid-flow-col grid-rows-2 auto-cols-[minmax(180px,1fr)] gap-3 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2'
+                      : 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'}
+                  >
+                    {getTypesByCategory().map((type) => (
+                      <TypeCard
+                        key={type.id}
+                        {...type}
+                        selected={selectedType === type.id}
+                        onSelect={setSelectedType}
+                        compact={selectedCategory === 'online'}
+                      />
+                    ))}
+                  </div>
                 </div>
                 {selectedCategory === 'property' && (
                   <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">
@@ -2431,7 +2483,7 @@ export default function CreateListing() {
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'property' ? "Cozy mountain cabin with amazing views" :
-                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
+                        (selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Handyman Service" :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
@@ -2451,7 +2503,7 @@ export default function CreateListing() {
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'property' ? "Describe what makes your place special..." :
-                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
+                        (selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
                         selectedCategory === 'experiences' ? "Describe your service in detail..." :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
@@ -3014,7 +3066,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' && (
                       <div className="space-y-8 pt-4 border-t border-gray-200 dark:border-gray-800">
                         {/* 1. VEHICLE TYPES SECTION */}
                         <div className="bg-gray-50 dark:bg-gray-800/60 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
@@ -3340,7 +3392,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'experiences' && selectedType === 'moving' && (
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'moving' && (
                       <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Moving Rates Configuration</h3>

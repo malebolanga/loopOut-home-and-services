@@ -35,7 +35,7 @@ const helperSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['domestic', 'handyman', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals'],
+        enum: ['domestic', 'handyman', 'errand', 'tutor', 'chef', 'beauty', 'tattoo', 'barber', 'photography', 'baker', 'sneaker', 'washingmat', 'animals', 'carwash', 'moving', 'other'],
     },
     regularPrice: {
         type: Number,
@@ -139,6 +139,20 @@ const helperSchema = new mongoose.Schema({
     certifications: {
         type: String,
     },
+    carWashPackages: { type: String },
+    vehicleTypes: { type: String },
+    additionalServices: { type: String },
+    serviceDuration: { type: String },
+    mobileService: { type: Boolean, default: false },
+    ecoFriendly: { type: Boolean, default: false },
+    additionalPricing: { type: String },
+    moveCostPerBox: { type: Number },
+    moveCostPerKilo: { type: Number },
+    movePriceVan: { type: Number },
+    movePriceVanTrailer: { type: Number },
+    movePriceMiniTruck: { type: Number },
+    movePriceOtherTruck: { type: Number },
+    movePriceBigTruckTrailer: { type: Number },
     imageUrls: {
         type: Array,
         required: true,

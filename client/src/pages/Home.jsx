@@ -821,6 +821,11 @@ const POPULAR_REQUEST_SUGGESTIONS = [
 export const isFoodImageUrl = (val) => {
   if (!val || typeof val !== 'string') return false;
   const trimmed = val.trim();
+  // These legacy uploads render as checkerboard placeholders, not usable food photos.
+  if (
+    /OIP(?:[_-][^/?#.]*)?\.(?:png|jpe?g|webp)(?:[?#]|$)/i.test(trimmed) ||
+    /close-up-traditional-african-bread-based-street-food-called-bunny-chow/i.test(trimmed)
+  ) return false;
   return (
     trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
@@ -832,7 +837,7 @@ export const isFoodImageUrl = (val) => {
 
 export const resolveSmartFoodEmoji = (name = '', fallback = '🍱') => {
   const n = String(name || '').toLowerCase();
-  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
+  if (n.includes('kota') || n.includes('kots') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
   if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger')) return '🍔';
   if (n.includes('pizza') || n.includes('slice')) return '🍕';
   if (n.includes('wing') || n.includes('chicken') || n.includes('drumstick')) return '🍗';
@@ -852,7 +857,7 @@ export const resolveFoodPhoto = (name = '', fallbackUrl = '') => {
   if (n.includes('rib') || n.includes('pork') || n.includes('bbq') || n.includes('flame')) {
     return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
   }
-  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
+  if (n.includes('kota') || n.includes('kots') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
     return 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80';
   }
   if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger') || n.includes('smash')) {
@@ -904,7 +909,11 @@ export const resolveShopPhoto = (name = '') => {
 
 export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
   const [hasError, setHasError] = useState(false);
-  useEffect(() => setHasError(false), [src]);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  useEffect(() => {
+    setHasError(false);
+    setFallbackFailed(false);
+  }, [src]);
 
   const isShop = fallback === '🏪' || String(alt || '').toLowerCase().includes('shop');
   const effectiveSrc = (!hasError && isFoodImageUrl(src))
@@ -913,12 +922,21 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
       ? resolveShopPhoto(alt)
       : resolveFoodPhoto(alt || src);
 
+  if (fallbackFailed) {
+    return (
+      <div role="img" aria-label={alt || 'Image unavailable'} className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-3xl dark:from-slate-800 dark:to-slate-900 ${className}`}>
+        <span aria-hidden="true">{isShop ? '🏪' : resolveSmartFoodEmoji(alt, fallback)}</span>
+      </div>
+    );
+  }
+
   return (
     <img
       src={resolveApiUrl(effectiveSrc)}
       alt={alt || 'Food'}
       onError={() => {
         if (!hasError) setHasError(true);
+        else setFallbackFailed(true);
       }}
       className={`w-full h-full object-cover ${imgClassName}`}
       loading="lazy"
@@ -3615,7 +3633,9 @@ const matchItemToSubcategory = (item, tab, subId) => {
   if (!item) return false;
   if (subId === 'all') return true;
 
-  const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+  const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.propertyType || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+  const kind = String(item.kind || item.propertyType || '').toLowerCase().replace(/[\s-]+/g, '_');
+  const pricePeriod = String(item.pricePeriod || item.period || (item.type === 'rent' ? 'month' : item.type === 'office' ? 'hour' : ['over', 'hotel', 'land'].includes(item.type) ? 'night' : ['house', 'apartment'].includes(kind) ? 'day' : item.type === 'resort' ? 'day' : '')).toLowerCase().replace(/[\s-]+/g, '_');
 
   if (tab === 'Property') {
     switch (subId) {
@@ -3628,7 +3648,25 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'lodge':
         return item.type === 'lodge' || item.kind === 'lodge' || /lodge/i.test(text);
       case 'apartment':
-        return item.type === 'apartment' || item.kind === 'apartment' || item.kind === 'complex' || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+        return item.type === 'apartment' || ['apartment', 'complex'].includes(kind) || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+      case 'full_house':
+        return ['house', 'full_house'].includes(kind) || /full house|entire house|whole house|standalone house/i.test(text);
+      case 'single_room':
+        return ['room', 'single_room'].includes(kind) || /single room|room to rent|room for rent|private room/i.test(text);
+      case 'studio':
+        return kind === 'studio' || /studio|bachelor apartment/i.test(text);
+      case 'townhouse':
+        return ['townhouse', 'town_house'].includes(kind) || /town\s?house/i.test(text);
+      case 'loft':
+        return kind === 'loft' || /\bloft\b/i.test(text);
+      case 'penthouse':
+        return kind === 'penthouse' || /penthouse/i.test(text);
+      case 'per_day':
+        return pricePeriod === 'day';
+      case 'per_month':
+        return pricePeriod === 'month';
+      case 'per_hour':
+        return pricePeriod === 'hour';
       case 'self_catering':
         return item.type === 'land' || item.type === 'self_catering' || item.kind === 'Self Catering' || item.kind === 'self_catering' || item.kind === 'chalet' || /self[-\s]?catering|chalet/i.test(text);
       case 'resort':
@@ -3813,7 +3851,6 @@ function MobileAppHomepage({
         { id: 'property', label: 'Property', emoji: '🏡', desc: 'Recent properties & stays' },
         { id: 'service', label: 'Services', emoji: '🛠️', desc: 'Recent services & pros' },
         { id: 'helper', label: 'Helper', emoji: '🧹', desc: 'Recent helpers & bookings' },
-        { id: 'event', label: 'Events', emoji: '🎟️', desc: 'Recent events & shows' },
         { id: 'selling', label: 'Item for Sale', emoji: '🏷️', desc: 'Recent marketplace items' }
       ]
     },
@@ -3828,33 +3865,22 @@ function MobileAppHomepage({
       subcategories: [
         { id: 'all', label: 'All Properties', emoji: '🏡', desc: 'Explore all properties' },
         { id: 'rooms', label: 'Rooms & Rent', emoji: '🏠', desc: 'Rooms, homes & apartments for rent' },
+        { id: 'full_house', label: 'Full House', emoji: '🏡', desc: 'Entire houses and homes' },
+        { id: 'single_room', label: 'Single Room', emoji: '🛏️', desc: 'Private rooms for rent' },
+        { id: 'studio', label: 'Studio', emoji: '🪴', desc: 'Studio and bachelor apartments' },
+        { id: 'townhouse', label: 'Townhouse', emoji: '🏘️', desc: 'Townhouses and cluster homes' },
+        { id: 'loft', label: 'Loft', emoji: '🏙️', desc: 'Loft apartments' },
+        { id: 'penthouse', label: 'Penthouse', emoji: '🌇', desc: 'Penthouses and top-floor homes' },
         { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌', desc: 'B&B and guest houses' },
         { id: 'hotel', label: 'Hotels', emoji: '🏨', desc: 'Hotels & luxury suites' },
         { id: 'lodge', label: 'Lodges', emoji: '🏡', desc: 'Safari & nature lodges' },
         { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢', desc: 'Apartment complexes & flats' },
+        { id: 'per_day', label: 'Per Day', emoji: '☀️', desc: 'Properties priced per day' },
+        { id: 'per_month', label: 'Per Month', emoji: '📅', desc: 'Properties priced per month' },
+        { id: 'per_hour', label: 'Per Hour', emoji: '⏱️', desc: 'Rooms and stays priced per hour' },
         { id: 'self_catering', label: 'Self Catering', emoji: '🍳', desc: 'Self catering stays & chalets' },
         { id: 'resort', label: 'Holiday Park & Resort', emoji: '🏖️', desc: 'Holiday parks & resorts' },
         { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪', desc: 'Short stay & hourly rooms' }
-      ]
-    },
-    {
-      id: 'Services',
-      label: 'Services',
-      emoji: '🛠️',
-      icon: Wrench,
-      desc: 'Book pros',
-      textColor: 'text-amber-600',
-      bgColor: 'bg-amber-500',
-      subcategories: [
-        { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕', desc: 'Rides, shuttles & logistics' },
-        { id: 'carwash', label: 'Car Wash', emoji: '🚗', desc: 'Car wash & auto detailing' },
-        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️', desc: 'Catering, cakes & culinary' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿', desc: 'Gardening & yard care' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚', desc: 'Bakkie & home moving' },
-        { id: 'storage', label: 'Booking Storage', emoji: '📦', desc: 'Secure storage units' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧', desc: 'Plumbing, electrical & repairs' },
-        { id: 'others', label: 'Others & General', emoji: '✨', desc: 'General professional services' }
       ]
     },
     {
@@ -3877,24 +3903,6 @@ function MobileAppHomepage({
         { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
         { id: 'marquees', label: 'Marquees & Tents', emoji: '🎪', desc: 'Marquee hire, tents & setups' },
         { id: 'animals', label: 'Animal Care', emoji: '🐕', desc: 'Pet care & dog walking' }
-      ]
-    },
-    {
-      id: 'Events',
-      label: 'Events',
-      emoji: '🎟️',
-      icon: CalendarDays,
-      desc: 'Shows & vibes',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-500',
-      subcategories: [
-        { id: 'all', label: 'All Events', emoji: '🎟️' },
-        { id: 'music', label: 'Music & Concerts', emoji: '🎵' },
-        { id: 'sports', label: 'Sports & Matches', emoji: '⚽' },
-        { id: 'arts', label: 'Arts & Culture', emoji: '🎨' },
-        { id: 'community', label: 'Community & Meetups', emoji: '🤝' },
-        { id: 'food', label: 'Food & Markets', emoji: '🍔' },
-        { id: 'outdoors', label: 'Outdoors & Safari', emoji: '⛺' }
       ]
     },
     {
@@ -3939,10 +3947,11 @@ function MobileAppHomepage({
   // Keep the main discovery routes visible in the horizontal belt. Less-used
   // categories selected from More remain pinned there until another is chosen.
   const visibleTabs = useMemo(() => {
-    const pinnedIds = ['RecentAdded', 'Property', 'Services', 'Helper', 'Lunch', 'Selling'];
+    const pinnedIds = ['Property', 'Helper'];
     const pinnedTabs = pinnedIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean);
     const currentTab = tabs.find(t => t.id === activeTab);
-    return currentTab && !pinnedIds.includes(currentTab.id)
+    const hideFromTopBar = ['RecentAdded', 'Property', 'Helper', 'Lunch', 'Selling'].includes(currentTab?.id);
+    return currentTab && !pinnedIds.includes(currentTab.id) && !hideFromTopBar
       ? [...pinnedTabs, currentTab]
       : pinnedTabs;
   }, [tabs, activeTab]);
@@ -4116,10 +4125,10 @@ function MobileAppHomepage({
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
             const shortcutEmoji = {
-              Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲', Selling: '🛍️',
+              Property: '🏠', Services: '🛠️', Helper: '🧹',
             }[tab.id] || tab.emoji || '✨';
             const shortcutLabel = {
-              Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food', Selling: 'Sell',
+              Property: 'Homes', Services: 'Services', Helper: 'Helpers',
             }[tab.id] || tab.label;
             return (
               <motion.button
@@ -4142,13 +4151,13 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className={`relative flex min-w-[46px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
+                className={`relative flex min-w-[60px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
                 aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
-                <div className={`${isRecentAdded ? 'h-8 w-8 bg-rose-100/80 dark:bg-rose-900/40' : 'h-8 w-8'} flex items-center justify-center rounded-xl text-[22px] transition-transform group-hover:scale-105`} aria-hidden="true">
+                <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105`} aria-hidden="true">
                   <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
                 </div>
-                <span className={`mt-0.5 text-center text-[8px] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-gray-300'}`}>
+                <span className={`mt-0.5 text-center text-[9px] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-gray-300'}`}>
                   {isRecentAdded ? 'New' : shortcutLabel}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
@@ -4163,20 +4172,20 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="flex min-w-[46px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
+            className="flex min-w-[60px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
             aria-label="Browse all categories"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl text-[22px] transition-transform group-hover:scale-105" aria-hidden="true">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105" aria-hidden="true">
               <span role="img" aria-label="Browse categories">🗂️</span>
             </div>
-            <span className="mt-0.5 text-center text-[8px] font-semibold leading-tight text-slate-600 whitespace-nowrap dark:text-gray-300">
+            <span className="mt-0.5 text-center text-[9px] font-semibold leading-tight text-slate-600 whitespace-nowrap dark:text-gray-300">
               More
             </span>
           </motion.button>
         </div>
       </div>
 
-      <main className="w-full bg-white px-4 pb-4 pt-[56px] dark:bg-gray-950">
+      <main className="w-full bg-white px-4 pb-4 pt-[64px] dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
         {/* The fixed category belt already provides the visual separation. */}
@@ -4583,10 +4592,10 @@ function DesktopHomepage({
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
               const shortcutEmoji = {
-                Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲', Selling: '🛍️',
+                Property: '🏠', Services: '🛠️', Helper: '🧹',
               }[tab.id] || tab.emoji || '✨';
               const shortcutLabel = {
-                Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food', Selling: 'Sell',
+                Property: 'Homes', Services: 'Services', Helper: 'Helpers',
               }[tab.id] || tab.label;
               return (
                 <motion.button
@@ -4612,7 +4621,7 @@ function DesktopHomepage({
                   className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
                 >
-                  <div className={`${isRecentAdded ? 'w-11 h-11 bg-rose-100/80 dark:bg-rose-900/40' : 'w-9 h-9 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl text-[24px] shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
+                  <div className={`${isRecentAdded ? 'w-14 h-14 bg-rose-100/80 dark:bg-rose-900/40' : 'w-14 h-14 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl text-[36px] shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
                     <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
                   </div>
                   <div className="text-left">
@@ -4638,7 +4647,7 @@ function DesktopHomepage({
               className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
               aria-label="Browse all categories"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100/80 text-[24px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100/80 text-[36px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
                 <span role="img" aria-label="Browse categories">🗂️</span>
               </div>
               <div className="text-left">
@@ -4664,7 +4673,7 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-[88px]">
+      <div className="max-w-7xl mx-auto px-8 pt-[96px]">
         <HomeHero navigate={navigate} />
       </div>
 

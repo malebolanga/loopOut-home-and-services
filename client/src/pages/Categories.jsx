@@ -39,7 +39,6 @@ const Categories = () => {
     { icon: '🏠', label: 'Homes', color: 'bg-blue-100', type: 'properties' },
     { icon: '✨', label: 'Services', color: 'bg-emerald-100', type: 'services' },
     { icon: '👷', label: 'Helper', color: 'bg-purple-100', type: 'helpers' },
-    { icon: '🎪', label: 'Events', color: 'bg-amber-100', type: 'events' },
     { icon: '🏨', label: 'Hotels', color: 'bg-rose-100', type: 'properties', category: 'rent-short' },
     { icon: '🛒', label: 'Shopping', color: 'bg-yellow-100', type: 'services' },
     { icon: '🍽️', label: 'Food', color: 'bg-red-100', type: 'services' },
@@ -98,24 +97,6 @@ const Categories = () => {
         { id: 'babysitters', name: 'Babysitters', count: 234, icon: UserGroupIcon },
         { id: 'pet-care', name: 'Pet Care', count: 145, icon: HeartIcon },
         { id: 'event-staff', name: 'Event Staff', count: 123, icon: CalendarDaysIcon },
-      ]
-    },
-    {
-      id: 'events',
-      title: 'Events',
-      description: 'Discover exciting events and activities',
-      icon: CalendarDaysIcon,
-      color: 'bg-amber-500',
-      gradient: 'from-amber-500 to-amber-600',
-      subcategories: [
-        { id: 'concerts', name: 'Concerts & Music', count: 89, icon: MusicalNoteIcon },
-        { id: 'workshops', name: 'Workshops', count: 145, icon: BookOpenIcon },
-        { id: 'sports', name: 'Sports Events', count: 78, icon: FireIcon },
-        { id: 'festivals', name: 'Festivals', count: 56, icon: CalendarDaysIcon },
-        { id: 'conferences', name: 'Conferences', count: 67, icon: AcademicCapIcon },
-        { id: 'food-events', name: 'Food Events', count: 92, icon: CakeIcon },
-        { id: 'art-exhibitions', name: 'Art Exhibitions', count: 45, icon: CameraIcon },
-        { id: 'community', name: 'Community Events', count: 112, icon: UserGroupIcon },
       ]
     },
     {

@@ -141,6 +141,7 @@ export default function LoopPoolSection({ currentUser }) {
                   alt={pool.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
@@ -217,13 +218,14 @@ export default function LoopPoolSection({ currentUser }) {
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex -space-x-2 overflow-hidden">
                       {pool.joinedUsers.slice(0, 5).map((user, idx) => (
-                        <img
-                          key={idx}
-                          src={user.avatar}
-                          alt={user.name}
-                          className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover"
-                          title={user.name}
-                        />
+                          <img
+                            key={idx}
+                            src={user.avatar}
+                            alt={user.name}
+                            className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-gray-900 object-cover"
+                            title={user.name}
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
                       ))}
                     </div>
 

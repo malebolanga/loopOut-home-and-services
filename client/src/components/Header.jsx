@@ -121,7 +121,8 @@ const QUICK_DISCOVERY_MAP = {
   'house-rent': { searchType: 'properties', subType: 'rent' },
   'self-catering': { searchType: 'properties', subType: 'land' },
   photograph: { searchType: 'helpers', subType: 'photography' },
-  carwash: { searchType: 'services', subType: 'carwash' },
+  carwash: { searchType: 'helpers', subType: 'carwash' },
+  moving: { searchType: 'helpers', subType: 'moving' },
   electrician: { searchType: 'services', subType: 'electrician' },
   handyman: { searchType: 'services', subType: 'handyman' },
   catering: { searchType: 'services', subType: 'catering' },
@@ -617,7 +618,6 @@ export default function Header() {
   // Search categories
   const searchCategories = [
     { key: 'properties', label: 'Homes', icon: '🏠' },
-    { key: 'services', label: 'Services', icon: '🔧' },
     { key: 'helpers', label: 'Helpers', icon: '👨‍💼' },
     { key: 'events', label: 'Events', icon: '🎪' }
   ];
@@ -1017,7 +1017,6 @@ export default function Header() {
                   { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
                   { id: 'food', label: 'Food & Lunch', icon: UtensilsCrossed, color: 'orange', path: '/food' },
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
-                  { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
                   { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
                 ].map((item) => {
                   const Icon = item.icon;
@@ -1181,7 +1180,6 @@ export default function Header() {
                     {[
                       { id: 'food', label: 'Food & Lunch', icon: '🍱', color: 'bg-orange-50', path: '/food' },
                       { id: 'helpers', label: 'Helper', icon: '👨‍💼', color: 'bg-emerald-50' },
-                      { id: 'services', label: 'Services', icon: '🛠️', color: 'bg-blue-50' },
                       { id: 'properties', label: 'Homes', icon: '🏠', color: 'bg-rose-50' },
                       { id: 'events', label: 'Events', icon: '🎪', color: 'bg-amber-50' },
                       { id: 'resort', label: 'Resort', icon: '🏖️', color: 'bg-cyan-50' },
@@ -1211,7 +1209,7 @@ export default function Header() {
                               setShowSearch(false);
                               return;
                             }
-                            const isCore = ['properties', 'services', 'helpers', 'events', 'food'].includes(cat.id);
+                            const isCore = ['properties', 'helpers', 'events', 'food'].includes(cat.id);
                             const discovery = QUICK_DISCOVERY_MAP[cat.id] || {
                               searchType: isCore ? cat.id : 'all',
                               subType: ''
