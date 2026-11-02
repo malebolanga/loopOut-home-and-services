@@ -2320,37 +2320,30 @@ export default function PhotographyHelperPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-7 border-b border-slate-200">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Choose a service</h2>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid auto-cols-[minmax(180px,1fr)] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain pb-2 scrollbar-hide">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
                       <button
-                        key={service.id} 
-                        onClick={() => setSelectedModalService(service)}
+                        key={service.id}
                         type="button"
-                        className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                          isSelected 
-                            ? 'border-rose-500 bg-rose-50 shadow-sm' 
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                        onClick={() => setSelectedModalService(service)}
+                        aria-pressed={isSelected}
+                        className={`relative flex min-h-[156px] w-full flex-col items-start gap-2.5 rounded-2xl border p-3.5 text-left transition-all ${isSelected ? 'border-rose-500 bg-rose-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}
                       >
-                        <div className="flex min-w-0 items-center gap-3">
-                          {service.image ? <img src={service.image} alt={service.name} className="h-16 w-16 shrink-0 rounded-xl border border-slate-100 object-cover object-center" /> : <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{service.icon}</div>}
+                        {isSelected && <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500"><CheckIcon className="h-3 w-3 text-white" /></span>}
+                        <div className="flex w-full min-w-0 items-center gap-2.5 pr-5">
+                          {service.image ? <img src={service.image} alt="" className="h-11 w-11 shrink-0 rounded-xl border border-slate-100 bg-white object-cover" /> : <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{service.icon}</div>}
                           <div className="min-w-0">
-                            <span className={`text-left font-semibold transition-colors ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</span>
-                            {service.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</p>}
+                            {service.type && <span className={`mb-0.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-semibold ${isSelected ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>{service.type}</span>}
+                            <p className={`line-clamp-2 text-sm font-semibold ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</p>
                           </div>
                         </div>
-                        {service.price !== undefined && service.price !== null && (
-                          <span className={`shrink-0 text-right font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
-                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}<span className="block text-[11px] font-normal text-slate-500">per package</span>
-                          </span>
-                        )}
-                        {isSelected && (
-                          <div className="ml-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                            <CheckIcon className="text-white w-3 h-3" />
-                          </div>
-                        )}
+                        {service.description && <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</p>}
+                        <span className={`mt-auto text-sm font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
+                          {service.price === undefined || service.price === null ? 'Quote' : Number(service.price) === 0 ? 'Free' : `R${service.price}`}
+                          <span className="ml-1 text-[11px] font-normal text-slate-500">{service.price === undefined || service.price === null ? 'ask for pricing' : 'per service'}</span>
+                        </span>
                       </button>
                     );
                   })}

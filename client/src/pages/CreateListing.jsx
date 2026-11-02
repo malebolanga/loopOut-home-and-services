@@ -500,6 +500,7 @@ export default function CreateListing() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const helperTypesScrollerRef = useRef(null);
+  const sellingTypesScrollerRef = useRef(null);
 
   useEffect(() => {
     const className = 'create-listing-scrollbars-hidden';
@@ -1977,6 +1978,7 @@ export default function CreateListing() {
           { id: "clothes", label: "Clothes", emoji: "👕", description: "Apparel, shoes, accessories" },
           { id: "universities", label: "Universities", emoji: "🎓", description: "University related items" },
           { id: "books", label: "Books", emoji: "📚", description: "Textbooks, novels" },
+          { id: "other", label: "Other Items", emoji: "🏷️", description: "Anything that does not fit another category" },
         ];
       default:
         return [];
@@ -2082,26 +2084,12 @@ export default function CreateListing() {
   const nextPhaseMeta = getPhaseMeta(nextPhase, selectedCategory);
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-gray-50/70 dark:bg-gray-950 app-safe-content-bottom pb-32 md:pb-36">
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50/70 dark:bg-gray-950 pb-[70px] md:pb-8">
       {/* Sleek Modern Header */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 shadow-xs">
         <div className="app-safe-top max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <button 
-              type="button"
-              onClick={() => {
-                if (currStepIdx > 0) {
-                  handlePrevStep();
-                } else {
-                  navigate('/user-listings');
-                }
-              }}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
-              title="Go back"
-              aria-label="Go back"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </button>
+            <div className="h-9 w-9" aria-hidden="true" />
             
             <div className="flex items-center gap-2 sm:gap-2.5">
               <span className="font-extrabold text-xl tracking-tight text-[#FF5A5F]">
@@ -2128,7 +2116,7 @@ export default function CreateListing() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-40 sm:pb-44 md:pb-48">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-2 sm:pb-4 md:pb-6">
         {/* Step Progress */}
         <div className="mt-4 mb-8 sm:mt-6 sm:mb-10">
           <StepProgress 
@@ -2139,8 +2127,8 @@ export default function CreateListing() {
         </div>
 
         {/* Main Form Container */}
-        <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8 pb-24 sm:pb-28">
+        <div className={`transition-opacity duration-500 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
+          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8 pb-4">
             
             {/* Step 1: Select Category */}
             {currentStep === 1 && (
@@ -2357,12 +2345,12 @@ export default function CreateListing() {
                 selectedCategory === 'online' ? 'helper' : 
                 selectedCategory === 'selling' ? 'item' : 'event'}?`}>
                 <div className={selectedCategory === 'online' ? 'space-y-2' : ''}>
-                  {selectedCategory === 'online' && (
+                  {(selectedCategory === 'online' || selectedCategory === 'selling') && (
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => helperTypesScrollerRef.current?.scrollBy({ left: -360, behavior: 'smooth' })}
-                        aria-label="Scroll helper options left"
+                        onClick={() => (selectedCategory === 'online' ? helperTypesScrollerRef : sellingTypesScrollerRef).current?.scrollBy({ left: -360, behavior: 'smooth' })}
+                        aria-label={`Scroll ${selectedCategory === 'selling' ? 'item' : 'helper'} options left`}
                         title="Scroll left"
                         className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
@@ -2370,8 +2358,8 @@ export default function CreateListing() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => helperTypesScrollerRef.current?.scrollBy({ left: 360, behavior: 'smooth' })}
-                        aria-label="Scroll helper options right"
+                        onClick={() => (selectedCategory === 'online' ? helperTypesScrollerRef : sellingTypesScrollerRef).current?.scrollBy({ left: 360, behavior: 'smooth' })}
+                        aria-label={`Scroll ${selectedCategory === 'selling' ? 'item' : 'helper'} options right`}
                         title="Scroll right"
                         className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
                       >
@@ -2380,8 +2368,8 @@ export default function CreateListing() {
                     </div>
                   )}
                   <div
-                    ref={selectedCategory === 'online' ? helperTypesScrollerRef : null}
-                    className={selectedCategory === 'online'
+                    ref={selectedCategory === 'online' ? helperTypesScrollerRef : selectedCategory === 'selling' ? sellingTypesScrollerRef : null}
+                    className={selectedCategory === 'online' || selectedCategory === 'selling'
                       ? 'grid grid-flow-col grid-rows-2 auto-cols-[minmax(180px,1fr)] gap-3 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2'
                       : 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'}
                   >
@@ -2488,6 +2476,7 @@ export default function CreateListing() {
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
+                        selectedCategory === 'selling' && selectedType === 'other' ? "Item for sale" :
                         selectedCategory === 'selling' ? "Vintage Leather Sofa in Excellent Condition" :
                         "Summer Music Festival"
                       }
@@ -2508,6 +2497,7 @@ export default function CreateListing() {
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
                         selectedCategory === 'online' ? "Describe your skills and experience..." :
+                        selectedCategory === 'selling' && selectedType === 'other' ? "Describe the item, its condition, features, and any useful details..." :
                         selectedCategory === 'selling' ? "Describe the item's condition, features, history, or why you are selling it..." :
                         "Describe the event, activities, and what attendees can expect..."
                       }

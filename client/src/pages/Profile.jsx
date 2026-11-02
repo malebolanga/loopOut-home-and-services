@@ -274,7 +274,7 @@ export default function Profile() {
   const [contactVisibility, setContactVisibility] = useState('private');
   const fileRef = useRef(null);
   const coverFileRef = useRef(null);
-  const [activeSection, setActiveSection] = useState("personal");
+  const [activeSection, setActiveSection] = useState("overview");
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
   const isProvider = canCreateListings(currentUser);
@@ -990,14 +990,92 @@ export default function Profile() {
   };
   const profileCompletion = calculateProfileCompletion();
 
+  if (activeSection === 'overview') {
+    const profileAvatar = formData.avatar || currentUser?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+    const profileName = currentUser?.username || 'LoopOut member';
+    const profileRole = currentUser?.offeringType === 'viewer' || !currentUser?.offeringType ? 'Guest' : offeringLabel;
+    const profileRows = [
+      { label: 'Account settings', detail: 'Personal information, login and preferences', icon: Cog6ToothIcon, action: () => navigate('/settings') },
+      { label: 'View profile', detail: 'See how your profile appears to others', icon: UserIcon, action: () => navigate(`/user/${currentUser?._id}?tab=about`) },
+      { label: 'Privacy and sharing', detail: 'Manage what you share on LoopOut', icon: GlobeAltIcon, action: () => navigate('/settings?tab=privacy') },
+      { label: 'Get help', detail: 'Visit the LoopOut help centre', icon: QuestionMarkCircleIcon, action: handleNavigateToHelp },
+    ];
+
+    return (
+      <div className="min-h-screen bg-[#f7f7f7] pb-28 app-safe-content-bottom dark:bg-gray-950">
+        <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
+          <div className="mx-auto flex h-16 max-w-xl items-center justify-between px-5">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Profile</h1>
+            <button type="button" onClick={() => navigate('/notifications')} aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 dark:text-gray-200 dark:hover:bg-gray-800">
+              <BellIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-xl space-y-4 px-5 py-6">
+          <section className="rounded-[28px] border border-slate-100 bg-white px-6 py-7 text-center shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:border-gray-800 dark:bg-gray-900">
+            <button type="button" onClick={() => fileRef.current?.click()} aria-label="Change profile photo" className="mx-auto block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-4">
+              <img src={profileAvatar} alt="Profile" className="mx-auto h-20 w-20 rounded-full object-cover" />
+            </button>
+            <input type="file" hidden ref={fileRef} accept="image/*" onChange={(event) => setFile(event.target.files?.[0])} />
+            {fileUploadError && <p role="alert" className="mt-2 text-xs text-rose-600">{typeof fileUploadError === 'string' ? fileUploadError : 'Could not upload your photo.'}</p>}
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{profileName}</h2>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-gray-400">{profileRole}</p>
+            <button type="button" onClick={() => navigate(`/user/${currentUser?._id}?tab=about`)} className="mt-3 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600 dark:text-gray-200">
+              View your profile
+            </button>
+          </section>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => handleNavigate('/my-loopout')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-2xl dark:bg-rose-950/40" aria-hidden="true">🕘</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Past bookings</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">Review completed bookings</span>
+            </button>
+            <button type="button" onClick={() => handleNavigate('/upcoming-bookings')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-950/40" aria-hidden="true">📅</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Upcoming bookings</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">See what’s coming up</span>
+            </button>
+            <button type="button" onClick={() => handleNavigate('/users')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-2xl dark:bg-emerald-950/40" aria-hidden="true">👥</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Connections</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">Browse LoopOut members</span>
+            </button>
+            <button type="button" onClick={() => isProvider ? navigate(`/${currentUser?._id}/listings`) : navigate('/become')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-2xl dark:bg-amber-950/40" aria-hidden="true">🏡</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">{isProvider ? 'Manage listings' : 'Become a host'}</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">{isProvider ? 'Update your listings' : 'Share a space or offer a service'}</span>
+            </button>
+          </div>
+
+          <section className="overflow-hidden rounded-[24px] border border-slate-100 bg-white px-4 py-1 shadow-[0_6px_22px_rgba(15,23,42,0.04)] dark:border-gray-800 dark:bg-gray-900" aria-label="Profile settings">
+            {profileRows.map(({ label, detail, icon: Icon, action }, index) => (
+              <button key={label} type="button" onClick={action} className={`flex w-full items-center gap-3 py-4 text-left ${index < profileRows.length - 1 ? 'border-b border-slate-100 dark:border-gray-800' : ''}`}>
+                <Icon className="h-5 w-5 shrink-0 text-slate-700 dark:text-gray-300" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-slate-900 dark:text-white">{label}</span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-gray-400">{detail}</span>
+                </span>
+                <ChevronRightIcon className="h-4 w-4 shrink-0 text-slate-400" />
+              </button>
+            ))}
+          </section>
+
+          <button type="button" onClick={handleSignOut} className="w-full rounded-2xl px-4 py-4 text-left text-sm font-semibold text-slate-600 transition hover:bg-white dark:text-gray-300 dark:hover:bg-gray-900">Sign out</button>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen app-safe-content-bottom pb-36 md:pb-32 bg-slate-50 dark:bg-gray-950">
       {/* Profile page header */}
       <header className="app-safe-top relative z-10 bg-white dark:bg-gray-950 border-b border-slate-100 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <button
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
+          onClick={() => setActiveSection('overview')}
+          aria-label="Back to profile"
           className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
         >
           <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center">
@@ -1139,16 +1217,15 @@ export default function Profile() {
                     />}
                     <MenuItem
                       icon={FaUserPlus}
-                      label="Become a provider"
+                      label="Become a host"
                       active={false}
                       onClick={() => navigate('/become')}
                     />
                     {isProvider && <MenuItem
                       icon={ListBulletIcon}
-                      label={currentUser?.offeringType === 'property' ? 'My properties' : currentUser?.offeringType === 'food' ? 'My shop' : currentUser?.offeringType === 'goods' ? 'My goods' : 'My offers'}
-                      active={activeSection === "my-listings"}
-                      onClick={() => setActiveSection("my-listings")}
-                      badge={userListings?.length || 0}
+                      label="Manage listings"
+                      active={false}
+                      onClick={() => navigate(`/${currentUser?._id}/listings`)}
                     />}
                     <MenuItem
                       icon={TrophyIcon}

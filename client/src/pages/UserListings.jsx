@@ -283,7 +283,7 @@ export default function UserListings() {
               </svg>
             </button>
             <div className="min-w-0">
-              <h1 className="text-[18px] sm:text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">My Listings</h1>
+              <h1 className="text-[18px] sm:text-[20px] font-semibold text-gray-900 tracking-tight leading-tight truncate">Manage listings</h1>
               <p className="text-[12px] sm:text-[13px] text-gray-400 leading-tight">{userListings.length} {userListings.length === 1 ? 'post' : 'posts'}</p>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function UserListings() {
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Condition<input maxLength={60} value={editForm.condition} onChange={(event) => setEditForm((form) => ({ ...form, condition: event.target.value }))} placeholder="New, excellent, used…" className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Category<select value={editForm.category} onChange={(event) => setEditForm((form) => ({ ...form, category: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800"><option value="furniture">Furniture</option><option value="electronics">Electronics</option><option value="clothes">Clothes</option><option value="universities">University items</option><option value="books">Books</option></select></label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Category<select value={editForm.category} onChange={(event) => setEditForm((form) => ({ ...form, category: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800"><option value="furniture">Furniture</option><option value="electronics">Electronics</option><option value="clothes">Clothes</option><option value="universities">University items</option><option value="books">Books</option><option value="other">Other items</option></select></label>
               <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Contact number<input required type="tel" value={editForm.contact} onChange={(event) => setEditForm((form) => ({ ...form, contact: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>
             </div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200">Location<input value={editForm.address} onChange={(event) => setEditForm((form) => ({ ...form, address: event.target.value }))} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-800" /></label>

@@ -21,6 +21,7 @@ import BookingProgress from '../components/BookingProgress';
 import ListingBookingSheet from '../components/ListingBookingSheet';
 import { resolveApiUrl } from '../utils/apiBaseUrl';
 import ListingDetailShell from '../components/ListingDetailShell';
+import ListingWeatherForecast from '../components/ListingWeatherForecast';
 
 
 import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
@@ -2373,6 +2374,7 @@ export default function Listing() {
             </div>
           </div>
         </div>
+        <ListingWeatherForecast listing={listing} />
       </ListingDetailShell>
 
       {/* WhatsApp Booking Modal */}

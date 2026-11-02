@@ -103,7 +103,6 @@ const BottomNav = () => {
     '/sign-up',
     '/forgot-password',
     '/wishlist',
-    '/profile',
     '/dashboard',
     '/calendar',
     '/planner',

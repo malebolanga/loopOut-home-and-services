@@ -77,11 +77,11 @@ router.post('/verify-whatsapp/:id', verifyToken, verifyWhatsApp);
 // Follower routes
 router.put('/follow/:id', verifyToken, followUser);
 router.put('/unfollow/:id', verifyToken, unfollowUser);
-router.get('/followers/:id', getFollowers);
-router.get('/following/:id', getFollowing);
+router.get('/followers/:id', verifyTokenOptional, getFollowers);
+router.get('/following/:id', verifyTokenOptional, getFollowing);
 
 // Route to get public user details (no token required)
-router.get('/public/:id', getPublicUser);
+router.get('/public/:id', verifyTokenOptional, getPublicUser);
 
 // Route to get user details
 router.get('/:id', verifyToken, getUser);

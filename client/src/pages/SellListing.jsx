@@ -27,6 +27,7 @@ const CATEGORY_META = {
   clothes:      { emoji: '👗', label: 'Clothes',      gradient: 'from-rose-400 to-pink-500',     bg: 'bg-rose-50',   text: 'text-rose-700',   border: 'border-rose-200'  },
   universities: { emoji: '🎓', label: 'Universities', gradient: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200'},
   books:        { emoji: '📚', label: 'Books',        gradient: 'from-emerald-500 to-teal-500',  bg: 'bg-emerald-50',text: 'text-emerald-700',border: 'border-emerald-200'},
+  other:        { emoji: '🏷️', label: 'Other Items',  gradient: 'from-gray-500 to-slate-600',    bg: 'bg-gray-50',  text: 'text-gray-700',  border: 'border-gray-200' },
 };
 
 const toWhatsAppNumber = (contact) => {

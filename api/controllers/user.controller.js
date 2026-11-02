@@ -462,7 +462,19 @@ export const getPublicUser = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     if (!user) return next(errorHandler(404, 'User not found!'));
 
-    const { password, otp, otpExpiry, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks, ...rest } = user._doc;
+    const {
+      password, otp, otpExpiry, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks,
+      email, phone, contactVisibility, profileVisibility, sharedInfo = {}, dataSharing,
+      coverPhoto,
+      followers = [], following = [], likeCount = 0, dislikeCount = 0, reviews = [],
+      bio, location, occupation, interests, website, socialMedia,
+      ...rest
+    } = user._doc;
+    const isProfileOwner = req.user?.id === req.params.id;
+    const profileIsVisible = isProfileOwner || profileVisibility !== false;
+    const contactDetailsAreVisible = isProfileOwner || (profileIsVisible && contactVisibility === 'public');
+    const reviewsAreVisible = isProfileOwner || (profileIsVisible && sharedInfo.reviews !== false);
+    const connectionsAreVisible = isProfileOwner || (profileIsVisible && sharedInfo.socialConnections === true);
 
     // Fetch all user's content concurrently
     const [listings, services, helpers, events] = await Promise.all([
@@ -474,12 +486,20 @@ export const getPublicUser = async (req, res, next) => {
 
     res.status(200).json({
       ...rest,
+      profileVisibility: profileIsVisible,
+      ...(profileIsVisible ? { coverPhoto, bio, location, occupation, interests, website, socialMedia } : {}),
+      ...(contactDetailsAreVisible ? { email, phone } : {}),
+      likeCount: reviewsAreVisible ? likeCount : 0,
+      dislikeCount: reviewsAreVisible ? dislikeCount : 0,
+      reviews: reviewsAreVisible ? reviews : [],
+      followers: connectionsAreVisible ? followers : [],
+      following: connectionsAreVisible ? following : [],
+      followersCount: connectionsAreVisible ? followers.length : 0,
+      followingCount: connectionsAreVisible ? following.length : 0,
       listings,
       services,
       helpers,
       events,
-      followersCount: user.followers?.length || 0,
-      followingCount: user.following?.length || 0,
     });
   } catch (error) {
     next(error);
@@ -540,8 +560,9 @@ export const unfollowUser = async (req, res, next) => {
 
 export const getFollowers = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).populate('followers', 'username avatar bio');
+    const user = await User.findById(req.params.id).select('followers sharedInfo profileVisibility').populate('followers', 'username avatar bio');
     if (!user) return next(errorHandler(404, 'User not found!'));
+    if (req.user?.id !== req.params.id && (user.profileVisibility === false || user.sharedInfo?.socialConnections !== true)) return res.status(200).json([]);
     res.status(200).json(user.followers);
   } catch (error) {
     next(error);
@@ -550,8 +571,9 @@ export const getFollowers = async (req, res, next) => {
 
 export const getFollowing = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).populate('following', 'username avatar bio');
+    const user = await User.findById(req.params.id).select('following sharedInfo profileVisibility').populate('following', 'username avatar bio');
     if (!user) return next(errorHandler(404, 'User not found!'));
+    if (req.user?.id !== req.params.id && (user.profileVisibility === false || user.sharedInfo?.socialConnections !== true)) return res.status(200).json([]);
     res.status(200).json(user.following);
   } catch (error) {
     next(error);

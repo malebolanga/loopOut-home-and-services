@@ -86,7 +86,7 @@ const CATEGORY_ICON_BY_ID = {
   service: Wrench, transport: Car, carwash: Car, catering: ChefHat, landscaping: Trees, moving: Truck, storage: Package, handyman: Hammer, others: Sparkles,
   helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, marquees: Store, marquee: Store, animals: Dog,
   event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
-  selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen,
+  selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen, other: Tags,
 };
 
 const CategoryNavIcon = ({ id, className = 'h-4 w-4' }) => {
@@ -3731,6 +3731,7 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'clothes': return item.category === 'clothes' || item.type === 'clothes' || /cloth|shoe|dress|shirt|jacket|wear/i.test(text);
       case 'universities': return item.category === 'universities' || item.type === 'universities' || /uni|university|student|campus/i.test(text);
       case 'books': return item.category === 'books' || item.type === 'books' || /book|textbook|novel|study/i.test(text);
+      case 'other': return item.category === 'other' || item.type === 'other';
       default: return true;
     }
   }
@@ -3919,7 +3920,8 @@ function MobileAppHomepage({
         { id: 'electronics', label: 'Electronics', emoji: '💻' },
         { id: 'clothes', label: 'Clothes', emoji: '👕' },
         { id: 'universities', label: 'Universities', emoji: '🎓' },
-        { id: 'books', label: 'Books', emoji: '📚' }
+        { id: 'books', label: 'Books', emoji: '📚' },
+        { id: 'other', label: 'Other Items', emoji: '🏷️' }
       ]
     },
     {
@@ -4120,7 +4122,7 @@ function MobileAppHomepage({
         style={{ top: isHeaderVisible ? '92px' : '0px' }}
         className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-[21px] shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex translate-y-[18px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+        <div className="flex -translate-y-[8px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
@@ -4151,7 +4153,7 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className={`relative flex min-w-[60px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
+                className={`relative flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
                 aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
                 <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105`} aria-hidden="true">
@@ -4172,7 +4174,7 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="flex min-w-[60px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
+            className="flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
             aria-label="Browse all categories"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105" aria-hidden="true">
@@ -4586,8 +4588,8 @@ function DesktopHomepage({
         style={{ top: isHeaderVisible ? '96px' : '0px' }}
         className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 pt-2.5 pb-[25px] shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
-        <div className="max-w-7xl mx-auto translate-y-[18px] px-8 flex items-center justify-center relative">
-          <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
+        <div className="max-w-7xl mx-auto -translate-y-[8px] px-8 flex items-center justify-center relative">
+          <div className="flex items-center justify-center gap-[47px] overflow-x-auto scrollbar-hide py-1">
             {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';

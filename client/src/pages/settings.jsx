@@ -1,6 +1,6 @@
 // src/pages/Settings.jsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -10,14 +10,16 @@ import {
   Trash2, Plus, AlertTriangle
 } from 'lucide-react';
 import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('account');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'privacy' ? 'privacy' : 'hub');
 
   // Custom States
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -47,9 +49,26 @@ export default function SettingsPage() {
 
   const [privacy, setPrivacy] = useState({
     profilePublic: true,
-    shareContacts: true,
-    locationTracking: true
+    contactVisibility: 'private',
+    bookingHistory: false,
+    reviews: true,
+    socialConnections: false,
+    marketing: false,
+    research: false
   });
+
+  useEffect(() => {
+    if (!currentUser) return;
+    setPrivacy({
+      profilePublic: currentUser.profileVisibility ?? true,
+      contactVisibility: currentUser.contactVisibility || 'private',
+      bookingHistory: currentUser.sharedInfo?.bookingHistory ?? false,
+      reviews: currentUser.sharedInfo?.reviews ?? true,
+      socialConnections: currentUser.sharedInfo?.socialConnections ?? false,
+      marketing: currentUser.dataSharing?.marketing ?? false,
+      research: currentUser.dataSharing?.research ?? false,
+    });
+  }, [currentUser]);
 
   // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
@@ -168,14 +187,92 @@ export default function SettingsPage() {
     setPrivacy(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleSavePrivacy = async () => {
+    if (!currentUser?._id) return;
+    try {
+      dispatch(updateUserStart());
+      setIsUpdating(true);
+      const response = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profileVisibility: privacy.profilePublic,
+          contactVisibility: privacy.contactVisibility,
+          sharedInfo: {
+            bookingHistory: privacy.bookingHistory,
+            reviews: privacy.reviews,
+            socialConnections: privacy.socialConnections,
+          },
+          dataSharing: { marketing: privacy.marketing, research: privacy.research },
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.success === false) throw new Error(data.message || 'Could not save privacy settings.');
+      dispatch(updateUserSuccess(data));
+      setSuccessMessage('Privacy and sharing settings saved.');
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const tabs = [
     { id: 'account', label: 'My Profile', icon: User },
     { id: 'guardian', label: 'Guardian Safety', icon: Shield },
     { id: 'security', label: 'Login & Security', icon: Lock },
     { id: 'customize', label: 'Interface Design', icon: Settings },
-    { id: 'privacy', label: 'Privacy Control', icon: Eye },
+    { id: 'privacy', label: 'Privacy & Sharing', icon: Eye },
     { id: 'billing', label: 'Payments & Billing', icon: CreditCard }
   ];
+
+  const accountSections = [
+    { id: 'account', label: 'Personal info', description: 'Manage your name, contact details and profile photo.', icon: User },
+    { id: 'security', label: 'Login & security', description: 'Update your password and keep your account secure.', icon: Lock },
+    { id: 'privacy', label: 'Privacy & sharing', description: 'Choose what information you share on LoopOut.', icon: Eye },
+    { id: 'customize', label: 'Global preferences', description: 'Set your language, currency, appearance and alerts.', icon: Globe },
+    { id: 'guardian', label: 'Safety contacts', description: 'Manage emergency contacts and safety preferences.', icon: Shield },
+    { id: 'billing', label: 'Payments & billing', description: 'Review your payment and billing options.', icon: CreditCard },
+  ];
+
+  if (activeTab === 'hub') {
+    return (
+      <div className="app-safe-top min-h-screen bg-white text-gray-900 app-safe-content-bottom pb-36 dark:bg-gray-950 dark:text-white">
+        <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-rose-600 dark:text-gray-300"
+          >
+            <ArrowLeft className="h-4 w-4" /> Profile
+          </button>
+          <div className="mb-8 border-b border-gray-200 pb-7 dark:border-gray-800">
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">Account settings</h1>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Manage your personal information, account security and preferences.</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {accountSections.map(({ id, label, description, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setActiveTab(id)}
+                className="group flex min-h-32 items-start gap-4 rounded-2xl border border-gray-200 bg-white p-5 text-left transition hover:border-gray-400 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-600"
+              >
+                <Icon className="mt-0.5 h-6 w-6 shrink-0 text-gray-800 dark:text-gray-200" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-gray-900 dark:text-white">{label}</span>
+                  <span className="mt-1 block text-sm leading-5 text-gray-500 dark:text-gray-400">{description}</span>
+                </span>
+                <span aria-hidden="true" className="text-xl leading-5 text-gray-400 transition group-hover:translate-x-0.5">›</span>
+              </button>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-safe-top min-h-screen bg-gray-50/50 text-gray-900 transition-colors duration-300 dark:bg-gray-950 dark:text-white app-safe-content-bottom pb-36 md:pb-20">
@@ -184,7 +281,7 @@ export default function SettingsPage() {
         {/* Breadcrumb Header */}
         <div className="flex items-center gap-4 mb-8">
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => setActiveTab('hub')}
             className="w-10 h-10 rounded-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-sm"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -642,51 +739,84 @@ export default function SettingsPage() {
 
               {/* Privacy Tab */}
               {activeTab === 'privacy' && (
-                <div className="space-y-8 animate-fadeIn">
-                  <div>
-                    <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2">Privacy Control</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Control what data is visible to other members of the LoopOut community.</p>
+                <div className="mx-auto max-w-3xl space-y-8 animate-fadeIn">
+                  <div className="border-b border-gray-200 pb-6 dark:border-gray-800">
+                    <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Privacy & sharing</h2>
+                    <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">Choose what people can see on your profile and how LoopOut may use your information.</p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl">
-                      <div>
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white">Public Profile Visibility</h4>
-                        <p className="text-xs text-gray-400">Allow other users to view your registered reviews and rating details.</p>
+                  <section>
+                    <h3 className="mb-1 text-lg font-semibold text-gray-900 dark:text-white">Profile and contact details</h3>
+                    <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">You can change these choices at any time.</p>
+                    <div className="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+                      <div className="flex items-center justify-between gap-5 py-5">
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Show my profile to other members</h4>
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Allow other members to view your public profile.</p>
+                        </div>
+                        <button type="button" role="switch" aria-checked={privacy.profilePublic} aria-label="Show my profile to other members" onClick={() => togglePrivacy('profilePublic')} className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${privacy.profilePublic ? 'bg-gray-900 dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                          <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all dark:bg-gray-900 ${privacy.profilePublic ? 'left-[26px] dark:bg-gray-900' : 'left-1 dark:bg-white'}`} />
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => togglePrivacy('profilePublic')}
-                        className={`w-12 h-6 rounded-full transition-all relative ${privacy.profilePublic ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${privacy.profilePublic ? 'right-1' : 'left-1'}`} />
-                      </button>
+                      <div className="flex flex-col gap-3 py-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Contact details</h4>
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Choose whether your phone and email appear on your public profile.</p>
+                        </div>
+                        <select value={privacy.contactVisibility} onChange={(event) => setPrivacy((prev) => ({ ...prev, contactVisibility: event.target.value }))} className="rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-700 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                          <option value="private">Private</option>
+                          <option value="public">Visible on my profile</option>
+                        </select>
+                      </div>
                     </div>
+                  </section>
 
-                    <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl">
-                      <div>
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white">Mutual Contact Syncing</h4>
-                        <p className="text-xs text-gray-400">Share your contacts to see which friends share mutual bookings on properties.</p>
-                      </div>
-                      <button 
-                        onClick={handleToggleAccessContacts}
-                        className={`w-12 h-6 rounded-full transition-all relative ${accessContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${accessContacts ? 'right-1' : 'left-1'}`} />
-                      </button>
+                  <section>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Information shared on LoopOut</h3>
+                    <div className="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+                      {[
+                        { key: 'bookingHistory', title: 'Booking history', detail: 'Allow your booking history to appear in relevant member experiences.' },
+                        { key: 'reviews', title: 'Reviews', detail: 'Show reviews and ratings associated with your profile.' },
+                        { key: 'socialConnections', title: 'Social connections', detail: 'Show your connections and following activity.' },
+                      ].map(({ key, title, detail }) => (
+                        <div key={key} className="flex items-center justify-between gap-5 py-5">
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h4>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{detail}</p>
+                          </div>
+                          <button type="button" role="switch" aria-checked={privacy[key]} aria-label={title} onClick={() => togglePrivacy(key)} className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${privacy[key] ? 'bg-gray-900 dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                            <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all dark:bg-gray-900 ${privacy[key] ? 'left-[26px] dark:bg-gray-900' : 'left-1 dark:bg-white'}`} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                  </section>
 
-                    <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl">
-                      <div>
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white">Real-Time Geolocation Tracking</h4>
-                        <p className="text-xs text-gray-400">Use browser coordinates to calculate distance to service locations accurately.</p>
-                      </div>
-                      <button 
-                        onClick={() => togglePrivacy('locationTracking')}
-                        className={`w-12 h-6 rounded-full transition-all relative ${privacy.locationTracking ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
-                      >
-                        <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${privacy.locationTracking ? 'right-1' : 'left-1'}`} />
-                      </button>
+                  <section>
+                    <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Data preferences</h3>
+                    <div className="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
+                      {[
+                        { key: 'marketing', title: 'Personalized offers', detail: 'Allow LoopOut to use your activity to tailor offers and updates.' },
+                        { key: 'research', title: 'Product research', detail: 'Allow your information to be used in product research.' },
+                      ].map(({ key, title, detail }) => (
+                        <div key={key} className="flex items-center justify-between gap-5 py-5">
+                          <div>
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{title}</h4>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{detail}</p>
+                          </div>
+                          <button type="button" role="switch" aria-checked={privacy[key]} aria-label={title} onClick={() => togglePrivacy(key)} className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${privacy[key] ? 'bg-gray-900 dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'}`}>
+                            <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all dark:bg-gray-900 ${privacy[key] ? 'left-[26px] dark:bg-gray-900' : 'left-1 dark:bg-white'}`} />
+                          </button>
+                        </div>
+                      ))}
                     </div>
+                  </section>
+
+                  <div className="flex justify-end border-t border-gray-200 pt-5 dark:border-gray-800">
+                    <button type="button" onClick={handleSavePrivacy} disabled={isUpdating} className="inline-flex min-w-36 items-center justify-center rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+                      {isUpdating ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Save changes
+                    </button>
                   </div>
                 </div>
               )}
