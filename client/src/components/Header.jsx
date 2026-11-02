@@ -221,10 +221,10 @@ export default function Header() {
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('preferredCurrency') || 'ZAR';
+    return localStorage.getItem('preferredCurrency') || localStorage.getItem('currency') || 'ZAR';
   });
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    return localStorage.getItem('preferredLanguage') || 'English';
+    return localStorage.getItem('preferredLanguage') || 'en';
   });
 
   const profileDropdownRef = useRef(null);
@@ -233,6 +233,28 @@ export default function Header() {
   const headerRef = useRef(null);
   const currencyDropdownRef = useRef(null);
   const languageDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const syncCurrencyPreference = (event) => {
+      const nextCurrency = event.detail?.currency || localStorage.getItem('preferredCurrency') || 'ZAR';
+      setSelectedCurrency(nextCurrency);
+    };
+    window.addEventListener('loopout:currency-change', syncCurrencyPreference);
+    return () => window.removeEventListener('loopout:currency-change', syncCurrencyPreference);
+  }, []);
+  useEffect(() => {
+    const syncLanguagePreference = (event) => {
+      const nextLanguage = event.detail?.language || localStorage.getItem('preferredLanguage') || 'en';
+      setSelectedLanguage(nextLanguage);
+    };
+    window.addEventListener('loopout:language-change', syncLanguagePreference);
+    return () => window.removeEventListener('loopout:language-change', syncLanguagePreference);
+  }, []);
+  useEffect(() => {
+    if (!currentUser?.preferredLanguage) return;
+    setSelectedLanguage(currentUser.preferredLanguage);
+    localStorage.setItem('preferredLanguage', currentUser.preferredLanguage);
+  }, [currentUser?._id, currentUser?.preferredLanguage]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -591,6 +613,8 @@ export default function Header() {
   const handleCurrencyChange = (currencyCode) => {
     setSelectedCurrency(currencyCode);
     localStorage.setItem('preferredCurrency', currencyCode);
+    localStorage.setItem('currency', currencyCode);
+    window.dispatchEvent(new CustomEvent('loopout:currency-change', { detail: { currency: currencyCode } }));
     setShowCurrencyDropdown(false);
 
     // Dispatch currency change to Redux store if you have currency slice
@@ -600,8 +624,9 @@ export default function Header() {
 
   // Handle language change
   const handleLanguageChange = (languageCode, languageName) => {
-    setSelectedLanguage(languageName);
+    setSelectedLanguage(languageCode);
     localStorage.setItem('preferredLanguage', languageCode);
+    window.dispatchEvent(new CustomEvent('loopout:language-change', { detail: { language: languageCode } }));
     setShowLanguageDropdown(false);
 
     // Dispatch language change to Redux store if you have language slice
@@ -948,7 +973,7 @@ export default function Header() {
                         <span className="text-lg">{language.flag}</span>
                         <span>{language.name}</span>
                       </div>
-                      {selectedLanguage === language.name && (
+                      {selectedLanguage === language.code && (
                         <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
                       )}
                     </button>
@@ -965,7 +990,7 @@ export default function Header() {
                   <div className="p-4 border-b border-[#DDDDDD] dark:border-gray-800 font-semibold text-[#222222] dark:text-white">
                     Choose currency
                   </div>
-                  {currencies.filter((currency) => currency.code === 'ZAR').map((currency) => (
+                  {currencies.map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencyChange(currency.code)}

@@ -8,13 +8,24 @@ import {
   verifyOtp,
   resendOtp,
   requestPasswordReset,
-  resetPassword
+  resetPassword,
+  verifyTwoFactorLogin,
+  beginTwoFactorSetup,
+  confirmTwoFactorSetup,
+  disableTwoFactor,
+  confirmTwoFactorDisable
 } from '../controllers/auth.controller.js';
+import { verifyToken } from '../utils/verifyUser.js';
 
 const router = express.Router();
 
 router.post("/signup", signup);
 router.post("/signin", signin);
+router.post('/verify-two-factor-login', verifyTwoFactorLogin);
+router.post('/two-factor/enable', verifyToken, beginTwoFactorSetup);
+router.post('/two-factor/confirm', verifyToken, confirmTwoFactorSetup);
+router.post('/two-factor/disable', verifyToken, disableTwoFactor);
+router.post('/two-factor/disable/confirm', verifyToken, confirmTwoFactorDisable);
 router.post('/google', google);
 router.get('/signout', signOut);
 router.post('/validate-token', validateToken);

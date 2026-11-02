@@ -3949,7 +3949,7 @@ function MobileAppHomepage({
   // Keep the main discovery routes visible in the horizontal belt. Less-used
   // categories selected from More remain pinned there until another is chosen.
   const visibleTabs = useMemo(() => {
-    const pinnedIds = ['Property', 'Helper'];
+    const pinnedIds = ['Property', 'Helper', 'Lunch'];
     const pinnedTabs = pinnedIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean);
     const currentTab = tabs.find(t => t.id === activeTab);
     const hideFromTopBar = ['RecentAdded', 'Property', 'Helper', 'Lunch', 'Selling'].includes(currentTab?.id);
@@ -4120,17 +4120,17 @@ function MobileAppHomepage({
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '92px' : '0px' }}
-        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-[21px] shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
+        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-0 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex -translate-y-[8px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+        <div className="flex translate-y-[2px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
             const shortcutEmoji = {
-              Property: '🏠', Services: '🛠️', Helper: '🧹',
+              Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲',
             }[tab.id] || tab.emoji || '✨';
             const shortcutLabel = {
-              Property: 'Homes', Services: 'Services', Helper: 'Helpers',
+              Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food',
             }[tab.id] || tab.label;
             return (
               <motion.button
@@ -4187,10 +4187,11 @@ function MobileAppHomepage({
         </div>
       </div>
 
-      <main className="w-full bg-white px-4 pb-4 pt-[64px] dark:bg-gray-950">
+      <main className="w-full bg-white px-4 pb-4 pt-[10px] dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
-        {/* The fixed category belt already provides the visual separation. */}
+        {/* ── FOOD SPECIALS STRIP (flush right below category belt) ── */}
+        <FoodSpecialsStrip navigate={navigate} className="mt-0" />
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -4201,7 +4202,7 @@ function MobileAppHomepage({
               exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
               transition={{ duration: 0.3 }}
               onClick={onRequestLocation}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden mb-3"
             >
               {geoLoading ? (
                 <>
@@ -4222,9 +4223,6 @@ function MobileAppHomepage({
             </motion.button>
           )}
         </AnimatePresence>
-
-        {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
-        <FoodSpecialsStrip navigate={navigate} className="-mt-[57px]" />
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
         <section id="explore-section" className="mb-8">
@@ -4586,18 +4584,18 @@ function DesktopHomepage({
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '96px' : '0px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 pt-2.5 pb-[25px] shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 pt-2.5 pb-0 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
-        <div className="max-w-7xl mx-auto -translate-y-[8px] px-8 flex items-center justify-center relative">
-          <div className="flex items-center justify-center gap-[47px] overflow-x-auto scrollbar-hide py-1">
-            {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
+        <div className="max-w-7xl mx-auto translate-y-[2px] px-8 flex items-center justify-center relative">
+          <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
+            {(visibleTabs || tabs.slice(0, 3)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
               const shortcutEmoji = {
-                Property: '🏠', Services: '🛠️', Helper: '🧹',
+                Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲',
               }[tab.id] || tab.emoji || '✨';
               const shortcutLabel = {
-                Property: 'Homes', Services: 'Services', Helper: 'Helpers',
+                Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food',
               }[tab.id] || tab.label;
               return (
                 <motion.button
@@ -4675,7 +4673,7 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-[96px]">
+      <div className="max-w-7xl mx-auto px-8 pt-[54px]">
         <HomeHero navigate={navigate} />
       </div>
 

@@ -81,4 +81,77 @@ describe('Auth API', () => {
     expect(res.body.email).toBe(testUser.email);
     expect(res.headers['set-cookie']).toBeDefined();
   });
+
+  it('should enable, require, and disable two-factor sign-in using email codes', async () => {
+    const crypto = await import('crypto');
+    const { default: User } = await import('../models/user.model.js');
+    const user = await User.findOne({ email: testUser.email });
+    user.twoFactorEnabled = true;
+    await user.save();
+
+    const challenge = await request(app)
+      .post('/api/auth/signin')
+      .send({ email: testUser.email, password: testUser.password });
+    expect(challenge.statusCode).toBe(200);
+    expect(challenge.body.requiresTwoFactor).toBe(true);
+    expect(challenge.body.token).toBeUndefined();
+
+    const loginCode = '381642';
+    await User.updateOne({ _id: user._id }, {
+      otp: crypto.createHash('sha256').update(loginCode).digest('hex'),
+      otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+      otpAttempts: 0,
+      otpPurpose: 'two-factor-login',
+    });
+    const verified = await request(app)
+      .post('/api/auth/verify-two-factor-login')
+      .send({ email: testUser.email, otp: loginCode });
+    expect(verified.statusCode).toBe(200);
+    expect(verified.body.token).toBeTruthy();
+    expect(verified.body.twoFactorEnabled).toBe(true);
+    expect(verified.body.otp).toBeUndefined();
+
+    const authorization = `Bearer ${verified.body.token}`;
+    const disableChallenge = await request(app)
+      .post('/api/auth/two-factor/disable')
+      .set('Authorization', authorization)
+      .send({});
+    expect(disableChallenge.statusCode).toBe(200);
+    expect(disableChallenge.body.requiresCode).toBe(true);
+
+    const disableCode = '529713';
+    await User.updateOne({ _id: user._id }, {
+      otp: crypto.createHash('sha256').update(disableCode).digest('hex'),
+      otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+      otpAttempts: 0,
+      otpPurpose: 'two-factor-disable',
+    });
+    const disabled = await request(app)
+      .post('/api/auth/two-factor/disable/confirm')
+      .set('Authorization', authorization)
+      .send({ otp: disableCode });
+    expect(disabled.statusCode).toBe(200);
+    expect(disabled.body.user.twoFactorEnabled).toBe(false);
+
+    const setupChallenge = await request(app)
+      .post('/api/auth/two-factor/enable')
+      .set('Authorization', authorization)
+      .send({});
+    expect(setupChallenge.statusCode).toBe(200);
+    expect(setupChallenge.body.requiresCode).toBe(true);
+
+    const setupCode = '764205';
+    await User.updateOne({ _id: user._id }, {
+      otp: crypto.createHash('sha256').update(setupCode).digest('hex'),
+      otpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+      otpAttempts: 0,
+      otpPurpose: 'two-factor-setup',
+    });
+    const enabled = await request(app)
+      .post('/api/auth/two-factor/confirm')
+      .set('Authorization', authorization)
+      .send({ otp: setupCode });
+    expect(enabled.statusCode).toBe(200);
+    expect(enabled.body.user.twoFactorEnabled).toBe(true);
+  });
 });

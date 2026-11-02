@@ -70,6 +70,12 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
         return;
       }
 
+      if (data.requiresTwoFactor) {
+        dispatch(signInFailure(null));
+        navigate('/sign-in', { state: { twoFactorEmail: data.email } });
+        return;
+      }
+
       setPendingGoogleToken('');
       persistSessionToken(data);
       dispatch(signInSuccess(data));

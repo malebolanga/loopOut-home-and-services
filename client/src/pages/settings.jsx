@@ -19,13 +19,17 @@ export default function SettingsPage() {
   const { currentUser } = useSelector((state) => state.user);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'privacy' ? 'privacy' : 'hub');
+  const [activeTab, setActiveTab] = useState(() => {
+    const requestedTab = searchParams.get('tab');
+    return ['account', 'guardian', 'security', 'customize', 'privacy', 'billing'].includes(requestedTab) ? requestedTab : 'hub';
+  });
 
   // Custom States
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'ZAR');
+  const [currency, setCurrency] = useState(localStorage.getItem('preferredCurrency') || localStorage.getItem('currency') || 'ZAR');
   const [isUpdating, setIsUpdating] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Guardian State
   const [guardianContacts, setGuardianContacts] = useState(currentUser?.contacts || []);
@@ -33,20 +37,38 @@ export default function SettingsPage() {
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
 
+  useEffect(() => {
+    if (!currentUser?._id) return;
+    setGuardianContacts((Array.isArray(currentUser.contacts) ? currentUser.contacts : []).map((contact) => (
+      typeof contact === 'string' ? { name: 'Trusted contact', phone: contact } : contact
+    )));
+    setAccessContacts(Boolean(currentUser.accessContacts));
+  }, [currentUser?._id]);
+
   // Form Fields
-  const [username, setUsername] = useState(currentUser?.username || 'Guest User');
-  const [email, setEmail] = useState(currentUser?.email || 'guest@loopout.com');
-  const [phone, setPhone] = useState(currentUser?.phone || '+27 72 123 4567');
-  const [language, setLanguage] = useState('English');
+  const languageOptions = [
+    { code: 'en', name: 'English' }, { code: 'af', name: 'Afrikaans' },
+    { code: 'zu', name: 'Zulu' }, { code: 'xh', name: 'Xhosa' },
+    { code: 'es', name: 'Spanish' }, { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' }, { code: 'pt', name: 'Portuguese' },
+    { code: 'ar', name: 'Arabic' },
+  ];
+  const storedLanguage = localStorage.getItem('preferredLanguage') || 'en';
+  const initialLanguage = languageOptions.some((item) => item.code === storedLanguage) ? storedLanguage : 'en';
+  const [username, setUsername] = useState(currentUser?.username || '');
+  const [email, setEmail] = useState(currentUser?.email || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
+  const [language, setLanguage] = useState(currentUser?.preferredLanguage || initialLanguage);
+
+  useEffect(() => {
+    setUsername(currentUser?.username || '');
+    setEmail(currentUser?.email || '');
+    setPhone(currentUser?.phone || '');
+    const preferred = currentUser?.preferredLanguage || localStorage.getItem('preferredLanguage') || 'en';
+    setLanguage(languageOptions.some((item) => item.code === preferred) ? preferred : 'en');
+  }, [currentUser?._id]);
 
   // Custom Settings Toggles
-  const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    smsAlerts: false,
-    pushAlerts: true,
-    marketingEmails: true
-  });
-
   const [privacy, setPrivacy] = useState({
     profilePublic: true,
     contactVisibility: 'private',
@@ -62,7 +84,6 @@ export default function SettingsPage() {
     setPrivacy({
       profilePublic: currentUser.profileVisibility ?? true,
       contactVisibility: currentUser.contactVisibility || 'private',
-      bookingHistory: currentUser.sharedInfo?.bookingHistory ?? false,
       reviews: currentUser.sharedInfo?.reviews ?? true,
       socialConnections: currentUser.sharedInfo?.socialConnections ?? false,
       marketing: currentUser.dataSharing?.marketing ?? false,
@@ -74,6 +95,15 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
+  const [twoFactorSetupPending, setTwoFactorSetupPending] = useState(false);
+  const [twoFactorAction, setTwoFactorAction] = useState('enable');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorDevCode, setTwoFactorDevCode] = useState('');
+
+  useEffect(() => {
+    setTwoFactorEnabled(Boolean(currentUser?.twoFactorEnabled));
+  }, [currentUser?._id, currentUser?.twoFactorEnabled]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -84,103 +114,250 @@ export default function SettingsPage() {
     );
   }, [theme]);
 
-  const handleSaveAccount = (e) => {
+  const handleSaveAccount = async (e) => {
     e.preventDefault();
-    setIsUpdating(true);
-    setTimeout(() => {
+    if (!currentUser?._id) {
+      setErrorMessage('Sign in to save your profile details and preferred language.');
+      return;
+    }
+    const cleanUsername = username.trim();
+    if (cleanUsername.length < 3 || cleanUsername.length > 40) {
+      setErrorMessage('Name must be between 3 and 40 characters.');
+      return;
+    }
+    try {
+      setErrorMessage('');
+      setSuccessMessage('');
+      setIsUpdating(true);
+      dispatch(updateUserStart());
+      const res = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUsername, phone: phone.trim(), preferredLanguage: language }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false || !data?._id) {
+        if (res.status === 409) throw new Error('That name is already in use. Please choose another name.');
+        throw new Error(data.message || 'Could not save your profile details.');
+      }
+      dispatch(updateUserSuccess(data));
+      setUsername(data.username || cleanUsername);
+      localStorage.setItem('preferredLanguage', language);
+      window.dispatchEvent(new CustomEvent('loopout:language-change', { detail: { language } }));
       setIsUpdating(false);
-      setSuccessMessage('Account details updated successfully!');
+      setSuccessMessage('Profile details and preferred language saved.');
       setTimeout(() => setSuccessMessage(''), 3000);
-    }, 1500);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not save your profile details. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleSaveGuardian = async (e) => {
     e?.preventDefault();
+    if (!currentUser?._id) {
+      setErrorMessage('Sign in to save Guardian Safety settings.');
+      return;
+    }
     try {
+      setErrorMessage('');
+      setSuccessMessage('');
       dispatch(updateUserStart());
       setIsUpdating(true);
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+      const res = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contacts: guardianContacts,
-          accessContacts: accessContacts,
+          accessContacts,
         }),
       });
       const data = await res.json();
-      setIsUpdating(false);
-      if (data.success === false) {
-        dispatch(updateUserFailure(data.message));
-        return;
-      }
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Could not save trusted contacts.');
       dispatch(updateUserSuccess(data));
-      setSuccessMessage('Guardian settings updated successfully!');
+      setSuccessMessage('Guardian safety settings saved.');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      setIsUpdating(false);
       dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not save Guardian Safety settings. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleToggleAccessContacts = async () => {
+    if (!currentUser?._id || isUpdating) return;
     const updatedAccess = !accessContacts;
-    setAccessContacts(updatedAccess);
     try {
+      setErrorMessage('');
+      setSuccessMessage('');
       dispatch(updateUserStart());
-      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+      setIsUpdating(true);
+      const res = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accessContacts: updatedAccess,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contacts: guardianContacts, accessContacts: updatedAccess }),
       });
       const data = await res.json();
-      if (res.ok) {
-        dispatch(updateUserSuccess(data));
-        setSuccessMessage('Mutual contacts syncing status updated!');
-        setTimeout(() => setSuccessMessage(''), 3000);
-      } else {
-        dispatch(updateUserFailure(data.message));
-      }
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Could not update mutual contact matching.');
+      setAccessContacts(updatedAccess);
+      dispatch(updateUserSuccess(data));
+      setSuccessMessage('Mutual contact preference updated.');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not update mutual contact matching. Please try again.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const addContact = () => {
-    if (!newContactName.trim() || !newContactPhone.trim()) return;
-    setGuardianContacts([...guardianContacts, { name: newContactName, phone: newContactPhone }]);
+    const name = newContactName.trim();
+    const phoneValue = newContactPhone.trim();
+    const digitCount = phoneValue.replace(/\D/g, '').length;
+    if (!name || !phoneValue) return setErrorMessage('Enter both a contact name and phone number.');
+    if (digitCount < 7 || digitCount > 15) return setErrorMessage('Enter a valid phone number with 7 to 15 digits.');
+    if (guardianContacts.length >= 10) return setErrorMessage('You can add up to 10 trusted contacts.');
+    if (guardianContacts.some((contact) => contact.phone?.replace(/\D/g, '') === phoneValue.replace(/\D/g, ''))) {
+      return setErrorMessage('That phone number is already in your trusted contacts.');
+    }
+    setErrorMessage('');
+    setGuardianContacts((contacts) => [...contacts, { name, phone: phoneValue }]);
     setNewContactName('');
     setNewContactPhone('');
   };
 
   const removeContact = (index) => {
-    setGuardianContacts(guardianContacts.filter((_, i) => i !== index));
+    setGuardianContacts((contacts) => {
+      const updated = contacts.filter((_, contactIndex) => contactIndex !== index);
+      if (!updated.length) setAccessContacts(false);
+      return updated;
+    });
   };
 
-  const handleSaveSecurity = (e) => {
+  const handleSaveSecurity = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      alert("New passwords do not match!");
+      setErrorMessage('The new passwords do not match.');
       return;
     }
-    setIsUpdating(true);
-    setTimeout(() => {
-      setIsUpdating(false);
+    if (newPassword.length < 12) {
+      setErrorMessage('Your new password must contain at least 12 characters.');
+      return;
+    }
+    if (!currentUser?._id) {
+      setErrorMessage('Sign in to update your password.');
+      return;
+    }
+
+    try {
+      setErrorMessage('');
+      setSuccessMessage('');
+      dispatch(updateUserStart());
+      setIsUpdating(true);
+      const response = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.success === false) {
+        throw new Error(data.message || 'Could not update your password.');
+      }
+      dispatch(updateUserSuccess(data));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setSuccessMessage('Security password updated successfully!');
+      setSuccessMessage('Password updated successfully.');
       setTimeout(() => setSuccessMessage(''), 3000);
-    }, 1500);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not update your password. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const toggleNotification = (key) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  const handleBeginTwoFactorSetup = async (event) => {
+    event.preventDefault();
+    if (!currentUser?._id) return setErrorMessage('Sign in to enable two-factor sign-in.');
+    try {
+      setErrorMessage('');
+      setSuccessMessage('');
+      setIsUpdating(true);
+      const response = await authenticatedFetch('/api/auth/two-factor/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await response.json();
+      if (!response.ok || data.success === false) throw new Error(data.message || 'Could not start two-factor setup.');
+      setTwoFactorSetupPending(true);
+      setTwoFactorAction('enable');
+      setTwoFactorCode(data.devCode || '');
+      setTwoFactorDevCode(data.devCode || '');
+      setSuccessMessage(data.devCode ? `Development setup code: ${data.devCode}` : `A setup code was sent to ${data.email || 'your email'}.`);
+    } catch (error) {
+      setErrorMessage(error.message || 'Could not start two-factor setup. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleConfirmTwoFactorSetup = async (event) => {
+    event.preventDefault();
+    try {
+      setErrorMessage('');
+      setSuccessMessage('');
+      setIsUpdating(true);
+      const confirmEndpoint = twoFactorAction === 'disable' ? '/api/auth/two-factor/disable/confirm' : '/api/auth/two-factor/confirm';
+      const response = await authenticatedFetch(confirmEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: twoFactorCode }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.success === false) throw new Error(data.message || 'Could not enable two-factor sign-in.');
+      setTwoFactorEnabled(Boolean(data.user?.twoFactorEnabled));
+      setTwoFactorSetupPending(false);
+      setTwoFactorCode('');
+      setTwoFactorDevCode('');
+      dispatch(updateUserSuccess(data.user));
+      setSuccessMessage(data.message || 'Two-factor sign-in is now enabled.');
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not enable two-factor sign-in. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDisableTwoFactor = async () => {
+    try {
+      setErrorMessage('');
+      setSuccessMessage('');
+      setIsUpdating(true);
+      const response = await authenticatedFetch('/api/auth/two-factor/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await response.json();
+      if (!response.ok || data.success === false) throw new Error(data.message || 'Could not disable two-factor sign-in.');
+      setTwoFactorAction('disable');
+      setTwoFactorSetupPending(true);
+      setTwoFactorCode(data.devCode || '');
+      setTwoFactorDevCode(data.devCode || '');
+      setSuccessMessage(data.devCode ? `Development confirmation code: ${data.devCode}` : `A confirmation code was sent to ${data.email || 'your email'}.`);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not disable two-factor sign-in. Please try again.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const togglePrivacy = (key) => {
@@ -188,8 +365,13 @@ export default function SettingsPage() {
   };
 
   const handleSavePrivacy = async () => {
-    if (!currentUser?._id) return;
+    if (!currentUser?._id) {
+      setErrorMessage('Sign in to save your privacy settings.');
+      return;
+    }
     try {
+      setErrorMessage('');
+      setSuccessMessage('');
       dispatch(updateUserStart());
       setIsUpdating(true);
       const response = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
@@ -199,7 +381,6 @@ export default function SettingsPage() {
           profileVisibility: privacy.profilePublic,
           contactVisibility: privacy.contactVisibility,
           sharedInfo: {
-            bookingHistory: privacy.bookingHistory,
             reviews: privacy.reviews,
             socialConnections: privacy.socialConnections,
           },
@@ -213,6 +394,7 @@ export default function SettingsPage() {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
       dispatch(updateUserFailure(error.message));
+      setErrorMessage(error.message || 'Could not save privacy settings. Please try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -297,6 +479,17 @@ export default function SettingsPage() {
 
         {/* Global Toast Success banner */}
         <AnimatePresence>
+          {errorMessage && (
+            <motion.div
+              role="alert"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 font-semibold text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+            >
+              {errorMessage}
+            </motion.div>
+          )}
           {successMessage && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -364,26 +557,28 @@ export default function SettingsPage() {
                     <div className="text-center sm:text-left space-y-1">
                       <h4 className="font-black text-gray-900 dark:text-white">Profile Photo</h4>
                       <p className="text-xs text-gray-400">Accepted formats: JPG, PNG, WEBP. Max size: 2MB.</p>
-                      <div className="flex gap-2.5 mt-2">
-                        <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-wider rounded-xl hover:scale-105 active:scale-95 transition-all">Upload New</button>
-                        <button className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-black uppercase tracking-wider rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-all">Remove</button>
-                      </div>
+                      <button type="button" onClick={() => navigate('/profile')} className="mt-2 px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-xs font-black uppercase tracking-wider rounded-xl hover:scale-105 active:scale-95 transition-all">Manage photo on profile</button>
                     </div>
                   </div>
 
                   <form onSubmit={handleSaveAccount} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Username</label>
+                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Name</label>
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input 
                             type="text" 
                             value={username} 
                             onChange={(e) => setUsername(e.target.value)}
+                            maxLength={40}
+                            required
+                            minLength={3}
+                            autoComplete="nickname"
                             className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
                           />
                         </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">This is the name shown on your LoopOut profile. It must be at least 3 characters.</p>
                       </div>
 
                       <div className="space-y-2">
@@ -393,10 +588,12 @@ export default function SettingsPage() {
                           <input 
                             type="email" 
                             value={email} 
-                            onChange={(e) => setEmail(e.target.value)}
+                            readOnly
+                            aria-describedby="profile-email-note"
                             className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
                           />
                         </div>
+                        <p id="profile-email-note" className="text-xs text-gray-500 dark:text-gray-400">Email is used for sign-in and can’t be changed from this page.</p>
                       </div>
 
                       <div className="space-y-2">
@@ -421,11 +618,7 @@ export default function SettingsPage() {
                             onChange={(e) => setLanguage(e.target.value)}
                             className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white appearance-none"
                           >
-                            <option>English</option>
-                            <option>Afrikaans</option>
-                            <option>isiZulu</option>
-                            <option>isiXhosa</option>
-                            <option>Sepedi</option>
+                            {languageOptions.map((option) => <option key={option.code} value={option.code}>{option.name}</option>)}
                           </select>
                         </div>
                       </div>
@@ -451,18 +644,18 @@ export default function SettingsPage() {
                   <div>
                     <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                       <Shield className="w-6 h-6 text-rose-500" />
-                      loopOut Guardian
+                      Guardian Safety
                     </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Configure your emergency contacts and safety preferences for peace of mind while using LoopOut.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Save trusted contact numbers and choose whether LoopOut can use them to identify mutual connections in supported parts of the app.</p>
                   </div>
 
-                  <div className="p-6 bg-gradient-to-br from-rose-500 to-rose-700 rounded-3xl text-white shadow-xl shadow-rose-500/20">
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
                     <div className="flex items-start gap-4">
-                      <AlertTriangle className="w-8 h-8 flex-shrink-0" />
+                      <AlertTriangle className="w-6 h-6 flex-shrink-0" />
                       <div>
-                        <h3 className="font-black text-lg">SOS Trigger Active</h3>
-                        <p className="text-sm text-rose-100 mt-1">
-                          In case of emergency, triple-tap the LoopOut logo on the home screen to instantly alert your chosen contacts with your live location.
+                        <h3 className="font-semibold">About trusted contacts</h3>
+                        <p className="mt-1 text-sm leading-6">
+                          LoopOut stores these contact details for mutual-contact matching when enabled. This setting does not send SOS alerts, SMS messages, or live location to your contacts.
                         </p>
                       </div>
                     </div>
@@ -471,42 +664,53 @@ export default function SettingsPage() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 bg-gray-50 dark:bg-gray-800/30 border border-gray-100/50 dark:border-gray-850 rounded-2xl gap-4">
                       <div>
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white">Enable Location Sharing</h4>
-                        <p className="text-xs text-gray-400">Allow LoopOut to send your live GPS coordinates to guardians during an SOS event.</p>
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Show mutual connections</h4>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">When enabled, LoopOut compares saved contact numbers with member phone numbers to find mutual connections in supported profile, listing, and booking views. Your contact list is not shown to other members.</p>
                       </div>
                       <button 
-                        onClick={() => setAccessContacts(!accessContacts)}
-                        className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 ${accessContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
+                        type="button"
+                        role="switch"
+                        aria-checked={accessContacts}
+                        aria-label="Show mutual contacts on booking cards"
+                        disabled={isUpdating || (guardianContacts.length === 0 && !accessContacts)}
+                        onClick={handleToggleAccessContacts}
+                        className={`w-12 h-6 rounded-full transition-all relative flex-shrink-0 disabled:cursor-not-allowed disabled:opacity-50 ${accessContacts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
                       >
                         <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${accessContacts ? 'right-1' : 'left-1'}`} />
                       </button>
+                      {guardianContacts.length === 0 && <p className="text-xs text-gray-500 dark:text-gray-400">Add a trusted contact before enabling matching.</p>}
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-sm font-black uppercase tracking-widest text-gray-400">Emergency Contacts</h4>
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Trusted contacts</h4>
                       
                       {guardianContacts.length === 0 ? (
                         <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
                           <Shield className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
-                          <p className="text-sm font-bold text-gray-500 dark:text-gray-400">No emergency contacts added yet.</p>
-                          <p className="text-xs text-gray-400 mt-1">Add a trusted friend or family member below.</p>
+                          <p className="text-sm font-bold text-gray-500 dark:text-gray-400">No trusted contacts added yet.</p>
+                          <p className="text-xs text-gray-400 mt-1">Add someone you trust below. LoopOut will not automatically contact them.</p>
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {guardianContacts.map((contact, index) => (
-                            <div key={index} className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
+                          {guardianContacts.map((contact, index) => {
+                            const contactName = typeof contact === 'string' ? 'Trusted contact' : contact?.name?.trim() || 'Trusted contact';
+                            const contactPhone = typeof contact === 'string' ? contact : contact?.phone || '';
+                            return (
+                            <div key={`${contactPhone}-${index}`} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl shadow-sm">
                               <div>
-                                <h5 className="font-black text-sm text-gray-900 dark:text-white">{contact.name}</h5>
-                                <p className="text-xs text-gray-500">{contact.phone}</p>
+                                <h5 className="font-semibold text-sm text-slate-900 dark:text-gray-100">{contactName}</h5>
+                                <p className="mt-1 text-sm text-slate-700 dark:text-gray-300">{contactPhone}</p>
                               </div>
                               <button 
+                                type="button"
                                 onClick={() => removeContact(index)}
                                 className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
 
@@ -514,7 +718,9 @@ export default function SettingsPage() {
                         <div className="relative">
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input 
-                            type="text" 
+                            type="text"
+                            maxLength={80}
+                            aria-label="Trusted contact name"
                             placeholder="Contact Name"
                             value={newContactName}
                             onChange={(e) => setNewContactName(e.target.value)}
@@ -526,6 +732,8 @@ export default function SettingsPage() {
                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input 
                               type="tel" 
+                              maxLength={24}
+                              aria-label="Trusted contact phone number"
                               placeholder="Phone Number"
                               value={newContactPhone}
                               onChange={(e) => setNewContactPhone(e.target.value)}
@@ -533,7 +741,10 @@ export default function SettingsPage() {
                             />
                           </div>
                           <button 
+                            type="button"
                             onClick={addContact}
+                            aria-label="Add trusted contact"
+                            disabled={guardianContacts.length >= 10}
                             className="w-12 h-[50px] bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md"
                           >
                             <Plus className="w-5 h-5" />
@@ -561,7 +772,7 @@ export default function SettingsPage() {
                 <div className="space-y-8 animate-fadeIn">
                   <div>
                     <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2">Login & Security</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Manage your password, login procedures and secondary verification layers.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Change your password by confirming your current password.</p>
                   </div>
 
                   <form onSubmit={handleSaveSecurity} className="space-y-6">
@@ -571,7 +782,8 @@ export default function SettingsPage() {
                         <div className="relative">
                           <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input 
-                            type="password" 
+                            type="password"
+                            autoComplete="current-password"
                             required
                             placeholder="••••••••••••"
                             value={currentPassword}
@@ -586,9 +798,11 @@ export default function SettingsPage() {
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input 
-                            type="password" 
+                            type="password"
+                            autoComplete="new-password"
+                            minLength={12}
                             required
-                            placeholder="Min 8 characters"
+                            placeholder="At least 12 characters"
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
@@ -601,7 +815,9 @@ export default function SettingsPage() {
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                           <input 
-                            type="password" 
+                            type="password"
+                            autoComplete="new-password"
+                            minLength={12}
                             required
                             placeholder="Match new password"
                             value={confirmPassword}
@@ -626,19 +842,43 @@ export default function SettingsPage() {
 
                   <hr className="border-gray-100 dark:border-gray-800" />
 
-                  {/* Two-Factor Authentication Info */}
-                  <div className="flex items-start gap-4 p-6 bg-rose-50/50 dark:bg-rose-950/20 rounded-3xl border border-rose-100/50 dark:border-rose-900/30">
-                    <Smartphone className="w-6 h-6 text-rose-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-black text-gray-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                        Add an extra layer of security by requiring a confirmation SMS code alongside your password when you log into your loopOut account.
-                      </p>
-                      <button className="mt-3 text-rose-600 dark:text-rose-400 text-xs font-black uppercase tracking-widest hover:underline flex items-center gap-1.5">
-                        Setup Authenticator
-                      </button>
+                  <section className="space-y-5 rounded-3xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+                    <div className="flex items-start gap-4">
+                      <Smartphone className="mt-0.5 h-6 w-6 shrink-0 text-rose-500" />
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white">Two-factor sign-in</h4>
+                        <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">Require a one-time code sent to your LoopOut email after signing in with email and password or Google.</p>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Keep access to {currentUser?.email || 'your account email'} to receive sign-in codes.</p>
+                      </div>
                     </div>
-                  </div>
+
+                    {!twoFactorEnabled && !twoFactorSetupPending && (
+                      <form onSubmit={handleBeginTwoFactorSetup} className="space-y-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <button type="submit" disabled={isUpdating} className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 dark:bg-white dark:text-gray-900">
+                          {isUpdating ? <RefreshCw className="h-4 w-4 animate-spin" /> : null} Enable two-factor sign-in
+                        </button>
+                      </form>
+                    )}
+
+                    {twoFactorSetupPending && (
+                      <form onSubmit={handleConfirmTwoFactorSetup} className="space-y-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <label htmlFor="two-factor-setup-code" className="block text-sm font-semibold text-gray-800 dark:text-gray-200">Enter the six-digit {twoFactorAction === 'disable' ? 'confirmation' : 'setup'} code sent to {currentUser?.email}</label>
+                        {twoFactorDevCode && <p className="rounded-lg bg-amber-50 p-3 text-sm font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">Development code: {twoFactorDevCode}</p>}
+                        <input id="two-factor-setup-code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm tracking-[0.3em] text-gray-900 focus:border-rose-500 focus:outline-none dark:border-gray-700 dark:bg-gray-950 dark:text-white" />
+                        <div className="flex flex-wrap gap-3">
+                          <button type="submit" disabled={isUpdating || twoFactorCode.length !== 6} className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-semibold text-white disabled:opacity-60 dark:bg-white dark:text-gray-900">{isUpdating ? <RefreshCw className="h-4 w-4 animate-spin" /> : null} Confirm and {twoFactorAction === 'disable' ? 'turn off' : 'enable'}</button>
+                          <button type="button" disabled={isUpdating} onClick={() => { setTwoFactorSetupPending(false); setTwoFactorCode(''); setTwoFactorDevCode(''); }} className="rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-700 disabled:opacity-60 dark:border-gray-700 dark:text-gray-200">Cancel</button>
+                        </div>
+                      </form>
+                    )}
+
+                    {twoFactorEnabled && (
+                      <div className="space-y-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Two-factor sign-in is enabled.</p>
+                        <button type="button" onClick={handleDisableTwoFactor} disabled={isUpdating} className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-3 text-sm font-semibold text-gray-800 disabled:opacity-60 dark:border-gray-700 dark:text-gray-200">{isUpdating ? <RefreshCw className="h-4 w-4 animate-spin" /> : null} Turn off with an email code</button>
+                      </div>
+                    )}
+                  </section>
                 </div>
               )}
 
@@ -647,7 +887,7 @@ export default function SettingsPage() {
                 <div className="space-y-8 animate-fadeIn">
                   <div>
                     <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2">Interface Design</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Fine-tune the appearance, color tones, theme states, and standard currency settings of the system.</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">Choose the app theme and your preferred currency display.</p>
                   </div>
 
                   <div className="space-y-6">
@@ -656,6 +896,8 @@ export default function SettingsPage() {
                       <label className="text-xs font-black uppercase tracking-widest text-gray-400">Application Theme Mode</label>
                       <div className="grid grid-cols-2 gap-4">
                         <button
+                          type="button"
+                          aria-pressed={theme === 'light'}
                           onClick={() => setTheme('light')}
                           className={`flex items-center justify-center gap-3 p-5 rounded-2xl border font-black uppercase tracking-wider text-xs transition-all ${
                             theme === 'light'
@@ -664,9 +906,11 @@ export default function SettingsPage() {
                           }`}
                         >
                           <Sun className="w-4 h-4 text-amber-500" />
-                          <span>Solar Mode (Light)</span>
+                          <span>Light mode</span>
                         </button>
                         <button
+                          type="button"
+                          aria-pressed={theme === 'dark'}
                           onClick={() => setTheme('dark')}
                           className={`flex items-center justify-center gap-3 p-5 rounded-2xl border font-black uppercase tracking-wider text-xs transition-all ${
                             theme === 'dark'
@@ -675,21 +919,25 @@ export default function SettingsPage() {
                           }`}
                         >
                           <Moon className="w-4 h-4 text-purple-400" />
-                          <span>Nebula Mode (Dark)</span>
+                          <span>Dark mode</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Currency Customizer */}
                     <div className="space-y-2">
-                      <label className="text-xs font-black uppercase tracking-widest text-gray-400">Global Currency Display</label>
+                      <label htmlFor="interface-currency" className="text-xs font-black uppercase tracking-widest text-gray-400">Preferred currency</label>
                       <div className="relative">
                         <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <select 
+                        <select
+                          id="interface-currency"
                           value={currency} 
                           onChange={(e) => {
-                            setCurrency(e.target.value);
-                            localStorage.setItem('currency', e.target.value);
+                            const nextCurrency = e.target.value;
+                            setCurrency(nextCurrency);
+                            localStorage.setItem('preferredCurrency', nextCurrency);
+                            localStorage.setItem('currency', nextCurrency);
+                            window.dispatchEvent(new CustomEvent('loopout:currency-change', { detail: { currency: nextCurrency } }));
                           }}
                           className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white appearance-none"
                         >
@@ -697,41 +945,22 @@ export default function SettingsPage() {
                           <option value="USD">United States Dollar (USD) - $</option>
                           <option value="EUR">Euro (EUR) - €</option>
                           <option value="GBP">British Pound (GBP) - £</option>
+                          <option value="AUD">Australian Dollar (AUD) - A$</option>
+                          <option value="CAD">Canadian Dollar (CAD) - C$</option>
+                          <option value="JPY">Japanese Yen (JPY) - ¥</option>
                         </select>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1">This updates pricing metrics across Stays, Stalls, and Service reservations automatically.</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This saves your preference and updates the currency selector. Listings and booking totals remain in the currency shown by their provider.</p>
                     </div>
 
-                    {/* Notification Toggles */}
-                    <div className="space-y-3 pt-4">
-                      <label className="text-xs font-black uppercase tracking-widest text-gray-400">Notification Alerts</label>
-                      <div className="space-y-3.5">
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-100/50 dark:border-gray-800 rounded-2xl">
-                          <div>
-                            <h4 className="text-sm font-black text-gray-900 dark:text-white">Email Alerts</h4>
-                            <p className="text-xs text-gray-400">Receive receipt emails and booking proposals.</p>
-                          </div>
-                          <button 
-                            onClick={() => toggleNotification('emailAlerts')}
-                            className={`w-12 h-6 rounded-full transition-all relative ${notifications.emailAlerts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
-                          >
-                            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${notifications.emailAlerts ? 'right-1' : 'left-1'}`} />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/40 border border-gray-100/50 dark:border-gray-800 rounded-2xl">
-                          <div>
-                            <h4 className="text-sm font-black text-gray-900 dark:text-white">WhatsApp & SMS Alerts</h4>
-                            <p className="text-xs text-gray-400">Get direct alerts on booking en-route/ongoing events.</p>
-                          </div>
-                          <button 
-                            onClick={() => toggleNotification('smsAlerts')}
-                            className={`w-12 h-6 rounded-full transition-all relative ${notifications.smsAlerts ? 'bg-rose-500' : 'bg-gray-300 dark:bg-gray-700'}`}
-                          >
-                            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${notifications.smsAlerts ? 'right-1' : 'left-1'}`} />
-                          </button>
-                        </div>
+                    <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-800/40 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Notification preferences</h3>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage booking, payment, promotion, and security notification preferences in your profile.</p>
                       </div>
+                      <button type="button" onClick={() => navigate('/profile', { state: { activeSection: 'notifications' } })} className="inline-flex shrink-0 items-center justify-center rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-800 transition hover:border-gray-600 dark:border-gray-700 dark:text-gray-100 dark:hover:border-gray-500">
+                        Manage notifications
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -742,7 +971,7 @@ export default function SettingsPage() {
                 <div className="mx-auto max-w-3xl space-y-8 animate-fadeIn">
                   <div className="border-b border-gray-200 pb-6 dark:border-gray-800">
                     <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">Privacy & sharing</h2>
-                    <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">Choose what people can see on your profile and how LoopOut may use your information.</p>
+                    <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">Choose which profile details, contact details, reviews, and connections other members can see.</p>
                   </div>
 
                   <section>
@@ -751,8 +980,8 @@ export default function SettingsPage() {
                     <div className="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
                       <div className="flex items-center justify-between gap-5 py-5">
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Show my profile to other members</h4>
-                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Allow other members to view your public profile.</p>
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Show my profile details</h4>
+                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Hide your about details, reviews, and connections from other members. Your public listings can still appear in LoopOut search.</p>
                         </div>
                         <button type="button" role="switch" aria-checked={privacy.profilePublic} aria-label="Show my profile to other members" onClick={() => togglePrivacy('profilePublic')} className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${privacy.profilePublic ? 'bg-gray-900 dark:bg-white' : 'bg-gray-300 dark:bg-gray-700'}`}>
                           <span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all dark:bg-gray-900 ${privacy.profilePublic ? 'left-[26px] dark:bg-gray-900' : 'left-1 dark:bg-white'}`} />
@@ -775,7 +1004,6 @@ export default function SettingsPage() {
                     <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Information shared on LoopOut</h3>
                     <div className="divide-y divide-gray-200 border-y border-gray-200 dark:divide-gray-800 dark:border-gray-800">
                       {[
-                        { key: 'bookingHistory', title: 'Booking history', detail: 'Allow your booking history to appear in relevant member experiences.' },
                         { key: 'reviews', title: 'Reviews', detail: 'Show reviews and ratings associated with your profile.' },
                         { key: 'socialConnections', title: 'Social connections', detail: 'Show your connections and following activity.' },
                       ].map(({ key, title, detail }) => (
@@ -790,6 +1018,7 @@ export default function SettingsPage() {
                         </div>
                       ))}
                     </div>
+                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Booking details are private to the people involved in each booking. They are not shown on your public profile.</p>
                   </section>
 
                   <section>

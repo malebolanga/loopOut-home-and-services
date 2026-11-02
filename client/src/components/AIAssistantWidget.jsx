@@ -78,7 +78,7 @@ export default function AIAssistantWidget() {
       setIsOpen(true);
       const prompt = event?.detail?.initialPrompt;
       if (prompt) {
-        handleSendMessage(prompt);
+        handleSendMessage(prompt, event?.detail?.areaGuide || null);
       }
     };
 
@@ -91,7 +91,7 @@ export default function AIAssistantWidget() {
     return null;
   }
 
-  const handleSendMessage = async (customText = null) => {
+  const handleSendMessage = async (customText = null, areaGuide = null) => {
     const textToSend = typeof customText === 'string' ? customText.trim() : inputVal.trim();
     if (!textToSend || isTyping) return;
 
@@ -113,7 +113,7 @@ export default function AIAssistantWidget() {
       const res = await fetch('/api/loopbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: textToSend })
+        body: JSON.stringify({ prompt: textToSend, ...(areaGuide ? { areaGuide } : {}) })
       });
 
       const data = await res.json();
@@ -124,6 +124,7 @@ export default function AIAssistantWidget() {
           sender: 'bot',
           text: data.answer || "Here's what I found for you:",
           actionItems: data.actionItems || [],
+          sourceLinks: data.sourceLinks || [],
           suggestedFollowUps: data.suggestedFollowUps || [],
           timestamp: data.timestamp || new Date().toISOString()
         };
@@ -136,7 +137,9 @@ export default function AIAssistantWidget() {
       const errorMsg = {
         id: `bot-err-${Date.now()}`,
         sender: 'bot',
-        text: "I'm temporarily having trouble connecting to live marketplace data. You can explore categories directly or try asking again in a moment.",
+        text: err?.message && err.message !== 'Failed to fetch'
+          ? err.message
+          : "I'm temporarily having trouble connecting to live marketplace data. You can explore categories directly or try asking again in a moment.",
         isError: true,
         timestamp: new Date().toISOString()
       };
@@ -356,6 +359,22 @@ export default function AIAssistantWidget() {
                         <div className="whitespace-pre-line prose prose-sm max-w-none">
                           {msg.text}
                         </div>
+
+                        {msg.sourceLinks?.length > 0 && (
+                          <div className="mt-3 border-t border-slate-100 pt-3" aria-label="Sources for this area guide">
+                            <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">Sources</p>
+                            <ul className="space-y-1.5">
+                              {msg.sourceLinks.map((source) => (
+                                <li key={source.url}>
+                                  <a href={source.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-start gap-1.5 text-xs font-semibold text-indigo-700 underline underline-offset-2 hover:text-indigo-900 dark:text-indigo-300 dark:hover:text-indigo-200">
+                                    <ExternalLink className="mt-0.5 h-3 w-3 shrink-0" />
+                                    <span>{source.title || source.url}</span>
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
                         {/* Interactive Item Cards returned by LoopBot */}
                         {msg.actionItems && msg.actionItems.length > 0 && (

@@ -9,6 +9,30 @@ import Event from '../models/event.model.js';
 import Sell from '../models/sell.model.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
+const normalizeContactPhone = (contact) => String(
+  typeof contact === 'string' ? contact : contact?.phone || ''
+).replace(/\D/g, '');
+
+const normalizeTrustedContacts = (contacts) => {
+  if (!Array.isArray(contacts)) return { error: 'Trusted contacts must be a list.' };
+  if (contacts.length > 10) return { error: 'You can save up to 10 trusted contacts.' };
+
+  const normalized = [];
+  const seenPhones = new Set();
+  for (const item of contacts) {
+    const name = typeof item === 'string' ? 'Trusted contact' : String(item?.name || '').trim();
+    const phone = String(typeof item === 'string' ? item : item?.phone || '').trim();
+    const digits = normalizeContactPhone(phone);
+    if (!name || name.length > 80 || phone.length > 24 || digits.length < 7 || digits.length > 15) {
+      return { error: 'Each trusted contact needs a name and a valid phone number.' };
+    }
+    if (seenPhones.has(digits)) return { error: 'A trusted contact phone number was added more than once.' };
+    seenPhones.add(digits);
+    normalized.push({ name, phone });
+  }
+  return { contacts: normalized };
+};
+
 export const test = (req, res) => {
   res.json({
     message: 'Api route is working!',
@@ -17,8 +41,11 @@ export const test = (req, res) => {
 
 export const getUsers = async (req, res, next) => {
   try {
-    // Exclude sensitive information from the response
-    const users = await User.find({}, { password: 0, __v: 0, otp: 0, otpExpiry: 0, idDocumentUrl: 0, liveSelfieUrl: 0, faceData: 0, contacts: 0, plannerTasks: 0 });
+    // The community directory only needs public profile fields; never return contact or account data here.
+    const users = await User.find({}, 'username avatar bio offeringType createdAt')
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
     res.status(200).json(users);
   } catch (error) {
     next(errorHandler(500, 'Failed to fetch users'));
@@ -71,7 +98,7 @@ export const updateUser = async (req, res, next) => {
   try {
     // List of allowed fields to update directly
     const allowedFields = [
-      'username', 'email', 'avatar', 'coverPhoto', 'location', 'bio', 'phone',
+        'username', 'email', 'avatar', 'coverPhoto', 'location', 'bio', 'phone', 'preferredLanguage',
       'occupation', 'interests', 'website', 'socialMedia',
       'faceData', 'profileVisibility', 'contactVisibility',
       'sharedInfo', 'dataSharing', 'securitySettings', 'plannerTasks',
@@ -86,20 +113,25 @@ export const updateUser = async (req, res, next) => {
         updateData[field] = req.body[field];
       }
     });
+    if (req.body.username !== undefined) {
+      const username = String(req.body.username).trim();
+      if (username.length < 3 || username.length > 40) {
+        return next(errorHandler(400, 'Name must be between 3 and 40 characters.'));
+      }
+      updateData.username = username;
+    }
+
+    if (req.body.contacts !== undefined) {
+      const result = normalizeTrustedContacts(req.body.contacts);
+      if (result.error) return next(errorHandler(400, result.error));
+      updateData.contacts = result.contacts;
+    }
 
     // Allow account conversion to valid provider roles
     if (req.body.offeringType !== undefined) {
       const validRoles = ['viewer', 'services', 'property', 'food', 'goods'];
       if (validRoles.includes(req.body.offeringType)) {
         updateData.offeringType = req.body.offeringType;
-      }
-    }
-
-    // Auto-populate default contacts for demo when contacts access is enabled and contacts array is empty
-    if (req.body.accessContacts === true) {
-      const existingUser = await User.findById(req.params.id);
-      if (existingUser && (!existingUser.contacts || existingUser.contacts.length === 0)) {
-        updateData.contacts = ['+27821234567', '+27712345678', '+27612345679', '+27794478189'];
       }
     }
 
@@ -127,10 +159,13 @@ export const updateUser = async (req, res, next) => {
         new: true,  // Return updated document
         runValidators: true  // Validate updates
       }
-    ).select('-password -__v');  // Exclude sensitive fields
+    ).select('-password -__v -otp -otpExpiry -otpAttempts -otpPurpose');  // Exclude credentials and one-time codes
 
     res.status(200).json(updatedUser);
   } catch (error) {
+    if (error?.code === 11000 && error?.keyPattern?.username) {
+      return next(errorHandler(409, 'That name is already in use. Please choose another name.'));
+    }
     next(error);
   }
 };
@@ -202,8 +237,8 @@ export const getUser = async (req, res, next) => {
   try {
     const isSelf = req.user?.id === req.params.id;
     const projection = isSelf
-      ? '-password -__v -otp -otpExpiry'
-      : '-password -__v -otp -otpExpiry -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks';
+      ? '-password -__v -otp -otpExpiry -otpAttempts -otpPurpose'
+      : '-password -__v -otp -otpExpiry -otpAttempts -otpPurpose -twoFactorEnabled -idDocumentUrl -liveSelfieUrl -faceData -contacts -plannerTasks';
     const user = await User.findById(req.params.id).select(projection);
     if (!user) return next(errorHandler(404, 'User not found!'));
     res.status(200).json(user);
@@ -463,7 +498,7 @@ export const getPublicUser = async (req, res, next) => {
     if (!user) return next(errorHandler(404, 'User not found!'));
 
     const {
-      password, otp, otpExpiry, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks,
+      password, otp, otpExpiry, otpAttempts, otpPurpose, twoFactorEnabled, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks,
       email, phone, contactVisibility, profileVisibility, sharedInfo = {}, dataSharing,
       coverPhoto,
       followers = [], following = [], likeCount = 0, dislikeCount = 0, reviews = [],
@@ -601,25 +636,23 @@ export const getMutualFriends = async (req, res, next) => {
     const targetContacts = targetUser.contacts || [];
 
     // Helper to extract last 9 digits for robust matching across different formats
-    const normalize = (p) => p.replace(/\D/g, '').slice(-9);
-    const targetNormalized = new Set(targetContacts.map(normalize));
+    const normalize = (contact) => normalizeContactPhone(contact).slice(-9);
+    const targetNormalized = new Set(targetContacts.map(normalize).filter((phone) => phone.length >= 9));
     
-    const mutualPhones = currentContacts.filter(phone => {
-        const norm = normalize(phone);
-        return norm.length >= 9 && targetNormalized.has(norm);
-    });
+    const mutualPhoneDigits = new Set(currentContacts.map(normalize).filter((phone) => (
+      phone.length >= 9 && targetNormalized.has(phone)
+    )));
 
-    if (mutualPhones.length === 0) {
-        return res.status(200).json([]);
-    }
+    if (mutualPhoneDigits.size === 0) return res.status(200).json([]);
 
-    // Find users with these mutual phone numbers
+    // Phone numbers may be stored with different country-code/spacing formats.
     const mutuals = await User.find({
-      phone: { $in: mutualPhones },
+      phone: { $type: 'string', $ne: '' },
       _id: { $nin: [currentUserId, targetUserId] }
     }).select('username avatar phone _id');
+    const matches = mutuals.filter((user) => mutualPhoneDigits.has(normalizeContactPhone(user.phone).slice(-9)));
 
-    res.status(200).json(mutuals.map(m => ({
+    return res.status(200).json(matches.map((m) => ({
         username: m.username,
         avatar: m.avatar,
         phone: m.phone,

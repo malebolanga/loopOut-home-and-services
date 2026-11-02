@@ -86,6 +86,32 @@ const AMENITY_CONFIGS = {
   environmentallyFriendly: { icon: FaTree, label: "Environmentally friendly", field: "environmentallyFriendly" },
 };
 
+const startOfLocalDay = (value) => {
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+};
+
+const dateOnlyString = (value) => {
+  const date = startOfLocalDay(value);
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const hasBookedNightOverlap = (checkInValue, checkOutValue, ranges = []) => {
+  const checkIn = startOfLocalDay(checkInValue);
+  const checkOut = startOfLocalDay(checkOutValue);
+  if (!checkIn || !checkOut) return false;
+  return ranges.some((range) => {
+    const bookedStart = startOfLocalDay(range.start);
+    const bookedEnd = startOfLocalDay(range.end);
+    return bookedStart && bookedEnd && checkIn < bookedEnd && checkOut > bookedStart;
+  });
+};
+
 const RATING_CATEGORIES = [
   { name: "Cleanliness", icon: MdCleanHands, key: "cleanliness" },
   { name: "Accuracy", icon: MdOutlineGppGood, key: "accuracy" },
@@ -692,7 +718,7 @@ export default function Listing() {
   const [endTime, setEndTime] = useState('17:00');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isNearExpanded, setIsNearExpanded] = useState(false);
-  const [dateRange, setDateRange] = useState([new Date(), null]);
+  const [dateRange, setDateRange] = useState([null, null]);
 
   const [uiState, setUiState] = useState({
     loading: true,
@@ -760,7 +786,7 @@ export default function Listing() {
   const breakfastPrice = 250;
 
   const days = dateRange[0] && dateRange[1]
-    ? Math.max(1, Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(1, Math.round((Date.UTC(dateRange[1].getFullYear(), dateRange[1].getMonth(), dateRange[1].getDate()) - Date.UTC(dateRange[0].getFullYear(), dateRange[0].getMonth(), dateRange[0].getDate())) / 86400000))
     : 0;
 
   const calculateTotalHours = (start, end) => {
@@ -793,9 +819,9 @@ export default function Listing() {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         
         const isBooked = bookedDates.some(range => {
-          if (listing?.type !== 'office') return false;
           const start = new Date(range.start);
           const end = new Date(range.end);
+          if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
           const currentCheck = new Date(selectedDate);
           currentCheck.setHours(hour, minute, 0, 0);
           return currentCheck >= start && currentCheck < end; 
@@ -854,17 +880,7 @@ export default function Listing() {
 
     const isDailyStayType = getPropertyRatePeriod(listing) === 'day';
     if (isDailyStayType && dateRange && dateRange[0] && dateRange[1]) {
-      const checkIn = new Date(dateRange[0]);
-      const checkOut = new Date(dateRange[1]);
-      checkIn.setHours(0, 0, 0, 0);
-      checkOut.setHours(0, 0, 0, 0);
-      const hasOverlap = bookedDates.some(range => {
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-        return checkIn < end && checkOut > start;
-      });
+      const hasOverlap = hasBookedNightOverlap(dateRange[0], dateRange[1], bookedDates);
       if (hasOverlap) {
         alert('The selected reservation dates are already booked or occupied. Please select available dates on the calendar.');
         return;
@@ -1863,43 +1879,61 @@ export default function Listing() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                   {isDailyStay && (
                     <div>
+                      <p className="mb-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                        Choose a check-in date, then a check-out date. Booked nights are unavailable; you may check out on the day another stay begins.
+                      </p>
                       <Calendar
-                        onChange={setDateRange}
+                        onChange={(nextRange) => setDateRange(Array.isArray(nextRange) ? nextRange : [nextRange, null])}
                         value={dateRange}
                         selectRange={true}
-                        minDate={new Date()}
-                        tileDisabled={({ date, view }) => {
-                          if (view === 'month') {
-                            return bookedDates.some(range => {
-                              const start = new Date(range.start);
-                              const end = new Date(range.end);
-                              // Set all to midnight for precise comparison
-                              const current = new Date(date);
-                              current.setHours(0, 0, 0, 0);
-                              start.setHours(0, 0, 0, 0);
-                              end.setHours(0, 0, 0, 0);
-                              return current >= start && current <= end;
-                            });
-                          }
-                          return false;
+                        minDate={startOfLocalDay(new Date())}
+                        tileClassName={({ date, view }) => {
+                          if (view !== 'month') return null;
+                          const day = startOfLocalDay(date);
+                          const today = startOfLocalDay(new Date());
+                          if (!day || day < today) return null;
+                          const checkIn = dateRange[0] && !dateRange[1] ? startOfLocalDay(dateRange[0]) : null;
+                          const unavailable = bookedDates.some((range) => {
+                            const bookedStart = startOfLocalDay(range.start);
+                            const bookedEnd = startOfLocalDay(range.end);
+                            if (!bookedStart || !bookedEnd) return false;
+                            if (!checkIn) return day >= bookedStart && day < bookedEnd;
+                            if (day <= checkIn) return true;
+                            return checkIn < bookedEnd && day > bookedStart;
+                          });
+                          return unavailable ? 'listing-calendar-unavailable' : null;
                         }}
-                        className="rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm w-full"
+                        tileDisabled={({ date, view }) => {
+                          if (view !== 'month') return false;
+                          const day = startOfLocalDay(date);
+                          const today = startOfLocalDay(new Date());
+                          if (!day || day < today) return true;
+                          const checkIn = dateRange[0] && !dateRange[1] ? startOfLocalDay(dateRange[0]) : null;
+                          return bookedDates.some((range) => {
+                            const bookedStart = startOfLocalDay(range.start);
+                            const bookedEnd = startOfLocalDay(range.end);
+                            if (!bookedStart || !bookedEnd) return false;
+                            if (!checkIn) return day >= bookedStart && day < bookedEnd;
+                            if (day <= checkIn) return true;
+                            return checkIn < bookedEnd && day > bookedStart;
+                          });
+                        }}
+                        className="listing-booking-calendar rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm w-full"
                       />
 
-                      {dateRange && dateRange[0] && dateRange[1] && bookedDates.some(range => {
-                        const checkIn = new Date(dateRange[0]);
-                        const checkOut = new Date(dateRange[1]);
-                        const start = new Date(range.start);
-                        const end = new Date(range.end);
-                        checkIn.setHours(0, 0, 0, 0);
-                        checkOut.setHours(0, 0, 0, 0);
-                        start.setHours(0, 0, 0, 0);
-                        end.setHours(0, 0, 0, 0);
-                        return checkIn < end && checkOut > start;
-                      }) && (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span>Unavailable dates are disabled. Your checkout date is not charged as a night.</span>
+                        {(dateRange[0] || dateRange[1]) && (
+                          <button type="button" onClick={() => setDateRange([null, null])} className="font-semibold text-rose-600 underline underline-offset-2 hover:text-rose-700 dark:text-rose-400">
+                            Clear dates
+                          </button>
+                        )}
+                      </div>
+
+                      {dateRange?.[0] && dateRange?.[1] && hasBookedNightOverlap(dateRange[0], dateRange[1], bookedDates) && (
                         <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
                           <span className="text-base">⚠️</span>
-                          <span>Selected dates include already booked / occupied days. Please select available dates.</span>
+                          <span>Those nights overlap an existing booking. Please choose different dates.</span>
                         </div>
                       )}
                     </div>
@@ -1911,9 +1945,9 @@ export default function Listing() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Date</label>
                         <input
                           type="date"
-                          value={selectedDate.toISOString().split('T')[0]}
-                          onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                          min={new Date().toISOString().split('T')[0]}
+                          value={dateOnlyString(selectedDate)}
+                          onChange={(e) => setSelectedDate(new Date(`${e.target.value}T00:00:00`))}
+                          min={dateOnlyString(new Date())}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm"
                         />
                       </div>
@@ -2387,9 +2421,9 @@ export default function Listing() {
         }}
         bookedDates={bookedDates}
         initialDates={{
-          checkIn: dateRange && dateRange[0] ? new Date(dateRange[0].getTime() - dateRange[0].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
-          checkOut: dateRange && dateRange[1] ? new Date(dateRange[1].getTime() - dateRange[1].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
-          selectedDate: selectedDate ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
+          checkIn: dateRange?.[0] ? dateOnlyString(dateRange[0]) : '',
+          checkOut: dateRange?.[1] ? dateOnlyString(dateRange[1]) : '',
+          selectedDate: selectedDate ? dateOnlyString(selectedDate) : '',
           startTime,
           endTime,
           selectedUnit,

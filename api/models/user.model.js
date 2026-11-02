@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    preferredLanguage: {
+        type: String,
+        enum: ['en', 'af', 'zu', 'xh', 'es', 'fr', 'de', 'pt', 'ar'],
+        default: "en",
+    },
     favorites: [{
         itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Listing' },
         addedAt: { type: Date, default: Date.now }
@@ -176,9 +181,12 @@ const userSchema = new mongoose.Schema({
         type: Number,
         default: 1
     },
-    contacts: [{
-        type: String,
-    }],
+    // Trusted contacts are private account data. Keep name and number together;
+    // Mixed also allows legacy string-only phone entries to be read safely.
+    contacts: {
+        type: [mongoose.Schema.Types.Mixed],
+        default: []
+    },
     accessContacts: {
         type: Boolean,
         default: false
@@ -233,8 +241,12 @@ const userSchema = new mongoose.Schema({
     },
     otpPurpose: {
         type: String,
-        enum: ['verify', 'reset', null],
+        enum: ['verify', 'reset', 'two-factor-login', 'two-factor-setup', 'two-factor-disable', null],
         default: null,
+    },
+    twoFactorEnabled: {
+        type: Boolean,
+        default: false,
     },
     termsAcceptedAt: {
         type: Date,

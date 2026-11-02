@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FaSpinner } from 'react-icons/fa';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -14,7 +14,12 @@ import AuthSideIllustration from '../components/AuthSideIllustration';
 import { persistSessionToken } from '../utils/authenticatedFetch';
 
 export default function SignIn() {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const location = useLocation();
+  const initialTwoFactorEmail = location.state?.twoFactorEmail || '';
+  const [formData, setFormData] = useState({ email: initialTwoFactorEmail, password: '' });
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState(Boolean(initialTwoFactorEmail));
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorDevCode, setTwoFactorDevCode] = useState('');
   const { loading, error, currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -51,6 +56,14 @@ export default function SignIn() {
 
       const data = await res.json();
 
+      if (res.ok && data.requiresTwoFactor) {
+        setTwoFactorChallenge(true);
+        setTwoFactorCode('');
+        setTwoFactorDevCode(data.devCode || '');
+        dispatch(signInFailure(null));
+        return;
+      }
+
       if (!res.ok) {
         if (data.requiresVerification) {
           navigate('/sign-up', { state: { email: formData.email, verify: true } });
@@ -72,6 +85,44 @@ export default function SignIn() {
       navigate('/');
     } catch (err) {
       dispatch(signInFailure(err.message || 'Unable to sign in. Please try again.'));
+    }
+  };
+
+  const handleVerifyTwoFactor = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(signInStart());
+      const res = await fetch('/api/auth/verify-two-factor-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: formData.email, otp: twoFactorCode }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) throw new Error(data.message || 'That sign-in code could not be verified.');
+      persistSessionToken(data);
+      dispatch(signInSuccess(data));
+      navigate('/');
+    } catch (err) {
+      dispatch(signInFailure(err.message || 'Unable to verify your sign-in code.'));
+    }
+  };
+
+  const handleResendTwoFactor = async () => {
+    try {
+      dispatch(signInStart());
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.requiresTwoFactor) throw new Error(data.message || 'Could not request a new sign-in code.');
+      setTwoFactorDevCode(data.devCode || '');
+      dispatch(signInFailure(null));
+    } catch (err) {
+      dispatch(signInFailure(err.message || 'Could not request a new sign-in code.'));
     }
   };
 
@@ -99,7 +150,20 @@ export default function SignIn() {
           <Link to="/how-it-works" className="mt-2 inline-flex text-xs font-semibold text-rose-600 underline decoration-rose-300 underline-offset-4 hover:text-rose-800">See how LoopOut works</Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {twoFactorChallenge ? (
+        <form onSubmit={handleVerifyTwoFactor} className="flex flex-col gap-4">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-slate-950">Verify it’s you</h2>
+            <p className="mt-1 text-sm text-slate-600">Enter the six-digit sign-in code sent to {formData.email}.</p>
+          </div>
+          {twoFactorDevCode && <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center text-sm font-semibold text-amber-900">Development code: {twoFactorDevCode}</p>}
+          <label htmlFor="two-factor-code" className="sr-only">Six-digit sign-in code</label>
+          <input id="two-factor-code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} required value={twoFactorCode} onChange={(event) => setTwoFactorCode(event.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-center text-lg tracking-[0.35em] text-slate-900 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/15" />
+          <button type="submit" disabled={loading || twoFactorCode.length !== 6} className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] px-6 py-3.5 text-[16px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">{loading ? 'Verifying…' : 'Verify and sign in'}</button>
+          <button type="button" disabled={loading} onClick={handleResendTwoFactor} className="text-sm font-semibold text-rose-700 underline underline-offset-2 disabled:opacity-50">Send code again</button>
+          <button type="button" disabled={loading} onClick={() => { setTwoFactorChallenge(false); setTwoFactorCode(''); setTwoFactorDevCode(''); dispatch(signInFailure(null)); }} className="text-sm text-slate-600 underline underline-offset-2">Back to sign in</button>
+        </form>
+        ) : <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="relative">
             <label htmlFor="email" className="sr-only">Email address</label>
             <input
@@ -158,7 +222,7 @@ export default function SignIn() {
           <div className="[&>button]:rounded-xl [&>button]:py-3.5">
               <OAuth />
           </div>
-        </form>
+        </form>}
 
         {/* Sign Up Link */}
         <div className="mt-8 text-center drop-shadow-sm">

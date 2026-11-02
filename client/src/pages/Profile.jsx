@@ -79,7 +79,7 @@ import {
   FaClipboardCheck
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import MyListing from "./MyListing";
 import { 
@@ -252,6 +252,7 @@ const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
 
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
+  const location = useLocation();
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
@@ -274,7 +275,7 @@ export default function Profile() {
   const [contactVisibility, setContactVisibility] = useState('private');
   const fileRef = useRef(null);
   const coverFileRef = useRef(null);
-  const [activeSection, setActiveSection] = useState("overview");
+  const [activeSection, setActiveSection] = useState(location.state?.activeSection === 'notifications' ? 'notifications' : 'overview');
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
   const isProvider = canCreateListings(currentUser);
@@ -1512,20 +1513,15 @@ export default function Profile() {
                           </div>
                         </div>
 
-                        {/* Contacts Access Row */}
-                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                          <div className="flex items-center justify-between mb-2">
-                             <div>
-                                <p className="font-medium text-[#484848] dark:text-white">loopOut Contact Access</p>
-                                <p className="text-sm text-[#767676] dark:text-white mt-1">Allow loopOut to sync your contacts for easy connections</p>
-                             </div>
-                             <ToggleSwitch enabled={accessContacts} setEnabled={setAccessContacts} />
+                        {/* Trusted contact controls live in Guardian Safety settings. */}
+                        <div className="flex flex-col gap-3 rounded-xl bg-gray-50 p-4 dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-medium text-[#484848] dark:text-white">Guardian Safety contacts</p>
+                            <p className="mt-1 text-sm text-[#767676] dark:text-gray-300">Manage trusted numbers and mutual-contact matching.</p>
                           </div>
-                          {accessContacts && (
-                            <p className="text-[10px] text-[#00A699] font-medium flex items-center gap-1">
-                               <CheckCircleIcon className="w-2.5 h-2.5" /> Contact syncing active
-                            </p>
-                          )}
+                          <button type="button" onClick={() => navigate('/settings?tab=guardian')} className="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-600 dark:border-gray-600 dark:text-white">
+                            Manage contacts
+                          </button>
                         </div>
                       </div>
 

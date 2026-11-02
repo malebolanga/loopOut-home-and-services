@@ -35,7 +35,7 @@ const issueSession = async (res, user, status = 200) => {
   } catch (err) {
     console.error('Failed to update lastLogin:', err.message);
   }
-  const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
+  const safeUser = safeUserPayload(user);
   return res.cookie('access_token', token, cookieOptions()).status(status).json({ ...safeUser, token, access_token: token, lastLogin: loginTime });
 };
 
@@ -58,6 +58,65 @@ const sendVerificationCode = async (user, subject = 'Your LoopOut verification c
     console.error('Verification code delivery failed:', error.message);
     return { success: false, otp };
   }
+};
+
+const sendTwoFactorCode = async (user, purpose) => {
+  const otp = generateOtp();
+  user.otp = hashOtp(otp);
+  user.otpExpiry = new Date(Date.now() + OTP_TTL_MS);
+  user.otpAttempts = 0;
+  user.otpPurpose = purpose;
+  await user.save();
+
+  const setup = purpose === 'two-factor-setup';
+  const text = `Your LoopOut ${setup ? 'security setup' : 'sign-in'} code is ${otp}. It expires in 10 minutes. Do not share this code.`;
+  const html = `<p>Use this one-time code to ${setup ? 'enable two-factor sign-in' : 'sign in to'} your LoopOut account. It expires in <strong>10 minutes</strong>.</p><p style="font-size:28px;letter-spacing:6px"><strong>${otp}</strong></p><p>Do not share this code.</p>`;
+  const delivery = await sendEmail(user.email, setup ? 'Confirm LoopOut two-factor setup' : 'Your LoopOut sign-in code', text, html);
+  return { success: delivery.success, otp };
+};
+
+const clearOtp = (user) => {
+  user.otp = undefined;
+  user.otpExpiry = undefined;
+  user.otpAttempts = 0;
+  user.otpPurpose = undefined;
+};
+
+const safeUserPayload = (user) => {
+  const safeUser = user.toObject ? user.toObject() : { ...user };
+  for (const field of ['password', 'otp', 'otpExpiry', 'otpAttempts', 'otpPurpose']) delete safeUser[field];
+  return safeUser;
+};
+
+const startTwoFactorLogin = async (user, res) => {
+  const now = Date.now();
+  const challengeIsValid = user.otpPurpose === 'two-factor-login' && user.otp && user.otpExpiry && now <= user.otpExpiry.getTime();
+  if (challengeIsValid && (user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) {
+    return res.status(429).json({ success: false, message: 'Too many incorrect codes. Wait for this code to expire and try signing in again.' });
+  }
+
+  const sentAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
+  const shouldSend = !challengeIsValid || now - sentAt >= OTP_RESEND_COOLDOWN_MS;
+  let developmentCode;
+  if (shouldSend) {
+    const delivery = await sendTwoFactorCode(user, 'two-factor-login');
+    if (!delivery.success) {
+      if (process.env.NODE_ENV === 'production') {
+        clearOtp(user);
+        await user.save();
+        return res.status(503).json({ success: false, message: 'We could not send your sign-in code. Please try again shortly.' });
+      }
+      developmentCode = delivery.otp;
+    }
+  }
+
+  return res.status(200).json({
+    success: true,
+    requiresTwoFactor: true,
+    email: user.email,
+    message: shouldSend ? 'Enter the one-time code sent to your email.' : 'A sign-in code was sent recently. Check your email for the code.',
+    ...(developmentCode ? { devCode: developmentCode } : {}),
+  });
 };
 
 const firebaseAuth = async () => {
@@ -190,6 +249,7 @@ export const signin = async (req, res, next) => {
       if (user.otpPurpose !== 'verify' || Date.now() - codeCreatedAt >= OTP_RESEND_COOLDOWN_MS) await sendVerificationCode(user);
       return res.status(403).json({ success: false, requiresVerification: true, email, message: 'Verify your email before signing in.' });
     }
+    if (user.twoFactorEnabled) return startTwoFactorLogin(user, res);
     return issueSession(res, user);
   } catch (error) { return next(error); }
 };
@@ -273,7 +333,131 @@ export const google = async (req, res, next) => {
         await user.save();
       }
     }
+    if (user.twoFactorEnabled) return startTwoFactorLogin(user, res);
     return issueSession(res, user);
+  } catch (error) { return next(error); }
+};
+
+export const verifyTwoFactorLogin = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const otp = String(req.body.otp || '').trim();
+    if (!emailPattern.test(email) || !/^\d{6}$/.test(otp)) return next(errorHandler(400, 'Enter the six-digit code sent to your email.'));
+
+    const user = await User.findOne({ email });
+    const challengeIsValid = user?.twoFactorEnabled && user.otpPurpose === 'two-factor-login' && user.otp && user.otpExpiry && Date.now() <= user.otpExpiry.getTime();
+    if (!challengeIsValid) return next(errorHandler(400, 'That sign-in code is invalid or has expired. Start sign-in again to request a new code.'));
+    if ((user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) return next(errorHandler(429, 'Too many incorrect codes. Start sign-in again later.'));
+    if (hashOtp(otp) !== user.otp) {
+      user.otpAttempts = (user.otpAttempts || 0) + 1;
+      await user.save();
+      return next(errorHandler(400, 'That sign-in code is invalid or has expired.'));
+    }
+
+    clearOtp(user);
+    await user.save();
+    return issueSession(res, user);
+  } catch (error) { return next(error); }
+};
+
+export const beginTwoFactorSetup = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return next(errorHandler(404, 'User not found.'));
+    if (user.twoFactorEnabled) return next(errorHandler(409, 'Two-factor sign-in is already enabled.'));
+
+    const now = Date.now();
+    const pendingCodeIsValid = user.otpPurpose === 'two-factor-setup' && user.otp && user.otpExpiry && now <= user.otpExpiry.getTime();
+    if (pendingCodeIsValid && (user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) return next(errorHandler(429, 'Too many incorrect codes. Wait for this setup code to expire and try again.'));
+    const sentAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
+    if (pendingCodeIsValid && now - sentAt < OTP_RESEND_COOLDOWN_MS) {
+      return res.json({ success: true, requiresCode: true, email: user.email, message: 'A setup code was sent recently. Check your email.' });
+    }
+
+    const delivery = await sendTwoFactorCode(user, 'two-factor-setup');
+    if (!delivery.success && process.env.NODE_ENV === 'production') {
+      clearOtp(user);
+      await user.save();
+      return next(errorHandler(503, 'We could not send your setup code. Please try again shortly.'));
+    }
+    return res.json({
+      success: true,
+      requiresCode: true,
+      email: user.email,
+      message: 'Enter the one-time code sent to your email to finish enabling two-factor sign-in.',
+      ...(!delivery.success && process.env.NODE_ENV !== 'production' ? { devCode: delivery.otp } : {}),
+    });
+  } catch (error) { return next(error); }
+};
+
+export const confirmTwoFactorSetup = async (req, res, next) => {
+  try {
+    const otp = String(req.body.otp || '').trim();
+    if (!/^\d{6}$/.test(otp)) return next(errorHandler(400, 'Enter the six-digit code sent to your email.'));
+    const user = await User.findById(req.user.id);
+    const challengeIsValid = user && !user.twoFactorEnabled && user.otpPurpose === 'two-factor-setup' && user.otp && user.otpExpiry && Date.now() <= user.otpExpiry.getTime();
+    if (!challengeIsValid) return next(errorHandler(400, 'That setup code is invalid or has expired. Request a new code.'));
+    if ((user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) return next(errorHandler(429, 'Too many incorrect codes. Request a new setup code later.'));
+    if (hashOtp(otp) !== user.otp) {
+      user.otpAttempts = (user.otpAttempts || 0) + 1;
+      await user.save();
+      return next(errorHandler(400, 'That setup code is invalid or has expired.'));
+    }
+
+    user.twoFactorEnabled = true;
+    clearOtp(user);
+    await user.save();
+    return res.json({ success: true, user: safeUserPayload(user), message: 'Two-factor sign-in is now enabled.' });
+  } catch (error) { return next(error); }
+};
+
+export const disableTwoFactor = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return next(errorHandler(404, 'User not found.'));
+    if (!user.twoFactorEnabled) return next(errorHandler(409, 'Two-factor sign-in is not enabled.'));
+
+    const now = Date.now();
+    const challengeIsValid = user.otpPurpose === 'two-factor-disable' && user.otp && user.otpExpiry && now <= user.otpExpiry.getTime();
+    if (challengeIsValid && (user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) return next(errorHandler(429, 'Too many incorrect codes. Wait for this code to expire and try again.'));
+    const sentAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
+    if (challengeIsValid && now - sentAt < OTP_RESEND_COOLDOWN_MS) {
+      return res.json({ success: true, requiresCode: true, email: user.email, message: 'A confirmation code was sent recently. Check your email.' });
+    }
+
+    const delivery = await sendTwoFactorCode(user, 'two-factor-disable');
+    if (!delivery.success && process.env.NODE_ENV === 'production') {
+      clearOtp(user);
+      await user.save();
+      return next(errorHandler(503, 'We could not send your confirmation code. Please try again shortly.'));
+    }
+    return res.json({
+      success: true,
+      requiresCode: true,
+      email: user.email,
+      message: 'Enter the one-time code sent to your email to turn off two-factor sign-in.',
+      ...(!delivery.success && process.env.NODE_ENV !== 'production' ? { devCode: delivery.otp } : {}),
+    });
+  } catch (error) { return next(error); }
+};
+
+export const confirmTwoFactorDisable = async (req, res, next) => {
+  try {
+    const otp = String(req.body.otp || '').trim();
+    if (!/^\d{6}$/.test(otp)) return next(errorHandler(400, 'Enter the six-digit code sent to your email.'));
+    const user = await User.findById(req.user.id);
+    const challengeIsValid = user?.twoFactorEnabled && user.otpPurpose === 'two-factor-disable' && user.otp && user.otpExpiry && Date.now() <= user.otpExpiry.getTime();
+    if (!challengeIsValid) return next(errorHandler(400, 'That confirmation code is invalid or has expired. Request a new code.'));
+    if ((user.otpAttempts || 0) >= OTP_MAX_ATTEMPTS) return next(errorHandler(429, 'Too many incorrect codes. Request a new confirmation code later.'));
+    if (hashOtp(otp) !== user.otp) {
+      user.otpAttempts = (user.otpAttempts || 0) + 1;
+      await user.save();
+      return next(errorHandler(400, 'That confirmation code is invalid or has expired.'));
+    }
+    user.twoFactorEnabled = false;
+    clearOtp(user);
+    await user.save();
+    return res.json({ success: true, user: safeUserPayload(user), message: 'Two-factor sign-in has been disabled.' });
   } catch (error) { return next(error); }
 };
 
@@ -313,14 +497,14 @@ export const validateToken = async (req, res, next) => {
 
     if (!decoded || !validToken) return res.status(200).json({ valid: false });
 
-    const user = await User.findById(decoded.id).select('-password -otp');
+    const user = await User.findById(decoded.id).select('-password -otp -otpExpiry -otpAttempts -otpPurpose');
     if (!user || user.isVerified === false) return res.status(200).json({ valid: false });
 
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
     try {
       await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date() } });
     } catch (err) {}
-    const { password, otp, ...safeUser } = user.toObject ? user.toObject() : user;
+    const safeUser = safeUserPayload(user);
     return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({
       valid: true,
       user: safeUser,

@@ -751,7 +751,7 @@ const getRecentBookersWithMutual = async (bookings, req) => {
       const currentUser = await User.findById(decoded.id).select('contacts accessContacts');
       if (currentUser && currentUser.accessContacts && currentUser.contacts?.length > 0) {
         hasContactsEnabled = true;
-        const normalize = (p) => p.replace(/\D/g, '').slice(-9);
+        const normalize = (contact) => String(typeof contact === 'string' ? contact : contact?.phone || '').replace(/\D/g, '').slice(-9);
         userContactsSet = new Set(currentUser.contacts.map(normalize));
       }
     } catch (err) {
@@ -762,7 +762,7 @@ const getRecentBookersWithMutual = async (bookings, req) => {
   return recentBookers.map(u => {
     let isMutual = false;
     if (hasContactsEnabled && u.phone) {
-      const normalize = (p) => p.replace(/\D/g, '').slice(-9);
+      const normalize = (p) => String(p || '').replace(/\D/g, '').slice(-9);
       const normPhone = normalize(u.phone);
       isMutual = normPhone.length >= 9 && userContactsSet.has(normPhone);
     }
