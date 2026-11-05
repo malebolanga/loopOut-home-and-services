@@ -1,14 +1,21 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Booking from './api/models/Booking.js';
-import Listing from './api/models/listing.model.js';
-import Helper from './api/models/helper.model.js';
-import Service from './api/models/service.model.js';
-import Event from './api/models/event.model.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import Booking from '../../api/models/Booking.js';
+import Listing from '../../api/models/listing.model.js';
+import Helper from '../../api/models/helper.model.js';
+import Service from '../../api/models/service.model.js';
+import Event from '../../api/models/event.model.js';
 
 dotenv.config();
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '../../api/.env') });
 
-const MONGO = process.env.MONGO || "mongodb+srv://Malebo_langa:malebo@loupeout-home.a9ccjpo.mongodb.net/?retryWrites=true&w=majority&appName=loupeOut-home";
+const MONGO = process.env.MONGO;
+if (!MONGO) {
+  console.error('Set the MONGO environment variable (see api/.env.example) before running this script.');
+  process.exit(1);
+}
 
 async function syncCounts() {
   try {

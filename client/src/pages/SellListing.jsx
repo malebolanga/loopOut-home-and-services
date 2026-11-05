@@ -65,12 +65,21 @@ export default function SellListing() {
   try {
     // Attempt to fetch from sell endpoint first
     let res = await fetch(`/api/sell/${id}`);
+    let isRegularListing = false;
     // If not found, fallback to regular listings endpoint
     if (res.status === 404) {
-      res = await fetch(`/api/listing/${id}`);
+      res = await fetch(`/api/listing/get/${id}`);
+      isRegularListing = true;
     }
     const data = await res.json();
-    if (!data.success) {
+    if (isRegularListing) {
+      // /api/listing/get/:id returns the listing document itself (or an error object), not { success, data }.
+      if (!res.ok || data.success === false) {
+        setError(data.message || 'Listing not found');
+      } else {
+        setListing(data);
+      }
+    } else if (!data.success) {
       setError(data.message || 'Listing not found');
     } else {
       setListing(data.data);

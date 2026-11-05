@@ -73,31 +73,36 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // Capacitor serves bundled Android files from http://localhost, https://localhost, or capacitor://localhost.
-// Keep all local origins in the credentialed CORS allow-list so API calls work on Android APK and browsers.
+// Origins are matched EXACTLY (by parsed hostname for localhost). Prefix/suffix matching such as
+// startsWith('http://localhost') or endsWith('.onrender.com') would also trust look-alike hosts like
+// http://localhost.evil.com or any other app hosted on Render, and CORS here allows credentials.
+const firebaseHostingOrigins = ['https://central-cinema-218106.web.app', 'https://central-cinema-218106.firebaseapp.com'];
+const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+const normalizeOrigin = (value) => (value || '').trim().replace(/\/+$/, '');
 const allowedOrigins = [
-  'http://localhost',
-  'https://localhost',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
   'capacitor://localhost',
+  'ionic://localhost',
+  ...firebaseHostingOrigins,
   process.env.CLIENT_URL,
-  process.env.RENDER_EXTERNAL_URL
-].filter(Boolean);
+  process.env.APP_URL,
+  process.env.RENDER_EXTERNAL_URL,
+  ...extraAllowedOrigins,
+].filter(Boolean).map(normalizeOrigin);
+
+const isLocalDevOrigin = (origin) => {
+  try {
+    const { protocol, hostname } = new URL(origin);
+    return ['http:', 'https:'].includes(protocol) && ['localhost', '127.0.0.1'].includes(hostname);
+  } catch {
+    return false;
+  }
+};
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Requests with no Origin header (same-origin, curl, server-to-server) are not browser cross-site requests.
     if (!origin) return callback(null, true);
-    if (
-      allowedOrigins.includes(origin) ||
-      allowedOrigins.some(o => origin.startsWith(o)) ||
-      origin.endsWith('.onrender.com') ||
-      origin.startsWith('http://localhost') ||
-      origin.startsWith('http://127.0.0.1') ||
-      origin.startsWith('https://localhost') ||
-      origin.startsWith('capacitor://')
-    ) {
+    if (allowedOrigins.includes(normalizeOrigin(origin)) || isLocalDevOrigin(origin)) {
       return callback(null, true);
     }
     return callback(null, false);
@@ -134,7 +139,7 @@ const apiLimiter = rateLimit({
   message: { success: false, message: 'Too many requests from this IP, please try again after 5 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => req.path === '/api/health',
+  skip: (req) => req.originalUrl.split('?')[0] === '/api/health',
 });
 const messagesLimiter = rateLimit({ windowMs: 5 * 60 * 1000, limit: 500, message: { success: false, message: 'Too many message requests, please slow down.' }, standardHeaders: true, legacyHeaders: false });
 const authLimiter = rateLimit({
@@ -150,7 +155,15 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 });
-app.use('/api/auth/', authLimiter); app.use('/api/messages', messagesLimiter); app.use('/api/', apiLimiter);
+// AI endpoints cost money per call and ai-help is open to signed-out visitors, so cap them much lower per IP.
+const aiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: isProduction ? (parseInt(process.env.AI_RATE_LIMIT) || 40) : 1000,
+  message: { success: false, message: 'Too many AI requests, please try again in a few minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/', authLimiter); app.use('/api/messages', messagesLimiter); app.use(['/api/ai-help', '/api/loopbot', '/api/ai'], aiLimiter); app.use('/api/', apiLimiter);
 app.use((req, res, next) => { const start = Date.now(); res.on('finish', () => console.log(`[API] ${req.method} ${req.url} - ${res.statusCode} (${Date.now() - start}ms)`)); next(); });
 app.use('/api/user', userRouter); app.use('/api/auth', authRouter); app.use('/api/search', searchRouter); app.use('/api/listing', listingRouter); app.use('/api/comments', commentRouter); app.use('/api/comment', commentRouter); app.use('/api/helper', helperRouter); app.use('/api/event', eventRouter); app.use('/api/carwash', carwashRoutes); app.use('/api/service-comments', serviceCommentRouter); app.use('/api/service-comment', serviceCommentRouter); app.use('/api/trips', tripRouter); app.use('/api/helper-comments', helperCommentRouter); app.use('/api/helper-comment', helperCommentRouter); app.use('/api/event-comments', eventCommentRouter); app.use('/api/event-comment', eventCommentRouter); app.use('/api/service', serviceRouter); app.use('/api/notifications', notificationRoute); app.use('/api/messages', messageRouter); app.use('/api/payment', paymentRouter); app.use('/api/promotion', promotionRouter); app.use('/api/wishlist', wishlistRouter); app.use('/api/explore', exploreRouter); app.use('/api/bookings', bookingRouter); app.use('/api/looking-for', lookingForRouter); app.use('/api/ai-help', aiHelpRouter); app.use('/api/loopbot', aiHelpRouter); app.use('/api/verification', verificationRouter); app.use('/api/sos', sosRouter); app.use('/api/ai', aiRouter); app.use('/api/sell', sellRouter); app.use('/api/stats', statsRouter); app.use('/api/lunch', lunchRouter); app.use('/api/uploads', uploadRouter); app.use('/uploads', express.static(path.resolve(__dirname, '../client/public/uploads')), (_req, res) => res.redirect('https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=800'));
 app.get('/api/health', (_req, res) => {

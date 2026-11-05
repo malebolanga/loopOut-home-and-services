@@ -16,7 +16,7 @@ export default function ListingsPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/listings?type=${type}`);
+        const response = await fetch(`/api/listing/get?type=${encodeURIComponent(type)}`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status} - ${response.statusText}`);
         }

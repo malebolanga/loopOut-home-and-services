@@ -6,16 +6,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../api/.env') });
 
 async function backfill() {
   await mongoose.connect(process.env.MONGO);
   console.log("Connected to MongoDB.");
 
-  const Booking = (await import('./api/models/Booking.js')).default;
-  const Listing = (await import('./api/models/listing.model.js')).default;
-  const Helper = (await import('./api/models/helper.model.js')).default;
-  const Service = (await import('./api/models/service.model.js')).default;
+  const Booking = (await import('../../api/models/Booking.js')).default;
+  const Listing = (await import('../../api/models/listing.model.js')).default;
+  const Helper = (await import('../../api/models/helper.model.js')).default;
+  const Service = (await import('../../api/models/service.model.js')).default;
 
   // Initialize all to 0
   await Listing.updateMany({}, { $set: { bookingsCount: 0 } });
