@@ -1,6 +1,6 @@
 // seed_hiking_event.js - script to create a sample hiking event
 import mongoose from 'mongoose';
-import Event from '../api/models/event.model.js';
+import Event from '../../api/models/event.model.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

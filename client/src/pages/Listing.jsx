@@ -34,7 +34,7 @@ import {
   FaWifi, FaParking, FaSwimmingPool, FaUtensils, FaFire, FaTv, FaWarehouse,
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
-  FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
+  FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok,
   FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight, FaHotel,
   FaTimes, FaRegCommentDots, FaEnvelope, FaPhone
 } from "react-icons/fa";
@@ -146,14 +146,6 @@ const SOCIAL_PLATFORMS = [
   { name: 'twitter', icon: FaTwitter, color: 'text-blue-400', baseUrl: 'https://twitter.com/' },
   { name: 'linkedin', icon: FaLinkedin, color: 'text-blue-700', baseUrl: 'https://linkedin.com/in/' },
   { name: 'tiktok', icon: FaTiktok, color: 'text-black', baseUrl: 'https://tiktok.com/@' },
-];
-
-const ADVERTISING_PLATFORMS = [
-  { name: 'Facebook Ads', icon: FaFacebook, color: 'bg-blue-500', reach: '2.9B' },
-  { name: 'Google Ads', icon: FaGlobe, color: 'bg-red-500', reach: '4.3B' },
-  { name: 'Instagram Ads', icon: FaInstagram, color: 'bg-pink-500', reach: '2B' },
-  { name: 'Twitter Ads', icon: FaTwitter, color: 'bg-blue-400', reach: '450M' },
-  { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black', reach: '1B' },
 ];
 
 // Replaced with 3-step bottom popout sheet
@@ -748,14 +740,6 @@ export default function Listing() {
   });
   const [ratingLoading, setRatingLoading] = useState(false);
 
-  const [advertisingState, setAdvertisingState] = useState({
-    showAdModal: false,
-    selectedPlatforms: [],
-    budget: 250,
-    duration: 7,
-    loading: false,
-    success: false
-  });
 
   const [socialMediaVerified, setSocialMediaVerified] = useState({
     facebook: true,
@@ -993,52 +977,6 @@ export default function Listing() {
   };
 
   const hostStarRating = Math.min(5, Math.floor(hostData.likeCount / 40));
-
-  const handleAdPlatformToggle = (platform) => {
-    setAdvertisingState(prev => ({
-      ...prev,
-      selectedPlatforms: prev.selectedPlatforms.includes(platform)
-        ? prev.selectedPlatforms.filter(p => p !== platform)
-        : [...prev.selectedPlatforms, platform]
-    }));
-  };
-
-  const handleAdvertiseSubmit = async () => {
-    if (!currentUser) {
-      navigate('/sign-in');
-      return;
-    }
-    if (advertisingState.selectedPlatforms.length === 0) {
-      alert('Please select at least one advertising platform');
-      return;
-    }
-
-    setAdvertisingState(prev => ({ ...prev, loading: true }));
-    try {
-      const token = currentUser?.token || currentUser?.access_token || '';
-      const response = await fetch('/api/listing/advertise', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          listingId: listing._id,
-          platforms: advertisingState.selectedPlatforms,
-          budget: advertisingState.budget,
-          duration: advertisingState.duration
-        })
-      });
-
-      if (response.ok) {
-        setAdvertisingState(prev => ({ ...prev, loading: false, success: true, showAdModal: false }));
-        alert('Advertising campaign started successfully!');
-      }
-    } catch (error) {
-      console.error('Advertising error:', error);
-      setAdvertisingState(prev => ({ ...prev, loading: false }));
-    }
-  };
 
   const verifySocialMedia = async (hostData) => {
     if (!hostData) return;

@@ -64,7 +64,7 @@ export default function HomeExperience() {
     let cancelled = false;
     const load = async () => {
       try {
-        const responses = await Promise.allSettled([fetch('/api/services?limit=6'), fetch('/api/helpers?limit=6')]);
+        const responses = await Promise.allSettled([fetch('/api/service/get?limit=6'), fetch('/api/helper/get?limit=6')]);
         const merged = [];
         for (const result of responses) {
           if (result.status !== 'fulfilled' || !result.value.ok) continue;

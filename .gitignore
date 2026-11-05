@@ -16,6 +16,7 @@ mobile/.env
 *.env.local
 *.env.production
 !.env.example
+!.env.*.example
 !api/.env.example
 !client/.env.example
 
@@ -49,3 +50,13 @@ firebase-service-account.json
 .gradle/
 .gradle-build-home/
 client/android/.gradle-build-home/
+
+# Android / iOS build artifacts and signing material - never commit these
+*.apk
+*.aab
+*.jks
+*.keystore
+keystore.properties
+client/android/keystore.properties
+client/build_*.txt
+

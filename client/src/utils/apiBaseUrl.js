@@ -7,9 +7,17 @@ const isLocalBrowser = typeof window !== 'undefined'
 // Local web development should use Vite's /api and /uploads proxies so the
 // frontend reads the same local backend code being edited. Native builds keep
 // using the configured remote API URL.
+// Production API used when no VITE_API_BASE_URL was supplied at build time AND the app is not served by the API
+// itself: the native Android/iOS shells (served from https://localhost) and the Firebase Hosting web build
+// (static files only, no /api). On the Render-hosted site the API is same-origin, so no base URL is needed.
+const DEFAULT_PRODUCTION_API_URL = 'https://loupeout-home-7rlt.onrender.com';
+const isStaticHostedWeb = typeof window !== 'undefined'
+  && /\.(web\.app|firebaseapp\.com)$/i.test(window.location.hostname);
+const fallbackApiBaseUrl = (Capacitor.isNativePlatform() || isStaticHostedWeb) ? DEFAULT_PRODUCTION_API_URL : '';
+
 const configuredApiBaseUrl = isLocalBrowser
   ? ''
-  : (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+  : (import.meta.env.VITE_API_BASE_URL || fallbackApiBaseUrl).replace(/\/+$/, '');
 
 // Native app check or explicit configured base URL
 const isCapacitorApp = () => Capacitor.isNativePlatform() || window.location.origin.includes('localhost') || window.location.protocol === 'file:';
