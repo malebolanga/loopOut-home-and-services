@@ -17,6 +17,9 @@ router.get('/get', getEvents);
 router.get('/:id', getEvent);
 router.put('/:id', verifyToken, requireOfferingType('property', 'goods'), updateEvent);
 router.delete('/:id', verifyToken, deleteEvent);
+// Aliases used by the web client (same URL style as /api/listing/update/:id and /delete/:id).
+router.put('/update/:id', verifyToken, requireOfferingType('property', 'goods'), updateEvent);
+router.delete('/delete/:id', verifyToken, deleteEvent);
 router.get('/similar/:id', getSimilarEvents);
 
 export default router;
