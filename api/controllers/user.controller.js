@@ -11,12 +11,10 @@ import Booking from '../models/Booking.js';
 import Notification from '../models/notification.model.js';
 import Escrow from '../models/escrow.model.js';
 import Comment from '../models/comment.model.js';
-import Comments from '../models/comments.model.js';
 import HelperComment from '../models/helper-comment.model.js';
 import ServiceComment from '../models/service-comment.model.js';
 import EventComment from '../models/event-comment.model.js';
 import Review from '../models/Review.js';
-import HostRating from '../models/models/HostRating.js';
 import Conversation from '../models/Conversation.model.js';
 import Message from '../models/Message.model.js';
 import { deleteFirebaseUser, deleteFirebaseUserByEmail, verifyFirebaseIdToken } from '../utils/pushNotifications.js';
@@ -293,7 +291,7 @@ export const deleteUser = async (req, res, next) => {
       bookingIds.length ? Escrow.deleteMany({ bookingId: { $in: bookingIds } }) : Promise.resolve(),
       Message.deleteMany({ $or: [{ sender: userId }, ...(conversationIds.length ? [{ conversationId: { $in: conversationIds } }] : [])] }),
       Conversation.deleteMany({ participants: userId }),
-      ...[Comment, Comments, HelperComment, ServiceComment, EventComment].map((Model) => Model.deleteMany({
+      ...[Comment, HelperComment, ServiceComment, EventComment].map((Model) => Model.deleteMany({
         $or: [
           { userId }, { 'replies.userId': userId },
           ...(ownedListingIds.length ? [{ listingId: { $in: ownedListingIds } }] : []),
@@ -303,12 +301,12 @@ export const deleteUser = async (req, res, next) => {
         ]
       })),
       Review.deleteMany({ $or: [{ author: userId }, { 'replies.author': userId }] }),
-      HostRating.deleteMany({ $or: [{ hostId: userId }, { userId }] }),
-      ...[Comment, Comments, HelperComment, ServiceComment, EventComment, Review].map((Model) => Model.updateMany(
+      ...[Comment, HelperComment, ServiceComment, EventComment, Review].map((Model) => Model.updateMany(
         { $or: [{ likes: userId }, { 'replies.userId': userId }, { 'replies.author': userId }] },
         { $pull: { likes: userId, replies: { $or: [{ userId }, { author: userId }] } } }
       )),
       User.updateMany({ $or: [{ followers: userId }, { following: userId }] }, { $pull: { followers: userId, following: userId } }),
+      User.updateMany({ 'ratedBy.userId': userId }, { $pull: { ratedBy: { userId } } }),
       Booking.deleteMany(bookingFilter),
       Listing.deleteMany({ userRef: userId }),
       Service.deleteMany({ userRef: userId }),
