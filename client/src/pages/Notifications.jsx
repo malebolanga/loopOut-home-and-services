@@ -164,6 +164,10 @@ export default function Notifications() {
     const [foodShopDetails, setFoodShopDetails] = useState(null);
     const [loadingFoodOrder, setLoadingFoodOrder] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const [nextOffset, setNextOffset] = useState(0);
+    const [serverUnreadCount, setServerUnreadCount] = useState(0);
     const [error, setError] = useState(null);
 
     const getToken = useCallback(() => {
@@ -282,8 +286,9 @@ export default function Notifications() {
         return () => { active = false; };
     }, [selectedNotification, getToken]);
 
-    const fetchNotifications = useCallback(async ({ silent = false } = {}) => {
+    const fetchNotifications = useCallback(async ({ silent = false, append = false } = {}) => {
         try {
+            if (append) setLoadingMore(true);
             if (!silent) {
                 setLoading(true);
                 setError(null);
@@ -291,7 +296,8 @@ export default function Notifications() {
             let apiNotifs = [];
             try {
                 const token = getToken();
-                const res = await fetch('/api/notifications', {
+                const offset = append ? nextOffset : 0;
+                const res = await fetch(`/api/notifications?limit=20&offset=${offset}`, {
                     credentials: 'include',
                     headers: {
                         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -300,6 +306,9 @@ export default function Notifications() {
                 if (res.ok) {
                     const data = await res.json();
                     apiNotifs = data.notifications || [];
+                    setServerUnreadCount(Number(data.unreadCount) || 0);
+                    setHasMore(Boolean(data.hasMore));
+                    setNextOffset(Number(data.nextOffset) || 0);
                 } else {
                     throw new Error(`Could not load notifications (${res.status}).`);
                 }
@@ -336,13 +345,19 @@ export default function Notifications() {
                 (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
 
-            setNotifications(combined);
+            setNotifications((previous) => {
+                if (!append) return combined;
+                const byId = new Map(previous.map((entry) => [String(entry._id || entry.id), entry]));
+                combined.forEach((entry) => byId.set(String(entry._id || entry.id), entry));
+                return [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            });
         } catch (err) {
             if (!silent) setError(err.message);
         } finally {
             if (!silent) setLoading(false);
+            if (append) setLoadingMore(false);
         }
-    }, [currentUser?._id, getToken]);
+    }, [currentUser?._id, getToken, nextOffset]);
 
     useEffect(() => {
         if (!currentUser) {
@@ -367,6 +382,7 @@ export default function Notifications() {
     }, [currentUser?._id, navigate, fetchNotifications]);
 
     const markAsRead = async (id) => {
+        const wasUnread = notifications.some((notification) => (notification._id === id || notification.id === id) && !notification.read);
         try {
             const token = getToken();
             await fetch(`/api/notifications/${id}/read`, {
@@ -381,6 +397,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.map(n => ((n._id === id || n.id === id) ? { ...n, read: true } : n)));
+        if (wasUnread) setServerUnreadCount((count) => Math.max(0, count - 1));
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -392,6 +409,7 @@ export default function Notifications() {
     };
 
     const deleteNotification = async (id) => {
+        const removedUnread = notifications.some((notification) => (notification._id === id || notification.id === id) && !notification.read);
         try {
             const token = getToken();
             await fetch(`/api/notifications/${id}`, {
@@ -406,6 +424,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
+        if (removedUnread) setServerUnreadCount((count) => Math.max(0, count - 1));
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -431,6 +450,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setServerUnreadCount(0);
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -456,6 +476,7 @@ export default function Notifications() {
         }
 
         setNotifications([]);
+        setServerUnreadCount(0);
         localStorage.removeItem('loopout_local_notifications');
     };
 
@@ -680,7 +701,7 @@ export default function Notifications() {
         );
     }
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = Math.max(notifications.filter(n => !n.read).length, serverUnreadCount);
 
     return (
         <div className="app-safe-top max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 app-safe-content-bottom pb-36 min-h-screen">
@@ -725,7 +746,6 @@ export default function Notifications() {
                     </div>
                 )}
             </div>
-
             <FoodCollectionReadyBanner navigate={navigate} />
 
             {error && (
@@ -896,6 +916,15 @@ export default function Notifications() {
                             );
                         })}
                     </AnimatePresence>
+                </div>
+            )}
+
+            {hasMore && (
+                <div className="mt-6 flex justify-center">
+                    <button type="button" disabled={loadingMore} onClick={() => fetchNotifications({ append: true })}
+                        className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-800 shadow-sm disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                        {loadingMore ? 'Loading…' : 'Load more notifications'}
+                    </button>
                 </div>
             )}
 

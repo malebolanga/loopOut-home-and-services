@@ -1,3 +1,4 @@
+import Booking from '../models/Booking.js';
 ﻿import Event from '../models/event.model.js';
 import { errorHandler } from '../utils/error.js';
 import User from '../models/user.model.js'; // Add this import
@@ -12,7 +13,11 @@ export const createEvent = async (req, res, next) => {
       return next(errorHandler(400, imageCheck.message));
     }
 
-    const event = await Event.create(req.body);
+    const capacity = Number(req.body.capacity);
+    const eventData = { ...req.body, userRef: req.user.id, ticketsBooked: 0 };
+    if (Number.isInteger(capacity) && capacity > 0) eventData.capacity = capacity;
+    else delete eventData.capacity;
+    const event = await Event.create(eventData);
 
     // Add event to user's events array
     await User.findByIdAndUpdate(req.body.userRef, {
@@ -89,9 +94,19 @@ export const updateEvent = async (req, res, next) => {
       }
     }
 
+    const existingEvent = await Event.findById(req.params.id);
+    if (!existingEvent) return next(errorHandler(404, 'Event not found'));
+    const ownerId = (existingEvent.userRef?._id || existingEvent.userRef)?.toString();
+    if (ownerId !== req.user?.id && !req.user?.isAdmin) return next(errorHandler(403, 'You can only update your own events.'));
+    const capacity = Number(req.body.capacity);
+    if (req.body.capacity !== undefined && req.body.capacity !== '' && (!Number.isInteger(capacity) || capacity < Number(existingEvent.ticketsBooked || 0))) {
+      return next(errorHandler(400, 'Event capacity cannot be lower than tickets already reserved.'));
+    }
+    const updateData = { ...req.body };
+    delete updateData.ticketsBooked;
     const event = await Event.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateData },
       { new: true }
     );
     if (!event) return next(errorHandler(404, 'Event not found'));
@@ -103,9 +118,25 @@ export const updateEvent = async (req, res, next) => {
 
 export const deleteEvent = async (req, res, next) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const event = await Event.findById(req.params.id);
     if (!event) return next(errorHandler(404, 'Event not found'));
-    res.status(200).json('Event has been deleted');
+
+    const ownerId = (event.userRef?._id || event.userRef)?.toString();
+    if (req.user?.id !== ownerId && !req.user?.isAdmin) {
+      return next(errorHandler(403, 'You can only delete your own events!'));
+    }
+
+    const activeBookingCount = await Booking.countDocuments({
+      event: event._id,
+      status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing', 'work_completed'] },
+      endDate: { $gte: new Date() }
+    });
+    if (activeBookingCount > 0) {
+      return next(errorHandler(409, 'This event has active attendee registrations. Cancel or conclude them before deleting the event.'));
+    }
+
+    await Event.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Event has been deleted' });
   } catch (error) {
     next(error);
   }

@@ -393,7 +393,7 @@ export default function FreshaCalendarPage() {
   };
   const handleToday = () => setSelectedDate(new Date());
 
-  // Handle status update (e.g., Accept/Confirm or Mark Complete)
+  // Handle status update (e.g., Accept/Confirm or provider work completion)
   const handleUpdateStatus = async (bookingId, newStatus) => {
     try {
       const res = await authenticatedFetch(`/api/bookings/update/${bookingId}`, {
@@ -942,10 +942,10 @@ export default function FreshaCalendarPage() {
 
                   {selectedBooking.isHostBooking && ['confirmed', 'approved', 'assigned', 'ongoing'].includes(selectedBooking.status) && (
                     <button
-                      onClick={() => handleUpdateStatus(selectedBooking._id, 'completed')}
+                      onClick={() => handleUpdateStatus(selectedBooking._id, 'work_completed')}
                       className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition shadow-md"
                     >
-                      ✓ Mark Appointment Completed
+                      ✓ Mark Work Complete
                     </button>
                   )}
                 </div>

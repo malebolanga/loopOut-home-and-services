@@ -13,6 +13,8 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
+import { auth } from "../firebase";
+import { GoogleAuthProvider, reauthenticateWithPopup } from 'firebase/auth';
 import {
   updateUserStart,
   updateUserSuccess,
@@ -753,10 +755,15 @@ export default function Profile() {
   const saveSettings = async (settings) => {
     try {
       dispatch(updateUserStart());
+      let payload = settings;
+      if (settings.newPassword !== undefined && !settings.currentPassword && auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com')) {
+        const result = await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+        payload = { ...settings, firebaseIdToken: await result.user.getIdToken(true) };
+      }
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok || data.success === false) throw new Error(data.message || 'Unable to save settings.');
@@ -796,14 +803,33 @@ export default function Profile() {
 
   const handleDeleteUser = async () => {
     if (!window.confirm('Delete your account permanently? This cannot be undone.')) return;
-    const currentPassword = window.prompt('Enter your current password to confirm account deletion:');
-    if (!currentPassword) return;
+    let currentPassword = '';
+    let firebaseIdToken = '';
+    const isGoogleAccount = auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com') || currentUser?.authProviders?.includes('google');
+
+    if (isGoogleAccount) {
+      if (auth.currentUser) {
+        try {
+          firebaseIdToken = await auth.currentUser.getIdToken(true);
+        } catch {
+          try {
+            const result = await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+            firebaseIdToken = await result.user.getIdToken(true);
+          } catch (error) {
+            console.warn('Google re-authentication could not be completed:', error.message);
+          }
+        }
+      }
+    } else {
+      currentPassword = window.prompt('Enter your current password to confirm account deletion:') || '';
+      if (!currentPassword) return;
+    }
     try {
       dispatch(deleteUserStart());
       const res = await fetch(`/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword }),
+        body: JSON.stringify({ currentPassword, firebaseIdToken, isGoogleAuth: Boolean(isGoogleAccount), confirmDelete: true }),
       });
       const data = await res.json();
       if (data.success === false) {
@@ -1622,25 +1648,25 @@ export default function Profile() {
               <SectionCard title="Notifications" icon={BellIcon}>
                 <div className="max-w-2xl space-y-6">
                   <div>
-                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Email notifications</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">App and push notifications</h4>
                     <div className="space-y-2">
                       <Checkbox
                         label="Booking updates"
                         checked={notifications.activity.bookingUpdates}
                         onChange={() => toggleNotification('activity', 'bookingUpdates')}
-                        helperText="Stay informed about your booking status"
+                        helperText="Receive booking updates in LoopOut and on registered devices"
                       />
                       <Checkbox
                         label="Payment receipts"
                         checked={notifications.activity.paymentReceipts}
                         onChange={() => toggleNotification('activity', 'paymentReceipts')}
-                        helperText="Receive confirmation for all your payments"
+                        helperText="Get an alert when a booking payment is released"
                       />
                       <Checkbox
-                        label="Promotions and offers"
-                        checked={notifications.promotions.specialOffers}
-                        onChange={() => toggleNotification('promotions', 'specialOffers')}
-                        helperText="Get exclusive deals and discounts"
+                        label="New listings and services nearby"
+                        checked={notifications.promotions.platformUpdates}
+                        onChange={() => toggleNotification('promotions', 'platformUpdates')}
+                        helperText="Get in-app updates when new posts appear in your area"
                       />
                     </div>
                   </div>

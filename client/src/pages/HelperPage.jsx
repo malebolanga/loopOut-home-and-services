@@ -668,16 +668,16 @@ export default function HelperPage() {
 
   // Chef-specific options
   const mealTypes = [
-    { id: 'breakfast', name: 'Breakfast & Brunch', icon: 'ðŸ¥ž', description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices' },
-    { id: 'desserts', name: 'Desserts & High Tea', icon: 'ðŸ°', description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies' },
-    { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: 'ðŸ‘‘', description: 'Multi-course fine dining: starter, palate cleanser, gourmet main & decadent dessert' },
-    { id: 'lunch', name: 'Lunch Feast Banquet', icon: 'ðŸ±', description: 'Plated 2-course hearty lunch or corporate feast with fresh salads and sides' },
-    { id: 'dinner', name: 'Private Dinner Experience', icon: 'ðŸ·', description: 'Intimate evening fine-dining experience cooked and plated fresh at your table' },
-    { id: 'braai', name: 'Braai / BBQ Smokehouse', icon: 'ðŸ¥©', description: 'Braai master experience with premium meats, gourmet marinades and fresh sides' },
-    { id: 'buffet', name: 'Buffet Spread', icon: 'ðŸ²', description: 'Generous hot and cold buffet spread for gatherings, functions and parties' },
-    { id: 'appetizers', name: 'CanapÃ©s & Finger Food', icon: 'ðŸ¢', description: 'Cocktail finger foods, gourmet skewers, sliders & elegant bite-sized platters' },
-    { id: 'meal-prep', name: 'Meal Prep / Batch Cooking', icon: 'ðŸ¥—', description: 'Weekly portioned and packaged meal prep designed for healthy home dining' },
-    { id: 'vegan', name: 'Vegan / Plant-Based Feast', icon: 'ðŸ¥‘', description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition' }
+    { id: 'breakfast', name: 'Breakfast & Brunch', icon: '🥞', description: 'Artisanal eggs benedict, fluffy pancakes, fresh pastries, seasonal fruit, premium coffee & juices' },
+    { id: 'desserts', name: 'Desserts & High Tea', icon: '🍰', description: 'Gourmet dessert station, custom cakes, delicate pastries, mousses & high-tea sweet delicacies' },
+    { id: 'full-course', name: 'Full Course Menu / Tasting Menu', icon: '👑', description: 'Multi-course fine dining: starter, palate cleanser, gourmet main & decadent dessert' },
+    { id: 'lunch', name: 'Lunch Feast Banquet', icon: '🍱', description: 'Plated 2-course hearty lunch or corporate feast with fresh salads and sides' },
+    { id: 'dinner', name: 'Private Dinner Experience', icon: '🍷', description: 'Intimate evening fine-dining experience cooked and plated fresh at your table' },
+    { id: 'braai', name: 'Braai / BBQ Smokehouse', icon: '🥩', description: 'Braai master experience with premium meats, gourmet marinades and fresh sides' },
+    { id: 'buffet', name: 'Buffet Spread', icon: '🍲', description: 'Generous hot and cold buffet spread for gatherings, functions and parties' },
+    { id: 'appetizers', name: 'Canapés & Finger Food', icon: '🍢', description: 'Cocktail finger foods, gourmet skewers, sliders & elegant bite-sized platters' },
+    { id: 'meal-prep', name: 'Meal Prep / Batch Cooking', icon: '🥗', description: 'Weekly portioned and packaged meal prep designed for healthy home dining' },
+    { id: 'vegan', name: 'Vegan / Plant-Based Feast', icon: '🥑', description: '100% gourmet plant-based fine dining packed with vibrant flavors & balanced nutrition' }
   ];
 
   const cuisineTypes = [
@@ -766,52 +766,6 @@ export default function HelperPage() {
     postalCode: '',
     country: 'South Africa'
   });
-
-  // Social Media Verification States
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
-
   const [bookingData, setBookingData] = useState({
     name: '',
     phone: '',
@@ -820,6 +774,7 @@ export default function HelperPage() {
     serviceFrequency: '',
     locationOption: 'comeToYou',
     address: '',
+    dogsAtProperty: '',
     date: '',
     time: '',
     durationHours: '',
@@ -884,19 +839,6 @@ export default function HelperPage() {
     ironingLoad: ''
   });
   const [totalPrice, setTotalPrice] = useState(0);
-
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
-
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1015,7 +957,7 @@ export default function HelperPage() {
     const diffInMs = new Date() - new Date(dateString);
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     if (diffInDays < 1) return 'Today';
-    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
     const diffInWeeks = Math.floor(diffInDays / 7);
     if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
     const diffInMonths = Math.floor(diffInDays / 30);
@@ -1115,11 +1057,13 @@ export default function HelperPage() {
       throw new Error('Please provide a more detailed address');
     }
 
-    // Check for basic address components
-    const hasStreet = /\d+\s+[A-Za-z\s]+/.test(addressStr);
-    const hasCity = /[A-Za-z]{2,}/.test(addressStr);
+    // Accept common address formats such as "27 Somerset Road, Cape Town",
+    // "House 14, Madiba Park, Polokwane", and extensions/stands.
+    const addressWords = addressStr.match(/[A-Za-zÀ-ÿ]+/g) || [];
+    const hasStreetNumber = /\b\d+[A-Za-z]?\b/.test(addressStr);
+    const hasStreetAndCityDetail = addressWords.length >= 2;
 
-    if (!hasStreet || !hasCity) {
+    if (!hasStreetNumber || !hasStreetAndCityDetail) {
       throw new Error('Please include street number, street name, and city');
     }
 
@@ -1196,158 +1140,33 @@ export default function HelperPage() {
   const getLocationSpecificMessage = (bookingData, provider) => {
     const locationInfo = handleLocationInfo(bookingData, provider);
 
-    let locationMessage = `ðŸ“ *Location Details:*%0A`;
-    locationMessage += `â€¢ Type: ${locationInfo.displayName}%0A`;
+    let locationMessage = `📍 *Location Details:*%0A`;
+    locationMessage += `• Type: ${locationInfo.displayName}%0A`;
 
     if (locationInfo.address) {
-      locationMessage += `â€¢ Address: ${locationInfo.address}%0A`;
+      locationMessage += `• Address: ${locationInfo.address}%0A`;
       if (locationInfo.mapLink && locationInfo.mapLink !== '#') {
-        locationMessage += `â€¢ Navigation: ${locationInfo.mapLink}%0A`;
+        locationMessage += `• Navigation: ${locationInfo.mapLink}%0A`;
       }
     }
 
     if (locationInfo.instructions) {
-      locationMessage += `â€¢ Instructions: ${locationInfo.instructions}%0A`;
+      locationMessage += `• Instructions: ${locationInfo.instructions}%0A`;
     }
 
     if (locationInfo.travelFee > 0) {
-      locationMessage += `â€¢ Travel Fee: R${locationInfo.travelFee}%0A`;
+      locationMessage += `• Travel Fee: R${locationInfo.travelFee}%0A`;
     }
 
     return locationMessage;
   };
 
   // ==================== END ENHANCED LOCATION FUNCTIONS ====================
-
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
-
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
-
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (helperData) => {
-    setVerifyingSocialMedia(true);
 
-    try {
-      // Simulate AI API calls to check social media presence
-      setTimeout(() => {
-        // Generate realistic mock data based on helper information
-        const name = helperData.name || '';
-
-        // AI logic to determine social media presence
-        const hasFacebook = Math.random() > 0.3; // 70% chance
-        const hasInstagram = Math.random() > 0.2; // 80% chance
-        const hasLinkedIn = Math.random() > 0.4; // 60% chance
-        const hasTwitter = Math.random() > 0.5; // 50% chance
-
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
-          verified: Math.random() > 0.8, // Higher verification chance for professionals
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error verifying social media:', error);
-      setVerifyingSocialMedia(false);
-    }
-  };
 
   useEffect(() => {
     const fetchHelper = async () => {
@@ -1496,113 +1315,6 @@ export default function HelperPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Simulate AI assessment of helper content
-  const simulateAiAssessment = (helperData) => {
-    // Simulate processing delay
-    setTimeout(() => {
-      const description = helperData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
-
-      // Barber-specific scoring
-      if (helperData.type === 'barber' || helperData.type === 'barbar') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("modern") || description.includes("trends")) descScore += 1;
-        if (description.includes("fade") || description.includes("beard")) descScore += 1;
-      }
-
-      // Beauty-specific scoring
-      if (helperData.type === 'beauty' || helperData.type === 'spa') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("premium") || description.includes("professional")) descScore += 1;
-      }
-
-      // Chef-specific scoring
-      if (helperData.type === 'chef' || helperData.type === 'cooking') {
-        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
-        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
-      }
-
-      // Tattoo-specific scoring
-      if (helperData.type === 'tattoo') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-      }
-
-      // Tutor-specific scoring
-      if (helperData.type === 'tutor') {
-        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
-        if (description.includes("degree") || description.includes("education")) descScore += 1;
-        if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      }
-
-      // Photography-specific scoring
-      if (helperData.type === 'photography') {
-        if (description.includes("certified") || description.includes("professional")) descScore += 2;
-        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
-      }
-
-      // Sneaker cleaner-specific scoring
-      if (helperData.type === 'sneaker') {
-        if (description.includes("professional") || description.includes("experience")) descScore += 2;
-        if (description.includes("products") || description.includes("solutions")) descScore += 1;
-        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
-        if (description.includes("brands") || description.includes("materials")) descScore += 1;
-      }
-
-      // Washing mat-specific scoring
-      if (helperData.type === 'washingmat') {
-        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
-        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
-        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
-        if (description.includes("drying") || description.includes("process")) descScore += 1;
-      }
-
-      // Animal care-specific scoring
-      if (helperData.type === 'animals') {
-        if (description.includes("certified") || description.includes("trained")) descScore += 2;
-        if (description.includes("experience") || description.includes("passion")) descScore += 1;
-        if (description.includes("animals") || description.includes("pets")) descScore += 1;
-        if (description.includes("care") || description.includes("handling")) descScore += 1;
-        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (helperData.imageUrls?.length > 0) imgScore = 3;
-      if (helperData.imageUrls?.length > 2) imgScore = 4;
-      if (helperData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
-    }, 1500);
-  };
 
   // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
@@ -1858,48 +1570,48 @@ export default function HelperPage() {
     // Enhanced location handling for quick booking
     const locationInfo = handleLocationInfo(bookingData, helper);
 
-    let message = `*ðŸ“… QUICK BOOKING REQUEST*%0A`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `*ðŸ‘¤ CLIENT DETAILS*%0A`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `ðŸ‘¤ *Name:* ${bookingData.name}%0A`;
-    message += `ðŸ“ž *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
-    if (bookingData.date) message += `ðŸ“… *Date:* ${bookingData.date}%0A`;
-    if (bookingData.time) message += `â° *Time:* ${bookingData.time}%0A%0A`;
+    let message = `*📅 QUICK BOOKING REQUEST*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*👤 CLIENT DETAILS*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `👤 *Name:* ${bookingData.name}%0A`;
+    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}%0A`;
+    if (bookingData.date) message += `📅 *Date:* ${bookingData.date}%0A`;
+    if (bookingData.time) message += `⏰ *Time:* ${bookingData.time}%0A%0A`;
 
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `*ðŸ’¼ SERVICE SUMMARY*%0A`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `âš’ï¸ *Provider:* ${providerDisplayName}%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*💼 SERVICE SUMMARY*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `⚒️ *Provider:* ${providerDisplayName}%0A`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
           const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
-          message += `ðŸ“œ *${s.name}:* ${priceStr}%0A`;
+          message += `📜 *${s.name}:* ${priceStr}%0A`;
         } else {
-          message += `ðŸ“œ *${id}*%0A`;
+          message += `📜 *${id}*%0A`;
         }
       });
     }
-    message += `ðŸ’µ *TOTAL: R${totalPrice}*%0A%0A`;
+    message += `💵 *TOTAL: R${totalPrice}*%0A%0A`;
 
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `*ðŸ“ LOCATION*%0A`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `ðŸ“Œ *Type:* ${locationInfo.displayName}%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*📍 LOCATION*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `📌 *Type:* ${locationInfo.displayName}%0A`;
     if (locationInfo.address) {
-      message += `ðŸ  *Address:* ${locationInfo.address}%0A`;
+      message += `🏠 *Address:* ${locationInfo.address}%0A`;
       const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}%0A`;
+      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}%0A`;
     }
     message += `%0A`;
 
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    message += `*âš¡ QUICK ACTIONS*%0A`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”%0A`;
-    if (acceptLink) message += `âœ… *ACCEPT:*%0A${acceptLink}%0A%0A`;
-    if (declineLink) message += `âŒ *REJECT:*%0A${declineLink}%0A%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    message += `*⚡ QUICK ACTIONS*%0A`;
+    message += `━━━━━━━━━━━━━━━━━━━━%0A`;
+    if (acceptLink) message += `✅ *ACCEPT:*%0A${acceptLink}%0A%0A`;
+    if (declineLink) message += `❌ *REJECT:*%0A${declineLink}%0A%0A`;
 
     message += `_Sent via loopOut_`;
 
@@ -1943,7 +1655,7 @@ export default function HelperPage() {
     }).then(async (res) => {
       if (res.ok) {
         pushPhoneNotification({
-          title: 'ðŸŽ‰ Booking Request Sent',
+          title: '🎉 Booking Request Sent',
           message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
@@ -2032,6 +1744,10 @@ export default function HelperPage() {
       alert("Please provide your address for home service.");
       return;
     }
+    if (bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
+      alert("Please let the provider know whether there are dogs at the property.");
+      return;
+    }
 
     if (hasProfanity(bookingData.specialRequirements || '') || hasProfanity(bookingData.message || '')) {
       alert("Your request contains inappropriate language. Please revise it before submitting.");
@@ -2112,26 +1828,20 @@ export default function HelperPage() {
     // Generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    // Build the main WhatsApp message with premium structure
-    let message = `*âœ¨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* âœ¨\n\n`;
+    // Keep the WhatsApp message plain and readable on mobile clients.
+    let message = `*New ${getProfessionalTitle(helper.type)} booking request*\n\n`;
+    message += `*Client details*\n`;
+    message += `Name: ${bookingData.name}\n`;
+    message += `Phone: ${bookingData.phone || 'Not provided'}\n`;
+    message += `Date: ${bookingData.date || 'Not specified'}\n`;
+    message += `Time: ${bookingData.time || 'Not specified'}\n`;
+    message += `Duration: ${getSelectedDurationLabel()}\n`;
+    if (bookingData.serviceFrequency) message += `Frequency: ${bookingData.serviceFrequency}\n`;
+    if (bookingData.selectedPerformer) message += `Selected member: ${bookingData.selectedPerformer}\n`;
 
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*ðŸ‘¤ CLIENT DETAILS*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `ðŸ‘¤ *Name:* ${bookingData.name}\n`;
-    message += `ðŸ“ž *Phone:* ${bookingData.phone || 'Not provided'}\n`;
-    message += `ðŸ“… *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `â° *Time:* ${bookingData.time || 'Not specified'}\n`;
-    message += `âŒ› *Duration:* ${getSelectedDurationLabel()}\n`;
-    if (bookingData.serviceFrequency) message += `ðŸ”„ *Frequency:* ${bookingData.serviceFrequency}\n`;
-    if (bookingData.selectedPerformer) message += `ðŸ‘¤ *Performer:* ${bookingData.selectedPerformer}\n\n`;
-    else message += `\n`;
-
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*ðŸ’¼ SERVICE SUMMARY*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `âš’ï¸ *Service:* ${providerDisplayName}\n`;
-    message += `ðŸ“‹ *Type:* ${getProfessionalTitle(helper.type)}\n`;
+    message += `\n*Service summary*\n`;
+    message += `Provider: ${providerDisplayName}\n`;
+    message += `Service type: ${getProfessionalTitle(helper.type)}\n`;
 
     // Add selected services
     if (bookingData.selectedServices.length > 0) {
@@ -2139,92 +1849,78 @@ export default function HelperPage() {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
           const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
-          message += `ðŸ“œ *${s.name}:* ${priceStr}\n`;
+          message += `${s.name}: ${priceStr}\n`;
         } else {
-          message += `ðŸ“œ *${id}*\n`;
+          message += `${id}\n`;
         }
       });
-      message += `ðŸ’µ *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `Total price: R${totalPrice}\n`;
     } else {
-      message += `ðŸ’µ *Base Price:* R${helper.regularPrice}\n`;
-      message += `ðŸ’µ *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `Base price: R${helper.regularPrice}\n`;
+      message += `Total price: R${totalPrice}\n`;
     }
 
     // Add service-specific details (Barber, Chef, etc.)
     if (helper.type === 'barber' || helper.type === 'barbar') {
-      if (bookingData.selectedHaircut) message += `âœ‚ï¸ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
-      if (bookingData.beardStyle) message += `ðŸ§” *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
+      if (bookingData.selectedHaircut) message += `Haircut style: ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
+      if (bookingData.beardStyle) message += `Beard style: ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
     } else if (helper.type === 'chef' || helper.type === 'cooking') {
-      message += `\nðŸŽ‰ *EVENT & FUNCTION DETAILS:*\n`;
-      if (bookingData.functionType) message += `ðŸŽˆ *Function Type:* ${bookingData.functionType}\n`;
-      if (bookingData.numberOfGuests) message += `ðŸ‘¥ *Number of Guests:* ${bookingData.numberOfGuests} Guests\n`;
-      if (bookingData.mealType) message += `ðŸ½ï¸ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `ðŸŒ *Cuisine Preference:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
-      if (bookingData.dietaryRestrictions) message += `ðŸ¥— *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
-      if (bookingData.cookingEquipment) message += `ðŸ³ *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
-      if (bookingData.ingredientsProvided) message += `ðŸ›’ *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
+      message += `\n*Event and function details*\n`;
+      if (bookingData.functionType) message += `Function type: ${bookingData.functionType}\n`;
+      if (bookingData.numberOfGuests) message += `Number of guests: ${bookingData.numberOfGuests}\n`;
+      if (bookingData.mealType) message += `Meal type: ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
+      if (bookingData.cuisinePreference) message += `Cuisine preference: ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.dietaryRestrictions) message += `Dietary requirements or allergies: ${bookingData.dietaryRestrictions}\n`;
+      if (bookingData.cookingEquipment) message += `Kitchen available: ${bookingData.cookingEquipment}\n`;
+      if (bookingData.ingredientsProvided) message += `Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Provided by client' : 'Provided by chef'}\n`;
     } else if (helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') {
-      message += `\nðŸ§¹ *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
-      if (bookingData.houseSize) message += `ðŸ  *Property Size:* ${bookingData.houseSize}\n`;
-      if (bookingData.numberOfBedrooms) message += `ðŸ›ï¸ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
-      if (bookingData.numberOfBathrooms) message += `ðŸš¿ *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
-      if (bookingData.cleaningSuppliesProvided) message += `ðŸ§¼ *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
-      if (bookingData.hasPets) message += `ðŸ¾ *Pets in House:* ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
-      if (bookingData.ironingLoad) message += `ðŸ‘” *Ironing/Laundry Load:* ${bookingData.ironingLoad}\n`;
+      message += `\n*Housekeeping details*\n`;
+      if (bookingData.houseSize) message += `Property size: ${bookingData.houseSize}\n`;
+      if (bookingData.numberOfBedrooms) message += `Bedrooms: ${bookingData.numberOfBedrooms}\n`;
+      if (bookingData.numberOfBathrooms) message += `Bathrooms: ${bookingData.numberOfBathrooms}\n`;
+      if (bookingData.cleaningSuppliesProvided) message += `Cleaning supplies: ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
+      if (bookingData.hasPets) message += `Other pets in the home: ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
+      if (bookingData.ironingLoad) message += `Ironing and laundry load: ${bookingData.ironingLoad}\n`;
     } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
-      if (bookingData.handymanJobType) message += `ðŸ”¨ *Job Type:*      ${bookingData.handymanJobType}\n`;
-      if (bookingData.handymanMaterialsRequired) message += `ðŸ›’ *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
-      message += `âš¡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? 'ðŸ”´ URGENT â€” Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? 'ðŸŸ¢ Flexible â€” No rush' : 'ðŸŸ¡ Normal priority'}\n`;
-      if (bookingData.handymanJobDescription) message += `ðŸ“‹ *Job Description:* ${bookingData.handymanJobDescription}\n`;
+      if (bookingData.handymanJobType) message += `Job type: ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `Materials: ${bookingData.handymanMaterialsRequired}\n`;
+      message += `Urgency: ${bookingData.handymanUrgency === 'urgent' ? 'Urgent' : bookingData.handymanUrgency === 'flexible' ? 'Flexible' : 'Normal'}\n`;
+      if (bookingData.handymanJobDescription) message += `Job description: ${bookingData.handymanJobDescription}\n`;
     } else if (helper.type === 'carwash') {
       if (bookingData.vehicleType) message += `🚗 *Vehicle Type:* ${bookingData.vehicleType}\n`;
       if (bookingData.vehicleMake) message += `🔖 *Vehicle Make:* ${bookingData.vehicleMake}\n`;
       if (bookingData.vehicleModel) message += `🚘 *Vehicle Model:* ${bookingData.vehicleModel}\n`;
     }
-    message += `\n`;
-
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*ðŸ“ LOCATION & NAVIGATION*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `ðŸ“Œ *Type:* ${locationInfo.displayName}\n`;
-    if (locationInfo.address && locationInfo.address !== 'Address not specified') {
-      message += `ðŸ  *Address:* ${locationInfo.address}\n`;
-      const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `ðŸ—ºï¸ *Navigate:* ${mapLink}\n`;
+    message += `\n*Location*\n`;
+    message += `Service location: ${locationInfo.displayName}\n`;
+    if (bookingData.locationOption === 'comeToYou') {
+      message += `Dogs at the property: ${bookingData.dogsAtProperty === 'yes' ? 'Yes' : 'No'}\n`;
     }
-    if (locationInfo.travelFee > 0) message += `ðŸš— *Travel Fee:* R${locationInfo.travelFee}\n`;
-    message += `\n`;
-
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*ðŸ´ PROVISIONS*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `ðŸ½ï¸ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? 'âœ… Yes' : 'âŒ No'}\n`;
-    message += `âš¡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? 'âœ… Yes' : 'âŒ No'}\n\n`;
-
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*ðŸ’¬ COMMENTS & NOTES*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `ðŸ“ ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n\n`;
+    if (locationInfo.address && locationInfo.address !== 'Address not specified') {
+      message += `Address: ${locationInfo.address}\n`;
+      const mapLink = generateMapLink(locationInfo.address);
+      if (mapLink) message += `Map: ${mapLink}\n`;
+    }
+    if (locationInfo.travelFee > 0) message += `Travel fee: R${locationInfo.travelFee}\n`;
+    message += `\n*Provisions*\n`;
+    message += `Food provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}\n`;
+    message += `Electricity available: ${bookingData.electricityProvided === 'yes' ? 'Yes' : 'No'}\n`;
+    message += `\n*Notes*\n`;
+    message += `${bookingData.specialRequirements || 'No special requirements'}\n`;
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-      message += `*ðŸ“Ž ATTACHMENTS*\n`;
-      message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
+      message += `\n*Attachments*\n`;
       uploadedFiles.forEach((file) => {
-        message += `â€¢ ${file.name}: ${file.url}\n`;
+        message += `${file.name}: ${file.url}\n`;
       });
-      message += `\n`;
     }
 
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    message += `*âš¡ QUICK ACTIONS*\n`;
-    message += `â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n`;
-    if (acceptLink) message += `âœ… *ACCEPT:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `âŒ *REJECT:*\n${declineLink}\n\n`;
-
-    message += `ðŸ” *Verification Code:* ${verificationCode}\n`;
-    message += `_Sent via loopOut_`;
+    message += `\n*Booking actions*\n`;
+    if (acceptLink) message += `Accept: ${acceptLink}\n`;
+    if (declineLink) message += `Decline: ${declineLink}\n`;
+    message += `Verification code: ${verificationCode}\n`;
+    message += `Sent via LoopOut`;
 
     // Open WhatsApp with properly encoded message
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
@@ -2246,7 +1942,7 @@ export default function HelperPage() {
     if (helper.type === 'transport' && bookingData.specialRequirements) {
       const requirements = bookingData.specialRequirements.toLowerCase();
       if (requirements.includes('pretor') && requirements.includes('johan')) {
-        bookingSubtype = `Route: Pretoria â†” JHB`;
+        bookingSubtype = `Route: Pretoria ↔ JHB`;
       }
     }
 
@@ -2292,7 +1988,7 @@ export default function HelperPage() {
     }).then(async (res) => {
       if (res.ok) {
         pushPhoneNotification({
-          title: 'ðŸŽ‰ Booking Request Sent',
+          title: '🎉 Booking Request Sent',
           message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
@@ -2312,49 +2008,6 @@ export default function HelperPage() {
     setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
-
-  // Simulate AI analysis of comments
-  const analyzeCommentsWithAI = () => {
-    setAnalyzingComments(true);
-
-    // Simulate API call to AI service
-    setTimeout(() => {
-      // Generate random quality scores for comments
-      const analysis = {};
-      const comments = document.querySelectorAll('.comment-item');
-
-      comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
-        analysis[index] = { qualityScore, sentiment };
-      });
-
-      setCommentAnalysis(analysis);
-      setAnalyzingComments(false);
-    }, 2000);
-  };
-
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
 
   // Function to open full-page booking form overlay
   const openBookingFormOverlay = () => {
@@ -2568,7 +2221,7 @@ export default function HelperPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="ðŸ§°" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
+      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="🧰" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
 
       <ListingDetailShell>
         {/* Content Section */}
@@ -2641,7 +2294,7 @@ export default function HelperPage() {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-base font-semibold text-slate-900">Hosted by {accountOwnerName}</span>
-                  <span className="mt-1 block text-sm text-slate-500">Account owner Â· Worker: {providerDisplayName}</span>
+                  <span className="mt-1 block text-sm text-slate-500">Account owner · Worker: {providerDisplayName}</span>
                 </span>
               </Link>
               <button
@@ -2666,13 +2319,13 @@ export default function HelperPage() {
                 {isVerifiedProvider && (
                   <div className="flex items-start gap-4">
                     <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">This providerâ€™s account has been verified by LoopOut.</p></div>
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">LoopOut has verified this provider's account.</p></div>
                   </div>
                 )}
                 {helper.operatingHours && (
                   <div className="flex items-start gap-4">
                     <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
-                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Hours shared</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">See the schedule below to choose an available time.</p></div>
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Availability</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">Check the schedule below to choose an available time.</p></div>
                   </div>
                 )}
               </div>
@@ -2887,7 +2540,7 @@ export default function HelperPage() {
             {galleryImages.length > 0 && (
               <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-portfolio-title">
                 <div className="mb-4 flex items-end justify-between gap-4">
-                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this providerâ€™s work</p></div>
+                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider's work</p></div>
                   <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {galleryImages.length}</button>
                 </div>
                 <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
@@ -3210,7 +2863,7 @@ export default function HelperPage() {
             <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
               <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter  uppercase">
                 <MapPinIcon className="text-rose-500 w-6 h-6" />
-                Other professionals in the matrix
+                More helpers nearby
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {similarHelpers.map((item) => (
@@ -3308,9 +2961,6 @@ export default function HelperPage() {
           totalComments={commentCount}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
         />
       )}
       {showAllReviewsPanel && (

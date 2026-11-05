@@ -49,6 +49,8 @@ const eventSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    capacity: { type: Number, min: 1, default: undefined },
+    ticketsBooked: { type: Number, min: 0, default: 0 },
     imageUrls: {
       type: [String],
       required: true,

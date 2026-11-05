@@ -27,6 +27,7 @@ import { MdChildCare, MdDirectionsBus } from 'react-icons/md';
 import { pushPhoneNotification } from './PhoneNotificationManager';
 import useLocationCoords from '../hooks/useGeolocation';
 import { calculateDistance } from '../utils/locationUtils';
+import { formatListingTitle, getPropertyRatePeriod } from '../utils/listingDisplay';
 
 
 
@@ -377,9 +378,6 @@ const ACCENT_CLASSES = {
 };
 
 const DAILY_STAY_TYPES = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'];
-const HOURLY_ROOM_TYPES = ['office', 'hourly_room', 'room_hourly'];
-const RENT_TYPES = ['rent', 'apartment'];
-
 const TYPE_ALIASES = {
   chef: 'chef',
   culinary: 'chef',
@@ -508,7 +506,7 @@ export default function ListingBookingSheet({
     checkOut: '',
     guests: 2,
     rooms: 1,
-    accommodationSelection: 'rooms',
+    accommodationSelection: '',
     breakfast: false,
     pets: false,
     selectedDate: '',
@@ -533,7 +531,8 @@ export default function ListingBookingSheet({
   const propertyKind = String(listing?.kind || '').toLowerCase();
   const isHouseOrApartment = ['house', 'apartment', 'townhouse', 'villa', 'cottage', 'penthouse', 'home'].some(k => propertyKind.includes(k) || String(listing?.type || '').toLowerCase().includes(k)) || !listing?.kind;
   const supportsEntireProperty = isHouseOrApartment || propertyKind === '' || !listing?.kind;
-  const ratePeriod = listing?.pricePeriod || (listing?.kind === 'house' ? 'day' : (HOURLY_ROOM_TYPES.includes(propertyType) ? 'hour' : RENT_TYPES.includes(propertyType) ? 'month' : 'day'));
+  const ratePeriod = getPropertyRatePeriod(listing);
+  const listingTitle = formatListingTitle(listing?.name);
   const isDailyStay = ratePeriod === 'day' || ratePeriod === 'night';
   const selectedRoomType = listing?.roomTypes?.find(room => room.name === bookingDetails.selectedUnit);
   const availableRoomCount = Math.max(1, Number(selectedRoomType?.count || (supportsEntireProperty ? (listing?.bedrooms || listing?.numberOfRooms || listing?.totalUnits) : (listing?.numberOfRooms || listing?.numberOfApartments || listing?.totalUnits || listing?.bedrooms)) || 1));
@@ -711,8 +710,8 @@ export default function ListingBookingSheet({
     const unitTag = bookingDetails.selectedUnit ? ` (${bookingDetails.selectedUnit})` : '';
     const dateStr = isDailyStay ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate);
 
-    const acceptMsg = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name}${unitTag} on ${dateStr}. See you then!`;
-    const declineMsg = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listing.name}${unitTag} on ${dateStr}. Can we try another time?`;
+    const acceptMsg = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listingTitle}${unitTag} on ${dateStr}. See you then!`;
+    const declineMsg = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listingTitle}${unitTag} on ${dateStr}. Can we try another time?`;
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMsg)}` : null;
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMsg)}` : null;
 
@@ -724,7 +723,7 @@ export default function ListingBookingSheet({
         : propertyType === 'land' ? '🏡 SELF-CATERING BOOKING'
         : '🛌 GUEST HOUSE & B&B BOOKING';
       msg += `*${typeTitle}*\n\n`;
-      msg += `🏨 *Property:* ${listing?.name}\n`;
+      msg += `🏨 *Property:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Room / Unit:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Guest:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -741,7 +740,7 @@ export default function ListingBookingSheet({
       if (bookingDetails.pets) msg += `🐾 *Pets:* Yes\n`;
     } else if (isHourlyRoom) {
       msg += `*🚪 ROOM PER HOUR BOOKING ⏰*\n\n`;
-      msg += `🚪 *Space:* ${listing?.name}\n`;
+      msg += `🚪 *Space:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Room:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Client:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -749,7 +748,7 @@ export default function ListingBookingSheet({
       msg += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime} (${hours.toFixed(1)} hrs)\n`;
     } else if (isRent) {
       msg += `*🏠 PROPERTY RENTAL INQUIRY 🏠*\n\n`;
-      msg += `🏠 *Property:* ${listing?.name}\n`;
+      msg += `🏠 *Property:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Unit:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Prospect:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -758,7 +757,7 @@ export default function ListingBookingSheet({
       msg += `💰 *${ratePeriod === 'night' ? 'Nightly Rate' : ratePeriod === 'day' ? 'Daily Rate' : ratePeriod === 'hour' ? 'Hourly Rate' : 'Monthly Rent'}:* R${listing?.regularPrice?.toLocaleString()}/${ratePeriod}\n`;
     } else {
       msg += `*${config.waMsgPrefix}*\n\n`;
-      msg += `${config.emoji} *Service:* ${listing?.name}\n`;
+      msg += `${config.emoji} *Service:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `📋 *${config.unitLabel}:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Address:* ${listing?.address}\n`;
       msg += `👤 *${config.clientLabel}:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -830,7 +829,7 @@ export default function ListingBookingSheet({
 
       pushPhoneNotification({
         title: '🎉 Booking Request Sent',
-        message: `Your booking for ${listing?.name || 'service'} has been submitted! Check notifications for updates.`,
+        message: `Your booking for ${listingTitle || 'service'} has been submitted! Check notifications for updates.`,
         type: 'success',
         link: '/notifications'
       });
@@ -861,7 +860,7 @@ export default function ListingBookingSheet({
           name: currentUser.username || currentUser.name,
           email: currentUser.email,
           serviceId: listing._id,
-          providerName: listing.name
+          providerName: listingTitle
         })
       });
       const data = await res.json();
@@ -954,7 +953,7 @@ export default function ListingBookingSheet({
                 )}
                 <div className="min-w-0">
                   <h2 className="text-sm font-black text-gray-900 dark:text-white leading-tight truncate max-w-[200px] sm:max-w-xs">
-                    {isServiceMode ? `${config.label} Booking` : `Reserve`} · {listing.name}
+                    {isServiceMode ? `${config.label} Booking` : `Reserve`} · {listingTitle}
                   </h2>
                   <div className="flex items-center gap-1.5">
                     <p className="text-[11px] text-gray-400 font-semibold">
@@ -990,7 +989,7 @@ export default function ListingBookingSheet({
                     <span className="text-3xl">{config.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <div className="font-black text-sm">{config.label} Booking</div>
-                      <div className="text-xs opacity-80">{listing.name} · R{listing?.regularPrice?.toLocaleString()} base rate</div>
+                      <div className="text-xs opacity-80">{listingTitle} · R{listing?.regularPrice?.toLocaleString()} base rate</div>
                     </div>
                     {distanceLabel && (
                       <span className="shrink-0 text-[10px] font-black bg-white/20 backdrop-blur-sm px-2 py-1 rounded-xl border border-white/30">
@@ -1417,7 +1416,7 @@ export default function ListingBookingSheet({
 
                   <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
                     <span>Service / Property</span>
-                    <span className="text-white font-black truncate max-w-[180px]">{listing?.name}</span>
+                    <span className="text-white font-black truncate max-w-[180px]">{listingTitle}</span>
                   </div>
 
                   {displayAddress && (

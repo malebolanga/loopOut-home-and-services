@@ -7,6 +7,19 @@ import Service from '../models/service.model.js';
 import Helper from '../models/helper.model.js';
 import Event from '../models/event.model.js';
 import Sell from '../models/sell.model.js';
+import Booking from '../models/Booking.js';
+import Notification from '../models/notification.model.js';
+import Escrow from '../models/escrow.model.js';
+import Comment from '../models/comment.model.js';
+import Comments from '../models/comments.model.js';
+import HelperComment from '../models/helper-comment.model.js';
+import ServiceComment from '../models/service-comment.model.js';
+import EventComment from '../models/event-comment.model.js';
+import Review from '../models/Review.js';
+import HostRating from '../models/models/HostRating.js';
+import Conversation from '../models/Conversation.model.js';
+import Message from '../models/Message.model.js';
+import { deleteFirebaseUser, deleteFirebaseUserByEmail, verifyFirebaseIdToken } from '../utils/pushNotifications.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
 
 const normalizeContactPhone = (contact) => String(
@@ -92,6 +105,7 @@ export const unregisterPushToken = async (req, res, next) => {
 };
 
 export const updateUser = async (req, res, next) => {
+  let passwordChanged = false;
   if (req.user.id !== req.params.id)
     return next(errorHandler(401, 'You can only update your own account!'));
 
@@ -139,17 +153,31 @@ export const updateUser = async (req, res, next) => {
     updateData.updatedAt = new Date();
 
     if (req.body.newPassword !== undefined || req.body.currentPassword !== undefined) {
-      if (!req.body.currentPassword || !req.body.newPassword) {
-        return next(errorHandler(400, 'Enter your current password and a new password.'));
+      if (!req.body.newPassword) {
+        return next(errorHandler(400, 'Enter a new password.'));
       }
       const existingUser = await User.findById(req.params.id).select('+password');
-      if (!existingUser || !bcryptjs.compareSync(req.body.currentPassword, existingUser.password)) {
+      if (!existingUser) return next(errorHandler(404, 'User not found.'));
+      const hasPasswordLogin = (existingUser.authProviders || ['password']).includes('password');
+      if (hasPasswordLogin && (!req.body.currentPassword || !bcryptjs.compareSync(req.body.currentPassword, existingUser.password))) {
         return next(errorHandler(401, 'Your current password is incorrect.'));
+      }
+      if (!hasPasswordLogin) {
+        try {
+          const decoded = await verifyFirebaseIdToken(String(req.body.firebaseIdToken || ''));
+          if (String(decoded.email || '').toLowerCase() !== existingUser.email.toLowerCase()) {
+            return next(errorHandler(401, 'Re-authenticate with the Google account connected to this LoopOut account.'));
+          }
+        } catch {
+          return next(errorHandler(401, 'Re-authenticate with Google before setting a password.'));
+        }
+        updateData.authProviders = [...new Set([...(existingUser.authProviders || []), 'password'])];
       }
       if (req.body.newPassword.length < 12) {
         return next(errorHandler(400, 'Your new password must contain at least 12 characters.'));
       }
       updateData.password = bcryptjs.hashSync(req.body.newPassword, 12);
+      passwordChanged = true;
     }
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -160,6 +188,15 @@ export const updateUser = async (req, res, next) => {
         runValidators: true  // Validate updates
       }
     ).select('-password -__v -otp -otpExpiry -otpAttempts -otpPurpose');  // Exclude credentials and one-time codes
+
+    if (passwordChanged) {
+      const refreshed = await User.findById(req.params.id).select('notificationPreferences').lean();
+      if (refreshed?.notificationPreferences?.security?.passwordChanges !== false) {
+        const message = 'Your LoopOut password was changed. If you did not make this change, secure your account now.';
+        await new Notification({ userId: req.params.id, type: 'security', title: 'Password changed', message }).save();
+        sendPushNotificationToUser(req.params.id, { title: 'Password changed', body: message, data: { type: 'security', route: '/settings?tab=security' }, preference: 'security.passwordChanges' }).catch(() => {});
+      }
+    }
 
     res.status(200).json(updatedUser);
   } catch (error) {
@@ -173,17 +210,117 @@ export const updateUser = async (req, res, next) => {
 
 
 export const deleteUser = async (req, res, next) => {
-  if (req.user.id !== req.params.id)
+  if (req.user.id !== req.params.id && !req.user.isAdmin)
     return next(errorHandler(401, 'You can only delete your own account!'));
   try {
-    const currentPassword = String(req.body?.currentPassword || '');
     const user = await User.findById(req.params.id).select('+password');
-    if (!currentPassword || !user || !bcryptjs.compareSync(currentPassword, user.password)) {
-      return next(errorHandler(401, 'Enter your current password to delete your account.'));
+    if (!user) return next(errorHandler(404, 'User not found!'));
+
+    const currentPassword = String(req.body?.currentPassword || '');
+    const hasPasswordLogin = (user.authProviders || ['password']).includes('password');
+    let verifiedGoogleUid = '';
+    if (req.body?.firebaseIdToken) {
+      try {
+        const decoded = await verifyFirebaseIdToken(String(req.body.firebaseIdToken));
+        if (String(decoded.email || '').toLowerCase() !== user.email.toLowerCase()) {
+          return next(errorHandler(401, 'Re-authenticate with the Google account connected to this LoopOut account.'));
+        }
+        verifiedGoogleUid = decoded.uid;
+      } catch {
+        return next(errorHandler(401, 'Your Google sign-in could not be verified. Please sign in again.'));
+      }
     }
-    await User.findByIdAndDelete(req.params.id);
+    const passwordValid = hasPasswordLogin && currentPassword && bcryptjs.compareSync(currentPassword, user.password);
+    const isGoogleAuth = Boolean(req.body?.isGoogleAuth || req.body?.confirmDelete);
+    const googleAllowed = !hasPasswordLogin && isGoogleAuth && (user.authProviders || []).includes('google');
+    if (!passwordValid && !verifiedGoogleUid && !googleAllowed) {
+      return next(errorHandler(401, hasPasswordLogin
+        ? 'Enter your current password or re-authenticate with Google to delete your account.'
+        : 'Re-authenticate with Google to delete your account.'));
+    }
+
+    const userId = req.params.id;
+
+    const [listings, services, helpers, events] = await Promise.all([
+      Listing.find({ userRef: userId }).select('_id').lean(),
+      Service.find({ userRef: userId }).select('_id').lean(),
+      Helper.find({ userRef: userId }).select('_id').lean(),
+      Event.find({ userRef: userId }).select('_id').lean(),
+    ]);
+    const ownedListingIds = listings.map((item) => item._id);
+    const ownedServiceIds = services.map((item) => item._id);
+    const ownedHelperIds = helpers.map((item) => item._id);
+    const ownedEventIds = events.map((item) => item._id);
+    const bookingFilter = { $or: [
+      { user: userId },
+      ...(ownedListingIds.length ? [{ listing: { $in: ownedListingIds } }] : []),
+      ...(ownedServiceIds.length ? [{ service: { $in: ownedServiceIds } }] : []),
+      ...(ownedHelperIds.length ? [{ helper: { $in: ownedHelperIds } }] : []),
+      ...(ownedEventIds.length ? [{ event: { $in: ownedEventIds } }] : []),
+    ] };
+    const bookingIds = (await Booking.find(bookingFilter).select('_id').lean()).map((item) => item._id);
+    const conversationIds = (await Conversation.find({ participants: userId }).select('_id').lean()).map((item) => item._id);
+
+    // Preserve bookings and listings while future work or held funds are unresolved.
+    const activeBooking = await Booking.findOne({
+      ...bookingFilter,
+      status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing', 'work_completed'] },
+      endDate: { $gte: new Date() },
+    }).select('_id').lean();
+    if (activeBooking) {
+      return next(errorHandler(409, 'Resolve your upcoming or active bookings before deleting your account.'));
+    }
+    const unresolvedEscrow = bookingIds.length
+      ? await Escrow.exists({ bookingId: { $in: bookingIds }, status: { $in: ['held', 'disputed'] } })
+      : null;
+    if (unresolvedEscrow) {
+      return next(errorHandler(409, 'Resolve any held or disputed booking payments before deleting your account.'));
+    }
+
+    if ((user.authProviders || []).includes('google')) {
+      try {
+        if (verifiedGoogleUid) await deleteFirebaseUser(verifiedGoogleUid);
+        else await deleteFirebaseUserByEmail(user.email);
+      }
+      catch (error) {
+        if (error?.code !== 'auth/user-not-found') {
+          return next(errorHandler(503, 'Google account deletion could not be completed. Please try again.'));
+        }
+      }
+    }
+
+    await Promise.all([
+      bookingIds.length ? Escrow.deleteMany({ bookingId: { $in: bookingIds } }) : Promise.resolve(),
+      Message.deleteMany({ $or: [{ sender: userId }, ...(conversationIds.length ? [{ conversationId: { $in: conversationIds } }] : [])] }),
+      Conversation.deleteMany({ participants: userId }),
+      ...[Comment, Comments, HelperComment, ServiceComment, EventComment].map((Model) => Model.deleteMany({
+        $or: [
+          { userId }, { 'replies.userId': userId },
+          ...(ownedListingIds.length ? [{ listingId: { $in: ownedListingIds } }] : []),
+          ...(ownedServiceIds.length ? [{ serviceId: { $in: ownedServiceIds } }] : []),
+          ...(ownedHelperIds.length ? [{ helperId: { $in: ownedHelperIds } }] : []),
+          ...(ownedEventIds.length ? [{ eventId: { $in: ownedEventIds } }] : []),
+        ]
+      })),
+      Review.deleteMany({ $or: [{ author: userId }, { 'replies.author': userId }] }),
+      HostRating.deleteMany({ $or: [{ hostId: userId }, { userId }] }),
+      ...[Comment, Comments, HelperComment, ServiceComment, EventComment, Review].map((Model) => Model.updateMany(
+        { $or: [{ likes: userId }, { 'replies.userId': userId }, { 'replies.author': userId }] },
+        { $pull: { likes: userId, replies: { $or: [{ userId }, { author: userId }] } } }
+      )),
+      User.updateMany({ $or: [{ followers: userId }, { following: userId }] }, { $pull: { followers: userId, following: userId } }),
+      Booking.deleteMany(bookingFilter),
+      Listing.deleteMany({ userRef: userId }),
+      Service.deleteMany({ userRef: userId }),
+      Helper.deleteMany({ userRef: userId }),
+      Event.deleteMany({ userRef: userId }),
+      Sell.deleteMany({ userRef: userId }),
+      Notification.deleteMany({ $or: [{ userId }, { 'data.userId': userId }] }),
+      User.findByIdAndDelete(userId),
+    ]);
+
     res.clearCookie('access_token');
-    res.status(200).json('User has been deleted!');
+    res.status(200).json({ success: true, message: 'User and all associated data have been deleted!' });
   } catch (error) {
     next(error);
   }

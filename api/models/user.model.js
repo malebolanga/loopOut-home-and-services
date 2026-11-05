@@ -21,6 +21,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    authProviders: {
+        type: [{ type: String, enum: ['password', 'google'] }],
+        default: ['password'],
+    },
+    firebaseUid: { type: String, default: '', select: false },
+    loginFailureCount: { type: Number, default: 0, select: false },
+    lastLoginAlertAt: { type: Date, default: null, select: false },
     avatar: {
         type: String,
         default: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",

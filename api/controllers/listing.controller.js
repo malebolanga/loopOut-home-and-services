@@ -1,4 +1,5 @@
 import Listing from '../models/listing.model.js';
+import Booking from '../models/Booking.js';
 import User from '../models/user.model.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
@@ -167,6 +168,15 @@ export const deleteListing = async (req, res, next) => {
 
     if (!isAuthorized) {
       return next(errorHandler(403, 'You can only delete your own listings!'));
+    }
+
+    const activeBookingCount = await Booking.countDocuments({
+      listing: listing._id,
+      status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing', 'work_completed'] },
+      endDate: { $gte: new Date() }
+    });
+    if (activeBookingCount) {
+      return next(errorHandler(409, 'This listing has upcoming or active bookings. Cancel or complete them before deleting the listing.'));
     }
 
     // Permanent deletion from database

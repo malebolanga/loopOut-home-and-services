@@ -22,6 +22,7 @@ import ListingBookingSheet from '../components/ListingBookingSheet';
 import { resolveApiUrl } from '../utils/apiBaseUrl';
 import ListingDetailShell from '../components/ListingDetailShell';
 import ListingWeatherForecast from '../components/ListingWeatherForecast';
+import { formatListingTitle, getPropertyRatePeriod } from '../utils/listingDisplay';
 
 
 import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
@@ -137,15 +138,6 @@ const LISTING_TYPES = {
   land: { label: 'Self Catering', color: 'bg-emerald-700 text-white', icon: FaHome, period: '/day' },
   resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-600 text-white', icon: FaUmbrellaBeach, period: '/day' },
   office: { label: 'Room Per Hour', color: 'bg-amber-600 text-white', icon: FaClock, period: '/hour' }
-};
-
-const getPropertyRatePeriod = (listing) => {
-  if (['hour', 'day', 'night', 'month'].includes(listing?.pricePeriod)) return listing.pricePeriod;
-  if (['office', 'hourly_room', 'room_hourly'].includes(listing?.type)) return 'hour';
-  if (listing?.type === 'over') return 'night';
-  if (listing?.kind === 'house' || listing?.kind === 'apartment') return 'day';
-  if (['rent', 'apartment'].includes(listing?.type)) return 'month';
-  return 'day';
 };
 
 const SOCIAL_PLATFORMS = [
@@ -1508,7 +1500,7 @@ export default function Listing() {
       {/* Main Content - Overlapping sheet matching Helper and Services standard */}
       <ListingDetailShell>
         <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
-          <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
+          <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{formatListingTitle(listing.name)}</h1>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
             {pricePeriod === 'night' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per night` : 'Per night') :
              pricePeriod === 'day' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per day` : 'Per day') :

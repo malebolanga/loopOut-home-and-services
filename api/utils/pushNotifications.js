@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applicationDefault, cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getAuth } from 'firebase-admin/auth';
 import User from '../models/user.model.js';
 
 const normalizeServiceAccount = (account) => {
@@ -44,8 +45,20 @@ const getAdminApp = () => {
   });
 };
 
-export const sendPushNotificationToUser = async (userId, { title, body, data = {}, channelId = 'loopout_updates' }) => {
+export const verifyFirebaseIdToken = (token) => getAuth(getAdminApp()).verifyIdToken(token);
+export const deleteFirebaseUser = async (uid) => getAuth(getAdminApp()).deleteUser(uid);
+export const deleteFirebaseUserByEmail = async (email) => {
+  const firebaseAuth = getAuth(getAdminApp());
+  const account = await firebaseAuth.getUserByEmail(email);
+  return firebaseAuth.deleteUser(account.uid);
+};
+
+export const sendPushNotificationToUser = async (userId, { title, body, data = {}, channelId = 'loopout_updates', preference = 'activity.bookingUpdates' }) => {
   const user = await User.findById(userId).select('+pushTokens').lean();
+  const [group, key] = String(preference || '').split('.');
+  if (group && key && user?.notificationPreferences?.[group]?.[key] === false) {
+    return { sentCount: 0, failureCount: 0, skipped: 'notification_preference_disabled' };
+  }
   const tokens = [...new Set((user?.pushTokens || []).map((entry) => entry.token).filter(Boolean))].slice(0, 500);
   if (!tokens.length) return { sentCount: 0, failureCount: 0, skipped: 'no_registered_devices' };
 

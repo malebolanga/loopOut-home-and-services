@@ -3,6 +3,8 @@ import bcryptjs from 'bcryptjs';
 import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import Notification from '../models/notification.model.js';
+import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 
 import { sendEmail } from '../utils/email.js';
 import { sendSMS } from '../utils/sms.js';
@@ -31,7 +33,7 @@ const issueSession = async (res, user, status = 200) => {
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
   const loginTime = new Date();
   try {
-    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: loginTime } });
+    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: loginTime, loginFailureCount: 0 } });
   } catch (err) {
     console.error('Failed to update lastLogin:', err.message);
   }
@@ -84,7 +86,7 @@ const clearOtp = (user) => {
 
 const safeUserPayload = (user) => {
   const safeUser = user.toObject ? user.toObject() : { ...user };
-  for (const field of ['password', 'otp', 'otpExpiry', 'otpAttempts', 'otpPurpose']) delete safeUser[field];
+  for (const field of ['password', 'firebaseUid', 'loginFailureCount', 'lastLoginAlertAt', 'otp', 'otpExpiry', 'otpAttempts', 'otpPurpose']) delete safeUser[field];
   return safeUser;
 };
 
@@ -243,7 +245,25 @@ export const signin = async (req, res, next) => {
     const password = req.body.password;
     const user = emailPattern.test(email) ? await User.findOne({ email }) : null;
     const validPassword = user && await bcryptjs.compare(password || '', user.password);
-    if (!validPassword) return next(errorHandler(401, 'Invalid email or password.'));
+    if (!validPassword) {
+      if (user) {
+        try {
+          const account = await User.findById(user._id).select('+loginFailureCount +lastLoginAlertAt notificationPreferences');
+          const failures = Number(account?.loginFailureCount || 0) + 1;
+          const shouldAlert = failures >= 3 && (!account.lastLoginAlertAt || Date.now() - account.lastLoginAlertAt.getTime() > 60 * 60 * 1000)
+            && account.notificationPreferences?.security?.loginAttempts !== false;
+          await User.updateOne({ _id: user._id }, { $set: { loginFailureCount: failures, ...(shouldAlert ? { lastLoginAlertAt: new Date() } : {}) } });
+          if (shouldAlert) {
+            const message = 'We noticed several unsuccessful sign-in attempts on your LoopOut account. If this was not you, update your password.';
+            await new Notification({ userId: user._id, type: 'security', title: 'Unsuccessful sign-in attempts', message }).save();
+            sendPushNotificationToUser(user._id, { title: 'Unsuccessful sign-in attempts', body: message, data: { type: 'security', route: '/settings?tab=security' }, preference: 'security.loginAttempts' }).catch(() => {});
+          }
+        } catch (alertError) {
+          console.warn('[signin] Could not record failed login alert:', alertError.message);
+        }
+      }
+      return next(errorHandler(401, 'Invalid email or password.'));
+    }
     if (!user.isVerified) {
       const codeCreatedAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
       if (user.otpPurpose !== 'verify' || Date.now() - codeCreatedAt >= OTP_RESEND_COOLDOWN_MS) await sendVerificationCode(user);
@@ -304,6 +324,8 @@ export const google = async (req, res, next) => {
         username,
         email,
         password: await bcryptjs.hash(crypto.randomBytes(32).toString('hex'), 12),
+        authProviders: ['google'],
+        firebaseUid: decoded.uid || '',
         avatar: decoded.picture || undefined,
         phone: String(req.body.phone || '').trim(),
         location: String(req.body.location || '').trim(),
@@ -313,6 +335,14 @@ export const google = async (req, res, next) => {
       });
     } else {
       let needsSave = false;
+      if (!user.authProviders?.includes('google')) {
+        user.authProviders = [...(user.authProviders || []), 'google'];
+        needsSave = true;
+      }
+      if (decoded.uid && user.firebaseUid !== decoded.uid) {
+        user.firebaseUid = decoded.uid;
+        needsSave = true;
+      }
       if (requestedOfferingType && !user.offeringType) {
         user.offeringType = requestedOfferingType;
         if (req.body.phone) user.phone = String(req.body.phone).trim();

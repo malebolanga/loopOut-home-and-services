@@ -1,4 +1,5 @@
 import Service from '../models/service.model.js';
+import Booking from '../models/Booking.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { fuzzItemsLocation, fuzzSingleItemLocation } from '../utils/locationFuzzer.js';
@@ -85,8 +86,18 @@ export const deleteService = async (req, res, next) => {
       return next(errorHandler(404, 'Service not found!'));
     }
 
-    if (req.user.id !== service.creator.toString()) {
+    const creatorId = (service.creator?._id || service.creator || service.userRef?._id || service.userRef)?.toString();
+    if (req.user.id !== creatorId && !req.user.isAdmin) {
       return next(errorHandler(401, 'You can only delete your own services!'));
+    }
+
+    const activeBookingCount = await Booking.countDocuments({
+      service: service._id,
+      status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing', 'work_completed'] },
+      endDate: { $gte: new Date() }
+    });
+    if (activeBookingCount > 0) {
+      return next(errorHandler(409, 'This service has upcoming or active bookings. Please complete or cancel them before deleting.'));
     }
 
     await Service.findByIdAndDelete(req.params.id);

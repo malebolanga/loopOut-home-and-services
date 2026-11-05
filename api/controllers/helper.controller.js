@@ -1,5 +1,6 @@
 import Helper from '../models/helper.model.js';
 import User from '../models/user.model.js';
+import Booking from '../models/Booking.js';
 import { errorHandler } from '../utils/error.js';
 import { createAreaNotifications } from '../utils/notificationUtils.js';
 import { validateListingText, validateImages } from '../utils/moderationHelper.js';
@@ -161,6 +162,15 @@ export const deleteHelper = async (req, res, next) => {
 
     if (!isAuthorized) {
       return next(errorHandler(403, 'You can only delete your own helper listing!'));
+    }
+
+    const activeBookingCount = await Booking.countDocuments({
+      helper: helper._id,
+      status: { $in: ['pending', 'confirmed', 'approved', 'assigned', 'enroute', 'ongoing', 'work_completed'] },
+      endDate: { $gte: new Date() }
+    });
+    if (activeBookingCount > 0) {
+      return next(errorHandler(409, 'This helper profile has upcoming or active bookings. Please complete or cancel them before deleting.'));
     }
 
     await Helper.findByIdAndDelete(req.params.id);

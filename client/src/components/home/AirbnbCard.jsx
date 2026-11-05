@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
+import { formatListingTitle } from '../../utils/listingDisplay';
 import { BadgeCheck, Navigation2 } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
@@ -211,7 +212,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       <div className="home-image-card relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 mb-2 ring-1 ring-black/5">
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
-          alt={item.name}
+          alt={formatListingTitle(item.name || item.title)}
           type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : item.type?.includes('office') ? 'office' : 'property') : type}
           className="home-media-gallery"
           compactIndicator
@@ -247,7 +248,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
             <p className={`min-h-[2rem] line-clamp-2 font-semibold leading-4 text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
-              {type === 'helper' ? 'Worker: ' : ''}{item.name || item.title || item.address?.split(',')[0] || 'South Africa'}
+              {type === 'helper' ? 'Worker: ' : ''}{formatListingTitle(item.name || item.title || item.address?.split(',')[0] || 'South Africa')}
             </p>
 
             {(item.address || item.location) && (

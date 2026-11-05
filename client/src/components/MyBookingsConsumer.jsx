@@ -216,14 +216,8 @@ const BookingCard = ({ booking, onCancel, onCloseWork, onRate }) => {
           </div>
         )}
 
-        {/* Action if active and ready to close */}
         {['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(booking.status) && (
-          <button
-            onClick={() => onCloseWork(booking)}
-            className="w-full py-2 bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
-          >
-            Mark Job Complete &amp; Rate
-          </button>
+          <p className="text-center text-xs font-semibold text-slate-500">Waiting for the provider to finish the work.</p>
         )}
         
         {/* Premium WhatsApp Contact Card */}

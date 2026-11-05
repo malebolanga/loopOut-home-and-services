@@ -663,51 +663,7 @@ export default function PrivateTutor() {
     postalCode: '',
     country: 'South Africa'
   });
-
-  // Social Media Verification States
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
+;
 
   const tutorModules = {
     'Mathematics': ['Algebra', 'Calculus', 'Geometry', 'Statistics', 'Trigonometry'],
@@ -791,19 +747,6 @@ export default function PrivateTutor() {
     },
     tutorSelectedDates: [],
   });
-
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
-
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -1099,135 +1042,12 @@ export default function PrivateTutor() {
 
   // ==================== END ENHANCED LOCATION FUNCTIONS ====================
 
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
 
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (helperData) => {
-    setVerifyingSocialMedia(true);
-
-    try {
-      // Simulate AI API calls to check social media presence
-      setTimeout(() => {
-        // Generate realistic mock data based on helper information
-        const name = helperData.name || '';
-
-        // AI logic to determine social media presence
-        const hasFacebook = Math.random() > 0.3; // 70% chance
-        const hasInstagram = Math.random() > 0.2; // 80% chance
-        const hasLinkedIn = Math.random() > 0.4; // 60% chance
-        const hasTwitter = Math.random() > 0.5; // 50% chance
-
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
-          verified: Math.random() > 0.8, // Higher verification chance for professionals
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error verifying social media:', error);
-      setVerifyingSocialMedia(false);
-    }
-  };
 
   useEffect(() => {
     const fetchHelper = async () => {
@@ -1246,15 +1066,6 @@ export default function PrivateTutor() {
 
         const data = await res.json();
         setHelper(data);
-
-        // Simulate AI assessment on data load
-        simulateAiAssessment(data);
-
-        // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals'].includes(data.type)) {
-          verifySocialMediaPresence(data);
-        }
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -1306,113 +1117,6 @@ export default function PrivateTutor() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Simulate AI assessment of helper content
-  const simulateAiAssessment = (helperData) => {
-    // Simulate processing delay
-    setTimeout(() => {
-      const description = helperData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
-
-      // Barber-specific scoring
-      if (helperData.type === 'barber' || helperData.type === 'barbar') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("modern") || description.includes("trends")) descScore += 1;
-        if (description.includes("fade") || description.includes("beard")) descScore += 1;
-      }
-
-      // Beauty-specific scoring
-      if (helperData.type === 'beauty' || helperData.type === 'spa') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("premium") || description.includes("professional")) descScore += 1;
-      }
-
-      // Chef-specific scoring
-      if (helperData.type === 'chef' || helperData.type === 'cooking') {
-        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
-        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
-      }
-
-      // Tattoo-specific scoring
-      if (helperData.type === 'tattoo') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-      }
-
-      // Tutor-specific scoring
-      if (helperData.type === 'tutor') {
-        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
-        if (description.includes("degree") || description.includes("education")) descScore += 1;
-        if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      }
-
-      // Photography-specific scoring
-      if (helperData.type === 'photography') {
-        if (description.includes("certified") || description.includes("professional")) descScore += 2;
-        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
-      }
-
-      // Sneaker cleaner-specific scoring
-      if (helperData.type === 'sneaker') {
-        if (description.includes("professional") || description.includes("experience")) descScore += 2;
-        if (description.includes("products") || description.includes("solutions")) descScore += 1;
-        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
-        if (description.includes("brands") || description.includes("materials")) descScore += 1;
-      }
-
-      // Washing mat-specific scoring
-      if (helperData.type === 'washingmat') {
-        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
-        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
-        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
-        if (description.includes("drying") || description.includes("process")) descScore += 1;
-      }
-
-      // Animal care-specific scoring
-      if (helperData.type === 'animals') {
-        if (description.includes("certified") || description.includes("trained")) descScore += 2;
-        if (description.includes("experience") || description.includes("passion")) descScore += 1;
-        if (description.includes("animals") || description.includes("pets")) descScore += 1;
-        if (description.includes("care") || description.includes("handling")) descScore += 1;
-        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (helperData.imageUrls?.length > 0) imgScore = 3;
-      if (helperData.imageUrls?.length > 2) imgScore = 4;
-      if (helperData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
-    }, 1500);
-  };
 
   // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
@@ -2160,49 +1864,6 @@ export default function PrivateTutor() {
     setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
-
-  // Simulate AI analysis of comments
-  const analyzeCommentsWithAI = () => {
-    setAnalyzingComments(true);
-
-    // Simulate API call to AI service
-    setTimeout(() => {
-      // Generate random quality scores for comments
-      const analysis = {};
-      const comments = document.querySelectorAll('.comment-item');
-
-      comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
-        analysis[index] = { qualityScore, sentiment };
-      });
-
-      setCommentAnalysis(analysis);
-      setAnalyzingComments(false);
-    }, 2000);
-  };
-
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
 
   // Function to open full-page booking form overlay
   const openBookingFormOverlay = () => {
@@ -2966,9 +2627,6 @@ export default function PrivateTutor() {
           onClose={() => setShowCommentsPanel(false)}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
         />
       )}
     </div>

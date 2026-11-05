@@ -55,6 +55,10 @@ export default function HelperBookingSheet({
         alert("Please enter your service address.");
         return;
       }
+      if (bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
+        alert("Please let the provider know whether there are dogs at the property.");
+        return;
+      }
     }
     if (step === 2) {
       if (
@@ -295,16 +299,34 @@ export default function HelperBookingSheet({
 
                 {/* Address if comeToYou */}
                 {bookingData.locationOption === 'comeToYou' && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">📍 Address *</label>
-                    <textarea
-                      name="address"
-                      value={bookingData.address}
-                      onChange={handleBookingChange}
-                      rows="2"
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"
-                      placeholder="Enter your full street address, suburb & city"
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">📍 Address *</label>
+                      <textarea
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleBookingChange}
+                        rows="2"
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"
+                        placeholder="e.g. 27 Somerset Road, Greenpoint, Cape Town"
+                      />
+                    </div>
+                    <fieldset>
+                      <legend className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">🐕 Are there dogs at the property? *</legend>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[['yes', 'Yes'], ['no', 'No']].map(([value, label]) => (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-pressed={bookingData.dogsAtProperty === value}
+                            onClick={() => setBookingData(prev => ({ ...prev, dogsAtProperty: value }))}
+                            className={`p-3 rounded-2xl border-2 text-center text-xs font-bold transition-all ${bookingData.dogsAtProperty === value ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300' : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'}`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
                   </div>
                 )}
               </div>

@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { updateUserStart, updateUserSuccess, updateUserFailure } from '../redux/user/userSlice';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { auth } from '../firebase';
+import { GoogleAuthProvider, reauthenticateWithPopup } from 'firebase/auth';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -21,7 +23,7 @@ export default function SettingsPage() {
   // Tab State
   const [activeTab, setActiveTab] = useState(() => {
     const requestedTab = searchParams.get('tab');
-    return ['account', 'guardian', 'security', 'customize', 'privacy', 'billing'].includes(requestedTab) ? requestedTab : 'hub';
+    return ['account', 'guardian', 'security', 'customize', 'privacy'].includes(requestedTab) ? requestedTab : 'hub';
   });
 
   // Custom States
@@ -95,6 +97,10 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const isGoogleOnlyAccount = Boolean(
+    (auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com') || currentUser?.authProviders?.includes('google')) &&
+    !(auth.currentUser?.providerData?.some((provider) => provider.providerId === 'password') || currentUser?.authProviders?.includes('password'))
+  );
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(Boolean(currentUser?.twoFactorEnabled));
   const [twoFactorSetupPending, setTwoFactorSetupPending] = useState(false);
   const [twoFactorAction, setTwoFactorAction] = useState('enable');
@@ -258,10 +264,15 @@ export default function SettingsPage() {
       setSuccessMessage('');
       dispatch(updateUserStart());
       setIsUpdating(true);
+      let passwordPayload = { currentPassword, newPassword };
+      if (!currentPassword && auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com')) {
+        const result = await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+        passwordPayload.firebaseIdToken = await result.user.getIdToken(true);
+      }
       const response = await authenticatedFetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify(passwordPayload),
       });
       const data = await response.json();
       if (!response.ok || data.success === false) {
@@ -405,8 +416,7 @@ export default function SettingsPage() {
     { id: 'guardian', label: 'Guardian Safety', icon: Shield },
     { id: 'security', label: 'Login & Security', icon: Lock },
     { id: 'customize', label: 'Interface Design', icon: Settings },
-    { id: 'privacy', label: 'Privacy & Sharing', icon: Eye },
-    { id: 'billing', label: 'Payments & Billing', icon: CreditCard }
+    { id: 'privacy', label: 'Privacy & Sharing', icon: Eye }
   ];
 
   const accountSections = [
@@ -415,7 +425,6 @@ export default function SettingsPage() {
     { id: 'privacy', label: 'Privacy & sharing', description: 'Choose what information you share on LoopOut.', icon: Eye },
     { id: 'customize', label: 'Global preferences', description: 'Set your language, currency, appearance and alerts.', icon: Globe },
     { id: 'guardian', label: 'Safety contacts', description: 'Manage emergency contacts and safety preferences.', icon: Shield },
-    { id: 'billing', label: 'Payments & billing', description: 'Review your payment and billing options.', icon: CreditCard },
   ];
 
   if (activeTab === 'hub') {
@@ -784,8 +793,9 @@ export default function SettingsPage() {
                           <input 
                             type="password"
                             autoComplete="current-password"
-                            required
-                            placeholder="••••••••••••"
+                            required={!isGoogleOnlyAccount}
+                            disabled={isGoogleOnlyAccount}
+                            placeholder={isGoogleOnlyAccount ? 'Google sign-in will verify your account' : '••••••••••••'}
                             value={currentPassword}
                             onChange={(e) => setCurrentPassword(e.target.value)}
                             className="w-full pl-11 pr-5 py-4 bg-gray-50 dark:bg-gray-850 border border-gray-150 dark:border-gray-800 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all text-gray-900 dark:text-white"
@@ -1050,36 +1060,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Billing & Payments Tab */}
-              {activeTab === 'billing' && (
-                <div className="space-y-8 animate-fadeIn">
-                  <div>
-                    <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white mb-2">Payments & Billing</h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">Securely manage payment credentials, PayFast integrations, and view transaction details.</p>
-                  </div>
 
-                  {/* PayFast Status Card */}
-                  <div className="p-6 bg-gradient-to-r from-rose-50 to-purple-50 dark:from-gray-800 dark:to-gray-850 rounded-[2rem] border border-rose-100/50 dark:border-gray-800 shadow-inner flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 bg-rose-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">Active Partner</span>
-                        <h4 className="font-black text-lg text-gray-900 dark:text-white">PayFast Integration Secured</h4>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Payments are safely handled using PayFast escrow systems to protect client and host funds.</p>
-                    </div>
-                    <button className="px-5 py-3.5 bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md shadow-rose-500/20 flex-shrink-0">Configure PayFast</button>
-                  </div>
-
-                  {/* Transaction List */}
-                  <div className="space-y-4">
-                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Active Escrow Accounts</h4>
-                    <div className="bg-gray-50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 text-center text-gray-400">
-                      <p className="text-sm font-semibold mb-1">No pending payouts found.</p>
-                      <p className="text-xs text-gray-400">Payout funds are held securely until the booking starts.</p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
             </div>
           </div>

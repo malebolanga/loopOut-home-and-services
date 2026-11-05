@@ -20,14 +20,22 @@ router.get('/', verifyToken, async(req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid user ID format' });
         }
 
-        const [notifications, unreadCount] = await Promise.all([
-            Notification.find({ userId }).sort({ createdAt: -1 }).limit(20).lean(),
-            Notification.countDocuments({ userId, read: false })
+        const rawLimit = Number.parseInt(req.query.limit, 10);
+        const rawOffset = Number.parseInt(req.query.offset, 10);
+        const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 20;
+        const offset = Number.isFinite(rawOffset) ? Math.max(rawOffset, 0) : 0;
+        const [notifications, unreadCount, totalCount] = await Promise.all([
+            Notification.find({ userId }).sort({ createdAt: -1, _id: -1 }).skip(offset).limit(limit).lean(),
+            Notification.countDocuments({ userId, read: false }),
+            Notification.countDocuments({ userId })
         ]);
 
         return res.json({
             notifications,
-            unreadCount
+            unreadCount,
+            totalCount,
+            hasMore: offset + notifications.length < totalCount,
+            nextOffset: offset + notifications.length
         });
     } catch (error) {
         console.error('[NOTIF] CRITICAL SERVER ERROR:', error.message);

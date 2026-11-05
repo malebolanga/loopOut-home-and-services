@@ -62,7 +62,7 @@ export default function BookingHistory({ bookingSummary, providerName, providerT
     <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
   
       <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider font-bold">
-        Click on a past client below to ask for a direct reference about their experience.
+        Select a past client below to request a reference.
       </p>
       <div className="py-4 px-[2px] overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8 rounded-none">
         <Swiper

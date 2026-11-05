@@ -11,8 +11,20 @@ import ServiceComment from '../models/service-comment.model.js';
 import Comment from '../models/comment.model.js';
 import EventComment from '../models/event-comment.model.js';
 import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
+import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
+
+const shouldSendBookingPush = async (userId, preference = 'activity.bookingUpdates') => {
+  try {
+    const user = await User.findById(userId).select('notificationPreferences');
+    if (!user) return true;
+    const [group, key] = preference.split('.');
+    return user.notificationPreferences?.[group]?.[key] !== false;
+  } catch {
+    return true;
+  }
+};
 
 // Calculate price and validate dates (public - used by client before booking)
 export const calculateBookingDetails = async (req, res) => {
@@ -51,6 +63,8 @@ export const calculateBookingDetails = async (req, res) => {
 
 // Create booking (requires authentication via verifyToken middleware)
 export const createBooking = async (req, res) => {
+  let eventTicketsReserved = 0;
+  let eventBookingSaved = false;
   try {
     // Always use the authenticated user — never trust client-supplied userId
     const authenticatedUserId = req.user.id;
@@ -62,6 +76,7 @@ export const createBooking = async (req, res) => {
       selectedPerformer, performerExperience, performerImage, numberOfRooms, accommodationSelection,
       serviceDuration, selectedHaircut, beardGrooming, specialRequirements,
       foodProvided, electricityProvided,
+      breakfast,
       vehicleType, vehicleMake, vehicleModel,
       requestLocation, locationOption
     } = req.body;
@@ -105,14 +120,42 @@ export const createBooking = async (req, res) => {
       console.warn('[createBooking] validation failed: invalid date range', { startDate, endDate });
       return res.status(400).json({ error: 'Invalid date range' });
     }
+    if (start.getTime() < Date.now()) {
+      return res.status(400).json({ error: 'Bookings must start in the future. Please choose a new date or time.' });
+    }
+    const ownerId = (item.userRef?._id || item.userRef || item.creator?._id || item.creator)?.toString?.();
+    if (ownerId && ownerId === authenticatedUserId) {
+      return res.status(403).json({ error: 'You cannot book your own listing or service.' });
+    }
     const timeDifference = Math.max(0, end.getTime() - start.getTime());
     const numberOfUnits = Math.max(1, Math.ceil(timeDifference / (1000 * 3600 * 24)));
-    
-    // Honor the price selected by the user during reservation (unit/service/option/style/package)
-    const clientSelectedPrice = Number(totalPrice ?? price);
-    const resolvedTotalPrice = (!isNaN(clientSelectedPrice) && clientSelectedPrice > 0)
-      ? clientSelectedPrice
-      : ((item.regularPrice || 0) * numberOfUnits);
+    const ratePeriod = item.pricePeriod || (item.type === 'over' ? 'night' : item.type === 'office' ? 'hour' : 'day');
+    const listedBasePrice = Number(item.regularPrice) || 0;
+    const basePrice = item.offer && Number(item.discountPrice) > 0 && Number(item.discountPrice) < listedBasePrice
+      ? Number(item.discountPrice)
+      : listedBasePrice;
+    const selectedRoom = listingId && Array.isArray(item.roomTypes) ? item.roomTypes.find((room) => room.name === subtype) : null;
+    const selectedService = Array.isArray(item.serviceList) ? item.serviceList.find((service) => service.name === subtype) : null;
+    const selectedPrice = Number(selectedRoom?.price ?? selectedService?.price);
+    const unitPrice = Number.isFinite(selectedPrice) && selectedPrice >= 0 ? selectedPrice : basePrice;
+    let resolvedTotalPrice = unitPrice;
+    if (eventId) {
+      resolvedTotalPrice = basePrice * (parsedGuestCount || 1);
+    } else if (listingId && ['day', 'night'].includes(ratePeriod)) {
+      const roomMultiplier = accommodationSelection === 'entire' ? 1 : parsedRoomCount;
+      resolvedTotalPrice = unitPrice * numberOfUnits * roomMultiplier
+        + (breakfast === true ? 150 * numberOfUnits * (parsedGuestCount || 1) : 0)
+        + (parsedGuestCount > 2 ? (parsedGuestCount - 2) * 200 * numberOfUnits : 0);
+    } else if (listingId && ratePeriod === 'hour') {
+      resolvedTotalPrice = unitPrice * Math.max(1, timeDifference / (1000 * 60 * 60));
+    } else if (listingId && ratePeriod === 'week') {
+      resolvedTotalPrice = unitPrice * Math.max(1, Math.ceil(timeDifference / (7 * 24 * 60 * 60 * 1000)));
+    } else if (listingId && ratePeriod === 'month') {
+      resolvedTotalPrice = unitPrice * Math.max(1, Math.ceil(timeDifference / (30 * 24 * 60 * 60 * 1000)));
+    }
+    if (!Number.isFinite(resolvedTotalPrice) || resolvedTotalPrice < 0) {
+      return res.status(400).json({ error: 'Could not calculate a valid booking price for this listing.' });
+    }
 
     // Overlap check to prevent double-booking
     // For single-time appointments (like helpers/services where start == end), treat slot window as 1 hour
@@ -165,11 +208,30 @@ export const createBooking = async (req, res) => {
       if (maxOccupied + requestedRoomCount > inventory) {
         return res.status(400).json({ error: `Only ${Math.max(0, inventory - maxOccupied)} room(s) remain available for some of those dates.` });
       }
-    } else {
+    } else if (!eventId) {
       const existingBooking = await Booking.findOne(overlapQuery);
       if (existingBooking) {
         console.warn('[createBooking] validation failed: time slot already reserved', { overlapQuery, existingBookingId: existingBooking._id });
         return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+      }
+    }
+
+    if (eventId) {
+      const ticketCount = parsedGuestCount || 1;
+      if (Number(item.capacity) > 0) {
+        const reservedEvent = await Event.findOneAndUpdate(
+          {
+            _id: eventId,
+            $expr: { $lte: [{ $add: [{ $ifNull: ['$ticketsBooked', 0] }, ticketCount] }, '$capacity'] }
+          },
+          { $inc: { ticketsBooked: ticketCount } },
+          { new: true }
+        );
+        if (!reservedEvent) return res.status(409).json({ error: 'This event has reached capacity. Please choose another event.' });
+        eventTicketsReserved = ticketCount;
+      } else {
+        await Event.findByIdAndUpdate(eventId, { $inc: { ticketsBooked: ticketCount } });
+        eventTicketsReserved = ticketCount;
       }
     }
 
@@ -187,6 +249,7 @@ export const createBooking = async (req, res) => {
       message,
       subtype,
       numberOfGuests: parsedGuestCount,
+      breakfast: breakfast === true,
       numberOfRooms: listingId ? bookingRoomCount : undefined,
       accommodationSelection: listingId ? accommodationSelection : undefined,
       functionType,
@@ -208,6 +271,7 @@ export const createBooking = async (req, res) => {
     });
 
     await newBooking.save();
+    eventBookingSaved = true;
 
     // Increment bookingsCount
     if (listingId) await Listing.findByIdAndUpdate(listingId, { $inc: { bookingsCount: 1 } });
@@ -225,7 +289,7 @@ export const createBooking = async (req, res) => {
     const bookingMapLink = bookingAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingAddress)}` : undefined;
 
     try {
-      if (hostUserId) {
+      if (hostUserId && await shouldSendBookingPush(hostUserId)) {
         await new Notification({
           userId: hostUserId,
           type: 'booking',
@@ -246,13 +310,18 @@ export const createBooking = async (req, res) => {
             mapLink: bookingMapLink
           }
         }).save();
+        sendPushNotificationToUser(hostUserId, {
+            title: '📅 New Booking Request',
+            body: `You have a new booking request for "${itemName}" (ZAR ${resolvedTotalPrice.toLocaleString()}).`,
+            data: { bookingId: String(newBooking._id), type: 'booking', route: '/notifications' }
+        }).catch((pushErr) => console.warn('[createBooking] Host push notification error:', pushErr.message));
       }
     } catch (notifErr) {
       console.error('Failed to create host notification:', notifErr);
     }
 
     try {
-      if (authenticatedUserId) {
+      if (authenticatedUserId && await shouldSendBookingPush(authenticatedUserId)) {
         await new Notification({
           userId: authenticatedUserId,
           type: 'booking',
@@ -273,6 +342,11 @@ export const createBooking = async (req, res) => {
             mapLink: bookingMapLink
           }
         }).save();
+        sendPushNotificationToUser(authenticatedUserId, {
+          title: 'Booking Request Sent',
+          body: `Your booking request for "${itemName}" has been sent.`,
+          data: { bookingId: String(newBooking._id), type: 'booking', route: '/notifications' }
+        }).catch((pushErr) => console.warn('[createBooking] Guest push notification error:', pushErr.message));
       }
     } catch (notifErr) {
       console.error('Failed to create guest notification:', notifErr);
@@ -285,6 +359,9 @@ export const createBooking = async (req, res) => {
     });
 
   } catch (error) {
+    if (eventTicketsReserved > 0 && !eventBookingSaved) {
+      await Event.updateOne({ _id: req.body.eventId }, { $inc: { ticketsBooked: -eventTicketsReserved } }).catch(() => {});
+    }
     console.error('[createBooking] error:', error);
     res.status(500).json({ error: 'Server error' });
   }
@@ -600,16 +677,29 @@ export const updateBookingStatus = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    const isGuest = callerId === bookingUserId;
     const allowedByGuest = ['cancelled', 'completed'];
-    const allowedByHost = ['confirmed', 'approved', 'declined', 'cancelled', 'completed', 'assigned', 'enroute', 'ongoing', 'work_completed'];
+    const allowedByHost = ['confirmed', 'approved', 'declined', 'cancelled', 'assigned', 'enroute', 'ongoing', 'work_completed'];
     if (!req.user.isAdmin) {
-      const allowedStatuses = callerId === bookingUserId ? allowedByGuest : allowedByHost;
+      const allowedStatuses = isGuest ? allowedByGuest : allowedByHost;
       if (!allowedStatuses.includes(status)) {
         return res.status(403).json({ error: 'You are not allowed to set that booking status.' });
       }
     }
 
     const previousStatus = booking.status;
+    if (status === 'work_completed' && (isGuest || !['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(previousStatus))) {
+      return res.status(409).json({ error: 'Only the provider can mark an active booking as work completed.' });
+    }
+    if (status === 'completed' && (!isGuest || previousStatus !== 'work_completed')) {
+      return res.status(409).json({ error: 'The client can confirm completion only after the provider marks the work complete.' });
+    }
+    if (['confirmed', 'approved'].includes(status) && !isGuest && previousStatus !== 'pending') {
+      return res.status(409).json({ error: 'Only pending bookings can be confirmed.' });
+    }
+    if (['assigned', 'enroute', 'ongoing'].includes(status) && (isGuest || !['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(previousStatus))) {
+      return res.status(409).json({ error: 'This booking cannot move to that service status.' });
+    }
     // Guests may cancel only up to 48 hours before the scheduled start.
     // Providers can still cancel when they are unable to fulfil a booking.
     if (status === 'cancelled' && callerId === bookingUserId && !req.user.isAdmin) {
@@ -629,7 +719,7 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     // If client closes and completes work, automatically release any held escrow to the provider
-    if (status === 'completed') {
+    if (status === 'completed' && isGuest && previousStatus === 'work_completed') {
       try {
         await Escrow.updateMany(
           { bookingId: booking._id, status: 'held' },
@@ -638,6 +728,9 @@ export const updateBookingStatus = async (req, res) => {
       } catch (escrowErr) {
         console.error('[updateBookingStatus] Failed to release escrow:', escrowErr);
       }
+    }
+    if (booking.event && ['cancelled', 'declined'].includes(status) && !['cancelled', 'declined', 'completed'].includes(previousStatus)) {
+      await Event.updateOne({ _id: booking.event }, { $inc: { ticketsBooked: -Math.max(1, Number(booking.numberOfGuests) || 1) } });
     }
 
     const itemName = item?.name || item?.title || 'Service';
@@ -650,7 +743,12 @@ export const updateBookingStatus = async (req, res) => {
       try {
         let recipientId;
         let title = 'Booking Update';
-        let messageText = `The status of your booking for "${itemName}" has been updated to ${status}.`;
+        const statusLabels = {
+          pending: 'waiting for provider response', confirmed: 'confirmed', approved: 'confirmed',
+          declined: 'declined', cancelled: 'cancelled', assigned: 'a provider has been assigned',
+          enroute: 'the provider is on the way', ongoing: 'in progress', work_completed: 'finished by the provider', completed: 'completed'
+        };
+        let messageText = `Your booking for "${itemName}" is now ${statusLabels[status] || 'updated'}.`;
 
         if (status === 'cancelled') {
           title = 'Booking Cancelled';
@@ -667,7 +765,7 @@ export const updateBookingStatus = async (req, res) => {
           messageText = `Your appointment for "${itemName}" has been confirmed! View your schedule on the Calendar.`;
 
           // Also notify the service provider / host so both parties receive the calendar confirmation
-          if (hostId && hostId.toString() !== bookingUserId?.toString()) {
+          if (hostId && hostId.toString() !== bookingUserId?.toString() && await shouldSendBookingPush(hostId)) {
             try {
               await new Notification({
                 userId: hostId,
@@ -684,14 +782,26 @@ export const updateBookingStatus = async (req, res) => {
           title = 'Booking Declined';
           recipientId = bookingUserId;
           messageText = `Your booking request for "${itemName}" was declined by the host.`;
-        } else if (status === 'work_completed') {
-          title = 'Work Completed by Provider';
+        } else if (status === 'assigned') {
+          title = 'Provider Assigned';
           recipientId = bookingUserId;
-          messageText = `The service provider has finished the work for "${itemName}". Please review and close the work to finalize payment and rate your pro!`;
+          messageText = `A provider has been assigned to your booking for "${itemName}".`;
+        } else if (status === 'enroute') {
+          title = '🚗 Provider En Route';
+          recipientId = bookingUserId;
+          messageText = `Your provider is en route to your location for "${itemName}".`;
+        } else if (status === 'ongoing') {
+          title = '🔨 Work In Progress';
+          recipientId = bookingUserId;
+          messageText = `Work has begun on your booking for "${itemName}".`;
+        } else if (status === 'work_completed') {
+          title = '✅ Work Completed by Provider';
+          recipientId = bookingUserId;
+          messageText = `The service provider has finished the work for "${itemName}". Please review and confirm completion to finalize payment and rate your pro!`;
         } else if (status === 'completed') {
           // If guest closed it, notify host of payment/completion
           if (callerId === bookingUserId) {
-            if (hostId) {
+            if (hostId && await shouldSendBookingPush(hostId, 'activity.paymentReceipts')) {
               await new Notification({
                 userId: hostId,
                 type: 'booking',
@@ -699,6 +809,12 @@ export const updateBookingStatus = async (req, res) => {
                 message: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released the payment!`,
                 data: { bookingId: booking._id, itemType, itemId, status: 'completed', price: booking.totalPrice, totalPrice: booking.totalPrice }
               }).save();
+              sendPushNotificationToUser(hostId, {
+                  title: 'Work Closed & Payment Released',
+                  body: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released payment!`,
+                  data: { bookingId: String(booking._id), type: 'booking', route: '/notifications' },
+                  preference: 'activity.paymentReceipts'
+              }).catch((e) => console.warn('[updateBookingStatus] Host push error:', e.message));
             }
           }
           title = 'Booking Completed - Rate & Review';
@@ -708,7 +824,7 @@ export const updateBookingStatus = async (req, res) => {
           recipientId = bookingUserId;
         }
 
-        if (recipientId) {
+        if (recipientId && await shouldSendBookingPush(recipientId)) {
           await new Notification({
             userId: recipientId,
             type: status === 'completed' ? 'review' : 'booking',
@@ -716,6 +832,12 @@ export const updateBookingStatus = async (req, res) => {
             message: messageText,
             data: { bookingId: booking._id, itemType, itemId, status, price: booking.totalPrice, totalPrice: booking.totalPrice, canReview: status === 'completed' }
           }).save();
+
+          sendPushNotificationToUser(recipientId, {
+              title,
+              body: messageText,
+              data: { bookingId: String(booking._id), type: 'booking', route: '/notifications' }
+          }).catch((e) => console.warn('[updateBookingStatus] Push error:', e.message));
         }
       } catch (notifErr) {
         console.error('Failed to create status update notification:', notifErr);

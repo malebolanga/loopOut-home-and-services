@@ -23,6 +23,7 @@ export const createAreaNotifications = async (item, itemType) => {
         // We use a case-insensitive regex for flexibility
         const usersInArea = await User.find({
             location: { $regex: new RegExp(location.trim(), 'i') },
+            'notificationPreferences.promotions.platformUpdates': { $ne: false },
             _id: { $ne: item.userRef || item.creator } // Don't notify the creator
         });
 
@@ -64,6 +65,14 @@ export const createAreaNotifications = async (item, itemType) => {
  */
 export const createUserNotification = async (userId, type, title, message, data = {}) => {
     try {
+        const user = await User.findById(userId).select('notificationPreferences').lean();
+        if (!user) return;
+        const preference = type === 'booking'
+            ? user.notificationPreferences?.activity?.bookingUpdates
+            : type === 'payment'
+                ? user.notificationPreferences?.activity?.paymentReceipts
+                : null;
+        if (preference === false) return;
         const notification = new Notification({
             userId,
             type,

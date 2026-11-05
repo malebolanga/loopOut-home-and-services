@@ -645,16 +645,6 @@ export default function UpcomingBookings() {
 
               {/* Modal Footer Actions */}
               <div className="p-4 border-t border-slate-100 bg-white flex items-center gap-2">
-                {selectedBooking.status !== 'completed' && selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'work_completed' && (
-                  <button
-                    onClick={() => handleCloseWork(selectedBooking)}
-                    disabled={closingId === selectedBooking.id}
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
-                  >
-                    <SparklesIcon className="w-3.5 h-3.5" />
-                    <span>Close Work &amp; Rate</span>
-                  </button>
-                )}
                 {selectedBooking.itemRoute && (
                   <button
                     onClick={() => navigate(selectedBooking.itemRoute)}

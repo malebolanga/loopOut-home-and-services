@@ -3597,6 +3597,15 @@ export default function CreateListing() {
                           onChange={handleFormChange}
                           required
                         />
+                        <FormInput
+                          label="Ticket capacity (optional)"
+                          type="number"
+                          id="capacity"
+                          value={listingForm.capacity}
+                          onChange={handleFormChange}
+                          placeholder="Leave blank for unlimited tickets"
+                          min="1"
+                        />
                       </div>
                     )}
 

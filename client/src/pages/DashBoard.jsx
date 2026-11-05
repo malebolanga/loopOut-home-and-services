@@ -711,10 +711,10 @@ export default function DashBoard() {
                           )}
                           {(booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'ongoing') && (
                             <button
-                              onClick={() => handleStatusUpdate(booking._id, 'completed')}
+                              onClick={() => handleStatusUpdate(booking._id, 'work_completed')}
                               className="px-4 py-2.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-500 transition-all shadow-md"
                             >
-                              {booking.type === 'listing' ? 'Check Out' : 'Mark Complete'}
+                              {booking.type === 'listing' ? 'Mark Check-out Complete' : 'Mark Work Complete'}
                             </button>
                           )}
                         </>
