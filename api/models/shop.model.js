@@ -10,6 +10,7 @@ const mealSchema = new mongoose.Schema({
   itemType: { type: String, enum: ['meal', 'combo', 'special'], default: 'meal' },
   image: { type: String, default: '🍱' },
   isAvailable: { type: Boolean, default: true },
+  portions: [{ name: { type: String, enum: ['Small', 'Medium', 'Large', 'Full plate'] }, price: { type: Number, min: 0 } }],
   addOns: [{ name: String, price: Number }],
   sides: { type: [String], default: [] }
 }, { _id: false });

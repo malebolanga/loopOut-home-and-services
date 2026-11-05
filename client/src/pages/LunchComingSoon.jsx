@@ -62,6 +62,33 @@ import {
 import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
+const PORTION_SIZES = ['Small', 'Medium', 'Large', 'Full plate'];
+const getStartingMealPrice = (meal) => {
+  const prices = (meal?.portions || []).map((portion) => Number(portion.price)).filter((price) => Number.isFinite(price) && price > 0);
+  return prices.length ? Math.min(...prices) : Number(meal?.price) || 0;
+};
+const formatMealPrice = (meal) => meal?.portions?.length ? `From ${formatPrice(getStartingMealPrice(meal))}` : formatPrice(meal?.price);
+
+const PortionPriceFields = ({ portions = [], onChange }) => (
+  <fieldset className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
+    <legend className="px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">Serving sizes &amp; prices (optional)</legend>
+    <p className="mb-2 text-[10px] text-gray-500 dark:text-gray-400">Add a price for each size you offer. Customers will choose one before ordering.</p>
+    <div className="grid grid-cols-2 gap-2">
+      {PORTION_SIZES.map((name) => (
+        <label key={name} className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+          {name}
+          <div className="mt-1 flex items-center rounded-lg bg-gray-50 px-2 dark:bg-gray-800">
+            <span className="text-xs text-gray-400">R</span>
+            <input type="number" min="0.01" max="10000" step="0.01" inputMode="decimal" aria-label={`${name} price`} value={portions.find((portion) => portion.name === name)?.price || ''} onChange={(event) => {
+              const price = event.target.value;
+              onChange((current) => [...current.filter((portion) => portion.name !== name), ...(price ? [{ name, price }] : [])]);
+            }} className="w-full bg-transparent px-1 py-2 text-xs text-gray-900 outline-none dark:text-white" placeholder="Not offered" />
+          </div>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+);
 
 const getFoodRatingSummary = (shop, meal) => {
   const mealId = String(meal?.id || meal?._id || '');
@@ -758,8 +785,10 @@ export default function LunchComingSoon() {
     category: 'Full Menu',
     itemType: 'meal',
     image: '🍱',
-    sides: []
+    sides: [],
+    portions: []
   });
+  const [selectedPortionName, setSelectedPortionName] = useState('');
 
   // Edit states
   const [showEditShopModal, setShowEditShopModal] = useState(false);
@@ -791,7 +820,8 @@ export default function LunchComingSoon() {
     category: 'Full Menu',
     itemType: 'meal',
     image: '🍱',
-    sides: []
+    sides: [],
+    portions: []
   });
 
   // Selected Order for Receipt Modal
@@ -1303,7 +1333,7 @@ export default function LunchComingSoon() {
   };
 
   // Cart operations
-  const addToCart = (meal) => {
+  const addToCart = (meal, portionName = '') => {
     if (currentShop?.isOpen === false) {
       setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
       return;
@@ -1318,18 +1348,31 @@ export default function LunchComingSoon() {
     const chosenSides = availableSides.length > 0 && maxSides > 0
       ? getActiveSides(meal, availableSides, maxSides)
       : [];
+    const chosenPortion = meal.portions?.find((portion) => portion.name === portionName);
+    if (meal.portions?.length && !chosenPortion) {
+      setNotice({ type: 'error', message: 'Choose a serving size before adding this meal.' });
+      return;
+    }
+    const orderedMeal = chosenPortion
+      ? { ...meal, price: Number(chosenPortion.price), portionName: chosenPortion.name }
+      : { ...meal, portionName: '' };
 
-    const cartKey = meal.id + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
+    const cartKey = meal.id + (chosenPortion ? `-${chosenPortion.name}` : '') + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
 
     setCart((items) => {
-      const existingIndex = items.findIndex((item) => (item.cartKey && item.cartKey === cartKey) || (item.id === meal.id && JSON.stringify(item.sides || []) === JSON.stringify(chosenSides)));
+      const existingIndex = items.findIndex((item) => (item.cartKey && item.cartKey === cartKey) || (!item.cartKey && item.id === meal.id && item.portionName === orderedMeal.portionName && JSON.stringify(item.sides || []) === JSON.stringify(chosenSides)));
       if (existingIndex > -1) {
         return items.map((item, idx) => idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...items, { ...meal, shopId: currentShop.id || currentShop._id, sides: chosenSides, cartKey, quantity: 1 }];
+      return [...items, { ...orderedMeal, shopId: currentShop.id || currentShop._id, sides: chosenSides, cartKey, quantity: 1 }];
     });
     // Auto-show basket preview popup
     setShowBasketPreview(true);
+  };
+
+  const openFoodDetails = (meal) => {
+    setSelectedPortionName('');
+    setSelectedFeaturedMeal(meal);
   };
 
   const updateQuantity = (cartKeyOrId, change) => {
@@ -1338,7 +1381,7 @@ export default function LunchComingSoon() {
     setCart((items) =>
       items
         .map((item) => {
-          const isMatch = (item.cartKey && item.cartKey === cartKeyOrId) || item.id === cartKeyOrId;
+          const isMatch = item.cartKey ? item.cartKey === cartKeyOrId : item.id === cartKeyOrId;
           return isMatch ? { ...item, quantity: item.quantity + change } : item;
         })
         .filter((item) => item.quantity > 0)
@@ -1465,9 +1508,14 @@ export default function LunchComingSoon() {
   const handleAddMealSubmit = async (e) => {
     e.preventDefault();
     const targetShopId = dashboardShop ? (dashboardShop.id || dashboardShop._id) : selectedShopId;
-    if (!newMealForm.name || !newMealForm.price || !targetShopId) return;
+    const configuredPrices = (newMealForm.portions || []).map((portion) => Number(portion.price)).filter((price) => Number.isFinite(price) && price > 0);
+    const fallbackPrice = configuredPrices.length ? Math.min(...configuredPrices) : Number(newMealForm.price);
+    if (!newMealForm.name || !Number.isFinite(fallbackPrice) || fallbackPrice <= 0 || !targetShopId) {
+      setNotice({ type: 'error', message: 'Add a valid base price or at least one serving size price.' });
+      return;
+    }
     try {
-      const added = await addMealToShop(targetShopId, newMealForm);
+      const added = await addMealToShop(targetShopId, { ...newMealForm, price: fallbackPrice });
       if (added) {
         setShops((prev) =>
           prev.map((s) => {
@@ -1482,7 +1530,7 @@ export default function LunchComingSoon() {
         );
       }
       setShowAddMealModal(false);
-      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', category: 'Full Menu', itemType: 'meal', image: '🍱', sides: [] });
+      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', category: 'Full Menu', itemType: 'meal', image: '🍱', sides: [], portions: [] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
@@ -1653,6 +1701,8 @@ export default function LunchComingSoon() {
   const selectedFoodActiveSides = selectedFeaturedMeal
     ? getActiveSides(selectedFeaturedMeal, selectedFoodSides, selectedFoodMaxSides)
     : [];
+  const selectedFoodPortion = selectedFeaturedMeal?.portions?.find((portion) => portion.name === selectedPortionName);
+  const selectedFoodPrice = selectedFoodPortion?.price ?? getStartingMealPrice(selectedFeaturedMeal);
 
   return (
     <main className={`app-safe-top min-h-screen app-safe-content-bottom ${cart.length > 0 ? 'pb-28 sm:pb-24' : 'pb-12 sm:pb-8'} bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden`}>
@@ -1939,7 +1989,7 @@ export default function LunchComingSoon() {
                       <button
                         key={meal.id || meal._id || `${meal.name}-${index}`}
                         type="button"
-                        onClick={() => setSelectedFeaturedMeal(meal)}
+                        onClick={() => openFoodDetails(meal)}
                         aria-label={`View details for ${meal.name}`}
                         className="flex min-w-[220px] snap-start items-center gap-2 rounded-lg bg-gray-50 p-2 text-left transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:min-w-[250px] dark:bg-gray-800/60 dark:hover:bg-gray-800"
                       >
@@ -1954,7 +2004,7 @@ export default function LunchComingSoon() {
                           <p className="truncate text-[11px] font-semibold text-gray-800 dark:text-gray-100">{meal.name}</p>
                           {mealRating.count > 0 && <p className="flex items-center gap-0.5 text-[10px] font-semibold text-gray-600 dark:text-gray-300"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} · {mealRating.count} {mealRating.count === 1 ? 'rating' : 'ratings'}</p>}
                           <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
-                            {formatPrice(meal.price)} · {meal.completedSales > 0 ? `${meal.completedSales} sold` : meal.itemType === 'combo' ? 'Combo' : meal.itemType === 'special' || meal.isSpecial ? 'Special' : 'Popular'}
+                            {formatMealPrice(meal)} · {meal.completedSales > 0 ? `${meal.completedSales} sold` : meal.itemType === 'combo' ? 'Combo' : meal.itemType === 'special' || meal.isSpecial ? 'Special' : 'Popular'}
                           </p>
                           {meal.itemType === 'combo' && meal.description && <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">{meal.description}</p>}
                         </div>
@@ -2110,7 +2160,7 @@ export default function LunchComingSoon() {
                         <button
                           key={meal.id}
                           type="button"
-                          onClick={() => setSelectedFeaturedMeal(meal)}
+                          onClick={() => openFoodDetails(meal)}
                           aria-label={`View ${meal.name} details and order options`}
                           className={`relative w-full rounded-xl bg-white p-3.5 text-left shadow-sm ring-1 ring-gray-200 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800 ${soldOut ? 'opacity-75' : ''}`}
                         >
@@ -2137,7 +2187,7 @@ export default function LunchComingSoon() {
                                     )}
                                   </div>
                                 </div>
-                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatPrice(meal.price)}</span>
+                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatMealPrice(meal)}</span>
                               </div>
                               {meal.description && (
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">{meal.description}</p>
@@ -2748,7 +2798,7 @@ export default function LunchComingSoon() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal), itemType: meal.itemType || 'meal' });
+                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal), itemType: meal.itemType || 'meal', portions: meal.portions || [] });
                               setShowEditMealModal(true);
                             }}
                             className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition"
@@ -2827,7 +2877,7 @@ export default function LunchComingSoon() {
                             <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-lg" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}{item.portionName ? ` · ${item.portionName}` : ''}</p>
                             <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
                           </div>
                         </div>
@@ -3250,8 +3300,8 @@ export default function LunchComingSoon() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
-                    <input type="number" required step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Base price (R) · optional with sizes</label>
+                    <input type="number" min="0.01" max="10000" step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
@@ -3272,6 +3322,7 @@ export default function LunchComingSoon() {
                     </select>
                   </div>
                 </div>
+                <PortionPriceFields portions={newMealForm.portions || []} onChange={(update) => setNewMealForm((form) => ({ ...form, portions: update(form.portions || []) }))} />
                 <FoodImageField label="Food photo" value={newMealForm.image} onChange={(image) => setNewMealForm((form) => ({ ...form, image }))} />
                 {/* Sides */}
                 <div>
@@ -3417,6 +3468,7 @@ export default function LunchComingSoon() {
                     </select>
                   </div>
                 </div>
+                <PortionPriceFields portions={editMealForm.portions || []} onChange={(update) => setEditMealForm((form) => ({ ...form, portions: update(form.portions || []) }))} />
                 <FoodImageField label="Food photo" value={editMealForm.image || '🍱'} onChange={(image) => setEditMealForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
@@ -3559,9 +3611,21 @@ export default function LunchComingSoon() {
                         ) : null;
                       })()}
                     </div>
-                    <span className="shrink-0 text-lg font-black text-amber-600 dark:text-amber-400">{formatPrice(selectedFeaturedMeal.price)}</span>
+                    <span className="shrink-0 text-lg font-black text-amber-600 dark:text-amber-400">{formatPrice(selectedFoodPrice)}</span>
                   </div>
                   {selectedFeaturedMeal.description && <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{selectedFeaturedMeal.description}</p>}
+                  {selectedFeaturedMeal.portions?.length > 0 && (
+                    <fieldset>
+                      <legend className="mb-2 text-xs font-bold text-gray-800 dark:text-gray-100">Choose a serving size</legend>
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedFeaturedMeal.portions.map((portion) => (
+                          <button key={portion.name} type="button" aria-pressed={selectedPortionName === portion.name} onClick={() => setSelectedPortionName(portion.name)} className={`flex min-h-11 items-center justify-between rounded-xl border px-3 py-2 text-xs font-semibold transition ${selectedPortionName === portion.name ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200' : 'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-200'}`}>
+                            <span>{portion.name}</span><span>{formatPrice(portion.price)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
                   {selectedFeaturedMeal.itemType === 'combo' && selectedFeaturedMeal.sides?.length > 0 && (
                     <div>
                       <h3 className="mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">Included in this combo</h3>
@@ -3599,13 +3663,13 @@ export default function LunchComingSoon() {
                     onClick={() => {
                       const mealToOrder = selectedFeaturedMeal;
                       setSelectedFeaturedMeal(null);
-                      addToCart(mealToOrder);
+                      addToCart(mealToOrder, selectedPortionName);
                     }}
-                    disabled={isCurrentShopClosed || selectedFeaturedMeal.isAvailable === false}
+                    disabled={isCurrentShopClosed || selectedFeaturedMeal.isAvailable === false || Boolean(selectedFeaturedMeal.portions?.length && !selectedFoodPortion)}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    {selectedFeaturedMeal.isAvailable === false ? 'Sold out' : isCurrentShopClosed ? 'Shop is closed' : `Order · ${formatPrice(selectedFeaturedMeal.price)}`}
+                    {selectedFeaturedMeal.isAvailable === false ? 'Sold out' : isCurrentShopClosed ? 'Shop is closed' : selectedFeaturedMeal.portions?.length && !selectedFoodPortion ? 'Choose a serving size' : `Order · ${formatPrice(selectedFoodPrice)}`}
                   </button>
                 </div>
               </motion.section>
@@ -3670,7 +3734,7 @@ export default function LunchComingSoon() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>
-                          <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                          <p className="text-[10px] text-gray-400">{item.portionName ? `${item.portionName} · ` : ''}{formatPrice(item.price)} × {item.quantity}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">

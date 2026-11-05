@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 import {
   PlusIcon,
   HomeIcon,
@@ -818,12 +819,13 @@ export default function Planner() {
                           <button 
                             onClick={async (e) => {
                               e.stopPropagation();
-                              if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
+                              const cancellationReason = window.confirm('Are you sure you want to cancel this booking?') ? requestCancellationReason() : null;
+                              if (cancellationReason) {
                                 try {
                                   const res = await fetch(`/api/bookings/update/${booking._id}`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                    body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                   });
                                   if (res.ok) {
                                     setBookings(prev => prev.filter(b => b._id !== booking._id));
@@ -1341,12 +1343,13 @@ export default function Planner() {
 
                         <button
                           onClick={async () => {
-                            if (window.confirm('Are you sure you want to remove this booking from your schedule?')) {
+                            const cancellationReason = window.confirm('Are you sure you want to cancel this booking?') ? requestCancellationReason() : null;
+                            if (cancellationReason) {
                               try {
                                 const res = await fetch(`/api/bookings/update/${booking._id}`, {
                                   method: 'POST',
                                   headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                  body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                 });
                                 if (res.ok) {
                                   setBookings(prev => prev.filter(b => b._id !== booking._id));

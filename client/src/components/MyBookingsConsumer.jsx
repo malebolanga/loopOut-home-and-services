@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaCalendarCheck, 
@@ -347,23 +348,24 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
   };
 
   const handleCancel = async (id) => {
+    const cancellationReason = requestCancellationReason();
+    if (!cancellationReason) return;
     try {
-      // Optimistically remove from UI
-      setActiveBookings(prev => prev.filter(b => b.id !== id));
-
       const res = await fetch(`/api/bookings/update/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: 'cancelled',
-          cancelledBy: 'user'
+          cancellationReason
         })
       });
       if (!res.ok) {
-        console.error('Failed to cancel booking on server');
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to cancel booking on server.');
       }
+      setActiveBookings(prev => prev.filter(b => b.id !== id));
     } catch (error) {
-      console.error('Failed to cancel booking:', error);
+      console.error('Failed to cancel booking:', error.message || error);
     }
   };
 

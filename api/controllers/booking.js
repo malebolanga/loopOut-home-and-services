@@ -655,7 +655,10 @@ export const stopProviderLocation = async (req, res) => {
 export const updateBookingStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    const { status, cancelledBy } = req.body;
+    const { status } = req.body;
+    const cancellationReason = typeof req.body.cancellationReason === 'string'
+      ? req.body.cancellationReason.trim().slice(0, 500)
+      : '';
 
     const booking = await Booking.findById(bookingId)
       .populate({ path: 'listing', populate: { path: 'userRef' } })
@@ -688,6 +691,9 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     const previousStatus = booking.status;
+    if (status === 'cancelled' && !cancellationReason) {
+      return res.status(400).json({ error: 'Please provide a reason for cancelling this booking.' });
+    }
     if (status === 'work_completed' && (isGuest || !['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(previousStatus))) {
       return res.status(409).json({ error: 'Only the provider can mark an active booking as work completed.' });
     }
@@ -713,6 +719,11 @@ export const updateBookingStatus = async (req, res) => {
       }
     }
     booking.status = status;
+    if (status === 'cancelled') {
+      booking.cancellationReason = cancellationReason;
+      booking.cancelledAt = new Date();
+      booking.cancelledBy = req.user.isAdmin ? 'admin' : isGuest ? 'client' : 'provider';
+    }
     await booking.save();
     if (['completed', 'cancelled', 'declined', 'work_completed'].includes(status)) {
       await ProviderLiveLocation.deleteOne({ booking: booking._id });
@@ -752,12 +763,12 @@ export const updateBookingStatus = async (req, res) => {
 
         if (status === 'cancelled') {
           title = 'Booking Cancelled';
-          if (cancelledBy === 'user') {
+          if (isGuest) {
             recipientId = hostId;
-            messageText = `Client ${booking.user?.username || 'User'} has cancelled their booking for "${itemName}".`;
+            messageText = `Client ${booking.user?.username || 'User'} cancelled their booking for "${itemName}". Reason: ${cancellationReason}`;
           } else {
             recipientId = bookingUserId;
-            messageText = `Your booking for "${itemName}" has been cancelled by the host.`;
+            messageText = `Your booking for "${itemName}" was cancelled by the provider. Reason: ${cancellationReason}`;
           }
         } else if (status === 'confirmed' || status === 'approved') {
           title = '📅 Booking Confirmed';

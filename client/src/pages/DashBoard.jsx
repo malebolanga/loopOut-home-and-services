@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 import {
   CalendarIcon,
   UserIcon,
@@ -266,6 +267,8 @@ export default function DashBoard() {
   }, [currentUser?._id, dashboardMode]);
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
+    const cancellationReason = newStatus === 'cancelled' ? requestCancellationReason() : undefined;
+    if (newStatus === 'cancelled' && !cancellationReason) return;
     try {
       const res = await fetch(`/api/bookings/update/${bookingId}`, {
         method: 'POST',
@@ -273,7 +276,7 @@ export default function DashBoard() {
         credentials: 'include',
         body: JSON.stringify({ 
           status: newStatus,
-          cancelledBy: newStatus === 'cancelled' ? (dashboardMode === 'hosting' ? 'host' : 'user') : undefined
+          ...(newStatus === 'cancelled' ? { cancellationReason } : {})
         })
       });
       if (res.ok) {

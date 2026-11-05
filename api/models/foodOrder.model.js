@@ -13,7 +13,8 @@ const orderItemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   quantity: { type: Number, default: 1 },
   image: { type: String, default: '🍱' },
-  sides: { type: [String], default: [] }
+  sides: { type: [String], default: [] },
+  portionName: { type: String, default: '' }
 }, { _id: false });
 
 const foodOrderSchema = new mongoose.Schema({

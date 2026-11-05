@@ -29,6 +29,18 @@ const cleanImage = (value, fallback = '') => {
   if (/^https?:\/\//i.test(image) || image.startsWith('/') || image.startsWith('data:image/')) return image;
   return image.length <= 16 ? image : fallback;
 };
+const PORTION_NAMES = ['Small', 'Medium', 'Large', 'Full plate'];
+const normalizePortions = (value) => {
+  if (!Array.isArray(value)) return [];
+  const portions = [];
+  for (const entry of value) {
+    const name = PORTION_NAMES.find((option) => option.toLowerCase() === cleanText(entry?.name, 20).toLowerCase());
+    const price = Number(entry?.price);
+    if (!name || !Number.isFinite(price) || price <= 0 || price > 10000 || portions.some((portion) => portion.name === name)) return null;
+    portions.push({ name, price: Math.round(price * 100) / 100 });
+  }
+  return portions;
+};
 const getOwnedShop = async (id, req, res) => {
   if (!validId(id)) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
   const shop = await Shop.findById(id);
@@ -151,8 +163,10 @@ export const addMealToShop = async (req, res, next) => {
     const name = cleanText(req.body.name, 100); const price = Number(req.body.price);
     if (!name || !Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid meal name and price.' });
     const sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
+    const portions = normalizePortions(req.body.portions);
+    if (portions === null) return res.status(400).json({ success: false, message: 'Enter a valid price for each serving size.' });
     const itemType = ['combo', 'special'].includes(String(req.body.itemType || '').toLowerCase()) ? String(req.body.itemType).toLowerCase() : 'meal';
-    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', itemType, image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides };
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', itemType, image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides, portions };
     shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
   } catch (error) { return next(error); }
 };
@@ -170,6 +184,11 @@ export const updateMealInShop = async (req, res, next) => {
     if (req.body.image !== undefined) meal.image = cleanImage(req.body.image, meal.image || '🍽️');
     if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
     if (req.body.sides !== undefined) meal.sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
+    if (req.body.portions !== undefined) {
+      const portions = normalizePortions(req.body.portions);
+      if (portions === null) return res.status(400).json({ success: false, message: 'Enter a valid price for each serving size.' });
+      meal.portions = portions;
+    }
     if (req.body.price !== undefined) { const price = Number(req.body.price); if (!Number.isFinite(price) || price <= 0 || price > 10000) return res.status(400).json({ success: false, message: 'Enter a valid price.' }); meal.price = Math.round(price * 100) / 100; }
     await shop.save(); return res.json(meal.toObject());
   } catch (error) { return next(error); }
@@ -206,7 +225,11 @@ export const createOrder = async (req, res, next) => {
       const quantity = Number(item.quantity);
       if (!meal || !meal.isAvailable || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return null;
       const itemSides = Array.isArray(item.sides) ? item.sides.map(s => cleanText(s, 60)).filter(Boolean).slice(0, 3) : [];
-      return { id: meal.id, name: meal.name, price: meal.price, quantity, image: meal.image || '🍱', sides: itemSides };
+      const portionName = cleanText(item.portionName, 20);
+      const selectedPortion = portionName ? meal.portions?.find((portion) => portion.name === portionName) : null;
+      if ((meal.portions?.length && !selectedPortion) || (portionName && !selectedPortion)) return null;
+      const itemPrice = selectedPortion?.price ?? meal.price;
+      return { id: meal.id, name: selectedPortion ? `${meal.name} (${selectedPortion.name})` : meal.name, portionName: selectedPortion?.name || '', price: itemPrice, quantity, image: meal.image || '🍱', sides: itemSides };
     });
     if (normalizedItems.some((item) => !item)) return res.status(409).json({ success: false, message: 'One or more meals are unavailable. Refresh your basket and try again.' });
     const phone = cleanText(customerPhone, 30); if (!phone) return res.status(400).json({ success: false, message: 'A contact phone number is required.' });

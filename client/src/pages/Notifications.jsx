@@ -9,6 +9,7 @@ import { getCarWashBookingDetails, isCarWashBooking as isCarWashBookingRecord } 
 import BookingRequestDetails from '../components/BookingRequestDetails';
 import RatingModal from '../components/RatingModal';
 import { parseBookingMessageDetails } from '../utils/bookingMessageDetails';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 
 const parsePriceFromText = (text) => {
     if (!text || typeof text !== 'string') return null;
@@ -1276,6 +1277,8 @@ export default function Notifications() {
                                                                 onClick={async () => {
                                                                     if (!canRequesterCancel) return;
                                                                     if (!window.confirm('Are you sure you want to cancel your booking?')) return;
+                                                                    const cancellationReason = requestCancellationReason();
+                                                                    if (!cancellationReason) return;
                                                                     try {
                                                                         const token = getToken();
                                                                         const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
@@ -1285,7 +1288,7 @@ export default function Notifications() {
                                                                                 'Content-Type': 'application/json',
                                                                                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                             },
-                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                                                            body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                                                         });
                                                                         if (res.ok) {
                                                                             const updatedBooking = await res.json();
@@ -1334,6 +1337,8 @@ export default function Notifications() {
                                                                 <button
                                                                     onClick={async () => {
                                                                         if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+                                                                        const cancellationReason = requestCancellationReason();
+                                                                        if (!cancellationReason) return;
                                                                         try {
                                                                             const token = getToken();
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
@@ -1343,7 +1348,7 @@ export default function Notifications() {
                                                                                     'Content-Type': 'application/json',
                                                                                     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                                 },
-                                                                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'host' })
+                                                                                body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                                                             });
                                                                             if (res.ok) {
                                                                                 const updatedBooking = await res.json();

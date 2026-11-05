@@ -9,6 +9,7 @@ import {
   Star, UtensilsCrossed, X
 } from 'lucide-react';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } from '../utils/barberBookingDetails';
 import { getCarWashBookingDetails, isCarWashBooking as isCarWashBookingRecord } from '../utils/carWashBookingDetails';
 import { rateShop, subscribeToOrders, updateOrderStatus } from '../services/lunchService';
@@ -454,6 +455,8 @@ export default function MyLoopOut() {
   const cancelItem = async (item) => {
     const label = item.kind === 'goods' ? 'item request' : item.kind === 'food' ? 'food order' : 'booking';
     if (!window.confirm(`Cancel this ${label}?`)) return;
+    const cancellationReason = item.kind === 'booking' ? requestCancellationReason() : undefined;
+    if (item.kind === 'booking' && !cancellationReason) return;
     setBusyId(item.id);
     setNotice('');
     try {
@@ -469,7 +472,7 @@ export default function MyLoopOut() {
         await changeGoodsStatus(item, 'Cancelled');
       } else {
         const response = await authenticatedFetch(`/api/bookings/update/${item.id}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled', cancellationReason }),
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.message || payload.error || 'Could not cancel this booking.');
@@ -698,6 +701,7 @@ export default function MyLoopOut() {
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-600">📋 Booking details · {detailsBooking.resourceType}</p>
                 <h2 id="booking-details-title" className="mt-1 truncate text-xl font-black text-slate-900 dark:text-white">{detailsBooking.title}</h2>
                 <p className="mt-1 text-xs font-semibold capitalize text-slate-500 dark:text-gray-400">📌 Status: {String(detailsBooking.status).replaceAll('_', ' ')}</p>
+                {detailsBooking.raw?.cancellationReason && <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800 dark:bg-rose-950/30 dark:text-rose-200">Cancellation reason: {detailsBooking.raw.cancellationReason}</p>}
               </div>
               <button type="button" onClick={() => setDetailsBooking(null)} aria-label="Close booking details" className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-gray-800"><X className="h-5 w-5" /></button>
             </div>

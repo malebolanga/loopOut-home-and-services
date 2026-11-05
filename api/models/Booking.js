@@ -14,6 +14,9 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'confirmed', 'cancelled', 'completed', 'approved', 'declined', 'assigned', 'enroute', 'ongoing', 'work_completed'],
     default: 'pending'
   },
+  cancellationReason: { type: String, trim: true, maxlength: 500 },
+  cancelledAt: { type: Date },
+  cancelledBy: { type: String, enum: ['client', 'provider', 'admin'] },
   phone: { type: String },
   message: { type: String },
   subtype: { type: String },
