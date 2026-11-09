@@ -25,6 +25,7 @@ const PhoneNotificationManager = () => {
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
   const audioRef = useRef(null);
   const hasUserActivatedRef = useRef(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const nativeListenersInstalledRef = useRef(false);
   const nativeListenersReadyRef = useRef(Promise.resolve());
   const lastRegisteredTokenRef = useRef('');
@@ -38,6 +39,7 @@ const PhoneNotificationManager = () => {
   useEffect(() => {
     const markUserActivated = () => {
       hasUserActivatedRef.current = true;
+      setHasUserInteracted(true);
     };
 
     window.addEventListener('pointerdown', markUserActivated, { once: true });
@@ -53,36 +55,36 @@ const PhoneNotificationManager = () => {
   useEffect(() => {
     if (isNativeAndroid) {
       let active = true;
-      let promptTimer;
       PushNotifications.checkPermissions()
         .then(({ receive }) => {
           if (!active) return;
           setPermissionState(receive);
-          if (receive === 'denied' || receive === 'prompt' || receive === 'prompt-with-rationale') {
-            const hasPrompted = sessionStorage.getItem('phone_notif_prompted');
-            if (receive === 'denied' || !hasPrompted) {
-              promptTimer = setTimeout(() => setShowPermissionPrompt(true), 3000);
-            }
-          }
         })
         .catch((error) => console.warn('Could not check Android notification permission:', error));
       return () => {
         active = false;
-        if (promptTimer) clearTimeout(promptTimer);
       };
     }
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermissionState(Notification.permission);
-      if (Notification.permission === 'default') {
-        const hasPrompted = sessionStorage.getItem('phone_notif_prompted');
-        if (!hasPrompted) {
-          const timer = setTimeout(() => setShowPermissionPrompt(true), 3000);
-          return () => clearTimeout(timer);
-        }
-      }
     }
   }, [isNativeAndroid]);
+
+  // Ask only after the user has interacted with the app, and remember the
+  // choice across visits so the prompt does not keep returning.
+  useEffect(() => {
+    if (!hasUserInteracted || localStorage.getItem('phone_notif_prompted') === 'true') return;
+    if (isNativeAndroid) {
+      PushNotifications.checkPermissions().then(({ receive }) => {
+        if (receive === 'prompt' || receive === 'prompt-with-rationale') setShowPermissionPrompt(true);
+      }).catch(() => {});
+      return;
+    }
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      setShowPermissionPrompt(true);
+    }
+  }, [hasUserInteracted, isNativeAndroid]);
 
   // Install Capacitor listeners before the user grants permission and registers with FCM.
   useEffect(() => {
@@ -168,7 +170,7 @@ const PhoneNotificationManager = () => {
         const permission = await PushNotifications.requestPermissions();
         setPermissionState(permission.receive);
         setShowPermissionPrompt(permission.receive === 'denied');
-        sessionStorage.setItem('phone_notif_prompted', 'true');
+        localStorage.setItem('phone_notif_prompted', 'true');
 
         if (permission.receive !== 'granted') return;
 
@@ -198,7 +200,7 @@ const PhoneNotificationManager = () => {
         const permission = await Notification.requestPermission();
         setPermissionState(permission);
         setShowPermissionPrompt(false);
-        sessionStorage.setItem('phone_notif_prompted', 'true');
+        localStorage.setItem('phone_notif_prompted', 'true');
         
         if (permission === 'granted') {
           pushPhoneNotification({
@@ -215,7 +217,7 @@ const PhoneNotificationManager = () => {
 
   const dismissPermissionPrompt = () => {
     setShowPermissionPrompt(false);
-    sessionStorage.setItem('phone_notif_prompted', 'true');
+    localStorage.setItem('phone_notif_prompted', 'true');
   };
 
   // Event listener for in-app top notification triggers

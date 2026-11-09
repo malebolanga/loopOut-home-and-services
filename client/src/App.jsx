@@ -161,6 +161,7 @@ const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const Inbox = lazy(() => import('./pages/Inbox'));
 
 const CreateRequest = lazy(() => import('./pages/CreateRequest'));
+const WorkNow = lazy(() => import('./pages/WorkNow'));
 const MicroGigs = lazy(() => import('./pages/MicroGigs'));
 
 // Categories page
@@ -221,6 +222,7 @@ const AnimatedRoutes = () => {
         <Route path="/gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
         <Route path="/neighborhood-gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
         <Route path="/create-request" element={<PageTransition><CreateRequest /></PageTransition>} />
+        <Route path="/work-now" element={<PageTransition><WorkNow /></PageTransition>} />
 
         {/* Trip Routes */}
         <Route path="/trips" element={<PageTransition><Trips /></PageTransition>} />
@@ -503,7 +505,7 @@ function AppContent() {
       <PhoneNotificationManager />
       <AuthSessionManager />
       {!hideHeader && <Header />}
-      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
+      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950 home-route-content' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
         <Suspense fallback={<NeuralLoader fullScreen={true} />}>
           <AnimatedRoutes />
         </Suspense>

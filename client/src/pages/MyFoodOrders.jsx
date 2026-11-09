@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ShoppingBag,
@@ -94,20 +94,30 @@ const getItemEmojiFallback = (item) => {
 
 export default function MyFoodOrders() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { currentUser } = useSelector((state) => state.user || {});
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all' | 'active' | 'completed'
+  const [filter, setFilter] = useState(() => searchParams.get('filter') === 'active' ? 'active' : 'all'); // 'all' | 'active' | 'completed'
   const [searchQuery, setSearchQuery] = useState('');
   const [activeReceiptOrder, setActiveReceiptOrder] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [ratingTargetOrder, setRatingTargetOrder] = useState(null);
   const [shopRating, setShopRating] = useState(5);
+  const [itemRatings, setItemRatings] = useState({});
   const [ratingComment, setRatingComment] = useState('');
   const [ratingError, setRatingError] = useState('');
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [orderActionError, setOrderActionError] = useState('');
   const [orderSyncError, setOrderSyncError] = useState('');
+
+  const openRatingForOrder = (order) => {
+    setShopRating(5);
+    setItemRatings({});
+    setRatingComment('');
+    setRatingError('');
+    setRatingTargetOrder(order);
+  };
 
   const completeCustomerOrder = async (order) => {
     const orderId = order._id || order.id || order.orderId;
@@ -118,10 +128,7 @@ export default function MyFoodOrders() {
         (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, ...savedOrder } : entry
       ));
       if (!order.isRated) {
-        setShopRating(5);
-        setRatingComment('');
-        setRatingError('');
-        setRatingTargetOrder({ ...order, ...savedOrder });
+        openRatingForOrder({ ...order, ...savedOrder });
       }
     } catch (error) {
       setOrderActionError(error.message || 'Could not complete this order. Please try again.');
@@ -149,17 +156,28 @@ export default function MyFoodOrders() {
     setRatingError('');
     try {
       const orderId = ratingTargetOrder._id || ratingTargetOrder.id || ratingTargetOrder.orderId;
+      const orderItems = ratingTargetOrder.items || (ratingTargetOrder.mealName ? [{ id: ratingTargetOrder.mealId, name: ratingTargetOrder.mealName }] : []);
+      const itemRatingsPayload = orderItems.map((item, itemIndex) => ({
+        itemIndex,
+        mealId: item.id || '',
+        rating: Number(itemRatings[itemIndex]),
+      }));
+      if (!orderItems.length || itemRatingsPayload.some((entry) => !entry.mealId || !Number.isInteger(entry.rating) || entry.rating < 1 || entry.rating > 5)) {
+        setRatingError('Please rate each food item before submitting.');
+        setRatingSubmitting(false);
+        return;
+      }
       await rateShop(ratingTargetOrder.shopId, {
         orderId,
         shopRating,
-        foodRating: shopRating,
+        itemRatings: itemRatingsPayload,
         comment: ratingComment,
-        userName: currentUser?.username || currentUser?.name || 'Customer',
       });
       setOrders((current) => current.map((entry) =>
         (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, isRated: true } : entry
       ));
       setRatingTargetOrder(null);
+      setItemRatings({});
       setRatingComment('');
     } catch (error) {
       setRatingError(error.message || 'Could not save your rating. Please try again.');
@@ -470,10 +488,7 @@ export default function MyFoodOrders() {
                     <button
                       type="button"
                       onClick={() => {
-                        setShopRating(5);
-                        setRatingComment('');
-                        setRatingError('');
-                        setRatingTargetOrder(order);
+                        openRatingForOrder(order);
                       }}
                       className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-white transition hover:bg-amber-600"
                     >
@@ -647,6 +662,21 @@ export default function MyFoodOrders() {
                 <button key={value} type="button" onClick={() => setShopRating(value)} aria-label={`${value} star${value === 1 ? '' : 's'}`}>
                   <Star className={`h-8 w-8 ${value <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
                 </button>
+              ))}
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Rate each food item</p>
+              {(ratingTargetOrder.items || (ratingTargetOrder.mealName ? [{ name: ratingTargetOrder.mealName }] : [])).map((item, itemIndex) => (
+                <div key={`${item.id || item.name || 'meal'}-${itemIndex}`} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-2 dark:bg-gray-800">
+                  <span className="min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-100">{item.name || item.title || `Food item ${itemIndex + 1}`}</span>
+                  <span className="flex shrink-0 gap-0.5" role="group" aria-label={`Rate ${item.name || item.title || `food item ${itemIndex + 1}`}`}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button key={value} type="button" onClick={() => setItemRatings((current) => ({ ...current, [itemIndex]: value }))} aria-label={`${value} stars`}>
+                        <Star className={`h-5 w-5 ${value <= (itemRatings[itemIndex] || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </span>
+                </div>
               ))}
             </div>
             <textarea value={ratingComment} onChange={(event) => setRatingComment(event.target.value)} rows={3} maxLength={500} placeholder="Share a few words (optional)" className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800" />

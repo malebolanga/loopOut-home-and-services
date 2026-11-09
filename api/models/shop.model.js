@@ -46,6 +46,8 @@ const shopSchema = new mongoose.Schema({
   ownerName: { type: String, default: 'Store Manager' },
   // Pauses orders while keeping the shop and menu visible to customers.
   isOpen: { type: Boolean, default: true },
+  // Shop owner can opt into a clearly labeled free home food-row promotion.
+  isPromoted: { type: Boolean, default: false },
   whatsapp: { type: String, default: '' },
   operatingHours: {
     openTime: { type: String, default: '08:00' },

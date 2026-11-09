@@ -418,6 +418,9 @@ const BottomNav = () => {
           const handleClick = () => {
             if (item.isProfile) {
               setShowProfileDropup(!showProfileDropup);
+            } else if (item.id === 'home') {
+              setShowProfileDropup(false);
+              window.location.assign('/');
             } else {
               setShowProfileDropup(false);
               navigate(item.route);

@@ -44,6 +44,7 @@ import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { resolveApiUrl } from '../utils/apiBaseUrl';
 import { isNativeApp, isAndroidApp } from '../utils/nativeApp';
+import { subscribeToOrders } from '../services/lunchService';
 
 
 import {
@@ -448,7 +449,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
 
         {/* Verification removed */}
         <div className="absolute bottom-3 left-3 bg-white/40 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
-          <span className="text-[8px] font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
+          <span className="text-xs font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
         </div>
       </div>
 
@@ -525,7 +526,7 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
         {/* Top Badges */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
           <div className="bg-gray-900/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-            <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
+            <span className="text-xs font-black text-white uppercase tracking-widest">{type}</span>
           </div>
           <button className="p-2 bg-white/80 backdrop-blur-md rounded-full border border-gray-200 hover:bg-rose-500 hover:border-rose-500 transition-colors group/heart shadow-sm">
             <HeartIcon className="w-4 h-4 text-gray-700 group-hover:text-white" />
@@ -3065,9 +3066,11 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
   );
 };
 
-const FoodSpecialsStrip = ({ navigate, className = '' }) => {
+const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
+  const [activeFoodShortcut, setActiveFoodShortcut] = useState('recommended');
+  const [activeFoodOrders, setActiveFoodOrders] = useState([]);
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
@@ -3092,6 +3095,53 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
     }
   });
   const [showOrderReview, setShowOrderReview] = useState(false);
+  const displayedFoodItems = useMemo(() => {
+    if (activeFoodShortcut === 'popular') {
+      return foodItems.filter((item) => getFoodPriorityRank(item.tag, item.name) <= 3);
+    }
+    if (activeFoodShortcut === 'specials') {
+      return foodItems.filter((item) =>
+        Number(item.originalPrice) > Number(item.price) || /special|deal|offer|discount/i.test(item.tag || '')
+      );
+    }
+    return foodItems;
+  }, [foodItems, activeFoodShortcut]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setActiveFoodOrders([]);
+      return undefined;
+    }
+
+    let localOrders = [];
+    try {
+      const stored = localStorage.getItem('loopout_food_orders');
+      if (stored) localOrders = JSON.parse(stored);
+    } catch {
+      localOrders = [];
+    }
+
+    const customerId = String(currentUser._id || currentUser.id || '');
+    const customerPhone = String(currentUser.phone || '');
+    const updateActiveOrders = (serverOrders = []) => {
+      const byId = new Map();
+      [...localOrders, ...(Array.isArray(serverOrders) ? serverOrders : [])].forEach((order) => {
+        const orderId = order._id || order.id || order.orderId;
+        if (orderId) byId.set(String(orderId), order);
+      });
+      setActiveFoodOrders([...byId.values()]
+        .filter((order) => {
+          const belongsToUser = (customerId && String(order.customerId || order.customer?._id || order.userId || '') === customerId)
+            || (customerPhone && String(order.customerPhone || '') === customerPhone);
+          const status = String(order.status || '').toLowerCase();
+          return belongsToUser && !['completed', 'complete', 'done', 'delivered', 'collected', 'cancelled', 'canceled'].some((endStatus) => status.includes(endStatus));
+        })
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0)));
+    };
+
+    updateActiveOrders();
+    return subscribeToOrders((serverOrders) => updateActiveOrders(serverOrders));
+  }, [currentUser?._id, currentUser?.id, currentUser?.phone]);
 
   useEffect(() => {
     try {
@@ -3266,14 +3316,16 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
               shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
               shopDistance: shop.distance || '',
               shopPhone: shop.phone || shop.whatsapp || '',
+              isSponsored: shop.isPromoted === true && shop.isOpen !== false,
               latitude: shop.latitude || null,
               longitude: shop.longitude || null
             });
           });
         });
 
-        // Globally sort so items with real photos appear first, then by priority tag
+        // Show opted-in shop promotions first, then prioritize real food photos.
         collected.sort((a, b) => {
+          if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
           const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
           const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
           if (aHasImg !== bHasImg) return aHasImg - bHasImg;
@@ -3305,7 +3357,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
   return (
     <section className={`mb-6 bg-white transition-[margin] duration-300 dark:bg-gray-950 ${className}`}>
       {/* ── Header: Made For You • Fresh & Fast, and See All ── */}
-      <div className="mb-3 flex items-center justify-between gap-2 px-0.5">
+      <div className="mb-5 flex items-center justify-between gap-2 px-0.5">
         <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
@@ -3322,8 +3374,8 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
               )}
             </button>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">Food near you</h3>
-            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">Local favourites, ready to order</p>
+            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">{browseMode ? 'Explore Food' : 'Food near you'}</h3>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">{browseMode ? 'Dishes from local food shops' : 'Local favourites and shop offers, ready to order'}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -3331,7 +3383,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/my-orders')}
-            className="flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1.5 text-[10px] font-bold text-white shadow-sm transition hover:bg-amber-600 cursor-pointer sm:text-xs"
+            className="flex min-h-11 items-center gap-1 rounded-full bg-amber-400 px-3 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 cursor-pointer"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>My Orders</span>
@@ -3349,7 +3401,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food')}
-            className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[10px] font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 cursor-pointer dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 sm:px-3 sm:text-xs"
+            className="flex min-h-11 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 cursor-pointer dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
           >
             <span>See All</span>
             <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
@@ -3357,15 +3409,125 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
         </div>
       </div>
 
-      {/* ── Horizontal Carousel: Spotify-style Food Cards ── */}
-      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 scrollbar-hide sm:gap-4">
-        {foodItems.map((item, i) => (
+      {!browseMode && (
+        <div
+          role="group"
+          aria-label="Food recommendations"
+          className="-mx-4 mb-2 flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide"
+        >
+          {[
+            { id: 'orders', label: 'Order again' },
+            { id: 'active-orders', label: 'Active orders' },
+            { id: 'recommended', label: 'Recommended' },
+            { id: 'popular', label: 'Popular' },
+            { id: 'specials', label: 'Specials' },
+          ].map((shortcut) => {
+            const isActive = activeFoodShortcut === shortcut.id;
+            return (
+              <button
+                key={shortcut.id}
+                type="button"
+                onClick={() => {
+                  if (shortcut.id === 'orders') {
+                    navigate('/my-orders');
+                    return;
+                  }
+                  if (shortcut.id === 'active-orders') {
+                    setActiveFoodShortcut('active-orders');
+                    return;
+                  }
+                  setActiveFoodShortcut(shortcut.id);
+                }}
+                aria-pressed={shortcut.id === 'orders' ? undefined : isActive}
+                className={`snap-start flex min-h-11 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+                  isActive
+                    ? 'bg-[#06C167] text-slate-950'
+                    : 'border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                {shortcut.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!browseMode && activeFoodShortcut === 'active-orders' && (
+        <section aria-label="Your active food orders" className="mb-3 space-y-3">
+          {activeFoodOrders.length ? activeFoodOrders.map((order) => {
+            const orderItems = Array.isArray(order.items) ? order.items : [];
+            const orderId = order._id || order.id || order.orderId;
+            const orderTotal = Number(order.total ?? order.totalAmount ?? order.grandTotal ?? order.price);
+            const orderShop = shopsData.find((shop) => String(shop._id || shop.id) === String(order.shopId));
+            const firstOrderedItem = orderItems[0];
+            const firstMeal = orderShop?.meals?.find((meal) =>
+              String(meal.id) === String(firstOrderedItem?.id) || meal.name === firstOrderedItem?.name
+            );
+            const foodImage = firstOrderedItem?.image || firstMeal?.image || order.shopImage;
+            const orderStart = new Date(order.createdAt || order.date || Date.now());
+            const prepMinutes = Math.max(10, ...orderItems.map((orderedItem) => {
+              const matchingMeal = orderShop?.meals?.find((meal) =>
+                String(meal.id) === String(orderedItem.id) || meal.name === orderedItem.name
+              );
+              const minutes = parseInt(String(matchingMeal?.prepTime || '').replace(/\D+/g, ''), 10);
+              return Number.isFinite(minutes) && minutes > 0 ? minutes : 15;
+            }));
+            const isDelivery = (order.fulfilment || order.type) === 'delivery';
+            const etaStart = new Date(orderStart.getTime() + (prepMinutes + (isDelivery ? 15 : 0)) * 60_000);
+            const etaEnd = new Date(orderStart.getTime() + (prepMinutes + (isDelivery ? 30 : 10)) * 60_000);
+            const formatOrderTime = (value) => new Date(value).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+            const scheduledCollection = order.scheduledFor || order.collectionTime || order.pickupTime;
+            const collectionLabel = scheduledCollection
+              ? `Collection time: ${formatOrderTime(scheduledCollection)}`
+              : order.pickupReadyAt
+                ? `Ready since ${formatOrderTime(order.pickupReadyAt)}`
+                : `${isDelivery ? 'Est. delivery' : 'Est. collection'}: ${formatOrderTime(etaStart)}–${formatOrderTime(etaEnd)}`;
+            return (
+              <button
+                key={orderId}
+                type="button"
+                onClick={() => navigate('/my-orders?filter=active')}
+                className="flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50"
+                aria-label={`Open active order from ${order.shopName || order.shop?.name || 'food shop'}`}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-gray-800">
+                    <FoodMedia src={foodImage} alt={firstOrderedItem?.name || 'Food ordered'} fallback="🍱" className="h-full w-full text-2xl" imgClassName="rounded-xl" />
+                  </span>
+                  <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{order.shopName || order.shop?.name || 'Food order'}</span>
+                  <span className="mt-0.5 block truncate text-xs text-slate-700 dark:text-slate-300">
+                    {orderItems.length ? orderItems.map((item) => `${item.quantity || item.qty || 1} × ${item.name || item.title || 'Item'}`).join(', ') : order.mealName || 'Order in progress'}
+                  </span>
+                  <span className="mt-1 block text-xs font-semibold capitalize text-emerald-800 dark:text-emerald-300">{String(order.status || 'Pending').replace(/[_-]+/g, ' ')}</span>
+                  <span className="mt-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">{collectionLabel}</span>
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  {Number.isFinite(orderTotal) && orderTotal > 0 && <span className="block text-sm font-bold text-slate-900 dark:text-white">R{orderTotal.toFixed(2)}</span>}
+                  <span className="mt-1 inline-block text-xs font-bold text-emerald-800 dark:text-emerald-300">View order →</span>
+                </span>
+              </button>
+            );
+          }) : (
+            <div className="rounded-2xl bg-slate-50 px-4 py-5 text-center dark:bg-gray-900">
+              <p className="text-sm font-semibold text-slate-800 dark:text-gray-100">No active food orders</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-gray-300">Your order updates will appear here.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Featured carousel appears on the Home feed. The Food tab uses the full
+          image-led grid below, like a food delivery browse page. */}
+      {!browseMode && activeFoodShortcut !== 'active-orders' && <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 scrollbar-hide sm:gap-4">
+        {displayedFoodItems.map((item, i) => (
           <motion.div
             key={`carousel-${item.shopId}-${item.id || i}`}
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="relative flex w-[112px] shrink-0 snap-start flex-col rounded-2xl bg-white p-1.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-pointer dark:bg-gray-900 sm:w-[136px] sm:p-2"
+            className="relative flex w-[112px] shrink-0 snap-start flex-col rounded-2xl bg-transparent p-1.5 transition-all duration-200 cursor-pointer sm:w-[136px] sm:p-2"
           >
             {/* Square cover artwork */}
             <div className="relative mb-1.5 flex aspect-[1.12/1] w-full items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
@@ -3389,7 +3551,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-1 text-[8px] font-bold uppercase tracking-wide shadow-sm ${
+                <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-1 text-xs font-bold uppercase tracking-wide shadow-sm ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3402,7 +3564,13 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
                 </span>
               )}
 
-              <span className="absolute bottom-1.5 left-1.5 z-10 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-gray-950/90 dark:text-white">
+              {item.isSponsored && (
+                <span className="absolute right-1.5 top-1.5 z-10 rounded-md bg-slate-900/90 px-1.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
+                  Sponsored
+                </span>
+              )}
+
+              <span className="absolute bottom-1.5 left-1.5 z-10 rounded-full bg-white/95 px-2 py-1 text-xs font-extrabold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-gray-950/90 dark:text-white">
                 R{item.price}
               </span>
 
@@ -3414,7 +3582,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-20"
+                    className="absolute bottom-1 right-1 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md transition-all duration-200 active:scale-90 dark:bg-gray-950/95"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
@@ -3424,7 +3592,7 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
                       </span>
                     ) : (
                       <ShoppingBag
-                        className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                        className="h-5 w-5"
                         style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
                       />
                     )}
@@ -3434,17 +3602,48 @@ const FoodSpecialsStrip = ({ navigate, className = '' }) => {
             </div>
 
             {/* Title */}
-            <p className="truncate text-[10px] font-semibold leading-tight text-gray-900 dark:text-white sm:text-[11px]">
+            <p className="truncate text-xs font-semibold leading-tight text-gray-900 dark:text-white">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="mt-0.5 truncate text-[8px] leading-tight text-gray-500 dark:text-gray-400 sm:text-[9px]">
+            <p className="mt-0.5 truncate text-xs leading-tight text-gray-600 dark:text-gray-300">
               {item.shopName}
             </p>
           </motion.div>
         ))}
-      </div>
+      </div>}
+
+      {/* Uber Eats-inspired browse cards */}
+      {activeFoodShortcut !== 'active-orders' && <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {displayedFoodItems.map((item, index) => (
+          <motion.button
+            key={`food-list-${item.shopId}-${item.id || index}`}
+            type="button"
+            whileTap={{ scale: 0.99 }}
+            onClick={() => handleFoodSelect(item)}
+            className="group w-full overflow-hidden rounded-2xl bg-transparent text-left transition"
+          >
+            <span className="relative block aspect-[1.45/1] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <FoodMedia
+                src={item.image}
+                alt={item.name}
+                fallback="🍱"
+                className="h-full w-full text-3xl"
+                imgClassName="transition-transform duration-300 group-hover:scale-105"
+              />
+              <span className="absolute bottom-2 right-2 rounded-lg bg-white px-2 py-1 text-[11px] font-extrabold text-gray-900 shadow-sm dark:bg-gray-950 dark:text-white">
+                R{item.price}
+              </span>
+            </span>
+            <span className="block min-w-0 p-2.5">
+              <span className="block truncate text-xs font-bold text-gray-900 dark:text-white sm:text-sm">{item.name}</span>
+              <span className="mt-1 block truncate text-[10px] font-medium text-gray-600 dark:text-gray-300 sm:text-xs">{item.shopName}</span>
+              {(item.shopCuisine || item.shopDistance) && <span className="mt-0.5 block truncate text-xs text-gray-600 dark:text-gray-300">{[item.shopCuisine, item.shopDistance].filter(Boolean).join(' · ')}</span>}
+            </span>
+          </motion.button>
+        ))}
+      </div>}
 
       <AnimatePresence>
         {previewFood && (
@@ -3694,18 +3893,15 @@ const matchItemToSubcategory = (item, tab, subId) => {
   if (tab === 'Helper') {
     switch (subId) {
       case 'domestic': return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
-      case 'tutor': return item.type === 'tutor' || /tutor|teach|math|science|english|lesson|academy/i.test(text);
       case 'chef': return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
       case 'beauty': return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
-      case 'tattoo': return item.type === 'tattoo' || /tattoo|ink|piercing|body art/i.test(text);
       case 'barber': return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
       case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
       case 'sneakers':
       case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
-      case 'marquees':
-      case 'marquee': return item.type === 'marquees' || item.type === 'marquee' || item.type === 'tent' || item.category === 'marquee' || /marquee|tents?|canop(y|ies)|stretch\s*tent|event setup|event hire/i.test(text);
-      case 'animals':
-      case 'animal': return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
+      case 'carwash': return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
+      case 'moving': return item.type === 'moving' || /moving|relocation|logistics|hauling|bakkie/i.test(text);
+      case 'other': return item.type === 'other' || item.type === 'others';
       default: return true;
     }
   }
@@ -3739,12 +3935,74 @@ const matchItemToSubcategory = (item, tab, subId) => {
   return true;
 };
 
+const RecentlyViewedStrip = ({ items = [], navigate }) => {
+  if (!items.length) return null;
+
+  return (
+    <section aria-label="Recently viewed listings" className="mb-5">
+      <div className="mb-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">History</p>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">Recently viewed</h2>
+      </div>
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:gap-4">
+        {items.slice(0, 12).map((item, index) => (
+          <div key={`recently-viewed-${item._id || item.id || index}`} className="w-[145px] shrink-0 snap-start sm:w-[180px]">
+            <AirbnbCard
+              item={item}
+              type={item.itemType === 'listing' ? 'property' : (item.itemType || 'service')}
+              reducedSize
+              showOwner={false}
+              showCategory={false}
+              showAccountOwner={false}
+              onClick={(path) => navigate(path)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const getActiveBookingCount = (activeTab, bookings = []) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const isServiceTab = ['Helper', 'Helpers', 'Services'].includes(activeTab);
+  if (!isPropertyTab && !isServiceTab) return 0;
+
+  return bookings.filter((booking) => {
+    const status = String(booking.status || '').toLowerCase();
+    if (['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(status)) return false;
+    const isPropertyBooking = Boolean(booking.listing) || ['listing', 'property', 'stay'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    const isServiceBooking = Boolean(booking.helper || booking.service) || ['helper', 'service'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    return isPropertyTab ? isPropertyBooking : isServiceBooking;
+  }).length;
+};
+
+const ActiveBookingsChip = ({ activeTab, bookings, navigate }) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const isServiceTab = ['Helper', 'Helpers', 'Services'].includes(activeTab);
+  if (!isPropertyTab && !isServiceTab) return null;
+  const count = getActiveBookingCount(activeTab, bookings);
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.96 }}
+      onClick={() => navigate('/upcoming-bookings')}
+      aria-label={`Open active bookings, ${count} ${count === 1 ? 'booking' : 'bookings'}`}
+      className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/50"
+    >
+      <CalendarDays className="h-4 w-4" />
+      <span>Bookings</span>
+      <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-gray-900 dark:text-rose-200">{count}</span>
+    </motion.button>
+  );
+};
+
 function MobileAppHomepage({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation, currentUser,
+  recentlyAddedItems, locationStatus, requestCount = 0, activeBookings = [], geoCity, geoLoading, geoError, onRequestLocation, currentUser,
   homeLoadError, onRetryHomeData
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -3857,7 +4115,7 @@ function MobileAppHomepage({
     },
     {
       id: 'Property',
-      label: 'Property',
+      label: 'Properties',
       emoji: '🏡',
       icon: House,
       desc: 'Rooms & stays',
@@ -3886,24 +4144,23 @@ function MobileAppHomepage({
     },
     {
       id: 'Helper',
-      label: 'Helper',
-      emoji: '🧹',
-      icon: HandHeart,
-      desc: 'Chores & care',
-      textColor: 'text-sky-600',
-      bgColor: 'bg-sky-500',
+      label: 'Services',
+      emoji: '🛠️',
+      icon: Wrench,
+      desc: 'Local services & helpers',
+      textColor: 'text-amber-600',
+      bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: '🧹', desc: 'Explore all helpers' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Maids, cleaners & housekeepers' },
-        { id: 'tutor', label: 'Private Tutor', emoji: '📚', desc: 'Academic tutors & lessons' },
-        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Personal chefs & cooking' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Nails, hair, lashes & skincare' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉', desc: 'Tattoos & body piercings' },
-        { id: 'barber', label: 'Barbershop', emoji: '💈', desc: 'Haircuts, fades & grooming' },
+        { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
+        { id: 'barber', label: 'Barber', emoji: '✂️', desc: 'Haircuts & grooming' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Hair, nails & makeup' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Cleaning, laundry, chores' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Meal preparation' },
         { id: 'photography', label: 'Photographer', emoji: '📸', desc: 'Photography, shoots & events' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
-        { id: 'marquees', label: 'Marquees & Tents', emoji: '🎪', desc: 'Marquee hire, tents & setups' },
-        { id: 'animals', label: 'Animal Care', emoji: '🐕', desc: 'Pet care & dog walking' }
+        { id: 'sneaker', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗💦', desc: 'Car cleaning & detailing' },
+        { id: 'moving', label: 'Moving', emoji: '🚚', desc: 'Home and office relocation' },
+        { id: 'other', label: 'Other Services', emoji: '✨', desc: 'Other skills and services' }
       ]
     },
     {
@@ -3931,8 +4188,7 @@ function MobileAppHomepage({
       icon: UtensilsCrossed,
       desc: 'Food & eats',
       textColor: 'text-orange-600',
-      bgColor: 'bg-orange-500',
-      route: '/food'
+      bgColor: 'bg-orange-500'
     },
     {
       id: 'LookingFor',
@@ -4052,7 +4308,7 @@ function MobileAppHomepage({
       case 'Properties': return 'bg-emerald-500';
       case 'Services': return 'bg-amber-500';
       case 'Helper':
-      case 'Helpers': return 'bg-sky-500';
+      case 'Helpers': return 'bg-amber-500';
       case 'Events': return 'bg-purple-500';
       case 'Selling':
       case 'Sell':
@@ -4087,11 +4343,13 @@ function MobileAppHomepage({
         loadingEvents={loadingEvents}
         loadingSellItems={loadingSellItems}
         recentlyAddedItems={recentlyAddedItems}
+        recentlyViewedItems={recentlyViewedItems}
         navigate={navigate}
         currentUser={currentUser}
         isBookingsOpen={isBookingsOpen}
         setIsBookingsOpen={setIsBookingsOpen}
         requestCount={requestCount}
+        activeBookings={activeBookings}
         stats={stats}
         homeLoadError={homeLoadError}
         onRetryHomeData={onRetryHomeData}
@@ -4126,18 +4384,16 @@ function MobileAppHomepage({
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-            const shortcutEmoji = {
-              Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲',
-            }[tab.id] || tab.emoji || '✨';
+            const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
             const shortcutLabel = {
-              Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food',
+              Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
             }[tab.id] || tab.label;
             return (
               <motion.button
                 key={tab.id}
                 onClick={() => {
                   if (tab.route) {
-                    navigate(tab.route);
+                    navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
                     return;
                   }
                   if (isRecentAdded) {
@@ -4156,10 +4412,10 @@ function MobileAppHomepage({
                 className={`relative flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
                 aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
-                <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105`} aria-hidden="true">
-                  <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
+                <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl transition-transform group-hover:scale-105`} aria-hidden="true">
+                  <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-7 w-7 text-slate-700 dark:text-slate-200" />
                 </div>
-                <span className={`mt-0.5 text-center text-[9px] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-gray-300'}`}>
+                <span className={`mt-0.5 text-center text-xs font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-800 dark:text-rose-200' : 'text-slate-700 dark:text-gray-200'}`}>
                   {isRecentAdded ? 'New' : shortcutLabel}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
@@ -4180,18 +4436,21 @@ function MobileAppHomepage({
             <div className="flex h-12 w-12 items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105" aria-hidden="true">
               <span role="img" aria-label="Browse categories">🗂️</span>
             </div>
-            <span className="mt-0.5 text-center text-[9px] font-semibold leading-tight text-slate-600 whitespace-nowrap dark:text-gray-300">
+            <span className="mt-0.5 text-center text-xs font-semibold leading-tight text-slate-700 whitespace-nowrap dark:text-gray-200">
               More
             </span>
           </motion.button>
         </div>
       </div>
 
-      <main className="w-full bg-white px-4 pb-4 pt-[10px] dark:bg-gray-950">
+      <main className="w-full bg-white px-4 pb-4 pt-6 dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
-        {/* ── FOOD SPECIALS STRIP (flush right below category belt) ── */}
-        <FoodSpecialsStrip navigate={navigate} className="mt-0" />
+        {/* Keep food recommendations on the general feed; category selections
+            show matching listings and headings below. */}
+        {activeTab === 'Lunch' && (
+          <FoodSpecialsStrip navigate={navigate} className="mt-7" />
+        )}
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -4224,8 +4483,12 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
+          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
+        )}
+
         {/* ── EXPLORE SECTION (listings-first) ── */}
-        <section id="explore-section" className="mb-8">
+        {activeTab !== 'Lunch' && <section id="explore-section" className="mb-8">
 
           {/* Subcategory Pills - hidden for Recent as requested */}
           {currentCategoryObj?.subcategories &&
@@ -4234,26 +4497,28 @@ function MobileAppHomepage({
             activeTab !== 'Recent Added' &&
             activeTab !== 'Recent' && (
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2.5 mb-5 -mx-4 px-4 snap-x">
-              {currentCategoryObj.subcategories.map((sub) => {
+              {currentCategoryObj.subcategories.map((sub, index) => {
                 const isSubActive = activeSubcategory === sub.id;
                 const count = getSubcategoryCount(activeTab, sub.id);
                 return (
-                  <motion.button
-                    key={sub.id}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveSubcategory(sub.id)}
-                    className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${isSubActive
-                      ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
-                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                      }`}
-                  >
-                    <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                      }`}>
-                      {isLoadingCurrentTab ? '...' : count}
-                    </span>
-                  </motion.button>
+                  <React.Fragment key={sub.id}>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveSubcategory(sub.id)}
+                      className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${isSubActive
+                        ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
+                        : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
+                        }`}
+                    >
+                      <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                        }`}>
+                        {isLoadingCurrentTab ? '...' : count}
+                      </span>
+                    </motion.button>
+                    {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} navigate={navigate} />}
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -4282,7 +4547,15 @@ function MobileAppHomepage({
           {/* Section label + live count */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-black text-base text-gray-950 dark:text-white tracking-tight">
-              Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span>
+              {activeTab === 'Property' || activeTab === 'Properties'
+                ? 'Properties near you'
+                : activeTab === 'Helper' || activeTab === 'Helpers'
+                  ? 'Services near you'
+                  : activeTab === 'Services'
+                    ? 'Services near you'
+                    : activeTab === 'Lunch'
+                      ? 'Food near you'
+                      : <>Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>}
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4331,7 +4604,7 @@ function MobileAppHomepage({
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
-                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
+                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} found
               </h3>
               <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">Be the first to list in this category.</p>
               {activeSubcategory !== 'all' && (
@@ -4392,7 +4665,8 @@ function MobileAppHomepage({
               </motion.button>
             </div>
           )}
-        </section>
+        </section>}
+
 
         {/* Sell Items */}
         <SellItemsSection navigate={navigate} />
@@ -4462,10 +4736,12 @@ function DesktopHomepage({
   loadingEvents,
   loadingSellItems,
   recentlyAddedItems,
+  recentlyViewedItems = [],
   navigate,
   isBookingsOpen,
   setIsBookingsOpen,
   requestCount,
+  activeBookings = [],
   stats,
   homeLoadError,
   onRetryHomeData,
@@ -4591,18 +4867,16 @@ function DesktopHomepage({
             {(visibleTabs || tabs.slice(0, 3)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-              const shortcutEmoji = {
-                Property: '🏠', Services: '🛠️', Helper: '🧹', Lunch: '🍲',
-              }[tab.id] || tab.emoji || '✨';
+              const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
               const shortcutLabel = {
-                Property: 'Homes', Services: 'Services', Helper: 'Helpers', Lunch: 'Food',
+                Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
               }[tab.id] || tab.label;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => {
                     if (tab.route) {
-                      navigate(tab.route);
+                      navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
                       return;
                     }
                     if (isRecentAdded) {
@@ -4621,14 +4895,14 @@ function DesktopHomepage({
                   className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
                 >
-                  <div className={`${isRecentAdded ? 'w-14 h-14 bg-rose-100/80 dark:bg-rose-900/40' : 'w-14 h-14 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl text-[36px] shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
-                    <span role="img">{isRecentAdded ? '🆕' : shortcutEmoji}</span>
+                  <div className={`${isRecentAdded ? 'w-14 h-14 bg-rose-100/80 dark:bg-rose-900/40' : 'w-14 h-14 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
+                    <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-8 w-8 text-slate-700 dark:text-slate-200" />
                   </div>
                   <div className="text-left">
                     <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
                       {isRecentAdded ? 'New listings' : shortcutLabel}
                     </span>
-                    <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                    <span className="block text-xs text-gray-600 font-semibold leading-tight">
                       {isRecentAdded ? 'Just added' : (tab.desc || '')}
                     </span>
                   </div>
@@ -4654,7 +4928,7 @@ function DesktopHomepage({
                 <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">
                   Browse categories
                 </span>
-                <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                <span className="block text-xs text-gray-600 font-semibold leading-tight">
                   See everything
                 </span>
               </div>
@@ -4687,30 +4961,32 @@ function DesktopHomepage({
           activeTab !== 'Recent Added' &&
           activeTab !== 'Recent' && (
           <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
-            {currentCategoryObj.subcategories.map((sub) => {
+            {currentCategoryObj.subcategories.map((sub, index) => {
               const isSubActive = activeSubcategory === sub.id;
               const count = getSubcategoryCount(activeTab, sub.id);
               return (
-                <motion.button
-                  key={sub.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveSubcategory(sub.id)}
-                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${isSubActive
-                    ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
-                    }`}
-                >
-                  <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
+                <React.Fragment key={sub.id}>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveSubcategory(sub.id)}
+                    className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${isSubActive
+                      ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
                       }`}
                   >
-                    {isLoadingCurrentTab ? '...' : count}
-                  </span>
-                </motion.button>
+                    <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
+                        }`}
+                    >
+                      {isLoadingCurrentTab ? '...' : count}
+                    </span>
+                  </motion.button>
+                  {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} navigate={navigate} />}
+                </React.Fragment>
               );
             })}
           </div>
@@ -4736,19 +5012,33 @@ function DesktopHomepage({
           </div>
         )}
 
-        {/* Food Specials Strip — Desktop (always visible, right under search) */}
-        <div className="mb-6">
-          <FoodSpecialsStrip navigate={navigate} />
-        </div>
+        {/* Food cards appear only when the Food category is selected. */}
+        {activeTab === 'Lunch' && (
+          <div className="mt-7 mb-6">
+            <FoodSpecialsStrip navigate={navigate} />
+          </div>
+        )}
 
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
+          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
+        )}
+
+        {activeTab !== 'Lunch' && <>
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-black tracking-tighter leading-none">
-              <span className="text-slate-900 dark:text-white">Explore </span>
-              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">
-                {activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}
-              </span>
+              {activeTab === 'Property' || activeTab === 'Properties' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Properties near you</span>
+              ) : activeTab === 'Helper' || activeTab === 'Helpers' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Services near you</span>
+              ) : activeTab === 'Services' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Services near you</span>
+              ) : activeTab === 'Lunch' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Food near you</span>
+              ) : (
+                <><span className="text-slate-900 dark:text-white">Explore </span><span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>
+              )}
             </h1>
             <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
@@ -4851,7 +5141,7 @@ function DesktopHomepage({
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">
-              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} available
+              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} available
             </h3>
             <p className="text-sm text-slate-400 dark:text-gray-500 max-w-xs leading-relaxed mb-6">
               {activeSubcategory !== 'all'
@@ -4884,6 +5174,9 @@ function DesktopHomepage({
             </div>
           </div>
         )}
+
+        </>}
+
 
         {/* Sell Items Section (Desktop) */}
         <div className="mt-16">
@@ -4959,7 +5252,8 @@ const Home = () => {
   const [aiInsights, setAiInsights] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
   const [currentLocation, setCurrentLocation] = useState('South Africa');
-  const [requestCount, setRequestCount] = useState(0);
+  const [activeBookings, setActiveBookings] = useState([]);
+  const requestCount = activeBookings.length;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -4973,8 +5267,8 @@ const Home = () => {
         if (!res.ok) return;
         const data = await res.json();
         if (Array.isArray(data)) {
-          const activeBookings = data.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'declined');
-          setRequestCount(activeBookings.length);
+          const currentBookings = data.filter(b => !['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(String(b.status || '').toLowerCase()));
+          setActiveBookings(currentBookings);
         }
       } catch (error) {
         if (error.name === 'AbortError') return;
@@ -5319,6 +5613,7 @@ const Home = () => {
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
       locationStatus={locationStatus}
       requestCount={requestCount}
+      activeBookings={activeBookings}
       geoCity={city}
       geoLoading={geoLoading}
       geoError={geoError}

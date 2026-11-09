@@ -36,6 +36,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    workerAvailability: {
+        online: { type: Boolean, default: false },
+        latitude: { type: Number, min: -90, max: 90 },
+        longitude: { type: Number, min: -180, max: 180 },
+        serviceTypes: [{ type: String }],
+        updatedAt: { type: Date },
+    },
     bio: {
         type: String,
         default: "",

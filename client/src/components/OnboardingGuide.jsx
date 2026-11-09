@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   CalendarDaysIcon,
@@ -48,18 +48,14 @@ const steps = [
 ];
 
 const OnboardingGuide = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const current = steps[currentStep];
   const StepIcon = current.icon;
 
-  useEffect(() => {
-    if (location.pathname !== '/' || localStorage.getItem('hasSeenOnboardingGuide')) return undefined;
-    const timer = window.setTimeout(() => setIsVisible(true), 3000);
-    return () => window.clearTimeout(timer);
-  }, [location.pathname]);
+  // Keep first visit focused on the page. The guide remains available from
+  // its explicit entry point, instead of covering the home feed automatically.
 
   const closeGuide = () => {
     localStorage.setItem('hasSeenOnboardingGuide', 'true');

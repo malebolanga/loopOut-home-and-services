@@ -151,6 +151,7 @@ export const updateShop = async (req, res, next) => {
     for (const key of ['name', 'cuisine', 'address', 'phone', 'whatsapp']) if (req.body[key] !== undefined) shop[key] = cleanText(req.body[key], key === 'address' ? 180 : 80);
     if (req.body.image !== undefined) shop.image = cleanImage(req.body.image, shop.image || '🏪');
     if (typeof req.body.isOpen === 'boolean') shop.isOpen = req.body.isOpen;
+    if (typeof req.body.isPromoted === 'boolean') shop.isPromoted = req.body.isPromoted;
     if (req.body.operatingHours && typeof req.body.operatingHours === 'object') shop.operatingHours = req.body.operatingHours;
     await shop.save(); return res.json(format(shop));
   } catch (error) { return next(error); }

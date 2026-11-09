@@ -10,7 +10,7 @@ import { useWishlist } from '../../hooks/useWishlist';
 import useLocationCoords from '../../hooks/useGeolocation';
 import { calculateDistance } from '../../utils/locationUtils';
 
-export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false, showOwner = true }) => {
+export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = false, reducedSize = false, showOwner = true, showCategory = true, showAccountOwner = true }) => {
   const isGuestFavorite = item.rating >= 4.8;
   const wishlistType = type === 'property' ? 'listing' : type;
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
@@ -167,7 +167,19 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
     let path = `/listing/${item._id}`; // safe default
 
-    if (resolvedType === 'listing' || resolvedType === 'property'
+    // The category being rendered is authoritative for home cards. A helper's
+    // service subtype (for example "barber" or "beauty") must not make its
+    // card fall through to the generic /listing route.
+    if (type === 'helper' || resolvedType === 'helper') {
+      const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+      if (specializedTypes.includes(item.type)) {
+        path = `/${item.type}/${item._id}`;
+      } else if (item.type === 'tutor') {
+        path = `/privatetutor/${item._id}`;
+      } else {
+        path = `/helper/${item._id}`;
+      }
+    } else if (resolvedType === 'listing' || resolvedType === 'property'
       || resolvedType === 'rent' || resolvedType === 'over'
       || resolvedType === 'sale' || resolvedType === 'land'
       || resolvedType === 'resort' || resolvedType === 'hotel'
@@ -179,15 +191,6 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       path = `/sell-item/${item._id}`;
     } else if (resolvedType === 'food' || resolvedType === 'lunch') {
       path = item.route || '/food';
-    } else if (resolvedType === 'helper') {
-      const specializedTypes = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
-      if (specializedTypes.includes(item.type)) {
-        path = `/${item.type}/${item._id}`;
-      } else if (item.type === 'tutor') {
-        path = `/privatetutor/${item._id}`;
-      } else {
-        path = `/helper/${item._id}`;
-      }
     } else if (resolvedType === 'service') {
       if (item.type === 'carwash') {
         path = `/carwash/${item._id}`;
@@ -206,10 +209,19 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   return (
     <div
       onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleClick();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={`Open ${formatListingTitle(item.name || item.title || 'listing')}`}
       className="cursor-pointer flex flex-col bg-transparent w-full border-0 shadow-none rounded-none "
     >
       {/* Image section */}
-      <div className="home-image-card relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 mb-2 ring-1 ring-black/5">
+      <div className={`home-image-card relative overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-black/5 ${reducedSize ? 'aspect-[16/10] rounded-xl mb-1.5' : 'aspect-[4/3] rounded-2xl mb-2'}`}>
         <ImageGallery
           imageUrls={item.imageUrls || [item.image] || []}
           alt={formatListingTitle(item.name || item.title)}
@@ -227,12 +239,14 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
         {/* Favorite button */}
         <button
           onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
-          className={`absolute top-3 left-3 flex items-center justify-center text-white active:scale-90 transition-transform z-20 drop-shadow-md ${reducedSize ? 'p-1' : 'p-2'}`}
+          className={`absolute flex items-center justify-center text-white active:scale-90 transition-transform z-20 drop-shadow-md ${reducedSize ? 'top-2 left-2 p-1' : 'top-3 left-3 p-2'}`}
+          aria-label={`${isFavorite ? 'Remove' : 'Add'} ${formatListingTitle(item.name || item.title || 'listing')} ${isFavorite ? 'from' : 'to'} saved listings`}
+          title={isFavorite ? 'Remove from saved listings' : 'Save listing'}
         >
           {isFavorite ? (
-            <HeartIconSolid className={`text-rose-500 fill-rose-500 ${reducedSize ? 'w-6 h-6' : 'w-7 h-7'}`} />
+            <HeartIconSolid className={`text-rose-500 fill-rose-500 ${reducedSize ? 'w-5 h-5' : 'w-7 h-7'}`} />
           ) : (
-            <HeartIcon className={`stroke-[2.5px] ${reducedSize ? 'w-6 h-6' : 'w-7 h-7'}`} />
+            <HeartIcon className={`stroke-[2.5px] ${reducedSize ? 'w-5 h-5' : 'w-7 h-7'}`} />
           )}
         </button>
         {/* Guest favorite badge */}
@@ -247,29 +261,40 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
       <div className="flex flex-col mt-1">
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <p className={`min-h-[2rem] line-clamp-2 font-semibold leading-4 text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>
-              {type === 'helper' ? 'Worker: ' : ''}{formatListingTitle(item.name || item.title || item.address?.split(',')[0] || 'South Africa')}
+            <p className={`line-clamp-2 font-semibold leading-4 text-gray-900 dark:text-white ${reducedSize ? 'min-h-[1.75rem] text-xs leading-[1rem]' : 'min-h-[2rem] text-[13px]'}`}>
+              {formatListingTitle(item.name || item.title || item.address?.split(',')[0] || 'South Africa')}
             </p>
 
+            {type === 'event' && (item.date || item.eventDate || item.startDate || item.startsAt) && (
+              <p className="mt-1 truncate text-xs font-medium text-slate-700 dark:text-slate-300">
+                {new Date(item.date || item.eventDate || item.startDate || item.startsAt).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                {(item.time || item.startTime) ? ` · ${item.time || item.startTime}` : ''}
+              </p>
+            )}
+
             {(item.address || item.location) && (
-              <p className="mt-0.5 truncate text-[11px] leading-tight text-gray-500 dark:text-gray-400">
+              <p className={`mt-0.5 truncate leading-tight text-gray-600 dark:text-gray-300 ${reducedSize ? 'text-xs' : 'text-xs'}`}>
                 {String(item.address || item.location).split(',')[0]}
               </p>
             )}
-            <div className="mt-1 flex min-h-[18px] items-center gap-1.5 overflow-hidden">
-              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold leading-none text-slate-600 dark:bg-gray-800 dark:text-gray-300">
-                {getCategoryLabel()}
-              </span>
-              {!hideDistance && distanceLabel && (
-                <span className="inline-flex min-w-0 items-center gap-0.5 truncate text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  <Navigation2 className="h-2.5 w-2.5 shrink-0" />{distanceLabel}
-                </span>
-              )}
-              {responseTime && <span className="min-w-0 truncate text-[9px] text-gray-500 dark:text-gray-400">Replies {responseTime}</span>}
-            </div>
-            {type === 'helper' && ownerName && (
-              <p className="mt-1 truncate text-[10px] leading-tight text-gray-500 dark:text-gray-400">
-                Account owner: <span className="font-medium text-gray-700 dark:text-gray-300">{ownerName}</span>
+            {(showCategory || (!hideDistance && distanceLabel) || responseTime) && (
+              <div className={`mt-1 flex items-center gap-1.5 overflow-hidden ${reducedSize ? 'min-h-[15px]' : 'min-h-[18px]'}`}>
+                {showCategory && (
+                  <span className={`shrink-0 rounded-full bg-slate-100 font-semibold leading-none text-slate-700 dark:bg-gray-800 dark:text-gray-200 ${reducedSize ? 'px-1.5 py-1 text-xs' : 'px-2 py-1 text-xs'}`}>
+                    {getCategoryLabel()}
+                  </span>
+                )}
+                {!hideDistance && distanceLabel && (
+                  <span className={`inline-flex min-w-0 items-center gap-0.5 truncate font-semibold text-emerald-700 dark:text-emerald-300 text-xs`}>
+                    <Navigation2 className="h-2.5 w-2.5 shrink-0" />{distanceLabel}
+                  </span>
+                )}
+                {responseTime && <span className="min-w-0 truncate text-xs text-gray-600 dark:text-gray-300">Replies {responseTime}</span>}
+              </div>
+            )}
+            {showAccountOwner && type === 'helper' && ownerName && (
+              <p className={`mt-1 truncate leading-tight text-gray-600 dark:text-gray-300 text-xs`}>
+                Hosted by <span className="font-medium text-gray-800 dark:text-gray-100">{ownerName}</span>
               </p>
             )}
           </div>
@@ -284,7 +309,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
                   </span>
                 </>
               ) : (
-                <span className={`text-gray-400 font-normal italic ${reducedSize ? 'text-[9px]' : 'text-[10px]'}`}>New</span>
+                <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">New</span>
               )}
             </div>
             {showOwner && owner && owner.avatar && (
@@ -303,7 +328,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
         {/* Legacy _distance display removed — now shown via distanceLabel above */}
 
-        <div className="flex items-baseline gap-1 mt-1">
+        <div className={`flex items-baseline gap-1 ${reducedSize ? 'mt-0' : 'mt-1'}`}>
           <span className={`font-semibold text-gray-900 dark:text-white ${reducedSize ? 'text-[12px]' : 'text-[13px]'}`}>{formatPrice()}</span>
           <span className={`text-gray-500 dark:text-white font-normal ${reducedSize ? 'text-[10px]' : 'text-[12px]'}`}>{getPriceSuffix()}</span>
         </div>
@@ -314,7 +339,7 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
 
 export const AirbnbCardSkeleton = ({ reducedSize = false }) => (
   <div className={`flex flex-col ${reducedSize ? 'gap-1.5' : 'gap-2'} animate-pulse`}>
-    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-200 dark:bg-gray-800" />
+    <div className={`relative overflow-hidden bg-gray-200 dark:bg-gray-800 ${reducedSize ? 'aspect-[16/10] rounded-xl' : 'aspect-[4/3] rounded-2xl'}`} />
     <div className="flex flex-col pt-1 gap-1">
       <div className="flex justify-between items-start gap-2">
         <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded-md w-2/3" />

@@ -200,7 +200,7 @@ export default function UpcomingBookings() {
     <div className="min-h-screen bg-white app-safe-content-bottom pb-36 md:pb-12">
       <Helmet>
         <title>Your Upcoming Bookings | loopOut</title>
-        <meta name="description" content="View and manage all your upcoming stays, helpers, services and event bookings." />
+        <meta name="description" content="View and manage all your upcoming stays, helpers and event bookings." />
       </Helmet>
 
       {/* Top sticky navigation bar */}
@@ -227,7 +227,7 @@ export default function UpcomingBookings() {
                 )}
               </div>
               <p className="text-xs text-gray-400 font-semibold mt-0.5 hidden sm:block">
-                Manage your reservations, scheduled services &amp; appointments
+                Manage your stays, helpers and event bookings
               </p>
             </div>
           </div>
@@ -259,7 +259,6 @@ export default function UpcomingBookings() {
             {[
               { id: 'all', label: 'All ', emoji: '✨' },
               { id: 'listing', label: 'Stays ', emoji: '🏡' },
-              { id: 'service', label: 'Services', emoji: '🛠️' },
               { id: 'helper', label: 'Helpers', emoji: '🧹' },
               { id: 'event', label: 'Events', emoji: '🎟️' }
             ].map((tab) => (
@@ -357,7 +356,7 @@ export default function UpcomingBookings() {
             <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
               {searchQuery || filterType !== 'all' || filterUrgency !== 'all'
                 ? 'Try adjusting your filters or search query to find your reservations.'
-                : 'Discover top stays, hire trusted domestic helpers, or schedule daily services today.'}
+                : 'Discover stays, book trusted helpers, or find events to attend.'}
             </p>
             <button
               onClick={() => navigate('/')}

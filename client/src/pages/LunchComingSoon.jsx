@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   TrendingUp,
   Lightbulb,
+  Megaphone,
   ListPlus,
   Search,
   Edit3,
@@ -721,6 +722,7 @@ export default function LunchComingSoon() {
   // when the persisted Redux currentUser._id is stale.
   const [serverMyShops, setServerMyShops] = useState(null); // null = not yet loaded
   const [selectedShopId, setSelectedShopId] = useState('');
+  const [allFoodSearch, setAllFoodSearch] = useState('');
   const [isShopDetailOpen, setIsShopDetailOpen] = useState(Boolean(location.state?.selectedShopId));
   const [cart, setCart] = useState([]);
   const [selectedMealSides, setSelectedMealSides] = useState({});
@@ -744,6 +746,7 @@ export default function LunchComingSoon() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showBasketPreview, setShowBasketPreview] = useState(false);
   const [selectedFeaturedMeal, setSelectedFeaturedMeal] = useState(null);
+  const [zoomedFoodImage, setZoomedFoodImage] = useState(null);
   const [checkoutData, setCheckoutData] = useState({
     customerName: currentUser?.username || currentUser?.name || '',
     customerPhone: currentUser?.phone || '',
@@ -845,6 +848,7 @@ export default function LunchComingSoon() {
   const [showPastCustomerReceipts, setShowPastCustomerReceipts] = useState(false);
 
   // Customer menu discovery controls
+  const [shopSearch, setShopSearch] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [menuTagFilter, setMenuTagFilter] = useState('All');
   const [selectedFoodCategory, setSelectedFoodCategory] = useState('all'); // 'all' | 'african' | 'light' | 'drinks' | 'fruits'
@@ -1041,6 +1045,32 @@ export default function LunchComingSoon() {
   const currentShop = useMemo(() => {
     return shops.find((shop) => String(shop.id || shop._id) === String(selectedShopId)) || shops[0] || null;
   }, [shops, selectedShopId]);
+
+  const visibleShops = useMemo(() => {
+    const query = shopSearch.trim().toLowerCase();
+    if (!query) return shops;
+    return shops.filter((shop) => {
+      const menuText = (shop.meals || []).map((meal) => `${meal.name || ''} ${meal.description || ''} ${meal.category || ''}`).join(' ');
+      const searchableText = [shop.name, shop.cuisine, shop.description, shop.address, shop.location, shop.ownerName, menuText]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return searchableText.includes(query);
+    });
+  }, [shops, shopSearch]);
+
+  const allFoodItems = useMemo(() => {
+    const query = allFoodSearch.trim().toLowerCase();
+    return shops.flatMap((shop) => (shop.meals || []).map((meal) => ({ shop, meal })))
+      .filter(({ shop, meal }) => {
+        if (!query) return true;
+        return [meal.name, meal.description, meal.category, meal.tag, shop.name, shop.cuisine]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      });
+  }, [shops, allFoodSearch]);
 
   // A closed shop remains visible, but customers cannot change or submit an order.
   const isCurrentShopClosed = currentShop?.isOpen === false;
@@ -1696,6 +1726,36 @@ export default function LunchComingSoon() {
     }
   };
 
+  const handleToggleShopPromotion = async (shop) => {
+    if (!shop) return;
+    const uid = String(currentUser?._id || currentUser?.id || '');
+    const shopId = shop.id || shop._id;
+    const isOwnerOfShop = myShops.some((entry) => String(entry.id || entry._id) === String(shopId)) ||
+      Boolean(uid && String(shop.ownerId || '') === uid) ||
+      currentUser?.isAdmin === true || currentUser?.role === 'admin';
+    if (!isOwnerOfShop) {
+      setNotice({ type: 'error', message: 'Only this shop’s owner can manage its home promotion.' });
+      return;
+    }
+
+    const isPromoted = shop.isPromoted !== true;
+    try {
+      await updateShop(shopId, { isPromoted });
+      setShops((prev) => prev.map((entry) =>
+        String(entry.id || entry._id) === String(shopId) ? { ...entry, isPromoted } : entry
+      ));
+      setNotice({
+        type: 'success',
+        message: isPromoted
+          ? `${shop.name} is now promoted in the home food row for free. It will be labeled Sponsored.`
+          : `Home promotion turned off for ${shop.name}.`
+      });
+    } catch (err) {
+      console.error('Toggle shop promotion error:', err);
+      setNotice({ type: 'error', message: err.message || 'Could not update the shop promotion.' });
+    }
+  };
+
   const selectedFoodSides = selectedFeaturedMeal ? getAvailableSides(selectedFeaturedMeal) : [];
   const selectedFoodMaxSides = selectedFeaturedMeal ? getMaxSides(selectedFeaturedMeal) : 0;
   const selectedFoodActiveSides = selectedFeaturedMeal
@@ -1713,13 +1773,13 @@ export default function LunchComingSoon() {
             <button
               type="button"
               onClick={() => isShopDetailOpen ? setIsShopDetailOpen(false) : navigate(-1)}
-              aria-label={isShopDetailOpen ? 'Back to all food shops' : 'Go back'}
+              aria-label={isShopDetailOpen && activeTab !== 'all-food' ? 'Back to all food shops' : 'Go back'}
               className="inline-flex h-9 w-9 items-center justify-self-start justify-center rounded-full bg-white text-gray-600 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-gray-700"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
             <div className="min-w-0 text-center">
-              {isShopDetailOpen && currentShop ? (
+              {isShopDetailOpen && currentShop && activeTab !== 'all-food' ? (
                 <>
                   <ShopImage image={currentShop.image} className="mx-auto mb-1 h-9 w-9 rounded-lg bg-amber-50 object-cover text-2xl dark:bg-gray-800" />
                   <h1 className="truncate text-base font-bold text-gray-900 dark:text-white">{currentShop.name || 'Food shop'}</h1>
@@ -1790,6 +1850,7 @@ export default function LunchComingSoon() {
         <div className="flex items-center gap-1.5 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 mb-5 overflow-x-auto">
           {[
             { key: 'explore', label: 'Browse Food', icon: <Store className="h-4 w-4" /> },
+            { key: 'all-food', label: 'All Food', icon: <UtensilsCrossed className="h-4 w-4" /> },
             { key: 'orders', label: 'My Orders', icon: <ShoppingBag className="h-4 w-4" />, badge: myCustomerOrders.length || null },
             ...(isShopOwner ? [{ key: 'my-shop', label: 'My Shop', icon: <ChefHat className="h-4 w-4" />, badge: liveKitchenQueue.length || null }] : [])
           ].map((tab) => (
@@ -1816,6 +1877,63 @@ export default function LunchComingSoon() {
           ))}
         </div>
 
+        {activeTab === 'all-food' && (
+          <section aria-labelledby="all-food-heading" className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="all-food-heading" className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                  <UtensilsCrossed className="h-5 w-5 text-amber-500" /> All Food
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{allFoodItems.length}</span>
+                </h2>
+                <button type="button" onClick={() => setActiveTab('explore')} className="text-xs font-bold text-amber-700 hover:text-amber-800 dark:text-amber-400">Browse shops</button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">See menu items from every food shop. Tap an item to open its shop and order.</p>
+            </div>
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input type="text" value={allFoodSearch} onChange={(event) => setAllFoodSearch(event.target.value)} placeholder="Search dishes, shops or cuisine..." aria-label="Search all food" className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+              {allFoodSearch && <button type="button" onClick={() => setAllFoodSearch('')} aria-label="Clear all food search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>}
+            </label>
+            {allFoodItems.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {allFoodItems.map(({ shop, meal }) => {
+                  const soldOut = meal.isAvailable === false;
+                  const isClosed = shop.isOpen === false;
+                  const shopId = String(shop.id || shop._id);
+                  return (
+                    <button key={`${shopId}-${meal.id}`} type="button" onClick={() => {
+                      setSelectedShopId(shopId);
+                      setMenuSearch('');
+                      setSelectedFoodCategory('all');
+                      setMenuTagFilter('All');
+                      setIsShopDetailOpen(true);
+                      setActiveTab('explore');
+                    }} aria-label={`View ${meal.name} at ${shop.name}`} className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-gray-200 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800">
+                      <span className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                        <FoodVisual visual={getItemVisual(meal)} alt={meal.name} className="h-full w-full object-cover" emojiClassName="flex h-full w-full items-center justify-center text-3xl" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-start justify-between gap-2">
+                          <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{meal.name}</span>
+                          <span className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">{formatMealPrice(meal)}</span>
+                        </span>
+                        <span className="mt-1 block truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{shop.name} · {shop.cuisine || 'Food shop'}</span>
+                        {meal.description && <span className="mt-1 block line-clamp-2 text-[10px] text-gray-500 dark:text-gray-400">{meal.description}</span>}
+                        <span className={`mt-1.5 block text-[10px] font-bold ${soldOut || isClosed ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>{soldOut ? 'Sold out' : isClosed ? 'Shop closed' : 'Tap to view shop & order'}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-300 px-4 py-10 text-center dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{allFoodSearch ? `No food matches “${allFoodSearch.trim()}”` : 'No menu items available yet'}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{allFoodSearch ? 'Try a dish name, shop or cuisine.' : 'Check back soon for menus from local shops.'}</p>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* ══════════════════════════════════════════════════════ */}
         {/* TAB: BROWSE FOOD (explore / other-shops)             */}
         {/* ══════════════════════════════════════════════════════ */}
@@ -1828,12 +1946,24 @@ export default function LunchComingSoon() {
                 <div className="mb-3">
                   <h2 id="food-shops-heading" className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
                     <Store className="h-5 w-5 text-amber-500" /> Food shops near you
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{shops.length}</span>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{visibleShops.length}{shopSearch.trim() ? ` of ${shops.length}` : ''}</span>
                   </h2>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose a shop to see its menu and place an order.</p>
                 </div>
+                <label className="relative mb-3 block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={shopSearch}
+                    onChange={(event) => setShopSearch(event.target.value)}
+                    placeholder="Search shops, food or location..."
+                    aria-label="Search food shops by name, menu or location"
+                    className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  />
+                  {shopSearch && <button type="button" onClick={() => setShopSearch('')} aria-label="Clear shop search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>}
+                </label>
                 <div className="space-y-2.5">
-                  {shops.map((shop) => {
+                  {visibleShops.map((shop) => {
                     const shopId = shop.id || shop._id;
                     const isClosed = shop.isOpen === false;
                     const mealCount = Array.isArray(shop.meals) ? shop.meals.length : 0;
@@ -1951,6 +2081,13 @@ export default function LunchComingSoon() {
                     );
                   })}
                 </div>
+                {visibleShops.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center dark:border-gray-700">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">No shops match “{shopSearch.trim()}”</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Try a shop name, dish, cuisine or area.</p>
+                    <button type="button" onClick={() => setShopSearch('')} className="mt-3 rounded-full bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600">Clear search</button>
+                  </div>
+                )}
               </section>
             )}
 
@@ -2527,6 +2664,22 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {isCurrentShopOwner && dashboardShop && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleShopPromotion(dashboardShop)}
+                      aria-pressed={dashboardShop.isPromoted === true}
+                      title={dashboardShop.isPromoted === true ? 'Turn off free home promotion' : 'Promote your shop in the home food row for free'}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold transition ${
+                        dashboardShop.isPromoted === true
+                          ? 'bg-white text-amber-700'
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      }`}
+                    >
+                      <Megaphone className="h-3 w-3" />
+                      {dashboardShop.isPromoted === true ? 'Sponsored' : 'Promote free'}
+                    </button>
+                  )}
                   {isCurrentShopOwner && dashboardShop && (
                     <button
                       type="button"
@@ -3585,7 +3738,14 @@ export default function LunchComingSoon() {
                 className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl"
               >
                 <div className="relative flex h-56 items-center justify-center bg-amber-50 dark:bg-gray-800 sm:h-64">
-                  <FoodVisual visual={getItemVisual(selectedFeaturedMeal)} alt={selectedFeaturedMeal.name} className="h-full w-full object-contain p-3" emojiClassName="text-7xl" />
+                  <button
+                    type="button"
+                    onClick={() => setZoomedFoodImage(selectedFeaturedMeal)}
+                    aria-label={`Zoom image of ${selectedFeaturedMeal.name}`}
+                    className="h-full w-full cursor-zoom-in p-3"
+                  >
+                    <FoodVisual visual={getItemVisual(selectedFeaturedMeal)} alt={selectedFeaturedMeal.name} className="h-full w-full object-contain" emojiClassName="flex h-full w-full items-center justify-center text-7xl" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setSelectedFeaturedMeal(null)}
@@ -3791,6 +3951,34 @@ export default function LunchComingSoon() {
           </motion.div>
         )}
       </AnimatePresence>
+
+        <AnimatePresence>
+          {zoomedFoodImage && (
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Image of ${zoomedFoodImage.name}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setZoomedFoodImage(null)}
+              className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-4"
+            >
+              <button
+                type="button"
+                onClick={() => setZoomedFoodImage(null)}
+                aria-label="Close zoomed food image"
+                className="absolute right-4 top-4 z-10 rounded-full bg-white/15 p-3 text-white backdrop-blur hover:bg-white/25"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="flex h-full max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3" onClick={(event) => event.stopPropagation()}>
+                <FoodVisual visual={getItemVisual(zoomedFoodImage)} alt={zoomedFoodImage.name} className="max-h-[78vh] max-w-full rounded-xl object-contain" emojiClassName="text-8xl sm:text-9xl" />
+                <p className="max-w-full truncate text-center text-sm font-semibold text-white">{zoomedFoodImage.name}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       {/* ── FLOATING CART BAR ── */}
       {cart.length > 0 && (activeTab === 'explore' || activeTab === 'other-shops') && (

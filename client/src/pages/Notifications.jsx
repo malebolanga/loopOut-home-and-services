@@ -521,9 +521,11 @@ export default function Notifications() {
         }
 
         if (notification.data) {
-            const { itemType, itemId, orderId, orderCode, goodsOrderId, canReview } = notification.data;
+            const { itemType, itemId, orderId, orderCode, goodsOrderId, canReview, serviceRequestId } = notification.data;
             
-            if (goodsOrderId) {
+            if (serviceRequestId) {
+                navigate('/work-now');
+            } else if (goodsOrderId) {
                 navigate('/my-loopout');
             } else if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
                 navigate('/my-orders');
