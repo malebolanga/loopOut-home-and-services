@@ -121,19 +121,13 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
     <div className="w-full space-y-3">
       {pendingGoogleToken && offeringType === undefined && (
         <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm">
-          <p className="text-sm font-semibold text-gray-900">How will you use LoopOut?</p>
-          <div className="grid grid-cols-2 gap-2">{[
-            { value: 'viewer', label: 'Browse, book & request' },
-            { value: 'services', label: 'Provide services' },
-            { value: 'property', label: 'List property' },
-            { value: 'food', label: 'Open a food shop' },
-            { value: 'goods', label: 'Sell goods' },
-          ].map((option) => (
-            <label key={option.value} className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 text-xs text-gray-800 ${roleForm.offeringType === option.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}>
-              <input type="radio" name="googleOfferingType" value={option.value} checked={roleForm.offeringType === option.value} onChange={() => setRoleForm((current) => ({ ...current, offeringType: option.value }))} />
-              <span>{option.label}</span>
+          <fieldset className="space-y-2"><legend className="text-sm font-semibold text-gray-900">What would you like to do?</legend><p className="text-xs text-gray-600">Choose the option that fits you best.</p><div className="space-y-2">{[{value:"services",label:"Offer a service",description:"Get bookings for work you do, such as cleaning, repairs or tutoring.",icon:"🛠️"},{value:"property",label:"List a property",description:"Advertise a home, room or holiday stay to rent or sell.",icon:"🏡"},{value:"goods",label:"Sell an item",description:"Post individual items like furniture, clothing or electronics.",icon:"📦"},{value:"food",label:"Open a shop",description:"Set up a food shop and show customers what you have available.",icon:"🏪"},{value:"viewer",label:"Browse and make a request",description:"Find a place, service or item. Ask a question, make a request or book.",icon:"🔎"}].map((option) => (
+            <label key={option.value} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-left text-sm ${roleForm.offeringType === option.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}>
+              <span aria-hidden="true" className="mt-0.5 text-base">{option.icon}</span>
+              <input className="mt-1 accent-rose-600" type="radio" name="googleOfferingType" value={option.value} checked={roleForm.offeringType === option.value} onChange={() => setRoleForm((current) => ({ ...current, offeringType: option.value }))} required />
+              <span><strong className="block text-gray-900">{option.label}</strong><span className="mt-0.5 block text-xs text-gray-600">{option.description}</span></span>
             </label>
-          ))}</div>
+          ))}</div>{roleForm.offeringType === 'services' && <p className="text-xs text-gray-600">Service providers complete an identity review using a government ID or passport and a live selfie after signup.</p>}</fieldset>
           <input aria-label="Mobile number" type="tel" autoComplete="tel" placeholder="Mobile number" value={roleForm.phone} onChange={(event) => setRoleForm((current) => ({ ...current, phone: event.target.value }))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900" />
           <input aria-label="City or area" autoComplete="address-level2" placeholder="City or area" value={roleForm.location} onChange={(event) => setRoleForm((current) => ({ ...current, location: event.target.value }))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900" />
           <label className="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" checked={roleForm.acceptedTerms} onChange={(event) => setRoleForm((current) => ({ ...current, acceptedTerms: event.target.checked }))} /><span>I accept the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms</a> and <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
