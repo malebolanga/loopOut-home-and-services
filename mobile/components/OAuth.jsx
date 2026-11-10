@@ -161,4 +161,4 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
       )}
     </>
   );
-}}
+}
