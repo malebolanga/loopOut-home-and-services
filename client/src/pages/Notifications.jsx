@@ -626,6 +626,14 @@ export default function Notifications() {
     const isRequester = isClientMatch || (!isHostMatch && looksLikeRequesterNotif);
     // If current user is the one who is providing the service/listing/booking
     const isProvider = (isHostMatch && !isClientMatch) || (!isClientMatch && !isRequester && looksLikeProviderNotif);
+    const providerContact = bookingDetails?.listing?.contact || bookingDetails?.listing?.phone || bookingDetails?.listing?.userRef?.phone ||
+        bookingDetails?.helper?.contact || bookingDetails?.helper?.phone || bookingDetails?.helper?.userRef?.phone ||
+        bookingDetails?.service?.contact || bookingDetails?.service?.phone || bookingDetails?.service?.userRef?.phone || bookingDetails?.service?.creator?.phone ||
+        bookingDetails?.event?.contact || bookingDetails?.event?.phone || bookingDetails?.event?.userRef?.phone;
+    const bookingContact = isRequester
+        ? providerContact
+        : (bookingDetails?.user?.phone || bookingDetails?.phone || providerContact);
+    const bookingContactLabel = isRequester ? 'Provider contact' : isProvider ? 'Client contact' : 'Contact';
 
     const isPending = bookingDetails?.status === 'pending';
     const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
@@ -1156,9 +1164,9 @@ export default function Notifications() {
                                                     )}
                                                 </div>}
                                             </div>
-                                            {(isBarberBooking || isCarWash) && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            {(bookingDuration || bookingContact) && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                                 {bookingDuration && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">⏱️ Duration</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDuration}</p></div>}
-                                                {bookingDetails.phone && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">📞 Contact</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDetails.phone}</p></div>}
+                                                {bookingContact && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">📞 {bookingContactLabel}</p><a href={`tel:${String(bookingContact).replace(/[^\d+]/g, '')}`} className="mt-1 inline-block font-semibold text-slate-900 underline underline-offset-2 dark:text-white">{bookingContact}</a></div>}
                                             </div>}
                                             {(isBarberBooking || isCarWash || bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.performerExperience || bookingDetails.numberOfGuests || barberBookingDetails.serviceDuration || barberBookingDetails.selectedHaircut || barberBookingDetails.beardGrooming || barberBookingDetails.specialRequirements || barberBookingDetails.foodProvided || barberBookingDetails.electricityProvided || (bookingDetails.message && !requestMessageDetails.length && !isBarberBooking && !isCarWash)) && <div className={`sm:col-span-2 rounded-xl p-3 ${isBarberBooking ? 'bg-blue-50/70 dark:bg-blue-950/20' : isCarWash ? 'bg-cyan-50/70 dark:bg-cyan-950/20' : 'bg-white dark:bg-gray-900'}`}>
                                                 <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isBarberBooking || isCarWash ? '🧰 What you booked' : '📝 Services and booking details'}</p>

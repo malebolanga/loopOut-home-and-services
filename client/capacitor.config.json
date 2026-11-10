@@ -9,6 +9,9 @@
   "plugins": {
     "PushNotifications": {
       "presentationOptions": ["alert", "sound"]
+    },
+    "FirebaseAuthentication": {
+      "providers": ["google.com"]
     }
   }
 }

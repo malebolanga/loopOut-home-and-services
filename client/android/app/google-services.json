@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "828543108648-7g2bi5ipu0j2612mou00iep9t0r8hsmv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.loupeout.app",
+            "certificate_hash": "7da0c26313ad43ed0bb717dc54e92c9700d94d71"
+          }
+        },
+        {
           "client_id": "828543108648-4t3v0sg13pjn0vldcs1nto79glo1tn8q.apps.googleusercontent.com",
           "client_type": 3
         }

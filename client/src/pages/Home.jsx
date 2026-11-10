@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setHideBottomNav, setHideHeader } from '../redux/frontendSlice';
@@ -3977,23 +3978,111 @@ const getActiveBookingCount = (activeTab, bookings = []) => {
   }).length;
 };
 
-const ActiveBookingsChip = ({ activeTab, bookings, navigate }) => {
+const ActiveBookingsChip = ({ activeTab, bookings, isBookingsOpen, setIsBookingsOpen }) => {
   const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
   const isServiceTab = ['Helper', 'Helpers', 'Services'].includes(activeTab);
   if (!isPropertyTab && !isServiceTab) return null;
   const count = getActiveBookingCount(activeTab, bookings);
   return (
-    <motion.button
-      type="button"
-      whileTap={{ scale: 0.96 }}
-      onClick={() => navigate('/upcoming-bookings')}
-      aria-label={`Open active bookings, ${count} ${count === 1 ? 'booking' : 'bookings'}`}
-      className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/50"
-    >
-      <CalendarDays className="h-4 w-4" />
-      <span>Bookings</span>
-      <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-gray-900 dark:text-rose-200">{count}</span>
-    </motion.button>
+    <>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.96 }}
+        onClick={() => setIsBookingsOpen(true)}
+        aria-label={`Open active bookings, ${count} ${count === 1 ? 'booking' : 'bookings'}`}
+        className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/50"
+      >
+        <CalendarDays className="h-4 w-4" />
+        <span>Bookings</span>
+        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-gray-900 dark:text-rose-200">{count}</span>
+      </motion.button>
+      {isBookingsOpen && <ActiveBookingsPopover activeTab={activeTab} bookings={bookings} onClose={() => setIsBookingsOpen(false)} />}
+    </>
+  );
+};
+
+const ActiveBookingsPopover = ({ activeTab, bookings, onClose }) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const activeItems = bookings.filter((booking) => {
+    const status = String(booking.status || '').toLowerCase();
+    if (['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(status)) return false;
+    const isPropertyBooking = Boolean(booking.listing) || ['listing', 'property', 'stay'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    const isServiceBooking = Boolean(booking.helper || booking.service) || ['helper', 'service'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    return isPropertyTab ? isPropertyBooking : isServiceBooking;
+  });
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1400] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
+      <section role="dialog" aria-modal="true" aria-labelledby="home-active-bookings-title" className="max-h-[82dvh] w-full max-w-lg overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl" onClick={(event) => event.stopPropagation()}>
+        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-gray-800">
+          <div>
+            <h2 id="home-active-bookings-title" className="text-lg font-extrabold text-slate-900 dark:text-white">Your bookings</h2>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-gray-400">{isPropertyTab ? 'Property' : 'Service'} bookings · {activeItems.length}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close bookings" className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-xl text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">×</button>
+        </header>
+        <div className="max-h-[65dvh] space-y-3 overflow-y-auto p-4">
+          {activeItems.length ? activeItems.map((booking) => {
+            const item = booking.listing || booking.helper || booking.service || booking.event || {};
+            const bookingDate = new Date(booking.startDate || booking.date || booking.createdAt);
+            const dateLabel = Number.isNaN(bookingDate.getTime())
+              ? 'Date to be confirmed'
+              : bookingDate.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const title = item.name || item.title || booking.serviceName || booking.title || 'Booking request';
+            const status = String(booking.status || 'pending').replace(/[_-]/g, ' ');
+            const serviceDetails = [
+              booking.subtype,
+              booking.functionType,
+              booking.selectedHaircut && `Haircut: ${booking.selectedHaircut}`,
+              booking.beardGrooming && `Beard grooming: ${booking.beardGrooming}`,
+              booking.serviceDuration && `Duration: ${booking.serviceDuration}`,
+              booking.specialRequirements && `Request: ${booking.specialRequirements}`,
+            ].filter(Boolean).join(' · ');
+            const rawAddress = booking.requestLocation || booking.address || item.businessAddress || item.address || item.location;
+            const address = typeof rawAddress === 'string' ? rawAddress : rawAddress?.formattedAddress || rawAddress?.address || '';
+            const contact = item.contact || item.phone || item.userRef?.phone || item.creator?.phone || booking.phone;
+            return (
+              <article key={booking._id || booking.id || `${title}-${dateLabel}`} className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-slate-900 dark:text-white">{title}</h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-gray-300">{dateLabel}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold capitalize text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">{status}</span>
+                </div>
+                {(booking.selectedPerformer || booking.totalPrice || booking.totalAmount) && (
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-gray-400">
+                    {booking.selectedPerformer && <span>Provider: {booking.selectedPerformer}</span>}
+                    {(booking.totalPrice || booking.totalAmount) && <span>Total: R{booking.totalPrice || booking.totalAmount}</span>}
+                  </div>
+                )}
+                <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 text-sm dark:border-gray-700">
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Service:</strong> {serviceDetails || booking.serviceName || item.type || title}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Address:</strong> {address || 'Not provided'}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Contact:</strong> {contact ? <a href={`tel:${String(contact).replace(/[^\d+]/g, '')}`} className="underline underline-offset-2">{contact}</a> : 'Not provided'}</span>
+                  </div>
+                </div>
+              </article>
+            );
+          }) : (
+            <div className="py-10 text-center">
+              <CalendarDays className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 font-semibold text-slate-800 dark:text-gray-200">No active bookings here yet</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">Your booking requests will appear here.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>,
+    document.body
   );
 };
 
@@ -4517,7 +4606,7 @@ function MobileAppHomepage({
                         {isLoadingCurrentTab ? '...' : count}
                       </span>
                     </motion.button>
-                    {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} navigate={navigate} />}
+                    {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} isBookingsOpen={isBookingsOpen} setIsBookingsOpen={setIsBookingsOpen} />}
                   </React.Fragment>
                 );
               })}
@@ -4985,7 +5074,7 @@ function DesktopHomepage({
                       {isLoadingCurrentTab ? '...' : count}
                     </span>
                   </motion.button>
-                  {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} navigate={navigate} />}
+                  {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} isBookingsOpen={isBookingsOpen} setIsBookingsOpen={setIsBookingsOpen} />}
                 </React.Fragment>
               );
             })}
