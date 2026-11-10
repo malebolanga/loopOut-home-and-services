@@ -87,7 +87,7 @@ export default function AIAssistantWidget() {
   }, []);
 
   // Hide the floating widget on pages where it obstructs the page controls.
-  if (location.pathname === '/ai-help-center' || location.pathname === '/loopbot' || location.pathname === '/my-loopout') {
+  if (['/ai-help-center', '/loopbot', '/my-loopout', '/sign-in', '/sign-up', '/forgot-password'].includes(location.pathname)) {
     return null;
   }
 
