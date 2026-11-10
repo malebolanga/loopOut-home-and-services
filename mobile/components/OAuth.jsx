@@ -102,39 +102,63 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
     }
   };
 
+  const newGoogleSignup = pendingGoogleToken && offeringType === undefined;
+  const googleButtonDisabled = loading || (pendingGoogleToken
+    ? (!roleForm.offeringType || !roleForm.phone.trim() || !roleForm.location.trim() || !roleForm.acceptedTerms)
+    : (offeringType !== undefined && (!offeringType || !acceptedTerms || !phone?.trim() || !location?.trim())));
+
   return (
-    <div className="w-full space-y-3">
-      {pendingGoogleToken && offeringType === undefined && (
-        <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm">
-          <p className="text-sm font-semibold text-gray-900">How will you use LoopOut?</p>
-          <div className="grid grid-cols-2 gap-2">{[
-            { value: 'viewer', label: 'Browse, book & request' },
-            { value: 'services', label: 'Provide services' },
-            { value: 'property', label: 'List property' },
-            { value: 'food', label: 'Open a food shop' },
-            { value: 'goods', label: 'Sell goods' },
-          ].map((option) => (
-            <label key={option.value} className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 text-xs text-gray-800 ${roleForm.offeringType === option.value ? 'border-rose-500 bg-rose-50' : 'border-gray-200'}`}>
-              <input type="radio" name="googleOfferingType" value={option.value} checked={roleForm.offeringType === option.value} onChange={() => setRoleForm((current) => ({ ...current, offeringType: option.value }))} />
-              <span>{option.label}</span>
-            </label>
-          ))}</div>
-          <input aria-label="Mobile number" type="tel" autoComplete="tel" placeholder="Mobile number" value={roleForm.phone} onChange={(event) => setRoleForm((current) => ({ ...current, phone: event.target.value }))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900" />
-          <input aria-label="City or area" autoComplete="address-level2" placeholder="City or area" value={roleForm.location} onChange={(event) => setRoleForm((current) => ({ ...current, location: event.target.value }))} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900" />
-          <label className="flex items-start gap-2 text-xs text-gray-700"><input type="checkbox" checked={roleForm.acceptedTerms} onChange={(event) => setRoleForm((current) => ({ ...current, acceptedTerms: event.target.checked }))} /><span>I accept the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms</a> and <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
+    <>
+      {newGoogleSignup ? (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-3 sm:p-5">
+          <section aria-labelledby="google-signup-title" className="max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-5 text-slate-900 shadow-2xl sm:p-6">
+            <div className="mb-5 flex items-center gap-2 font-semibold text-emerald-800">
+              <span aria-hidden="true" className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-700 text-white">L</span>
+              <span>LoopOut</span>
+            </div>
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Create your account · Final step</p>
+            <h1 id="google-signup-title" className="text-2xl font-semibold tracking-tight">What would you like to do?</h1>
+            <p className="mb-5 mt-2 text-sm text-slate-600">Choose the option that fits you best. You can add more later.</p>
+            <fieldset className="space-y-2">
+              <legend className="mb-2 text-sm font-medium">Choose one to get started</legend>
+              <div className="space-y-2">{[{value:"services",label:"Offer a service",description:"Get bookings for work you do, such as cleaning, repairs or tutoring.",icon:"🛠️"},{value:"property",label:"List a property",description:"Advertise a home, room or holiday stay to rent or sell.",icon:"🏡"},{value:"goods",label:"Sell an item",description:"Post individual items like furniture, clothing or electronics.",icon:"📦"},{value:"food",label:"Open a shop",description:"Set up a food shop and show customers what you have available.",icon:"🏪"},{value:"viewer",label:"Browse and make a request",description:"Find a place, service or item. Ask a question, make a request or book.",icon:"🔎"}].map((option) => (
+                <label key={option.value} className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors ${roleForm.offeringType === option.value ? 'border-emerald-700 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                  <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-lg">{option.icon}</span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="block text-sm font-semibold text-slate-900">{option.label}</strong>
+                    <span className="mt-0.5 block text-sm leading-snug text-slate-600">{option.description}</span>
+                  </span>
+                  <input className="mt-1 h-4 w-4 shrink-0 accent-emerald-700" type="radio" name="googleOfferingType" value={option.value} checked={roleForm.offeringType === option.value} onChange={() => setRoleForm((current) => ({ ...current, offeringType: option.value }))} required />
+                </label>
+              ))}</div>
+            </fieldset>
+            <p className="mb-4 mt-3 text-xs text-slate-500">Not sure? Choose “Browse and make a request” to get started.</p>
+            {roleForm.offeringType === 'services' && <p className="mb-4 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">Service providers complete an identity review using a government ID or passport and a live selfie.</p>}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-700">Mobile number<input aria-label="Mobile number" type="tel" autoComplete="tel" value={roleForm.phone} onChange={(event) => setRoleForm((current) => ({ ...current, phone: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-900 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/15" /></label>
+              <label className="block text-sm font-medium text-slate-700">City or area<input aria-label="City or area" autoComplete="address-level2" value={roleForm.location} onChange={(event) => setRoleForm((current) => ({ ...current, location: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-200 px-4 py-3 text-base text-slate-900 placeholder-slate-400 focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/15" /></label>
+              <label className="flex items-start gap-2 text-sm text-slate-700"><input className="mt-1" type="checkbox" checked={roleForm.acceptedTerms} onChange={(event) => setRoleForm((current) => ({ ...current, acceptedTerms: event.target.checked }))} /><span>I accept the <a className="underline" href="/terms" target="_blank" rel="noreferrer">Terms</a> and <a className="underline" href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span></label>
+              <button type="button" onClick={handleGoogleClick} disabled={googleButtonDisabled} className="w-full rounded-xl bg-gradient-to-r from-[#E61E4D] to-[#D70466] py-3 font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? <FaSpinner className="mx-auto animate-spin" /> : 'Continue'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : (
+        <div className="w-full space-y-3">
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={handleGoogleClick}
+            disabled={googleButtonDisabled}
+            type="button"
+            className="flex w-full items-center justify-center gap-3 rounded-lg border border-[#DDDDDD] bg-white p-3 font-semibold text-[#222222] shadow-sm transition-all duration-200 hover:border-[#000000] hover:bg-[#F7F7F7] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {loading ? <FaSpinner className="animate-spin text-[#E61E4D]" /> : <FcGoogle className="text-xl" />}
+            <span>{loading ? 'Processing...' : 'Continue with Google'}</span>
+          </motion.button>
         </div>
       )}
-      <motion.button
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        onClick={handleGoogleClick}
-        disabled={loading || (pendingGoogleToken ? (!roleForm.offeringType || !roleForm.phone.trim() || !roleForm.location.trim() || !roleForm.acceptedTerms) : (offeringType !== undefined && (!offeringType || !acceptedTerms || !phone?.trim() || !location?.trim())))}
-        type='button'
-        className='flex items-center justify-center gap-3 w-full bg-white border border-[#DDDDDD] text-[#222222] font-semibold p-3 rounded-lg hover:bg-[#F7F7F7] hover:border-[#000000] transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm'
-      >
-        {loading ? <FaSpinner className="animate-spin text-[#E61E4D]" /> : <FcGoogle className="text-xl" />}
-        <span>{loading ? 'Processing...' : pendingGoogleToken ? 'Complete Google sign-up' : 'Continue with Google'}</span>
-      </motion.button>
-    </div>
+    </>
   );
 }
