@@ -192,7 +192,6 @@ export const updateUser = async (req, res, next) => {
       if (refreshed?.notificationPreferences?.security?.passwordChanges !== false) {
         const message = 'Your LoopOut password was changed. If you did not make this change, secure your account now.';
         await new Notification({ userId: req.params.id, type: 'security', title: 'Password changed', message }).save();
-        sendPushNotificationToUser(req.params.id, { title: 'Password changed', body: message, data: { type: 'security', route: '/settings?tab=security' }, preference: 'security.passwordChanges' }).catch(() => {});
       }
     }
 

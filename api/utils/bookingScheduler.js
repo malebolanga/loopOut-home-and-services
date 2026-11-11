@@ -5,7 +5,6 @@ import Listing from '../models/listing.model.js';
 import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
 import Event from '../models/event.model.js';
-import { sendPushNotificationToUser } from './pushNotifications.js';
 
 const isBookingAlertsEnabled = async (userId) => {
   if (!userId) return false;
@@ -107,17 +106,6 @@ export const checkBookingsAndActions = async () => {
         continue;
       }
 
-      const pushResults = await Promise.allSettled(recipients.map((recipient) => {
-        const notification = notifications.find((entry) => entry.data.audience === recipient.role);
-        return sendPushNotificationToUser(recipient.userId, {
-          title,
-          body: notification.message,
-          data: { bookingId: booking._id, type: 'booking', reminderStage: stage.key, route: '/notifications' },
-        });
-      }));
-      pushResults.forEach((result) => {
-        if (result.status === 'rejected') console.warn(`[BOOKING REMINDER] Push delivery failed for ${booking._id} (${stage.key}):`, result.reason?.message || result.reason);
-      });
     }
 
     // -------------------------------------------------------------
@@ -169,14 +157,6 @@ export const checkBookingsAndActions = async () => {
           data: { bookingId: pending._id, status: 'declined' }
         }).save().catch(() => {});
       }
-      const alertRecipients = await Promise.all([pending.user?._id, hostId].filter(Boolean).map(async (userId) => (
-        await isBookingAlertsEnabled(userId) ? userId : null
-      )));
-      await Promise.allSettled(alertRecipients.filter(Boolean).map((userId) => sendPushNotificationToUser(userId, {
-        title: 'Booking Request Expired',
-        body: `The booking request for "${itemName}" expired because it was not accepted within 48 hours.`,
-        data: { bookingId: String(pending._id), type: 'booking', route: '/notifications' }
-      })));
     }
 
     // -------------------------------------------------------------
@@ -233,11 +213,6 @@ export const checkBookingsAndActions = async () => {
           data: { bookingId: booking._id, status: 'cancelled' }
         });
         await hostCancelNotification.save().catch(() => {});
-        await sendPushNotificationToUser(hostId, {
-          title: 'Booking Auto-Cancelled',
-          body: `The booking for "${itemName}" on ${formattedDate} was cancelled after its end date passed.`,
-          data: { bookingId: String(booking._id), type: 'booking', route: '/notifications' }
-        }).catch(() => {});
       }
     }
 

@@ -4,17 +4,17 @@ import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Send, Sparkles, User as UserIcon, 
-  Bot, Loader2, Info, RotateCcw, ShieldCheck, Zap,
+  Bot, Loader2, Info, RotateCcw, Zap,
   ChevronRight, MapPin, Search, Star
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const MARKET_PROMPTS = [
   { icon: '🏡', title: 'Find Rooms & Stays', prompt: 'Find available student rooms and rentals in Polokwane under R3,000' },
-  { icon: '💇', title: 'Book a Barber', prompt: 'Find top-rated barbers and hair stylists near me' },
-  { icon: '🧹', title: 'Hire a Helper', prompt: 'Find verified domestic cleaners and maids with high ratings' },
+  { icon: '💇', title: 'Book a Barber', prompt: 'Find barbers and hair stylists near me' },
+  { icon: '🧹', title: 'Hire a Helper', prompt: 'Find domestic cleaners and maids near me' },
   { icon: '🚗', title: 'Car Wash & Detailing', prompt: 'What mobile car wash services can come to my location?' },
-  { icon: '🛡️', title: 'Escrow Protection', prompt: 'How does the loopOut escrow payment guarantee protect my money?' },
+  { icon: '💳', title: 'Payment & booking help', prompt: 'How do payments work on LoopOut?' },
   { icon: '💰', title: 'Host & Helper Earnings', prompt: 'How do I list my room or register as a helper to earn money?' }
 ];
 
@@ -26,11 +26,11 @@ export default function AIHelpCenter() {
     {
       id: 1,
       sender: 'ai',
-      text: `👋 **Hello ${currentUser ? currentUser.username : 'there'}! I'm LoopBot**, your loopOut Marketplace Copilot.\n\nI can help you search properties, book verified helpers, find local services, calculate stay budgets, or answer questions about our **Escrow Buyer Protection**.\n\nWhat would you like to explore today?`,
+      text: `👋 **Hello ${currentUser ? currentUser.username : 'there'}! I'm LoopBot**, your loopOut Marketplace Copilot.\n\nI can help you search properties, find helpers and local services, calculate stay budgets, and understand booking and payment details.\n\nWhat would you like to explore today?`,
       suggestedFollowUps: [
         'Find rooms in Polokwane',
         'Book a barber session',
-        'How does Escrow work?',
+        'How do payments work on LoopOut?',
         'Hire a cleaner'
       ],
       timestamp: new Date().toISOString()
@@ -124,7 +124,7 @@ export default function AIHelpCenter() {
         suggestedFollowUps: [
           'Find rooms in Polokwane',
           'Book a barber session',
-          'How does Escrow work?',
+          'How do payments work on LoopOut?',
           'Hire a cleaner'
         ],
         timestamp: new Date().toISOString()
@@ -136,7 +136,7 @@ export default function AIHelpCenter() {
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       <Helmet>
         <title>LoopBot AI | loopOut Market Concierge &amp; Assistant</title>
-        <meta name="description" content="Chat with LoopBot to find verified rooms, book top-rated helpers, and explore local services across South Africa." />
+        <meta name="description" content="Chat with LoopBot to find rooms, helpers, local services, food, events, and items across South Africa." />
       </Helmet>
 
       {/* Premium Glassmorphic Header */}
@@ -362,7 +362,7 @@ export default function AIHelpCenter() {
                   handleSendMessage();
                 }
               }}
-              placeholder="Ask LoopBot (e.g. find room in Polokwane, hire a barber, how escrow works)..."
+              placeholder="Ask LoopBot (e.g. find a room in Polokwane, hire a barber, payment help)..."
               className="flex-1 max-h-32 min-h-[44px] bg-transparent outline-none resize-none px-4 py-3 text-[14px] text-slate-900 dark:text-white placeholder:text-slate-400 scrollbar-hide"
               rows={1}
             />
@@ -377,10 +377,7 @@ export default function AIHelpCenter() {
           </form>
           
           <div className="flex items-center justify-between mt-2.5 px-2 text-[10px] font-semibold text-slate-400">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-              100% Escrow Protected Market
-            </span>
+            <span>Review booking and payment terms</span>
             <span>LoopBot AI • Powered by loopOut Neural Intelligence</span>
           </div>
         </div>

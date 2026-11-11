@@ -4,7 +4,6 @@ import { errorHandler } from '../utils/error.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import Notification from '../models/notification.model.js';
-import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 
 import { sendEmail } from '../utils/email.js';
 import { sendSMS } from '../utils/sms.js';
@@ -256,7 +255,6 @@ export const signin = async (req, res, next) => {
           if (shouldAlert) {
             const message = 'We noticed several unsuccessful sign-in attempts on your LoopOut account. If this was not you, update your password.';
             await new Notification({ userId: user._id, type: 'security', title: 'Unsuccessful sign-in attempts', message }).save();
-            sendPushNotificationToUser(user._id, { title: 'Unsuccessful sign-in attempts', body: message, data: { type: 'security', route: '/settings?tab=security' }, preference: 'security.loginAttempts' }).catch(() => {});
           }
         } catch (alertError) {
           console.warn('[signin] Could not record failed login alert:', alertError.message);

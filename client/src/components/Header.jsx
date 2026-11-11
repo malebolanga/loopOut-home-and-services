@@ -182,7 +182,8 @@ export default function Header() {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const prevUnreadCountRef = useRef(0);
+  const knownNotificationIdsRef = useRef(new Set());
+  const hasLoadedNotificationsRef = useRef(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -300,33 +301,38 @@ export default function Header() {
         const data = await res.json();
         const newUnreadCount = data.unreadCount || 0;
 
-        // If we have new unread notifications, ring the bell and trigger phone push banner
-        if (newUnreadCount > prevUnreadCountRef.current) {
+        const incomingNotifications = Array.isArray(data.notifications) ? data.notifications : [];
+        const unseenNotifications = hasLoadedNotificationsRef.current
+          ? incomingNotifications.filter((notification) => notification._id && !knownNotificationIdsRef.current.has(String(notification._id)))
+          : [];
+
+        // Don't replay an old unread alert on first load. After that, show every
+        // newly-created notification even when another alert was read at the same time.
+        if (unseenNotifications.length > 0) {
           playNotificationChime();
-
-          const latest = data.notifications?.[0];
-
-          // Trigger iOS/Android style top phone notification banner
-          if (latest) {
+          unseenNotifications.reverse().forEach((notification) => {
+            const notificationId = String(notification._id);
             pushPhoneNotification({
-              title: latest.title || 'loopOut Alert',
-              message: latest.message || 'You have a new update.',
-              type: latest.type || 'info',
-              link: '/notifications'
+              title: notification.title || 'loopOut Alert',
+              message: notification.message || 'You have a new update.',
+              type: notification.type || 'info',
+              notificationId,
+              link: notification.data?.route || notification.data?.link ||
+                (notification.type === 'message' && notification.data?.conversationId ? `/messages/${notification.data.conversationId}` :
+                  notification.type === 'system' && notification.data?.followerId ? `/user/${notification.data.followerId}` : '/notifications')
             });
-          }
-
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new window.Notification(latest?.title || 'loopOut Alert', {
-              body: latest?.message || 'You have a new notification',
-              icon: '/favicon.ico'
-            });
-          }
+          });
         }
 
         setNotifications(data.notifications || []);
         setUnreadCount(newUnreadCount);
-        prevUnreadCountRef.current = newUnreadCount;
+        incomingNotifications.forEach((notification) => {
+          if (notification._id) knownNotificationIdsRef.current.add(String(notification._id));
+        });
+        if (knownNotificationIdsRef.current.size > 200) {
+          knownNotificationIdsRef.current = new Set([...knownNotificationIdsRef.current].slice(-100));
+        }
+        hasLoadedNotificationsRef.current = true;
       }
     } catch (error) {
       // Ignore AbortError (unmount) and transient network errors (Render cold-start)
@@ -713,10 +719,16 @@ export default function Header() {
               <button
                 key={cmd.label}
                 onClick={() => handleNavigate(cmd.route)}
+                aria-label={`${cmd.label}${cmd.route === '/my-loopout' && calendarBadgeCount ? `, ${calendarBadgeCount} upcoming booking or calendar alert${calendarBadgeCount === 1 ? '' : 's'}` : ''}`}
                 className="flex flex-col items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/60 hover:bg-rose-50/50 dark:hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-100/50"
               >
-                <div className={`p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
+                <div className={`relative p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
                   {cmd.icon}
+                  {cmd.route === '/my-loopout' && calendarBadgeCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rose-600 px-1 text-[9px] font-black leading-none text-white dark:border-gray-900">
+                      {calendarBadgeCount > 99 ? '99+' : calendarBadgeCount}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[8px] font-black text-gray-900 dark:text-gray-300 uppercase tracking-widest text-center leading-tight">
                   {cmd.label}

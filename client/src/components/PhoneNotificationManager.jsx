@@ -19,6 +19,8 @@ const PhoneNotificationManager = () => {
   const currentUser = useSelector((state) => state.user?.currentUser);
   const isNativeAndroid = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   const [activeNotification, setActiveNotification] = useState(null);
+  const activeNotificationRef = useRef(null);
+  const notificationQueueRef = useRef([]);
   const [permissionState, setPermissionState] = useState(
     isNativeAndroid ? 'prompt' : (typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'denied')
   );
@@ -29,9 +31,25 @@ const PhoneNotificationManager = () => {
   const nativeListenersInstalledRef = useRef(false);
   const nativeListenersReadyRef = useRef(Promise.resolve());
   const lastRegisteredTokenRef = useRef('');
+  const recentNotificationIdsRef = useRef(new Set());
   const [nativePushToken, setNativePushToken] = useState(() => (
     typeof window !== 'undefined' ? localStorage.getItem('loopout_fcm_token') || '' : ''
   ));
+
+  const enqueuePhoneNotification = (notification) => {
+    if (activeNotificationRef.current) {
+      notificationQueueRef.current.push(notification);
+      return;
+    }
+    activeNotificationRef.current = notification;
+    setActiveNotification(notification);
+  };
+
+  const showNextPhoneNotification = () => {
+    const next = notificationQueueRef.current.shift() || null;
+    activeNotificationRef.current = next;
+    setActiveNotification(next);
+  };
 
   // Browsers only permit haptics after the page has received a user gesture.
   // Keep this state locally so background notifications never trigger a console
@@ -56,9 +74,25 @@ const PhoneNotificationManager = () => {
     if (isNativeAndroid) {
       let active = true;
       PushNotifications.checkPermissions()
-        .then(({ receive }) => {
+        .then(async ({ receive }) => {
           if (!active) return;
           setPermissionState(receive);
+          if (receive === 'granted') {
+            try {
+              await nativeListenersReadyRef.current;
+              await PushNotifications.createChannel({
+                id: 'loopout_updates',
+                name: 'LoopOut updates',
+                description: 'Booking, message, follower, and order alerts',
+                importance: 5,
+                visibility: 1,
+                vibration: true,
+              });
+              await PushNotifications.register();
+            } catch (error) {
+              console.warn('Could not register this phone for LoopOut alerts:', error);
+            }
+          }
         })
         .catch((error) => console.warn('Could not check Android notification permission:', error));
       return () => {
@@ -74,13 +108,19 @@ const PhoneNotificationManager = () => {
   // Ask only after the user has interacted with the app, and remember the
   // choice across visits so the prompt does not keep returning.
   useEffect(() => {
-    if (!hasUserInteracted || localStorage.getItem('phone_notif_prompted') === 'true') return;
+    if (!hasUserInteracted) return;
     if (isNativeAndroid) {
       PushNotifications.checkPermissions().then(({ receive }) => {
-        if (receive === 'prompt' || receive === 'prompt-with-rationale') setShowPermissionPrompt(true);
+        setPermissionState(receive);
+        if (receive === 'denied') {
+          setShowPermissionPrompt(true);
+        } else if (localStorage.getItem('phone_notif_prompted') !== 'true' && (receive === 'prompt' || receive === 'prompt-with-rationale')) {
+          setShowPermissionPrompt(true);
+        }
       }).catch(() => {});
       return;
     }
+    if (localStorage.getItem('phone_notif_prompted') === 'true') return;
     if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
       setShowPermissionPrompt(true);
     }
@@ -107,12 +147,13 @@ const PhoneNotificationManager = () => {
           pushPhoneNotification({
             title: notification.title || 'LoopOut update',
             message: notification.body || 'You have a new LoopOut update.',
-            type: 'info',
-            link: notification.data?.link || '/notifications',
+            type: notification.data?.type || 'info',
+            notificationId: notification.data?.notificationId,
+            link: notification.data?.route || notification.data?.link || '/notifications',
           });
         }));
         handles.push(await PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
-          const link = notification.data?.link;
+          const link = notification.data?.route || notification.data?.link;
           navigate(typeof link === 'string' && link.startsWith('/') ? link : '/notifications');
         }));
       } catch (error) {
@@ -177,7 +218,7 @@ const PhoneNotificationManager = () => {
         await PushNotifications.createChannel({
           id: 'loopout_updates',
           name: 'LoopOut updates',
-          description: 'Food order, booking, and message alerts',
+          description: 'Booking, message, follower, and order alerts',
           importance: 5,
           visibility: 1,
           vibration: true,
@@ -224,8 +265,16 @@ const PhoneNotificationManager = () => {
   useEffect(() => {
     const handleTrigger = (event) => {
       const detail = event.detail || {};
+      const notificationId = detail.notificationId || detail.id;
+      if (notificationId && recentNotificationIdsRef.current.has(String(notificationId))) return;
+      if (notificationId) {
+        const id = String(notificationId);
+        recentNotificationIdsRef.current.add(id);
+        window.setTimeout(() => recentNotificationIdsRef.current.delete(id), 60_000);
+      }
       const newNotif = {
         id: Date.now(),
+        notificationId: notificationId ? String(notificationId) : undefined,
         title: detail.title || 'loopOut Alert',
         message: detail.message || 'New notification received.',
         type: detail.type || 'info',
@@ -233,7 +282,7 @@ const PhoneNotificationManager = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
-      setActiveNotification(newNotif);
+      enqueuePhoneNotification(newNotif);
 
       // Play subtle vibration if supported
       if (hasUserActivatedRef.current && typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -241,7 +290,7 @@ const PhoneNotificationManager = () => {
       }
 
       // Also trigger native browser notification if granted
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      if (!isNativeAndroid && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
         try {
           new window.Notification(newNotif.title, {
             body: newNotif.message,
@@ -260,20 +309,18 @@ const PhoneNotificationManager = () => {
   // Auto-dismiss top banner after 5 seconds
   useEffect(() => {
     if (activeNotification) {
-      const timer = setTimeout(() => {
-        setActiveNotification(null);
-      }, 5500);
+      const timer = setTimeout(showNextPhoneNotification, 5500);
       return () => clearTimeout(timer);
     }
   }, [activeNotification]);
 
   const handleNotificationClick = () => {
-    if (activeNotification?.link) {
-      navigate(activeNotification.link);
+    if (activeNotificationRef.current?.link) {
+      navigate(activeNotificationRef.current.link);
     } else {
       navigate('/notifications');
     }
-    setActiveNotification(null);
+    showNextPhoneNotification();
   };
 
   const getNotificationIcon = (type) => {
@@ -335,7 +382,7 @@ const PhoneNotificationManager = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setActiveNotification(null);
+                  showNextPhoneNotification();
                 }}
                 aria-label="Dismiss notification"
                 className="p-1.5 text-slate-400 hover:text-white rounded-full active:scale-90 transition-transform"

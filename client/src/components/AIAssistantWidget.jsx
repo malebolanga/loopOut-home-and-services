@@ -16,7 +16,6 @@ import {
   MapPin,
   ExternalLink,
   ChevronRight,
-  ShieldCheck,
   Zap,
   HelpCircle,
   Move
@@ -24,10 +23,10 @@ import {
 
 const QUICK_STARTERS = [
   { label: '🏡 Find Rooms in Polokwane', prompt: 'Find available student rooms and rentals in Polokwane under R3,000' },
-  { label: '💇 Book a Barber', prompt: 'I want to book a top-rated barber near me' },
-  { label: '🧹 Hire a Cleaner', prompt: 'Find verified domestic cleaners in my area' },
+  { label: '💇 Book a Barber', prompt: 'Find barbers near me' },
+  { label: '🧹 Hire a Cleaner', prompt: 'Find domestic cleaners in my area' },
   { label: '🚗 Car Wash Services', prompt: 'What car wash and detailing services are available?' },
-  { label: '🛡️ How Escrow Works', prompt: 'How does the loopOut escrow payment protection work?' },
+  { label: '💳 Payment & booking help', prompt: 'How do payments work on LoopOut?' },
   { label: '🚀 Host Earnings', prompt: 'How do I become a host or helper and earn on loopOut?' }
 ];
 
@@ -47,7 +46,7 @@ export default function AIAssistantWidget() {
       suggestedFollowUps: [
         'Find rooms in Polokwane',
         'Book a barber session',
-        'How does Escrow work?',
+        'How do payments work on LoopOut?',
         'Hire a cleaner'
       ],
       timestamp: new Date().toISOString()
@@ -158,7 +157,7 @@ export default function AIAssistantWidget() {
         suggestedFollowUps: [
           'Find rooms in Polokwane',
           'Book a barber session',
-          'How does Escrow work?',
+          'How do payments work on LoopOut?',
           'Hire a cleaner'
         ],
         timestamp: new Date().toISOString()
@@ -511,10 +510,7 @@ export default function AIAssistantWidget() {
                 </button>
               </form>
               <div className="flex items-center justify-between mt-2 px-1 text-[9px] font-semibold text-slate-400">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                  Escrow Protected Bookings
-                </span>
+                <span>Review booking and payment terms</span>
                 <span>Powered by loopOut Neural AI</span>
               </div>
             </div>

@@ -4,7 +4,6 @@ import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
 import OnDemandJob from '../models/OnDemandJob.js';
 import Notification from '../models/notification.model.js';
-import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 
 const EARTH_RADIUS_KM = 6371;
 const ONLINE_STALE_MS = 10 * 60 * 1000;
@@ -28,7 +27,6 @@ const notify = async (recipient, title, message, job, extra = {}) => {
       message,
       data: { serviceRequestId: String(job._id), link: '/work-now', ...extra },
     });
-    sendPushNotificationToUser(recipient, { title, body: message, data: { type: 'service_request', serviceRequestId: String(job._id), route: '/work-now' } }).catch(() => {});
   } catch (error) {
     console.warn('[onDemand] notification failed:', error.message);
   }

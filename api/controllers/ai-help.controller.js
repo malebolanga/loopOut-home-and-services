@@ -32,8 +32,7 @@ async function getLocalAreaGuide(area) {
   const models = [...new Set([
     process.env.OPENAI_WEB_SEARCH_MODEL,
     process.env.OPENAI_MODEL,
-    'gpt-5.6-luna',
-    'gpt-5.5',
+    'gpt-6-luna',
   ].filter(Boolean))];
   let result = null;
   let lastApiError = null;
@@ -276,18 +275,18 @@ export const getAiResponse = async (req, res, next) => {
         answer: `👋 **Hello! I'm LoopBot**, your intelligent loopOut Marketplace Copilot & AI Concierge.\n\n` +
           `I can search across our entire database in real time for:\n\n` +
           `• 🏡 **Properties & Student Rooms** (Polokwane, Mankweng, Pretoria, JHB, Cape Town, etc.)\n` +
-          `• 💇 **Verified Helpers & Freelancers** (Barbers, Hair/Braids, Beauty, Chefs, Tutors, Cleaners, Photographers)\n` +
+          `• 💇 **Helpers & Freelancers** (Barbers, Hair/Braids, Beauty, Chefs, Tutors, Cleaners, Photographers)\n` +
           `• 🚗 **Local Services** (Car Wash & Detailing, Storage Units, Moving & Handyman)\n` +
           `• 🎉 **Events & Experiences** (Concerts, Festivals, Sports, Hiking)\n` +
           `• 🛍️ **Marketplace Deals** (Phones, Laptops, Furniture, Textbooks)\n` +
-          `• 🛡️ **Escrow Protection & Booking Assistance**\n\n` +
+          `• 📋 **Booking and payment guidance**\n\n` +
           `**What would you like to find or explore today?**`,
         actionItems: [],
         suggestedFollowUps: [
           "Find student rooms in Mankweng",
           "Book a barber in Polokwane",
           "Find mobile car wash",
-          "How does Escrow protection work?"
+          "How do payments work on LoopOut?"
         ],
         timestamp: new Date().toISOString()
       });
@@ -302,19 +301,16 @@ export const getAiResponse = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         botName: "LoopBot",
-        answer: `### 🛡️ **loopOut Smart Escrow & Buyer Protection**\n\n` +
-          `Your safety, booking funds, and transactions are **100% protected** on loopOut:\n\n` +
-          `1. **Vault Holding**: When you pay for any room, helper, or service, funds are securely vaulted in Escrow. The provider does **not** receive your money upfront.\n` +
-          `2. **Milestone & Completion Release**: Funds are released only after the service is successfully delivered or your check-in is verified.\n` +
-          `3. **24-Hour Cancellation Policy**: Cancel eligible bookings up to 24 hours in advance for a fast, hassle-free refund.\n` +
-          `4. **Dispute Intervention**: If a host/provider doesn't deliver or the listing is inaccurate, our 24/7 Trust & Safety Team steps in to resolve or refund immediately.\n` +
-          `5. **Payment Methods**: We support Visa, Mastercard, Ozow Instant EFT, and LoopPoints.`,
+        answer: `### Payments and booking safety\n\n` +
+          `Payment arrangements vary by listing and provider. Review the listing and booking details, then agree on the amount, payment method, and cancellation terms before confirming.\n\n` +
+          `Some eligible bookings may offer LoopOut escrow at checkout. Use escrow only when it is explicitly shown in the booking flow; direct payments to a provider are not automatically held or refunded by LoopOut.\n\n` +
+          `Keep your booking and payment records. If you need help, contact the provider through the available contact option or visit the LoopOut Help Centre. LoopBot cannot take payments or guarantee a refund.`,
         actionItems: [],
         suggestedFollowUps: [
           "How do I verify my ID?",
-          "Find verified rooms",
+          "Find rooms near me",
           "How do hosts get paid?",
-          "Book a verified helper"
+          "Find helpers near me"
         ],
         timestamp: new Date().toISOString()
       });
@@ -329,13 +325,9 @@ export const getAiResponse = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         botName: "LoopBot",
-        answer: `### 🚀 **Grow Your Business & Earn on loopOut**\n\n` +
-          `Join thousands of verified Hosts, Freelancers, and Service Providers across South Africa:\n\n` +
-          `• **Free to List**: List your rental property, beauty salon, mobile car wash, or tutoring services with zero upfront listing fees.\n` +
-          `• **Verified Badge**: Complete 2-minute ID verification to earn the blue trust badge and attract 3x more bookings.\n` +
-          `• **Guaranteed Escrow Payouts**: You get paid reliably straight to your South African bank account once services are fulfilled.\n` +
-          `• **Host Dashboard**: Manage bookings, customer messages, earnings, and reviews in one real-time dashboard.\n\n` +
-          `Ready to start? Head to the **Host Tools** or **Create Listing** page in the top menu!`,
+        answer: `### Create a listing on LoopOut\n\n` +
+          `Open **Create Listing**, choose the category that matches what you offer, and complete the requested details, price, availability, and photos. Follow any profile or identity steps shown in the app.\n\n` +
+          `Review the listing terms before publishing. Bookings, earnings, payment arrangements, and demand depend on your listing and customer agreements; LoopOut does not guarantee bookings or payouts.`,
         actionItems: [],
         suggestedFollowUps: [
           "Verify my identity",
@@ -667,8 +659,8 @@ export const getAiResponse = async (req, res, next) => {
         category: p.type === 'over' ? 'Overnight Stay' : p.type === 'rent' ? 'Property Rental' : p.type === 'complex' ? 'Student Complex' : 'Property',
         imageUrl: normalizeImageUrl(p, 'listing'),
         link: `/listing/${p._id}`,
-        rating: p.rating || 4.9,
-        badge: p.isPromoted ? 'Featured' : 'Verified Host'
+        rating: p.rating > 0 ? p.rating : null,
+        badge: p.isPromoted ? 'Featured' : ''
       };
     });
 
@@ -677,14 +669,14 @@ export const getAiResponse = async (req, res, next) => {
       return {
         id: h._id,
         title: h.name,
-        price: h.regularPrice ? `R${h.regularPrice.toLocaleString()}` : 'From R150',
+        price: h.regularPrice ? `R${h.regularPrice.toLocaleString()}` : 'Price on listing',
         location: h.address || h.near || 'South Africa',
         type: 'helper',
         category: `${typeCapitalized} Specialist`,
         imageUrl: normalizeImageUrl(h, 'helper'),
         link: getHelperLink(h),
-        rating: h.rating || 4.9,
-        badge: 'Escrow Protected'
+        rating: h.rating > 0 ? h.rating : null,
+        badge: ''
       };
     });
 
@@ -699,8 +691,8 @@ export const getAiResponse = async (req, res, next) => {
         category: `${typeCapitalized} Service`,
         imageUrl: normalizeImageUrl(s, 'service'),
         link: getServiceLink(s),
-        rating: s.rating || 4.8,
-        badge: 'Verified Business'
+        rating: s.rating > 0 ? s.rating : null,
+        badge: ''
       };
     });
 
@@ -713,7 +705,7 @@ export const getAiResponse = async (req, res, next) => {
       category: e.type ? `${e.type.toUpperCase()} Event` : 'Live Event',
       imageUrl: normalizeImageUrl(e, 'event'),
       link: `/event/${e._id}`,
-      rating: 5.0,
+      rating: e.rating > 0 ? e.rating : null,
       badge: e.date || 'Upcoming'
     }));
 
@@ -726,8 +718,8 @@ export const getAiResponse = async (req, res, next) => {
       category: s.category ? `Marketplace • ${s.category.toUpperCase()}` : 'Item For Sale',
       imageUrl: normalizeImageUrl(s, 'sell'),
       link: `/sell-item/${s._id}`,
-      rating: 4.8,
-      badge: s.condition || 'Verified Seller'
+      rating: null,
+      badge: s.condition || 'For sale'
     }));
 
     const formattedShops = rawShops.map(sh => ({
@@ -739,7 +731,7 @@ export const getAiResponse = async (req, res, next) => {
       category: 'Food & Meals',
       imageUrl: normalizeImageUrl(sh, 'shop'),
       link: '/lunch',
-      rating: parseFloat(sh.rating) || 5.0,
+      rating: sh.reviews?.length > 0 && Number.parseFloat(sh.rating) > 0 ? Number.parseFloat(sh.rating) : null,
       badge: sh.isOpen ? 'Open Now' : 'Store'
     }));
 
@@ -770,7 +762,7 @@ export const getAiResponse = async (req, res, next) => {
     let answer = "";
     const breakdown = [];
 
-    if (rawHelpers.length > 0) breakdown.push(`💇 **${rawHelpers.length}** Verified Helper${rawHelpers.length > 1 ? 's' : ''}`);
+    if (rawHelpers.length > 0) breakdown.push(`💇 **${rawHelpers.length}** Helper${rawHelpers.length > 1 ? 's' : ''}`);
     if (rawServices.length > 0) breakdown.push(`🚗 **${rawServices.length}** Service Provider${rawServices.length > 1 ? 's' : ''}`);
     if (rawListings.length > 0) breakdown.push(`🏡 **${rawListings.length}** Property/Stay listing${rawListings.length > 1 ? 's' : ''}`);
     if (rawEvents.length > 0) breakdown.push(`🎉 **${rawEvents.length}** Event${rawEvents.length > 1 ? 's' : ''}`);
@@ -785,10 +777,10 @@ export const getAiResponse = async (req, res, next) => {
 
       answer = `✨ I searched our live database and found **${topActionItems.length} matching options** ${summaryContext ? `${summaryContext} ` : ''}on loopOut:\n\n` +
         breakdown.map(b => `• ${b}`).join('\n') + `\n\n` +
-        `All bookings and transactions are secured by **loopOut Escrow Protection** (funds are only released when you confirm satisfactory service). Click any card below to view full details and book!`;
+        `Open a card to review its details, availability, and payment terms before you book.`;
     } else {
       answer = `I searched our database for "${rawPrompt}"${locDisplay ? ` in ${locDisplay}` : ''}${budgetDisplay ? ` ${budgetDisplay}` : ''}.\n\n` +
-        `While there are no exact matches for this specific query yet, our marketplace is updated daily! You can check the **Explore** page or post your exact requirement in **Looking For** so verified providers can reach out to you directly.`;
+        `I couldn't find an exact match. Try a nearby area, a broader search term, or check **Explore** and **Looking For** for more options.`;
     }
 
     // ── 9. DYNAMIC FOLLOW-UP SUGGESTIONS ──
@@ -799,10 +791,10 @@ export const getAiResponse = async (req, res, next) => {
       suggestedFollowUps.push(`Car wash services in ${locDisplay}`);
     } else {
       suggestedFollowUps.push("Find student rooms in Mankweng");
-      suggestedFollowUps.push("Hire a verified chef");
+      suggestedFollowUps.push("Find a chef near me");
       suggestedFollowUps.push("Explore upcoming events");
     }
-    suggestedFollowUps.push("How does Escrow protect my payment?");
+    suggestedFollowUps.push("How do payments work on LoopOut?");
 
     return res.status(200).json({
       success: true,

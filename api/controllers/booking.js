@@ -11,7 +11,6 @@ import ServiceComment from '../models/service-comment.model.js';
 import Comment from '../models/comment.model.js';
 import EventComment from '../models/event-comment.model.js';
 import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
-import { sendPushNotificationToUser } from '../utils/pushNotifications.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
@@ -310,11 +309,6 @@ export const createBooking = async (req, res) => {
             mapLink: bookingMapLink
           }
         }).save();
-        sendPushNotificationToUser(hostUserId, {
-            title: '📅 New Booking Request',
-            body: `You have a new booking request for "${itemName}" (ZAR ${resolvedTotalPrice.toLocaleString()}).`,
-            data: { bookingId: String(newBooking._id), type: 'booking', route: '/notifications' }
-        }).catch((pushErr) => console.warn('[createBooking] Host push notification error:', pushErr.message));
       }
     } catch (notifErr) {
       console.error('Failed to create host notification:', notifErr);
@@ -342,11 +336,6 @@ export const createBooking = async (req, res) => {
             mapLink: bookingMapLink
           }
         }).save();
-        sendPushNotificationToUser(authenticatedUserId, {
-          title: 'Booking Request Sent',
-          body: `Your booking request for "${itemName}" has been sent.`,
-          data: { bookingId: String(newBooking._id), type: 'booking', route: '/notifications' }
-        }).catch((pushErr) => console.warn('[createBooking] Guest push notification error:', pushErr.message));
       }
     } catch (notifErr) {
       console.error('Failed to create guest notification:', notifErr);
@@ -820,12 +809,6 @@ export const updateBookingStatus = async (req, res) => {
                 message: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released the payment!`,
                 data: { bookingId: booking._id, itemType, itemId, status: 'completed', price: booking.totalPrice, totalPrice: booking.totalPrice }
               }).save();
-              sendPushNotificationToUser(hostId, {
-                  title: 'Work Closed & Payment Released',
-                  body: `Client ${booking.user?.username || 'User'} has closed the work for "${itemName}" and released payment!`,
-                  data: { bookingId: String(booking._id), type: 'booking', route: '/notifications' },
-                  preference: 'activity.paymentReceipts'
-              }).catch((e) => console.warn('[updateBookingStatus] Host push error:', e.message));
             }
           }
           title = 'Booking Completed - Rate & Review';
@@ -844,11 +827,6 @@ export const updateBookingStatus = async (req, res) => {
             data: { bookingId: booking._id, itemType, itemId, status, price: booking.totalPrice, totalPrice: booking.totalPrice, canReview: status === 'completed' }
           }).save();
 
-          sendPushNotificationToUser(recipientId, {
-              title,
-              body: messageText,
-              data: { bookingId: String(booking._id), type: 'booking', route: '/notifications' }
-          }).catch((e) => console.warn('[updateBookingStatus] Push error:', e.message));
         }
       } catch (notifErr) {
         console.error('Failed to create status update notification:', notifErr);

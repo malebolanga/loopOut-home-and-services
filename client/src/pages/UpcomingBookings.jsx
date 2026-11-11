@@ -10,7 +10,6 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronLeftIcon,
   ClockIcon,
-  ShieldCheckIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
   ArrowTopRightOnSquareIcon,
@@ -62,14 +61,14 @@ export default function UpcomingBookings() {
           .filter((b) => {
             const d = new Date(b.startDate || b.date || b.createdAt);
             d.setHours(0, 0, 0, 0);
-            return d >= now && !['cancelled', 'declined'].includes(b.status);
+            return d >= now && !['cancelled', 'declined', 'completed'].includes(b.status) && !b.service;
           })
           .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date))
           .map((b) => {
             const due = new Date(b.startDate || b.date || b.createdAt);
             const diffMs = due - new Date();
-            const diffDays = Math.floor(diffMs / 86400000);
-            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            const dayKey = (date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+            const diffDays = Math.round((dayKey(due) - dayKey(now)) / 86400000);
             const isToday = diffDays === 0;
             const isTomorrow = diffDays === 1;
             const urgency = isToday ? 'today' : isTomorrow ? 'tomorrow' : diffDays <= 3 ? 'soon' : 'upcoming';
@@ -95,7 +94,6 @@ export default function UpcomingBookings() {
               dateStr: due.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
               timeStr: due.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               diffDays,
-              diffHrs,
               urgency,
               isToday,
               isTomorrow,
@@ -571,18 +569,14 @@ export default function UpcomingBookings() {
                   />
                 )}
 
-                {/* Price & Escrow Protection */}
+                {/* Booking total */}
                 {selectedBooking.price && (
-                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl">
                     <div>
-                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Total Amount</p>
+                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Booking total</p>
                       <p className="font-black text-emerald-900 text-base">
                         {typeof selectedBooking.price === 'number' ? `R${selectedBooking.price.toLocaleString()}` : `R${selectedBooking.price}`}
                       </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-white/80 px-2.5 py-1 rounded-full border border-emerald-200">
-                      <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
-                      <span>Escrow Protected</span>
                     </div>
                   </div>
                 )}
