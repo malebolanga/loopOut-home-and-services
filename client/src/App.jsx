@@ -497,7 +497,7 @@ function AppContent() {
   return (
     <div className="loopout-app">
       <OnboardingGuide />
-      {!isMyLoopOutPage && <AIAssistantWidget />}
+      {!isMyLoopOutPage && !['/sign-in', '/sign-up', '/forgot-password'].includes(location.pathname) && <AIAssistantWidget />}
       <NeuralSplash />
       <CompareWidget />
 
