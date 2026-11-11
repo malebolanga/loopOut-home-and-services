@@ -4949,10 +4949,10 @@ function DesktopHomepage({
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '96px' : '0px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 pt-2.5 pb-0 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-1 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
         <div className="max-w-7xl mx-auto translate-y-[2px] px-8 flex items-center justify-center relative">
-          <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
+          <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide py-0.5">
             {(visibleTabs || tabs.slice(0, 3)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
@@ -4981,11 +4981,11 @@ function DesktopHomepage({
                   }}
                   whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
+                  className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none relative"
                   aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
                 >
-                  <div className={`${isRecentAdded ? 'w-14 h-14 bg-rose-100/80 dark:bg-rose-900/40' : 'w-14 h-14 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
-                    <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-8 w-8 text-slate-700 dark:text-slate-200" />
+                  <div className={`${isRecentAdded ? 'w-10 h-10 bg-rose-100/80 dark:bg-rose-900/40' : 'w-10 h-10 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
+                    <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-6 w-6 text-slate-700 dark:text-slate-200" />
                   </div>
                   <div className="text-left">
                     <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
@@ -5007,10 +5007,10 @@ function DesktopHomepage({
               onClick={() => setIsCategoriesSheetOpen(true)}
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
+              className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none"
               aria-label="Browse all categories"
             >
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100/80 text-[36px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100/80 text-[26px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
                 <span role="img" aria-label="Browse categories">🗂️</span>
               </div>
               <div className="text-left">
@@ -5036,8 +5036,8 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-[54px]">
-        <HomeHero navigate={navigate} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        <HomeHero navigate={navigate} compact />
       </div>
 
       {/* Main Clean Feed Grid */}

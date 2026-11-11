@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade } from 'swiper/modules';
-import { ArrowRight, MapPin, Search } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 const SLIDES = [
   {
@@ -49,15 +49,8 @@ const useHomeStats = () => {
 export const HomeHero = ({ navigate, compact = false }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [swiperRef, setSwiperRef] = useState(null);
-  const [query, setQuery] = useState('');
   const stats = useHomeStats();
   const slide = SLIDES[activeIndex];
-
-  const search = (event) => {
-    event?.preventDefault();
-    const value = query.trim();
-    navigate(value ? `/search?q=${encodeURIComponent(value)}` : '/search');
-  };
 
   const statLine = stats
     ? [
@@ -66,7 +59,7 @@ export const HomeHero = ({ navigate, compact = false }) => {
       ].filter(Boolean).join(' · ')
     : null;
 
-  const heroHeight = compact ? 'clamp(300px, 38vh, 380px)' : 'clamp(390px, 55vh, 520px)';
+  const heroHeight = compact ? 'clamp(260px, 34vh, 340px)' : 'clamp(320px, 42vh, 420px)';
 
   return (
     <section
@@ -116,49 +109,9 @@ export const HomeHero = ({ navigate, compact = false }) => {
               {slide.category}
             </span>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.05] tracking-tight max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-[1.08] tracking-tight max-w-2xl">
               {slide.headline}
             </h1>
-
-            <p className="flex items-center gap-2 mt-3 flex-wrap" aria-label="LoopOut categories">
-              <span
-                className="text-[11px] font-black tracking-[0.12em] uppercase px-2.5 py-1 rounded-full"
-                style={{ color: slide.accent, background: `${slide.accent}22` }}
-              >
-                Homes
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Services
-              </span>
-              <span className="text-[11px] font-bold tracking-widest uppercase text-white/60 px-2.5 py-1 rounded-full bg-white/8">
-                Helpers
-              </span>
-            </p>
-
-            <form onSubmit={search} className="mt-5 w-full max-w-2xl">
-              <div className="flex flex-col sm:flex-row gap-2 p-2 rounded-2xl bg-white shadow-2xl">
-                <div className="flex-1 min-w-0 flex items-center gap-2 px-3">
-                  <Search className="w-5 h-5 shrink-0 text-gray-400" aria-hidden="true" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="w-full min-w-0 bg-transparent border-0 outline-none text-gray-900 placeholder:text-gray-400 py-3 text-sm sm:text-base"
-                    placeholder="What are you looking for?"
-                    aria-label="Search LoopOut"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="min-h-12 px-5 rounded-xl font-extrabold text-white bg-gray-950 hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2"
-                >
-                  Search <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-1.5 mt-2 px-1 text-white/65 text-xs font-semibold">
-                <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Discover what's available near you</span>
-              </div>
-            </form>
 
             <div className="flex flex-wrap items-center gap-3 mt-4">
               <button
