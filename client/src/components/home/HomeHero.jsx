@@ -113,10 +113,6 @@ export const HomeHero = ({ navigate, compact = false }) => {
               {slide.headline}
             </h1>
 
-        </p>
-
-     </form>
-
             <div className="flex flex-wrap items-center gap-3 mt-4">
               <button
                 type="button"
