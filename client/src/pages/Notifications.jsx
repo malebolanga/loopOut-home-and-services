@@ -24,6 +24,19 @@ const parsePriceFromText = (text) => {
     return null;
 };
 
+const getBookingNotificationPrice = (notification, booking) => {
+    const candidates = [
+        notification?.data?.totalPrice,
+        notification?.data?.price,
+        parsePriceFromText(notification?.message),
+        booking?.totalPrice,
+        booking?.price,
+    ];
+    const value = candidates.find((candidate) => candidate !== undefined && candidate !== null && candidate !== '');
+    const price = Number(value);
+    return Number.isFinite(price) && price >= 0 ? price : 0;
+};
+
 const extractAddressFromBookingMessage = (message) => {
     if (typeof message !== 'string' || !message.trim()) return '';
     const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
@@ -513,6 +526,12 @@ export default function Notifications() {
 
     const handleNotificationAction = (notification) => {
         if (!notification) return;
+        const notificationRoute = notification.data?.route;
+        if (typeof notificationRoute === 'string' && notificationRoute.startsWith('/')) {
+            navigate(notificationRoute);
+            setSelectedNotification(null);
+            return;
+        }
         if (notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) {
             const convId = notification.data?.conversationId;
             navigate(convId ? `/messages/${convId}` : '/messages');
@@ -1069,13 +1088,7 @@ export default function Notifications() {
                                             {!isBarberBooking && !isCarWash && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">💰 Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">
-                                                    ZAR {Number(
-                                                        selectedNotification?.data?.price ||
-                                                        selectedNotification?.data?.totalPrice ||
-                                                        parsePriceFromText(selectedNotification?.message) ||
-                                                        bookingDetails.totalPrice ||
-                                                        0
-                                                    ).toLocaleString()}
+                                                    ZAR {getBookingNotificationPrice(selectedNotification, bookingDetails).toLocaleString()}
                                                 </p>
                                             </div>}
                                             <div>
@@ -1199,13 +1212,7 @@ export default function Notifications() {
                                             {requestMessageDetails.length > 0 && <div className="sm:col-span-2"><BookingRequestDetails message={bookingDetails.message} /></div>}
                                             {(isBarberBooking || isCarWash) && <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800">
                                                 <span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span>
-                                                <span className="text-lg font-black text-slate-900 dark:text-white">R{Number(
-                                                    selectedNotification?.data?.price ||
-                                                    selectedNotification?.data?.totalPrice ||
-                                                    parsePriceFromText(selectedNotification?.message) ||
-                                                    bookingDetails.totalPrice ||
-                                                    0
-                                                ).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white">R{getBookingNotificationPrice(selectedNotification, bookingDetails).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>
                                             </div>}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
@@ -1469,6 +1476,7 @@ export default function Notifications() {
                                     selectedNotification.type === 'reference' ||
                                     selectedNotification.type === 'message' ||
                                     selectedNotification.data?.conversationId ||
+                                    selectedNotification.data?.route ||
                                     selectedNotification.data?.goodsOrderId ||
                                     (selectedNotification.type === 'food_order' && (selectedNotification.data?.orderId || selectedNotification.data?.orderCode))
                                 ) && (
@@ -1476,7 +1484,9 @@ export default function Notifications() {
                                         onClick={() => handleNotificationAction(selectedNotification)}
                                         className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 text-center flex items-center justify-center gap-2"
                                     >
-                                        {selectedNotification.type === 'reference' || selectedNotification.data?.isReference
+                                        {selectedNotification.data?.adminAlertType
+                                            ? 'Open admin dashboard'
+                                            : selectedNotification.type === 'reference' || selectedNotification.data?.isReference
                                             ? '💬 Reply to Reference Request'
                                             : selectedNotification.type === 'message' || selectedNotification.data?.conversationId
                                             ? '💬 Open Message'

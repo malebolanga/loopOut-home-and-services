@@ -19,6 +19,8 @@ import Conversation from '../models/Conversation.model.js';
 import Message from '../models/Message.model.js';
 import { deleteFirebaseUser, deleteFirebaseUserByEmail, verifyFirebaseIdToken } from '../utils/pushNotifications.js';
 import { createUserNotification } from '../utils/notificationUtils.js';
+import UserSectionActivity from '../models/userSectionActivity.model.js';
+import UserLoginArea from '../models/userLoginArea.model.js';
 
 const normalizeContactPhone = (contact) => String(
   typeof contact === 'string' ? contact : contact?.phone || ''
@@ -53,7 +55,7 @@ export const test = (req, res) => {
 export const getUsers = async (req, res, next) => {
   try {
     // The community directory only needs public profile fields; never return contact or account data here.
-    const users = await User.find({}, 'username avatar bio offeringType createdAt')
+    const users = await User.find({ accountStatus: { $ne: 'suspended' } }, 'username avatar bio offeringType createdAt')
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
@@ -313,6 +315,8 @@ export const deleteUser = async (req, res, next) => {
       Event.deleteMany({ userRef: userId }),
       Sell.deleteMany({ userRef: userId }),
       Notification.deleteMany({ $or: [{ userId }, { 'data.userId': userId }] }),
+      UserSectionActivity.deleteMany({ userId }),
+      UserLoginArea.deleteOne({ userId }),
       User.findByIdAndDelete(userId),
     ]);
 
@@ -630,6 +634,7 @@ export const getPublicUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return next(errorHandler(404, 'User not found!'));
+    if (user.accountStatus === 'suspended') return next(errorHandler(404, 'User not found!'));
 
     const {
       password, otp, otpExpiry, otpAttempts, otpPurpose, twoFactorEnabled, idDocumentUrl, liveSelfieUrl, faceData, contacts, plannerTasks,

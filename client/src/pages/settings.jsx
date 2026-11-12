@@ -664,7 +664,7 @@ export default function SettingsPage() {
                       <div>
                         <h3 className="font-semibold">About trusted contacts</h3>
                         <p className="mt-1 text-sm leading-6">
-                          LoopOut stores these contact details for mutual-contact matching when enabled. This setting does not send SOS alerts, SMS messages, or live location to your contacts.
+                          This switch only controls mutual-contact matching. If you trigger a panic alert, you can choose to open a text message to one of these contacts with your alert code and map pin. LoopOut does not text them automatically.
                         </p>
                       </div>
                     </div>
@@ -697,7 +697,7 @@ export default function SettingsPage() {
                         <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
                           <Shield className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
                           <p className="text-sm font-bold text-gray-500 dark:text-gray-400">No trusted contacts added yet.</p>
-                          <p className="text-xs text-gray-400 mt-1">Add someone you trust below. LoopOut will not automatically contact them.</p>
+                          <p className="text-xs text-gray-400 mt-1">Add someone you trust below. During a panic alert, you can choose to text or call them.</p>
                         </div>
                       ) : (
                         <div className="space-y-3">

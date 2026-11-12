@@ -171,6 +171,21 @@ const userSchema = new mongoose.Schema({
         enum: ['unverified', 'pending', 'verified', 'rejected'],
         default: 'unverified'
     },
+    // Sensitive KYC values are excluded from normal user queries and cleared
+    // after an administrator completes the document review.
+    idDocumentNumber: {
+        type: String,
+        default: '',
+        select: false
+    },
+    kycReviewedAt: { type: Date, default: null },
+    kycReviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    kycReviewNote: { type: String, default: '' },
+    kycReviewChecks: {
+        numberMatches: { type: Boolean, default: false },
+        documentHasFace: { type: Boolean, default: false },
+        faceMatchesSelfie: { type: Boolean, default: false },
+    },
     idDocumentUrl: {
         type: String,
         default: ""
@@ -275,8 +290,16 @@ const userSchema = new mongoose.Schema({
     }],
     lastLogin: {
         type: Date,
-        default: Date.now,
+        default: null,
     },
+    lastLoginRecorded: { type: Boolean, default: false },
+    kycSubmittedAt: { type: Date, default: null },
+    shareActivityWithAdmins: { type: Boolean, default: false },
+    shareLoginGpsArea: { type: Boolean, default: false },
+    accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active', index: true },
+    accountStatusChangedAt: { type: Date, default: null },
+    accountStatusChangedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    accountStatusNote: { type: String, default: '', maxlength: 500 },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

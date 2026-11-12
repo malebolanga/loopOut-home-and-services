@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const replySchema = new mongoose.Schema({
   content: {
@@ -98,6 +99,7 @@ const helperCommentSchema = new mongoose.Schema({
 // Historical comments may have no booking ID; new booking-linked reviews are unique per booking.
 helperCommentSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
 
+hideSuspendedOwnerContent(helperCommentSchema, [{ field: 'userId' }]);
 const HelperComment = mongoose.model('HelperComment', helperCommentSchema);
 
 export default HelperComment;

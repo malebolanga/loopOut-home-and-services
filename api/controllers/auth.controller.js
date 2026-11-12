@@ -29,10 +29,13 @@ const cookieOptions = () => ({
 });
 
 const issueSession = async (res, user, status = 200) => {
+  if (user.accountStatus === 'suspended') {
+    return res.status(403).json({ success: false, message: 'This account is suspended. Contact LoopOut support for help.' });
+  }
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
   const loginTime = new Date();
   try {
-    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: loginTime, loginFailureCount: 0 } });
+    await User.findByIdAndUpdate(user._id, { $set: { lastLogin: loginTime, lastLoginRecorded: true, loginFailureCount: 0 } });
   } catch (err) {
     console.error('Failed to update lastLogin:', err.message);
   }
@@ -262,6 +265,9 @@ export const signin = async (req, res, next) => {
       }
       return next(errorHandler(401, 'Invalid email or password.'));
     }
+    if (user.accountStatus === 'suspended') {
+      return res.status(403).json({ success: false, message: 'This account is suspended. Contact LoopOut support for help.' });
+    }
     if (!user.isVerified) {
       const codeCreatedAt = user.otpExpiry ? user.otpExpiry.getTime() - OTP_TTL_MS : 0;
       if (user.otpPurpose !== 'verify' || Date.now() - codeCreatedAt >= OTP_RESEND_COOLDOWN_MS) await sendVerificationCode(user);
@@ -312,6 +318,9 @@ export const google = async (req, res, next) => {
     const email = normalizeEmail(decoded.email);
     if (!email || !decoded.email_verified) return next(errorHandler(401, 'A verified Google email address is required.'));
     let user = await User.findOne({ email });
+    if (user?.accountStatus === 'suspended') {
+      return res.status(403).json({ success: false, message: 'This account is suspended. Contact LoopOut support for help.' });
+    }
     if ((!user || !user.offeringType) && !requestedOfferingType) {
       return res.status(200).json({ success: true, requiresOfferingType: true, email });
     }
@@ -530,7 +539,7 @@ export const validateToken = async (req, res, next) => {
 
     const refreshedToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: SESSION_EXPIRES_IN });
     try {
-      await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date() } });
+      await User.findByIdAndUpdate(user._id, { $set: { lastLogin: new Date(), lastLoginRecorded: true } });
     } catch (err) {}
     const safeUser = safeUserPayload(user);
     return res.cookie('access_token', refreshedToken, cookieOptions()).status(200).json({

@@ -38,6 +38,9 @@ const BottomNav = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const { hideBottomNav } = useSelector((state) => state.frontend || {});
+  const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
+    String(currentUser?.email || '').trim().toLowerCase()
+  );
   
   const [showProfileDropup, setShowProfileDropup] = useState(false);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
@@ -332,7 +335,8 @@ const BottomNav = () => {
                     { label: 'Calendar', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
                     { label: 'Listings', route: `/${currentUser._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
                     { label: 'Activity', route: '/my-loopout', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-purple-500' },
-                    { label: 'Settings', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-gray-600' }
+                    { label: 'Settings', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-gray-600' },
+                    ...(isLoopOutAdmin ? [{ label: 'Admin Review', route: '/admin/verification', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-600 to-red-500' }] : [])
                   ].map((cmd) => (
                     <button
                       key={cmd.label}

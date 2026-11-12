@@ -34,17 +34,19 @@ export const requireOfferingType = (...allowedTypes) => async (req, res, next) =
       );
       const isDefaultAvatar = !user.avatar || user.avatar.includes('blank-profile-picture') || user.avatar.trim() === '';
       const hasProfilePicture = !isDefaultAvatar;
+      const isIdentityReviewed = user.kycStatus === 'verified';
 
-      if (!hasIdDocument || !hasFaceScan || !hasProfilePicture) {
+      if (!hasIdDocument || !hasFaceScan || !hasProfilePicture || !isIdentityReviewed) {
         const missing = [];
         if (!hasIdDocument) missing.push('ID document or passport');
         if (!hasFaceScan) missing.push('face scan (live selfie)');
         if (!hasProfilePicture) missing.push('profile picture');
+        if (!isIdentityReviewed) missing.push(user.kycStatus === 'rejected' ? 'resubmitted identity documents' : 'administrator identity review');
 
         return res.status(403).json({
           success: false,
           requiresVerification: true,
-          message: `As a service provider or helper, you must complete verification before posting. Please upload: ${missing.join(', ')}.`,
+          message: `As a service provider or helper, your ID number and document photo must be reviewed against your live selfie before posting. Please complete: ${missing.join(', ')}.`,
           missing: {
             idDocument: !hasIdDocument,
             faceScan: !hasFaceScan,

@@ -20,6 +20,7 @@ import CompareWidget from "./components/CompareWidget";
 import AIAssistantWidget from "./components/AIAssistantWidget";
 import BottomNav from "./components/BottomNav";
 import PhoneNotificationManager from "./components/PhoneNotificationManager";
+import EmergencySOS from "./components/EmergencySOS";
 
 // Core page: keep Home immediate; load authentication only when it is opened.
 import Home from "./pages/Home";
@@ -97,6 +98,7 @@ const Users = lazy(() => import('./pages/Users'));
 const UserListings = lazy(() => import('./pages/UserListings'));
 const Pricing = lazy(() => import('./pages/Pricing'));
 const Verification = lazy(() => import('./pages/Verification'));
+const AdminVerificationReview = lazy(() => import('./pages/AdminVerificationReview'));
 
 // Payment & Promotion
 const PromotionSelection = lazy(() => import('./pages/PromotionSelection'));
@@ -327,6 +329,7 @@ const AnimatedRoutes = () => {
           <Route path="/radar" element={<PageTransition><Radar /></PageTransition>} />
           <Route path="/quick-book" element={<PageTransition><QuickBook /></PageTransition>} />
           <Route path="/verification" element={<PageTransition><Verification /></PageTransition>} />
+          <Route path="/admin/verification" element={<PageTransition><AdminVerificationReview /></PageTransition>} />
           <Route path="/create-listing" element={<CreateListingRedirect />} />
           <Route path="/:userId/create-listing" element={<PageTransition><ListingCreationGate><CreateListing /></ListingCreationGate></PageTransition>} />
           <Route path="/update-listing/:listingId" element={<PageTransition><UpdateListing /></PageTransition>} />
@@ -393,6 +396,7 @@ import OnboardingGuide from './components/OnboardingGuide';
 
 function AppContent() {
   const location = useLocation();
+  const { currentUser } = useSelector((state) => state.user);
 
   // Safety net: some pages lock body scroll for galleries/overlays via a
   // plain function call (not tied to a cleanup effect). If the user
@@ -402,6 +406,46 @@ function AppContent() {
   useEffect(() => {
     document.body.style.overflow = '';
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!currentUser?._id || currentUser.shareActivityWithAdmins !== true) return;
+    const path = location.pathname.toLowerCase();
+    const section = path === '/' ? 'Home'
+      : /search/.test(path) ? 'Search'
+      : /helper|barber|beauty|photography|tattoo|chef|carwash|privatetutor|animals|washingmat/.test(path) ? 'Helpers'
+      : /service|provider/.test(path) ? 'Services'
+      : /property|listing|rent|overnight|for-rent/.test(path) ? 'Property'
+      : /food|lunch/.test(path) ? 'Food'
+      : /shop/.test(path) ? 'Shops'
+      : /event/.test(path) ? 'Events'
+      : /booking|calendar|trip/.test(path) ? 'Bookings'
+      : /message|conversation/.test(path) ? 'Messages'
+      : /profile|settings/.test(path) ? 'Profile'
+      : /sale|sell-item|for-sale/.test(path) ? 'Sell'
+      : 'Other';
+    const sessionId = globalThis.crypto?.randomUUID?.() || (Date.now() + '-' + Math.random().toString(36).slice(2));
+    const recordActivity = (durationSeconds) => authenticatedFetch('/api/stats/section-activity', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, sessionId, durationSeconds }),
+    }).catch(() => {});
+    recordActivity(0);
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') recordActivity(30);
+    }, 30000);
+    return () => window.clearInterval(intervalId);
+  }, [currentUser?._id, currentUser?.shareActivityWithAdmins, location.pathname]);
+
+  useEffect(() => {
+    if (!currentUser?._id || currentUser.shareLoginGpsArea !== true || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      authenticatedFetch('/api/stats/login-area', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ latitude: coords.latitude, longitude: coords.longitude }),
+      }).catch(() => {});
+    }, () => {}, { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000 });
+  }, [currentUser?._id, currentUser?.shareLoginGpsArea]);
 
   const hideFooterPaths = [
     '/host-dashboard',
@@ -504,8 +548,9 @@ function AppContent() {
       <ScrollToTop />
       <PhoneNotificationManager />
       <AuthSessionManager />
+      {currentUser?.offeringType === 'services' && <EmergencySOS />}
       {!hideHeader && <Header />}
-      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950 home-route-content' : ''}${location.pathname === '/dashboard' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
+      <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950 home-route-content' : ''}${location.pathname === '/dashboard' || location.pathname === '/admin/verification' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
         <Suspense fallback={<NeuralLoader fullScreen={true} />}>
           <AnimatedRoutes />
         </Suspense>

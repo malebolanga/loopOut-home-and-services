@@ -4,6 +4,7 @@ import Listing from '../models/listing.model.js';
 import LookingFor from '../models/lookingFor.model.js';
 import Service from '../models/service.model.js';
 import Shop from '../models/shop.model.js';
+import { getSuspendedOwnerIds } from '../utils/hideSuspendedOwnerContent.js';
 import { fuzzItemsLocation } from '../utils/locationFuzzer.js';
 
 const MAX_PAGE_SIZE = 20;
@@ -217,8 +218,9 @@ const searchFood = async ({ searchRegex, locationRegex, minPrice, maxPrice, subT
     });
   }
 
+  const suspendedOwnerIds = await getSuspendedOwnerIds();
   const rows = await Shop.aggregate([
-    { $match: { ownerId: { $ne: 'guest' } } },
+    { $match: { ownerId: { $ne: 'guest', $nin: suspendedOwnerIds.map(String) } } },
     { $unwind: '$meals' },
     { $match: match },
     { $sort: { createdAt: -1, _id: -1, 'meals.id': 1 } },

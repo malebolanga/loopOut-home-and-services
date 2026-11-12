@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const replySchema = new mongoose.Schema({
   content: {
@@ -64,6 +65,7 @@ const commentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 commentSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
+hideSuspendedOwnerContent(commentSchema, [{ field: 'userId' }]);
 
 const Comment = mongoose.model('Comment', commentSchema);
 

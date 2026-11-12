@@ -1256,7 +1256,8 @@ export default function Listing() {
     cleanliness: ratings.cleanliness || hostRatings.categoryRatings?.host_cleanliness || 0,
   };
   const isGuestFavourite = hasReviews && ratings.overall >= 4.8 && commentCount >= 5;
-  const isVerifiedHost = Boolean(listing.userRef?.isVerified || listing.userRef?.verified || listing.userRef?.isSuperhost);
+  // Google/email account verification and Superhost status do not prove identity.
+  const isIdentityVerifiedHost = listing.userRef?.kycStatus === 'verified';
   const hasOfferPrice = !isRent && listing.offer && Number(listing.discountPrice) > 0 && Number(listing.discountPrice) < Number(listing.regularPrice);
   const displayedPrice = hasOfferPrice ? Number(listing.discountPrice) : Number(listing.regularPrice);
   const listingHighlights = [
@@ -1270,10 +1271,10 @@ export default function Listing() {
       title: 'Park for free',
       detail: 'Free parking is available at this property.',
     },
-    isVerifiedHost && {
+    isIdentityVerifiedHost && {
       icon: MdOutlineGppGood,
-      title: listing.userRef?.isSuperhost ? 'Superhost' : 'Verified host',
-      detail: 'Host verification is on file with LoopOut.',
+      title: 'Identity checked',
+      detail: 'LoopOut has completed an identity review for this host.',
     },
   ].filter(Boolean);
   const cancellationSummary = !isSaleOrRent
@@ -1557,7 +1558,7 @@ export default function Listing() {
                 <div>
                   <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
                   <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
-                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isVerifiedHost ? 'Verified Host · ' : 'Host · '}
+                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isIdentityVerifiedHost ? 'Identity checked · ' : 'Host · '}
                     {listing.userRef?.createdAt ? (() => {
                       const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
                       return months < 12 ? `${months} month${months > 1 ? 's' : ''} hosting` : `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} hosting`;

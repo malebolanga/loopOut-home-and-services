@@ -430,7 +430,7 @@ export default function ComprehensiveSafetyPolicy() {
                 <div>
                   <h3 className="text-xl font-semibold mb-4">Medical Emergencies</h3>
                   <ul className="list-disc pl-5 space-y-3">
-                    <li className="font-semibold">Call emergency services immediately (911)</li>
+                    <li className="font-semibold">Call your local emergency services number immediately; panic alerts do not call authorities</li>
                     <li>Provide clear location information</li>
                     <li>Administer basic first aid if trained</li>
                     <li>Do not move injured persons unnecessarily</li>
@@ -455,19 +455,9 @@ export default function ComprehensiveSafetyPolicy() {
                 <h4 className="font-semibold mb-2 text-yellow-800">Emergency Contact Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="font-semibold">LoopOut Safety Team</p>
-                    <p>safety@homeservicespro.com</p>
-                    <p>1-800-HOME-SAFE</p>
-                  </div>
-                  <div>
                     <p className="font-semibold">Emergency Services</p>
-                    <p>911 (USA)</p>
-                    <p>112 (EU Emergency)</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Non-Emergency Police</p>
-                    <p>311 (USA)</p>
-                    <p>Local precinct</p>
+                    <p>Call the emergency number for your country or area.</p>
+                    <p>Saved trusted contacts are available in Guardian Safety settings.</p>
                   </div>
                 </div>
               </div>

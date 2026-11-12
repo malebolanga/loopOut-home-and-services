@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const listingSchema = new mongoose.Schema(
   {
@@ -102,6 +103,7 @@ listingSchema.index({ regularPrice: 1, createdAt: -1 });
 listingSchema.index({ isPromoted: 1, createdAt: -1 });
 // Owner's listing management page
 listingSchema.index({ userRef: 1, createdAt: -1 });
+hideSuspendedOwnerContent(listingSchema, [{ field: 'userRef' }]);
 
 const Listing = mongoose.model('Listing', listingSchema);
 export default Listing;

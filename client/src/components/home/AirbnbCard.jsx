@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import ImageGallery from '../ImageGallery';
 import { formatListingTitle } from '../../utils/listingDisplay';
-import { BadgeCheck, Navigation2 } from 'lucide-react';
+import { Navigation2 } from 'lucide-react';
 import { HeartIcon as HeartIconSolid, StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { HeartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { useWishlist } from '../../hooks/useWishlist';
@@ -16,7 +16,9 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
   const { isFavorite, toggleFavorite } = useWishlist(item, wishlistType);
   const owner = typeof (item.userRef || item.creator) === 'object' ? (item.userRef || item.creator) : null;
   const ownerName = owner?.username || owner?.name || owner?.fullName || 'Account owner';
-  const isVerified = Boolean(item.isVerified || item.verified || owner?.isVerified || owner?.verified);
+  // Account/email verification is not the same as a completed identity review.
+  // Only an explicit completed KYC status may be described as verified.
+  const isIdentityVerified = item.kycStatus === 'verified' || owner?.kycStatus === 'verified';
   const responseTime = item.responseTimeLabel || item.responseTime || owner?.responseTimeLabel || owner?.responseTime;
 
   // Live GPS distance
@@ -230,10 +232,10 @@ export const AirbnbCard = ({ item, onClick, type = 'property', hideDistance = fa
           compactIndicator
         />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-[15] bg-gradient-to-t from-slate-950/50 via-slate-950/12 to-transparent" />
-        {isVerified && (
+        {isIdentityVerified && (
           <span className="absolute right-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-slate-900 shadow-sm backdrop-blur">
-            <BadgeCheck className="h-3.5 w-3.5 text-rose-500" aria-hidden="true" />
-            Verified
+            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+            Identity checked
           </span>
         )}
         {/* Favorite button */}

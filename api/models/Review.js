@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { getSuspendedOwnerIds, hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -57,6 +58,11 @@ const reviewSchema = new mongoose.Schema(
 );
 
 reviewSchema.index({ bookingId: 1 }, { unique: true, sparse: true });
+hideSuspendedOwnerContent(reviewSchema, [{ field: 'author' }]);
+reviewSchema.pre('aggregate', async function hideSuspendedReviewAggregates() {
+  const ids = await getSuspendedOwnerIds();
+  if (ids.length) this.pipeline().unshift({ $match: { author: { $nin: ids } } });
+});
 
 const Review = mongoose.model('Review', reviewSchema);
 export default Review;

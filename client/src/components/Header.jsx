@@ -186,6 +186,9 @@ export default function Header() {
   const hasLoadedNotificationsRef = useRef(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [adminOverview, setAdminOverview] = useState(null);
+  const [adminOverviewLoading, setAdminOverviewLoading] = useState(false);
+  const [adminOverviewRetry, setAdminOverviewRetry] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -345,6 +348,28 @@ export default function Header() {
 
   // Track confirmed calendar appointments for user or host
   const [calendarAlertCount, setCalendarAlertCount] = useState(0);
+  const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
+    String(currentUser?.email || '').trim().toLowerCase()
+  );
+
+  useEffect(() => {
+    if (!showProfileDropdown || !isLoopOutAdmin) return;
+    const controller = new AbortController();
+    setAdminOverviewLoading(true);
+    authenticatedFetch('/api/stats/admin-overview', { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Could not load admin report.');
+        setAdminOverview(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAdminOverview(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setAdminOverviewLoading(false);
+      });
+    return () => controller.abort();
+  }, [showProfileDropdown, isLoopOutAdmin, adminOverviewRetry]);
 
   const fetchCalendarAlerts = useCallback(async (signal) => {
     if (!currentUser?._id) {
@@ -565,7 +590,8 @@ export default function Header() {
     { label: 'FOR BUSINESS', route: '/for-business', icon: <BriefcaseIcon className="w-5 h-5" />, color: 'bg-rose-500' },
     { label: 'HOST EARNINGS', route: '/host-earnings', icon: <ChartBarIcon className="w-5 h-5" />, color: 'bg-amber-500' },
     { label: 'HOST TOOLS', route: '/host-tools', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
-    { label: 'SETTINGS', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-indigo-500' }
+    { label: 'SETTINGS', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
+    ...(isLoopOutAdmin ? [{ label: 'ADMIN REVIEW', route: '/admin/verification', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-600 to-red-500' }] : [])
   ];
 
   // Handle search submission
@@ -736,6 +762,52 @@ export default function Header() {
               </button>
             ))}
           </div>
+
+          {isLoopOutAdmin && (
+            <section aria-label="LoopOut admin tools" className="mb-3 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+              <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-rose-300 ring-1 ring-white/10"><ChartBarIcon className="h-5 w-5" /></span>
+                    <div>
+                      <p className="text-xs font-black tracking-wide">LoopOut overview</p>
+                      <p className="mt-0.5 text-[10px] text-slate-300">Your platform at a glance</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-bold text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />LIVE</span>
+                </div>
+                {adminOverview && !adminOverviewLoading && (
+                  <div className="mt-4 flex items-end justify-between border-t border-white/10 pt-3">
+                    <div><p className="text-[10px] font-medium text-slate-300">Total registered users</p><p className="mt-0.5 text-3xl font-black tracking-tight">{Number(adminOverview.users.total).toLocaleString()}</p></div>
+                    <span className="pb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-400">All time</span>
+                  </div>
+                )}
+              </div>
+              {adminOverviewLoading ? (
+                <div className="grid grid-cols-2 gap-2 p-3" aria-label="Loading admin report">
+                  {[0, 1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-gray-800" />)}
+                </div>
+              ) : adminOverview ? (
+                <div className="p-3">
+                  <div className="mb-2 flex items-center justify-between"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">Activity</p><p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500">South Africa time</p></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Logged in today*</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{Number(adminOverview.logins.uniqueUsersToday).toLocaleString()}</p></div>
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">New users today</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{Number(adminOverview.users.signupsToday).toLocaleString()}</p></div>
+                    <div className="col-span-2 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Accounts with recorded login · this week*</p><p className="text-base font-black text-slate-900 dark:text-white">{Number(adminOverview.logins.uniqueUsersThisWeek).toLocaleString()}</p></div>
+                  </div>
+                  <p className="mt-2 px-0.5 text-[9px] leading-relaxed text-slate-400 dark:text-slate-500">*Successful logins explicitly recorded by LoopOut.</p>
+                </div>
+              ) : (
+                <div className="p-3"><p className="text-xs text-slate-500 dark:text-slate-400">We couldn’t load the latest admin report.</p><button type="button" onClick={() => setAdminOverviewRetry((attempt) => attempt + 1)} className="mt-2 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">Try again</button></div>
+              )}
+              <div className="border-t border-slate-100 p-3 dark:border-gray-800">
+                <button type="button" onClick={() => handleNavigate('/admin/verification')} className="group flex w-full items-center justify-between rounded-xl bg-rose-600 px-3 py-3 text-left text-white shadow-sm transition hover:bg-rose-700 active:scale-[0.99]">
+                  <span className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15"><ShieldCheckIcon className="h-4 w-4" /></span><span><span className="block text-xs font-extrabold">Review identity submissions</span><span className="mt-0.5 block text-[9px] text-rose-100">Check ID documents and selfies</span></span></span>
+                  <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            </section>
+          )}
 
           <button
             type="button"

@@ -109,20 +109,16 @@ const TrustAndSafety = () => {
                      <div className="w-12 h-12 bg-rose-500/10 rounded-full flex items-center justify-center">
                         <PhoneIcon className="w-6 h-6 text-rose-500" />
                      </div>
-                     <span className="text-rose-500 text-xs font-black uppercase tracking-widest">Global Safety Line</span>
+                  <span className="text-rose-500 text-xs font-black uppercase tracking-widest">Emergency information</span>
                   </div>
                   <h2 className="text-4xl lg:text-6xl font-black text-white tracking-tighter m-0 mb-8 leading-none">
-                     8-MINUTE <br />
-                     <span className="italic text-gray-400">RESPONSE.</span>
+                     YOUR LOCATION. <br />
+                     <span className="italic text-gray-400">YOUR CHOICE.</span>
                   </h2>
-                  <p className="text-gray-400 text-lg mb-12">Our emergency team is stationed strategically to provide immediate assistance whenever a protocol alert is triggered.</p>
+                  <p className="text-gray-400 text-lg mb-12">A service-provider panic alert records a GPS pin and alert code. You can choose to text or call a saved trusted contact. LoopOut does not dispatch emergency services or monitor a live response, so call your local emergency number if you need immediate help.</p>
                   <div className="flex flex-wrap gap-4">
-                     <button className="px-10 py-5 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-950/20 hover:bg-rose-500 transition-all">
-                        Call Safety HQ
-                     </button>
-                     <button className="px-10 py-5 bg-white/5 text-white border border-white/10 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">
-                        Safety Checklist
-                     </button>
+                     <button onClick={() => navigate('/settings')} className="px-8 py-4 bg-rose-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-rose-950/20 hover:bg-rose-500 transition-all">Manage trusted contacts</button>
+                     <button onClick={() => navigate('/settings')} className="px-8 py-4 bg-white/5 text-white border border-white/10 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Safety settings</button>
                   </div>
                </div>
                <div className="relative h-96 lg:h-auto overflow-hidden">

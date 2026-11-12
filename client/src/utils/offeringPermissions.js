@@ -14,6 +14,8 @@ export const getServiceProviderVerificationStatus = (user) => {
       hasIdDocument: false,
       hasFaceScan: false,
       hasProfilePicture: false,
+      isIdentityReviewed: false,
+      kycStatus: 'unverified',
       missing: ['ID document or passport', 'Face scan (live selfie)', 'Profile picture'],
       missingCount: 3,
     };
@@ -25,17 +27,21 @@ export const getServiceProviderVerificationStatus = (user) => {
     (user.faceData?.imageUrl && user.faceData.imageUrl.trim() !== '')
   );
   const hasProfilePicture = Boolean(user.avatar && !isDefaultAvatar(user.avatar));
+  const isIdentityReviewed = user.kycStatus === 'verified';
 
   const missing = [];
   if (!hasIdDocument) missing.push('ID document or passport');
   if (!hasFaceScan) missing.push('Face scan (live selfie)');
   if (!hasProfilePicture) missing.push('Profile picture');
+  if (!isIdentityReviewed) missing.push(user.kycStatus === 'rejected' ? 'resubmit identity documents' : 'administrator identity review');
 
   return {
-    isCompliant: hasIdDocument && hasFaceScan && hasProfilePicture,
+    isCompliant: hasIdDocument && hasFaceScan && hasProfilePicture && isIdentityReviewed,
     hasIdDocument,
     hasFaceScan,
     hasProfilePicture,
+    isIdentityReviewed,
+    kycStatus: user.kycStatus || 'unverified',
     missing,
     missingCount: missing.length,
   };

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const eventSchema = new mongoose.Schema(
   {
@@ -108,6 +109,7 @@ eventSchema.index({ createdAt: -1 });
 eventSchema.index({ type: 1, createdAt: -1 });
 eventSchema.index({ regularPrice: 1, createdAt: -1 });
 eventSchema.index({ userRef: 1, createdAt: -1 });
+hideSuspendedOwnerContent(eventSchema, [{ field: 'userRef' }]);
 
 const Event = mongoose.model('Event', eventSchema);
 export default Event;

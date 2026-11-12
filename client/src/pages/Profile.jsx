@@ -935,6 +935,51 @@ export default function Profile() {
     }));
   };
 
+  const toggleAdminActivitySharing = async () => {
+    const enabled = currentUser?.shareActivityWithAdmins !== true;
+    try {
+      const response = await authenticatedFetch('/api/stats/activity-sharing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update activity sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareActivityWithAdmins: data.enabled }));
+    } catch (sharingError) {
+      setFetchError(sharingError.message || 'Could not update activity sharing.');
+    }
+  };
+
+  const toggleLoginAreaSharing = async () => {
+    const enabled = currentUser?.shareLoginGpsArea !== true;
+    try {
+      let position = null;
+      if (enabled) {
+        if (!navigator.geolocation) throw new Error('Location services are not available in this browser.');
+        position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000,
+        }));
+      }
+      const response = await authenticatedFetch('/api/stats/login-area-sharing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update login-area sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareLoginGpsArea: data.enabled }));
+      if (enabled && position) {
+        await authenticatedFetch('/api/stats/login-area', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        });
+      }
+    } catch (sharingError) {
+      setFetchError(sharingError.code === 1
+        ? 'Location permission was denied. Allow location access in your phone or browser settings, then try again.'
+        : sharingError.message || 'Could not update login-area sharing.');
+    }
+  };
+
   const loadMoreListings = () => {
     setVisibleListings((prev) => prev + 3);
   };
@@ -1439,6 +1484,12 @@ export default function Profile() {
                              <ShieldCheckIcon className="w-5 h-5 text-[#FF5A5F]" />
                              Account Verification
                           </h4>
+
+                          {['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(String(currentUser?.email || '').trim().toLowerCase()) && (
+                            <button type="button" onClick={() => navigate('/admin/verification')} className="mb-4 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-900">
+                              Review identity submissions
+                            </button>
+                          )}
                           
                           {/* Face Verification Row */}
                           <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
@@ -1669,6 +1720,22 @@ export default function Profile() {
                         helperText="Get in-app updates when new posts appear in your area"
                       />
                     </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-[#DDDDDD]">
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-2">Privacy and activity</h4>
+                    <Checkbox
+                      label="Share my approximate GPS area when LoopOut opens"
+                      checked={currentUser?.shareLoginGpsArea === true}
+                      onChange={toggleLoginAreaSharing}
+                      helperText="Optional and off by default. Your phone or browser will ask for location permission. When you open LoopOut while signed in, the area is rounded to roughly 1 km, visible only to the two LoopOut admins, and deleted after 30 days. Turning this off deletes it immediately."
+                    />
+                    <Checkbox
+                      label="Share my LoopOut section activity with admins"
+                      checked={currentUser?.shareActivityWithAdmins === true}
+                      onChange={toggleAdminActivitySharing}
+                      helperText="Optional and off by default. When enabled, the two LoopOut admins can see sampled broad sections you visit and approximate active time while a LoopOut tab is visible. Search terms, individual clicks, and listing details are not recorded. Activity expires after 30 days; switching this off deletes your saved section history."
+                    />
                   </div>
 
                   <div className="pt-6 border-t border-[#DDDDDD]">

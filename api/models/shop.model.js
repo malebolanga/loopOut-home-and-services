@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const mealSchema = new mongoose.Schema({
   id: { type: String, required: true },
@@ -59,6 +60,7 @@ const shopSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 shopSchema.index({ ownerId: 1, createdAt: -1 });
+hideSuspendedOwnerContent(shopSchema, [{ field: 'ownerId', storedAsString: true }]);
 
 const Shop = mongoose.model('Shop', shopSchema);
 export default Shop;

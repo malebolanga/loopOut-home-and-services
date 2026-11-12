@@ -97,6 +97,13 @@ export const createBooking = async (req, res) => {
     if (!Number.isInteger(parsedRoomCount) || parsedRoomCount < 1) {
       return res.status(400).json({ error: 'Number of rooms must be a positive whole number.' });
     }
+
+    const formPriceValue = totalPrice ?? price;
+    const hasFormPrice = formPriceValue !== undefined && formPriceValue !== null && formPriceValue !== '';
+    const formPrice = hasFormPrice ? Number(formPriceValue) : null;
+    if (hasFormPrice && (!Number.isFinite(formPrice) || formPrice < 0)) {
+      return res.status(400).json({ error: 'Please select a valid booking price.' });
+    }
     if (accommodationSelection !== undefined && !['entire', 'rooms'].includes(accommodationSelection)) {
       return res.status(400).json({ error: 'Choose the whole property or select rooms to book.' });
     }
@@ -152,6 +159,15 @@ export const createBooking = async (req, res) => {
     } else if (listingId && ratePeriod === 'month') {
       resolvedTotalPrice = unitPrice * Math.max(1, Math.ceil(timeDifference / (30 * 24 * 60 * 60 * 1000)));
     }
+
+    // Helper and service forms can combine selected options, packages, travel,
+    // or other form choices that are not represented by the listing base rate.
+    // Keep the submitted form total as the booking amount for these request types
+    // so the booking record and its notifications show the same selected price.
+    if ((helperId || serviceId) && hasFormPrice) {
+      resolvedTotalPrice = formPrice;
+    }
+
     if (!Number.isFinite(resolvedTotalPrice) || resolvedTotalPrice < 0) {
       return res.status(400).json({ error: 'Could not calculate a valid booking price for this listing.' });
     }

@@ -843,6 +843,8 @@ export default function CreateListing() {
               hasIdDocument: data.hasIdDocument,
               hasFaceScan: data.hasFaceScan,
               hasProfilePicture: data.hasProfilePicture,
+              isIdentityReviewed: data.kycStatus === 'verified',
+              kycStatus: data.kycStatus || 'unverified',
               missing: data.missing || [],
               missingCount: (data.missing || []).length
             };
@@ -854,6 +856,7 @@ export default function CreateListing() {
                 liveSelfieUrl: data.liveSelfieUrl || currentUser.liveSelfieUrl,
                 avatar: data.avatar || currentUser.avatar,
                 kycStatus: data.kycStatus || currentUser.kycStatus,
+                kycReviewNote: data.kycReviewNote || currentUser.kycReviewNote,
                 isVerified: data.isVerified !== undefined ? data.isVerified : currentUser.isVerified
               }));
             }
@@ -2145,25 +2148,29 @@ export default function CreateListing() {
                           <div>
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 mb-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                              Verification Required to Post
+                              {verificationStatus.kycStatus === 'pending' ? 'Identity Review Pending' : verificationStatus.kycStatus === 'rejected' ? 'Identity Review Needs Changes' : 'Verification Required to Post'}
                             </div>
                             <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                               Complete your Provider Credentials
                             </h4>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => navigate('/verification')}
-                          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
-                        >
-                          <span>Verify Now</span>
-                          <ArrowRightIcon className="w-3.5 h-3.5" />
-                        </button>
+                        {verificationStatus.kycStatus === 'pending' ? (
+                          <span className="shrink-0 rounded-xl bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Waiting for review</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/verification')}
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          >
+                            <span>{verificationStatus.kycStatus === 'rejected' ? 'Resubmit documents' : 'Verify now'}</span>
+                            <ArrowRightIcon className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
 
                       <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        To protect our community, service providers and helpers must submit their government ID, complete a face scan, and upload a profile picture before publishing listings.
+                        Uploading documents does not verify identity. An administrator checks the number on your PDF, confirms it shows a face, and compares that photo with your live selfie before you can publish.
                       </p>
 
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2172,7 +2179,7 @@ export default function CreateListing() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xl">📄</span>
                             {verificationStatus.hasIdDocument ? (
-                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">{verificationStatus.isIdentityReviewed ? 'Reviewed' : 'Submitted'}</span>
                             ) : (
                               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
                             )}
@@ -2195,7 +2202,7 @@ export default function CreateListing() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xl">🤳</span>
                             {verificationStatus.hasFaceScan ? (
-                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">{verificationStatus.isIdentityReviewed ? 'Reviewed' : 'Submitted'}</span>
                             ) : (
                               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
                             )}
@@ -4628,7 +4635,7 @@ export default function CreateListing() {
                   Verification Required to Post
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                  As a service provider or helper, you cannot post until your identity documents, face scan, and profile picture are submitted.
+                  Your PDF number and photo must be reviewed against your live selfie before you can post. Uploading a document or selfie alone does not verify identity.
                 </p>
               </div>
 
@@ -4638,11 +4645,11 @@ export default function CreateListing() {
                     <span className="text-2xl">📄</span>
                     <div>
                       <p className="text-xs font-bold text-gray-900 dark:text-white">ID Document or Passport</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasIdDocument ? 'Uploaded & verified' : 'Not submitted yet'}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasIdDocument ? (verificationStatus.isIdentityReviewed ? 'Reviewed by LoopOut' : 'Submitted · awaiting review') : 'Not submitted yet'}</p>
                     </div>
                   </div>
                   {verificationStatus.hasIdDocument ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                    <span className={`${verificationStatus.isIdentityReviewed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300'} font-bold text-xs`}>{verificationStatus.isIdentityReviewed ? '✓ Reviewed' : 'Pending review'}</span>
                   ) : (
                     <button
                       type="button"
@@ -4659,11 +4666,11 @@ export default function CreateListing() {
                     <span className="text-2xl">🤳</span>
                     <div>
                       <p className="text-xs font-bold text-gray-900 dark:text-white">Face Scan / Live Selfie</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasFaceScan ? 'Biometric scan complete' : 'Not scanned yet'}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasFaceScan ? (verificationStatus.isIdentityReviewed ? 'Compared with ID photo' : 'Captured · awaiting comparison') : 'Not scanned yet'}</p>
                     </div>
                   </div>
                   {verificationStatus.hasFaceScan ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                    <span className={`${verificationStatus.isIdentityReviewed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300'} font-bold text-xs`}>{verificationStatus.isIdentityReviewed ? '✓ Reviewed' : 'Pending review'}</span>
                   ) : (
                     <button
                       type="button"

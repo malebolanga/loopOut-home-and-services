@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const helperSchema = new mongoose.Schema({
     name: {
@@ -218,6 +219,7 @@ helperSchema.index({ regularPrice: 1, createdAt: -1 });
 helperSchema.index({ kind: 1, createdAt: -1 });
 helperSchema.index({ userRef: 1, createdAt: -1 });
 helperSchema.index({ creator: 1, createdAt: -1 });
+hideSuspendedOwnerContent(helperSchema, [{ field: 'userRef' }, { field: 'creator' }]);
 
 const Helper = mongoose.model('Helper', helperSchema);
 

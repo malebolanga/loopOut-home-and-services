@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const sellSchema = new mongoose.Schema(
   {
@@ -26,6 +27,7 @@ const sellSchema = new mongoose.Schema(
 sellSchema.index({ createdAt: -1 });
 sellSchema.index({ category: 1, createdAt: -1 });
 sellSchema.index({ creator: 1, createdAt: -1 });
+hideSuspendedOwnerContent(sellSchema, [{ field: 'creator' }]);
 
 const Sell = mongoose.model('Sell', sellSchema);
 export default Sell;

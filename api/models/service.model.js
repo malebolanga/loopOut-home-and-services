@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { hideSuspendedOwnerContent } from '../utils/hideSuspendedOwnerContent.js';
 
 const serviceSchema = new mongoose.Schema(
   {
@@ -268,6 +269,7 @@ serviceSchema.index({ regularPrice: 1, createdAt: -1 });
 serviceSchema.index({ kind: 1, createdAt: -1 });
 serviceSchema.index({ userRef: 1, createdAt: -1 });
 serviceSchema.index({ creator: 1, createdAt: -1 });
+hideSuspendedOwnerContent(serviceSchema, [{ field: 'userRef' }, { field: 'creator' }]);
 
 const Service = mongoose.model('Service', serviceSchema);
 
