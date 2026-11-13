@@ -1027,6 +1027,94 @@ textarea {
     }
 }
 
+// Booking calendar styles for listing date selection only.
+.listing-booking-calendar.react-calendar {
+  max-width: 520px;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.listing-booking-calendar .react-calendar__navigation {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.listing-booking-calendar .react-calendar__navigation button {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border-radius: 0.75rem;
+  color: #0f172a;
+}
+
+.listing-booking-calendar .react-calendar__navigation button:enabled:hover,
+.listing-booking-calendar .react-calendar__navigation button:enabled:focus {
+  background: #f1f5f9 !important;
+}
+
+.listing-booking-calendar .react-calendar__month-view__weekdays {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.listing-booking-calendar .react-calendar__tile {
+  min-height: 2.75rem;
+  border-radius: 0.75rem !important;
+  color: #0f172a;
+}
+
+.listing-booking-calendar .react-calendar__tile:enabled:hover,
+.listing-booking-calendar .react-calendar__tile:enabled:focus {
+  background: #fff1f2 !important;
+}
+
+.listing-booking-calendar .react-calendar__tile:disabled {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+}
+
+.listing-booking-calendar .react-calendar__tile.listing-calendar-unavailable:disabled {
+  background: repeating-linear-gradient(135deg, #f1f5f9, #f1f5f9 5px, #e2e8f0 5px, #e2e8f0 7px) !important;
+  color: #64748b !important;
+  text-decoration: line-through;
+}
+
+.listing-booking-calendar .react-calendar__tile--now {
+  background: #fff7ed !important;
+  color: #9a3412;
+  font-weight: 700;
+}
+
+.listing-booking-calendar .react-calendar__tile--range,
+.listing-booking-calendar .react-calendar__tile--rangeStart,
+.listing-booking-calendar .react-calendar__tile--rangeEnd,
+.listing-booking-calendar .react-calendar__tile--active {
+  background: #e11d48 !important;
+  color: white !important;
+}
+
+.dark .listing-booking-calendar.react-calendar {
+  border-color: #374151 !important;
+  background: #111827;
+}
+
+.dark .listing-booking-calendar .react-calendar__navigation button,
+.dark .listing-booking-calendar .react-calendar__tile {
+  color: #f9fafb;
+}
+
+.dark .listing-booking-calendar .react-calendar__tile:disabled {
+  background: #1f2937 !important;
+  color: #6b7280 !important;
+}
+
 
 /* In your global CSS file, e.g., index.css */
 

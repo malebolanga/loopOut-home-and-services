@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -27,6 +27,7 @@ import { MdChildCare, MdDirectionsBus } from 'react-icons/md';
 import { pushPhoneNotification } from './PhoneNotificationManager';
 import useLocationCoords from '../hooks/useGeolocation';
 import { calculateDistance } from '../utils/locationUtils';
+import { formatListingTitle, getPropertyRatePeriod } from '../utils/listingDisplay';
 
 
 
@@ -377,9 +378,6 @@ const ACCENT_CLASSES = {
 };
 
 const DAILY_STAY_TYPES = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'];
-const HOURLY_ROOM_TYPES = ['office', 'hourly_room', 'room_hourly'];
-const RENT_TYPES = ['rent', 'apartment'];
-
 const TYPE_ALIASES = {
   chef: 'chef',
   culinary: 'chef',
@@ -508,6 +506,7 @@ export default function ListingBookingSheet({
     checkOut: '',
     guests: 2,
     rooms: 1,
+    accommodationSelection: '',
     breakfast: false,
     pets: false,
     selectedDate: '',
@@ -529,9 +528,25 @@ export default function ListingBookingSheet({
   const [isEscrowLoading, setIsEscrowLoading] = useState(false);
 
   const propertyType = listing?.type || '';
-  const isDailyStay = DAILY_STAY_TYPES.includes(propertyType);
-  const isHourlyRoom = HOURLY_ROOM_TYPES.includes(propertyType);
-  const isRent = RENT_TYPES.includes(propertyType);
+  const propertyKind = String(listing?.kind || '').toLowerCase();
+  const isHouseOrApartment = ['house', 'apartment', 'townhouse', 'villa', 'cottage', 'penthouse', 'home'].some(k => propertyKind.includes(k) || String(listing?.type || '').toLowerCase().includes(k)) || !listing?.kind;
+  const supportsEntireProperty = isHouseOrApartment || propertyKind === '' || !listing?.kind;
+  const ratePeriod = getPropertyRatePeriod(listing);
+  const listingTitle = formatListingTitle(listing?.name);
+  const isDailyStay = ratePeriod === 'day' || ratePeriod === 'night';
+  const selectedRoomType = listing?.roomTypes?.find(room => room.name === bookingDetails.selectedUnit);
+  const availableRoomCount = Math.max(1, Number(selectedRoomType?.count || (supportsEntireProperty ? (listing?.bedrooms || listing?.numberOfRooms || listing?.totalUnits) : (listing?.numberOfRooms || listing?.numberOfApartments || listing?.totalUnits || listing?.bedrooms)) || 1));
+  const maxBookableRooms = Math.min(5, availableRoomCount);
+  const isWholePropertyBooking = bookingDetails.accommodationSelection === 'entire' || (!supportsEntireProperty ? false : bookingDetails.accommodationSelection !== 'rooms');
+  const propertyLabel = (propertyKind.includes('apartment') || propertyKind.includes('flat'))
+    ? 'Full apartment'
+    : (propertyKind.includes('townhouse'))
+    ? 'Full townhouse'
+    : (propertyKind.includes('villa'))
+    ? 'Full villa'
+    : 'Full house';
+  const isHourlyRoom = ratePeriod === 'hour';
+  const isRent = ratePeriod === 'month';
   const serviceConfig = getServiceConfig(listing);
   const isServiceMode = !!serviceConfig && !isDailyStay && !isHourlyRoom && !isRent;
 
@@ -558,24 +573,38 @@ export default function ListingBookingSheet({
   const locationSectionLabel = isMenuService ? 'Menu / Service Location' : 'Service Location';
   const displayAddress = listing?.address || listing?.location || listing?.city || listing?.near || '';
 
+  const initialOpenedRef = useRef(false);
+
   useEffect(() => {
     if (isOpen) {
-      setStep(1);
-      setErrors({});
-      setBookingDetails(prev => ({
-        ...prev,
-        fullName: currentUser?.name || currentUser?.username || prev.fullName,
-        email: currentUser?.email || prev.email,
-        phone: currentUser?.phone || prev.phone,
-        checkIn: initialDates?.checkIn || prev.checkIn,
-        checkOut: initialDates?.checkOut || prev.checkOut,
-        selectedDate: initialDates?.selectedDate || prev.selectedDate,
-        startTime: initialDates?.startTime || prev.startTime,
-        endTime: initialDates?.endTime || prev.endTime,
-        selectedUnit: initialDates?.selectedUnit || prev.selectedUnit || '',
-      }));
+      if (!initialOpenedRef.current) {
+        initialOpenedRef.current = true;
+        setStep(1);
+        setErrors({});
+        const propKind = String(listing?.kind || '').toLowerCase();
+        const defaultEntire = ['house', 'apartment', 'townhouse', 'villa', 'cottage', 'home'].some(k => propKind.includes(k) || String(listing?.type || '').toLowerCase().includes(k)) || !listing?.kind;
+        const initialGuestCount = Number(initialDates?.guests || 2) || 2;
+        setBookingDetails(prev => ({
+          ...prev,
+          fullName: currentUser?.name || currentUser?.username || prev.fullName,
+          email: currentUser?.email || prev.email,
+          phone: currentUser?.phone || prev.phone,
+          checkIn: initialDates?.checkIn || prev.checkIn,
+          checkOut: initialDates?.checkOut || prev.checkOut,
+          selectedDate: initialDates?.selectedDate || prev.selectedDate,
+          startTime: initialDates?.startTime || prev.startTime,
+          endTime: initialDates?.endTime || prev.endTime,
+          selectedUnit: initialDates?.selectedUnit || prev.selectedUnit || '',
+          accommodationSelection: prev.accommodationSelection || (defaultEntire ? 'entire' : 'rooms'),
+          rooms: prev.rooms || (defaultEntire ? Math.max(1, Number(listing?.numberOfRooms || listing?.bedrooms || 1)) : 1),
+          guests: prev.guests ? Number(prev.guests) : initialGuestCount,
+          numberOfGuests: prev.numberOfGuests ? Number(prev.numberOfGuests) : initialGuestCount,
+        }));
+      }
+    } else {
+      initialOpenedRef.current = false;
     }
-  }, [isOpen, initialDates, currentUser]);
+  }, [isOpen]);
 
   if (!isOpen || !listing) return null;
 
@@ -603,7 +632,8 @@ export default function ListingBookingSheet({
       if (days === 0) return 0;
       const extra = bookingDetails.breakfast ? 150 * days * Number(bookingDetails.guests) : 0;
       const guestFee = Number(bookingDetails.guests) > 2 ? (Number(bookingDetails.guests) - 2) * 200 * days : 0;
-      return unitPrice * days * (Number(bookingDetails.rooms) || 1) + extra + guestFee;
+      const roomMultiplier = isWholePropertyBooking ? 1 : (Number(bookingDetails.rooms) || 1);
+      return unitPrice * days * roomMultiplier + extra + guestFee;
     }
     if (isHourlyRoom) return hours > 0 ? unitPrice * hours : 0;
     return unitPrice;
@@ -638,7 +668,15 @@ export default function ListingBookingSheet({
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setBookingDetails(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (name === 'guests' || name === 'numberOfGuests') {
+      const g = Math.max(1, parseInt(value, 10) || 1);
+      setBookingDetails(prev => ({ ...prev, guests: g, numberOfGuests: g }));
+    } else if (name === 'rooms') {
+      const r = Math.max(1, parseInt(value, 10) || 1);
+      setBookingDetails(prev => ({ ...prev, rooms: r }));
+    } else {
+      setBookingDetails(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    }
     if (errors[name]) setErrors(prev => { const n = { ...prev }; delete n[name]; return n; });
   };
 
@@ -672,23 +710,29 @@ export default function ListingBookingSheet({
     const unitTag = bookingDetails.selectedUnit ? ` (${bookingDetails.selectedUnit})` : '';
     const dateStr = isDailyStay ? formatDate(bookingDetails.checkIn) : formatDate(bookingDetails.selectedDate);
 
-    const acceptMsg = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listing.name}${unitTag} on ${dateStr}. See you then!`;
-    const declineMsg = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listing.name}${unitTag} on ${dateStr}. Can we try another time?`;
+    const acceptMsg = `Accept the booking for ${bookingDetails.fullName}, I accept your request for ${listingTitle}${unitTag} on ${dateStr}. See you then!`;
+    const declineMsg = `Decline the booking for ${bookingDetails.fullName}, I'm unable to accept request for ${listingTitle}${unitTag} on ${dateStr}. Can we try another time?`;
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMsg)}` : null;
     const declineLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(declineMsg)}` : null;
 
     let msg = '';
     if (isDailyStay) {
-      const typeTitle = propertyType === 'resort' ? '🏖️ RESORT & HOLIDAY PARK BOOKING'
+      const typeTitle = propertyType === 'rent' ? '🏠 ROOM / HOUSE BOOKING'
+        : propertyType === 'resort' ? '🏖️ RESORT & HOLIDAY PARK BOOKING'
         : propertyType === 'hotel' ? '🏨 HOTEL & LODGE BOOKING'
         : propertyType === 'land' ? '🏡 SELF-CATERING BOOKING'
         : '🛌 GUEST HOUSE & B&B BOOKING';
       msg += `*${typeTitle}*\n\n`;
-      msg += `🏨 *Property:* ${listing?.name}\n`;
+      msg += `🏨 *Property:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Room / Unit:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Guest:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
-      msg += `👥 *Occupancy:* ${bookingDetails.guests} Guest(s), ${bookingDetails.rooms} Room(s)\n`;
+      const stayOptionText = isWholePropertyBooking
+        ? `${propertyLabel}${availableRoomCount > 1 ? ` · ${availableRoomCount} bedrooms` : ''}`
+        : `${bookingDetails.rooms || 1} room${Number(bookingDetails.rooms || 1) === 1 ? '' : 's'}`;
+      msg += `🏠 *Stay option:* ${stayOptionText}\n`;
+      const guestCount = Number(bookingDetails.guests || bookingDetails.numberOfGuests) || 1;
+      msg += `👥 *Guests:* ${guestCount} ${guestCount === 1 ? 'Guest' : 'Guests'}\n`;
       msg += `➡️ *Check-in:* ${formatDate(bookingDetails.checkIn)}\n`;
       msg += `⬅️ *Check-out:* ${formatDate(bookingDetails.checkOut)}\n`;
       msg += `⏳ *Duration:* ${days} Day(s)\n`;
@@ -696,7 +740,7 @@ export default function ListingBookingSheet({
       if (bookingDetails.pets) msg += `🐾 *Pets:* Yes\n`;
     } else if (isHourlyRoom) {
       msg += `*🚪 ROOM PER HOUR BOOKING ⏰*\n\n`;
-      msg += `🚪 *Space:* ${listing?.name}\n`;
+      msg += `🚪 *Space:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Room:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Client:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -704,16 +748,16 @@ export default function ListingBookingSheet({
       msg += `⏰ *Time:* ${bookingDetails.startTime} - ${bookingDetails.endTime} (${hours.toFixed(1)} hrs)\n`;
     } else if (isRent) {
       msg += `*🏠 PROPERTY RENTAL INQUIRY 🏠*\n\n`;
-      msg += `🏠 *Property:* ${listing?.name}\n`;
+      msg += `🏠 *Property:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `🚪 *Unit:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Location:* ${listing?.address}\n`;
       msg += `👤 *Prospect:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
       if (bookingDetails.viewingDate) msg += `📅 *Viewing:* ${formatDate(bookingDetails.viewingDate)} at ${bookingDetails.viewingTime}\n`;
       if (bookingDetails.leaseDuration) msg += `⏳ *Lease Term:* ${bookingDetails.leaseDuration}\n`;
-      msg += `💰 *Monthly Rent:* R${listing?.regularPrice?.toLocaleString()}/month\n`;
+      msg += `💰 *${ratePeriod === 'night' ? 'Nightly Rate' : ratePeriod === 'day' ? 'Daily Rate' : ratePeriod === 'hour' ? 'Hourly Rate' : 'Monthly Rent'}:* R${listing?.regularPrice?.toLocaleString()}/${ratePeriod}\n`;
     } else {
       msg += `*${config.waMsgPrefix}*\n\n`;
-      msg += `${config.emoji} *Service:* ${listing?.name}\n`;
+      msg += `${config.emoji} *Service:* ${listingTitle}\n`;
       if (bookingDetails.selectedUnit) msg += `📋 *${config.unitLabel}:* ${bookingDetails.selectedUnit}\n`;
       msg += `📍 *Address:* ${listing?.address}\n`;
       msg += `👤 *${config.clientLabel}:* ${bookingDetails.fullName} (${bookingDetails.phone})\n`;
@@ -744,6 +788,10 @@ export default function ListingBookingSheet({
     const hostPhone = getHostPhone();
     if (!hostPhone) { alert('Host contact information is not currently available'); setIsSubmitting(false); return; }
     if (!currentUser) { alert('Please sign in to make a reservation.'); setIsSubmitting(false); return; }
+    if (currentUser.shareDetailedActivityWithAdmins === true) {
+      const activityToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser.token || currentUser.access_token || '';
+      fetch('/api/stats/activity-history', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...(activityToken ? { Authorization: `Bearer ${activityToken}` } : {}) }, body: JSON.stringify({ action: 'booking_started', section: 'Bookings', workflow: 'booking' }) }).catch(() => {});
+    }
 
     let savedBookingId = null;
     try {
@@ -770,7 +818,9 @@ export default function ListingBookingSheet({
           phone: bookingDetails.phone,
           message: `${bookingDetails.selectedUnit ? `[${config.unitLabel}: ${bookingDetails.selectedUnit}] ` : ''}${bookingDetails.specialRequests || ''}`.trim(),
           subtype: bookingDetails.selectedUnit || undefined,
-          numberOfGuests: Number(bookingDetails.numberOfGuests || bookingDetails.guests) || 1,
+          numberOfGuests: Number(bookingDetails.guests || bookingDetails.numberOfGuests) || 1,
+          numberOfRooms: isDailyStay ? (isWholePropertyBooking ? availableRoomCount : (Number(bookingDetails.rooms) || 1)) : undefined,
+          accommodationSelection: isDailyStay ? (isWholePropertyBooking ? 'entire' : 'rooms') : undefined,
         })
       });
 
@@ -783,13 +833,17 @@ export default function ListingBookingSheet({
 
       pushPhoneNotification({
         title: '🎉 Booking Request Sent',
-        message: `Your booking for ${listing?.name || 'service'} has been submitted! Check notifications for updates.`,
+        message: `Your booking for ${listingTitle || 'service'} has been submitted! Check notifications for updates.`,
         type: 'success',
         link: '/notifications'
       });
 
       const bookingResult = await bookingRes.json();
       savedBookingId = bookingResult.booking?._id;
+      if (currentUser.shareDetailedActivityWithAdmins === true) {
+        const activityToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser.token || currentUser.access_token || '';
+        fetch('/api/stats/activity-history', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...(activityToken ? { Authorization: `Bearer ${activityToken}` } : {}) }, body: JSON.stringify({ action: 'booking_submitted', section: 'Bookings', workflow: 'booking' }) }).catch(() => {});
+      }
     } catch (err) {
       console.error('Failed to save booking:', err);
     }
@@ -814,7 +868,7 @@ export default function ListingBookingSheet({
           name: currentUser.username || currentUser.name,
           email: currentUser.email,
           serviceId: listing._id,
-          providerName: listing.name
+          providerName: listingTitle
         })
       });
       const data = await res.json();
@@ -907,7 +961,7 @@ export default function ListingBookingSheet({
                 )}
                 <div className="min-w-0">
                   <h2 className="text-sm font-black text-gray-900 dark:text-white leading-tight truncate max-w-[200px] sm:max-w-xs">
-                    {isServiceMode ? `${config.label} Booking` : `Reserve`} · {listing.name}
+                    {isServiceMode ? `${config.label} Booking` : `Reserve`} · {listingTitle}
                   </h2>
                   <div className="flex items-center gap-1.5">
                     <p className="text-[11px] text-gray-400 font-semibold">
@@ -943,7 +997,7 @@ export default function ListingBookingSheet({
                     <span className="text-3xl">{config.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <div className="font-black text-sm">{config.label} Booking</div>
-                      <div className="text-xs opacity-80">{listing.name} · R{listing?.regularPrice?.toLocaleString()} base rate</div>
+                      <div className="text-xs opacity-80">{listingTitle} · R{listing?.regularPrice?.toLocaleString()} base rate</div>
                     </div>
                     {distanceLabel && (
                       <span className="shrink-0 text-[10px] font-black bg-white/20 backdrop-blur-sm px-2 py-1 rounded-xl border border-white/30">
@@ -1176,7 +1230,11 @@ export default function ListingBookingSheet({
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => setBookingDetails(p => ({ ...p, selectedUnit: item.name }))}
+                            onClick={() => setBookingDetails(p => ({
+                              ...p,
+                              selectedUnit: item.name,
+                              rooms: Math.min(Number(p.rooms) || 1, Math.max(1, Number(item.count || listing?.totalUnits || listing?.numberOfRooms || 1)))
+                            }))}
                             className={`p-3 rounded-2xl border-2 text-left transition-all flex items-center justify-between ${isSelected ? `${accentCls.border}` : 'border-gray-200 dark:border-gray-800 hover:border-gray-300'}`}
                           >
                             <div className="min-w-0 flex-1">
@@ -1257,6 +1315,32 @@ export default function ListingBookingSheet({
                 {isDailyStay && (
                   <div className="space-y-3">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Occupancy</h3>
+                    {supportsEntireProperty && (
+                      <div>
+                        <label className={labelCls}>What would you like to book?</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'entire', label: propertyKind === 'house' ? '🏠 Full house' : '🏢 Full apartment', detail: `All ${availableRoomCount} bedrooms` },
+                            { value: 'rooms', label: '🛏️ By room', detail: 'Choose 1–5 rooms' },
+                          ].map((option) => (
+                            <button
+                              key={option.value}
+                              type="button"
+                              aria-pressed={bookingDetails.accommodationSelection === option.value}
+                              onClick={() => setBookingDetails((previous) => ({
+                                ...previous,
+                                accommodationSelection: option.value,
+                                rooms: option.value === 'entire' ? availableRoomCount : 1,
+                              }))}
+                              className={`min-h-[68px] rounded-2xl border px-3 py-2 text-left transition-colors ${bookingDetails.accommodationSelection === option.value ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30' : 'border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:hover:bg-gray-900'}`}
+                            >
+                              <span className="block text-xs font-bold text-gray-900 dark:text-white">{option.label}</span>
+                              <span className="mt-1 block text-[10px] text-gray-500 dark:text-gray-400">{option.detail}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className={labelCls}>Guests</label>
@@ -1265,10 +1349,17 @@ export default function ListingBookingSheet({
                         </select>
                       </div>
                       <div>
-                        <label className={labelCls}>Rooms</label>
-                        <select name="rooms" value={bookingDetails.rooms} onChange={handleChange} className={inputCls(false)}>
-                          {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} Room{n > 1 ? 's' : ''}</option>)}
-                        </select>
+                        <label className={labelCls}>{isWholePropertyBooking ? 'Bedrooms included' : 'Rooms to book'}</label>
+                        {isWholePropertyBooking ? (
+                          <div className={`${inputCls(false)} flex items-center`}>
+                            {availableRoomCount} bedroom{availableRoomCount === 1 ? '' : 's'} · entire property
+                          </div>
+                        ) : (
+                          <select name="rooms" value={Math.min(bookingDetails.rooms, maxBookableRooms)} onChange={handleChange} className={inputCls(false)}>
+                            {Array.from({ length: maxBookableRooms }, (_, index) => index + 1).map(n => <option key={n} value={n}>{n} room{n > 1 ? 's' : ''}</option>)}
+                          </select>
+                        )}
+                        <p className="mt-1 text-[10px] text-gray-500">{isWholePropertyBooking ? 'The whole property is included in your nightly rate.' : `Choose up to ${maxBookableRooms} ${selectedRoomType ? `${selectedRoomType.name} ` : ''}room${maxBookableRooms === 1 ? '' : 's'}.`}</p>
                       </div>
                     </div>
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 pt-1">Add-ons</h3>
@@ -1322,6 +1413,7 @@ export default function ListingBookingSheet({
             {/* ─── STEP 3 ─── */}
             {step === 3 && (
               <div className="space-y-5">
+                <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-3 text-xs leading-relaxed text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">You can cancel up to 48 hours before the scheduled start or check-in. Any payment or refund is arranged directly with the host.</p>
                 <div className="bg-slate-900 rounded-3xl p-5 text-white space-y-3 shadow-xl">
                   {isServiceMode && (
                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gradient-to-r ${config.color} text-white text-xs font-black mb-1`}>
@@ -1332,7 +1424,7 @@ export default function ListingBookingSheet({
 
                   <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
                     <span>Service / Property</span>
-                    <span className="text-white font-black truncate max-w-[180px]">{listing?.name}</span>
+                    <span className="text-white font-black truncate max-w-[180px]">{listingTitle}</span>
                   </div>
 
                   {displayAddress && (
@@ -1365,6 +1457,25 @@ export default function ListingBookingSheet({
                     </div>
                   )}
 
+                  {isDailyStay && (
+                    <>
+                      <div className="flex justify-between items-center gap-3 text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
+                        <span>Stay option</span>
+                        <span className="text-white font-black text-right">
+                          {isWholePropertyBooking
+                            ? `${propertyLabel}${availableRoomCount > 1 ? ` · ${availableRoomCount} bedrooms` : ''}`
+                            : `${bookingDetails.rooms || 1} room${Number(bookingDetails.rooms || 1) === 1 ? '' : 's'}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center gap-3 text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
+                        <span>Guests</span>
+                        <span className="text-white font-black text-right">
+                          {Number(bookingDetails.guests || bookingDetails.numberOfGuests) || 1} {Number(bookingDetails.guests || bookingDetails.numberOfGuests) === 1 ? 'Guest' : 'Guests'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
                   {bookingDetails.selectedUnit && (
                     <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
                       <span>{config.unitLabel}</span>
@@ -1389,8 +1500,8 @@ export default function ListingBookingSheet({
                   {isDailyStay && days > 0 && (
                     <div className="space-y-1.5 py-1 text-xs text-slate-300">
                       <div className="flex justify-between items-center">
-                        <span>Base ({days}D × {bookingDetails.rooms || 1} room)</span>
-                        <span>R{((listing?.regularPrice || 0) * days * (Number(bookingDetails.rooms) || 1)).toLocaleString()}</span>
+                        <span>Base ({days}D × {isWholePropertyBooking ? 'full property' : `${bookingDetails.rooms || 1} room${Number(bookingDetails.rooms) === 1 ? '' : 's'}`})</span>
+                        <span>R{((listing?.regularPrice || 0) * days * (isWholePropertyBooking ? 1 : (Number(bookingDetails.rooms) || 1))).toLocaleString()}</span>
                       </div>
                       {bookingDetails.breakfast && (
                         <div className="flex justify-between items-center text-amber-300">

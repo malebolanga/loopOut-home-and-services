@@ -30,8 +30,8 @@ export const CategoriesSlider = ({ navigate, TOP_CATEGORIES = [] }) => {
   };
 
   const handleCategoryClick = (category) => {
-    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny', 'barber'];
-    const services = ['baker', 'carwash', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare', 'storage'];
+    const helpers = ['sneaker', 'washingmat', 'animals', 'domestic', 'tutor', 'maid', 'beauty', 'cleaner', 'nanny', 'barber', 'carwash', 'moving', 'other'];
+    const services = ['baker', 'photograph', 'transport', 'tattoo', 'hair', 'nails', 'massage', 'chef', 'landscaping', 'electrician', 'handyman', 'catering', 'schoolTransport', 'daily', 'daycare', 'storage'];
     const properties = ['rental', 'guesthouse'];
     const needs = ['roommate', 'nanny-need'];
     if (needs.includes(category.id)) navigate('/micro-gigs');

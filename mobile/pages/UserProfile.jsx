@@ -1,8 +1,9 @@
 // UserProfile.jsx - 完整代码（使用Tailwind替代CSS）
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import ImageWithFallback from '../components/ImageWithFallback';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import {
   CalendarIcon,
   MapPinIcon,
@@ -30,12 +31,13 @@ import { FaWhatsapp } from 'react-icons/fa';
 const UserProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'about' ? 'about' : 'overview');
   const [isFollowing, setIsFollowing] = useState(false);
   const [portfolioFilter, setPortfolioFilter] = useState('all');
   const [showFollowList, setShowFollowList] = useState(null); // 'followers', 'following', or null
@@ -46,7 +48,7 @@ const UserProfile = () => {
     const fetchUserData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/user/public/${id}`);
+        const res = await authenticatedFetch(`/api/user/public/${id}`);
         const data = await res.json();
         
         if (!res.ok) throw new Error(data.message || 'Failed to fetch user');
@@ -134,7 +136,7 @@ const UserProfile = () => {
     setShowFollowList(type);
     setFollowListLoading(true);
     try {
-      const res = await fetch(`/api/user/${type}/${id}`);
+      const res = await authenticatedFetch(`/api/user/${type}/${id}`);
       const data = await res.json();
       if (res.ok) {
         setFollowListData(data);
@@ -652,60 +654,80 @@ const UserProfile = () => {
             )}
 
             {activeTab === 'about' && (
-              <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12">
-                 <div className="space-y-8">
-                    <section className="space-y-4">
-                       <h3 className="text-xs font-black uppercase tracking-[0.25em] text-rose-500">Professional Background</h3>
-                       <div className="space-y-4">
-                          <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
-                             <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
-                                <BriefcaseIcon className="w-6 h-6 text-blue-500" />
-                             </div>
-                             <div>
-                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Main Occupation</p>
-                                <p className="text-gray-900 dark:text-white font-extrabold">{userData.occupation || 'Platform Professional'}</p>
-                             </div>
-                          </div>
-                          <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800">
-                             <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center">
-                                <AcademicCapIcon className="w-6 h-6 text-purple-500" />
-                             </div>
-                             <div>
-                                <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">Skills & Expertise</p>
-                                <p className="text-gray-900 dark:text-white font-extrabold">{userData.interests || 'Multi-talented Partner'}</p>
-                             </div>
-                          </div>
-                       </div>
+              <div className="mx-auto max-w-4xl rounded-3xl border border-gray-200 bg-white p-6 sm:p-9 dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex flex-col gap-5 border-b border-gray-200 pb-7 sm:flex-row sm:items-start sm:justify-between dark:border-gray-800">
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">About {userData.username}</h2>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      Member since {userData.createdAt && !Number.isNaN(new Date(userData.createdAt).getTime())
+                        ? new Date(userData.createdAt).toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })
+                        : 'LoopOut'}
+                    </p>
+                  </div>
+                  {currentUser?._id === id && (
+                    <button type="button" onClick={() => navigate('/profile')} className="inline-flex shrink-0 items-center justify-center rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-800 transition hover:border-gray-700 dark:border-gray-700 dark:text-white dark:hover:border-gray-400">
+                      Edit profile
+                    </button>
+                  )}
+                </div>
+
+                {userData.profileVisibility === false && currentUser?._id !== id ? (
+                  <div className="mt-7 rounded-2xl bg-gray-50 p-5 text-sm leading-6 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                    This member has chosen to keep their profile details private.
+                  </div>
+                ) : (
+                  <>
+
+                    <section className="border-b border-gray-200 py-7 dark:border-gray-800">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">About me</h3>
+                      <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-gray-700 dark:text-gray-300">
+                        {userData.bio || 'This member hasn’t added a bio yet.'}
+                      </p>
                     </section>
 
-                    <section className="space-y-4">
-                       <h3 className="text-xs font-black uppercase tracking-[0.25em] text-rose-500">Social Reach</h3>
-                       <div className="flex gap-4">
+                    <section className="space-y-5 py-7">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">A few details</h3>
+                      {[
+                    { label: 'Lives in', value: userData.location, icon: <MapPinIcon className="h-5 w-5" /> },
+                    { label: 'Work', value: userData.occupation, icon: <BriefcaseIcon className="h-5 w-5" /> },
+                    { label: 'Interests', value: userData.interests, icon: <HeartIcon className="h-5 w-5" /> },
+                      ].filter((item) => item.value).map((item) => (
+                        <div key={item.label} className="flex items-start gap-4 text-gray-700 dark:text-gray-300">
+                          <span className="mt-0.5 text-gray-500 dark:text-gray-400">{item.icon}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.label}</p>
+                            <p className="mt-0.5 text-sm">{item.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {userData.isVerified && (
+                        <div className="flex items-center gap-4 text-gray-700 dark:text-gray-300">
+                          <ShieldCheckIcon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">Identity verified</p>
+                            <p className="mt-0.5 text-sm">This member has verified their identity.</p>
+                          </div>
+                        </div>
+                      )}
+                    </section>
+
+                    {(userData.website || userData.socialMedia) && (
+                      <section className="border-t border-gray-200 pt-6 dark:border-gray-800">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Links</h3>
+                        <div className="mt-4 flex flex-wrap gap-3">
                           {[
-                             { label: 'Website', icon: <GlobeAltIcon className="w-5 h-5" />, value: userData.website },
-                             { label: 'Social', icon: <UserCircleIcon className="w-5 h-5" />, value: userData.socialMedia }
-                          ].map((item, i) => (
-                             item.value && (
-                                <a key={i} href={item.value.startsWith('http') ? item.value : `https://${item.value}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-3 py-4 border-2 border-gray-100 dark:border-gray-800 rounded-2xl font-bold text-gray-700 dark:text-white hover:border-rose-500 hover:text-rose-600 transition-all">
-                                   {item.icon}
-                                   {item.label}
-                                </a>
-                             )
+                            { label: 'Website', value: userData.website },
+                            { label: 'Social profile', value: userData.socialMedia },
+                          ].filter((item) => item.value).map(({ label, value }) => (
+                            <a key={label} href={value.startsWith('http') ? value : `https://${value}`} target="_blank" rel="noreferrer" className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:border-gray-700 dark:border-gray-700 dark:text-white dark:hover:border-gray-400">
+                              {label}
+                            </a>
                           ))}
-                       </div>
-                    </section>
-                 </div>
-
-                 <div className="space-y-8">
-                    <section className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[3rem] border border-gray-100 dark:border-gray-800 space-y-6">
-                       <h3 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">Partner Bio</h3>
-                       <div className="prose prose-rose">
-                          <p className="text-gray-600 dark:text-white leading-relaxed font-medium">
-                            {userData.bio || "No detailed autobiographical data available for this loopOut partner. We recommend messaging the host directly for more specific inquiries about their experience or vision."}
-                          </p>
-                       </div>
-                    </section>
-                 </div>
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>

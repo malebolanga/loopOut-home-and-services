@@ -3,35 +3,17 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
-  HomeIcon, 
-  UserGroupIcon, 
-  BriefcaseIcon, 
-  ShoppingBagIcon,
   CheckCircleIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   ArrowRightIcon,
-  QuestionMarkCircleIcon,
-  ChevronDownIcon,
-  InformationCircleIcon
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { 
-  UtensilsCrossed, 
-  Store, 
   CheckCircle2, 
-  AlertCircle, 
-  Building2, 
-  Calendar, 
-  BadgePercent, 
-  Coins, 
-  Zap, 
+  AlertCircle,
   HelpCircle,
-  Clock,
-  MapPin,
-  Camera,
   FileCheck2,
-  ArrowLeft,
-  Sparkles
+  ArrowLeft
 } from 'lucide-react';
 import { updateUserSuccess } from '../redux/user/userSlice';
 import { getServiceProviderVerificationStatus } from '../utils/offeringPermissions';
@@ -64,7 +46,7 @@ const PROVIDER_ROLES = [
       'Verified guest profiles with review histories',
       'Full control over pricing, calendar availability, and booking rules'
     ],
-    actionText: 'Convert to Property Host',
+    actionText: 'Enable Property Host tools',
     actionRoute: (uid) => `/${uid}/create-listing?tab=stays`
   },
   {
@@ -95,7 +77,7 @@ const PROVIDER_ROLES = [
       'In-app chat and scheduling system',
       'Direct client booking requests and secure payments'
     ],
-    actionText: 'Convert to Service Provider',
+    actionText: 'Enable Service Provider tools',
     actionRoute: (uid) => `/${uid}/create-listing?tab=experiences`
   },
   {
@@ -126,7 +108,7 @@ const PROVIDER_ROLES = [
       'Live order management system (Pending, Preparing, Ready for Collection)',
       'Table booking requests with guest count and date/time reservations'
     ],
-    actionText: 'Convert to Food Shop Owner',
+    actionText: 'Enable Food Shop tools',
     actionRoute: () => '/food/register'
   },
   {
@@ -156,7 +138,7 @@ const PROVIDER_ROLES = [
       'Direct buyer messaging with location privacy protection',
       'Mark items sold with a single tap'
     ],
-    actionText: 'Convert to Goods Seller',
+    actionText: 'Enable Goods Seller tools',
     actionRoute: (uid) => `/${uid}/create-listing?tab=selling`
   }
 ];
@@ -206,7 +188,6 @@ export default function Become() {
   }, [roleParam]);
 
   const currentRoleInfo = PROVIDER_ROLES.find((r) => r.id === selectedRole) || PROVIDER_ROLES[0];
-  const isViewer = !currentUser || currentUser?.offeringType === 'viewer';
   const isAlreadyThisRole = currentUser?.offeringType === selectedRole;
   const verificationStatus = getServiceProviderVerificationStatus(currentUser);
 
@@ -273,46 +254,31 @@ export default function Become() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-base sm:text-lg font-bold leading-tight">Become a Provider</h1>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Upgrade your LoopOut account to start earning</p>
+              <h1 className="text-base sm:text-lg font-bold leading-tight">Start offering on LoopOut</h1>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Choose what you want to list</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {currentUser && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-gray-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Current Role: {currentUser.offeringType ? (currentUser.offeringType === 'viewer' ? 'Browsing Only' : currentUser.offeringType) : 'Standard'}
-              </span>
-            )}
-          </div>
+          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">Provider options</span>
         </div>
       </header>
 
       {/* ── Hero Advisory Banner ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-gray-900 to-rose-950 text-white py-12 px-4 sm:px-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(225,29,72,0.18),transparent_50%)] pointer-events-none" />
-        <div className="max-w-4xl mx-auto text-center relative z-10 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Provider Transition Guide
+      <section className="border-b border-slate-200 bg-white px-4 py-7 dark:border-gray-800 dark:bg-gray-900 sm:px-6 sm:py-9">
+        <div className="mx-auto max-w-5xl">
+          <div className="max-w-3xl space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Account setup</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Choose what you want to offer</h2>
+            <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
+              Select the category that fits what you want to list. You can still browse, book, and make requests with any category.
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
-            Ready to share your space, skill, or food?
-          </h2>
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
-            Your account is currently set for browsing, booking, and requests. To list properties, offer services, or register a food shop, review the requirements below and convert your account in one click.
-          </p>
 
           {/* Current Status Box */}
           {currentUser && (
-            <div className="mt-6 inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl bg-white/10 backdrop-blur-md px-4 py-2.5 text-xs text-slate-200 border border-white/15">
-              <span>Signed in as <strong className="text-white font-semibold">{currentUser.username}</strong></span>
-              <span className="text-white/40">•</span>
-              <span>Account Type: <span className="font-bold text-amber-300 uppercase tracking-wide">{currentUser.offeringType || 'viewer'}</span></span>
-              {currentUser.offeringType === 'viewer' && (
-                <span className="ml-1 rounded-full bg-amber-500/20 text-amber-300 px-2 py-0.5 text-[10px] font-bold border border-amber-400/30">
-                  Ready to upgrade
-                </span>
-              )}
+            <div className="mt-5 inline-flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-300">
+              <span>Signed in as <strong className="font-semibold text-slate-900 dark:text-white">{currentUser.username}</strong></span>
+              <span aria-hidden="true">·</span>
+              <span>Current option: <strong className="font-semibold text-slate-900 dark:text-white">{PROVIDER_ROLES.find((role) => role.id === currentUser.offeringType)?.name || 'Browse and request'}</strong></span>
             </div>
           )}
         </div>
@@ -330,16 +296,16 @@ export default function Become() {
       )}
 
       {/* ── Main Provider Selection Tabs ── */}
-      <main className="max-w-5xl mx-auto mt-8 px-4 sm:px-6 space-y-10">
+      <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 sm:py-10">
         <div>
-          <h3 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
-            Select what you would like to offer:
+          <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white mb-1">
+            Available categories
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-            Review the requirements and process for each role. You can switch to any role that fits your business.
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
+            Select a category to review what you can list and what you will need. Your account changes only after you confirm.
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {PROVIDER_ROLES.map((role) => {
               const active = selectedRole === role.id;
               const isCurrent = currentUser?.offeringType === role.id;
@@ -347,10 +313,11 @@ export default function Become() {
                 <button
                   key={role.id}
                   onClick={() => setSelectedRole(role.id)}
-                  className={`p-4 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between ${
+                  aria-pressed={active}
+                  className={`min-h-28 rounded-xl border p-4 text-left transition-colors relative flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2 ${
                     active
-                      ? `${role.lightBg} ${role.border} ring-2 ring-rose-500 shadow-md`
-                      : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 hover:border-slate-300 dark:hover:border-gray-700 shadow-sm'
+                    ? 'border-rose-500 bg-rose-50/50 ring-1 ring-rose-500 dark:border-rose-400 dark:bg-rose-950/20 dark:ring-rose-400'
+                      : 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 hover:border-rose-300 hover:shadow-sm dark:hover:border-rose-800'
                   }`}
                 >
                   {isCurrent && (
@@ -359,14 +326,13 @@ export default function Become() {
                     </span>
                   )}
                   <div>
-                    <span className="text-2xl mb-2 block">{role.emoji}</span>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white leading-tight">{role.name}</h4>
-                    <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-1 block">{role.badge}</span>
+                    <span className="mb-3 block text-2xl" aria-hidden="true">{role.emoji}</span>
+                    <h4 className="font-semibold text-sm text-slate-900 dark:text-white leading-tight">{role.name}</h4>
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 block">{role.badge}</span>
                   </div>
                   {active && (
                     <div className="mt-3 flex items-center gap-1 text-[11px] font-bold text-rose-600 dark:text-rose-400">
-                      <span>View details</span>
-                      <ArrowRightIcon className="w-3 h-3" />
+                      <span>Selected</span>
                     </div>
                   )}
                 </button>
@@ -381,15 +347,15 @@ export default function Become() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="bg-white dark:bg-gray-900 rounded-3xl border border-slate-200 dark:border-gray-800 shadow-xl overflow-hidden"
+          className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
         >
           {/* Header Banner */}
-          <div className={`p-6 sm:p-8 bg-gradient-to-r ${currentRoleInfo.color} text-white`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="border-b border-slate-100 bg-white px-5 py-5 dark:border-gray-800 dark:bg-gray-900 sm:px-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <span className="inline-block text-3xl mb-1">{currentRoleInfo.emoji}</span>
-                <h3 className="text-2xl sm:text-3xl font-black">{currentRoleInfo.name}</h3>
-                <p className="text-sm text-white/90 max-w-xl">{currentRoleInfo.tagline}</p>
+                <p className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400"><span className="text-xl" aria-hidden="true">{currentRoleInfo.emoji}</span>{currentRoleInfo.badge}</p>
+                <h3 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">{currentRoleInfo.name}</h3>
+                <p className="max-w-xl text-sm leading-5 text-slate-600 dark:text-slate-300">{currentRoleInfo.tagline}</p>
               </div>
 
               {/* Action Button */}
@@ -401,7 +367,7 @@ export default function Become() {
                         const dest = typeof currentRoleInfo.actionRoute === 'function' ? currentRoleInfo.actionRoute(currentUser._id) : currentRoleInfo.actionRoute;
                         navigate(dest);
                       }}
-                      className="px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-bold text-sm shadow-lg transition active:scale-95 flex items-center gap-2"
+                      className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
                     >
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       <span>Open Provider Workspace</span>
@@ -410,16 +376,15 @@ export default function Become() {
                     <button
                       onClick={() => handleConvertRole(currentRoleInfo.id)}
                       disabled={converting}
-                      className="px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-bold text-sm shadow-lg transition active:scale-95 disabled:opacity-75 flex items-center gap-2"
+                      className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600 disabled:opacity-60"
                     >
-                      <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
                       <span>{converting ? 'Converting...' : currentRoleInfo.actionText}</span>
                     </button>
                   )
                 ) : (
                   <button
                     onClick={() => navigate('/sign-up')}
-                    className="px-6 py-3 rounded-xl bg-white text-slate-900 hover:bg-slate-100 font-bold text-sm shadow-lg transition active:scale-95 flex items-center gap-2"
+                    className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-600"
                   >
                     <span>Sign Up to {currentRoleInfo.name}</span>
                     <ArrowRightIcon className="w-4 h-4" />
@@ -430,24 +395,24 @@ export default function Become() {
           </div>
 
           {/* Details Body */}
-          <div className="p-6 sm:p-8 space-y-8">
+          <div className="space-y-6 p-5 sm:p-7">
             {/* Overview */}
             <div>
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Role Overview</h4>
+              <h4 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">About this category</h4>
               <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                 {currentRoleInfo.description}
               </p>
             </div>
 
             {/* What you can list */}
-            <div className="rounded-2xl p-5 bg-slate-50 dark:bg-gray-800/50 border border-slate-100 dark:border-gray-800">
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
-                <Store className="w-4 h-4 text-rose-500" /> What You Can List
+            <div className="rounded-2xl bg-slate-50 p-5 dark:bg-gray-800/50">
+              <h4 className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
+                What you can list
               </h4>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {currentRoleInfo.whatYouCanList.map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <li key={idx} className="flex items-start gap-2 text-sm leading-5 text-slate-700 dark:text-slate-300">
+                    <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -456,19 +421,19 @@ export default function Become() {
 
             {/* Live KYC Verification Status (Service Providers) */}
             {currentRoleInfo.id === 'services' && currentUser && (
-              <div className={`rounded-2xl p-5 border ${
+              <div className={`rounded-lg border p-4 ${
                 verificationStatus.isCompliant
                   ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/30'
                   : 'border-amber-200 bg-amber-50/70 dark:border-amber-900 dark:bg-amber-950/30'
               }`}>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-2.5">
                     <ShieldCheckIcon className={`w-5 h-5 ${verificationStatus.isCompliant ? 'text-emerald-600' : 'text-amber-600'}`} />
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                       Your Service Provider Verification Status
                     </h4>
                   </div>
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full w-fit ${
+                  <span className={`w-fit rounded-md px-2.5 py-1 text-xs font-semibold ${
                     verificationStatus.isCompliant
                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300'
                       : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300'
@@ -477,7 +442,7 @@ export default function Become() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                <div className="grid grid-cols-1 gap-2.5 text-xs sm:grid-cols-3">
                   <div className={`p-3 rounded-xl border flex items-center justify-between ${
                     verificationStatus.hasIdDocument ? 'bg-white dark:bg-gray-900 border-emerald-200 text-emerald-700' : 'bg-white/80 dark:bg-gray-900 border-slate-200 text-slate-600'
                   }`}>
@@ -505,7 +470,7 @@ export default function Become() {
                     </p>
                     <button
                       onClick={() => navigate('/verification')}
-                      className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-sm transition whitespace-nowrap flex items-center justify-center gap-1.5"
+                      className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                     >
                       <span>Complete Verification</span>
                       <ArrowRightIcon className="w-3.5 h-3.5" />
@@ -517,64 +482,30 @@ export default function Become() {
 
             {/* What you need to prepare (Requirements) */}
             <div>
-              <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                <FileCheck2 className="w-4 h-4 text-rose-500" /> What You Need To Prepare
+              <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                <FileCheck2 className="h-4 w-4 text-slate-500" /> What you will need
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {currentRoleInfo.requirements.map((req, idx) => (
                   <div
                     key={idx}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900/60 shadow-xs space-y-1"
+                    className="space-y-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-gray-800 text-[10px] font-bold text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-slate-100 text-[10px] font-semibold text-slate-600 dark:bg-gray-800 dark:text-slate-400">
                         {idx + 1}
                       </span>
-                      <h5 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">{req.title}</h5>
+                      <h5 className="text-sm font-semibold text-slate-900 dark:text-white">{req.title}</h5>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 pl-7 leading-relaxed">{req.desc}</p>
+                    <p className="pl-7 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{req.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Key Benefits */}
-            <div className="rounded-2xl p-5 border border-emerald-100 bg-emerald-50/50 dark:border-emerald-950 dark:bg-emerald-950/20">
-              <h4 className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400 mb-3 flex items-center gap-2">
-                <Coins className="w-4 h-4" /> Provider Perks & Protections
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {currentRoleInfo.benefits.map((b, i) => (
-                  <div key={i} className="text-xs text-emerald-900 dark:text-emerald-200 font-medium flex items-start gap-2">
-                    <span className="text-emerald-500 font-bold">•</span>
-                    <span>{b}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Conversion CTA Footer Bar */}
-            <div className="pt-4 border-t border-slate-100 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-xs text-slate-500 dark:text-slate-400">
-                {isAlreadyThisRole ? (
-                  <span className="text-emerald-600 font-bold">You already have access to this role. Start listing whenever you are ready!</span>
-                ) : (
-                  <span>Converting will instantly enable creation tools for <strong className="text-slate-800 dark:text-slate-200">{currentRoleInfo.name}</strong> on your profile.</span>
-                )}
-              </div>
-              <div>
-                {currentUser && !isAlreadyThisRole && (
-                  <button
-                    onClick={() => handleConvertRole(currentRoleInfo.id)}
-                    disabled={converting}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 text-white font-bold text-xs shadow-md hover:opacity-95 transition disabled:opacity-60 flex items-center justify-center gap-2"
-                  >
-                    <span>{converting ? 'Converting...' : currentRoleInfo.actionText}</span>
-                    <ArrowRightIcon className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
+            <p className="border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500 dark:border-gray-800 dark:text-slate-400">
+              {isAlreadyThisRole ? 'This is already your active option. Open your provider workspace whenever you are ready.' : 'Choosing an option adds its listing tools to your account. Browsing and booking remain available.'}
+            </p>
           </div>
         </motion.div>
 
@@ -591,7 +522,7 @@ export default function Become() {
               return (
                 <div
                   key={i}
-                  className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-xs"
+                  className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-gray-800 dark:bg-gray-900"
                 >
                   <button
                     onClick={() => setOpenFaq(isOpen ? null : i)}

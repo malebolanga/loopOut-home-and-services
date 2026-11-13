@@ -112,7 +112,7 @@ const FoodCard = ({ item }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16, scale: 0.95 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-slate-100 flex flex-col"
+      className="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col"
     >
       {/* Image */}
       <div className="home-image-card relative aspect-[4/3] overflow-hidden bg-slate-100 shrink-0">

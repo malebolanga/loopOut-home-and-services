@@ -170,6 +170,9 @@ const HEADER_CATEGORY_ICONS = {
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
+  const hostingMenuPath = currentUser?.offeringType && currentUser.offeringType !== 'viewer' ? '/hosting-menu' : '/become';
+  const hostingMenuLabel = hostingMenuPath === '/hosting-menu' ? 'Hosting menu' : 'Become a host or provider';
+  const hostingMenuDescription = hostingMenuPath === '/hosting-menu' ? 'Manage your hosting account and listings' : 'Choose property, services, food, or goods';
   const { hideHeader } = useSelector((state) => state.frontend || {});
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('all');
@@ -811,15 +814,15 @@ export default function Header() {
 
           <button
             type="button"
-            onClick={() => handleNavigate('/become')}
+            onClick={() => handleNavigate(hostingMenuPath)}
             className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
               <Sparkles className="h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
-              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+              <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
             </span>
             <ChevronRightIcon className="h-4 w-4 text-rose-500" />
           </button>
@@ -856,15 +859,15 @@ export default function Header() {
           >Create Account</button>
           <button
             type="button"
-            onClick={() => handleNavigate('/become')}
+            onClick={() => handleNavigate(hostingMenuPath)}
             className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
               <Sparkles className="h-5 w-5" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
-              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+              <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
             </span>
             <ChevronRightIcon className="h-4 w-4 text-rose-500" />
           </button>

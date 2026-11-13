@@ -133,7 +133,7 @@ const InquiryModal = ({ listing, onClose }) => {
       `*🏠 RENTAL INQUIRY & VIEWING*%0A%0A` +
       `*Property:* ${listing.name}%0A` +
       `*Address:* ${listing.address}%0A` +
-      `*Price:* R${listing.regularPrice?.toLocaleString()}/month%0A%0A` +
+      `*Price:* R${listing.regularPrice?.toLocaleString()}/${listing.pricePeriod || (listing.kind === 'house' ? 'day' : 'month')}%0A%0A` +
       `*Name:* ${form.name}%0A` +
       `*Phone:* ${form.phone}%0A`;
     if (form.email) msg += `*Email:* ${form.email}%0A`;
@@ -577,7 +577,7 @@ export default function RentPage() {
               <div className="bg-gray-950 p-8">
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-white">R{price?.toLocaleString()}</span>
-                  <span className="text-gray-400 font-bold text-sm">/month</span>
+                  <span className="text-gray-400 font-bold text-sm">/{listing.pricePeriod || (listing.kind === 'house' ? 'day' : 'month')}</span>
                 </div>
                 {hasDiscount && (
                   <div className="mt-2 flex items-center gap-2">

@@ -14,6 +14,7 @@ import Shop from '../models/shop.model.js';
 import TableBooking from '../models/tableBooking.model.js';
 import FoodOrder from '../models/foodOrder.model.js';
 import UserSectionActivity from '../models/userSectionActivity.model.js';
+import UserActivityHistory from '../models/userActivityHistory.model.js';
 import UserLoginArea from '../models/userLoginArea.model.js';
 import { isLoopOutAdminEmail } from '../utils/requireLoopOutAdmin.js';
 import { invalidateAccountStatusCache } from '../utils/verifyUser.js';
@@ -115,7 +116,7 @@ export const getAdminUsers = async (req, res, next) => {
     const pageSize = 50;
     const [total, users] = await Promise.all([
       User.countDocuments(),
-      User.find({}, 'username email avatar location offeringType isVerified lastLogin lastLoginRecorded createdAt shareActivityWithAdmins accountStatus accountStatusNote shareLoginGpsArea')
+      User.find({}, 'username email avatar location offeringType isVerified lastLogin lastLoginRecorded createdAt shareActivityWithAdmins shareDetailedActivityWithAdmins accountStatus accountStatusNote shareLoginGpsArea')
         .sort({ lastLoginRecorded: -1, lastLogin: -1, createdAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
     ]);
     const ids = users.map((user) => user._id);
@@ -172,25 +173,40 @@ export const getAdminPerformance = async (req, res, next) => {
   try {
     const now = new Date();
     const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const optedInUsers = await User.find({ shareActivityWithAdmins: true }).distinct('_id');
-    const [activityRows, propertyPosts, servicePosts, helperPosts, foodShops, eventPosts, salePosts, bookingRows, foodReservations, foodOrders] = await Promise.all([
+    const [optedInUsers, suspendedOwnerIds] = await Promise.all([
+      User.find({ shareActivityWithAdmins: true }).distinct('_id'),
+      getSuspendedOwnerIds(),
+    ]);
+    const excludeSuspended = (...fields) => suspendedOwnerIds.length
+      ? { $nor: fields.map((field) => ({ [field]: { $in: suspendedOwnerIds } })) }
+      : {};
+    const excludeSuspendedShops = suspendedOwnerIds.length
+      ? { $nor: [{ ownerId: { $in: suspendedOwnerIds.map(String) } }] }
+      : {};
+    const [activityRows, propertyPosts, servicePosts, helperPosts, foodShops, eventPosts, salePosts, bookingRows, foodReservations, foodOrders, goodsRequests] = await Promise.all([
       optedInUsers.length ? UserSectionActivity.aggregate([
         { $match: { userId: { $in: optedInUsers }, createdAt: { $gte: since } } },
         { $group: { _id: '$section', count: { $sum: 1 }, durationSeconds: { $sum: '$durationSeconds' } } },
       ]) : Promise.resolve([]),
-      Listing.countDocuments({ listingType: 'property' }), Service.countDocuments(), Helper.countDocuments(), Shop.countDocuments(), Event.countDocuments(), Sell.countDocuments(),
+      Listing.countDocuments({ $and: [{ listingType: 'property' }, excludeSuspended('userRef')] }),
+      Service.countDocuments(excludeSuspended('userRef', 'creator')),
+      Helper.countDocuments(excludeSuspended('userRef', 'creator')),
+      Shop.countDocuments(excludeSuspendedShops),
+      Event.countDocuments(excludeSuspended('userRef')),
+      Sell.countDocuments(excludeSuspended('creator')),
       Booking.aggregate([
         { $match: { createdAt: { $gte: since } } },
         { $project: { category: { $switch: { branches: [
-          { case: { $ne: ['$listing', null] }, then: 'Property' },
-          { case: { $ne: ['$service', null] }, then: 'Services' },
-          { case: { $ne: ['$helper', null] }, then: 'Helpers' },
-          { case: { $ne: ['$event', null] }, then: 'Events' },
+          { case: { $eq: [{ $type: '$listing' }, 'objectId'] }, then: 'Property' },
+          { case: { $eq: [{ $type: '$service' }, 'objectId'] }, then: 'Services' },
+          { case: { $eq: [{ $type: '$helper' }, 'objectId'] }, then: 'Helpers' },
+          { case: { $eq: [{ $type: '$event' }, 'objectId'] }, then: 'Events' },
         ], default: 'Other' } } } },
         { $group: { _id: '$category', count: { $sum: 1 } } },
       ]),
       TableBooking.countDocuments({ createdAt: { $gte: since } }),
       FoodOrder.countDocuments({ createdAt: { $gte: since } }),
+      GoodsOrder.countDocuments({ createdAt: { $gte: since } }),
     ]);
     const sectionCounts = Object.fromEntries(activityRows.map(({ _id, count }) => [_id, count]));
     const sectionSeconds = Object.fromEntries(activityRows.map(({ _id, durationSeconds = 0 }) => [_id, durationSeconds]));
@@ -198,14 +214,15 @@ export const getAdminPerformance = async (req, res, next) => {
     const bookingCounts = Object.fromEntries(bookingRows.map(({ _id, count }) => [_id, count]));
     const categories = [
       { key: 'Food', label: 'Food', activity: (sectionCounts.Food || 0) + (sectionCounts.Shops || 0), activeMinutes: sectionTime('Food') + sectionTime('Shops'), posts: foodShops, bookings: foodReservations, orders: foodOrders },
-      { key: 'Property', label: 'Property', activity: (sectionCounts.Property || 0) + (sectionCounts.Listings || 0), activeMinutes: sectionTime('Property') + sectionTime('Listings'), posts: propertyPosts, bookings: bookingCounts.Property || 0, orders: null },
+      { key: 'Property', label: 'Property', activity: sectionCounts.Property || 0, activeMinutes: sectionTime('Property'), posts: propertyPosts, bookings: bookingCounts.Property || 0, orders: null },
       { key: 'Services', label: 'Services', activity: sectionCounts.Services || 0, activeMinutes: sectionTime('Services'), posts: servicePosts, bookings: bookingCounts.Services || 0, orders: null },
       { key: 'Helpers', label: 'Helpers', activity: sectionCounts.Helpers || 0, activeMinutes: sectionTime('Helpers'), posts: helperPosts, bookings: bookingCounts.Helpers || 0, orders: null },
       { key: 'Events', label: 'Events', activity: sectionCounts.Events || 0, activeMinutes: sectionTime('Events'), posts: eventPosts, bookings: bookingCounts.Events || 0, orders: null },
-      { key: 'Sell', label: 'Items for sale', activity: sectionCounts.Sell || 0, activeMinutes: sectionTime('Sell'), posts: salePosts, bookings: null, orders: null },
+      { key: 'Sell', label: 'Items for sale', activity: sectionCounts.Sell || 0, activeMinutes: sectionTime('Sell'), posts: salePosts, bookings: null, orders: goodsRequests },
+      { key: 'LegacyListings', label: 'Older, unclassified listing activity', activity: sectionCounts.Listings || 0, activeMinutes: sectionTime('Listings'), posts: null, bookings: null, orders: null },
       { key: 'Other', label: 'Other app sections', activity: ['Home', 'Search', 'Bookings', 'Messages', 'Profile', 'Other'].reduce((sum, key) => sum + (sectionCounts[key] || 0), 0), activeMinutes: ['Home', 'Search', 'Bookings', 'Messages', 'Profile', 'Other'].reduce((sum, key) => sum + sectionTime(key), 0), posts: null, bookings: null, orders: null },
     ];
-    return res.json({ success: true, generatedAt: now.toISOString(), period: { startsAt: since.toISOString(), endsAt: now.toISOString() }, activityAvailable: optedInUsers.length > 0, timeAvailable: categories.some((category) => category.activeMinutes > 0), activityOptedInUsers: optedInUsers.length, activityNote: 'Sampled section activity and visible-tab time from users who opted in; it does not count individual clicks. Active-time collection starts with this update.', postsNote: 'Current records in each post collection; Food counts shops and Items for sale counts Sell posts.', bookingsNote: 'Bookings created in the last 30 days; Food counts restaurant table reservations; food orders are shown separately.', categories });
+    return res.json({ success: true, generatedAt: now.toISOString(), period: { startsAt: since.toISOString(), endsAt: now.toISOString() }, activityAvailable: optedInUsers.length > 0, timeAvailable: categories.some((category) => category.activeMinutes > 0), activityOptedInUsers: optedInUsers.length, activityNote: 'Sampled section activity and visible-tab time from users who opted in; it does not count individual clicks. Active-time collection starts with this update. Older Listings activity is kept unclassified because the previous tracker combined property and sale pages.', postsNote: 'Current post records visible to users; content owned by suspended accounts is excluded. Food counts shops.', bookingsNote: 'Booking requests created in the last 30 days, including all statuses; Food counts restaurant reservations. The orders series counts food orders in Food and item purchase requests in Items for sale, including all statuses.', categories });
   } catch (error) { return next(error); }
 };
 
@@ -254,6 +271,53 @@ export const recordLoginArea = async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
+};
+
+export const setDetailedActivitySharing = async (req, res, next) => {
+  try {
+    if (typeof req.body?.enabled !== 'boolean') return res.status(400).json({ success: false, message: 'Choose whether to share detailed activity history.' });
+    const user = await User.findByIdAndUpdate(req.user.id, { $set: { shareDetailedActivityWithAdmins: req.body.enabled } }, { new: true }).select('shareDetailedActivityWithAdmins');
+    if (!user) return res.status(404).json({ success: false, message: 'Account not found.' });
+    if (!req.body.enabled) await UserActivityHistory.deleteMany({ userId: user._id });
+    return res.json({ success: true, enabled: user.shareDetailedActivityWithAdmins });
+  } catch (error) { return next(error); }
+};
+
+export const recordDetailedUserActivity = async (req, res, next) => {
+  try {
+    const allowedActions = ['page_view', 'search_submitted', 'booking_started', 'booking_submitted', 'property_listing_started', 'service_listing_started', 'helper_listing_started', 'sale_item_started', 'listing_step_completed', 'listing_published', 'food_order_submitted', 'table_reservation_submitted', 'item_request_submitted', 'profile_updated'];
+    const allowedSections = ['Home', 'Search', 'Listings', 'Property', 'Services', 'Helpers', 'Food', 'Shops', 'Events', 'Bookings', 'Messages', 'Sell', 'Profile', 'Other'];
+    const allowedWorkflows = ['property', 'service', 'helper', 'sale', 'food', 'booking', 'profile'];
+    const allowedSteps = ['category', 'details', 'pricing', 'availability', 'photos', 'review', 'submitted'];
+    const { action, section, pageKey, workflow, step } = req.body || {};
+    if (!allowedActions.includes(action) || !allowedSections.includes(section)) return res.status(400).json({ success: false, message: 'Unsupported activity event.' });
+    const allowedPages = ['home', 'search', 'property', 'service', 'helper', 'food', 'shop', 'event', 'booking', 'messages', 'profile', 'sell', 'other'];
+    if (pageKey !== undefined && !allowedPages.includes(pageKey)) return res.status(400).json({ success: false, message: 'Unsupported activity page.' });
+    if (action === 'page_view' && !allowedPages.includes(pageKey)) return res.status(400).json({ success: false, message: 'A supported activity page is required.' });
+    if (workflow !== undefined && !allowedWorkflows.includes(workflow)) return res.status(400).json({ success: false, message: 'Unsupported activity workflow.' });
+    if (step !== undefined && !allowedSteps.includes(step)) return res.status(400).json({ success: false, message: 'Unsupported workflow step.' });
+    if ((action === 'listing_step_completed' || action === 'listing_published') && (!['property', 'service', 'helper', 'sale'].includes(workflow) || (!step && action === 'listing_step_completed'))) return res.status(400).json({ success: false, message: 'A supported listing workflow and step are required.' });
+    const user = await User.findById(req.user.id).select('shareDetailedActivityWithAdmins');
+    if (!user?.shareDetailedActivityWithAdmins) return res.status(204).end();
+    await UserActivityHistory.create({ userId: user._id, action, section, ...(pageKey ? { pageKey } : {}), ...(workflow ? { workflow } : {}), ...(step ? { step } : {}) });
+    return res.status(204).end();
+  } catch (error) { return next(error); }
+};
+
+export const getAdminUserActivityHistory = async (req, res, next) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.userId)) return res.status(400).json({ success: false, message: 'Choose a valid user.' });
+    const page = Math.max(1, Math.min(10000, Number.parseInt(req.query.page, 10) || 1));
+    const pageSize = 100;
+    const user = await User.findById(req.params.userId).select('shareDetailedActivityWithAdmins').lean();
+    if (!user) return res.status(404).json({ success: false, message: 'User account not found.' });
+    if (!user.shareDetailedActivityWithAdmins) return res.json({ success: true, enabled: false, total: 0, page, pageSize, events: [] });
+    const [total, events] = await Promise.all([
+      UserActivityHistory.countDocuments({ userId: req.params.userId }),
+      UserActivityHistory.find({ userId: req.params.userId }).select('section action pageKey workflow step createdAt').sort({ createdAt: -1 }).skip((page - 1) * pageSize).limit(pageSize).lean(),
+    ]);
+    return res.json({ success: true, enabled: true, total, page, pageSize, events });
+  } catch (error) { return next(error); }
 };
 
 export const updateAdminUserStatus = async (req, res, next) => {

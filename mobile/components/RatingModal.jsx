@@ -55,7 +55,28 @@ const BEAUTY_RATING_CATEGORIES = [
   { field: 'hairdressingRating', label: '💇 Hairdressing' },
   { field: 'timelinessRating', label: '⏱️ On time' }
 ];
-const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES].map(({ field }) => [field, 0]));
+const TATTOO_RATING_CATEGORIES = [
+  { field: 'tattooCleaningRating', label: '🧹 Cleaning' },
+  { field: 'tattooCommunicationRating', label: '💬 Communication' },
+  { field: 'tattooEquipmentRating', label: '🧰 Equipment' },
+  { field: 'tattooArtistRating', label: '✍️ Tattoo artist' },
+  { field: 'tattooTimelinessRating', label: '⏱️ On time' }
+];
+const PHOTOGRAPHY_RATING_CATEGORIES = [
+  { field: 'photographyCleanlinessRating', label: '🧹 Cleanliness' },
+  { field: 'camerasRating', label: '📷 Cameras' },
+  { field: 'studioRating', label: '🏢 Studio' },
+  { field: 'photographerRating', label: '📸 Photography' },
+  { field: 'photographyCommunicationRating', label: '💬 Communication' }
+];
+const LISTING_RATING_CATEGORIES = [
+  { field: 'hospitalityRating', label: '🛎️ Hospitality' },
+  { field: 'comfortRating', label: '🛋️ Comfort' },
+  { field: 'locationRating', label: '📍 Location' },
+  { field: 'hostRating', label: '🧑‍💼 Owner / host' },
+  { field: 'cleanlinessRating', label: '🧹 Cleanliness' },
+];
+const EMPTY_CATEGORY_RATINGS = Object.fromEntries([...HELPER_RATING_CATEGORIES, ...CAR_WASH_RATING_CATEGORIES, ...BARBER_RATING_CATEGORIES, ...BEAUTY_RATING_CATEGORIES, ...TATTOO_RATING_CATEGORIES, ...PHOTOGRAPHY_RATING_CATEGORIES, ...LISTING_RATING_CATEGORIES].map(({ field }) => [field, 0]));
 
 export default function RatingModal({ 
   isOpen, 
@@ -100,7 +121,9 @@ export default function RatingModal({
   const helperType = String(helper?.type || booking.subtype || booking.raw?.subtype || '').toLowerCase();
   const isBarberRating = targetType === 'helper' && ['barber', 'barbar'].includes(helperType);
   const isBeautyRating = targetType === 'helper' && ['beauty', 'spa'].includes(helperType);
-  const activeRatingCategories = isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
+  const isTattooRating = targetType === 'helper' && ['tattoo', 'tattoo_artist', 'tattooartist', 'piercing'].includes(helperType);
+  const isPhotographyRating = targetType === 'helper' && ['photography', 'photographer', 'photo'].includes(helperType);
+  const activeRatingCategories = targetType === 'listing' ? LISTING_RATING_CATEGORIES : isCarWashRating ? CAR_WASH_RATING_CATEGORIES : isBarberRating ? BARBER_RATING_CATEGORIES : isBeautyRating ? BEAUTY_RATING_CATEGORIES : isTattooRating ? TATTOO_RATING_CATEGORIES : isPhotographyRating ? PHOTOGRAPHY_RATING_CATEGORIES : HELPER_RATING_CATEGORIES;
   const selectedPerformerName = booking.selectedPerformer || booking.raw?.selectedPerformer;
   const selectedPerformer = helper?.performers?.find((performer) =>
     String(performer.name || '').trim().toLowerCase() === String(selectedPerformerName || '').trim().toLowerCase()
@@ -139,10 +162,15 @@ export default function RatingModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     const isHelperRating = targetType === 'helper';
-    const isCategorizedRating = isHelperRating || targetType === 'service';
+    const isListingRating = targetType === 'listing';
+    const isCategorizedRating = isHelperRating || targetType === 'service' || isListingRating;
     const bookingId = booking.bookingId || booking.id || booking.raw?._id || booking._id;
     const selectedCategoryRatings = Object.fromEntries(Object.entries(categoryRatings).filter(([, value]) => Number(value) >= 1 && Number(value) <= 5));
     const selectedCategoryCount = Object.keys(selectedCategoryRatings).length;
+    if (isListingRating && selectedCategoryCount !== LISTING_RATING_CATEGORIES.length) {
+      setError('Please rate all five stay categories before submitting your review.');
+      return;
+    }
     const submittedRating = isCategorizedRating
       ? selectedCategoryCount
         ? Math.round(Object.values(selectedCategoryRatings).reduce((sum, value) => sum + value, 0) / selectedCategoryCount)
@@ -193,7 +221,9 @@ export default function RatingModal({
         endpoint = '/api/comments';
         payload = {
           ...payload,
-          listingId: targetId
+          listingId: targetId,
+          rating: submittedRating,
+          ...selectedCategoryRatings
         };
       } else if (targetType === 'event') {
         endpoint = '/api/event-comments';
@@ -315,7 +345,7 @@ export default function RatingModal({
                 <p className="text-xs text-white/70 font-semibold truncate mt-0.5">{targetTitle}</p>
                 <div className="flex items-center gap-1.5 mt-1 text-[10px] font-bold text-emerald-400">
                   <ShieldCheckIcon className="w-3.5 h-3.5" />
-                  <span>Booking complete &bull; Your honest feedback helps future clients</span>
+                  <span>{isBarberRating && selectedPerformerName ? `Selected barber: ${selectedPerformerName} · ` : ''}Booking complete &bull; Your honest feedback helps future clients</span>
                 </div>
               </div>
             </div>
@@ -345,9 +375,9 @@ export default function RatingModal({
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Star Rating Section */}
                 <div className="text-center space-y-2">
-                  {targetType === 'helper' || targetType === 'service' ? (
+                  {targetType === 'helper' || targetType === 'service' || targetType === 'listing' ? (
                     <div className="space-y-4 rounded-2xl bg-slate-50 p-4 text-left">
-                      <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">Rate each part of the service</p>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">{targetType === 'listing' ? 'Rate each part of your stay' : 'Rate each part of the service'}</p>
                       {activeRatingCategories.map((category) => (
                         <div key={category.field} className="flex items-center justify-between gap-3">
                           <span className="text-xs font-bold text-slate-700">{category.label}</span>

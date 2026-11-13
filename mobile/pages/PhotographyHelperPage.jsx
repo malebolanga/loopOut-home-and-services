@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -90,6 +92,14 @@ import { useBookedSlots } from '../hooks/useBookedSlots';
 import BookingTimeSlots from '../components/BookingTimeSlots';
 import BookingHistory from '../components/BookingHistory';
 
+const PHOTOGRAPHY_REVIEW_CATEGORIES = [
+  { key: 'photographyCleanliness', field: 'photographyCleanlinessRating', label: 'Cleanliness', emoji: '🧹' },
+  { key: 'cameras',                field: 'camerasRating',                label: 'Cameras',     emoji: '📷' },
+  { key: 'studio',                 field: 'studioRating',                 label: 'Studio',      emoji: '🏢' },
+  { key: 'photographer',           field: 'photographerRating',           label: 'Photography', emoji: '📸' },
+  { key: 'photographyCommunication',field: 'photographyCommunicationRating',label: 'Communication',emoji: '💬' }
+];
+
 export default function PhotographyHelperPage() {
   const [selectedModalService, setSelectedModalService] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
@@ -115,7 +125,8 @@ export default function PhotographyHelperPage() {
   const { isFavorite, toggleFavorite } = useWishlist(helper, 'helper');
   const [ratingLoading, setRatingLoading] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, communication: 0, photographyCleanliness: 0, cameras: 0, studio: 0, photographer: 0, photographyCommunication: 0, overall: 0 });
+  const [ratingCounts, setRatingCounts] = useState({});
   const [topComments, setTopComments] = useState([]);
   const [bookingSummary, setBookingSummary] = useState({ count: 0, recentBookers: [] });
 
@@ -670,51 +681,7 @@ export default function PhotographyHelperPage() {
     postalCode: '',
     country: 'South Africa'
   });
-
-  // Social Media Verification States
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
+;
 
   const [bookingData, setBookingData] = useState({
     name: '',
@@ -774,19 +741,6 @@ export default function PhotographyHelperPage() {
     ownSupplies: false,
   });
   const mobilePrice = bookingData.selectedServices.length > 0 ? totalPrice : startingServicePrice;
-
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
-
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -871,8 +825,14 @@ export default function PhotographyHelperPage() {
               setRatings({
                 cleanliness: data.ratings.cleanliness || 0,
                 communication: data.ratings.staff || 0,
+                photographyCleanliness: data.ratings.photographyCleanliness || 0,
+                cameras: data.ratings.cameras || 0,
+                studio: data.ratings.studio || 0,
+                photographer: data.ratings.photographer || 0,
+                photographyCommunication: data.ratings.photographyCommunication || 0,
                 overall: data.ratings.overall || 0
               });
+              if (data.ratingCounts) setRatingCounts(data.ratingCounts);
             }
           }
         } catch (error) {
@@ -1049,135 +1009,12 @@ export default function PhotographyHelperPage() {
 
   // ==================== END ENHANCED LOCATION FUNCTIONS ====================
 
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
 
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (helperData) => {
-    setVerifyingSocialMedia(true);
-
-    try {
-      // Simulate AI API calls to check social media presence
-      setTimeout(() => {
-        // Generate realistic mock data based on helper information
-        const name = helperData.name || '';
-
-        // AI logic to determine social media presence
-        const hasFacebook = Math.random() > 0.3; // 70% chance
-        const hasInstagram = Math.random() > 0.2; // 80% chance
-        const hasLinkedIn = Math.random() > 0.4; // 60% chance
-        const hasTwitter = Math.random() > 0.5; // 50% chance
-
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
-          verified: Math.random() > 0.8, // Higher verification chance for professionals
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error verifying social media:', error);
-      setVerifyingSocialMedia(false);
-    }
-  };
 
   useEffect(() => {
     const fetchHelper = async () => {
@@ -1196,15 +1033,6 @@ export default function PhotographyHelperPage() {
 
         const data = await res.json();
         setHelper(data);
-
-        // Simulate AI assessment on data load
-        simulateAiAssessment(data);
-
-        // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals'].includes(data.type)) {
-          verifySocialMediaPresence(data);
-        }
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -1255,113 +1083,6 @@ export default function PhotographyHelperPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Simulate AI assessment of helper content
-  const simulateAiAssessment = (helperData) => {
-    // Simulate processing delay
-    setTimeout(() => {
-      const description = helperData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
-
-      // Barber-specific scoring
-      if (helperData.type === 'barber' || helperData.type === 'barbar') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("modern") || description.includes("trends")) descScore += 1;
-        if (description.includes("fade") || description.includes("beard")) descScore += 1;
-      }
-
-      // Beauty-specific scoring
-      if (helperData.type === 'beauty' || helperData.type === 'spa') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("premium") || description.includes("professional")) descScore += 1;
-      }
-
-      // Chef-specific scoring
-      if (helperData.type === 'chef' || helperData.type === 'cooking') {
-        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
-        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
-      }
-
-      // Tattoo-specific scoring
-      if (helperData.type === 'tattoo') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-      }
-
-      // Tutor-specific scoring
-      if (helperData.type === 'tutor') {
-        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
-        if (description.includes("degree") || description.includes("education")) descScore += 1;
-        if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      }
-
-      // Photography-specific scoring
-      if (helperData.type === 'photography') {
-        if (description.includes("certified") || description.includes("professional")) descScore += 2;
-        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
-      }
-
-      // Sneaker cleaner-specific scoring
-      if (helperData.type === 'sneaker') {
-        if (description.includes("professional") || description.includes("experience")) descScore += 2;
-        if (description.includes("products") || description.includes("solutions")) descScore += 1;
-        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
-        if (description.includes("brands") || description.includes("materials")) descScore += 1;
-      }
-
-      // Washing mat-specific scoring
-      if (helperData.type === 'washingmat') {
-        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
-        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
-        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
-        if (description.includes("drying") || description.includes("process")) descScore += 1;
-      }
-
-      // Animal care-specific scoring
-      if (helperData.type === 'animals') {
-        if (description.includes("certified") || description.includes("trained")) descScore += 2;
-        if (description.includes("experience") || description.includes("passion")) descScore += 1;
-        if (description.includes("animals") || description.includes("pets")) descScore += 1;
-        if (description.includes("care") || description.includes("handling")) descScore += 1;
-        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (helperData.imageUrls?.length > 0) imgScore = 3;
-      if (helperData.imageUrls?.length > 2) imgScore = 4;
-      if (helperData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
-    }, 1500);
-  };
 
   // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
@@ -1670,6 +1391,7 @@ export default function PhotographyHelperPage() {
       subtype: helper.type,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -1936,10 +1658,11 @@ export default function PhotographyHelperPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -1976,49 +1699,6 @@ export default function PhotographyHelperPage() {
     setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
-
-  // Simulate AI analysis of comments
-  const analyzeCommentsWithAI = () => {
-    setAnalyzingComments(true);
-
-    // Simulate API call to AI service
-    setTimeout(() => {
-      // Generate random quality scores for comments
-      const analysis = {};
-      const comments = document.querySelectorAll('.comment-item');
-
-      comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
-        analysis[index] = { qualityScore, sentiment };
-      });
-
-      setCommentAnalysis(analysis);
-      setAnalyzingComments(false);
-    }, 2000);
-  };
-
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
 
   // Function to open full-page booking form overlay
   const openBookingFormOverlay = () => {
@@ -2221,31 +1901,9 @@ export default function PhotographyHelperPage() {
         </div>
       </nav>
 
-      {/* Image Gallery - Full Width */}
-      <div className="w-full">
-        {/* Airbnb-style image gallery layout */}
-        {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-            </div>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {helper.imageUrls.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </div>
-              ))}
-              {helper.imageUrls.length < 5 && Array(4 - Math.min(4, helper.imageUrls.length - 1)).fill(null).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-800 h-full" />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <ListingPhotoGallery images={helper.imageUrls} alt={helper.name} onOpen={openFullScreenGallery} emptyEmoji="📸" emptyTitle="Portfolio photos coming soon" emptyDescription="This photographer has not added portfolio photos yet." />
 
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         {/* Content Section */}
         <div className="mb-8 pt-7 border-b border-slate-200 pb-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
@@ -2323,37 +1981,30 @@ export default function PhotographyHelperPage() {
             {(helper.type === 'domestic' || helper.type === 'maid' || helper.type === 'beauty' || helper.type === 'spa' || helper.type === 'barber' || helper.type === 'barbar' || helper.type === 'chef' || helper.type === 'tattoo' || helper.type === 'tutor' || helper.type === 'photography' || helper.type === 'sneaker' || helper.type === 'washingmat' || helper.type === 'animals') && (
               <div className="pb-7 border-b border-slate-200">
                 <h2 className="text-xl font-semibold text-slate-900 mb-4">Choose a service</h2>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid auto-cols-[minmax(180px,1fr)] grid-flow-col grid-rows-2 gap-3 overflow-x-auto overscroll-x-contain pb-2 scrollbar-hide">
                   {serviceOptions.map((service) => {
                     const isSelected = bookingData.selectedServices.includes(service.id);
                     return (
                       <button
-                        key={service.id} 
-                        onClick={() => setSelectedModalService(service)}
+                        key={service.id}
                         type="button"
-                        className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                          isSelected 
-                            ? 'border-rose-500 bg-rose-50 shadow-sm' 
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
+                        onClick={() => setSelectedModalService(service)}
+                        aria-pressed={isSelected}
+                        className={`relative flex min-h-[156px] w-full flex-col items-start gap-2.5 rounded-2xl border p-3.5 text-left transition-all ${isSelected ? 'border-rose-500 bg-rose-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`}
                       >
-                        <div className="flex min-w-0 items-center gap-3">
-                          {service.image ? <img src={service.image} alt={service.name} className="h-16 w-16 shrink-0 rounded-xl border border-slate-100 object-cover object-center" /> : <div className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xl ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{service.icon}</div>}
+                        {isSelected && <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500"><CheckIcon className="h-3 w-3 text-white" /></span>}
+                        <div className="flex w-full min-w-0 items-center gap-2.5 pr-5">
+                          {service.image ? <img src={service.image} alt="" className="h-11 w-11 shrink-0 rounded-xl border border-slate-100 bg-white object-cover" /> : <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-lg ${isSelected ? 'text-rose-500' : 'text-slate-400'}`}>{service.icon}</div>}
                           <div className="min-w-0">
-                            <span className={`text-left font-semibold transition-colors ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</span>
-                            {service.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</p>}
+                            {service.type && <span className={`mb-0.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-semibold ${isSelected ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}`}>{service.type}</span>}
+                            <p className={`line-clamp-2 text-sm font-semibold ${isSelected ? 'text-rose-700' : 'text-slate-900'}`}>{service.name}</p>
                           </div>
                         </div>
-                        {service.price !== undefined && service.price !== null && (
-                          <span className={`shrink-0 text-right font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
-                            {Number(service.price) === 0 ? 'Free' : `R${service.price}`}<span className="block text-[11px] font-normal text-slate-500">per package</span>
-                          </span>
-                        )}
-                        {isSelected && (
-                          <div className="ml-2 w-5 h-5 bg-rose-500 rounded-full flex items-center justify-center">
-                            <CheckIcon className="text-white w-3 h-3" />
-                          </div>
-                        )}
+                        {service.description && <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">{service.description}</p>}
+                        <span className={`mt-auto text-sm font-semibold ${isSelected ? 'text-rose-600' : 'text-slate-900'}`}>
+                          {service.price === undefined || service.price === null ? 'Quote' : Number(service.price) === 0 ? 'Free' : `R${service.price}`}
+                          <span className="ml-1 text-[11px] font-normal text-slate-500">{service.price === undefined || service.price === null ? 'ask for pricing' : 'per service'}</span>
+                        </span>
                       </button>
                     );
                   })}
@@ -2392,44 +2043,61 @@ export default function PhotographyHelperPage() {
               </section>
             )}
 
-            {/* Reviews Summary */}
-            <div className="pb-6 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-8">
-                <StarIconSolid className="text-[#FFB400] text-2xl drop-shadow-sm w-6 h-6" />
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  {ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')} · {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
+            {/* Reviews Summary - Airbnb Style */}
+            <div className="py-6 border-0">
+              <div className="flex items-center gap-3 mb-6">
+                <StarIconSolid className="text-[#FFB400] w-6 h-6 shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>{ratings && ratings.overall > 0 ? ratings.overall.toFixed(1) : (helper.rating || 'New')}</span>
+                  <span className="text-gray-300 dark:text-gray-600" aria-hidden="true">·</span>
+                  <span className="text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    {commentsLoading ? 'Loading reviews…' : `${commentCount} ${commentCount === 1 ? 'review' : 'reviews'}`}
+                  </span>
                 </h2>
               </div>
 
-              {commentCount > 0 ? (
+              {commentsLoading ? (
+                <p className="mb-6 text-gray-500">Loading customer reviews…</p>
+              ) : commentCount > 0 ? (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <FaBroom className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Communication */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800">
-                        <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-700" />
-                        <span>Communication</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.communication?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.communication / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
+                  {/* Airbnb-style Borderless Side-Slide Carousel */}
+                  <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0" aria-label="Photography service rating categories">
+                    <Swiper
+                      spaceBetween={12}
+                      slidesPerView="auto"
+                      freeMode={true}
+                      modules={[FreeMode]}
+                      className="rating-categories-carousel"
+                    >
+                      {PHOTOGRAPHY_REVIEW_CATEGORIES.map(({ key, field, label, emoji }) => {
+                        const score = Number(ratings?.[key]) || 0;
+                        const count = Number(ratingCounts?.[key]) || 0;
+                        const displayScore = score > 0 ? score.toFixed(1) : (ratings?.overall > 0 ? ratings.overall.toFixed(1) : '5.0');
+
+                        return (
+                          <SwiperSlide key={field} className="!w-[130px] sm:!w-[145px]">
+                            <div
+                              className="h-full min-h-[96px] flex flex-col justify-between p-3.5 rounded-2xl bg-gray-50/90 dark:bg-gray-800/50 border-0 transition-all hover:bg-gray-100/90 dark:hover:bg-gray-800/80 cursor-grab active:cursor-grabbing"
+                            >
+                              <div className="flex items-center justify-between gap-1 mb-2">
+                                <span className="text-2xl select-none" aria-hidden="true">{emoji}</span>
+                                <span className="text-base font-bold text-gray-900 dark:text-white">
+                                  {displayScore}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                                  {label}
+                                </p>
+                                <p className="mt-0.5 text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                                  {count > 0 ? `${count} ${count === 1 ? 'rating' : 'ratings'}` : 'Top rated'}
+                                </p>
+                              </div>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                    </Swiper>
                   </div>
 
                   {/* Top Comments Swiper */}
@@ -2447,19 +2115,19 @@ export default function PhotographyHelperPage() {
                         className="-mx-4 px-4 sm:mx-0 sm:px-0"
                       >
                         {topComments.map(comment => {
-                          const rating = (comment.cleanlinessRating + comment.communicationRating) / 2 || 5;
+                          const reviewScores = PHOTOGRAPHY_REVIEW_CATEGORIES.map(({ field }) => Number(comment[field])).filter((score) => score >= 1 && score <= 5);
+                          const rating = reviewScores.length ? reviewScores.reduce((sum, score) => sum + score, 0) / reviewScores.length : 5;
                           
                           return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white border border-[#EBEBEB] rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="h-full bg-gray-50/70 dark:bg-gray-800/50 rounded-2xl p-5 border-0 flex flex-col justify-between relative overflow-hidden transition-all hover:bg-gray-100/70 dark:hover:bg-gray-800/70">
                               <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-4">
                                   <div className="flex items-center gap-3">
                                     <img 
                                       src={comment.userAvatar || '/default-avatar.jpg'} 
                                       alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 shadow-sm"
+                                      className="w-12 h-12 rounded-full object-cover shadow-sm"
                                       onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
                                     />
                                     <div>
@@ -2498,15 +2166,8 @@ export default function PhotographyHelperPage() {
               ) : (
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}</button>}
 
-              {commentCount > 0 && (
-                <button
-                  onClick={() => setShowCommentsPanel(true)}
-                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-                >
-                  Show all {commentCount} {commentCount === 1 ? 'review' : 'reviews'}
-                </button>
-              )}
             </div>
 
             {/* Location */}
@@ -2566,7 +2227,7 @@ export default function PhotographyHelperPage() {
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'photography'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (
@@ -2654,9 +2315,6 @@ export default function PhotographyHelperPage() {
           onClose={() => setShowCommentsPanel(false)}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
         />
       )}
     </div>

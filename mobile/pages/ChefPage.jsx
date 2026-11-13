@@ -11,6 +11,8 @@ import { useWishlist } from '../hooks/useWishlist';
 import { useBookedSlots } from '../hooks/useBookedSlots';
 import BookingTimeSlots from '../components/BookingTimeSlots';
 import BookingDateNotice from '../components/BookingDateNotice';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import { Link } from "react-router-dom";
 import {
@@ -672,51 +674,7 @@ export default function ChefPage() {
     postalCode: '',
     country: 'South Africa'
   });
-
-  // Social Media Verification States
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
+;
 
   const [bookingData, setBookingData] = useState({
     name: '',
@@ -781,19 +739,6 @@ export default function ChefPage() {
   const navigate = useNavigate();
 
   const { bookedDates, isTimeSlotBooked, isDateFullyBooked, isDateBooked, getAvailabilityNotice } = useBookedSlots(helper?._id || id);
-
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
-
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
 
   // Calculate total price with per-guest multiplier for chef/catering
   useEffect(() => {
@@ -1063,135 +1008,12 @@ export default function ChefPage() {
 
   // ==================== END ENHANCED LOCATION FUNCTIONS ====================
 
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
 
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
 
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (helperData) => {
-    setVerifyingSocialMedia(true);
-
-    try {
-      // Simulate AI API calls to check social media presence
-      setTimeout(() => {
-        // Generate realistic mock data based on helper information
-        const name = helperData.name || '';
-
-        // AI logic to determine social media presence
-        const hasFacebook = Math.random() > 0.3; // 70% chance
-        const hasInstagram = Math.random() > 0.2; // 80% chance
-        const hasLinkedIn = Math.random() > 0.4; // 60% chance
-        const hasTwitter = Math.random() > 0.5; // 50% chance
-
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
-          verified: Math.random() > 0.8, // Higher verification chance for professionals
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error verifying social media:', error);
-      setVerifyingSocialMedia(false);
-    }
-  };
 
   useEffect(() => {
     const fetchHelper = async () => {
@@ -1210,15 +1032,6 @@ export default function ChefPage() {
 
         const data = await res.json();
         setHelper(data);
-
-        // Simulate AI assessment on data load
-        simulateAiAssessment(data);
-
-        // Check if helper is barber, chef, beauty, domestic, maid, sneaker, washingmat, or animals and verify social media
-        if (['barber', 'barbar', 'chef', 'cooking', 'beauty', 'spa', 'domestic', 'maid', 'tattoo', 'tutor', 'photography', 'sneaker', 'washingmat', 'animals'].includes(data.type)) {
-          verifySocialMediaPresence(data);
-        }
-
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -1269,113 +1082,6 @@ export default function ChefPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Simulate AI assessment of helper content
-  const simulateAiAssessment = (helperData) => {
-    // Simulate processing delay
-    setTimeout(() => {
-      const description = helperData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
-
-      // Barber-specific scoring
-      if (helperData.type === 'barber' || helperData.type === 'barbar') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("modern") || description.includes("trends")) descScore += 1;
-        if (description.includes("fade") || description.includes("beard")) descScore += 1;
-      }
-
-      // Beauty-specific scoring
-      if (helperData.type === 'beauty' || helperData.type === 'spa') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("premium") || description.includes("professional")) descScore += 1;
-      }
-
-      // Chef-specific scoring
-      if (helperData.type === 'chef' || helperData.type === 'cooking') {
-        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
-        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
-      }
-
-      // Tattoo-specific scoring
-      if (helperData.type === 'tattoo') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-      }
-
-      // Tutor-specific scoring
-      if (helperData.type === 'tutor') {
-        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
-        if (description.includes("degree") || description.includes("education")) descScore += 1;
-        if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      }
-
-      // Photography-specific scoring
-      if (helperData.type === 'photography') {
-        if (description.includes("certified") || description.includes("professional")) descScore += 2;
-        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
-      }
-
-      // Sneaker cleaner-specific scoring
-      if (helperData.type === 'sneaker') {
-        if (description.includes("professional") || description.includes("experience")) descScore += 2;
-        if (description.includes("products") || description.includes("solutions")) descScore += 1;
-        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
-        if (description.includes("brands") || description.includes("materials")) descScore += 1;
-      }
-
-      // Washing mat-specific scoring
-      if (helperData.type === 'washingmat') {
-        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
-        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
-        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
-        if (description.includes("drying") || description.includes("process")) descScore += 1;
-      }
-
-      // Animal care-specific scoring
-      if (helperData.type === 'animals') {
-        if (description.includes("certified") || description.includes("trained")) descScore += 2;
-        if (description.includes("experience") || description.includes("passion")) descScore += 1;
-        if (description.includes("animals") || description.includes("pets")) descScore += 1;
-        if (description.includes("care") || description.includes("handling")) descScore += 1;
-        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (helperData.imageUrls?.length > 0) imgScore = 3;
-      if (helperData.imageUrls?.length > 2) imgScore = 4;
-      if (helperData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
-    }, 1500);
-  };
 
   // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
@@ -1695,6 +1401,7 @@ export default function ChefPage() {
       functionType: bookingData.functionType || undefined,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -2021,12 +1728,13 @@ export default function ChefPage() {
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: bookingData.specialRequirements || message,
+      message,
       subtype: bookingSubtype,
       numberOfGuests: bookingData.numberOfGuests || undefined,
       functionType: bookingData.functionType || undefined,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption,
       status: 'pending',
       type: 'helper'
     };
@@ -2063,49 +1771,6 @@ export default function ChefPage() {
     setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
-
-  // Simulate AI analysis of comments
-  const analyzeCommentsWithAI = () => {
-    setAnalyzingComments(true);
-
-    // Simulate API call to AI service
-    setTimeout(() => {
-      // Generate random quality scores for comments
-      const analysis = {};
-      const comments = document.querySelectorAll('.comment-item');
-
-      comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
-        analysis[index] = { qualityScore, sentiment };
-      });
-
-      setCommentAnalysis(analysis);
-      setAnalyzingComments(false);
-    }, 2000);
-  };
-
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
 
   // Function to open full-page booking form overlay
   const openBookingFormOverlay = () => {
@@ -2295,31 +1960,9 @@ export default function ChefPage() {
         </div>
       </nav>
 
-      {/* Image Gallery - Full Width */}
-      <div className="w-full">
-        {/* Airbnb-style image gallery layout */}
-        {helper.imageUrls && helper.imageUrls.length > 0 && (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <div className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(0)}>
-              <img src={helper.imageUrls[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-            </div>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {helper.imageUrls.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer group overflow-hidden" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </div>
-              ))}
-              {helper.imageUrls.length < 5 && Array(4 - Math.min(4, helper.imageUrls.length - 1)).fill(null).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-800 h-full" />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      <ListingPhotoGallery images={helper.imageUrls} alt={helper.name} onOpen={openFullScreenGallery} emptyEmoji="🍽️" emptyTitle="Food photos coming soon" emptyDescription="This chef has not added portfolio photos yet." />
 
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         {/* Content Section */}
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
@@ -2604,12 +2247,14 @@ export default function ChefPage() {
                 <p className="text-gray-600 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
+              {commentCount >= 10 && (
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 transition-colors w-full sm:w-auto"
+                >
+                  Show all {commentCount} reviews
+                </button>
+              )}
             </div>
 
             {/* Location */}
@@ -2641,7 +2286,7 @@ export default function ChefPage() {
         {/* Recent Bookers Section */}
         <BookingHistory bookingSummary={bookingSummary} providerName={helper?.name} providerType={helper?.type || 'chef'} providerImage={helper?.imageUrls?.[0]} providerId={helper?._id} />
 
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && helper.imageUrls && helper.imageUrls.length > 0 && (
@@ -2723,9 +2368,6 @@ export default function ChefPage() {
           onClose={() => setShowCommentsPanel(false)}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
         />
       )}
 

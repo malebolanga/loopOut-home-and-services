@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   TrendingUp,
   Lightbulb,
+  Megaphone,
   ListPlus,
   Search,
   Edit3,
@@ -62,6 +63,47 @@ import {
 import { resolveApiUrl } from '../utils/apiBaseUrl';
 
 const formatPrice = (price) => `R${Number(price || 0).toFixed(2)}`;
+const PORTION_SIZES = ['Small', 'Medium', 'Large', 'Full plate'];
+const getStartingMealPrice = (meal) => {
+  const prices = (meal?.portions || []).map((portion) => Number(portion.price)).filter((price) => Number.isFinite(price) && price > 0);
+  return prices.length ? Math.min(...prices) : Number(meal?.price) || 0;
+};
+const formatMealPrice = (meal) => meal?.portions?.length ? `From ${formatPrice(getStartingMealPrice(meal))}` : formatPrice(meal?.price);
+
+const PortionPriceFields = ({ portions = [], onChange }) => (
+  <fieldset className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
+    <legend className="px-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">Serving sizes &amp; prices (optional)</legend>
+    <p className="mb-2 text-[10px] text-gray-500 dark:text-gray-400">Add a price for each size you offer. Customers will choose one before ordering.</p>
+    <div className="grid grid-cols-2 gap-2">
+      {PORTION_SIZES.map((name) => (
+        <label key={name} className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+          {name}
+          <div className="mt-1 flex items-center rounded-lg bg-gray-50 px-2 dark:bg-gray-800">
+            <span className="text-xs text-gray-400">R</span>
+            <input type="number" min="0.01" max="10000" step="0.01" inputMode="decimal" aria-label={`${name} price`} value={portions.find((portion) => portion.name === name)?.price || ''} onChange={(event) => {
+              const price = event.target.value;
+              onChange((current) => [...current.filter((portion) => portion.name !== name), ...(price ? [{ name, price }] : [])]);
+            }} className="w-full bg-transparent px-1 py-2 text-xs text-gray-900 outline-none dark:text-white" placeholder="Not offered" />
+          </div>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+);
+
+const getFoodRatingSummary = (shop, meal) => {
+  const mealId = String(meal?.id || meal?._id || '');
+  if (!shop || !mealId) return { average: 0, count: 0 };
+  const ratings = (shop.reviews || [])
+    .flatMap((review) => Array.isArray(review.itemRatings) ? review.itemRatings : [])
+    .filter((entry) => String(entry.mealId || '') === mealId)
+    .map((entry) => Number(entry.rating))
+    .filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+  return {
+    average: ratings.length ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : 0,
+    count: ratings.length
+  };
+};
 
 const uploadFoodImage = async (file) => {
   if (!file || !file.type.startsWith('image/')) throw new Error('Choose an image file.');
@@ -113,7 +155,7 @@ const FoodImageField = ({ label, value, onChange, emojis = FOOD_EMOJIS }) => {
             <img
               src={value}
               alt={`${label} preview`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
               onError={() => setImgError(true)}
             />
           ) : (
@@ -160,13 +202,15 @@ export const FoodVisual = ({ visual, alt = 'Food', className = 'h-full w-full ob
   const [error, setError] = useState(false);
   useEffect(() => setError(false), [visual?.src]);
   const showImage = !error && Boolean(visual?.isImage && visual?.src);
+  const imageClassName = className.replace(/\bobject-cover\b/g, 'object-contain');
 
   if (showImage) {
     return (
       <img
         src={visual.src.trim()}
         alt={alt}
-        className={className}
+        className={`block h-full w-full object-contain ${imageClassName}`}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center' }}
         onError={() => setError(true)}
         loading="lazy"
       />
@@ -644,14 +688,6 @@ export default function LunchComingSoon() {
   const location = useLocation();
   const { currentUser } = useSelector((state) => state.user || {});
 
-  // Ref for the horizontal shop slider
-  const shopSliderRef = useRef(null);
-  const scrollShops = (dir) => {
-    if (shopSliderRef.current) {
-      shopSliderRef.current.scrollBy({ left: dir * 220, behavior: 'smooth' });
-    }
-  };
-
   // Track whether we've auto-set the initial shop selection (prevents stale-closure reset)
   const hasInitializedShopRef = useRef(false);
 
@@ -672,6 +708,7 @@ export default function LunchComingSoon() {
 
   // Filter & Search states for orders & menus
   const [orderFilterTab, setOrderFilterTab] = useState('all'); // 'all' | 'pending' | 'preparing' | 'ready' | 'completed'
+  const [ownerFoodTab, setOwnerFoodTab] = useState('kitchen'); // 'kitchen' | 'menu'
   const [orderSearchText, setOrderSearchText] = useState('');
   const [myMenuSearchText, setMyMenuSearchText] = useState('');
   const [myMenuTagFilter, setMyMenuTagFilter] = useState('All');
@@ -685,6 +722,8 @@ export default function LunchComingSoon() {
   // when the persisted Redux currentUser._id is stale.
   const [serverMyShops, setServerMyShops] = useState(null); // null = not yet loaded
   const [selectedShopId, setSelectedShopId] = useState('');
+  const [allFoodSearch, setAllFoodSearch] = useState('');
+  const [isShopDetailOpen, setIsShopDetailOpen] = useState(Boolean(location.state?.selectedShopId));
   const [cart, setCart] = useState([]);
   const [selectedMealSides, setSelectedMealSides] = useState({});
   const [orders, setOrders] = useState([]);
@@ -706,6 +745,8 @@ export default function LunchComingSoon() {
   // Form states for checkout & delivery
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showBasketPreview, setShowBasketPreview] = useState(false);
+  const [selectedFeaturedMeal, setSelectedFeaturedMeal] = useState(null);
+  const [zoomedFoodImage, setZoomedFoodImage] = useState(null);
   const [checkoutData, setCheckoutData] = useState({
     customerName: currentUser?.username || currentUser?.name || '',
     customerPhone: currentUser?.phone || '',
@@ -745,9 +786,12 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     category: 'Full Menu',
+    itemType: 'meal',
     image: '🍱',
-    sides: []
+    sides: [],
+    portions: []
   });
+  const [selectedPortionName, setSelectedPortionName] = useState('');
 
   // Edit states
   const [showEditShopModal, setShowEditShopModal] = useState(false);
@@ -777,8 +821,10 @@ export default function LunchComingSoon() {
     price: '',
     tag: 'Popular',
     category: 'Full Menu',
+    itemType: 'meal',
     image: '🍱',
-    sides: []
+    sides: [],
+    portions: []
   });
 
   // Selected Order for Receipt Modal
@@ -791,7 +837,7 @@ export default function LunchComingSoon() {
   const [showRateModal, setShowRateModal] = useState(false);
   const [ratingTargetOrder, setRatingTargetOrder] = useState(null);
   const [shopRating, setShopRating] = useState(5);
-  const [foodRating, setFoodRating] = useState(5);
+  const [itemRatings, setItemRatings] = useState({});
   const [ratingComment, setRatingComment] = useState('');
   const [showReviewsTab, setShowReviewsTab] = useState(false);
 
@@ -802,6 +848,7 @@ export default function LunchComingSoon() {
   const [showPastCustomerReceipts, setShowPastCustomerReceipts] = useState(false);
 
   // Customer menu discovery controls
+  const [shopSearch, setShopSearch] = useState('');
   const [menuSearch, setMenuSearch] = useState('');
   const [menuTagFilter, setMenuTagFilter] = useState('All');
   const [selectedFoodCategory, setSelectedFoodCategory] = useState('all'); // 'all' | 'african' | 'light' | 'drinks' | 'fruits'
@@ -837,43 +884,54 @@ export default function LunchComingSoon() {
     e.preventDefault();
     if (!ratingTargetOrder) return;
     const orderId = ratingTargetOrder.id || ratingTargetOrder._id;
+    if (ratingTargetOrder.status !== 'Completed') {
+      setNotice({ type: 'error', message: 'Confirm that you received your order before rating the shop.' });
+      return;
+    }
+    const itemsToRate = ratingTargetOrder.items || [];
+    const itemRatingsPayload = itemsToRate.map((item, itemIndex) => ({
+      itemIndex,
+      mealId: item.id || '',
+      mealName: item.name || 'Food item',
+      rating: Number(itemRatings[itemIndex]) || 0
+    }));
+    if (!itemsToRate.length || itemRatingsPayload.some((item) => item.rating < 1 || item.rating > 5)) {
+      setNotice({ type: 'error', message: 'Please rate every food item in this order before submitting.' });
+      return;
+    }
+    const foodRating = Math.round(itemRatingsPayload.reduce((total, item) => total + item.rating, 0) / itemRatingsPayload.length);
+    const submittedRating = { shopRating, foodRating, itemRatings: itemRatingsPayload, comment: ratingComment };
     try {
-      if (ratingTargetOrder.status !== 'Completed') {
-        try {
-          await updateOrderStatus(orderId, 'Completed');
-        } catch {
-          // ignore if already completed
-        }
-      }
       await rateShop(ratingTargetOrder.shopId, {
         orderId: orderId,
         shopRating,
         foodRating,
+        itemRatings: itemRatingsPayload,
         comment: ratingComment,
         userName: currentUser?.username || currentUser?.name || 'Valued Customer'
       });
       setShowRateModal(false);
-      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
+      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? {
+        ...o,
+        isRated: true,
+        status: 'Completed',
+        ratingDetails: submittedRating
+      } : o));
       // Close receipt modal so it completely disappears from the screen
       setActiveReceiptOrder(null);
       setNotice({ type: 'success', message: '⭐ Thank you for rating! Receipt archived to Dashboard & Order History.' });
       setRatingComment('');
     } catch (err) {
       console.error("Rate shop error:", err);
-      // Ensure rating modal closes and receipt modal closes so user isn't trapped
-      setShowRateModal(false);
-      setOrders(prev => prev.map(o => (o.id === orderId || o._id === orderId) ? { ...o, isRated: true, status: 'Completed' } : o));
-      setActiveReceiptOrder(null);
-      setNotice({ type: 'success', message: '⭐ Thank you! Your review has been saved and archived.' });
-      setRatingComment('');
+      setNotice({ type: 'error', message: err.message || 'We could not save your review. Please try again.' });
     }
   };
 
-  // Handle Order Status Progression (Received -> Preparing Food -> Ready for Collection -> Collected)
+  // Only the customer confirms receipt. A pickup order left ready will be closed by the server after two hours.
   const handleStatusUpdate = async (orderId, newStatus) => {
     if (!orderId) return;
     try {
-      await updateOrderStatus(orderId, newStatus);
+      const savedOrder = await updateOrderStatus(orderId, newStatus);
       // Optimistically update orders in local state
       setOrders((prev) =>
         prev.map((o) =>
@@ -890,11 +948,14 @@ export default function LunchComingSoon() {
       if (newStatus === 'Completed') {
         setNotice({
           type: 'success',
-          message: '🎉 Order confirmed as Collected! Hope you enjoy your meal.'
+          message: 'Order completed. You can now rate the shop and your meal.'
         });
         const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
         if (target && !target.isRated) {
-          setRatingTargetOrder({ ...target, status: 'Completed' });
+          setShopRating(5);
+          setItemRatings(Object.fromEntries((target.items || []).map((_, index) => [index, 0])));
+          setRatingComment('');
+          setRatingTargetOrder({ ...target, ...savedOrder, status: 'Completed' });
           setShowRateModal(true);
         }
       } else {
@@ -905,26 +966,7 @@ export default function LunchComingSoon() {
       }
     } catch (err) {
       console.error("Update order status error:", err);
-      // Optimistic fallback for immediate UX
-      setOrders((prev) =>
-        prev.map((o) =>
-          (o.id === orderId || o._id === orderId)
-            ? { ...o, status: newStatus, updatedAt: new Date().toISOString() }
-            : o
-        )
-      );
-      if (activeReceiptOrder && (activeReceiptOrder.id === orderId || activeReceiptOrder._id === orderId)) {
-        setActiveReceiptOrder((prev) =>
-          prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null
-        );
-      }
-      if (newStatus === 'Completed') {
-        const target = orders.find((o) => o.id === orderId || o._id === orderId) || activeReceiptOrder;
-        if (target && !target.isRated) {
-          setRatingTargetOrder({ ...target, status: 'Completed' });
-          setShowRateModal(true);
-        }
-      }
+      setNotice({ type: 'error', message: err.message || 'Could not update this order. Please try again.' });
     }
   };
 
@@ -939,7 +981,7 @@ export default function LunchComingSoon() {
         hasInitializedShopRef.current = true;
         const targetId = location.state?.selectedShopId;
         const matched = targetId && fetchedShops.find(s => String(s.id || s._id) === String(targetId));
-        setSelectedShopId(matched ? (matched.id || matched._id) : fetchedShops[0].id);
+        setSelectedShopId(matched ? (matched.id || matched._id) : (fetchedShops[0].id || fetchedShops[0]._id));
       }
     });
 
@@ -1001,22 +1043,40 @@ export default function LunchComingSoon() {
 
   // Selected active shop
   const currentShop = useMemo(() => {
-    return shops.find((s) => s.id === selectedShopId) || shops[0] || null;
+    return shops.find((shop) => String(shop.id || shop._id) === String(selectedShopId)) || shops[0] || null;
   }, [shops, selectedShopId]);
+
+  const visibleShops = useMemo(() => {
+    const query = shopSearch.trim().toLowerCase();
+    if (!query) return shops;
+    return shops.filter((shop) => {
+      const menuText = (shop.meals || []).map((meal) => `${meal.name || ''} ${meal.description || ''} ${meal.category || ''}`).join(' ');
+      const searchableText = [shop.name, shop.cuisine, shop.description, shop.address, shop.location, shop.ownerName, menuText]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return searchableText.includes(query);
+    });
+  }, [shops, shopSearch]);
+
+  const allFoodItems = useMemo(() => {
+    const query = allFoodSearch.trim().toLowerCase();
+    return shops.flatMap((shop) => (shop.meals || []).map((meal) => ({ shop, meal })))
+      .filter(({ shop, meal }) => {
+        if (!query) return true;
+        return [meal.name, meal.description, meal.category, meal.tag, shop.name, shop.cuisine]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      });
+  }, [shops, allFoodSearch]);
 
   // A closed shop remains visible, but customers cannot change or submit an order.
   const isCurrentShopClosed = currentShop?.isOpen === false;
+  const shopCommentReviews = (currentShop?.reviews || []).filter((review) => String(review.comment || '').trim().length > 0);
 
   const menuTags = useMemo(() => ['All', ...new Set((currentShop?.meals || []).map((meal) => meal.tag).filter(Boolean))], [currentShop]);
-
-  const categoryCounts = useMemo(() => {
-    const counts = { all: (currentShop?.meals || []).length, african: 0, light: 0, drinks: 0, fruits: 0 };
-    (currentShop?.meals || []).forEach((meal) => {
-      const cat = detectMealCategory(meal);
-      if (counts[cat] !== undefined) counts[cat] += 1;
-    });
-    return counts;
-  }, [currentShop]);
 
   const visibleMeals = useMemo(() => {
     const search = menuSearch.trim().toLowerCase();
@@ -1170,8 +1230,36 @@ export default function LunchComingSoon() {
   // Active kitchen queue for currently selected shop (visible to all customers)
   const activeKitchenOrders = useMemo(() => {
     if (!currentShop) return [];
-    return orders.filter((o) => o.shopId === currentShop.id && o.status !== 'Completed');
+    const shopId = String(currentShop.id || currentShop._id || '');
+    return orders.filter((o) => String(o.shopId || '') === shopId && o.status !== 'Completed');
   }, [orders, currentShop]);
+
+  const popularShopMeals = useMemo(() => {
+    if (!currentShop) return [];
+    const shopId = String(currentShop.id || currentShop._id || '');
+    const salesByName = orders
+      .filter((order) => String(order.shopId || '') === shopId && order.status === 'Completed')
+      .flatMap((order) => order.items || [])
+      .reduce((sales, item) => {
+        const name = String(item.name || '').trim().toLowerCase();
+        if (name) sales[name] = (sales[name] || 0) + Number(item.quantity || 1);
+        return sales;
+      }, {});
+    const meals = currentShop.meals || [];
+    const bestSellers = meals
+      .map((meal) => ({ ...meal, completedSales: salesByName[String(meal.name || '').trim().toLowerCase()] || 0 }))
+      .filter((meal) => meal.completedSales > 0)
+      .sort((a, b) => b.completedSales - a.completedSales)
+      .slice(0, 3);
+    const taggedPicks = meals
+      .filter((meal) => meal.isPopular || meal.isFeatured || meal.isSpecial || ['combo', 'special'].includes(String(meal.itemType || '').toLowerCase()) || /popular|special|combo|meal deal|bundle/i.test(`${meal.name || ''} ${meal.tag || ''} ${meal.category || ''} ${meal.description || ''}`))
+      .map((meal) => ({ ...meal, completedSales: 0 }));
+    const bestSellerNames = new Set(bestSellers.map((meal) => String(meal.name || '').trim().toLowerCase()));
+    return [
+      ...bestSellers.slice(0, 2),
+      ...taggedPicks.filter((meal) => !bestSellerNames.has(String(meal.name || '').trim().toLowerCase()))
+    ].slice(0, 3);
+  }, [currentShop, orders]);
 
   // Completed orders history for shop owner
   const completedStoreOrders = completedOrders;
@@ -1275,7 +1363,7 @@ export default function LunchComingSoon() {
   };
 
   // Cart operations
-  const addToCart = (meal) => {
+  const addToCart = (meal, portionName = '') => {
     if (currentShop?.isOpen === false) {
       setNotice({ type: 'error', message: `${currentShop.name} is currently closed and cannot accept orders.` });
       return;
@@ -1290,18 +1378,31 @@ export default function LunchComingSoon() {
     const chosenSides = availableSides.length > 0 && maxSides > 0
       ? getActiveSides(meal, availableSides, maxSides)
       : [];
+    const chosenPortion = meal.portions?.find((portion) => portion.name === portionName);
+    if (meal.portions?.length && !chosenPortion) {
+      setNotice({ type: 'error', message: 'Choose a serving size before adding this meal.' });
+      return;
+    }
+    const orderedMeal = chosenPortion
+      ? { ...meal, price: Number(chosenPortion.price), portionName: chosenPortion.name }
+      : { ...meal, portionName: '' };
 
-    const cartKey = meal.id + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
+    const cartKey = meal.id + (chosenPortion ? `-${chosenPortion.name}` : '') + (chosenSides.length ? '-' + chosenSides.slice().sort().join('-') : '');
 
     setCart((items) => {
-      const existingIndex = items.findIndex((item) => (item.cartKey && item.cartKey === cartKey) || (item.id === meal.id && JSON.stringify(item.sides || []) === JSON.stringify(chosenSides)));
+      const existingIndex = items.findIndex((item) => (item.cartKey && item.cartKey === cartKey) || (!item.cartKey && item.id === meal.id && item.portionName === orderedMeal.portionName && JSON.stringify(item.sides || []) === JSON.stringify(chosenSides)));
       if (existingIndex > -1) {
         return items.map((item, idx) => idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item);
       }
-      return [...items, { ...meal, sides: chosenSides, cartKey, quantity: 1 }];
+      return [...items, { ...orderedMeal, shopId: currentShop.id || currentShop._id, sides: chosenSides, cartKey, quantity: 1 }];
     });
     // Auto-show basket preview popup
     setShowBasketPreview(true);
+  };
+
+  const openFoodDetails = (meal) => {
+    setSelectedPortionName('');
+    setSelectedFeaturedMeal(meal);
   };
 
   const updateQuantity = (cartKeyOrId, change) => {
@@ -1310,7 +1411,7 @@ export default function LunchComingSoon() {
     setCart((items) =>
       items
         .map((item) => {
-          const isMatch = (item.cartKey && item.cartKey === cartKeyOrId) || item.id === cartKeyOrId;
+          const isMatch = item.cartKey ? item.cartKey === cartKeyOrId : item.id === cartKeyOrId;
           return isMatch ? { ...item, quantity: item.quantity + change } : item;
         })
         .filter((item) => item.quantity > 0)
@@ -1437,9 +1538,14 @@ export default function LunchComingSoon() {
   const handleAddMealSubmit = async (e) => {
     e.preventDefault();
     const targetShopId = dashboardShop ? (dashboardShop.id || dashboardShop._id) : selectedShopId;
-    if (!newMealForm.name || !newMealForm.price || !targetShopId) return;
+    const configuredPrices = (newMealForm.portions || []).map((portion) => Number(portion.price)).filter((price) => Number.isFinite(price) && price > 0);
+    const fallbackPrice = configuredPrices.length ? Math.min(...configuredPrices) : Number(newMealForm.price);
+    if (!newMealForm.name || !Number.isFinite(fallbackPrice) || fallbackPrice <= 0 || !targetShopId) {
+      setNotice({ type: 'error', message: 'Add a valid base price or at least one serving size price.' });
+      return;
+    }
     try {
-      const added = await addMealToShop(targetShopId, newMealForm);
+      const added = await addMealToShop(targetShopId, { ...newMealForm, price: fallbackPrice });
       if (added) {
         setShops((prev) =>
           prev.map((s) => {
@@ -1454,12 +1560,30 @@ export default function LunchComingSoon() {
         );
       }
       setShowAddMealModal(false);
-      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', image: '🍱', sides: [] });
+      setNewMealForm({ name: '', description: '', price: '', tag: 'Popular', category: 'Full Menu', itemType: 'meal', image: '🍱', sides: [], portions: [] });
       setNotice({ type: 'success', message: `Meal "${newMealForm.name}" added to menu!` });
     } catch (err) {
       console.error("Add meal error:", err);
       setNotice({ type: 'error', message: err.message || 'Error adding meal' });
     }
+  };
+
+  const openShopEditor = (shop) => {
+    if (!shop) return;
+    setEditShopForm({
+      id: shop.id || shop._id,
+      name: shop.name || '',
+      cuisine: shop.cuisine || '',
+      distance: shop.distance || '',
+      time: shop.time || '',
+      image: shop.image || '🏪',
+      address: shop.address || '',
+      phone: shop.phone || '',
+      whatsapp: shop.whatsapp || '',
+      operatingHours: shop.operatingHours || { openTime: '08:00', closeTime: '20:00', days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },
+      isOpen: shop.isOpen !== false
+    });
+    setShowEditShopModal(true);
   };
 
   // Handle Edit Shop Submit
@@ -1602,37 +1726,98 @@ export default function LunchComingSoon() {
     }
   };
 
+  const handleToggleShopPromotion = async (shop) => {
+    if (!shop) return;
+    const uid = String(currentUser?._id || currentUser?.id || '');
+    const shopId = shop.id || shop._id;
+    const isOwnerOfShop = myShops.some((entry) => String(entry.id || entry._id) === String(shopId)) ||
+      Boolean(uid && String(shop.ownerId || '') === uid) ||
+      currentUser?.isAdmin === true || currentUser?.role === 'admin';
+    if (!isOwnerOfShop) {
+      setNotice({ type: 'error', message: 'Only this shop’s owner can manage its home promotion.' });
+      return;
+    }
+
+    const isPromoted = shop.isPromoted !== true;
+    try {
+      await updateShop(shopId, { isPromoted });
+      setShops((prev) => prev.map((entry) =>
+        String(entry.id || entry._id) === String(shopId) ? { ...entry, isPromoted } : entry
+      ));
+      setNotice({
+        type: 'success',
+        message: isPromoted
+          ? `${shop.name} is now promoted in the home food row for free. It will be labeled Sponsored.`
+          : `Home promotion turned off for ${shop.name}.`
+      });
+    } catch (err) {
+      console.error('Toggle shop promotion error:', err);
+      setNotice({ type: 'error', message: err.message || 'Could not update the shop promotion.' });
+    }
+  };
+
+  const selectedFoodSides = selectedFeaturedMeal ? getAvailableSides(selectedFeaturedMeal) : [];
+  const selectedFoodMaxSides = selectedFeaturedMeal ? getMaxSides(selectedFeaturedMeal) : 0;
+  const selectedFoodActiveSides = selectedFeaturedMeal
+    ? getActiveSides(selectedFeaturedMeal, selectedFoodSides, selectedFoodMaxSides)
+    : [];
+  const selectedFoodPortion = selectedFeaturedMeal?.portions?.find((portion) => portion.name === selectedPortionName);
+  const selectedFoodPrice = selectedFoodPortion?.price ?? getStartingMealPrice(selectedFeaturedMeal);
+
   return (
     <main className={`app-safe-top min-h-screen app-safe-content-bottom ${cart.length > 0 ? 'pb-28 sm:pb-24' : 'pb-12 sm:pb-8'} bg-gray-50 dark:bg-gray-950 px-3 py-4 sm:px-6 w-full max-w-full overflow-x-hidden`}>
       <div className="mx-auto max-w-5xl w-full">
 
         {/* ── CLEAN HEADER ── */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+        <div className="mb-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
             <button
               type="button"
-              onClick={() => navigate(-1)}
-              className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              onClick={() => isShopDetailOpen ? setIsShopDetailOpen(false) : navigate(-1)}
+              aria-label={isShopDetailOpen && activeTab !== 'all-food' ? 'Back to all food shops' : 'Go back'}
+              className="inline-flex h-9 w-9 items-center justify-self-start justify-center rounded-full bg-white text-gray-600 shadow-sm ring-1 ring-gray-200 transition hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-700 dark:hover:bg-gray-700"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <UtensilsCrossed className="h-5 w-5 text-amber-500" />
-                Food Hub
-              </h1>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Browse menus · Order food · Track orders</p>
+            <div className="min-w-0 text-center">
+              {isShopDetailOpen && currentShop && activeTab !== 'all-food' ? (
+                <>
+                  <ShopImage image={currentShop.image} className="mx-auto mb-1 h-9 w-9 rounded-lg bg-amber-50 object-cover text-2xl dark:bg-gray-800" />
+                  <h1 className="truncate text-base font-bold text-gray-900 dark:text-white">{currentShop.name || 'Food shop'}</h1>
+                  {(currentShop.address || currentShop.location || currentShop.distance) && (
+                    <p className="mt-0.5 flex items-center justify-center gap-1 truncate text-[10px] text-gray-500 dark:text-gray-400">
+                      <MapPin className="h-3 w-3 shrink-0 text-amber-500" /> {currentShop.address || currentShop.location || currentShop.distance}
+                    </p>
+                  )}
+                  <div className="mt-0.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                    {(currentShop.contactName || currentShop.ownerName) && <span>Contact: {currentShop.contactName || currentShop.ownerName}</span>}
+                    {(currentShop.phone || currentShop.whatsapp) && (
+                      <button type="button" onClick={() => setShowContactCard(true)} className="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
+                        <Phone className="h-3 w-3" /> Contact shop
+                      </button>
+                    )}
+                    <span className={isCurrentShopClosed ? 'font-semibold text-rose-600 dark:text-rose-400' : 'font-semibold text-emerald-700 dark:text-emerald-400'}>
+                      {isCurrentShopClosed ? 'Closed' : 'Open'}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h1 className="flex items-center justify-center gap-2 text-xl font-bold text-gray-900 dark:text-white">
+                    <UtensilsCrossed className="h-5 w-5 text-amber-500" /> Food Hub
+                  </h1>
+                  <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500">Browse menus · Order food · Track orders</p>
+                </>
+              )}
             </div>
-          </div>
-          {canCreateFor(currentUser, 'food') && (
+          {canCreateFor(currentUser, 'food') ? (
             <button
               type="button"
               onClick={() => setShowAddShopModal(true)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500 hover:bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-sm transition"
+              className="inline-flex items-center justify-self-end gap-1.5 rounded-full bg-amber-500 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-amber-600"
             >
               <PlusCircle className="h-3.5 w-3.5" /> Register Shop
             </button>
-          )}
+          ) : <span aria-hidden="true" className="w-9 justify-self-end" />}
         </div>
 
         {/* ── NOTICE BANNER ── */}
@@ -1665,6 +1850,7 @@ export default function LunchComingSoon() {
         <div className="flex items-center gap-1.5 bg-white dark:bg-gray-900 rounded-xl p-1 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 mb-5 overflow-x-auto">
           {[
             { key: 'explore', label: 'Browse Food', icon: <Store className="h-4 w-4" /> },
+            { key: 'all-food', label: 'All Food', icon: <UtensilsCrossed className="h-4 w-4" /> },
             { key: 'orders', label: 'My Orders', icon: <ShoppingBag className="h-4 w-4" />, badge: myCustomerOrders.length || null },
             ...(isShopOwner ? [{ key: 'my-shop', label: 'My Shop', icon: <ChefHat className="h-4 w-4" />, badge: liveKitchenQueue.length || null }] : [])
           ].map((tab) => (
@@ -1691,56 +1877,218 @@ export default function LunchComingSoon() {
           ))}
         </div>
 
+        {activeTab === 'all-food' && (
+          <section aria-labelledby="all-food-heading" className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="all-food-heading" className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                  <UtensilsCrossed className="h-5 w-5 text-amber-500" /> All Food
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{allFoodItems.length}</span>
+                </h2>
+                <button type="button" onClick={() => setActiveTab('explore')} className="text-xs font-bold text-amber-700 hover:text-amber-800 dark:text-amber-400">Browse shops</button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">See menu items from every food shop. Tap an item to open its shop and order.</p>
+            </div>
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input type="text" value={allFoodSearch} onChange={(event) => setAllFoodSearch(event.target.value)} placeholder="Search dishes, shops or cuisine..." aria-label="Search all food" className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+              {allFoodSearch && <button type="button" onClick={() => setAllFoodSearch('')} aria-label="Clear all food search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>}
+            </label>
+            {allFoodItems.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {allFoodItems.map(({ shop, meal }) => {
+                  const soldOut = meal.isAvailable === false;
+                  const isClosed = shop.isOpen === false;
+                  const shopId = String(shop.id || shop._id);
+                  return (
+                    <button key={`${shopId}-${meal.id}`} type="button" onClick={() => {
+                      setSelectedShopId(shopId);
+                      setMenuSearch('');
+                      setSelectedFoodCategory('all');
+                      setMenuTagFilter('All');
+                      setIsShopDetailOpen(true);
+                      setActiveTab('explore');
+                    }} aria-label={`View ${meal.name} at ${shop.name}`} className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-gray-200 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800">
+                      <span className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                        <FoodVisual visual={getItemVisual(meal)} alt={meal.name} className="h-full w-full object-cover" emojiClassName="flex h-full w-full items-center justify-center text-3xl" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-start justify-between gap-2">
+                          <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{meal.name}</span>
+                          <span className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400">{formatMealPrice(meal)}</span>
+                        </span>
+                        <span className="mt-1 block truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{shop.name} · {shop.cuisine || 'Food shop'}</span>
+                        {meal.description && <span className="mt-1 block line-clamp-2 text-[10px] text-gray-500 dark:text-gray-400">{meal.description}</span>}
+                        <span className={`mt-1.5 block text-[10px] font-bold ${soldOut || isClosed ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>{soldOut ? 'Sold out' : isClosed ? 'Shop closed' : 'Tap to view shop & order'}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-300 px-4 py-10 text-center dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{allFoodSearch ? `No food matches “${allFoodSearch.trim()}”` : 'No menu items available yet'}</p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{allFoodSearch ? 'Try a dish name, shop or cuisine.' : 'Check back soon for menus from local shops.'}</p>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* ══════════════════════════════════════════════════════ */}
         {/* TAB: BROWSE FOOD (explore / other-shops)             */}
         {/* ══════════════════════════════════════════════════════ */}
         {(activeTab === 'explore' || activeTab === 'other-shops') && (
           <div className="space-y-5">
 
-            {/* Shop Selector — Horizontal scroll */}
-            {shops.length > 0 && (
-              <div>
-                <h2 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2.5 flex items-center gap-2">
-                  <Store className="h-4 w-4 text-amber-500" /> Restaurants & Food Shops
-                  <span className="text-[10px] font-medium text-gray-400">({shops.length})</span>
-                </h2>
-                <div
-                  ref={shopSliderRef}
-                  className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                >
-                  {shops.map((shop) => {
-                    const isSelected = (shop.id || shop._id) === selectedShopId;
+            {/* Browse shops first; opening a card shows only that shop's menu. */}
+            {shops.length > 0 && !isShopDetailOpen && (
+              <section aria-labelledby="food-shops-heading">
+                <div className="mb-3">
+                  <h2 id="food-shops-heading" className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-white">
+                    <Store className="h-5 w-5 text-amber-500" /> Food shops near you
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{visibleShops.length}{shopSearch.trim() ? ` of ${shops.length}` : ''}</span>
+                  </h2>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose a shop to see its menu and place an order.</p>
+                </div>
+                <label className="relative mb-3 block">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={shopSearch}
+                    onChange={(event) => setShopSearch(event.target.value)}
+                    placeholder="Search shops, food or location..."
+                    aria-label="Search food shops by name, menu or location"
+                    className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-10 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  />
+                  {shopSearch && <button type="button" onClick={() => setShopSearch('')} aria-label="Clear shop search" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><X className="h-4 w-4" /></button>}
+                </label>
+                <div className="space-y-2.5">
+                  {visibleShops.map((shop) => {
+                    const shopId = shop.id || shop._id;
                     const isClosed = shop.isOpen === false;
+                    const mealCount = Array.isArray(shop.meals) ? shop.meals.length : 0;
+                    const shopAddress = shop.address || shop.location || shop.distance;
+                    const shopContactName = shop.contactName || shop.ownerName;
+                    const shopContactNumber = shop.phone || shop.whatsapp;
+                    const shopReviews = Array.isArray(shop.reviews) ? shop.reviews : [];
+                    const reviewRatings = shopReviews
+                      .map((review) => Number(review.shopRating ?? review.rating))
+                      .filter((rating) => Number.isFinite(rating) && rating > 0 && rating <= 5);
+                    const foodReviewRatings = shopReviews
+                      .map((review) => Number(review.foodRating))
+                      .filter((rating) => Number.isFinite(rating) && rating > 0 && rating <= 5);
+                    const averageFoodRating = foodReviewRatings.length
+                      ? foodReviewRatings.reduce((total, rating) => total + rating, 0) / foodReviewRatings.length
+                      : null;
+                    const rawRating = Number(shop.averageRating ?? shop.rating);
+                    const shopRating = Number.isFinite(rawRating) && rawRating > 0
+                      ? rawRating
+                      : reviewRatings.length
+                        ? reviewRatings.reduce((total, rating) => total + rating, 0) / reviewRatings.length
+                        : null;
+                    const shopReviewCount = Number(shop.reviewCount ?? shop.ratingsCount ?? shopReviews.length) || 0;
+                    const uid = String(currentUser?._id || currentUser?.id || '');
+                    const canManageThisShop = Boolean(
+                      myShops.some((ownedShop) => String(ownedShop.id || ownedShop._id) === String(shopId)) ||
+                      (uid && String(shop.ownerId || '') === uid) ||
+                      currentUser?.isAdmin || currentUser?.role === 'admin'
+                    );
                     return (
-                      <button
-                        key={shop.id || shop._id}
-                        type="button"
-                        onClick={() => setSelectedShopId(shop.id || shop._id)}
-                        className={`relative shrink-0 snap-start flex flex-col items-center gap-1.5 rounded-xl px-4 py-3 min-w-[120px] transition border ${
-                          isSelected
-                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-400 ring-2 ring-amber-300 shadow-md'
-                            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-amber-300 shadow-sm'
-                        } ${isClosed ? 'opacity-60' : ''}`}
-                      >
-                        <ShopImage image={shop.image} className="h-12 w-12 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
-                        <span className={`text-xs font-semibold truncate max-w-[100px] ${isSelected ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'}`}>
-                          {shop.name}
-                        </span>
-                        {shop.cuisine && (
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[100px]">{shop.cuisine}</span>
+                      <div key={shopId} className="flex w-full items-center gap-2 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition hover:border-amber-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-amber-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentCartShopId = cart[0]?.shopId || currentShop?.id || currentShop?._id;
+                            if (cart.length > 0 && String(currentCartShopId) !== String(shopId)) {
+                              setNotice({ type: 'error', message: 'Finish or clear your current shop basket before switching shops.' });
+                              return;
+                            }
+                            setSelectedShopId(shopId);
+                            setSelectedFoodCategory('all');
+                            setMenuSearch('');
+                            setMenuTagFilter('All');
+                            setIsShopDetailOpen(true);
+                          }}
+                          className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          aria-label={`Open ${shop.name || 'food shop'} menu`}
+                        >
+                          <ShopImage image={shop.image} className="h-16 w-16 shrink-0 rounded-xl bg-amber-50 object-cover text-3xl dark:bg-gray-800" />
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-center justify-between gap-2">
+                              <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{shop.name || 'Food shop'}</span>
+                              <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold ${isClosed ? 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'}`}>
+                                {isClosed ? 'Closed' : 'Open'}
+                              </span>
+                            </span>
+                            <span className="mt-1 block truncate text-xs text-gray-500 dark:text-gray-400">
+                              {shop.cuisine || shop.description || 'Local food and favourites'}
+                            </span>
+                            {shopAddress && (
+                              <span className="mt-1 flex min-w-0 items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                <MapPin className="h-3 w-3 shrink-0 text-amber-500" />
+                                <span className="truncate">{shopAddress}</span>
+                              </span>
+                            )}
+                            {(shopContactName || shopContactNumber) && (
+                              <span className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-gray-500 dark:text-gray-400">
+                                {shopContactName && <span className="truncate">Owner: <span className="font-semibold text-gray-700 dark:text-gray-200">{shopContactName}</span></span>}
+                                {shopContactNumber && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{shopContactNumber}</span>}
+                              </span>
+                            )}
+                            <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                              <span className="inline-flex items-center gap-1">
+                                <Star className={`h-3.5 w-3.5 ${shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-400 dark:text-gray-500'}`} />
+                                <span className="text-gray-900 dark:text-white">{shopRating ? shopRating.toFixed(1) : 'New'}</span>
+                                <span className="font-medium text-gray-500 dark:text-gray-400">Shop</span>
+                              </span>
+                              {averageFoodRating && (
+                                <span className="inline-flex items-center gap-1">
+                                  <UtensilsCrossed className="h-3 w-3 text-amber-500" />
+                                  <span className="text-gray-900 dark:text-white">{averageFoodRating.toFixed(1)}</span>
+                                  <span className="font-medium text-gray-500 dark:text-gray-400">Food</span>
+                                </span>
+                              )}
+                              <span className="font-medium text-gray-500 dark:text-gray-400">
+                                {shopReviewCount ? `(${shopReviewCount} ${shopReviewCount === 1 ? 'review' : 'reviews'})` : 'No reviews yet'}
+                              </span>
+                            </span>
+                            <span className="mt-1 block text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                              {mealCount} menu item{mealCount === 1 ? '' : 's'} · Tap to view menu
+                            </span>
+                          </span>
+                        </button>
+                        {canManageThisShop && (
+                          <div className="flex shrink-0 flex-col gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openShopEditor(shop)}
+                              aria-label={`Edit ${shop.name || 'shop'}`}
+                              className="inline-flex min-h-8 items-center justify-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                            >
+                              <Edit3 className="h-3 w-3" /> Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleShopOpen(shop)}
+                              aria-label={`${isClosed ? 'Open' : 'Close'} ${shop.name || 'shop'}`}
+                              className={`inline-flex min-h-8 items-center justify-center rounded-full px-2.5 text-[10px] font-bold text-white shadow-sm transition ${isClosed ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+                            >
+                              {isClosed ? 'Open shop' : 'Close shop'}
+                            </button>
+                          </div>
                         )}
-                        {isClosed && (
-                          <span className="absolute top-1 right-1 text-[8px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-1.5 py-0.5 rounded-full">Closed</span>
-                        )}
-                        {!isClosed && (
-                          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-gray-900" />
-                        )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
+                {visibleShops.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-gray-300 px-4 py-8 text-center dark:border-gray-700">
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">No shops match “{shopSearch.trim()}”</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Try a shop name, dish, cuisine or area.</p>
+                    <button type="button" onClick={() => setShopSearch('')} className="mt-3 rounded-full bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600">Clear search</button>
+                  </div>
+                )}
+              </section>
             )}
 
             {/* Empty state */}
@@ -1765,43 +2113,51 @@ export default function LunchComingSoon() {
               </div>
             )}
 
-            {/* Selected Shop Info Bar */}
-            {currentShop && (
-              <div className="flex items-center justify-between gap-3 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
-                <div className="flex items-center gap-3 min-w-0">
-                  <ShopImage image={currentShop.image} className="h-12 w-12 shrink-0 rounded-xl bg-amber-50 dark:bg-gray-800 flex items-center justify-center text-3xl" />
-                  <div className="min-w-0">
-                    <h3 className="text-base font-bold text-gray-900 dark:text-white truncate">{currentShop.name}</h3>
-                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
-                      {currentShop.cuisine && <span>{currentShop.cuisine}</span>}
-                      {currentShop.distance && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{currentShop.distance}</span>}
-                      {currentShop.time && <span className="flex items-center gap-0.5"><Clock3 className="h-3 w-3" />{currentShop.time}</span>}
-                    </div>
+            {/* Popular food from the selected shop */}
+            {currentShop && isShopDetailOpen && (
+              popularShopMeals.length > 0 ? (
+                <section aria-label={`Popular food at ${currentShop.name}`} className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h2 className="text-xs font-bold text-gray-800 dark:text-gray-100">Popular & special picks</h2>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400">From this shop</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {isCurrentShopClosed ? (
-                    <span className="text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400 px-2.5 py-1 rounded-full">Closed</span>
-                  ) : (
-                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Open
-                    </span>
-                  )}
-                  {(currentShop.phone || currentShop.whatsapp) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowContactCard(true)}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-amber-500 transition"
-                    >
-                      <Phone className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
+                  <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {popularShopMeals.map((meal, index) => (
+                      <button
+                        key={meal.id || meal._id || `${meal.name}-${index}`}
+                        type="button"
+                        onClick={() => openFoodDetails(meal)}
+                        aria-label={`View details for ${meal.name}`}
+                        className="flex min-w-[220px] snap-start items-center gap-2 rounded-lg bg-gray-50 p-2 text-left transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:min-w-[250px] dark:bg-gray-800/60 dark:hover:bg-gray-800"
+                      >
+                        {(() => {
+                          const mealRating = getFoodRatingSummary(currentShop, meal);
+                          return (
+                            <>
+                        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-white dark:bg-gray-700">
+                          <FoodVisual visual={getItemVisual(meal)} alt={meal.name} className="h-full w-full object-cover" emojiClassName="text-xl" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[11px] font-semibold text-gray-800 dark:text-gray-100">{meal.name}</p>
+                          {mealRating.count > 0 && <p className="flex items-center gap-0.5 text-[10px] font-semibold text-gray-600 dark:text-gray-300"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} · {mealRating.count} {mealRating.count === 1 ? 'rating' : 'ratings'}</p>}
+                          <p className="text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                            {formatMealPrice(meal)} · {meal.completedSales > 0 ? `${meal.completedSales} sold` : meal.itemType === 'combo' ? 'Combo' : meal.itemType === 'special' || meal.isSpecial ? 'Special' : 'Popular'}
+                          </p>
+                          {meal.itemType === 'combo' && meal.description && <p className="truncate text-[10px] text-gray-500 dark:text-gray-400">{meal.description}</p>}
+                        </div>
+                        <span className="ml-auto shrink-0 text-[10px] font-semibold text-amber-700 dark:text-amber-400">Details</span>
+                            </>
+                          );
+                        })()}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : null
             )}
 
             {/* Active Customer Orders (on browse tab) */}
-            {myCustomerOrders.length > 0 && (
+            {myCustomerOrders.length > 0 && !isShopDetailOpen && (
               <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
                   <Bell className="h-4 w-4 text-amber-500" /> Active Orders
@@ -1854,7 +2210,7 @@ export default function LunchComingSoon() {
             )}
 
             {/* Order / Table Mode Toggle */}
-            {currentShop && (
+            {currentShop && isShopDetailOpen && (
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -1878,63 +2234,25 @@ export default function LunchComingSoon() {
                 >
                   🪑 Book Table
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setOrderMode('reviews')}
+                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition ${
+                    orderMode === 'reviews'
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 ring-1 ring-gray-200 dark:ring-gray-800 hover:bg-gray-50'
+                  }`}
+                >
+                  ⭐ Reviews{shopCommentReviews.length ? ` (${shopCommentReviews.length})` : ''}
+                </button>
               </div>
             )}
 
             {/* ── MENU GRID (Order Mode) ── */}
-            {currentShop && orderMode === 'order' && (
+            {currentShop && isShopDetailOpen && orderMode === 'order' && (
               <div>
-                {/* ── FOOD CATEGORIES BAR (Full Menu, African Cuisines, Light Food, Soft Drinks, Fruits) ── */}
-                <div className="mb-3.5">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                      <UtensilsCrossed className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Food Categories</span>
-                    </h3>
-                    <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
-                      {selectedFoodCategory === 'all'
-                        ? 'Full Menu · All Items'
-                        : `${FOOD_CATEGORIES.find((c) => c.id === selectedFoodCategory)?.name || ''} (${categoryCounts[selectedFoodCategory] || 0})`}
-                    </span>
-                  </div>
-
-                  <div
-                    className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1 snap-x snap-mandatory"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                  >
-                    {FOOD_CATEGORIES.map((cat) => {
-                      const isSelected = selectedFoodCategory === cat.id;
-                      const count = categoryCounts[cat.id] || 0;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => setSelectedFoodCategory(cat.id)}
-                          className={`shrink-0 snap-start flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
-                            isSelected
-                              ? 'bg-gradient-to-r from-amber-500 to-orange-500 border-amber-500 text-white shadow-amber-500/25 shadow-md scale-[1.02]'
-                              : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:border-amber-300 hover:bg-amber-50/50 dark:hover:bg-gray-800/60'
-                          }`}
-                        >
-                          <span className="text-base leading-none">{cat.icon}</span>
-                          <span className="whitespace-nowrap">{cat.name}</span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded-full font-black leading-none ${
-                              isSelected
-                                ? 'bg-white/25 text-white'
-                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                            }`}
-                          >
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Search & Tag Filter */}
-                <div className="flex items-center gap-2 mb-3">
+                <div className="mb-3 flex min-w-0 items-center gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                     <input
@@ -1945,11 +2263,22 @@ export default function LunchComingSoon() {
                       className="w-full rounded-lg bg-white dark:bg-gray-900 pl-9 pr-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none transition placeholder:text-gray-400"
                     />
                   </div>
+                  <select
+                    aria-label="Filter menu by food category"
+                    value={selectedFoodCategory}
+                    onChange={(e) => setSelectedFoodCategory(e.target.value)}
+                    className="max-w-[112px] rounded-lg bg-white px-2.5 py-2 text-xs text-gray-700 ring-1 ring-gray-200 focus:outline-none focus:ring-amber-400 dark:bg-gray-900 dark:text-gray-200 dark:ring-gray-800"
+                  >
+                    {FOOD_CATEGORIES.map((category) => (
+                      <option key={category.id} value={category.id}>{category.name}</option>
+                    ))}
+                  </select>
                   {menuTags.length > 2 && (
                     <select
+                      aria-label="Filter menu by tag"
                       value={menuTagFilter}
                       onChange={(e) => setMenuTagFilter(e.target.value)}
-                      className="rounded-lg bg-white dark:bg-gray-900 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-800 focus:ring-amber-400 focus:outline-none"
+                      className="max-w-[92px] rounded-lg bg-white px-2.5 py-2 text-xs ring-1 ring-gray-200 focus:outline-none focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800"
                     >
                       {menuTags.map((tag) => <option key={tag} value={tag}>{tag}</option>)}
                     </select>
@@ -1960,18 +2289,17 @@ export default function LunchComingSoon() {
                 {visibleMeals.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {visibleMeals.map((meal) => {
-                      const availableSides = getAvailableSides(meal);
-                      const maxSides = getMaxSides(meal);
-                      const activeSides = availableSides.length > 0 ? getActiveSides(meal, availableSides, maxSides) : [];
-                      const cartKey = meal.id + (activeSides.length ? '-' + activeSides.slice().sort().join('-') : '');
-                      const inCart = cart.find((c) => (c.cartKey && c.cartKey === cartKey) || c.id === meal.id);
                       const soldOut = meal.isAvailable === false;
                       const visual = getItemVisual(meal);
                       const catBadge = getCategoryBadge(meal);
+                      const mealRating = getFoodRatingSummary(currentShop, meal);
                       return (
-                        <div
+                        <button
                           key={meal.id}
-                          className={`relative bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 transition hover:shadow-md ${soldOut ? 'opacity-50' : ''}`}
+                          type="button"
+                          onClick={() => openFoodDetails(meal)}
+                          aria-label={`View ${meal.name} details and order options`}
+                          className={`relative w-full rounded-xl bg-white p-3.5 text-left shadow-sm ring-1 ring-gray-200 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-gray-900 dark:ring-gray-800 ${soldOut ? 'opacity-75' : ''}`}
                         >
                           <div className="flex items-start gap-3">
                             <div className="shrink-0 h-14 w-14 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
@@ -1986,74 +2314,36 @@ export default function LunchComingSoon() {
                                       <span>{catBadge.icon}</span>
                                       <span>{catBadge.name}</span>
                                     </span>
+                                    {['combo', 'special'].includes(String(meal.itemType || '').toLowerCase()) && (
+                                      <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-bold text-rose-700 dark:bg-rose-950/50 dark:text-rose-300">
+                                        {meal.itemType === 'combo' ? 'Combo' : 'Special'}
+                                      </span>
+                                    )}
                                     {meal.tag && (
                                       <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{meal.tag}</span>
                                     )}
                                   </div>
                                 </div>
-                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatPrice(meal.price)}</span>
+                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{formatMealPrice(meal)}</span>
                               </div>
                               {meal.description && (
                                 <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">{meal.description}</p>
                               )}
+                              {mealRating.count > 0 && (
+                                <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-gray-600 dark:text-gray-300">
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} <span className="font-normal text-gray-400">({mealRating.count})</span>
+                                </span>
+                              )}
                             </div>
                           </div>
 
-                          {/* ── SIDES SELECTOR — only shown when vendor explicitly added sides ── */}
-                          {availableSides.length > 0 && maxSides > 0 && !soldOut && (
-                            <div className="mt-2.5">
-                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
-                                Choose sides <span className="text-amber-500">({activeSides.length}/{maxSides})</span>
-                              </p>
-                              <div className="flex flex-wrap gap-1">
-                                {availableSides.map((side) => {
-                                  const isSelected = activeSides.includes(side);
-                                  return (
-                                    <button
-                                      key={side}
-                                      type="button"
-                                      onClick={() => toggleSideForMeal(meal.id, side, availableSides, maxSides)}
-                                      className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
-                                        isSelected
-                                          ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
-                                          : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-amber-300'
-                                      }`}
-                                    >
-                                      {isSelected && <Check className="h-2.5 w-2.5" />}
-                                      {side}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Add to cart */}
-                          <div className="mt-2.5 flex items-center justify-end gap-2">
-                            {soldOut ? (
-                              <span className="text-[10px] font-bold text-red-500">Sold Out</span>
-                            ) : inCart ? (
-                              <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg px-1">
-                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, -1)} className="p-1 text-gray-500 hover:text-red-500 transition">
-                                  <Minus className="h-3.5 w-3.5" />
-                                </button>
-                                <span className="text-xs font-bold text-gray-700 dark:text-gray-200 min-w-[20px] text-center">{inCart.quantity}</span>
-                                <button type="button" onClick={() => updateQuantity(inCart.cartKey || meal.id, 1)} className="p-1 text-gray-500 hover:text-emerald-500 transition">
-                                  <Plus className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => addToCart(meal)}
-                                disabled={isCurrentShopClosed}
-                                className="inline-flex items-center gap-1 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:bg-gray-300 disabled:cursor-not-allowed px-3 py-1.5 text-[11px] font-bold text-white shadow-sm transition"
-                              >
-                                <Plus className="h-3 w-3" /> Add
-                              </button>
-                            )}
+                          <div className="mt-2.5 flex items-center justify-between border-t border-gray-100 pt-2 dark:border-gray-800">
+                            <span className={`text-[10px] font-semibold ${soldOut ? 'text-rose-600 dark:text-rose-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {soldOut ? 'Sold out' : isCurrentShopClosed ? 'Shop closed' : 'Tap for details & order'}
+                            </span>
+                            {!soldOut && <ShoppingBag className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -2098,39 +2388,17 @@ export default function LunchComingSoon() {
                   </div>
                 )}
 
-                {/* Shop Reviews Summary */}
-                {currentShop?.reviews?.length > 0 && (
-                  <div className="mt-4 bg-white dark:bg-gray-900 rounded-xl p-3.5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
-                    <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1.5 mb-2">
-                      <Star className="h-3.5 w-3.5 text-amber-500" /> Reviews ({currentShop.reviews.length})
-                    </h4>
-                    <div className="space-y-2">
-                      {currentShop.reviews.slice(0, 3).map((review, i) => (
-                        <div key={i} className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
-                          <div className="flex gap-0.5">
-                            {[1,2,3,4,5].map((s) => (
-                              <Star key={s} className={`h-3 w-3 ${s <= (review.shopRating || review.rating || 0) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
-                            ))}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{review.userName || 'Customer'}</p>
-                            {review.comment && <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{review.comment}</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
             {/* ── TABLE BOOKING MODE ── */}
-            {currentShop && orderMode === 'table' && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
-                <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
-                </h3>
-                <form onSubmit={handleTableBooking} className="space-y-3">
+            {currentShop && isShopDetailOpen && orderMode === 'table' && (
+              <div className="space-y-4">
+                <div className="bg-white dark:bg-gray-900 rounded-xl p-5 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
+                  <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-amber-500" /> Reserve a Table at {currentShop.name}
+                  </h3>
+                  <form onSubmit={handleTableBooking} className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
@@ -2181,8 +2449,56 @@ export default function LunchComingSoon() {
                   >
                     {isCurrentShopClosed ? 'Shop is Closed' : 'Request Table'}
                   </button>
-                </form>
+                  </form>
+                </div>
+
               </div>
+            )}
+
+            {/* ── SHOP REVIEWS MODE ── */}
+            {currentShop && isShopDetailOpen && orderMode === 'reviews' && (
+              <section aria-label={`Reviews for ${currentShop.name}`} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-1.5 text-sm font-bold text-gray-800 dark:text-gray-100">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" /> Guest reviews
+                  </h3>
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    {shopCommentReviews.length} {shopCommentReviews.length === 1 ? 'review' : 'reviews'}
+                  </span>
+                </div>
+                {shopCommentReviews.length ? (
+                  <div className="space-y-2.5">
+                    {shopCommentReviews.map((review, index) => {
+                      const shopScore = Math.max(0, Math.min(5, Number(review.shopRating || review.rating || 0)));
+                      const foodScore = Math.max(0, Math.min(5, Number(review.foodRating || 0)));
+                      return (
+                        <article key={review._id || review.id || index} className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="truncate text-xs font-semibold text-gray-700 dark:text-gray-200">{review.userName || 'Customer'}</p>
+                            <div className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                              <span className="inline-flex items-center gap-0.5" title="Shop rating"><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {shopScore ? shopScore.toFixed(1) : '—'}</span>
+                              {foodScore > 0 && <span className="inline-flex items-center gap-0.5" title="Food rating"><UtensilsCrossed className="h-3 w-3 text-amber-500" /> {foodScore.toFixed(1)}</span>}
+                            </div>
+                          </div>
+                          <p className="mt-1.5 text-xs leading-relaxed text-gray-600 dark:text-gray-300">{String(review.comment).trim()}</p>
+                          {review.itemRatings?.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {review.itemRatings.map((itemRating, itemIndex) => (
+                                <span key={`${itemRating.mealId || itemRating.mealName}-${itemIndex}`} className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] font-medium text-gray-600 dark:bg-gray-900 dark:text-gray-300">
+                                  <span className="max-w-32 truncate">{itemRating.mealName}</span>
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {itemRating.rating}/5
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">No written reviews yet.</p>
+                )}
+              </section>
             )}
           </div>
         )}
@@ -2236,6 +2552,25 @@ export default function LunchComingSoon() {
                       <div className="mt-2 text-[10px] text-gray-400 flex items-center gap-1">
                         <Clock3 className="h-3 w-3" /> {collectionInfo.label}: {collectionInfo.full}
                       </div>
+                      {order.status === 'Ready for Collection' && (
+                        <div className="mt-3 space-y-2 border-t border-gray-100 pt-3 dark:border-gray-800">
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                            {order.fulfilment === 'delivery'
+                              ? 'Confirm once your delivery has arrived.'
+                              : 'Confirm after you collect your order. Unconfirmed pickup orders close automatically after 2 hours.'}
+                          </p>
+                          {String(order.customerId || '') === String(currentUser?._id || currentUser?.id || '') && <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleStatusUpdate(order.id || order._id, 'Completed');
+                            }}
+                            className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700"
+                          >
+                            {order.fulfilment === 'delivery' ? 'Confirm received & complete' : 'I collected it — complete order'}
+                          </button>}
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -2267,6 +2602,21 @@ export default function LunchComingSoon() {
                         <div>
                           <p className="text-xs font-bold text-gray-700 dark:text-gray-300">#{order.orderCode} · {order.shopName}</p>
                           <p className="text-[10px] text-gray-400">{(order.items || []).length} items · {formatPrice(order.total)}</p>
+                          {Number(order.ratingDetails?.foodRating) > 0 && (
+                            <p className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400">
+                              <UtensilsCrossed className="h-3 w-3" /> Food rating: {Number(order.ratingDetails.foodRating).toFixed(1)}/5
+                            </p>
+                          )}
+                          {order.ratingDetails?.itemRatings?.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {order.ratingDetails.itemRatings.map((itemRating, itemIndex) => (
+                                <span key={`${itemRating.mealId || itemRating.mealName}-${itemIndex}`} className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-gray-600 dark:bg-amber-950/30 dark:text-gray-300">
+                                  <span className="max-w-24 truncate">{itemRating.mealName}</span>
+                                  <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {itemRating.rating}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <span className="text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full flex items-center gap-1">
@@ -2314,6 +2664,22 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {isCurrentShopOwner && dashboardShop && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleShopPromotion(dashboardShop)}
+                      aria-pressed={dashboardShop.isPromoted === true}
+                      title={dashboardShop.isPromoted === true ? 'Turn off free home promotion' : 'Promote your shop in the home food row for free'}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-[10px] font-bold transition ${
+                        dashboardShop.isPromoted === true
+                          ? 'bg-white text-amber-700'
+                          : 'bg-white/20 text-white hover:bg-white/30'
+                      }`}
+                    >
+                      <Megaphone className="h-3 w-3" />
+                      {dashboardShop.isPromoted === true ? 'Sponsored' : 'Promote free'}
+                    </button>
+                  )}
                   {isCurrentShopOwner && dashboardShop && (
                     <button
                       type="button"
@@ -2370,7 +2736,34 @@ export default function LunchComingSoon() {
               ))}
             </div>
 
+            {/* Owner workspace tabs */}
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 dark:bg-gray-800 p-1.5" role="tablist" aria-label="Shop management">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={ownerFoodTab === 'kitchen'}
+                onClick={() => setOwnerFoodTab('kitchen')}
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${ownerFoodTab === 'kitchen' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              >
+                <Bell className="h-4 w-4 text-amber-500" />
+                Kitchen Queue
+                <span className={`rounded-full px-2 py-0.5 text-xs ${ownerFoodTab === 'kitchen' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200' : 'bg-gray-200 dark:bg-gray-700'}`}>{liveKitchenQueue.length}</span>
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={ownerFoodTab === 'menu'}
+                onClick={() => setOwnerFoodTab('menu')}
+                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${ownerFoodTab === 'menu' ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'}`}
+              >
+                <UtensilsCrossed className="h-4 w-4 text-amber-500" />
+                Your Menu
+                <span className={`rounded-full px-2 py-0.5 text-xs ${ownerFoodTab === 'menu' ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-200' : 'bg-gray-200 dark:bg-gray-700'}`}>{(dashboardShop?.meals || []).length}</span>
+              </button>
+            </div>
+
             {/* Kitchen Queue (Live Orders) */}
+            {ownerFoodTab === 'kitchen' && (
             <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -2422,8 +2815,8 @@ export default function LunchComingSoon() {
                   {(showAllKitchenQueue ? filteredShopOrders : filteredShopOrders.slice(0, 8)).map((order) => {
                     const statusConfig = {
                       'Pending': { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200', next: 'Preparing', label: 'Start Preparing' },
-                      'Preparing': { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', next: 'Ready for Collection', label: 'Mark Ready' },
-                      'Ready for Collection': { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200', next: 'Completed', label: 'Collected' },
+                      'Preparing': { color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', next: 'Ready for Collection', label: order.fulfilment === 'delivery' ? 'Ready for delivery' : 'Ready for pickup' },
+                      'Ready for Collection': { color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200', next: null, label: 'Waiting for customer' },
                       'Completed': { color: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', next: null, label: 'Done' }
                     };
                     const config = statusConfig[order.status] || statusConfig['Pending'];
@@ -2476,8 +2869,10 @@ export default function LunchComingSoon() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Menu Management */}
+            {ownerFoodTab === 'menu' && (
             <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
@@ -2556,7 +2951,7 @@ export default function LunchComingSoon() {
                           <button
                             type="button"
                             onClick={() => {
-                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal) });
+                              setEditMealForm({ ...meal, id: meal.id, category: meal.category || detectMealCategory(meal), itemType: meal.itemType || 'meal', portions: meal.portions || [] });
                               setShowEditMealModal(true);
                             }}
                             className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-amber-500 hover:bg-amber-50 transition"
@@ -2582,9 +2977,10 @@ export default function LunchComingSoon() {
                 </div>
               )}
             </div>
+            )}
 
             {/* Shop Insights */}
-            {shopInsights.length > 0 && (
+            {ownerFoodTab === 'menu' && shopInsights.length > 0 && (
               <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800">
                 <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-3">
                   <Lightbulb className="h-4 w-4 text-amber-500" /> Tips to Grow
@@ -2634,7 +3030,7 @@ export default function LunchComingSoon() {
                             <FoodVisual visual={getItemVisual(item)} alt={item.name} className="h-full w-full object-cover" emojiClassName="text-lg" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+                            <p className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{item.name}{item.portionName ? ` · ${item.portionName}` : ''}</p>
                             <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
                           </div>
                         </div>
@@ -2750,10 +3146,7 @@ export default function LunchComingSoon() {
                   'Ready for Collection': 'bg-emerald-100 text-emerald-800',
                   'Completed': 'bg-gray-200 text-gray-600',
                 };
-                const isMyOrder = currentUser && (
-                  String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '') ||
-                  (currentUser.phone && ord.customerPhone === currentUser.phone)
-                );
+                const isMyOrder = currentUser && String(ord.customerId || ord.userId || '') === String(currentUser._id || currentUser.id || '');
                 const ownsShopOrder = isCurrentShopOwner && String(ord.shopId || '') === String(dashboardShop?.id || dashboardShop?._id || '');
 
                 return (
@@ -2844,14 +3237,39 @@ export default function LunchComingSoon() {
                         )}
                         {ord.status === 'Preparing' && (
                           <button type="button" onClick={() => handleStatusUpdate(ordId, 'Ready for Collection')} className="flex-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 py-2 text-xs font-bold text-white shadow transition">
-                            Mark Ready
+                            {ord.fulfilment === 'delivery' ? 'Ready for delivery' : 'Ready for pickup'}
                           </button>
                         )}
                         {ord.status === 'Ready for Collection' && (
-                          <button type="button" onClick={() => handleStatusUpdate(ordId, 'Completed')} className="flex-1 rounded-lg bg-gray-700 hover:bg-gray-800 py-2 text-xs font-bold text-white shadow transition">
-                            Confirm Collected
-                          </button>
+                          <p className="flex-1 rounded-lg bg-emerald-50 px-3 py-2 text-center text-[11px] font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                            Waiting for the customer to confirm collection. Pickup orders auto-close after 2 hours.
+                          </p>
                         )}
+                      </div>
+                    )}
+
+                    {isMyOrder && ord.status === 'Ready for Collection' && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusUpdate(ordId, 'Completed')}
+                        className="w-full rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-white shadow transition hover:bg-emerald-700"
+                      >
+                        {ord.fulfilment === 'delivery' ? 'Confirm delivery received' : 'I collected it — complete order'}
+                      </button>
+                    )}
+
+                    {isMyOrder && ['Pending', 'Preparing'].includes(ord.status) && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-gray-800/70">
+                        <p className="text-xs text-gray-600 dark:text-gray-300">Cancel before the shop marks your order ready.</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Cancel this food order? You can cancel before the shop marks it ready.')) handleStatusUpdate(ordId, 'Cancelled');
+                          }}
+                          className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-rose-950/30"
+                        >
+                          Cancel order
+                        </button>
                       </div>
                     )}
 
@@ -2860,6 +3278,9 @@ export default function LunchComingSoon() {
                       <button
                         type="button"
                         onClick={() => {
+                          setShopRating(5);
+                          setItemRatings(Object.fromEntries((ord.items || []).map((_, index) => [index, 0])));
+                          setRatingComment('');
                           setRatingTargetOrder(ord);
                           setShowRateModal(true);
                         }}
@@ -2881,7 +3302,7 @@ export default function LunchComingSoon() {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
+              className="w-full max-w-sm max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-2xl shadow-2xl ring-1 ring-gray-200 dark:ring-gray-800 p-5"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
@@ -3021,10 +3442,19 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={newMealForm.description} onChange={(e) => setNewMealForm({...newMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} placeholder="Brief description..." />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Menu item type</label>
+                  <select value={newMealForm.itemType} onChange={(e) => setNewMealForm({ ...newMealForm, itemType: e.target.value })} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                    <option value="meal">Regular menu item</option>
+                    <option value="combo">Combo meal</option>
+                    <option value="special">Shop special</option>
+                  </select>
+                  {newMealForm.itemType === 'combo' && <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">List everything included in the combo in the description or sides.</p>}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
-                    <input type="number" required step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Base price (R) · optional with sizes</label>
+                    <input type="number" min="0.01" max="10000" step="0.01" value={newMealForm.price} onChange={(e) => setNewMealForm({...newMealForm, price: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none" placeholder="55.00" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category *</label>
@@ -3045,6 +3475,7 @@ export default function LunchComingSoon() {
                     </select>
                   </div>
                 </div>
+                <PortionPriceFields portions={newMealForm.portions || []} onChange={(update) => setNewMealForm((form) => ({ ...form, portions: update(form.portions || []) }))} />
                 <FoodImageField label="Food photo" value={newMealForm.image} onChange={(image) => setNewMealForm((form) => ({ ...form, image }))} />
                 {/* Sides */}
                 <div>
@@ -3157,6 +3588,15 @@ export default function LunchComingSoon() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Description</label>
                   <textarea value={editMealForm.description} onChange={(e) => setEditMealForm({...editMealForm, description: e.target.value})} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none resize-none" rows={2} />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Menu item type</label>
+                  <select value={editMealForm.itemType || 'meal'} onChange={(e) => setEditMealForm({ ...editMealForm, itemType: e.target.value })} className="w-full rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-xs ring-1 ring-gray-200 dark:ring-gray-700 focus:ring-amber-400 focus:outline-none">
+                    <option value="meal">Regular menu item</option>
+                    <option value="combo">Combo meal</option>
+                    <option value="special">Shop special</option>
+                  </select>
+                  {editMealForm.itemType === 'combo' && <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">List everything included in the combo in the description or sides.</p>}
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Price (R) *</label>
@@ -3181,6 +3621,7 @@ export default function LunchComingSoon() {
                     </select>
                   </div>
                 </div>
+                <PortionPriceFields portions={editMealForm.portions || []} onChange={(update) => setEditMealForm((form) => ({ ...form, portions: update(form.portions || []) }))} />
                 <FoodImageField label="Food photo" value={editMealForm.image || '🍱'} onChange={(image) => setEditMealForm((form) => ({ ...form, image }))} />
                 <div>
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sides (comma separated)</label>
@@ -3233,17 +3674,28 @@ export default function LunchComingSoon() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Food Rating</label>
-                  <div className="flex gap-1">
-                    {[1,2,3,4,5].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setFoodRating(s)}
-                        className="p-1 transition hover:scale-110"
-                      >
-                        <Star className={`h-7 w-7 ${s <= foodRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'}`} />
-                      </button>
+                  <label className="mb-2 block text-[10px] font-bold uppercase tracking-wider text-gray-500">Rate each food item</label>
+                  <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                    {(ratingTargetOrder.items || []).map((item, itemIndex) => (
+                      <div key={`${item.id || item.name}-${itemIndex}`} className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 p-2.5 dark:bg-gray-800/60">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-semibold text-gray-800 dark:text-gray-100">{item.name || 'Food item'}</p>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">Quantity: {item.quantity || 1}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((score) => (
+                            <button
+                              key={score}
+                              type="button"
+                              onClick={() => setItemRatings((previous) => ({ ...previous, [itemIndex]: score }))}
+                              aria-label={`Rate ${item.name || 'food item'} ${score} out of 5`}
+                              className="p-0.5 transition hover:scale-110"
+                            >
+                              <Star className={`h-4 w-4 ${score <= (itemRatings[itemIndex] || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300 dark:text-gray-600'}`} />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -3264,6 +3716,126 @@ export default function LunchComingSoon() {
             </motion.div>
           </div>
         )}
+
+        <AnimatePresence>
+          {selectedFeaturedMeal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+              onClick={() => setSelectedFeaturedMeal(null)}
+            >
+              <motion.section
+                role="dialog"
+                aria-modal="true"
+                aria-label={`${selectedFeaturedMeal.name} details`}
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 40, opacity: 0 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                onClick={(event) => event.stopPropagation()}
+                className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl"
+              >
+                <div className="relative flex h-56 items-center justify-center bg-amber-50 dark:bg-gray-800 sm:h-64">
+                  <button
+                    type="button"
+                    onClick={() => setZoomedFoodImage(selectedFeaturedMeal)}
+                    aria-label={`Zoom image of ${selectedFeaturedMeal.name}`}
+                    className="h-full w-full cursor-zoom-in p-3"
+                  >
+                    <FoodVisual visual={getItemVisual(selectedFeaturedMeal)} alt={selectedFeaturedMeal.name} className="h-full w-full object-contain" emojiClassName="flex h-full w-full items-center justify-center text-7xl" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedFeaturedMeal(null)}
+                    aria-label="Close food details"
+                    className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm transition hover:bg-white dark:bg-gray-950/90 dark:text-gray-200"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="space-y-3 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                        {selectedFeaturedMeal.itemType === 'combo' ? 'Combo meal' : selectedFeaturedMeal.itemType === 'special' || selectedFeaturedMeal.isSpecial ? 'Shop special' : 'Popular pick'}
+                      </p>
+                      <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">{selectedFeaturedMeal.name}</h2>
+                      {(() => {
+                        const mealRating = getFoodRatingSummary(currentShop, selectedFeaturedMeal);
+                        return mealRating.count > 0 ? (
+                          <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-gray-600 dark:text-gray-300">
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" /> {mealRating.average.toFixed(1)} <span className="font-normal text-gray-400">({mealRating.count} {mealRating.count === 1 ? 'rating' : 'ratings'} for this food)</span>
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+                    <span className="shrink-0 text-lg font-black text-amber-600 dark:text-amber-400">{formatPrice(selectedFoodPrice)}</span>
+                  </div>
+                  {selectedFeaturedMeal.description && <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{selectedFeaturedMeal.description}</p>}
+                  {selectedFeaturedMeal.portions?.length > 0 && (
+                    <fieldset>
+                      <legend className="mb-2 text-xs font-bold text-gray-800 dark:text-gray-100">Choose a serving size</legend>
+                      <div className="grid grid-cols-2 gap-2">
+                        {selectedFeaturedMeal.portions.map((portion) => (
+                          <button key={portion.name} type="button" aria-pressed={selectedPortionName === portion.name} onClick={() => setSelectedPortionName(portion.name)} className={`flex min-h-11 items-center justify-between rounded-xl border px-3 py-2 text-xs font-semibold transition ${selectedPortionName === portion.name ? 'border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950/30 dark:text-amber-200' : 'border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-200'}`}>
+                            <span>{portion.name}</span><span>{formatPrice(portion.price)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  )}
+                  {selectedFeaturedMeal.itemType === 'combo' && selectedFeaturedMeal.sides?.length > 0 && (
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">Included in this combo</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedFeaturedMeal.sides.map((side) => (
+                          <span key={side} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">{side}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedFeaturedMeal.itemType !== 'combo' && selectedFoodSides.length > 0 && selectedFoodMaxSides > 0 && selectedFeaturedMeal.isAvailable !== false && (
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-bold text-gray-700 dark:text-gray-200">
+                        Choose sides <span className="font-medium text-gray-500 dark:text-gray-400">({selectedFoodActiveSides.length}/{selectedFoodMaxSides})</span>
+                      </h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedFoodSides.map((side) => {
+                          const isSelected = selectedFoodActiveSides.includes(side);
+                          return (
+                            <button
+                              key={side}
+                              type="button"
+                              onClick={() => toggleSideForMeal(selectedFeaturedMeal.id, side, selectedFoodSides, selectedFoodMaxSides)}
+                              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${isSelected ? 'border-amber-500 bg-amber-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}
+                            >
+                              {isSelected && <Check className="h-3 w-3" />}{side}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mealToOrder = selectedFeaturedMeal;
+                      setSelectedFeaturedMeal(null);
+                      addToCart(mealToOrder, selectedPortionName);
+                    }}
+                    disabled={isCurrentShopClosed || selectedFeaturedMeal.isAvailable === false || Boolean(selectedFeaturedMeal.portions?.length && !selectedFoodPortion)}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-700"
+                  >
+                    <ShoppingBag className="h-4 w-4" />
+                    {selectedFeaturedMeal.isAvailable === false ? 'Sold out' : isCurrentShopClosed ? 'Shop is closed' : selectedFeaturedMeal.portions?.length && !selectedFoodPortion ? 'Choose a serving size' : `Order · ${formatPrice(selectedFoodPrice)}`}
+                  </button>
+                </div>
+              </motion.section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 
@@ -3322,7 +3894,7 @@ export default function LunchComingSoon() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{item.name}</p>
-                          <p className="text-[10px] text-gray-400">{formatPrice(item.price)} × {item.quantity}</p>
+                          <p className="text-[10px] text-gray-400">{item.portionName ? `${item.portionName} · ` : ''}{formatPrice(item.price)} × {item.quantity}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -3379,6 +3951,34 @@ export default function LunchComingSoon() {
           </motion.div>
         )}
       </AnimatePresence>
+
+        <AnimatePresence>
+          {zoomedFoodImage && (
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Image of ${zoomedFoodImage.name}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setZoomedFoodImage(null)}
+              className="fixed inset-0 z-[100] flex cursor-zoom-out items-center justify-center bg-black/90 p-4"
+            >
+              <button
+                type="button"
+                onClick={() => setZoomedFoodImage(null)}
+                aria-label="Close zoomed food image"
+                className="absolute right-4 top-4 z-10 rounded-full bg-white/15 p-3 text-white backdrop-blur hover:bg-white/25"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="flex h-full max-h-[90vh] w-full max-w-5xl flex-col items-center justify-center gap-3" onClick={(event) => event.stopPropagation()}>
+                <FoodVisual visual={getItemVisual(zoomedFoodImage)} alt={zoomedFoodImage.name} className="max-h-[78vh] max-w-full rounded-xl object-contain" emojiClassName="text-8xl sm:text-9xl" />
+                <p className="max-w-full truncate text-center text-sm font-semibold text-white">{zoomedFoodImage.name}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       {/* ── FLOATING CART BAR ── */}
       {cart.length > 0 && (activeTab === 'explore' || activeTab === 'other-shops') && (

@@ -43,8 +43,7 @@ import {
   CakeIcon,
   EllipsisHorizontalIcon,
   CalendarDaysIcon,
-  ArrowPathIcon,
-  CpuChipIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { Sparkles } from 'lucide-react';
 import { 
@@ -54,10 +53,6 @@ import {
 } from '@heroicons/react/24/solid';
 import { 
   FaWhatsapp, 
-  FaFacebook, 
-  FaInstagram, 
-  FaLinkedin, 
-  FaTwitter,
   FaPhone,
   FaUser,
   FaExclamationTriangle,
@@ -102,28 +97,8 @@ export default function EventPage() {
     phone: currentUser?.phone || '',
     quantity: 1,
     note: ''
-  });
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
-    instagram: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' },
-    linkedin: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, connections: null, verificationStatus: 'checking' },
-    twitter: { exists: false, username: null, url: null, isActive: false, verified: false, lastActive: null, followers: null, verificationStatus: 'checking' }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
-
-
-  const { id } = useParams();
+  });  const { id } = useParams();
   const navigate = useNavigate();
-
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
   const [similarEvents, setSimilarEvents] = useState([]);
   const { isFavorite, toggleFavorite } = useWishlist(event, 'event');
 
@@ -167,46 +142,6 @@ export default function EventPage() {
       console.error('Error saving history:', error);
     }
   };
-
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'events', 'live', 'festival', 'concert', 'exhibition', 'community'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
-
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
-
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (eventData) => {
-    setVerifyingSocialMedia(true);
-    try {
-      setTimeout(() => {
-        const name = eventData.name || '';
-        const hasFacebook = Math.random() > 0.3;
-        const hasInstagram = Math.random() > 0.2;
-        const hasLinkedIn = Math.random() > 0.4;
-        const hasTwitter = Math.random() > 0.5;
-
-        setSocialMediaVerification({
-          facebook: hasFacebook ? { exists: true, username: generateUsername(name, 'facebook'), url: `https://facebook.com/${generateUsername(name, 'facebook')}`, isActive: true, verified: Math.random() > 0.7, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 5000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
-          instagram: hasInstagram ? { exists: true, username: generateUsername(name, 'instagram'), url: `https://instagram.com/${generateUsername(name, 'instagram')}`, isActive: true, verified: Math.random() > 0.6, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 10000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
-          linkedin: hasLinkedIn ? { exists: true, username: generateUsername(name, 'linkedin'), url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`, isActive: true, verified: Math.random() > 0.8, lastActive: getRandomRecentDate(), connections: Math.floor(Math.random() * 500), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' },
-          twitter: hasTwitter ? { exists: true, username: generateUsername(name, 'twitter'), url: `https://twitter.com/${generateUsername(name, 'twitter')}`, isActive: true, verified: Math.random() > 0.5, lastActive: getRandomRecentDate(), followers: Math.floor(Math.random() * 3000), verificationStatus: 'verified' } : { exists: false, verificationStatus: 'not_found' }
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-    } catch (error) {
-      setVerifyingSocialMedia(false);
-    }
-  };
-
   // Get event type icon and color
   const getEventTypeInfo = (type) => {
     const types = {
@@ -230,8 +165,6 @@ export default function EventPage() {
         if (!res.ok) throw new Error('Failed to fetch event details');
         const data = await res.json();
         setEvent(data);
-        simulateAiAssessment(data);
-        verifySocialMediaPresence(data);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -240,22 +173,6 @@ export default function EventPage() {
     };
     fetchEvent();
   }, [id]);
-
-  const simulateAiAssessment = (eventData) => {
-    setTimeout(() => {
-      const description = eventData.description || '';
-      let descScore = Math.min(5, Math.floor(description.length / 200) + 1);
-      let imgScore = Math.min(5, (eventData.imageUrls?.length || 0) + 1);
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: (descScore + imgScore) / 2,
-        likes: Math.floor(Math.random() * 50),
-        dislikes: Math.floor(Math.random() * 10),
-        userReaction: null
-      });
-    }, 1500);
-  };
 
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
@@ -317,11 +234,13 @@ export default function EventPage() {
   const handleRegistrationSubmit = async (e) => {
     e.preventDefault();
     if (!event?.organizerContact) return alert("Organizer contact info missing.");
+    if (!currentUser?._id) return alert('Please sign in before registering for this event.');
+    const quantity = Math.max(1, parseInt(registrationData.quantity, 10) || 1);
+    if (Number(event.capacity) > 0 && Number(event.ticketsBooked || 0) + quantity > Number(event.capacity)) {
+      return alert('There are not enough tickets left for that quantity.');
+    }
     setIsUploading(true);
-    await new Promise(r => setTimeout(r, 1500)); // Simulate upload
-    setIsUploading(false);
-
-    const message = `*🎟️ EVENT REGISTRATION*%0A*Event:* ${event.name}%0A*Name:* ${registrationData.name}%0A*Tickets:* ${registrationData.quantity}`;
+    const message = `*🎟️ EVENT REGISTRATION*\n*Event:* ${event.name}\n*Name:* ${registrationData.name}\n*Tickets:* ${quantity}`;
     
     // Determine device type
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
@@ -338,11 +257,11 @@ export default function EventPage() {
         },
         credentials: 'include',
         body: JSON.stringify({
-          userId: currentUser?._id || 'guest',
           eventId: event._id,
           startDate: event.date + 'T' + (event.time || '00:00'),
-          endDate: event.date + 'T' + (event.time || '23:59'),
-          totalPrice: (event.regularPrice || 0) * registrationData.quantity,
+          endDate: new Date(new Date(`${event.date}T${event.time || '00:00'}`).getTime() + 60 * 60 * 1000).toISOString(),
+          numberOfGuests: quantity,
+          totalPrice: (event.regularPrice || 0) * quantity,
           phone: registrationData.phone,
           message: registrationData.note || message,
           deviceType,
@@ -358,18 +277,20 @@ export default function EventPage() {
           type: 'success',
           link: '/notifications'
         });
+        window.open(`https://wa.me/${formatContactForWhatsApp(event.organizerContact)}?text=${encodeURIComponent(message)}`, '_blank');
+      } else {
+        const result = await res.json().catch(() => ({}));
+        alert(result.error || 'We could not register you. Please try again.');
       }
     } catch (err) {
       console.error('Failed to record event booking:', err);
+      alert('We could not register you. Please check your connection and try again.');
+    } finally {
+      setIsUploading(false);
     }
-
-    window.open(`https://wa.me/${formatContactForWhatsApp(event.organizerContact)}?text=${message}`, '_blank');
   };
 
   const handleRegistrationChange = (e) => setRegistrationData({ ...registrationData, [e.target.name]: e.target.value });
-
-  const handleLike = () => setAiAssessment(prev => ({ ...prev, userReaction: prev.userReaction === 'like' ? null : 'like' }));
-  const handleDislike = () => setAiAssessment(prev => ({ ...prev, userReaction: prev.userReaction === 'dislike' ? null : 'dislike' }));
 
   const whatsappNumber = event ? formatContactForWhatsApp(event.organizerContact) : null;
   const whatsappLink = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=Hi, I'm interested in: ${event.name}` : null;
@@ -576,92 +497,6 @@ export default function EventPage() {
             </div>
           </section>
         )}
-
-            {/* AI Insights - Premium Card */}
-            <section className="p-8 bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] text-white overflow-hidden relative group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 shadow-inner">
-                    <CpuChipIcon className="w-6 h-6 text-rose-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold tracking-tight">AI Smart Assessment</h3>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Algorithmic quality check</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
-                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Description</div>
-                    <div className="text-3xl font-black text-white">{aiAssessment.descriptionQuality || '...'}<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
-                  </div>
-                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
-                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Content</div>
-                    <div className="text-3xl font-black text-white">{aiAssessment.imageQuality || '...'}<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
-                  </div>
-                  <div className="p-6 bg-white/5 backdrop-blur-lg rounded-[2rem] border border-white/5 hover:bg-white/10 transition-colors">
-                    <div className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2">Safety</div>
-                    <div className="text-3xl font-black text-white">4.8<span className="text-sm font-normal text-slate-500 dark:text-white ml-1">/5</span></div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-8 border-t border-white/10">
-                  <div className="flex items-center gap-4">
-                    <button onClick={handleLike} className={`flex items-center gap-2 font-bold text-sm px-6 py-3 rounded-2xl transition-all ${aiAssessment.userReaction === 'like' ? 'bg-emerald-500 text-white' : 'bg-white/5 hover:bg-white/10'}`}>
-                      <ArrowUpIcon className="w-4 h-4" /> Helpful
-                    </button>
-                    <button onClick={handleDislike} className={`flex items-center gap-2 font-bold text-sm px-6 py-3 rounded-2xl transition-all ${aiAssessment.userReaction === 'dislike' ? 'bg-rose-500 text-white' : 'bg-white/5 hover:bg-white/10'}`}>
-                      <ArrowDownIcon className="w-4 h-4" /> Flag
-                    </button>
-                  </div>
-                  <div className="text-slate-500 dark:text-white text-xs font-medium flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" /> Verified by Experience AI 
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Profiles & Verification */}
-            <section className="p-10 bg-slate-50 dark:bg-gray-950 rounded-[3rem] border border-slate-100 dark:border-gray-800">
-               <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Digital Footprint</h3>
-                <span className="px-4 py-1.5 bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-500/20 animate-pulse">Scanning Live</span>
-              </div>
-
-              {verifyingSocialMedia ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-4">
-                   <ArrowPathIcon className="w-10 h-10 text-slate-400 animate-spin" />
-                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Verifying Social Credentials...</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {['facebook', 'instagram', 'linkedin', 'twitter'].map((platform) => {
-                    const data = socialMediaVerification[platform];
-                    const Icon = platform === 'facebook' ? FaFacebook : platform === 'instagram' ? FaInstagram : platform === 'linkedin' ? FaLinkedin : FaTwitter;
-                    const colors = {
-                      facebook: 'text-blue-600 bg-blue-50',
-                      instagram: 'text-pink-600 bg-pink-50',
-                      linkedin: 'text-blue-700 bg-blue-50',
-                      twitter: 'text-sky-500 bg-sky-50'
-                    };
-
-                    return (
-                      <div key={platform} className={`p-6 rounded-[2rem] border transition-all duration-300 ${data.exists ? 'bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-800 shadow-sm hover:shadow-xl' : 'bg-slate-100 dark:bg-gray-800/50 border-transparent opacity-50 grayscale'}`}>
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colors[platform]}`}>
-                          <Icon className="text-2xl" />
-                        </div>
-                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{platform}</div>
-                        <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
-                          {data.exists ? `@${data.username}` : 'Not Found'}
-                        </div>
-                        {data.verified && <div className="mt-2 flex items-center gap-1 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter"><CheckBadgeIcon className="w-3 h-3"/> Verified</div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
 
              {/* Comments */}
              <section>

@@ -4,6 +4,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { X, Camera } from 'lucide-react';
 import { useSelector } from "react-redux";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { useRef, useState, useEffect } from "react";
 import {
   getDownloadURL,
@@ -12,6 +13,8 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
+import { auth } from "../firebase";
+import { GoogleAuthProvider, reauthenticateWithPopup } from 'firebase/auth';
 import {
   updateUserStart,
   updateUserSuccess,
@@ -78,9 +81,8 @@ import {
   FaClipboardCheck
 } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
-import WishList from "./WishListProfile";
 import MyListing from "./MyListing";
 import { 
   CameraIcon, 
@@ -252,6 +254,7 @@ const SettingsRow = ({ icon: Icon, title, description, onClick, danger }) => (
 
 export default function Profile() {
   const { currentUser, loading, error } = useSelector((state) => state.user);
+  const location = useLocation();
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
@@ -274,7 +277,7 @@ export default function Profile() {
   const [contactVisibility, setContactVisibility] = useState('private');
   const fileRef = useRef(null);
   const coverFileRef = useRef(null);
-  const [activeSection, setActiveSection] = useState("personal");
+  const [activeSection, setActiveSection] = useState(location.state?.activeSection === 'notifications' ? 'notifications' : 'overview');
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
   const isProvider = canCreateListings(currentUser);
@@ -752,10 +755,15 @@ export default function Profile() {
   const saveSettings = async (settings) => {
     try {
       dispatch(updateUserStart());
+      let payload = settings;
+      if (settings.newPassword !== undefined && !settings.currentPassword && auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com')) {
+        const result = await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+        payload = { ...settings, firebaseIdToken: await result.user.getIdToken(true) };
+      }
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok || data.success === false) throw new Error(data.message || 'Unable to save settings.');
@@ -795,14 +803,33 @@ export default function Profile() {
 
   const handleDeleteUser = async () => {
     if (!window.confirm('Delete your account permanently? This cannot be undone.')) return;
-    const currentPassword = window.prompt('Enter your current password to confirm account deletion:');
-    if (!currentPassword) return;
+    let currentPassword = '';
+    let firebaseIdToken = '';
+    const isGoogleAccount = auth.currentUser?.providerData?.some((provider) => provider.providerId === 'google.com') || currentUser?.authProviders?.includes('google');
+
+    if (isGoogleAccount) {
+      if (auth.currentUser) {
+        try {
+          firebaseIdToken = await auth.currentUser.getIdToken(true);
+        } catch {
+          try {
+            const result = await reauthenticateWithPopup(auth.currentUser, new GoogleAuthProvider());
+            firebaseIdToken = await result.user.getIdToken(true);
+          } catch (error) {
+            console.warn('Google re-authentication could not be completed:', error.message);
+          }
+        }
+      }
+    } else {
+      currentPassword = window.prompt('Enter your current password to confirm account deletion:') || '';
+      if (!currentPassword) return;
+    }
     try {
       dispatch(deleteUserStart());
       const res = await fetch(`/api/user/delete/${currentUser._id}`, {
         method: "DELETE",
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword }),
+        body: JSON.stringify({ currentPassword, firebaseIdToken, isGoogleAuth: Boolean(isGoogleAccount), confirmDelete: true }),
       });
       const data = await res.json();
       if (data.success === false) {
@@ -845,12 +872,13 @@ export default function Profile() {
 
   const handleListingDelete = async (listingId) => {
     try {
-      const res = await fetch(`/api/listing/delete/${listingId}`, {
+      const res = await authenticatedFetch(`/api/listing/delete/${listingId}`, {
         method: "DELETE",
       });
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        console.error('Delete listing failed:', data.message);
+        alert(data.message || 'Failed to delete listing. Please sign in again.');
         return;
       }
 
@@ -865,12 +893,13 @@ export default function Profile() {
 
   const handleEventDelete = async (eventId) => {
     try {
-      const res = await fetch(`/api/event/delete/${eventId}`, {
+      const res = await authenticatedFetch(`/api/event/delete/${eventId}`, {
         method: "DELETE",
       });
-      const data = await res.json();
-      if (data.success === false) {
-        console.log(data.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        console.error('Delete event failed:', data.message);
+        alert(data.message || 'Failed to delete event.');
         return;
       }
 
@@ -904,6 +933,65 @@ export default function Profile() {
         [type]: !prev[category][type]
       }
     }));
+  };
+
+  const toggleAdminActivitySharing = async () => {
+    const enabled = currentUser?.shareActivityWithAdmins !== true;
+    try {
+      const response = await authenticatedFetch('/api/stats/activity-sharing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update activity sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareActivityWithAdmins: data.enabled }));
+    } catch (sharingError) {
+      setFetchError(sharingError.message || 'Could not update activity sharing.');
+    }
+  };
+
+  const toggleDetailedActivitySharing = async () => {
+    const enabled = currentUser?.shareDetailedActivityWithAdmins !== true;
+    try {
+      const response = await authenticatedFetch('/api/stats/activity-history-sharing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update detailed activity sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareDetailedActivityWithAdmins: data.enabled }));
+    } catch (sharingError) {
+      setFetchError(sharingError.message || 'Could not update detailed activity sharing.');
+    }
+  };
+
+  const toggleLoginAreaSharing = async () => {
+    const enabled = currentUser?.shareLoginGpsArea !== true;
+    try {
+      let position = null;
+      if (enabled) {
+        if (!navigator.geolocation) throw new Error('Location services are not available in this browser.');
+        position = await new Promise((resolve, reject) => navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 10000,
+        }));
+      }
+      const response = await authenticatedFetch('/api/stats/login-area-sharing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update login-area sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareLoginGpsArea: data.enabled }));
+      if (enabled && position) {
+        await authenticatedFetch('/api/stats/login-area', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        });
+      }
+    } catch (sharingError) {
+      setFetchError(sharingError.code === 1
+        ? 'Location permission was denied. Allow location access in your phone or browser settings, then try again.'
+        : sharingError.message || 'Could not update login-area sharing.');
+    }
   };
 
   const loadMoreListings = () => {
@@ -988,13 +1076,92 @@ export default function Profile() {
   };
   const profileCompletion = calculateProfileCompletion();
 
+  if (activeSection === 'overview') {
+    const profileAvatar = formData.avatar || currentUser?.avatar || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+    const profileName = currentUser?.username || 'LoopOut member';
+    const profileRole = currentUser?.offeringType === 'viewer' || !currentUser?.offeringType ? 'Guest' : offeringLabel;
+    const profileRows = [
+      { label: 'Account settings', detail: 'Personal information, login and preferences', icon: Cog6ToothIcon, action: () => navigate('/settings') },
+      { label: 'View profile', detail: 'See how your profile appears to others', icon: UserIcon, action: () => navigate(`/user/${currentUser?._id}?tab=about`) },
+      { label: 'Privacy and sharing', detail: 'Manage what you share on LoopOut', icon: GlobeAltIcon, action: () => navigate('/settings?tab=privacy') },
+      { label: 'Get help', detail: 'Visit the LoopOut help centre', icon: QuestionMarkCircleIcon, action: handleNavigateToHelp },
+    ];
+
+    return (
+      <div className="min-h-screen bg-[#f7f7f7] pb-28 app-safe-content-bottom dark:bg-gray-950">
+        <header className="sticky top-0 z-30 border-b border-slate-100 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95">
+          <div className="mx-auto flex h-16 max-w-xl items-center justify-between px-5">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Profile</h1>
+            <button type="button" onClick={() => navigate('/notifications')} aria-label="Notifications" className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-700 transition hover:bg-slate-100 dark:text-gray-200 dark:hover:bg-gray-800">
+              <BellIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-xl space-y-4 px-5 py-6">
+          <section className="rounded-[28px] border border-slate-100 bg-white px-6 py-7 text-center shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:border-gray-800 dark:bg-gray-900">
+            <button type="button" onClick={() => fileRef.current?.click()} aria-label="Change profile photo" className="mx-auto block rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-4">
+              <img src={profileAvatar} alt="Profile" className="mx-auto h-20 w-20 rounded-full object-cover" />
+            </button>
+            <input type="file" hidden ref={fileRef} accept="image/*" onChange={(event) => setFile(event.target.files?.[0])} />
+            {fileUploadError && <p role="alert" className="mt-2 text-xs text-rose-600">{typeof fileUploadError === 'string' ? fileUploadError : 'Could not upload your photo.'}</p>}
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{profileName}</h2>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-gray-400">{profileRole}</p>
+            <button type="button" onClick={() => navigate(`/user/${currentUser?._id}?tab=about`)} className="mt-3 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600 dark:text-gray-200">
+              View your profile
+            </button>
+          </section>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" onClick={() => handleNavigate('/my-loopout')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-50 text-2xl dark:bg-rose-950/40" aria-hidden="true">🕘</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Past bookings</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">Review completed bookings</span>
+            </button>
+            <button type="button" onClick={() => handleNavigate('/upcoming-bookings')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-950/40" aria-hidden="true">📅</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Upcoming bookings</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">See what’s coming up</span>
+            </button>
+            <button type="button" onClick={() => handleNavigate('/users')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-2xl dark:bg-emerald-950/40" aria-hidden="true">👥</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">Connections</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">Browse LoopOut members</span>
+            </button>
+            <button type="button" onClick={() => isProvider ? navigate(`/${currentUser?._id}/listings`) : navigate('/become')} className="min-h-[132px] rounded-[24px] border border-slate-100 bg-white p-4 text-left shadow-[0_6px_22px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900">
+              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-2xl dark:bg-amber-950/40" aria-hidden="true">🏡</span>
+              <span className="block text-sm font-semibold text-slate-900 dark:text-white">{isProvider ? 'Manage listings' : 'Become a host'}</span>
+              <span className="mt-1 block text-xs text-slate-500 dark:text-gray-400">{isProvider ? 'Update your listings' : 'Share a space or offer a service'}</span>
+            </button>
+          </div>
+
+          <section className="overflow-hidden rounded-[24px] border border-slate-100 bg-white px-4 py-1 shadow-[0_6px_22px_rgba(15,23,42,0.04)] dark:border-gray-800 dark:bg-gray-900" aria-label="Profile settings">
+            {profileRows.map(({ label, detail, icon: Icon, action }, index) => (
+              <button key={label} type="button" onClick={action} className={`flex w-full items-center gap-3 py-4 text-left ${index < profileRows.length - 1 ? 'border-b border-slate-100 dark:border-gray-800' : ''}`}>
+                <Icon className="h-5 w-5 shrink-0 text-slate-700 dark:text-gray-300" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-slate-900 dark:text-white">{label}</span>
+                  <span className="mt-0.5 block text-xs text-slate-500 dark:text-gray-400">{detail}</span>
+                </span>
+                <ChevronRightIcon className="h-4 w-4 shrink-0 text-slate-400" />
+              </button>
+            ))}
+          </section>
+
+          <button type="button" onClick={handleSignOut} className="w-full rounded-2xl px-4 py-4 text-left text-sm font-semibold text-slate-600 transition hover:bg-white dark:text-gray-300 dark:hover:bg-gray-900">Sign out</button>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen app-safe-content-bottom pb-36 md:pb-32 bg-slate-50 dark:bg-gray-950">
-      {/* Sticky Back Bar */}
-      <div className="app-safe-top sticky top-0 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-slate-100 dark:border-gray-800 px-4 py-3 flex items-center gap-3">
+      {/* Profile page header */}
+      <header className="app-safe-top relative z-10 bg-white dark:bg-gray-950 border-b border-slate-100 dark:border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-3">
         <button
-          onClick={() => navigate(-1)}
-          aria-label="Go back"
+          onClick={() => setActiveSection('overview')}
+          aria-label="Back to profile"
           className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
         >
           <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-800 flex items-center justify-center">
@@ -1002,11 +1169,15 @@ export default function Profile() {
           </span>
           <span className="hidden sm:inline">Back</span>
         </button>
-        <span className="text-sm font-black uppercase tracking-widest text-slate-400 dark:text-gray-500">Profile</span>
-      </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Profile</h1>
+            <p className="hidden sm:block text-xs text-slate-500 dark:text-slate-400">Manage your account and preferences</p>
+          </div>
+        </div>
+      </header>
       {/* Masterpiece Elite Account Header */}
-      <div className="max-w-7xl mx-auto px-6 pt-32 mb-12">
-        <div className="relative group overflow-hidden rounded-[3rem] bg-gray-950 p-12 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] border border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 md:pt-7 mb-8 md:mb-10">
+        <div className="relative group overflow-hidden rounded-3xl bg-gray-950 p-5 sm:p-8 lg:p-12 shadow-xl shadow-slate-900/10 border border-white/5">
           {/* Animated Background Elements */}
           <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-rose-500/10 to-transparent blur-[80px] -z-10" />
           <div className="absolute bottom-0 left-0 w-1/4 h-1/2 bg-blue-500/5 rounded-full blur-[100px] -z-10 animate-pulse" />
@@ -1038,9 +1209,9 @@ export default function Profile() {
             {/* Profile Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
-                <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter italic">
+                  <h2 className="text-3xl lg:text-5xl font-black text-white tracking-tighter italic">
                   {currentUser?.username || 'ELITE USER'}
-                </h1>
+                  </h2>
                 {currentUser?.isVerified && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full shadow-[0_0_20px_rgba(59,130,246,0.1)]">
                     <CheckBadgeIcon className="w-5 h-5 text-blue-500" />
@@ -1131,17 +1302,16 @@ export default function Profile() {
                       onClick={() => setActiveSection("host-account")}
                     />}
                     <MenuItem
-                      icon={HeartIcon}
-                      label="Wishlist Vault"
-                      active={activeSection === "wishlist"}
-                      onClick={() => setActiveSection("wishlist")}
+                      icon={FaUserPlus}
+                      label="Become a host"
+                      active={false}
+                      onClick={() => navigate('/become')}
                     />
                     {isProvider && <MenuItem
                       icon={ListBulletIcon}
-                      label={currentUser?.offeringType === 'property' ? 'My properties' : currentUser?.offeringType === 'food' ? 'My shop' : currentUser?.offeringType === 'goods' ? 'My goods' : 'My offers'}
-                      active={activeSection === "my-listings"}
-                      onClick={() => setActiveSection("my-listings")}
-                      badge={userListings?.length || 0}
+                      label="Manage listings"
+                      active={false}
+                      onClick={() => navigate(`/${currentUser?._id}/listings`)}
                     />}
                     <MenuItem
                       icon={TrophyIcon}
@@ -1328,6 +1498,12 @@ export default function Profile() {
                              <ShieldCheckIcon className="w-5 h-5 text-[#FF5A5F]" />
                              Account Verification
                           </h4>
+
+                          {['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(String(currentUser?.email || '').trim().toLowerCase()) && (
+                            <button type="button" onClick={() => navigate('/admin/verification')} className="mb-4 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-900">
+                              Review identity submissions
+                            </button>
+                          )}
                           
                           {/* Face Verification Row */}
                           <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
@@ -1428,20 +1604,15 @@ export default function Profile() {
                           </div>
                         </div>
 
-                        {/* Contacts Access Row */}
-                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                          <div className="flex items-center justify-between mb-2">
-                             <div>
-                                <p className="font-medium text-[#484848] dark:text-white">loopOut Contact Access</p>
-                                <p className="text-sm text-[#767676] dark:text-white mt-1">Allow loopOut to sync your contacts for easy connections</p>
-                             </div>
-                             <ToggleSwitch enabled={accessContacts} setEnabled={setAccessContacts} />
+                        {/* Trusted contact controls live in Guardian Safety settings. */}
+                        <div className="flex flex-col gap-3 rounded-xl bg-gray-50 p-4 dark:bg-gray-800 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-medium text-[#484848] dark:text-white">Guardian Safety contacts</p>
+                            <p className="mt-1 text-sm text-[#767676] dark:text-gray-300">Manage trusted numbers and mutual-contact matching.</p>
                           </div>
-                          {accessContacts && (
-                            <p className="text-[10px] text-[#00A699] font-medium flex items-center gap-1">
-                               <CheckCircleIcon className="w-2.5 h-2.5" /> Contact syncing active
-                            </p>
-                          )}
+                          <button type="button" onClick={() => navigate('/settings?tab=guardian')} className="shrink-0 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 transition hover:border-gray-600 dark:border-gray-600 dark:text-white">
+                            Manage contacts
+                          </button>
                         </div>
                       </div>
 
@@ -1542,27 +1713,49 @@ export default function Profile() {
               <SectionCard title="Notifications" icon={BellIcon}>
                 <div className="max-w-2xl space-y-6">
                   <div>
-                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">Email notifications</h4>
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-4">App and push notifications</h4>
                     <div className="space-y-2">
                       <Checkbox
                         label="Booking updates"
                         checked={notifications.activity.bookingUpdates}
                         onChange={() => toggleNotification('activity', 'bookingUpdates')}
-                        helperText="Stay informed about your booking status"
+                        helperText="Receive booking updates in LoopOut and on registered devices"
                       />
                       <Checkbox
                         label="Payment receipts"
                         checked={notifications.activity.paymentReceipts}
                         onChange={() => toggleNotification('activity', 'paymentReceipts')}
-                        helperText="Receive confirmation for all your payments"
+                        helperText="Get an alert when a booking payment is released"
                       />
                       <Checkbox
-                        label="Promotions and offers"
-                        checked={notifications.promotions.specialOffers}
-                        onChange={() => toggleNotification('promotions', 'specialOffers')}
-                        helperText="Get exclusive deals and discounts"
+                        label="New listings and services nearby"
+                        checked={notifications.promotions.platformUpdates}
+                        onChange={() => toggleNotification('promotions', 'platformUpdates')}
+                        helperText="Get in-app updates when new posts appear in your area"
                       />
                     </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-[#DDDDDD]">
+                    <h4 className="font-semibold text-[#484848] dark:text-white mb-2">Privacy and activity</h4>
+                    <Checkbox
+                      label="Share my approximate GPS area when LoopOut opens"
+                      checked={currentUser?.shareLoginGpsArea === true}
+                      onChange={toggleLoginAreaSharing}
+                      helperText="Optional and off by default. Your phone or browser will ask for location permission. When you open LoopOut while signed in, the area is rounded to roughly 1 km, visible only to the two LoopOut admins, and deleted after 30 days. Turning this off deletes it immediately."
+                    />
+                    <Checkbox
+                      label="Share my LoopOut section activity with admins"
+                      checked={currentUser?.shareActivityWithAdmins === true}
+                      onChange={toggleAdminActivitySharing}
+                      helperText="Optional and off by default. When enabled, the two LoopOut admins can see sampled broad sections you visit and approximate active time while a LoopOut tab is visible. Search terms, individual clicks, and listing details are not recorded. Activity expires after 30 days; switching this off deletes your saved section history."
+                    />
+                    <Checkbox
+                      label="Share detailed activity history with admins"
+                      checked={currentUser?.shareDetailedActivityWithAdmins === true}
+                      onChange={toggleDetailedActivitySharing}
+                      helperText="Optional and off by default, separate from section activity. If enabled, only named page views and selected workflow milestones are saved for the two LoopOut admins for up to 30 days. Search terms, message text, form entries, listing IDs, passwords, identity documents, and precise location are never stored. Turn this off to delete this history immediately."
+                    />
                   </div>
 
                   <div className="pt-6 border-t border-[#DDDDDD]">
@@ -1729,14 +1922,6 @@ export default function Profile() {
                   </div>
                 </SectionCard>
               </>
-            )}
-
-            {/* Wishlist Section */}
-            {activeSection === "wishlist" && (
-              <SectionCard title="Wishlists" icon={HeartIcon}>
-                <p className="text-[#767676] dark:text-white mb-6">Places you've saved for future trips</p>
-                <WishList />
-              </SectionCard>
             )}
 
             {/* My Listings Section */}

@@ -3,6 +3,29 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 
+const ACTIVITY_ACTION_LABELS = {
+  search_submitted: 'Submitted a search (search terms are not stored)',
+  booking_started: 'Started a booking request',
+  booking_submitted: 'Submitted a booking request',
+  property_listing_started: 'Started a property listing',
+  service_listing_started: 'Started a service listing',
+  helper_listing_started: 'Started a helper listing',
+  sale_item_started: 'Started an item-for-sale listing',
+  listing_step_completed: 'Completed a listing workflow step',
+  listing_published: 'Published a listing',
+  food_order_submitted: 'Submitted a food order',
+  table_reservation_submitted: 'Requested a restaurant reservation',
+  item_request_submitted: 'Requested an item for sale',
+  profile_updated: 'Updated profile settings',
+};
+
+const describeActivityEvent = (event) => {
+  if (event.action === 'page_view') return 'Opened the ' + String(event.pageKey || event.section || 'app') + ' section';
+  const label = ACTIVITY_ACTION_LABELS[event.action] || 'LoopOut activity';
+  const details = [event.workflow, event.step].filter(Boolean).join(' · ');
+  return details ? label + ' · ' + details : label;
+};
+
 const CHECKS = [
   ['numberMatches', 'The number entered by the applicant matches the number on the PDF'],
   ['documentHasFace', 'The submitted ID or passport PDF shows the applicant’s face'],
@@ -30,6 +53,8 @@ export default function AdminVerificationReview() {
   const [usersTotal, setUsersTotal] = useState(0);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState('');
+  const [historyUserId, setHistoryUserId] = useState('');
+  const [userHistories, setUserHistories] = useState({});
   const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
     String(currentUser?.email || '').trim().toLowerCase()
   );
@@ -91,6 +116,19 @@ export default function AdminVerificationReview() {
       setUsersError(loadError.message || 'Could not load the user list.');
     } finally {
       setUsersLoading(false);
+    }
+  };
+
+  const loadUserActivityHistory = async (userId, page = 1) => {
+    const key = String(userId);
+    setUserHistories((current) => ({ ...current, [key]: { ...(current[key] || {}), loading: true, error: '' } }));
+    try {
+      const response = await authenticatedFetch(`/api/stats/admin-users/${key}/activity-history?page=${page}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not load this user activity history.');
+      setUserHistories((current) => ({ ...current, [key]: { ...data, loading: false, error: '' } }));
+    } catch (historyError) {
+      setUserHistories((current) => ({ ...current, [key]: { ...(current[key] || {}), loading: false, error: historyError.message || 'Could not load this user activity history.' } }));
     }
   };
 
@@ -204,7 +242,7 @@ export default function AdminVerificationReview() {
             : performanceError ? <p role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Section performance unavailable: {performanceError}</p>
               : performance ? <>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-600 dark:text-slate-300">
-                  {[['activity', 'Opt-in section activity', 'bg-sky-500'], ['posts', 'Current posts', 'bg-violet-500'], ['bookings', 'Bookings / reservations', 'bg-emerald-500'], ['orders', 'Food orders', 'bg-amber-500'], ['activeMinutes', 'Active minutes', 'bg-cyan-500']].map(([key, label, color]) => <span key={key} className="inline-flex items-center gap-2"><i className={"h-2.5 w-2.5 rounded-sm " + color} />{label}</span>)}
+                  {[['activity', 'Opt-in section activity', 'bg-sky-500'], ['posts', 'Visible posts', 'bg-violet-500'], ['bookings', 'Booking requests / reservations', 'bg-emerald-500'], ['orders', 'Orders / item requests', 'bg-amber-500'], ['activeMinutes', 'Active minutes', 'bg-cyan-500']].map(([key, label, color]) => <span key={key} className="inline-flex items-center gap-2"><i className={"h-2.5 w-2.5 rounded-sm " + color} />{label}</span>)}
                 </div>
                 <div className="mt-4 space-y-4">
                   {performance.categories.map((category) => <div key={category.key} className="grid gap-2 sm:grid-cols-[130px_1fr] sm:items-center">
@@ -212,9 +250,9 @@ export default function AdminVerificationReview() {
                     <div className="space-y-1.5">
                       {[
                         ['activity', 'Activity', 'bg-sky-500', performance.activityAvailable ? Number(category.activity) : null],
-                        ['posts', 'Posts', 'bg-violet-500', category.posts === null ? null : Number(category.posts)],
-                        ['bookings', 'Bookings', 'bg-emerald-500', category.bookings === null ? null : Number(category.bookings)],
-                        ['orders', 'Food orders', 'bg-amber-500', category.orders === null ? null : Number(category.orders)],
+                        ['posts', 'Visible posts', 'bg-violet-500', category.posts === null ? null : Number(category.posts)],
+                        ['bookings', 'Requests', 'bg-emerald-500', category.bookings === null ? null : Number(category.bookings)],
+                        ['orders', 'Orders / requests', 'bg-amber-500', category.orders === null ? null : Number(category.orders)],
                         ['activeMinutes', 'Active minutes', 'bg-cyan-500', performance.timeAvailable ? Number(category.activeMinutes) : null],
                       ].map(([key, label, color, value]) => {
                         const max = Math.max(1, ...performance.categories.map((item) => Number(item[key] || 0)));
@@ -245,6 +283,19 @@ export default function AdminVerificationReview() {
                 {!user.loginArea && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{user.shareLoginGpsArea ? 'GPS area sharing is enabled; no location has been recorded yet.' : 'Approximate GPS area is not shared by this user.'}</p>}
                 {user.accountStatus === 'suspended' && user.accountStatusNote && <p className="mt-2 text-xs text-rose-700 dark:text-rose-300">Suspension note: {user.accountStatusNote}</p>}
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{user.shareActivityWithAdmins ? user.recentSection ? `Last section visited (shared by user): ${user.recentSection.section} · ${new Date(user.recentSection.viewedAt).toLocaleString()}` : 'Section activity sharing is on; no recent section visit is recorded.' : 'Section activity not shared. The user can opt in from Profile settings.'}</p>
+                <div className="mt-3 border-t border-slate-100 pt-3 dark:border-gray-800">
+                  {user.shareDetailedActivityWithAdmins ? <>
+                    <button type="button" onClick={() => { const key = String(user._id); if (historyUserId === key) setHistoryUserId(''); else { setHistoryUserId(key); if (!userHistories[key]) loadUserActivityHistory(key, 1); } }} className="rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-900 dark:text-indigo-300 dark:hover:bg-indigo-950/30">{historyUserId === String(user._id) ? 'Hide activity history' : 'View activity history'}</button>
+                    {historyUserId === String(user._id) && <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-gray-800">
+                      <p className="mb-2 text-[10px] text-slate-500 dark:text-slate-400">User opted in. Named page views and selected workflow milestones only; retained for up to 30 days.</p>
+                      {userHistories[String(user._id)]?.error && <p role="alert" className="text-xs text-rose-700">{userHistories[String(user._id)].error}</p>}
+                      {userHistories[String(user._id)]?.loading ? <p className="text-xs text-slate-500">Loading history…</p> : <>
+                        {(userHistories[String(user._id)]?.events || []).length ? <ol className="max-h-72 space-y-2 overflow-y-auto">{userHistories[String(user._id)].events.map((event) => <li key={event._id} className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-b border-slate-200 pb-2 text-xs last:border-0 dark:border-gray-700"><span className="font-medium text-slate-700 dark:text-slate-200">{describeActivityEvent(event)}</span><time className="text-slate-500">{new Date(event.createdAt).toLocaleString()}</time></li>)}</ol> : <p className="text-xs text-slate-500">No activity history has been recorded.</p>}
+                        {Number(userHistories[String(user._id)]?.total) > 100 && <div className="mt-3 flex items-center justify-between"><span className="text-[10px] text-slate-500">Page {userHistories[String(user._id)].page}</span><div className="flex gap-2"><button type="button" disabled={userHistories[String(user._id)].loading || userHistories[String(user._id)].page <= 1} onClick={() => loadUserActivityHistory(user._id, userHistories[String(user._id)].page - 1)} className="rounded border px-2 py-1 text-[10px] disabled:opacity-40">Previous</button><button type="button" disabled={userHistories[String(user._id)].loading || userHistories[String(user._id)].page * 100 >= userHistories[String(user._id)].total} onClick={() => loadUserActivityHistory(user._id, userHistories[String(user._id)].page + 1)} className="rounded border px-2 py-1 text-[10px] disabled:opacity-40">Next</button></div></div>}
+                      </>}
+                    </div>}
+                  </> : <p className="text-[11px] text-slate-500 dark:text-slate-400">Detailed history is off. The user must enable it in Profile settings.</p>}
+                </div>
               </article>)}</div>
               : <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-gray-800">No user accounts found.</p>}
             {usersTotal > 50 && <div className="mt-4 flex items-center justify-between"><p className="text-xs text-slate-500">Page {usersPage} of {Math.ceil(usersTotal / 50)}</p><div className="flex gap-2"><button type="button" disabled={usersLoading || usersPage <= 1} onClick={() => loadUsers(usersPage - 1)} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-40 dark:border-gray-700">Previous</button><button type="button" disabled={usersLoading || usersPage >= Math.ceil(usersTotal / 50)} onClick={() => loadUsers(usersPage + 1)} className="rounded-lg border px-3 py-2 text-xs disabled:opacity-40 dark:border-gray-700">Next</button></div></div>}

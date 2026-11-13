@@ -43,8 +43,20 @@ export default function HelperBookingSheet({
         alert("Please enter your name and phone number.");
         return;
       }
+      if (!bookingData.date || !bookingData.time) {
+        alert("Please choose a booking date and start time.");
+        return;
+      }
+      if (!bookingData.durationHours) {
+        alert("Please choose how many hours you need, or select all day.");
+        return;
+      }
       if (bookingData.locationOption === 'comeToYou' && !bookingData.address?.trim()) {
         alert("Please enter your service address.");
+        return;
+      }
+      if (bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
+        alert("Please let the provider know whether there are dogs at the property.");
         return;
       }
     }
@@ -227,6 +239,22 @@ export default function HelperBookingSheet({
                       isTimeSlotBooked={isTimeSlotBooked}
                       isDateFullyBooked={isDateFullyBooked}
                     />
+                    <div>
+                      <label htmlFor="booking-duration" className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">How long do you need the service? *</label>
+                      <select
+                        id="booking-duration"
+                        name="durationHours"
+                        value={bookingData.durationHours || ''}
+                        onChange={handleBookingChange}
+                        required
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      >
+                        <option value="">Choose duration</option>
+                        {[1, 2, 3, 4, 6, 8, 10, 12].map((hours) => <option key={hours} value={String(hours)}>{hours} {hours === 1 ? 'hour' : 'hours'}</option>)}
+                        <option value="all-day">All day (8 hours)</option>
+                      </select>
+                      <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">The end time will be added to your booking request.</p>
+                    </div>
                   </div>
                 </div>
 
@@ -271,16 +299,34 @@ export default function HelperBookingSheet({
 
                 {/* Address if comeToYou */}
                 {bookingData.locationOption === 'comeToYou' && (
-                  <div>
-                    <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">📍 Address *</label>
-                    <textarea
-                      name="address"
-                      value={bookingData.address}
-                      onChange={handleBookingChange}
-                      rows="2"
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"
-                      placeholder="Enter your full street address, suburb & city"
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">📍 Address *</label>
+                      <textarea
+                        name="address"
+                        value={bookingData.address}
+                        onChange={handleBookingChange}
+                        rows="2"
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"
+                        placeholder="e.g. 27 Somerset Road, Greenpoint, Cape Town"
+                      />
+                    </div>
+                    <fieldset>
+                      <legend className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">🐕 Are there dogs at the property? *</legend>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[['yes', 'Yes'], ['no', 'No']].map(([value, label]) => (
+                          <button
+                            key={value}
+                            type="button"
+                            aria-pressed={bookingData.dogsAtProperty === value}
+                            onClick={() => setBookingData(prev => ({ ...prev, dogsAtProperty: value }))}
+                            className={`p-3 rounded-2xl border-2 text-center text-xs font-bold transition-all ${bookingData.dogsAtProperty === value ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300' : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300'}`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
                   </div>
                 )}
               </div>
@@ -479,6 +525,22 @@ export default function HelperBookingSheet({
                           </button>
                         ))}
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-800 dark:text-gray-200 mb-1.5">Estimated Service Duration</label>
+                      <select
+                        name="serviceDuration"
+                        value={bookingData.serviceDuration || ''}
+                        onChange={handleBookingChange}
+                        className="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-semibold text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      >
+                        <option value="">Select duration...</option>
+                        <option value="30 minutes">30 minutes</option>
+                        <option value="1 hour">1 hour</option>
+                        <option value="90 minutes">90 minutes</option>
+                        <option value="2 hours">2 hours</option>
+                      </select>
                     </div>
                   </div>
                 )}
@@ -779,6 +841,7 @@ export default function HelperBookingSheet({
             {/* ── SECTION 3: Provisions (Electricity/Food), Price & WhatsApp Booking ── */}
             {step === 3 && (
               <div className="space-y-6">
+                <p className="rounded-xl border border-emerald-100 bg-emerald-50 px-3.5 py-3 text-xs leading-relaxed text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">You can cancel up to 48 hours before the scheduled service. After that, contact the provider to discuss your options.</p>
                 {/* Provisions: Food & Electricity */}
                 <div className="rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-4 space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-gray-400">Provisions on site</h4>
@@ -827,18 +890,19 @@ export default function HelperBookingSheet({
                 {/* Booking Summary Card */}
                 <div className="bg-slate-900 rounded-3xl p-5 text-white space-y-3 shadow-xl">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
-                    <span>Professional</span>
+                    <span>👤 Professional</span>
                     <span className="text-white font-black">{helper?.name}</span>
                   </div>
                   {bookingData.date && (
                     <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10">
-                      <span>Scheduled Date & Time</span>
+                      <span>📅 Scheduled Date &amp; Time</span>
                       <span className="text-white font-black">{bookingData.date} {bookingData.time ? `@ ${bookingData.time}` : ''}</span>
                     </div>
                   )}
+                  {bookingData.durationHours && <div className="flex justify-between items-center text-xs font-bold text-slate-300 pb-2 border-b border-white/10"><span>⏱️ Service duration</span><span className="text-white font-black">{bookingData.durationHours === 'all-day' ? 'All day (8 hours)' : `${bookingData.durationHours} ${bookingData.durationHours === '1' ? 'hour' : 'hours'}`}</span></div>}
                   {bookingData.selectedServices.length > 0 && (
                     <div className="space-y-1 py-1">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Selected Services</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">🧰 Selected Services</span>
                       {bookingData.selectedServices.map(sId => {
                         const opt = serviceOptions.find(o => String(o.id) === String(sId));
                         return opt ? (
@@ -851,7 +915,7 @@ export default function HelperBookingSheet({
                     </div>
                   )}
                   <div className="pt-2 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-300">Estimated Total</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-slate-300">💰 Estimated Total</span>
                     <span className="text-2xl font-black text-rose-400">R{totalPrice}</span>
                   </div>
                 </div>

@@ -190,6 +190,7 @@ export default function GigRadarSection({ currentUser, navigate }) {
                         src={avatar}
                         alt={username}
                         className="w-10 h-10 rounded-2xl object-cover ring-2 ring-emerald-500/20 shrink-0"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                       <div className="min-w-0">
                         <p className="text-xs font-black text-gray-900 dark:text-white truncate">

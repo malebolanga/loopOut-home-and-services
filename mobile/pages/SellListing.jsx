@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPinIcon,
@@ -18,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { FaWhatsapp } from 'react-icons/fa';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 const CATEGORY_META = {
   furniture:    { emoji: '🛋️', label: 'Furniture',    gradient: 'from-amber-500 to-orange-500',  bg: 'bg-amber-50',  text: 'text-amber-700',  border: 'border-amber-200' },
@@ -25,6 +27,7 @@ const CATEGORY_META = {
   clothes:      { emoji: '👗', label: 'Clothes',      gradient: 'from-rose-400 to-pink-500',     bg: 'bg-rose-50',   text: 'text-rose-700',   border: 'border-rose-200'  },
   universities: { emoji: '🎓', label: 'Universities', gradient: 'from-violet-500 to-purple-600', bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200'},
   books:        { emoji: '📚', label: 'Books',        gradient: 'from-emerald-500 to-teal-500',  bg: 'bg-emerald-50',text: 'text-emerald-700',border: 'border-emerald-200'},
+  other:        { emoji: '🏷️', label: 'Other Items',  gradient: 'from-gray-500 to-slate-600',    bg: 'bg-gray-50',  text: 'text-gray-700',  border: 'border-gray-200' },
 };
 
 const toWhatsAppNumber = (contact) => {
@@ -37,12 +40,16 @@ const toWhatsAppNumber = (contact) => {
 export default function SellListing() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useSelector((state) => state.user || {});
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [requestMessage, setRequestMessage] = useState('');
+  const [requestBusy, setRequestBusy] = useState(false);
+  const [requestNotice, setRequestNotice] = useState('');
 
   // Validate that the ID looks like a MongoDB ObjectId (24 hex characters)
   const isValidId = /^[0-9a-fA-F]{24}$/.test(id);
@@ -58,12 +65,21 @@ export default function SellListing() {
   try {
     // Attempt to fetch from sell endpoint first
     let res = await fetch(`/api/sell/${id}`);
+    let isRegularListing = false;
     // If not found, fallback to regular listings endpoint
     if (res.status === 404) {
-      res = await fetch(`/api/listing/${id}`);
+      res = await fetch(`/api/listing/get/${id}`);
+      isRegularListing = true;
     }
     const data = await res.json();
-    if (!data.success) {
+    if (isRegularListing) {
+      // /api/listing/get/:id returns the listing document itself (or an error object), not { success, data }.
+      if (!res.ok || data.success === false) {
+        setError(data.message || 'Listing not found');
+      } else {
+        setListing(data);
+      }
+    } else if (!data.success) {
       setError(data.message || 'Listing not found');
     } else {
       setListing(data.data);
@@ -103,6 +119,25 @@ export default function SellListing() {
   const sellerName = String(listing?.creator?.username || 'there').trim().replace(/\s+/g, ' ');
   const whatsappMessage = `Hi ${sellerName}, I’m interested in ${listing?.title || 'your item'} on LoopOut${listing?.price ? ` listed for R${Number(listing.price).toLocaleString('en-ZA')}` : ''}. Is it still available?`;
   const whatsappHref = whatsappNumber ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}` : '';
+  const isOwner = currentUser && String(currentUser._id || currentUser.id) === String(listing?.creator?._id || listing?.creator);
+
+  const sendRequest = async (event) => {
+    event.preventDefault();
+    if (!currentUser) { navigate('/sign-in'); return; }
+    setRequestBusy(true);
+    setRequestNotice('');
+    try {
+      const response = await authenticatedFetch('/api/sell/orders', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: id, message: requestMessage }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || 'Could not send your request.');
+      setRequestNotice('Your request was sent. Track the seller’s response in My LoopOut.');
+      setRequestMessage('');
+    } catch (requestError) { setRequestNotice(requestError.message || 'Could not send your request.'); }
+    finally { setRequestBusy(false); }
+  };
 
   if (loading) {
     return (
@@ -443,6 +478,14 @@ export default function SellListing() {
               </div>
 
               <div className="space-y-3">
+                {!isOwner && <form onSubmit={sendRequest} className="space-y-3 rounded-2xl border border-rose-100 bg-rose-50/70 p-4 dark:border-rose-900/50 dark:bg-rose-950/20">
+                  <div><p className="text-sm font-semibold text-slate-900 dark:text-white">Request to buy</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">The seller can accept and arrange collection with you. Payment is arranged directly with the seller.</p></div>
+                  <label className="sr-only" htmlFor="seller-request-message">Message to seller</label>
+                  <textarea id="seller-request-message" value={requestMessage} onChange={(event) => setRequestMessage(event.target.value)} maxLength={500} rows={2} placeholder="Add a short message (optional)" className="w-full resize-y rounded-xl border border-slate-200 bg-white p-3 text-sm dark:border-slate-700 dark:bg-slate-900" />
+                  {requestNotice && <p role="status" className="text-xs font-semibold text-rose-700 dark:text-rose-300">{requestNotice}</p>}
+                  <button type="submit" disabled={requestBusy} className="flex w-full min-h-11 items-center justify-center rounded-xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60">{requestBusy ? 'Sending request…' : 'Send purchase request'}</button>
+                  {requestNotice.startsWith('Your request') && <button type="button" onClick={() => navigate('/my-loopout')} className="w-full rounded-xl border border-rose-200 px-4 py-2.5 text-xs font-bold text-rose-700 dark:border-rose-900 dark:text-rose-300">View in My LoopOut</button>}
+                </form>}
                 {whatsappHref && (
                   <a
                     href={whatsappHref}

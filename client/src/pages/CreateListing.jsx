@@ -53,6 +53,7 @@ import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { updateUserSuccess } from "../redux/user/userSlice";
 import { getServiceProviderVerificationStatus } from "../utils/offeringPermissions";
 
@@ -1187,6 +1188,25 @@ export default function CreateListing() {
     }
     
     setError(null);
+    if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+      const workflow = selectedCategory === 'property' ? 'property'
+        : selectedCategory === 'experiences' ? 'service'
+        : selectedCategory === 'online' || selectedCategory === 'helping' ? 'helper'
+        : selectedCategory === 'selling' ? 'sale' : null;
+      if (workflow) {
+        const startedAction = { property: 'property_listing_started', service: 'service_listing_started', helper: 'helper_listing_started', sale: 'sale_item_started' }[workflow];
+        if (currentStep === 1) {
+          authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: startedAction, workflow, section: workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell' }) }).catch(() => {});
+        } else {
+          const step = currentStep === 1 || currentStep === 2 ? 'category'
+            : currentStep === 4 || currentStep === 5 ? 'availability'
+            : currentStep === 8 ? 'photos'
+            : currentStep === 9 ? 'pricing'
+            : currentStep === 10 ? 'review' : 'details';
+          authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'listing_step_completed', workflow, step, section: workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell' }) }).catch(() => {});
+        }
+      }
+    }
     const visible = getVisibleSteps(selectedCategory, selectedType);
     const currIdx = visible.findIndex(s => s.id === currentStep);
     if (currIdx !== -1 && currIdx < visible.length - 1) {
@@ -1797,6 +1817,13 @@ export default function CreateListing() {
         
         setError(errorMessage);
       } else {
+        if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+          const workflow = selectedCategory === 'property' ? 'property' : selectedCategory === 'experiences' ? 'service' : selectedCategory === 'online' ? 'helper' : selectedCategory === 'selling' ? 'sale' : null;
+          if (workflow) {
+            const section = workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell';
+            authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'listing_published', workflow, step: 'submitted', section }) }).catch(() => {});
+          }
+        }
         setNewListingId(data._id || data.listing?._id);
         if (selectedCategory === 'selling') {
           navigate('/listing-success', { state: { listingId: data._id || data.listing?._id, type: selectedCategory } });

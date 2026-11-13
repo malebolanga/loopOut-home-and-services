@@ -424,12 +424,12 @@ export default function ComprehensivePropertySafetyPolicy() {
                 <div>
                   <h3 className="text-xl font-semibold mb-4">Property Emergencies</h3>
                   <ul className="list-disc pl-5 space-y-3">
-                    <li className="font-semibold">Call emergency services immediately (911)</li>
+                    <li className="font-semibold">Call your local emergency services number immediately</li>
                     <li>Know emergency exits and evacuation routes</li>
                     <li>Locate fire extinguishers and first aid kits</li>
                     <li>Report maintenance emergencies to property contact</li>
                     <li>Keep emergency contact information accessible</li>
-                    <li>Report incident to PropertySafe within 24 hours</li>
+                    <li>Report the incident to the property contact and LoopOut</li>
                   </ul>
                 </div>
                 <div>
@@ -437,10 +437,10 @@ export default function ComprehensivePropertySafetyPolicy() {
                   <ul className="list-disc pl-5 space-y-3">
                     <li className="font-semibold">Remove yourself from dangerous situations</li>
                     <li>Contact authorities if threatened or unsafe</li>
-                    <li>Use safety features in the PropertySafe app</li>
+                    <li>Use LoopOut safety features where available</li>
                     <li>Notify trusted contacts immediately</li>
                     <li>Document incidents with photos if safe</li>
-                    <li>Report safety concerns to PropertySafe promptly</li>
+                    <li>Report safety concerns to LoopOut promptly</li>
                   </ul>
                 </div>
               </div>
@@ -449,19 +449,9 @@ export default function ComprehensivePropertySafetyPolicy() {
                 <h4 className="font-semibold mb-2 text-yellow-800">Emergency Contact Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <p className="font-semibold">PropertySafe Safety Team</p>
-                    <p>safety@property-safe.com</p>
-                    <p>1-800-PROP-SAFE</p>
-                  </div>
-                  <div>
                     <p className="font-semibold">Emergency Services</p>
-                    <p>911 (USA)</p>
-                    <p>112 (EU Emergency)</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Non-Emergency Police</p>
-                    <p>311 (USA)</p>
-                    <p>Local precinct</p>
+                    <p>Call the emergency number for your country or area.</p>
+                    <p>LoopOut panic alerts do not call emergency services.</p>
                   </div>
                 </div>
               </div>

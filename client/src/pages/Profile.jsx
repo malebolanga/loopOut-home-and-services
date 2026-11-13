@@ -951,6 +951,20 @@ export default function Profile() {
     }
   };
 
+  const toggleDetailedActivitySharing = async () => {
+    const enabled = currentUser?.shareDetailedActivityWithAdmins !== true;
+    try {
+      const response = await authenticatedFetch('/api/stats/activity-history-sharing', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not update detailed activity sharing.');
+      dispatch(updateUserSuccess({ ...currentUser, shareDetailedActivityWithAdmins: data.enabled }));
+    } catch (sharingError) {
+      setFetchError(sharingError.message || 'Could not update detailed activity sharing.');
+    }
+  };
+
   const toggleLoginAreaSharing = async () => {
     const enabled = currentUser?.shareLoginGpsArea !== true;
     try {
@@ -1735,6 +1749,12 @@ export default function Profile() {
                       checked={currentUser?.shareActivityWithAdmins === true}
                       onChange={toggleAdminActivitySharing}
                       helperText="Optional and off by default. When enabled, the two LoopOut admins can see sampled broad sections you visit and approximate active time while a LoopOut tab is visible. Search terms, individual clicks, and listing details are not recorded. Activity expires after 30 days; switching this off deletes your saved section history."
+                    />
+                    <Checkbox
+                      label="Share detailed activity history with admins"
+                      checked={currentUser?.shareDetailedActivityWithAdmins === true}
+                      onChange={toggleDetailedActivitySharing}
+                      helperText="Optional and off by default, separate from section activity. If enabled, only named page views and selected workflow milestones are saved for the two LoopOut admins for up to 30 days. Search terms, message text, form entries, listing IDs, passwords, identity documents, and precise location are never stored. Turn this off to delete this history immediately."
                     />
                   </div>
 

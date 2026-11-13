@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateUserSuccess } from '../redux/user/userSlice';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, uploadString } from 'firebase/storage';
 import { app } from '../firebase';
 import { 
@@ -54,14 +55,18 @@ export default function Verification() {
   const [kycStep, setKycStep] = useState(1);
   const [idUrl, setIdUrl] = useState('');
   const [selfieUrl, setSelfieUrl] = useState('');
+  const [idDocumentNumber, setIdDocumentNumber] = useState('');
   const fileRef = useRef(null);
 
   useEffect(() => {
     if (currentUser?.offeringType === 'services' && currentUser?.kycStatus !== 'pending' && currentUser?.kycStatus !== 'verified') {
       setMethod('kyc');
       setStep(2);
+      if (currentUser?.kycStatus === 'rejected' && currentUser?.kycReviewNote) {
+        setError(`Previous review: ${currentUser.kycReviewNote}`);
+      }
     }
-  }, [currentUser?.offeringType, currentUser?.kycStatus]);
+  }, [currentUser?.offeringType, currentUser?.kycStatus, currentUser?.kycReviewNote]);
 
   // Verification Protocols
   const PROTOCOLS = [
@@ -71,7 +76,7 @@ export default function Verification() {
 
   const uploadKycFile = async (fileOrBase64, folder, setUrlState) => {
     const storage = getStorage(app);
-    const fileName = new Date().getTime() + "_upload";
+    const fileName = `${new Date().getTime()}_upload${folder === 'idDocuments' ? '.pdf' : '.jpg'}`;
     const storageRef = ref(storage, `kyc/${folder}/${fileName}`);
     setIsProcessing(true);
     setError(null);
@@ -113,14 +118,36 @@ export default function Verification() {
     );
   };
 
-  const handleIdChange = (e) => {
+  const handleIdChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      uploadKycFile(file, 'idDocuments', setIdUrl);
+    if (!file) return;
+    e.target.value = '';
+    if (file.size >= 10 * 1024 * 1024) {
+      setError('The ID or passport PDF must be under 10 MB.');
+      return;
     }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setError('Upload your ID or passport as a PDF file.');
+      return;
+    }
+    const signature = new TextDecoder().decode(await file.slice(0, 5).arrayBuffer());
+    if (signature !== '%PDF-') {
+      setError('This file is not a valid PDF. Please export or scan your ID into a PDF and try again.');
+      return;
+    }
+    setError(null);
+    uploadKycFile(file, 'idDocuments', setIdUrl);
   };
 
   const handleCaptureSelfie = () => {
+    if (!idUrl) {
+      setError('Upload your ID or passport PDF first.');
+      return;
+    }
+    if (!/^[A-Z0-9]{5,25}$/i.test(String(idDocumentNumber).replace(/[\s-]/g, ''))) {
+      setError('Enter the ID or passport number shown on your PDF before taking the selfie.');
+      return;
+    }
     if (videoRef.current) {
         const canvas = document.createElement('canvas');
         canvas.width = videoRef.current.videoWidth;
@@ -135,15 +162,15 @@ export default function Verification() {
   const submitKycFinal = async (idDocumentUrl, liveSelfieUrl) => {
      try {
        setIsProcessing(true);
-       const res = await fetch('/api/verification/submit-kyc', {
+       const res = await authenticatedFetch('/api/verification/submit-kyc', {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify({ idDocumentUrl, liveSelfieUrl })
+         body: JSON.stringify({ idDocumentUrl, liveSelfieUrl, idDocumentNumber })
        });
        const data = await res.json();
-       if (data.success === false) { setError(data.message); return; }
+       if (!res.ok || data.success === false) { setError(data.message || 'Please check your document and try again.'); return; }
        
-       const updatedUser = { ...currentUser, isVerified: false, kycStatus: 'pending' };
+       const updatedUser = { ...currentUser, kycStatus: 'pending', kycReviewNote: '' };
        dispatch(updateUserSuccess(updatedUser));
        setStep(3); // success screen
      } catch (err) {
@@ -347,10 +374,16 @@ export default function Verification() {
                      <div className="w-full text-center space-y-12">
                        <div className="space-y-4">
                           <h2 className="text-4xl font-black text-gray-950 tracking-tighter italic">STEP 1: IDENTITY DOCUMENT</h2>
-                          <p className="text-gray-500 dark:text-white font-medium">Please upload a clear image of your Passport, National ID, or Driver's License.</p>
+                          <p className="text-gray-500 dark:text-white font-medium">Upload a clear PDF of your ID or passport. A reviewer will check its number and photo against your live selfie.</p>
                        </div>
                        
-                       <input type="file" ref={fileRef} hidden accept="image/*" onChange={handleIdChange} />
+                       <div className="mx-auto max-w-xl space-y-4 text-left">
+                         <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200" htmlFor="identity-document-number">ID or passport number</label>
+                         <input id="identity-document-number" type="text" autoComplete="off" maxLength={30} value={idDocumentNumber} onChange={(e) => setIdDocumentNumber(e.target.value)} placeholder="Enter the number printed on your document" className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white" />
+                         <p className="text-xs text-slate-500 dark:text-slate-400">Use letters and numbers only. The reviewer will compare it with the number shown in your PDF.</p>
+                       </div>
+
+                       <input type="file" ref={fileRef} hidden accept="application/pdf,.pdf" onChange={handleIdChange} />
                        
                        <div className="relative aspect-[1.6/1] bg-gray-50 dark:bg-gray-800 border-4 border-dashed border-gray-200 dark:border-gray-800 rounded-[3rem] flex flex-col items-center justify-center p-12 hover:border-indigo-500 hover:bg-indigo-50/30 transition-all cursor-pointer"
                         onClick={() => fileRef.current.click()}
@@ -368,7 +401,7 @@ export default function Verification() {
                                <div className="w-20 h-20 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
                                   <IdentificationIcon className="w-10 h-10 text-indigo-500" />
                                </div>
-                               <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-indigo-600">Select Document File</p>
+                               <p className="mt-8 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-indigo-600">Select ID or Passport PDF · Max 10 MB</p>
                              </>
                            )}
                        </div>
@@ -382,6 +415,7 @@ export default function Verification() {
                              <Scan size={14} /> BIOMETRIC CAPTURE
                           </div>
                           <h2 className="text-4xl font-black text-gray-950 tracking-tighter">STEP 2: LIVE SELFIE</h2>
+                          <p className="mx-auto max-w-xl text-sm text-gray-500 dark:text-gray-300">Your selfie and PDF go to a pending review. A LoopOut administrator must confirm the number, the photo on the document, and that the face matches before your identity is marked verified.</p>
                        </div>
     
                        <div className="relative overflow-hidden rounded-[3rem] bg-gray-950 shadow-[0_50px_100px_-20px_rgba(225,29,72,0.3)] aspect-[4/3] flex items-center justify-center">
@@ -573,26 +607,24 @@ export default function Verification() {
               </div>
 
               <div className="space-y-6 mb-12">
-                 <h2 className="text-6xl font-black text-gray-950 tracking-tighter italic">IDENTITY <br/> ESTABLISHED</h2>
+                 <h2 className="text-4xl sm:text-5xl font-black text-gray-950 tracking-tighter italic">{method === 'kyc' ? <>SUBMITTED <br />FOR REVIEW</> : <>SIGNAL <br />CONFIRMED</>}</h2>
                  <p className="text-gray-500 dark:text-white max-w-md mx-auto font-medium">
-                   Your neural signal has been successfully hard-coded into the loopOut verification chain. You now hold ELITE level status.
+                   {method === 'kyc'
+                     ? 'Your identity is still pending. An administrator will check the number and face on your PDF against your live selfie. You can publish after the review is approved.'
+                     : 'Your contact signal was confirmed. This does not verify your identity.'}
                  </p>
               </div>
 
               <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 max-w-md w-full mb-12 flex items-center gap-6">
                  <div className="relative">
                    <img src={currentUser?.avatar} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500 p-0.5" />
-                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-[3px] border-white flex items-center justify-center">
-                      <Award size={10} className="text-white" />
-                   </div>
                  </div>
                  <div className="text-left flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">ELITE VERIFIED</p>
+                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">{method === 'kyc' ? 'Identity review' : 'Account signal'}</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white truncate">{currentUser?.username}</p>
                  </div>
                  <div className="text-right">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Trust Score</p>
-                    <p className="text-xl font-black italic tracking-tighter text-gray-950">99.8%</p>
+                    <p className="text-sm font-bold text-amber-700 dark:text-amber-300">{method === 'kyc' ? 'Pending' : 'Confirmed'}</p>
                  </div>
               </div>
 
@@ -600,7 +632,7 @@ export default function Verification() {
                 onClick={() => navigate('/profile')}
                 className="flex items-center gap-4 px-12 py-6 bg-gray-950 text-white hover:bg-black rounded-[2.5rem] text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95"
               >
-                Sync Final Core
+                Back to profile
                 <ChevronRightIcon className="w-5 h-5 hover:translate-x-1 transition-transform" />
               </button>
             </motion.div>

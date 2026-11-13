@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaCalendarCheck, 
@@ -216,14 +217,8 @@ const BookingCard = ({ booking, onCancel, onCloseWork, onRate }) => {
           </div>
         )}
 
-        {/* Action if active and ready to close */}
         {['confirmed', 'approved', 'assigned', 'enroute', 'ongoing'].includes(booking.status) && (
-          <button
-            onClick={() => onCloseWork(booking)}
-            className="w-full py-2 bg-slate-900 hover:bg-black text-white font-black text-[11px] uppercase tracking-wider rounded-xl transition-all active:scale-95 cursor-pointer"
-          >
-            Mark Job Complete &amp; Rate
-          </button>
+          <p className="text-center text-xs font-semibold text-slate-500">Waiting for the provider to finish the work.</p>
         )}
         
         {/* Premium WhatsApp Contact Card */}
@@ -232,8 +227,9 @@ const BookingCard = ({ booking, onCancel, onCloseWork, onRate }) => {
           <div className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500">
             <div className="flex items-center gap-4">
                <div className="relative">
-                 <div className="w-14 h-14 rounded-full bg-white border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center">
-                   <img src={booking.selectedPerformer ? (booking.performerImage || 'https://i.pravatar.cc/150?u=pro') : booking.proAvatar} alt={booking.selectedPerformer || booking.proName} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://i.pravatar.cc/150?u=pro'} />
+                 <div className="relative w-14 h-14 rounded-full bg-emerald-50 border-4 border-emerald-50 shadow-inner overflow-hidden flex items-center justify-center text-emerald-800 font-bold">
+                   <span aria-hidden="true">{(booking.selectedPerformer || booking.proName || 'P').trim().charAt(0).toUpperCase()}</span>
+                   {(booking.performerImage || booking.proAvatar) && <img src={booking.performerImage || booking.proAvatar} alt={`${booking.selectedPerformer || booking.proName}'s profile`} className="absolute inset-0 h-full w-full object-cover" onError={(e) => e.currentTarget.remove()} />}
                  </div>
                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
                     <FaWhatsapp className="text-white text-[10px]" />
@@ -312,14 +308,15 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
               date: new Date(b.startDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }),
               time: new Date(b.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               proName: b.listing ? (b.listing.userRef?.username || 'Host') : (b.helper?.name || b.service?.name || 'Pro'),
-              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.listing?.userRef?.avatar || b.helper?.userRef?.avatar || b.service?.userRef?.avatar || b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || '',
               proWhatsapp: b.phone || 'N/A',
               icon: b.listing ? <FaHome /> : (b.service?.type === 'carwash' ? <FaCar /> : <FaHandsWash />),
               color: b.listing ? 'bg-rose-500' : 'bg-blue-500',
               subtype: b.subtype || '',
               selectedPerformer: b.selectedPerformer,
               performerExperience: b.performerExperience,
-              performerImage: b.performerImage,
+              performerImage: b.performerImage || b.helper?.performers?.find((performer) => performer.name === b.selectedPerformer)?.image,
+              helper: b.helper,
               type: b.listing ? 'listing' : (b.helper ? 'helper' : 'service'),
               itemId: b.listing?._id || b.helper?._id || b.service?._id
             }));
@@ -351,23 +348,24 @@ const MyBookingsConsumer = ({ isOpen, onClose }) => {
   };
 
   const handleCancel = async (id) => {
+    const cancellationReason = requestCancellationReason();
+    if (!cancellationReason) return;
     try {
-      // Optimistically remove from UI
-      setActiveBookings(prev => prev.filter(b => b.id !== id));
-
       const res = await fetch(`/api/bookings/update/${id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           status: 'cancelled',
-          cancelledBy: 'user'
+          cancellationReason
         })
       });
       if (!res.ok) {
-        console.error('Failed to cancel booking on server');
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to cancel booking on server.');
       }
+      setActiveBookings(prev => prev.filter(b => b.id !== id));
     } catch (error) {
-      console.error('Failed to cancel booking:', error);
+      console.error('Failed to cancel booking:', error.message || error);
     }
   };
 

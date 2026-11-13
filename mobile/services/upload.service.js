@@ -1,12 +1,13 @@
 /**
  * upload.service.js
  *
- * Uploads files directly to Firebase Cloud Storage so that images persist
- * permanently across server restarts and deployments.  All pages that call
- * `uploadFiles()` will automatically benefit from cloud storage.
+ * Uploads files to Firebase Cloud Storage when the user has Firebase Auth,
+ * falling back to LoopOut's authenticated upload API for JWT-only accounts.
  */
 
-import { storage } from '../firebase';
+import { auth, storage } from '../firebase';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 import {
   ref,
   uploadBytesResumable,
@@ -20,7 +21,7 @@ import {
  * @param {Function} onProgress - Optional callback receiving 0-100 percent.
  * @returns {Promise<string[]>} - Resolves to an array of permanent cloud download URLs.
  */
-export const uploadFiles = async (files, onProgress = () => {}) => {
+const uploadToFirebase = async (files, onProgress) => {
   const uploadPromises = files.map((file, idx) => {
     return new Promise((res, rej) => {
       const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -50,4 +51,49 @@ export const uploadFiles = async (files, onProgress = () => {}) => {
   });
 
   return Promise.all(uploadPromises);
+};
+
+const uploadToApi = async (files, onProgress) => {
+  const uploadedUrls = [];
+  const batchSize = 10;
+
+  for (let start = 0; start < files.length; start += batchSize) {
+    const batch = files.slice(start, start + batchSize);
+    const formData = new FormData();
+    batch.forEach((file) => formData.append('files', file));
+
+    const response = await authenticatedFetch('/api/uploads', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok || result.success === false || !Array.isArray(result.urls)) {
+      throw new Error(result.message || `Upload failed (${response.status}).`);
+    }
+
+    uploadedUrls.push(...result.urls.map((url) => resolveApiUrl(url)));
+    onProgress(Math.round((Math.min(start + batch.length, files.length) / files.length) * 100));
+  }
+
+  return uploadedUrls;
+};
+
+export const uploadFiles = async (files, onProgress = () => {}) => {
+  if (!Array.isArray(files) || files.length === 0) return [];
+
+  // Password-based LoopOut accounts use the app's JWT rather than Firebase
+  // Auth. Their uploads must go through the authenticated API endpoint because
+  // Firebase Storage rules correctly reject unauthenticated writes.
+  if (!auth.currentUser) return uploadToApi(files, onProgress);
+
+  try {
+    return await uploadToFirebase(files, onProgress);
+  } catch (firebaseError) {
+    try {
+      return await uploadToApi(files, onProgress);
+    } catch (apiError) {
+      throw new Error(apiError?.message || firebaseError?.message || 'Image upload failed. Please try again.');
+    }
+  }
 };

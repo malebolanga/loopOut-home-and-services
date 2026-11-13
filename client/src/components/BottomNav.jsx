@@ -252,6 +252,9 @@ const BottomNav = () => {
   if (isBottomNavHidden) return null;
 
   const isProvider = currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer';
+  const hostingMenuPath = isProvider ? '/hosting-menu' : '/become';
+  const hostingMenuLabel = isProvider ? 'Hosting menu' : 'Become a host or provider';
+  const hostingMenuDescription = isProvider ? 'Manage your hosting account and listings' : 'Choose property, services, food, or goods';
 
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
@@ -358,7 +361,7 @@ const BottomNav = () => {
 
                 <button
                   onClick={() => {
-                    navigate('/become');
+                    navigate(hostingMenuPath);
                     setShowProfileDropup(false);
                   }}
                   className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20"
@@ -367,8 +370,8 @@ const BottomNav = () => {
                     <Sparkles className="h-5 w-5" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-black text-slate-900 dark:text-white">Become a host or provider</span>
-                    <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">Choose property, services, food, or goods</span>
+                    <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+                    <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
                   </span>
                   <ChevronRightIcon className="h-4 w-4 text-rose-500" />
                 </button>

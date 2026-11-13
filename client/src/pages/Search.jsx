@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { motion, AnimatePresence } from 'framer-motion';
 import NeuralLoader from '../components/NeuralLoader';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -699,6 +701,7 @@ const SkeletonCard = () => (
 );
 
 const SearchPage = () => {
+  const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -982,6 +985,10 @@ const SearchPage = () => {
     setSearchError('');
     const urlParams = buildSearchParams();
 
+    if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+      authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'search_submitted', section: 'Search' }) }).catch(() => {});
+    }
+
     navigate(`/search?${urlParams.toString()}`);
 
     // Save to recent searches
@@ -991,7 +998,7 @@ const SearchPage = () => {
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
     }
     return true;
-  }, [buildSearchParams, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
+  }, [buildSearchParams, currentUser?._id, currentUser?.shareDetailedActivityWithAdmins, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');

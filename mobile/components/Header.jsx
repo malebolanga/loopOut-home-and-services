@@ -121,7 +121,8 @@ const QUICK_DISCOVERY_MAP = {
   'house-rent': { searchType: 'properties', subType: 'rent' },
   'self-catering': { searchType: 'properties', subType: 'land' },
   photograph: { searchType: 'helpers', subType: 'photography' },
-  carwash: { searchType: 'services', subType: 'carwash' },
+  carwash: { searchType: 'helpers', subType: 'carwash' },
+  moving: { searchType: 'helpers', subType: 'moving' },
   electrician: { searchType: 'services', subType: 'electrician' },
   handyman: { searchType: 'services', subType: 'handyman' },
   catering: { searchType: 'services', subType: 'catering' },
@@ -169,6 +170,9 @@ const HEADER_CATEGORY_ICONS = {
 
 export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
+  const hostingMenuPath = currentUser?.offeringType && currentUser.offeringType !== 'viewer' ? '/hosting-menu' : '/become';
+  const hostingMenuLabel = hostingMenuPath === '/hosting-menu' ? 'Hosting menu' : 'Become a host or provider';
+  const hostingMenuDescription = hostingMenuPath === '/hosting-menu' ? 'Manage your hosting account and listings' : 'Choose property, services, food, or goods';
   const { hideHeader } = useSelector((state) => state.frontend || {});
   const [searchTerm, setSearchTerm] = useState('');
   const [searchType, setSearchType] = useState('all');
@@ -181,13 +185,18 @@ export default function Header() {
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const prevUnreadCountRef = useRef(0);
+  const knownNotificationIdsRef = useRef(new Set());
+  const hasLoadedNotificationsRef = useRef(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(() => localStorage.getItem('loopOutSound') !== 'false');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [adminOverview, setAdminOverview] = useState(null);
+  const [adminOverviewLoading, setAdminOverviewLoading] = useState(false);
+  const [adminOverviewRetry, setAdminOverviewRetry] = useState(0);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('Polokwane');
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const lastNavDirectionY = useRef(0);
 
   const playNotificationChime = useCallback(() => {
     if (!isSoundEnabled) return;
@@ -219,10 +228,10 @@ export default function Header() {
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
-    return localStorage.getItem('preferredCurrency') || 'ZAR';
+    return localStorage.getItem('preferredCurrency') || localStorage.getItem('currency') || 'ZAR';
   });
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    return localStorage.getItem('preferredLanguage') || 'English';
+    return localStorage.getItem('preferredLanguage') || 'en';
   });
 
   const profileDropdownRef = useRef(null);
@@ -231,6 +240,28 @@ export default function Header() {
   const headerRef = useRef(null);
   const currencyDropdownRef = useRef(null);
   const languageDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const syncCurrencyPreference = (event) => {
+      const nextCurrency = event.detail?.currency || localStorage.getItem('preferredCurrency') || 'ZAR';
+      setSelectedCurrency(nextCurrency);
+    };
+    window.addEventListener('loopout:currency-change', syncCurrencyPreference);
+    return () => window.removeEventListener('loopout:currency-change', syncCurrencyPreference);
+  }, []);
+  useEffect(() => {
+    const syncLanguagePreference = (event) => {
+      const nextLanguage = event.detail?.language || localStorage.getItem('preferredLanguage') || 'en';
+      setSelectedLanguage(nextLanguage);
+    };
+    window.addEventListener('loopout:language-change', syncLanguagePreference);
+    return () => window.removeEventListener('loopout:language-change', syncLanguagePreference);
+  }, []);
+  useEffect(() => {
+    if (!currentUser?.preferredLanguage) return;
+    setSelectedLanguage(currentUser.preferredLanguage);
+    localStorage.setItem('preferredLanguage', currentUser.preferredLanguage);
+  }, [currentUser?._id, currentUser?.preferredLanguage]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -276,33 +307,38 @@ export default function Header() {
         const data = await res.json();
         const newUnreadCount = data.unreadCount || 0;
 
-        // If we have new unread notifications, ring the bell and trigger phone push banner
-        if (newUnreadCount > prevUnreadCountRef.current) {
+        const incomingNotifications = Array.isArray(data.notifications) ? data.notifications : [];
+        const unseenNotifications = hasLoadedNotificationsRef.current
+          ? incomingNotifications.filter((notification) => notification._id && !knownNotificationIdsRef.current.has(String(notification._id)))
+          : [];
+
+        // Don't replay an old unread alert on first load. After that, show every
+        // newly-created notification even when another alert was read at the same time.
+        if (unseenNotifications.length > 0) {
           playNotificationChime();
-
-          const latest = data.notifications?.[0];
-
-          // Trigger iOS/Android style top phone notification banner
-          if (latest) {
+          unseenNotifications.reverse().forEach((notification) => {
+            const notificationId = String(notification._id);
             pushPhoneNotification({
-              title: latest.title || 'loopOut Alert',
-              message: latest.message || 'You have a new update.',
-              type: latest.type || 'info',
-              link: '/notifications'
+              title: notification.title || 'loopOut Alert',
+              message: notification.message || 'You have a new update.',
+              type: notification.type || 'info',
+              notificationId,
+              link: notification.data?.route || notification.data?.link ||
+                (notification.type === 'message' && notification.data?.conversationId ? `/messages/${notification.data.conversationId}` :
+                  notification.type === 'system' && notification.data?.followerId ? `/user/${notification.data.followerId}` : '/notifications')
             });
-          }
-
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            new window.Notification(latest?.title || 'loopOut Alert', {
-              body: latest?.message || 'You have a new notification',
-              icon: '/favicon.ico'
-            });
-          }
+          });
         }
 
         setNotifications(data.notifications || []);
         setUnreadCount(newUnreadCount);
-        prevUnreadCountRef.current = newUnreadCount;
+        incomingNotifications.forEach((notification) => {
+          if (notification._id) knownNotificationIdsRef.current.add(String(notification._id));
+        });
+        if (knownNotificationIdsRef.current.size > 200) {
+          knownNotificationIdsRef.current = new Set([...knownNotificationIdsRef.current].slice(-100));
+        }
+        hasLoadedNotificationsRef.current = true;
       }
     } catch (error) {
       // Ignore AbortError (unmount) and transient network errors (Render cold-start)
@@ -315,6 +351,28 @@ export default function Header() {
 
   // Track confirmed calendar appointments for user or host
   const [calendarAlertCount, setCalendarAlertCount] = useState(0);
+  const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
+    String(currentUser?.email || '').trim().toLowerCase()
+  );
+
+  useEffect(() => {
+    if (!showProfileDropdown || !isLoopOutAdmin) return;
+    const controller = new AbortController();
+    setAdminOverviewLoading(true);
+    authenticatedFetch('/api/stats/admin-overview', { signal: controller.signal })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Could not load admin report.');
+        setAdminOverview(data);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAdminOverview(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setAdminOverviewLoading(false);
+      });
+    return () => controller.abort();
+  }, [showProfileDropdown, isLoopOutAdmin, adminOverviewRetry]);
 
   const fetchCalendarAlerts = useCallback(async (signal) => {
     if (!currentUser?._id) {
@@ -456,10 +514,10 @@ export default function Header() {
 
       if (currentScrollY < 50) {
         setIsNavVisible(true);
-      } else if (isScrollingUp) {
-        setIsNavVisible(true);
-      } else {
-        setIsNavVisible(false);
+        lastNavDirectionY.current = currentScrollY;
+      } else if (Math.abs(currentScrollY - lastNavDirectionY.current) >= 8) {
+        setIsNavVisible(isScrollingUp);
+        lastNavDirectionY.current = currentScrollY;
       }
 
       setScrolled(currentScrollY > 20);
@@ -520,6 +578,7 @@ export default function Header() {
   // Command Center Navigation
   const MASTER_COMMANDS = [
     { label: 'FOOD & LUNCH', route: '/food', icon: <UtensilsCrossed className="w-5 h-5" />, color: 'bg-gradient-to-tr from-amber-500 to-orange-500' },
+    { label: 'MY LOOP OUT', route: '/my-loopout', icon: <CalendarDaysIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-purple-500' },
     { label: 'LOOPBOT AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
     { label: 'DASHBOARD', route: '/dashboard', icon: <HomeModernIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
     { label: 'ELITE REWARDS', route: '/rewards', icon: <Sparkles className="w-5 h-5" />, color: 'bg-purple-500' },
@@ -534,7 +593,8 @@ export default function Header() {
     { label: 'FOR BUSINESS', route: '/for-business', icon: <BriefcaseIcon className="w-5 h-5" />, color: 'bg-rose-500' },
     { label: 'HOST EARNINGS', route: '/host-earnings', icon: <ChartBarIcon className="w-5 h-5" />, color: 'bg-amber-500' },
     { label: 'HOST TOOLS', route: '/host-tools', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
-    { label: 'SETTINGS', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-indigo-500' }
+    { label: 'SETTINGS', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-indigo-500' },
+    ...(isLoopOutAdmin ? [{ label: 'ADMIN REVIEW', route: '/admin/verification', icon: <ShieldCheckIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-600 to-red-500' }] : [])
   ];
 
   // Handle search submission
@@ -588,6 +648,8 @@ export default function Header() {
   const handleCurrencyChange = (currencyCode) => {
     setSelectedCurrency(currencyCode);
     localStorage.setItem('preferredCurrency', currencyCode);
+    localStorage.setItem('currency', currencyCode);
+    window.dispatchEvent(new CustomEvent('loopout:currency-change', { detail: { currency: currencyCode } }));
     setShowCurrencyDropdown(false);
 
     // Dispatch currency change to Redux store if you have currency slice
@@ -597,8 +659,9 @@ export default function Header() {
 
   // Handle language change
   const handleLanguageChange = (languageCode, languageName) => {
-    setSelectedLanguage(languageName);
+    setSelectedLanguage(languageCode);
     localStorage.setItem('preferredLanguage', languageCode);
+    window.dispatchEvent(new CustomEvent('loopout:language-change', { detail: { language: languageCode } }));
     setShowLanguageDropdown(false);
 
     // Dispatch language change to Redux store if you have language slice
@@ -615,7 +678,6 @@ export default function Header() {
   // Search categories
   const searchCategories = [
     { key: 'properties', label: 'Homes', icon: '🏠' },
-    { key: 'services', label: 'Services', icon: '🔧' },
     { key: 'helpers', label: 'Helpers', icon: '👨‍💼' },
     { key: 'events', label: 'Events', icon: '🎪' }
   ];
@@ -643,7 +705,7 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders', '/my-loopout'];
   const hiddenPrefixes = ['/food', '/lunch', '/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
   
   const isHeaderHidden = 
@@ -686,10 +748,16 @@ export default function Header() {
               <button
                 key={cmd.label}
                 onClick={() => handleNavigate(cmd.route)}
+                aria-label={`${cmd.label}${cmd.route === '/my-loopout' && calendarBadgeCount ? `, ${calendarBadgeCount} upcoming booking or calendar alert${calendarBadgeCount === 1 ? '' : 's'}` : ''}`}
                 className="flex flex-col items-center justify-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/60 hover:bg-rose-50/50 dark:hover:bg-rose-500/10 rounded-2xl transition-all border border-transparent hover:border-rose-100/50"
               >
-                <div className={`p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
+                <div className={`relative p-2 ${cmd.color} text-white rounded-xl shadow-md transition-transform hover:scale-110`}>
                   {cmd.icon}
+                  {cmd.route === '/my-loopout' && calendarBadgeCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-rose-600 px-1 text-[9px] font-black leading-none text-white dark:border-gray-900">
+                      {calendarBadgeCount > 99 ? '99+' : calendarBadgeCount}
+                    </span>
+                  )}
                 </div>
                 <span className="text-[8px] font-black text-gray-900 dark:text-gray-300 uppercase tracking-widest text-center leading-tight">
                   {cmd.label}
@@ -697,6 +765,67 @@ export default function Header() {
               </button>
             ))}
           </div>
+
+          {isLoopOutAdmin && (
+            <section aria-label="LoopOut admin tools" className="mb-3 overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+              <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 text-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-rose-300 ring-1 ring-white/10"><ChartBarIcon className="h-5 w-5" /></span>
+                    <div>
+                      <p className="text-xs font-black tracking-wide">LoopOut overview</p>
+                      <p className="mt-0.5 text-[10px] text-slate-300">Your platform at a glance</p>
+                    </div>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 text-[9px] font-bold text-emerald-300"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />LIVE</span>
+                </div>
+                {adminOverview && !adminOverviewLoading && (
+                  <div className="mt-4 flex items-end justify-between border-t border-white/10 pt-3">
+                    <div><p className="text-[10px] font-medium text-slate-300">Total registered users</p><p className="mt-0.5 text-3xl font-black tracking-tight">{Number(adminOverview.users.total).toLocaleString()}</p></div>
+                    <span className="pb-1 text-[9px] font-semibold uppercase tracking-wider text-slate-400">All time</span>
+                  </div>
+                )}
+              </div>
+              {adminOverviewLoading ? (
+                <div className="grid grid-cols-2 gap-2 p-3" aria-label="Loading admin report">
+                  {[0, 1, 2, 3].map((item) => <div key={item} className="h-16 animate-pulse rounded-xl bg-slate-100 dark:bg-gray-800" />)}
+                </div>
+              ) : adminOverview ? (
+                <div className="p-3">
+                  <div className="mb-2 flex items-center justify-between"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">Activity</p><p className="text-[9px] font-semibold text-slate-400 dark:text-slate-500">South Africa time</p></div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Logged in today*</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{Number(adminOverview.logins.uniqueUsersToday).toLocaleString()}</p></div>
+                    <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">New users today</p><p className="mt-1 text-xl font-black text-slate-900 dark:text-white">{Number(adminOverview.users.signupsToday).toLocaleString()}</p></div>
+                    <div className="col-span-2 flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-2 dark:border-gray-800 dark:bg-gray-800/70"><p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Accounts with recorded login · this week*</p><p className="text-base font-black text-slate-900 dark:text-white">{Number(adminOverview.logins.uniqueUsersThisWeek).toLocaleString()}</p></div>
+                  </div>
+                  <p className="mt-2 px-0.5 text-[9px] leading-relaxed text-slate-400 dark:text-slate-500">*Successful logins explicitly recorded by LoopOut.</p>
+                </div>
+              ) : (
+                <div className="p-3"><p className="text-xs text-slate-500 dark:text-slate-400">We couldn’t load the latest admin report.</p><button type="button" onClick={() => setAdminOverviewRetry((attempt) => attempt + 1)} className="mt-2 text-xs font-bold text-rose-600 hover:text-rose-700 dark:text-rose-300">Try again</button></div>
+              )}
+              <div className="border-t border-slate-100 p-3 dark:border-gray-800">
+                <button type="button" onClick={() => handleNavigate('/admin/verification')} className="group flex w-full items-center justify-between rounded-xl bg-rose-600 px-3 py-3 text-left text-white shadow-sm transition hover:bg-rose-700 active:scale-[0.99]">
+                  <span className="flex items-center gap-2.5"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15"><ShieldCheckIcon className="h-4 w-4" /></span><span><span className="block text-xs font-extrabold">Review identity submissions</span><span className="mt-0.5 block text-[9px] text-rose-100">Check ID documents and selfies</span></span></span>
+                  <ChevronRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
+            </section>
+          )}
+
+          <button
+            type="button"
+            onClick={() => handleNavigate(hostingMenuPath)}
+            className="mb-2 flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
+            </span>
+            <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+          </button>
 
           <div className="sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md pt-3 border-t border-slate-100 dark:border-gray-800 mt-3 -mx-4 px-4 pb-3">
   <button
@@ -728,6 +857,20 @@ export default function Header() {
             onClick={() => handleNavigate('/sign-up')}
             className="w-full py-4 border-2 border-slate-200 text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
           >Create Account</button>
+          <button
+            type="button"
+            onClick={() => handleNavigate(hostingMenuPath)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition hover:border-rose-200 hover:bg-rose-100/80 active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20 dark:hover:bg-rose-950/40"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+              <Sparkles className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+              <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
+            </span>
+            <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+          </button>
           <div className="text-center text-[9px] text-slate-400 dark:text-gray-500 font-bold mt-3 uppercase tracking-[0.15em]">
   <Link to="/terms" className="hover:text-rose-500 transition-colors">Terms</Link>
   <span className="mx-1.5 text-slate-300 dark:text-gray-700">&middot;</span>
@@ -757,7 +900,7 @@ export default function Header() {
           transition={{ type: 'spring', damping: 25, stiffness: 120, opacity: { duration: 0.2 } }}
           ref={headerRef}
         className={`app-safe-top fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-950 border-b-0 backdrop-blur-xl transition-all duration-500 ${
-          scrolled ? 'bg-white/90 dark:bg-gray-950/90 shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : 'bg-transparent'
+          scrolled ? 'shadow-[0_4px_20px_rgba(15,23,42,0.03)]' : ''
         } ${hideHeader ? 'pointer-events-none' : ''}`}
         >
         <div className="max-w-[2520px] mx-auto xl:px-[82px] md:px-[42px] px-4 sm:px-6">
@@ -917,7 +1060,7 @@ export default function Header() {
                         <span className="text-lg">{language.flag}</span>
                         <span>{language.name}</span>
                       </div>
-                      {selectedLanguage === language.name && (
+                      {selectedLanguage === language.code && (
                         <CheckIcon className="w-4 h-4 text-[#FF5A5F]" />
                       )}
                     </button>
@@ -934,7 +1077,7 @@ export default function Header() {
                   <div className="p-4 border-b border-[#DDDDDD] dark:border-gray-800 font-semibold text-[#222222] dark:text-white">
                     Choose currency
                   </div>
-                  {currencies.filter((currency) => currency.code === 'ZAR').map((currency) => (
+                  {currencies.map((currency) => (
                     <button
                       key={currency.code}
                       onClick={() => handleCurrencyChange(currency.code)}
@@ -986,7 +1129,6 @@ export default function Header() {
                   { id: 'properties', label: 'Homes', icon: HomeIcon, color: 'rose' },
                   { id: 'food', label: 'Food & Lunch', icon: UtensilsCrossed, color: 'orange', path: '/food' },
                   { id: 'events', label: 'Experiences', icon: MagnifyingGlassIcon, color: 'rose' },
-                  { id: 'services', label: 'Services', icon: UserGroupIcon, color: 'rose' },
                   { id: 'helpers', label: 'Helpers', icon: BriefcaseIcon, color: 'rose' }
                 ].map((item) => {
                   const Icon = item.icon;
@@ -1150,7 +1292,6 @@ export default function Header() {
                     {[
                       { id: 'food', label: 'Food & Lunch', icon: '🍱', color: 'bg-orange-50', path: '/food' },
                       { id: 'helpers', label: 'Helper', icon: '👨‍💼', color: 'bg-emerald-50' },
-                      { id: 'services', label: 'Services', icon: '🛠️', color: 'bg-blue-50' },
                       { id: 'properties', label: 'Homes', icon: '🏠', color: 'bg-rose-50' },
                       { id: 'events', label: 'Events', icon: '🎪', color: 'bg-amber-50' },
                       { id: 'resort', label: 'Resort', icon: '🏖️', color: 'bg-cyan-50' },
@@ -1180,7 +1321,7 @@ export default function Header() {
                               setShowSearch(false);
                               return;
                             }
-                            const isCore = ['properties', 'services', 'helpers', 'events', 'food'].includes(cat.id);
+                            const isCore = ['properties', 'helpers', 'events', 'food'].includes(cat.id);
                             const discovery = QUICK_DISCOVERY_MAP[cat.id] || {
                               searchType: isCore ? cat.id : 'all',
                               subType: ''

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setHideBottomNav, setHideHeader } from '../redux/frontendSlice';
@@ -21,7 +22,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag, Phone } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -42,7 +43,9 @@ import { useWishlist } from '../hooks/useWishlist';
 import LookingForItem from '../components/LookingForItem';
 import HelperItem from '../components/HelperItem';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 import { isNativeApp, isAndroidApp } from '../utils/nativeApp';
+import { subscribeToOrders } from '../services/lunchService';
 
 
 import {
@@ -57,18 +60,13 @@ import ContinueSearchingCard from '../components/home/ContinueSearchingCard';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
 import CaughtUpHub from '../components/home/CaughtUpHub';
 import { TOP_CATEGORIES } from '../data/categories';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { CategoriesSlider } from '../components/home/CategoriesSlider';
 import { HomeHero } from '../components/home/HomeHero';
 import DownloadAppSection from '../components/home/DownloadAppSection';
 import CategoriesBottomSheet from '../components/home/CategoriesBottomSheet';
 import RecentPopoutMenu from '../components/home/RecentPopoutMenu';
 import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
-import {
-  RecentAdded3DIcon,
-  MoreCategories3DIcon,
-  Category3DIcon,
-  ThreeDButton
-} from '../components/home/ThreeDCategoryIcons';
 
 import {
   DISTANCE_TIERS,
@@ -80,7 +78,7 @@ import {
 // --- Constants ---
 const RECENTLY_VIEWED_KEY = 'recentlyViewed';
 const MAX_RECENTLY_VIEWED = 12;
-const DATA_FETCH_LIMIT = 50;
+const DATA_FETCH_LIMIT = 24;
 const AI_RECOMMENDATION_LIMIT = 6;
 const USER_PREFERENCE_KEY = 'userPreferences';
 const API_TIMEOUT = 45000;
@@ -90,7 +88,7 @@ const CATEGORY_ICON_BY_ID = {
   service: Wrench, transport: Car, carwash: Car, catering: ChefHat, landscaping: Trees, moving: Truck, storage: Package, handyman: Hammer, others: Sparkles,
   helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, marquees: Store, marquee: Store, animals: Dog,
   event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
-  selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen,
+  selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen, other: Tags,
 };
 
 const CategoryNavIcon = ({ id, className = 'h-4 w-4' }) => {
@@ -452,7 +450,7 @@ const EliteHelperCard = ({ helper, onClick }) => {
 
         {/* Verification removed */}
         <div className="absolute bottom-3 left-3 bg-white/40 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/30 z-20">
-          <span className="text-[8px] font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
+          <span className="text-xs font-black text-white uppercase tracking-widest">{helper.type || 'Helper'}</span>
         </div>
       </div>
 
@@ -497,6 +495,11 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
 
   const getPriceSuffix = () => {
     if (type !== 'property') return '';
+    if (item?.pricePeriod === 'night') return '/ night';
+    if (item?.pricePeriod === 'day') return '/ day';
+    if (item?.pricePeriod === 'hour') return '/ hour';
+    if (item?.pricePeriod === 'month') return '/ month';
+    if (item?.kind === 'house' || item?.kind === 'apartment') return '/ day';
     switch (item.type) {
       case 'rent': return '/ month';
       case 'over': return '/ night';
@@ -513,13 +516,18 @@ const EliteCard = ({ item, onClick, type = 'property', reducedSize = false }) =>
       className="cursor-pointer flex flex-col bg-white w-full rounded-[2rem] overflow-hidden shadow-lg relative border border-gray-200/80 hover:border-rose-500/50 transition-all"
     >
       <div className="home-image-card relative aspect-[4/3] overflow-hidden bg-gray-50">
-        <img loading="lazy" src={item.imageUrls?.[0]} className="w-full h-full object-cover brightness-90 saturate-90 group-hover:scale-105 transition-transform duration-700 ease-out" alt={item.name} />
+        <ImageGallery
+          imageUrls={[...(Array.isArray(item.imageUrls) ? item.imageUrls : []), item.image, item.images?.[0]].filter(Boolean)}
+          alt={item.name || 'Marketplace listing'}
+          type={type === 'property' ? (item.type?.includes('rent') ? 'rent' : item.type?.includes('sale') ? 'sale' : 'property') : type}
+          className="brightness-90 saturate-90"
+        />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-slate-950/45 via-slate-950/10 to-transparent" />
 
         {/* Top Badges */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-20">
           <div className="bg-gray-900/80 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-            <span className="text-[8px] font-black text-white uppercase tracking-widest">{type}</span>
+            <span className="text-xs font-black text-white uppercase tracking-widest">{type}</span>
           </div>
           <button className="p-2 bg-white/80 backdrop-blur-md rounded-full border border-gray-200 hover:bg-rose-500 hover:border-rose-500 transition-colors group/heart shadow-sm">
             <HeartIcon className="w-4 h-4 text-gray-700 group-hover:text-white" />
@@ -608,10 +616,11 @@ const StatusCard = ({ request, onLike, onDislike, currentUser, navigate }) => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gray-50 overflow-hidden border border-gray-100 p-0.5 shadow-sm">
-            <img loading="lazy"
+            <ImageWithFallback
               src={request.userRef?.avatar || "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"}
               alt="user"
-              className="w-full h-full object-cover rounded-lg"
+              type="avatar"
+              className="w-full h-full rounded-lg"
             />
           </div>
           <div>
@@ -814,6 +823,11 @@ const POPULAR_REQUEST_SUGGESTIONS = [
 export const isFoodImageUrl = (val) => {
   if (!val || typeof val !== 'string') return false;
   const trimmed = val.trim();
+  // These legacy uploads render as checkerboard placeholders, not usable food photos.
+  if (
+    /OIP(?:[_-][^/?#.]*)?\.(?:png|jpe?g|webp)(?:[?#]|$)/i.test(trimmed) ||
+    /close-up-traditional-african-bread-based-street-food-called-bunny-chow/i.test(trimmed)
+  ) return false;
   return (
     trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
@@ -825,7 +839,7 @@ export const isFoodImageUrl = (val) => {
 
 export const resolveSmartFoodEmoji = (name = '', fallback = '🍱') => {
   const n = String(name || '').toLowerCase();
-  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
+  if (n.includes('kota') || n.includes('kots') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood')) return '🥪';
   if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger')) return '🍔';
   if (n.includes('pizza') || n.includes('slice')) return '🍕';
   if (n.includes('wing') || n.includes('chicken') || n.includes('drumstick')) return '🍗';
@@ -845,7 +859,7 @@ export const resolveFoodPhoto = (name = '', fallbackUrl = '') => {
   if (n.includes('rib') || n.includes('pork') || n.includes('bbq') || n.includes('flame')) {
     return 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80';
   }
-  if (n.includes('kota') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
+  if (n.includes('kota') || n.includes('kots') || n.includes('quarter') || n.includes('sphatlo') || n.includes('sandwich') || n.includes('dagwood') || n.includes('bunny')) {
     return 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80';
   }
   if (n.includes('burger') || n.includes('patty') || n.includes('cheeseburger') || n.includes('smash')) {
@@ -897,7 +911,11 @@ export const resolveShopPhoto = (name = '') => {
 
 export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = '', imgClassName = '' }) => {
   const [hasError, setHasError] = useState(false);
-  useEffect(() => setHasError(false), [src]);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  useEffect(() => {
+    setHasError(false);
+    setFallbackFailed(false);
+  }, [src]);
 
   const isShop = fallback === '🏪' || String(alt || '').toLowerCase().includes('shop');
   const effectiveSrc = (!hasError && isFoodImageUrl(src))
@@ -906,12 +924,21 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
       ? resolveShopPhoto(alt)
       : resolveFoodPhoto(alt || src);
 
+  if (fallbackFailed) {
+    return (
+      <div role="img" aria-label={alt || 'Image unavailable'} className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-3xl dark:from-slate-800 dark:to-slate-900 ${className}`}>
+        <span aria-hidden="true">{isShop ? '🏪' : resolveSmartFoodEmoji(alt, fallback)}</span>
+      </div>
+    );
+  }
+
   return (
     <img
-      src={effectiveSrc}
+      src={resolveApiUrl(effectiveSrc)}
       alt={alt || 'Food'}
       onError={() => {
         if (!hasError) setHasError(true);
+        else setFallbackFailed(true);
       }}
       className={`w-full h-full object-cover ${imgClassName}`}
       loading="lazy"
@@ -1247,6 +1274,45 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
     setOrderStatus('submitting');
     setErrorMsg('');
 
+    const recordLocalOrder = (finalCode) => {
+      try {
+        const newOrderRecord = {
+          id: finalCode,
+          _id: finalCode,
+          orderCode: finalCode,
+          shopId: item.shopId,
+          shopName: item.shopName || 'Local Kitchen',
+          shopImage: item.shopImage || '🍲',
+          shopPhone: item.shopPhone || '',
+          items: [
+            ...cart.map((ci) => ({
+              name: ci.item.name,
+              qty: ci.qty,
+              price: ci.item.price * ci.qty,
+              sides: ci.sideNames || [],
+              drinks: ci.drinks || [],
+            })),
+            {
+              name: item.name,
+              qty: orderForm.qty,
+              price: itemTotal,
+              sides: selectedSideNames,
+              drinks: drinksList,
+            },
+          ],
+          fulfilment: orderForm.fulfilment,
+          deliveryAddress: orderForm.deliveryAddress.trim(),
+          totalAmount: allOrdersGrandTotal,
+          status: 'received',
+          createdAt: new Date().toISOString(),
+        };
+        const existing = JSON.parse(localStorage.getItem('loopout_food_orders') || '[]');
+        localStorage.setItem('loopout_food_orders', JSON.stringify([newOrderRecord, ...existing.slice(0, 49)]));
+      } catch {
+        // Keep the server order result even when local history cannot be updated.
+      }
+    };
+
     try {
       // Merge accumulated cart items with current item
       const allItems = [
@@ -1285,45 +1351,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
           selectedSides: allSides,
         }),
       });
-
-      const recordLocalOrder = (finalCode) => {
-        try {
-          const newOrderRecord = {
-            id: finalCode,
-            _id: finalCode,
-            orderCode: finalCode,
-            shopId: item.shopId,
-            shopName: item.shopName || 'Local Kitchen',
-            shopImage: item.shopImage || '🍲',
-            shopPhone: item.shopPhone || '',
-            items: [
-              ...cart.map((ci) => ({
-                name: ci.item.name,
-                qty: ci.qty,
-                price: ci.item.price * ci.qty,
-                sides: ci.sideNames || [],
-                drinks: ci.drinks || [],
-              })),
-              {
-                name: item.name,
-                qty: orderForm.qty,
-                price: itemTotal,
-                sides: selectedSideNames,
-                drinks: drinksList,
-              },
-            ],
-            fulfilment: orderForm.fulfilment,
-            deliveryAddress: orderForm.deliveryAddress.trim(),
-            totalAmount: allOrdersGrandTotal,
-            status: 'received',
-            createdAt: new Date().toISOString(),
-          };
-          const existing = JSON.parse(localStorage.getItem('loopout_food_orders') || '[]');
-          localStorage.setItem('loopout_food_orders', JSON.stringify([newOrderRecord, ...existing.slice(0, 49)]));
-        } catch {
-          // ignore
-        }
-      };
 
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -2580,8 +2607,6 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
   const [errorMsg, setErrorMsg] = useState('');
   const [orderId, setOrderId] = useState('');
 
-  if (!cart.length) return null;
-
   const shopName = cart[0]?.item.shopName || 'Shop';
   const shopImage = cart[0]?.item.shopImage || '🏪';
   const shopId = cart[0]?.item.shopId;
@@ -2625,6 +2650,8 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
     const formatTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
     return `${formatTime(tMin)} – ${formatTime(tMax)}`;
   }, [sheetEstimate]);
+
+  if (!cart.length) return null;
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -3040,14 +3067,15 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
   );
 };
 
-const FoodSpecialsStrip = ({ navigate }) => {
+const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => {
   const { currentUser } = useSelector((state) => state.user);
   const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
+  const [activeFoodShortcut, setActiveFoodShortcut] = useState('recommended');
+  const [activeFoodOrders, setActiveFoodOrders] = useState([]);
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
   const [selectedFood, setSelectedFood] = useState(null);
-  const { coords } = useLocationCoords();
-
+  const [previewFood, setPreviewFood] = useState(null);
   // ── Shared multi-item cart state ─────────────────────────────────────────────
   // cart: [{ item, qty, sideNames, drinks }]  — accumulates as user taps "Add More"
   // cartMeta: { name, phone, fulfilment, deliveryAddress } — filled once, shared
@@ -3068,6 +3096,53 @@ const FoodSpecialsStrip = ({ navigate }) => {
     }
   });
   const [showOrderReview, setShowOrderReview] = useState(false);
+  const displayedFoodItems = useMemo(() => {
+    if (activeFoodShortcut === 'popular') {
+      return foodItems.filter((item) => getFoodPriorityRank(item.tag, item.name) <= 3);
+    }
+    if (activeFoodShortcut === 'specials') {
+      return foodItems.filter((item) =>
+        Number(item.originalPrice) > Number(item.price) || /special|deal|offer|discount/i.test(item.tag || '')
+      );
+    }
+    return foodItems;
+  }, [foodItems, activeFoodShortcut]);
+
+  useEffect(() => {
+    if (!currentUser) {
+      setActiveFoodOrders([]);
+      return undefined;
+    }
+
+    let localOrders = [];
+    try {
+      const stored = localStorage.getItem('loopout_food_orders');
+      if (stored) localOrders = JSON.parse(stored);
+    } catch {
+      localOrders = [];
+    }
+
+    const customerId = String(currentUser._id || currentUser.id || '');
+    const customerPhone = String(currentUser.phone || '');
+    const updateActiveOrders = (serverOrders = []) => {
+      const byId = new Map();
+      [...localOrders, ...(Array.isArray(serverOrders) ? serverOrders : [])].forEach((order) => {
+        const orderId = order._id || order.id || order.orderId;
+        if (orderId) byId.set(String(orderId), order);
+      });
+      setActiveFoodOrders([...byId.values()]
+        .filter((order) => {
+          const belongsToUser = (customerId && String(order.customerId || order.customer?._id || order.userId || '') === customerId)
+            || (customerPhone && String(order.customerPhone || '') === customerPhone);
+          const status = String(order.status || '').toLowerCase();
+          return belongsToUser && !['completed', 'complete', 'done', 'delivered', 'collected', 'cancelled', 'canceled'].some((endStatus) => status.includes(endStatus));
+        })
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0)));
+    };
+
+    updateActiveOrders();
+    return subscribeToOrders((serverOrders) => updateActiveOrders(serverOrders));
+  }, [currentUser?._id, currentUser?.id, currentUser?.phone]);
 
   useEffect(() => {
     try {
@@ -3242,14 +3317,16 @@ const FoodSpecialsStrip = ({ navigate }) => {
               shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
               shopDistance: shop.distance || '',
               shopPhone: shop.phone || shop.whatsapp || '',
+              isSponsored: shop.isPromoted === true && shop.isOpen !== false,
               latitude: shop.latitude || null,
               longitude: shop.longitude || null
             });
           });
         });
 
-        // Globally sort so items with real photos appear first, then by priority tag
+        // Show opted-in shop promotions first, then prioritize real food photos.
         collected.sort((a, b) => {
+          if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
           const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
           const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
           if (aHasImg !== bHasImg) return aHasImg - bHasImg;
@@ -3279,33 +3356,35 @@ const FoodSpecialsStrip = ({ navigate }) => {
   }, []);
 
   return (
-    <section className="mb-6">
+    <section className={`mb-6 bg-white transition-[margin] duration-300 dark:bg-gray-950 ${className}`}>
       {/* ── Header: Made For You • Fresh & Fast, and See All ── */}
-      <div className="flex items-center justify-between mb-3 px-0.5">
-        <div>
-          <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-         
+      <div className="mb-5 flex items-center justify-between gap-2 px-0.5">
+        <div className="flex min-w-0 items-center gap-2.5">
             <button
               type="button"
               onClick={() => cart.length > 0 && setShowOrderReview(true)}
-              className="relative flex items-center justify-center w-7 h-7 rounded-xl bg-rose-100 dark:bg-rose-900/30 transition hover:bg-rose-200 dark:hover:bg-rose-800/40"
+              aria-label={`View basket${totalCartItems ? `, ${totalCartItems} items` : ''}`}
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 ring-1 ring-inset ring-rose-100 transition hover:bg-rose-100 dark:bg-rose-950/40 dark:ring-rose-900/50 dark:hover:bg-rose-900/50"
               title="View basket"
             >
-              <Flame className="w-4 h-4 text-rose-500" />
+              <Flame className="h-4 w-4 text-rose-600 dark:text-rose-300" />
               {totalCartItems > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] font-black min-w-[14px] h-[14px] px-0.5 rounded-full flex items-center justify-center border border-white shadow-sm">
                   {totalCartItems}
                 </span>
               )}
             </button>
-          </h3>
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">{browseMode ? 'Explore Food' : 'Food near you'}</h3>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">{browseMode ? 'Dishes from local food shops' : 'Local favourites and shop offers, ready to order'}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/my-orders')}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500 text-white text-xs font-black hover:bg-amber-600 transition cursor-pointer shadow-xs"
+            className="flex min-h-11 items-center gap-1 rounded-full bg-amber-400 px-3 text-xs font-bold text-slate-950 shadow-sm transition hover:bg-amber-300 cursor-pointer"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>My Orders</span>
@@ -3323,7 +3402,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/food')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-black uppercase tracking-wider dark:border-gray-700 transition-all cursor-pointer shadow-xs"
+            className="flex min-h-11 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 cursor-pointer dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
           >
             <span>See All</span>
             <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
@@ -3331,29 +3410,149 @@ const FoodSpecialsStrip = ({ navigate }) => {
         </div>
       </div>
 
-      {/* ── Horizontal Carousel: Spotify-style Food Cards ── */}
-      <div className="-mx-4 px-4 overflow-x-auto scrollbar-hide pb-2 pt-1 flex gap-2.5 sm:gap-3 snap-x snap-mandatory">
-        {foodItems.map((item, i) => (
+      {!browseMode && (
+        <div
+          role="group"
+          aria-label="Food recommendations"
+          className="-mx-4 mb-2 flex snap-x snap-mandatory items-center gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide"
+        >
+          {[
+            { id: 'orders', label: 'Order again' },
+            { id: 'active-orders', label: 'Active orders' },
+            { id: 'recommended', label: 'Recommended' },
+            { id: 'popular', label: 'Popular' },
+            { id: 'specials', label: 'Specials' },
+          ].map((shortcut) => {
+            const isActive = activeFoodShortcut === shortcut.id;
+            return (
+              <button
+                key={shortcut.id}
+                type="button"
+                onClick={() => {
+                  if (shortcut.id === 'orders') {
+                    navigate('/my-orders');
+                    return;
+                  }
+                  if (shortcut.id === 'active-orders') {
+                    setActiveFoodShortcut('active-orders');
+                    return;
+                  }
+                  setActiveFoodShortcut(shortcut.id);
+                }}
+                aria-pressed={shortcut.id === 'orders' ? undefined : isActive}
+                className={`snap-start flex min-h-11 shrink-0 items-center rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+                  isActive
+                    ? 'bg-[#06C167] text-slate-950'
+                    : 'border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                {shortcut.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {!browseMode && activeFoodShortcut === 'active-orders' && (
+        <section aria-label="Your active food orders" className="mb-3 space-y-3">
+          {activeFoodOrders.length ? activeFoodOrders.map((order) => {
+            const orderItems = Array.isArray(order.items) ? order.items : [];
+            const orderId = order._id || order.id || order.orderId;
+            const orderTotal = Number(order.total ?? order.totalAmount ?? order.grandTotal ?? order.price);
+            const orderShop = shopsData.find((shop) => String(shop._id || shop.id) === String(order.shopId));
+            const firstOrderedItem = orderItems[0];
+            const firstMeal = orderShop?.meals?.find((meal) =>
+              String(meal.id) === String(firstOrderedItem?.id) || meal.name === firstOrderedItem?.name
+            );
+            const foodImage = firstOrderedItem?.image || firstMeal?.image || order.shopImage;
+            const orderStart = new Date(order.createdAt || order.date || Date.now());
+            const prepMinutes = Math.max(10, ...orderItems.map((orderedItem) => {
+              const matchingMeal = orderShop?.meals?.find((meal) =>
+                String(meal.id) === String(orderedItem.id) || meal.name === orderedItem.name
+              );
+              const minutes = parseInt(String(matchingMeal?.prepTime || '').replace(/\D+/g, ''), 10);
+              return Number.isFinite(minutes) && minutes > 0 ? minutes : 15;
+            }));
+            const isDelivery = (order.fulfilment || order.type) === 'delivery';
+            const etaStart = new Date(orderStart.getTime() + (prepMinutes + (isDelivery ? 15 : 0)) * 60_000);
+            const etaEnd = new Date(orderStart.getTime() + (prepMinutes + (isDelivery ? 30 : 10)) * 60_000);
+            const formatOrderTime = (value) => new Date(value).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+            const scheduledCollection = order.scheduledFor || order.collectionTime || order.pickupTime;
+            const collectionLabel = scheduledCollection
+              ? `Collection time: ${formatOrderTime(scheduledCollection)}`
+              : order.pickupReadyAt
+                ? `Ready since ${formatOrderTime(order.pickupReadyAt)}`
+                : `${isDelivery ? 'Est. delivery' : 'Est. collection'}: ${formatOrderTime(etaStart)}–${formatOrderTime(etaEnd)}`;
+            return (
+              <button
+                key={orderId}
+                type="button"
+                onClick={() => navigate('/my-orders?filter=active')}
+                className="flex min-h-16 w-full items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50"
+                aria-label={`Open active order from ${order.shopName || order.shop?.name || 'food shop'}`}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-gray-800">
+                    <FoodMedia src={foodImage} alt={firstOrderedItem?.name || 'Food ordered'} fallback="🍱" className="h-full w-full text-2xl" imgClassName="rounded-xl" />
+                  </span>
+                  <span className="min-w-0">
+                  <span className="block truncate text-sm font-bold text-slate-900 dark:text-white">{order.shopName || order.shop?.name || 'Food order'}</span>
+                  <span className="mt-0.5 block truncate text-xs text-slate-700 dark:text-slate-300">
+                    {orderItems.length ? orderItems.map((item) => `${item.quantity || item.qty || 1} × ${item.name || item.title || 'Item'}`).join(', ') : order.mealName || 'Order in progress'}
+                  </span>
+                  <span className="mt-1 block text-xs font-semibold capitalize text-emerald-800 dark:text-emerald-300">{String(order.status || 'Pending').replace(/[_-]+/g, ' ')}</span>
+                  <span className="mt-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">{collectionLabel}</span>
+                  </span>
+                </span>
+                <span className="shrink-0 text-right">
+                  {Number.isFinite(orderTotal) && orderTotal > 0 && <span className="block text-sm font-bold text-slate-900 dark:text-white">R{orderTotal.toFixed(2)}</span>}
+                  <span className="mt-1 inline-block text-xs font-bold text-emerald-800 dark:text-emerald-300">View order →</span>
+                </span>
+              </button>
+            );
+          }) : (
+            <div className="rounded-2xl bg-slate-50 px-4 py-5 text-center dark:bg-gray-900">
+              <p className="text-sm font-semibold text-slate-800 dark:text-gray-100">No active food orders</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-gray-300">Your order updates will appear here.</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Featured carousel appears on the Home feed. The Food tab uses the full
+          image-led grid below, like a food delivery browse page. */}
+      {!browseMode && activeFoodShortcut !== 'active-orders' && <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 pt-1 scrollbar-hide sm:gap-4">
+        {displayedFoodItems.map((item, i) => (
           <motion.div
             key={`carousel-${item.shopId}-${item.id || i}`}
             whileHover={{ y: -3 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => handleFoodSelect(item)}
-            className="snap-start shrink-0 w-[88px] sm:w-[102px] hover:bg-gray-50 dark:hover:bg-gray-850 p-1.5 sm:p-2 rounded-xl transition-all duration-200 cursor-pointer relative hover:shadow-md dark:border-gray-800 flex flex-col"
+            className="relative flex w-[112px] shrink-0 snap-start flex-col rounded-2xl bg-transparent p-1.5 transition-all duration-200 cursor-pointer sm:w-[136px] sm:p-2"
           >
             {/* Square cover artwork */}
-            <div className="aspect-square w-full rounded-lg bg-gray-100 dark:bg-gray-800 relative overflow-hidden flex items-center justify-center mb-1 border border-gray-100/80 dark:border-gray-700/50">
-              <FoodMedia
-                src={item.image}
-                alt={item.name}
-                fallback="🍱"
-                className="text-xl group-hover:scale-110 transition-transform duration-300 select-none"
-                imgClassName="group-hover:scale-105 transition-transform duration-300 rounded-lg"
-              />
+            <div className="relative mb-1.5 flex aspect-[1.12/1] w-full items-center justify-center overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setPreviewFood(item);
+                }}
+                aria-label={`Zoom in on ${item.name} photo`}
+                className="absolute inset-0 z-0 h-full w-full cursor-zoom-in"
+              >
+                <FoodMedia
+                  src={item.image}
+                  alt={item.name}
+                  fallback="🍱"
+                  className="text-xl select-none"
+                  imgClassName="rounded-lg transition-transform duration-300 hover:scale-105"
+                />
+              </button>
 
               {/* Curated Tag Badge */}
               {item.tag && (
-                <span className={`absolute top-0.5 left-0.5 text-[6.5px] sm:text-[7px] font-black uppercase tracking-wider px-1 py-0.5 rounded shadow-xs ${
+                <span className={`absolute left-1.5 top-1.5 z-10 rounded-md px-1.5 py-1 text-xs font-bold uppercase tracking-wide shadow-sm ${
                   /hot/i.test(item.tag || '')
                     ? 'bg-rose-600 text-white'
                     : /popular/i.test(item.tag || '')
@@ -3366,6 +3565,16 @@ const FoodSpecialsStrip = ({ navigate }) => {
                 </span>
               )}
 
+              {item.isSponsored && (
+                <span className="absolute right-1.5 top-1.5 z-10 rounded-md bg-slate-900/90 px-1.5 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-sm">
+                  Sponsored
+                </span>
+              )}
+
+              <span className="absolute bottom-1.5 left-1.5 z-10 rounded-full bg-white/95 px-2 py-1 text-xs font-extrabold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-gray-950/90 dark:text-white">
+                R{item.price}
+              </span>
+
               {/* Basket Button */}
               {(() => {
                 const cartEntry = cart.find((ci) => ci.item.id === item.id);
@@ -3374,7 +3583,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center absolute right-1 bottom-1 transition-all duration-200 active:scale-90 z-10"
+                    className="absolute bottom-1 right-1 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-transparent shadow-none transition-all duration-200 active:scale-90"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
@@ -3384,7 +3593,7 @@ const FoodSpecialsStrip = ({ navigate }) => {
                       </span>
                     ) : (
                       <ShoppingBag
-                        className="w-3 h-3 sm:w-3.5 sm:h-3.5"
+                        className="h-5 w-5"
                         style={{ color: qty === 1 ? '#ef4444' : '#1ed760' }}
                       />
                     )}
@@ -3394,27 +3603,78 @@ const FoodSpecialsStrip = ({ navigate }) => {
             </div>
 
             {/* Title */}
-            <p className="font-extrabold text-gray-900 dark:text-white truncate text-[10px] sm:text-[11px] leading-tight group-hover:underline">
+            <p className="truncate text-xs font-semibold leading-tight text-gray-900 dark:text-white">
               {item.name}
             </p>
 
             {/* Subtitle / Shop */}
-            <p className="text-gray-400 dark:text-gray-500 text-[8.5px] sm:text-[9px] truncate leading-tight mt-0.5">
+            <p className="mt-0.5 truncate text-xs leading-tight text-gray-600 dark:text-gray-300">
               {item.shopName}
             </p>
-
-            {/* Price & GPS distance */}
-            <div className="flex items-center justify-between border-gray-100 dark:border-gray-800 mt-0.5">
-              <span className="font-black text-gray-900 dark:text-white text-[10px] sm:text-[11px]">R{item.price}</span>
-              {getAccurateDistanceLabel(item, coords) && (
-                <span className="text-[7.5px] font-bold text-emerald-600 dark:text-emerald-400 truncate max-w-[50px]">
-                  📍 {getAccurateDistanceLabel(item, coords)}
-                </span>
-              )}
-            </div>
           </motion.div>
         ))}
-      </div>
+      </div>}
+
+      {/* Uber Eats-inspired browse cards */}
+      {activeFoodShortcut !== 'active-orders' && <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {displayedFoodItems.map((item, index) => (
+          <motion.button
+            key={`food-list-${item.shopId}-${item.id || index}`}
+            type="button"
+            whileTap={{ scale: 0.99 }}
+            onClick={() => handleFoodSelect(item)}
+            className="group w-full overflow-hidden rounded-2xl border-0 bg-transparent p-0 text-left shadow-none transition"
+          >
+            <span className="relative block aspect-[1.45/1] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
+              <FoodMedia
+                src={item.image}
+                alt={item.name}
+                fallback="🍱"
+                className="h-full w-full text-3xl"
+                imgClassName="transition-transform duration-300 group-hover:scale-105"
+              />
+              <span className="absolute bottom-2 right-2 rounded-lg bg-white px-2 py-1 text-[11px] font-extrabold text-gray-900 shadow-sm dark:bg-gray-950 dark:text-white">
+                R{item.price}
+              </span>
+            </span>
+            <span className="block min-w-0 p-2.5">
+              <span className="block truncate text-xs font-bold text-gray-900 dark:text-white sm:text-sm">{item.name}</span>
+              <span className="mt-1 block truncate text-[10px] font-medium text-gray-600 dark:text-gray-300 sm:text-xs">{item.shopName}</span>
+              {(item.shopCuisine || item.shopDistance) && <span className="mt-0.5 block truncate text-xs text-gray-600 dark:text-gray-300">{[item.shopCuisine, item.shopDistance].filter(Boolean).join(' · ')}</span>}
+            </span>
+          </motion.button>
+        ))}
+      </div>}
+
+      <AnimatePresence>
+        {previewFood && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] flex items-center justify-center bg-black/90 p-4 sm:p-8"
+            onClick={() => setPreviewFood(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${previewFood.name} photo`}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewFood(null)}
+              aria-label="Close food photo"
+              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-2xl text-white backdrop-blur hover:bg-white/25 sm:right-6 sm:top-6"
+            >
+              ×
+            </button>
+            <div className="flex max-h-full w-full max-w-3xl flex-col items-center gap-3" onClick={(event) => event.stopPropagation()}>
+              <div className="h-[min(72dvh,680px)] w-full overflow-hidden rounded-2xl bg-black/20 sm:rounded-3xl">
+                <FoodMedia src={previewFood.image} alt={previewFood.name} fallback="🍱" className="text-7xl" imgClassName="!object-contain" />
+              </div>
+              <p className="max-w-full truncate text-center text-sm font-semibold text-white sm:text-base">{previewFood.name}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       {/* ── Cross-Shop Guard Dialog ── */}
@@ -3573,7 +3833,9 @@ const matchItemToSubcategory = (item, tab, subId) => {
   if (!item) return false;
   if (subId === 'all') return true;
 
-  const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+  const text = `${item.name || ''} ${item.title || ''} ${item.description || ''} ${item.type || ''} ${item.kind || ''} ${item.propertyType || ''} ${item.category || ''} ${item.skills || ''}`.toLowerCase();
+  const kind = String(item.kind || item.propertyType || '').toLowerCase().replace(/[\s-]+/g, '_');
+  const pricePeriod = String(item.pricePeriod || item.period || (item.type === 'rent' ? 'month' : item.type === 'office' ? 'hour' : ['over', 'hotel', 'land'].includes(item.type) ? 'night' : ['house', 'apartment'].includes(kind) ? 'day' : item.type === 'resort' ? 'day' : '')).toLowerCase().replace(/[\s-]+/g, '_');
 
   if (tab === 'Property') {
     switch (subId) {
@@ -3586,7 +3848,25 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'lodge':
         return item.type === 'lodge' || item.kind === 'lodge' || /lodge/i.test(text);
       case 'apartment':
-        return item.type === 'apartment' || item.kind === 'apartment' || item.kind === 'complex' || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+        return item.type === 'apartment' || ['apartment', 'complex'].includes(kind) || (Number(item.numberOfApartments) > 0) || /apartment|complex|flat/i.test(text);
+      case 'full_house':
+        return ['house', 'full_house'].includes(kind) || /full house|entire house|whole house|standalone house/i.test(text);
+      case 'single_room':
+        return ['room', 'single_room'].includes(kind) || /single room|room to rent|room for rent|private room/i.test(text);
+      case 'studio':
+        return kind === 'studio' || /studio|bachelor apartment/i.test(text);
+      case 'townhouse':
+        return ['townhouse', 'town_house'].includes(kind) || /town\s?house/i.test(text);
+      case 'loft':
+        return kind === 'loft' || /\bloft\b/i.test(text);
+      case 'penthouse':
+        return kind === 'penthouse' || /penthouse/i.test(text);
+      case 'per_day':
+        return pricePeriod === 'day';
+      case 'per_month':
+        return pricePeriod === 'month';
+      case 'per_hour':
+        return pricePeriod === 'hour';
       case 'self_catering':
         return item.type === 'land' || item.type === 'self_catering' || item.kind === 'Self Catering' || item.kind === 'self_catering' || item.kind === 'chalet' || /self[-\s]?catering|chalet/i.test(text);
       case 'resort':
@@ -3614,18 +3894,15 @@ const matchItemToSubcategory = (item, tab, subId) => {
   if (tab === 'Helper') {
     switch (subId) {
       case 'domestic': return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
-      case 'tutor': return item.type === 'tutor' || /tutor|teach|math|science|english|lesson|academy/i.test(text);
       case 'chef': return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
       case 'beauty': return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
-      case 'tattoo': return item.type === 'tattoo' || /tattoo|ink|piercing|body art/i.test(text);
       case 'barber': return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
       case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
       case 'sneakers':
       case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
-      case 'marquees':
-      case 'marquee': return item.type === 'marquees' || item.type === 'marquee' || item.type === 'tent' || item.category === 'marquee' || /marquee|tents?|canop(y|ies)|stretch\s*tent|event setup|event hire/i.test(text);
-      case 'animals':
-      case 'animal': return item.type === 'animals' || item.type === 'animal' || /animal|dog|pet|cat|vet/i.test(text);
+      case 'carwash': return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
+      case 'moving': return item.type === 'moving' || /moving|relocation|logistics|hauling|bakkie/i.test(text);
+      case 'other': return item.type === 'other' || item.type === 'others';
       default: return true;
     }
   }
@@ -3651,6 +3928,7 @@ const matchItemToSubcategory = (item, tab, subId) => {
       case 'clothes': return item.category === 'clothes' || item.type === 'clothes' || /cloth|shoe|dress|shirt|jacket|wear/i.test(text);
       case 'universities': return item.category === 'universities' || item.type === 'universities' || /uni|university|student|campus/i.test(text);
       case 'books': return item.category === 'books' || item.type === 'books' || /book|textbook|novel|study/i.test(text);
+      case 'other': return item.category === 'other' || item.type === 'other';
       default: return true;
     }
   }
@@ -3658,12 +3936,162 @@ const matchItemToSubcategory = (item, tab, subId) => {
   return true;
 };
 
+const RecentlyViewedStrip = ({ items = [], navigate }) => {
+  if (!items.length) return null;
+
+  return (
+    <section aria-label="Recently viewed listings" className="mb-5">
+      <div className="mb-3">
+        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">History</p>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">Recently viewed</h2>
+      </div>
+      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:gap-4">
+        {items.slice(0, 12).map((item, index) => (
+          <div key={`recently-viewed-${item._id || item.id || index}`} className="w-[145px] shrink-0 snap-start sm:w-[180px]">
+            <AirbnbCard
+              item={item}
+              type={item.itemType === 'listing' ? 'property' : (item.itemType || 'service')}
+              reducedSize
+              showOwner={false}
+              showCategory={false}
+              showAccountOwner={false}
+              onClick={(path) => navigate(path)}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const getActiveBookingCount = (activeTab, bookings = []) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const isServiceTab = ['Helper', 'Helpers', 'Services'].includes(activeTab);
+  if (!isPropertyTab && !isServiceTab) return 0;
+
+  return bookings.filter((booking) => {
+    const status = String(booking.status || '').toLowerCase();
+    if (['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(status)) return false;
+    const isPropertyBooking = Boolean(booking.listing) || ['listing', 'property', 'stay'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    const isServiceBooking = Boolean(booking.helper || booking.service) || ['helper', 'service'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    return isPropertyTab ? isPropertyBooking : isServiceBooking;
+  }).length;
+};
+
+const ActiveBookingsChip = ({ activeTab, bookings, isBookingsOpen, setIsBookingsOpen }) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const isServiceTab = ['Helper', 'Helpers', 'Services'].includes(activeTab);
+  if (!isPropertyTab && !isServiceTab) return null;
+  const count = getActiveBookingCount(activeTab, bookings);
+  return (
+    <>
+      <motion.button
+        type="button"
+        whileTap={{ scale: 0.96 }}
+        onClick={() => setIsBookingsOpen(true)}
+        aria-label={`Open active bookings, ${count} ${count === 1 ? 'booking' : 'bookings'}`}
+        className="flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-800 transition hover:bg-rose-100 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-200 dark:hover:bg-rose-950/50"
+      >
+        <CalendarDays className="h-4 w-4" />
+        <span>Bookings</span>
+        <span className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-rose-700 dark:bg-gray-900 dark:text-rose-200">{count}</span>
+      </motion.button>
+      {isBookingsOpen && <ActiveBookingsPopover activeTab={activeTab} bookings={bookings} onClose={() => setIsBookingsOpen(false)} />}
+    </>
+  );
+};
+
+const ActiveBookingsPopover = ({ activeTab, bookings, onClose }) => {
+  const isPropertyTab = ['Property', 'Properties'].includes(activeTab);
+  const activeItems = bookings.filter((booking) => {
+    const status = String(booking.status || '').toLowerCase();
+    if (['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(status)) return false;
+    const isPropertyBooking = Boolean(booking.listing) || ['listing', 'property', 'stay'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    const isServiceBooking = Boolean(booking.helper || booking.service) || ['helper', 'service'].includes(String(booking.itemType || booking.type || '').toLowerCase());
+    return isPropertyTab ? isPropertyBooking : isServiceBooking;
+  });
+
+  return createPortal(
+    <div className="fixed inset-0 z-[1400] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
+      <section role="dialog" aria-modal="true" aria-labelledby="home-active-bookings-title" className="max-h-[82dvh] w-full max-w-lg overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-gray-900 sm:rounded-3xl" onClick={(event) => event.stopPropagation()}>
+        <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-gray-800">
+          <div>
+            <h2 id="home-active-bookings-title" className="text-lg font-extrabold text-slate-900 dark:text-white">Your bookings</h2>
+            <p className="mt-0.5 text-sm text-slate-500 dark:text-gray-400">{isPropertyTab ? 'Property' : 'Service'} bookings · {activeItems.length}</p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close bookings" className="grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-xl text-slate-700 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">×</button>
+        </header>
+        <div className="max-h-[65dvh] space-y-3 overflow-y-auto p-4">
+          {activeItems.length ? activeItems.map((booking) => {
+            const item = booking.listing || booking.helper || booking.service || booking.event || {};
+            const bookingDate = new Date(booking.startDate || booking.date || booking.createdAt);
+            const dateLabel = Number.isNaN(bookingDate.getTime())
+              ? 'Date to be confirmed'
+              : bookingDate.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+            const title = item.name || item.title || booking.serviceName || booking.title || 'Booking request';
+            const status = String(booking.status || 'pending').replace(/[_-]/g, ' ');
+            const serviceDetails = [
+              booking.subtype,
+              booking.functionType,
+              booking.selectedHaircut && `Haircut: ${booking.selectedHaircut}`,
+              booking.beardGrooming && `Beard grooming: ${booking.beardGrooming}`,
+              booking.serviceDuration && `Duration: ${booking.serviceDuration}`,
+              booking.specialRequirements && `Request: ${booking.specialRequirements}`,
+            ].filter(Boolean).join(' · ');
+            const rawAddress = booking.requestLocation || booking.address || item.businessAddress || item.address || item.location;
+            const address = typeof rawAddress === 'string' ? rawAddress : rawAddress?.formattedAddress || rawAddress?.address || '';
+            const contact = item.contact || item.phone || item.userRef?.phone || item.creator?.phone || booking.phone;
+            return (
+              <article key={booking._id || booking.id || `${title}-${dateLabel}`} className="rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-slate-900 dark:text-white">{title}</h3>
+                    <p className="mt-1 text-sm text-slate-600 dark:text-gray-300">{dateLabel}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold capitalize text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">{status}</span>
+                </div>
+                {(booking.selectedPerformer || booking.totalPrice || booking.totalAmount) && (
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-gray-400">
+                    {booking.selectedPerformer && <span>Provider: {booking.selectedPerformer}</span>}
+                    {(booking.totalPrice || booking.totalAmount) && <span>Total: R{booking.totalPrice || booking.totalAmount}</span>}
+                  </div>
+                )}
+                <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 text-sm dark:border-gray-700">
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Service:</strong> {serviceDetails || booking.serviceName || item.type || title}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Address:</strong> {address || 'Not provided'}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-700 dark:text-gray-300">
+                    <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <span><strong className="font-semibold">Contact:</strong> {contact ? <a href={`tel:${String(contact).replace(/[^\d+]/g, '')}`} className="underline underline-offset-2">{contact}</a> : 'Not provided'}</span>
+                  </div>
+                </div>
+              </article>
+            );
+          }) : (
+            <div className="py-10 text-center">
+              <CalendarDays className="mx-auto h-8 w-8 text-slate-400" />
+              <p className="mt-3 font-semibold text-slate-800 dark:text-gray-200">No active bookings here yet</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">Your booking requests will appear here.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>,
+    document.body
+  );
+};
+
 function MobileAppHomepage({
   featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems,
   loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
-  recentlyAddedItems, locationStatus, requestCount = 0, geoCity, geoLoading, geoError, onRequestLocation, currentUser,
+  recentlyAddedItems, locationStatus, requestCount = 0, activeBookings = [], geoCity, geoLoading, geoError, onRequestLocation, currentUser,
   homeLoadError, onRetryHomeData
 }) {
   const [isDesktop, setIsDesktop] = useState(false);
@@ -3696,6 +4124,7 @@ function MobileAppHomepage({
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
   const lastScrollYRef = useRef(0);
+  const lastHeaderDirectionYRef = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -3704,10 +4133,10 @@ function MobileAppHomepage({
 
       if (currentScrollY < 50) {
         setIsHeaderVisible(true);
-      } else if (isScrollingUp) {
-        setIsHeaderVisible(true);
-      } else {
-        setIsHeaderVisible(false);
+        lastHeaderDirectionYRef.current = currentScrollY;
+      } else if (Math.abs(currentScrollY - lastHeaderDirectionYRef.current) >= 8) {
+        setIsHeaderVisible(isScrollingUp);
+        lastHeaderDirectionYRef.current = currentScrollY;
       }
 
       setIsScrolled(currentScrollY > 60);
@@ -3770,13 +4199,12 @@ function MobileAppHomepage({
         { id: 'property', label: 'Property', emoji: '🏡', desc: 'Recent properties & stays' },
         { id: 'service', label: 'Services', emoji: '🛠️', desc: 'Recent services & pros' },
         { id: 'helper', label: 'Helper', emoji: '🧹', desc: 'Recent helpers & bookings' },
-        { id: 'event', label: 'Events', emoji: '🎟️', desc: 'Recent events & shows' },
         { id: 'selling', label: 'Item for Sale', emoji: '🏷️', desc: 'Recent marketplace items' }
       ]
     },
     {
       id: 'Property',
-      label: 'Property',
+      label: 'Properties',
       emoji: '🏡',
       icon: House,
       desc: 'Rooms & stays',
@@ -3785,73 +4213,43 @@ function MobileAppHomepage({
       subcategories: [
         { id: 'all', label: 'All Properties', emoji: '🏡', desc: 'Explore all properties' },
         { id: 'rooms', label: 'Rooms & Rent', emoji: '🏠', desc: 'Rooms, homes & apartments for rent' },
+        { id: 'full_house', label: 'Full House', emoji: '🏡', desc: 'Entire houses and homes' },
+        { id: 'single_room', label: 'Single Room', emoji: '🛏️', desc: 'Private rooms for rent' },
+        { id: 'studio', label: 'Studio', emoji: '🪴', desc: 'Studio and bachelor apartments' },
+        { id: 'townhouse', label: 'Townhouse', emoji: '🏘️', desc: 'Townhouses and cluster homes' },
+        { id: 'loft', label: 'Loft', emoji: '🏙️', desc: 'Loft apartments' },
+        { id: 'penthouse', label: 'Penthouse', emoji: '🌇', desc: 'Penthouses and top-floor homes' },
         { id: 'guesthouse', label: 'Guest House & B&B', emoji: '🛌', desc: 'B&B and guest houses' },
         { id: 'hotel', label: 'Hotels', emoji: '🏨', desc: 'Hotels & luxury suites' },
         { id: 'lodge', label: 'Lodges', emoji: '🏡', desc: 'Safari & nature lodges' },
         { id: 'apartment', label: 'Apartment & Complex', emoji: '🏢', desc: 'Apartment complexes & flats' },
+        { id: 'per_day', label: 'Per Day', emoji: '☀️', desc: 'Properties priced per day' },
+        { id: 'per_month', label: 'Per Month', emoji: '📅', desc: 'Properties priced per month' },
+        { id: 'per_hour', label: 'Per Hour', emoji: '⏱️', desc: 'Rooms and stays priced per hour' },
         { id: 'self_catering', label: 'Self Catering', emoji: '🍳', desc: 'Self catering stays & chalets' },
         { id: 'resort', label: 'Holiday Park & Resort', emoji: '🏖️', desc: 'Holiday parks & resorts' },
         { id: 'hourly_room', label: 'Room Per Hour', emoji: '🚪', desc: 'Short stay & hourly rooms' }
       ]
     },
     {
-      id: 'Services',
+      id: 'Helper',
       label: 'Services',
       emoji: '🛠️',
       icon: Wrench,
-      desc: 'Book pros',
+      desc: 'Local services & helpers',
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
         { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
-        { id: 'transport', label: 'Transport & Shuttle', emoji: '🚕', desc: 'Rides, shuttles & logistics' },
-        { id: 'carwash', label: 'Car Wash', emoji: '🚗', desc: 'Car wash & auto detailing' },
-        { id: 'catering', label: 'Catering & Baking', emoji: '🍽️', desc: 'Catering, cakes & culinary' },
-        { id: 'landscaping', label: 'Landscaping & Yard', emoji: '🌿', desc: 'Gardening & yard care' },
-        { id: 'moving', label: 'Moving & Logistics', emoji: '🚚', desc: 'Bakkie & home moving' },
-        { id: 'storage', label: 'Booking Storage', emoji: '📦', desc: 'Secure storage units' },
-        { id: 'handyman', label: 'Handyman & Repairs', emoji: '🔧', desc: 'Plumbing, electrical & repairs' },
-        { id: 'others', label: 'Others & General', emoji: '✨', desc: 'General professional services' }
-      ]
-    },
-    {
-      id: 'Helper',
-      label: 'Helper',
-      emoji: '🧹',
-      icon: HandHeart,
-      desc: 'Chores & care',
-      textColor: 'text-sky-600',
-      bgColor: 'bg-sky-500',
-      subcategories: [
-        { id: 'all', label: 'All Helpers', emoji: '🧹', desc: 'Explore all helpers' },
-        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Maids, cleaners & housekeepers' },
-        { id: 'tutor', label: 'Private Tutor', emoji: '📚', desc: 'Academic tutors & lessons' },
-        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Personal chefs & cooking' },
-        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Nails, hair, lashes & skincare' },
-        { id: 'tattoo', label: 'Tattoo Artist', emoji: '💉', desc: 'Tattoos & body piercings' },
-        { id: 'barber', label: 'Barbershop', emoji: '💈', desc: 'Haircuts, fades & grooming' },
+        { id: 'barber', label: 'Barber', emoji: '✂️', desc: 'Haircuts & grooming' },
+        { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Hair, nails & makeup' },
+        { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Cleaning, laundry, chores' },
+        { id: 'chef', label: 'Private Chef', emoji: '👨‍🍳', desc: 'Meal preparation' },
         { id: 'photography', label: 'Photographer', emoji: '📸', desc: 'Photography, shoots & events' },
-        { id: 'sneakers', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
-        { id: 'marquees', label: 'Marquees & Tents', emoji: '🎪', desc: 'Marquee hire, tents & setups' },
-        { id: 'animals', label: 'Animal Care', emoji: '🐕', desc: 'Pet care & dog walking' }
-      ]
-    },
-    {
-      id: 'Events',
-      label: 'Events',
-      emoji: '🎟️',
-      icon: CalendarDays,
-      desc: 'Shows & vibes',
-      textColor: 'text-purple-600',
-      bgColor: 'bg-purple-500',
-      subcategories: [
-        { id: 'all', label: 'All Events', emoji: '🎟️' },
-        { id: 'music', label: 'Music & Concerts', emoji: '🎵' },
-        { id: 'sports', label: 'Sports & Matches', emoji: '⚽' },
-        { id: 'arts', label: 'Arts & Culture', emoji: '🎨' },
-        { id: 'community', label: 'Community & Meetups', emoji: '🤝' },
-        { id: 'food', label: 'Food & Markets', emoji: '🍔' },
-        { id: 'outdoors', label: 'Outdoors & Safari', emoji: '⛺' }
+        { id: 'sneaker', label: 'Sneaker Cleaner', emoji: '👟', desc: 'Sneaker cleaning & restoration' },
+        { id: 'carwash', label: 'Car Wash', emoji: '🚗💦', desc: 'Car cleaning & detailing' },
+        { id: 'moving', label: 'Moving', emoji: '🚚', desc: 'Home and office relocation' },
+        { id: 'other', label: 'Other Services', emoji: '✨', desc: 'Other skills and services' }
       ]
     },
     {
@@ -3868,7 +4266,8 @@ function MobileAppHomepage({
         { id: 'electronics', label: 'Electronics', emoji: '💻' },
         { id: 'clothes', label: 'Clothes', emoji: '👕' },
         { id: 'universities', label: 'Universities', emoji: '🎓' },
-        { id: 'books', label: 'Books', emoji: '📚' }
+        { id: 'books', label: 'Books', emoji: '📚' },
+        { id: 'other', label: 'Other Items', emoji: '🏷️' }
       ]
     },
     {
@@ -3878,8 +4277,7 @@ function MobileAppHomepage({
       icon: UtensilsCrossed,
       desc: 'Food & eats',
       textColor: 'text-orange-600',
-      bgColor: 'bg-orange-500',
-      route: '/food'
+      bgColor: 'bg-orange-500'
     },
     {
       id: 'LookingFor',
@@ -3893,16 +4291,16 @@ function MobileAppHomepage({
     }
   ];
 
-  // Pinned tabs on the sticky header bar:
-  // - "Recent" is always pinned on the header.
-  // - If user selects another category from the bottom sheet, it sticks on the homepage header as active.
+  // Keep the main discovery routes visible in the horizontal belt. Less-used
+  // categories selected from More remain pinned there until another is chosen.
   const visibleTabs = useMemo(() => {
-    const recentTab = tabs.find(t => t.id === 'RecentAdded' || t.id === 'Recent') || tabs[0];
-    if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
-      return [recentTab];
-    }
+    const pinnedIds = ['Property', 'Helper', 'Lunch'];
+    const pinnedTabs = pinnedIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean);
     const currentTab = tabs.find(t => t.id === activeTab);
-    return currentTab ? [recentTab, currentTab] : [recentTab];
+    const hideFromTopBar = ['RecentAdded', 'Property', 'Helper', 'Lunch', 'Selling'].includes(currentTab?.id);
+    return currentTab && !pinnedIds.includes(currentTab.id) && !hideFromTopBar
+      ? [...pinnedTabs, currentTab]
+      : pinnedTabs;
   }, [tabs, activeTab]);
 
   const currentTabLabel = useMemo(() => {
@@ -3999,7 +4397,7 @@ function MobileAppHomepage({
       case 'Properties': return 'bg-emerald-500';
       case 'Services': return 'bg-amber-500';
       case 'Helper':
-      case 'Helpers': return 'bg-sky-500';
+      case 'Helpers': return 'bg-amber-500';
       case 'Events': return 'bg-purple-500';
       case 'Selling':
       case 'Sell':
@@ -4034,11 +4432,13 @@ function MobileAppHomepage({
         loadingEvents={loadingEvents}
         loadingSellItems={loadingSellItems}
         recentlyAddedItems={recentlyAddedItems}
+        recentlyViewedItems={recentlyViewedItems}
         navigate={navigate}
         currentUser={currentUser}
         isBookingsOpen={isBookingsOpen}
         setIsBookingsOpen={setIsBookingsOpen}
         requestCount={requestCount}
+        activeBookings={activeBookings}
         stats={stats}
         homeLoadError={homeLoadError}
         onRetryHomeData={onRetryHomeData}
@@ -4066,19 +4466,23 @@ function MobileAppHomepage({
 
       {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
       <div
-        style={{ top: isHeaderVisible ? '92px' : '8px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2 px-4 border-b border-gray-100/80 dark:border-gray-800/80 shadow-[0_2px_16px_-4px_rgba(0,0,0,0.08)] transition-[top] duration-300 ease-out"
+        style={{ top: isHeaderVisible ? '92px' : '0px' }}
+        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-0 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex items-center justify-center gap-6 overflow-x-auto scrollbar-hide py-1">
+        <div className="flex translate-y-[2px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+            const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
+            const shortcutLabel = {
+              Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
+            }[tab.id] || tab.label;
             return (
               <motion.button
                 key={tab.id}
                 onClick={() => {
                   if (tab.route) {
-                    navigate(tab.route);
+                    navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
                     return;
                   }
                   if (isRecentAdded) {
@@ -4094,21 +4498,17 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1 relative"
-                aria-label={tab.label}
+                className={`relative flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
+                aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-                  {isRecentAdded ? (
-                    <RecentAdded3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
-                  ) : (
-                    <Category3DIcon type={tab.id} className="w-8 h-8 sm:w-9 sm:h-9" />
-                  )}
+                <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl transition-transform group-hover:scale-105`} aria-hidden="true">
+                  <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-7 w-7 text-slate-700 dark:text-slate-200" />
                 </div>
-                <span className={`text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-center whitespace-normal ${isActive ? 'text-rose-600' : 'text-slate-700 dark:text-gray-300'}`}>
-                  {isRecentAdded ? 'New listings' : tab.label}
+                <span className={`mt-0.5 text-center text-xs font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-800 dark:text-rose-200' : 'text-slate-700 dark:text-gray-200'}`}>
+                  {isRecentAdded ? 'New' : shortcutLabel}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute top-1 right-2 animate-pulse" />
+                  <span className="absolute right-2 top-1 h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
                 )}
               </motion.button>
             );
@@ -4119,24 +4519,27 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="shrink-0 flex flex-col items-center justify-center cursor-pointer focus:outline-none min-w-[68px] max-w-[76px] py-1"
+            className="flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
             aria-label="Browse all categories"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-              <MoreCategories3DIcon className="w-8 h-8 sm:w-9 sm:h-9" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105" aria-hidden="true">
+              <span role="img" aria-label="Browse categories">🗂️</span>
             </div>
-            <span className="text-[9px] leading-tight font-black uppercase tracking-wide mt-1 text-rose-600 text-center whitespace-normal">
-              Categories
+            <span className="mt-0.5 text-center text-xs font-semibold leading-tight text-slate-700 whitespace-nowrap dark:text-gray-200">
+              More
             </span>
           </motion.button>
         </div>
       </div>
 
-      <main className="px-4 pb-4 w-full">
+      <main className="w-full bg-white px-4 pb-4 pt-6 dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
 
-        {/* Spacer: height of categories bar only */}
-        <div className="h-[68px]" />
+        {/* Keep food recommendations on the general feed; category selections
+            show matching listings and headings below. */}
+        {activeTab === 'Lunch' && (
+          <FoodSpecialsStrip navigate={navigate} className="mt-7" />
+        )}
 
         {/* ── LOCATION TOAST: appears briefly once location is resolved, then auto-hides ── */}
         <AnimatePresence>
@@ -4147,7 +4550,7 @@ function MobileAppHomepage({
               exit={{ opacity: 0, y: -8, height: 0, marginBottom: 0 }}
               transition={{ duration: 0.3 }}
               onClick={onRequestLocation}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 text-xs font-bold text-gray-600 active:scale-95 overflow-hidden mb-3"
             >
               {geoLoading ? (
                 <>
@@ -4169,11 +4572,12 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
-        {/* ── FOOD SPECIALS STRIP (always visible, right under search) ── */}
-        <FoodSpecialsStrip navigate={navigate} />
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
+          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
+        )}
 
         {/* ── EXPLORE SECTION (listings-first) ── */}
-        <section id="explore-section" className="mb-8">
+        {activeTab !== 'Lunch' && <section id="explore-section" className="mb-8">
 
           {/* Subcategory Pills - hidden for Recent as requested */}
           {currentCategoryObj?.subcategories &&
@@ -4182,26 +4586,28 @@ function MobileAppHomepage({
             activeTab !== 'Recent Added' &&
             activeTab !== 'Recent' && (
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-2.5 mb-5 -mx-4 px-4 snap-x">
-              {currentCategoryObj.subcategories.map((sub) => {
+              {currentCategoryObj.subcategories.map((sub, index) => {
                 const isSubActive = activeSubcategory === sub.id;
                 const count = getSubcategoryCount(activeTab, sub.id);
                 return (
-                  <motion.button
-                    key={sub.id}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveSubcategory(sub.id)}
-                    className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${isSubActive
-                      ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
-                      : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                      }`}
-                  >
-                    <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
-                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
-                      }`}>
-                      {isLoadingCurrentTab ? '...' : count}
-                    </span>
-                  </motion.button>
+                  <React.Fragment key={sub.id}>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setActiveSubcategory(sub.id)}
+                      className={`snap-start shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer ${isSubActive
+                        ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900'
+                        : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
+                        }`}
+                    >
+                      <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${isSubActive ? 'bg-rose-500 text-white' : 'bg-white text-slate-500 border border-slate-200'
+                        }`}>
+                        {isLoadingCurrentTab ? '...' : count}
+                      </span>
+                    </motion.button>
+                    {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} isBookingsOpen={isBookingsOpen} setIsBookingsOpen={setIsBookingsOpen} />}
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -4230,7 +4636,15 @@ function MobileAppHomepage({
           {/* Section label + live count */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-black text-base text-gray-950 dark:text-white tracking-tight">
-              Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span>
+              {activeTab === 'Property' || activeTab === 'Properties'
+                ? 'Properties near you'
+                : activeTab === 'Helper' || activeTab === 'Helpers'
+                  ? 'Services near you'
+                  : activeTab === 'Services'
+                    ? 'Services near you'
+                    : activeTab === 'Lunch'
+                      ? 'Food near you'
+                      : <>Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>}
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4279,7 +4693,7 @@ function MobileAppHomepage({
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
-                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} found
+                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} found
               </h3>
               <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">Be the first to list in this category.</p>
               {activeSubcategory !== 'all' && (
@@ -4340,7 +4754,8 @@ function MobileAppHomepage({
               </motion.button>
             </div>
           )}
-        </section>
+        </section>}
+
 
         {/* Sell Items */}
         <SellItemsSection navigate={navigate} />
@@ -4410,10 +4825,12 @@ function DesktopHomepage({
   loadingEvents,
   loadingSellItems,
   recentlyAddedItems,
+  recentlyViewedItems = [],
   navigate,
   isBookingsOpen,
   setIsBookingsOpen,
   requestCount,
+  activeBookings = [],
   stats,
   homeLoadError,
   onRetryHomeData,
@@ -4532,19 +4949,23 @@ function DesktopHomepage({
       {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
       <div
         style={{ top: isHeaderVisible ? '96px' : '0px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-2.5 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-300 ease-out"
+        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-1 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
       >
-        <div className="max-w-7xl mx-auto px-8 flex items-center justify-center relative">
-          <div className="flex items-center justify-center gap-8 overflow-x-auto scrollbar-hide py-1">
-            {(visibleTabs || tabs.slice(0, 2)).map((tab) => {
+        <div className="max-w-7xl mx-auto translate-y-[2px] px-8 flex items-center justify-center relative">
+          <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide py-0.5">
+            {(visibleTabs || tabs.slice(0, 3)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
+              const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
+              const shortcutLabel = {
+                Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
+              }[tab.id] || tab.label;
               return (
                 <motion.button
                   key={tab.id}
                   onClick={() => {
                     if (tab.route) {
-                      navigate(tab.route);
+                      navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
                       return;
                     }
                     if (isRecentAdded) {
@@ -4560,21 +4981,17 @@ function DesktopHomepage({
                   }}
                   whileHover={{ scale: 1.08, y: -2 }}
                   whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none relative"
-                  aria-label={tab.label}
+                  className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none relative"
+                  aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
                 >
-                  <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-                    {isRecentAdded ? (
-                      <RecentAdded3DIcon className="w-8 h-8" />
-                    ) : (
-                      <Category3DIcon type={tab.id} className="w-8 h-8" />
-                    )}
+                  <div className={`${isRecentAdded ? 'w-10 h-10 bg-rose-100/80 dark:bg-rose-900/40' : 'w-10 h-10 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
+                    <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-6 w-6 text-slate-700 dark:text-slate-200" />
                   </div>
                   <div className="text-left">
                     <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
-                      {isRecentAdded ? 'New listings' : tab.label}
+                      {isRecentAdded ? 'New listings' : shortcutLabel}
                     </span>
-                    <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                    <span className="block text-xs text-gray-600 font-semibold leading-tight">
                       {isRecentAdded ? 'Just added' : (tab.desc || '')}
                     </span>
                   </div>
@@ -4590,17 +5007,17 @@ function DesktopHomepage({
               onClick={() => setIsCategoriesSheetOpen(true)}
               whileHover={{ scale: 1.08, y: -2 }}
               whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex items-center gap-2.5 cursor-pointer p-1 focus:outline-none"
+              className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none"
               aria-label="Browse all categories"
             >
-              <div className="w-9 h-9 rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100/90 dark:border-gray-800 flex items-center justify-center transition-transform group-hover:scale-105">
-                <MoreCategories3DIcon className="w-8 h-8" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100/80 text-[26px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
+                <span role="img" aria-label="Browse categories">🗂️</span>
               </div>
               <div className="text-left">
                 <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">
                   Browse categories
                 </span>
-                <span className="block text-[9.5px] text-gray-400 font-semibold leading-tight">
+                <span className="block text-xs text-gray-600 font-semibold leading-tight">
                   See everything
                 </span>
               </div>
@@ -4619,8 +5036,8 @@ function DesktopHomepage({
       </div>
 
       {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-8 pt-[88px]">
-        <HomeHero navigate={navigate} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
+        <HomeHero navigate={navigate} compact />
       </div>
 
       {/* Main Clean Feed Grid */}
@@ -4633,30 +5050,32 @@ function DesktopHomepage({
           activeTab !== 'Recent Added' &&
           activeTab !== 'Recent' && (
           <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-hide pb-6 mb-6 border-b border-gray-100">
-            {currentCategoryObj.subcategories.map((sub) => {
+            {currentCategoryObj.subcategories.map((sub, index) => {
               const isSubActive = activeSubcategory === sub.id;
               const count = getSubcategoryCount(activeTab, sub.id);
               return (
-                <motion.button
-                  key={sub.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setActiveSubcategory(sub.id)}
-                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${isSubActive
-                    ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
-                    }`}
-                >
-                  <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
+                <React.Fragment key={sub.id}>
+                  <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setActiveSubcategory(sub.id)}
+                    className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black transition-all duration-200 cursor-pointer shadow-xs ${isSubActive
+                      ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-900 scale-[1.02]'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
                       }`}
                   >
-                    {isLoadingCurrentTab ? '...' : count}
-                  </span>
-                </motion.button>
+                    <CategoryNavIcon id={sub.id} className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap tracking-tight">{sub.label}</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-black ml-0.5 ${isSubActive
+                        ? 'bg-rose-500 text-white'
+                        : 'bg-white text-slate-500 border border-slate-200 shadow-2xs'
+                        }`}
+                    >
+                      {isLoadingCurrentTab ? '...' : count}
+                    </span>
+                  </motion.button>
+                  {index === 0 && <ActiveBookingsChip activeTab={activeTab} bookings={activeBookings} isBookingsOpen={isBookingsOpen} setIsBookingsOpen={setIsBookingsOpen} />}
+                </React.Fragment>
               );
             })}
           </div>
@@ -4682,19 +5101,33 @@ function DesktopHomepage({
           </div>
         )}
 
-        {/* Food Specials Strip — Desktop (always visible, right under search) */}
-        <div className="mb-6">
-          <FoodSpecialsStrip navigate={navigate} />
-        </div>
+        {/* Food cards appear only when the Food category is selected. */}
+        {activeTab === 'Lunch' && (
+          <div className="mt-7 mb-6">
+            <FoodSpecialsStrip navigate={navigate} />
+          </div>
+        )}
 
+        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
+          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
+        )}
+
+        {activeTab !== 'Lunch' && <>
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-black tracking-tighter leading-none">
-              <span className="text-slate-900 dark:text-white">Explore </span>
-              <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">
-                {activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}
-              </span>
+              {activeTab === 'Property' || activeTab === 'Properties' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Properties near you</span>
+              ) : activeTab === 'Helper' || activeTab === 'Helpers' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Services near you</span>
+              ) : activeTab === 'Services' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Services near you</span>
+              ) : activeTab === 'Lunch' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Food near you</span>
+              ) : (
+                <><span className="text-slate-900 dark:text-white">Explore </span><span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>
+              )}
             </h1>
             <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
           </div>
@@ -4797,7 +5230,7 @@ function DesktopHomepage({
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">
-              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab} available
+              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} available
             </h3>
             <p className="text-sm text-slate-400 dark:text-gray-500 max-w-xs leading-relaxed mb-6">
               {activeSubcategory !== 'all'
@@ -4830,6 +5263,9 @@ function DesktopHomepage({
             </div>
           </div>
         )}
+
+        </>}
+
 
         {/* Sell Items Section (Desktop) */}
         <div className="mt-16">
@@ -4905,7 +5341,8 @@ const Home = () => {
   const [aiInsights, setAiInsights] = useState([]);
   const [recentlyViewedItems, setRecentlyViewedItems] = useState([]);
   const [currentLocation, setCurrentLocation] = useState('South Africa');
-  const [requestCount, setRequestCount] = useState(0);
+  const [activeBookings, setActiveBookings] = useState([]);
+  const requestCount = activeBookings.length;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -4919,8 +5356,8 @@ const Home = () => {
         if (!res.ok) return;
         const data = await res.json();
         if (Array.isArray(data)) {
-          const activeBookings = data.filter(b => b.status !== 'completed' && b.status !== 'cancelled' && b.status !== 'declined');
-          setRequestCount(activeBookings.length);
+          const currentBookings = data.filter(b => !['completed', 'cancelled', 'canceled', 'declined', 'rejected'].includes(String(b.status || '').toLowerCase()));
+          setActiveBookings(currentBookings);
         }
       } catch (error) {
         if (error.name === 'AbortError') return;
@@ -5137,7 +5574,7 @@ const Home = () => {
       }
 
       const fetchPromises = [
-        fetch(`/api/listing/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/listing/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.properties.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5147,7 +5584,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingProperties(false); }),
 
-        fetch(`/api/service/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/service/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.services.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5157,7 +5594,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingServices(false); }),
 
-        fetch(`/api/helper/get?limit=50&sort=createdAt&order=desc`, {
+        fetch(`/api/helper/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
           signal: controllers.helpers.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5167,7 +5604,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
-        fetch(`/api/event/get?limit=50&sort=date&order=asc`, {
+        fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
           signal: controllers.events.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5177,7 +5614,7 @@ const Home = () => {
           })
           .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingEvents(false); }),
 
-        fetch(`/api/sell?limit=50`, {
+        fetch(`/api/sell?limit=${DATA_FETCH_LIMIT}`, {
           signal: controllers.sell.signal
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
@@ -5265,6 +5702,7 @@ const Home = () => {
       onAISuggestionClick={(suggestion) => { navigate(`/search?searchTerm=${encodeURIComponent(suggestion)}&type=all&ai=1`); }}
       locationStatus={locationStatus}
       requestCount={requestCount}
+      activeBookings={activeBookings}
       geoCity={city}
       geoLoading={geoLoading}
       geoError={geoError}

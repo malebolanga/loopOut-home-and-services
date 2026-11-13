@@ -19,6 +19,10 @@ import { useWishlist } from '../hooks/useWishlist';
 import { pushPhoneNotification } from '../components/PhoneNotificationManager';
 import BookingProgress from '../components/BookingProgress';
 import ListingBookingSheet from '../components/ListingBookingSheet';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
+import ListingDetailShell from '../components/ListingDetailShell';
+import ListingWeatherForecast from '../components/ListingWeatherForecast';
+import { formatListingTitle, getPropertyRatePeriod } from '../utils/listingDisplay';
 
 
 import { HomeIcon, HeartIcon, ShareIcon, StarIcon, MapPinIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CheckCircleIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, FlagIcon, UserIcon, CameraIcon, Squares2X2Icon, ArrowLeftIcon, PhotoIcon, UserGroupIcon, CalendarIcon, CalendarDaysIcon, ClockIcon, HomeModernIcon, TagIcon, ArrowPathIcon, TicketIcon, BanknotesIcon } from '@heroicons/react/24/outline';
@@ -30,7 +34,7 @@ import {
   FaWifi, FaParking, FaSwimmingPool, FaUtensils, FaFire, FaTv, FaWarehouse,
   FaShieldAlt, FaHotTub, FaDog, FaBolt, FaSnowflake, FaUserFriends, FaCoffee,
   FaCouch, FaShower, FaWind, FaDesktop, FaTree, FaUmbrellaBeach, FaDumbbell,
-  FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok, FaGlobe,
+  FaSmokingBan, FaHome, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaTiktok,
   FaHeart, FaWhatsapp, FaUsers, FaClock, FaReceipt, FaSpinner, FaBed, FaBath, FaChevronLeft, FaChevronRight, FaHotel,
   FaTimes, FaRegCommentDots, FaEnvelope, FaPhone
 } from "react-icons/fa";
@@ -83,6 +87,32 @@ const AMENITY_CONFIGS = {
   environmentallyFriendly: { icon: FaTree, label: "Environmentally friendly", field: "environmentallyFriendly" },
 };
 
+const startOfLocalDay = (value) => {
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+};
+
+const dateOnlyString = (value) => {
+  const date = startOfLocalDay(value);
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const hasBookedNightOverlap = (checkInValue, checkOutValue, ranges = []) => {
+  const checkIn = startOfLocalDay(checkInValue);
+  const checkOut = startOfLocalDay(checkOutValue);
+  if (!checkIn || !checkOut) return false;
+  return ranges.some((range) => {
+    const bookedStart = startOfLocalDay(range.start);
+    const bookedEnd = startOfLocalDay(range.end);
+    return bookedStart && bookedEnd && checkIn < bookedEnd && checkOut > bookedStart;
+  });
+};
+
 const RATING_CATEGORIES = [
   { name: "Cleanliness", icon: MdCleanHands, key: "cleanliness" },
   { name: "Accuracy", icon: MdOutlineGppGood, key: "accuracy" },
@@ -92,11 +122,12 @@ const RATING_CATEGORIES = [
   { name: "Value", icon: MdAttachMoney, key: "value" },
 ];
 
-const HOST_RATING_CATEGORIES = [
-  { name: "Cleanliness", icon: MdCleanHands, key: "host_cleanliness" },
-  { name: "Communication", icon: MdChat, key: "host_communication" },
-  { name: "Staff", icon: FaUserFriends, key: "staff" },
-  { name: "Location", icon: MdLocationOn, key: "location_rating" },
+const LISTING_EMOJI_RATINGS = [
+  { label: "Hospitality", emoji: "🛎️", key: "hospitality" },
+  { label: "Comfort", emoji: "🛋️", key: "comfort" },
+  { label: "Location", emoji: "📍", key: "location" },
+  { label: "Owner / host", emoji: "🧑‍💼", key: "host" },
+  { label: "Cleanliness", emoji: "🧹", key: "cleanliness" },
 ];
 
 const LISTING_TYPES = {
@@ -115,14 +146,6 @@ const SOCIAL_PLATFORMS = [
   { name: 'twitter', icon: FaTwitter, color: 'text-blue-400', baseUrl: 'https://twitter.com/' },
   { name: 'linkedin', icon: FaLinkedin, color: 'text-blue-700', baseUrl: 'https://linkedin.com/in/' },
   { name: 'tiktok', icon: FaTiktok, color: 'text-black', baseUrl: 'https://tiktok.com/@' },
-];
-
-const ADVERTISING_PLATFORMS = [
-  { name: 'Facebook Ads', icon: FaFacebook, color: 'bg-blue-500', reach: '2.9B' },
-  { name: 'Google Ads', icon: FaGlobe, color: 'bg-red-500', reach: '4.3B' },
-  { name: 'Instagram Ads', icon: FaInstagram, color: 'bg-pink-500', reach: '2B' },
-  { name: 'Twitter Ads', icon: FaTwitter, color: 'bg-blue-400', reach: '450M' },
-  { name: 'TikTok Ads', icon: FaTiktok, color: 'bg-black', reach: '1B' },
 ];
 
 // Replaced with 3-step bottom popout sheet
@@ -356,27 +379,27 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
   if (!isOpen) return null;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex flex-col bg-black">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[9999] flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-black">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 text-white">
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+      <div className="flex shrink-0 items-center justify-between gap-2 px-3 py-2.5 pt-[max(env(safe-area-inset-top),0.5rem)] text-white sm:p-4">
+        <button onClick={onClose} aria-label="Close photo viewer" className="shrink-0 rounded-full p-2 transition-colors hover:bg-white/10">
           <MdClose className="text-2xl" />
         </button>
-        <span className="font-medium">{currentIndex + 1} / {images.length}</span>
-        <div className="flex gap-2">
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+        <span className="min-w-0 truncate text-sm font-medium">{currentIndex + 1} / {images.length}</span>
+        <div className="flex shrink-0 gap-1 sm:gap-2">
+          <button aria-label="Share photo" className="rounded-full p-2 transition-colors hover:bg-white/10">
             <FiShare2 className="text-xl" />
           </button>
-          <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+          <button aria-label="Add photo to wishlist" className="rounded-full p-2 transition-colors hover:bg-white/10">
             <FiHeart className="text-xl" />
           </button>
         </div>
       </div>
 
       {/* Main Image */}
-      <div className="flex-1 flex items-center justify-center relative px-16">
-        <button onClick={onPrev} className="absolute left-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-          <FaChevronLeft className="text-xl" />
+      <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center px-11 sm:px-16">
+        <button onClick={onPrev} aria-label="Previous photo" className="absolute left-2 z-20 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:left-4 sm:p-3">
+          <FaChevronLeft className="text-base sm:text-xl" />
         </button>
 
         <ImageWithFallback
@@ -384,16 +407,17 @@ const FullScreenGallery = ({ images, currentIndex, isOpen, onClose, onPrev, onNe
           imageUrls={images.slice(currentIndex)}
           alt={`Photo ${currentIndex + 1}`}
           type="property"
-          className="max-h-full max-w-full object-contain"
+          className="h-full w-full min-w-0 max-w-full"
+          imageClassName="object-contain"
         />
 
-        <button onClick={onNext} className="absolute right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-          <FaChevronRight className="text-xl" />
+        <button onClick={onNext} aria-label="Next photo" className="absolute right-2 z-20 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 sm:right-4 sm:p-3">
+          <FaChevronRight className="text-base sm:text-xl" />
         </button>
       </div>
 
       {/* Thumbnails */}
-      <div className="p-4 bg-black/50">
+      <div className="shrink-0 bg-black/50 px-3 py-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] sm:p-4">
         <Swiper modules={[FreeMode]} spaceBetween={8} slidesPerView="auto" freeMode={true} className="thumbs-swiper">
           {images.map((img, index) => (
             <SwiperSlide key={index} style={{ width: '100px' }}>
@@ -434,36 +458,36 @@ const AirbnbFloatGallery = ({
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: "100%", opacity: 0 }}
       transition={{ type: "spring", damping: 28, stiffness: 220, mass: 0.85 }}
-      className="fixed inset-0 z-[1000] bg-white text-slate-900 overflow-y-auto flex flex-col"
+      className="fixed inset-0 z-[1000] flex h-[100dvh] min-h-0 w-full flex-col overflow-x-hidden overflow-y-auto overscroll-contain bg-white text-slate-900"
     >
       {/* Sticky Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 flex shrink-0 items-center justify-between gap-2 border-b border-slate-200/80 bg-white/95 px-3 py-2.5 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur-md sm:px-8 sm:py-3.5">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onClose}
             aria-label="Back to listing"
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
-          <div>
-            <h2 className="text-sm sm:text-base font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+          <div className="min-w-0">
+            <h2 className="max-w-[34vw] truncate text-sm font-semibold text-slate-900 sm:max-w-md sm:text-base">
               {listingName}
             </h2>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="truncate text-[11px] font-medium text-slate-500 sm:text-xs">
               Photo tour · {images.length} {images.length === 1 ? 'photo' : 'photos'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           {handleShare && (
             <button
               type="button"
               onClick={handleShare}
               aria-label="Share listing"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
             >
               <ShareIcon className="w-4 h-4" />
             </button>
@@ -473,7 +497,7 @@ const AirbnbFloatGallery = ({
               type="button"
               onClick={toggleFavorite}
               aria-label={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
             >
               {isFavorite ? (
                 <HeartIconSolid className="w-5 h-5 text-rose-500" />
@@ -486,7 +510,7 @@ const AirbnbFloatGallery = ({
             type="button"
             onClick={onClose}
             aria-label="Close photo tour"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 hover:bg-slate-100 transition-colors text-slate-700"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100 sm:h-10 sm:w-10"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -494,19 +518,19 @@ const AirbnbFloatGallery = ({
       </header>
 
       {/* Gallery Content */}
-      <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 flex-1">
+      <div className="mx-auto w-full min-w-0 max-w-5xl flex-1 space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
         {/* Intro */}
         <div className="border-b border-slate-100 pb-5">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 mb-2">
             Property Photo Tour
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+          <h1 className="break-words text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
             {listingName}
           </h1>
           {listingAddress && (
-            <p className="text-sm text-slate-500 mt-1 flex items-center gap-1.5">
+            <p className="mt-1 flex min-w-0 items-start gap-1.5 break-words text-sm text-slate-500">
               <MapPinIcon className="w-4 h-4 text-slate-400 shrink-0" />
-              <span>{listingAddress}</span>
+              <span className="min-w-0 break-words">{listingAddress}</span>
             </p>
           )}
         </div>
@@ -517,7 +541,7 @@ const AirbnbFloatGallery = ({
           {images.length > 0 && (
             <div
               onClick={() => onImageClick?.(0)}
-              className="group relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300"
+              className="group relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 shadow-sm transition-all duration-300 hover:shadow-md sm:aspect-[16/9]"
             >
               <ImageWithFallback
                 src={images[0]}
@@ -592,7 +616,7 @@ export default function Listing() {
   const navigate = useNavigate();
   const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
-  const [ratings, setRatings] = useState({ cleanliness: 0, accuracy: 0, overall: 0 });
+  const [ratings, setRatings] = useState({ cleanliness: 0, accuracy: 0, overall: 0, hospitality: 0, comfort: 0, location: 0, host: 0 });
   const [topComments, setTopComments] = useState([]);
   const [numberOfGuests, setNumberOfGuests] = useState(2);
   const [extraBed, setExtraBed] = useState('no');
@@ -613,6 +637,7 @@ export default function Listing() {
   const [guestContact, setGuestContact] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
   const [listing, setListing] = useState(null);
+  const [failedHostAvatar, setFailedHostAvatar] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
   const [similarListings, setSimilarListings] = useState([]);
   const [bookedDates, setBookedDates] = useState([]);
@@ -677,7 +702,7 @@ export default function Listing() {
   const [endTime, setEndTime] = useState('17:00');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isNearExpanded, setIsNearExpanded] = useState(false);
-  const [dateRange, setDateRange] = useState([new Date(), null]);
+  const [dateRange, setDateRange] = useState([null, null]);
 
   const [uiState, setUiState] = useState({
     loading: true,
@@ -700,12 +725,9 @@ export default function Listing() {
   });
 
   const [hostRatings, setHostRatings] = useState({
-    average: 4.9,
-    totalRatings: 87,
-    categoryRatings: HOST_RATING_CATEGORIES.reduce((acc, { key }) => {
-      acc[key] = 4.8;
-      return acc;
-    }, {}),
+    average: 0,
+    totalRatings: 0,
+    categoryRatings: {},
     userRating: null,
   });
 
@@ -718,14 +740,6 @@ export default function Listing() {
   });
   const [ratingLoading, setRatingLoading] = useState(false);
 
-  const [advertisingState, setAdvertisingState] = useState({
-    showAdModal: false,
-    selectedPlatforms: [],
-    budget: 250,
-    duration: 7,
-    loading: false,
-    success: false
-  });
 
   const [socialMediaVerified, setSocialMediaVerified] = useState({
     facebook: true,
@@ -748,7 +762,7 @@ export default function Listing() {
   const breakfastPrice = 250;
 
   const days = dateRange[0] && dateRange[1]
-    ? Math.max(1, Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / (1000 * 60 * 60 * 24)))
+    ? Math.max(1, Math.round((Date.UTC(dateRange[1].getFullYear(), dateRange[1].getMonth(), dateRange[1].getDate()) - Date.UTC(dateRange[0].getFullYear(), dateRange[0].getMonth(), dateRange[0].getDate())) / 86400000))
     : 0;
 
   const calculateTotalHours = (start, end) => {
@@ -761,7 +775,7 @@ export default function Listing() {
   };
 
   const totalHours = calculateTotalHours(startTime, endTime);
-  const isHourlyType = listing?.type === 'office' || listing?.type === 'hourly_room' || listing?.type === 'room_hourly';
+  const isHourlyType = getPropertyRatePeriod(listing) === 'hour';
   const totalPrice = isHourlyType
     ? (listing.regularPrice * totalHours).toFixed(2)
     : 0;
@@ -781,9 +795,9 @@ export default function Listing() {
         const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         
         const isBooked = bookedDates.some(range => {
-          if (listing?.type !== 'office') return false;
           const start = new Date(range.start);
           const end = new Date(range.end);
+          if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
           const currentCheck = new Date(selectedDate);
           currentCheck.setHours(hour, minute, 0, 0);
           return currentCheck >= start && currentCheck < end; 
@@ -840,19 +854,9 @@ export default function Listing() {
       return;
     }
 
-    const isDailyStayType = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing?.type);
+    const isDailyStayType = getPropertyRatePeriod(listing) === 'day';
     if (isDailyStayType && dateRange && dateRange[0] && dateRange[1]) {
-      const checkIn = new Date(dateRange[0]);
-      const checkOut = new Date(dateRange[1]);
-      checkIn.setHours(0, 0, 0, 0);
-      checkOut.setHours(0, 0, 0, 0);
-      const hasOverlap = bookedDates.some(range => {
-        const start = new Date(range.start);
-        const end = new Date(range.end);
-        start.setHours(0, 0, 0, 0);
-        end.setHours(0, 0, 0, 0);
-        return checkIn < end && checkOut > start;
-      });
+      const hasOverlap = hasBookedNightOverlap(dateRange[0], dateRange[1], bookedDates);
       if (hasOverlap) {
         alert('The selected reservation dates are already booked or occupied. Please select available dates on the calendar.');
         return;
@@ -973,52 +977,6 @@ export default function Listing() {
   };
 
   const hostStarRating = Math.min(5, Math.floor(hostData.likeCount / 40));
-
-  const handleAdPlatformToggle = (platform) => {
-    setAdvertisingState(prev => ({
-      ...prev,
-      selectedPlatforms: prev.selectedPlatforms.includes(platform)
-        ? prev.selectedPlatforms.filter(p => p !== platform)
-        : [...prev.selectedPlatforms, platform]
-    }));
-  };
-
-  const handleAdvertiseSubmit = async () => {
-    if (!currentUser) {
-      navigate('/sign-in');
-      return;
-    }
-    if (advertisingState.selectedPlatforms.length === 0) {
-      alert('Please select at least one advertising platform');
-      return;
-    }
-
-    setAdvertisingState(prev => ({ ...prev, loading: true }));
-    try {
-      const token = currentUser?.token || currentUser?.access_token || '';
-      const response = await fetch('/api/listing/advertise', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          listingId: listing._id,
-          platforms: advertisingState.selectedPlatforms,
-          budget: advertisingState.budget,
-          duration: advertisingState.duration
-        })
-      });
-
-      if (response.ok) {
-        setAdvertisingState(prev => ({ ...prev, loading: false, success: true, showAdModal: false }));
-        alert('Advertising campaign started successfully!');
-      }
-    } catch (error) {
-      console.error('Advertising error:', error);
-      setAdvertisingState(prev => ({ ...prev, loading: false }));
-    }
-  };
 
   const verifySocialMedia = async (hostData) => {
     if (!hostData) return;
@@ -1217,7 +1175,11 @@ export default function Listing() {
             setRatings({
               cleanliness: data.ratings.cleanliness || 0,
               accuracy: data.ratings.staff || data.ratings.accuracy || 0,
-              overall: data.ratings.overall || 0
+              overall: data.ratings.overall || 0,
+              hospitality: data.ratings.hospitality || 0,
+              comfort: data.ratings.comfort || 0,
+              location: data.ratings.location || 0,
+              host: data.ratings.host || 0,
             });
           }
         } else setCommentCount(0);
@@ -1228,6 +1190,24 @@ export default function Listing() {
     };
     if (listingId) fetchCommentData();
   }, [listingId]);
+
+  useEffect(() => {
+    const fetchHostRatings = async () => {
+      const hostId = typeof listing?.userRef === 'string' ? listing.userRef : listing?.userRef?._id;
+      if (!hostId || !listingId) return;
+      try {
+        const query = new URLSearchParams({ listingId });
+        const headers = currentUser?.token ? { Authorization: `Bearer ${currentUser.token}` } : {};
+        const response = await fetch(`/api/user/host-ratings/${hostId}?${query}`, { headers });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (result?.success && result.data) setHostRatings(result.data);
+      } catch (error) {
+        console.error('Error fetching listing host ratings:', error);
+      }
+    };
+    fetchHostRatings();
+  }, [listing?.userRef, listingId, currentUser?.token]);
 
   // Loading and error states
   if (uiState.loading) {
@@ -1248,15 +1228,17 @@ export default function Listing() {
   }
 
   const listingType = LISTING_TYPES[listing.type] || LISTING_TYPES.over;
+  const pricePeriod = getPropertyRatePeriod(listing);
   const activeAmenities = getActiveAmenities();
   const displayContactNumber = listing?.contact || listing?.phone || '';
   const formattedDisplayNumber = formatPhoneNumberSafe(displayContactNumber);
   const displayEmail = listing?.email || listing?.userRef?.email || '';
+  const hostAvatarSrc = resolveApiUrl(listing?.userRef?.avatar || '');
 
   // Determine property type for UI
-  const isDailyStay = ['over', 'hotel', 'land', 'resort', 'guesthouse', 'self_catering', 'holiday_park', 'sale'].includes(listing.type);
-  const isHourlyRoom = listing.type === 'office' || listing.type === 'hourly_room' || listing.type === 'room_hourly';
-  const isRent = listing.type === 'rent' || listing.type === 'apartment';
+  const isDailyStay = pricePeriod === 'day' || pricePeriod === 'night';
+  const isHourlyRoom = pricePeriod === 'hour';
+  const isRent = pricePeriod === 'month';
   const showCalendar = isDailyStay || isHourlyRoom;
   const isSaleOrRent = isRent;
 
@@ -1266,8 +1248,16 @@ export default function Listing() {
   const grandTotal = roomTotal + breakfastTotal;
   const hasListingImages = listing.imageUrls.length > 0;
   const hasReviews = commentCount > 0 && ratings?.overall > 0;
+  const listingRatingScores = {
+    hospitality: ratings.hospitality || hostRatings.categoryRatings?.staff || 0,
+    comfort: ratings.comfort || 0,
+    location: ratings.location || hostRatings.categoryRatings?.location_rating || 0,
+    host: ratings.host || hostRatings.average || 0,
+    cleanliness: ratings.cleanliness || hostRatings.categoryRatings?.host_cleanliness || 0,
+  };
   const isGuestFavourite = hasReviews && ratings.overall >= 4.8 && commentCount >= 5;
-  const isVerifiedHost = Boolean(listing.userRef?.isVerified || listing.userRef?.verified || listing.userRef?.isSuperhost);
+  // Google/email account verification and Superhost status do not prove identity.
+  const isIdentityVerifiedHost = listing.userRef?.kycStatus === 'verified';
   const hasOfferPrice = !isRent && listing.offer && Number(listing.discountPrice) > 0 && Number(listing.discountPrice) < Number(listing.regularPrice);
   const displayedPrice = hasOfferPrice ? Number(listing.discountPrice) : Number(listing.regularPrice);
   const listingHighlights = [
@@ -1276,19 +1266,19 @@ export default function Listing() {
       title: 'Enjoy the pool',
       detail: 'A pool is available at this property.',
     },
-    listing.parking && {
+    (listing.parking || (Number(listing.garages) > 0) || (Number(listing.parkingSpaces) > 0)) && {
       icon: FaParking,
       title: 'Park for free',
       detail: 'Free parking is available at this property.',
     },
-    isVerifiedHost && {
+    isIdentityVerifiedHost && {
       icon: MdOutlineGppGood,
-      title: listing.userRef?.isSuperhost ? 'Superhost' : 'Verified host',
-      detail: 'Host verification is on file with LoopOut.',
+      title: 'Identity checked',
+      detail: 'LoopOut has completed an identity review for this host.',
     },
   ].filter(Boolean);
-  const cancellationSummary = !isSaleOrRent && /free/i.test(String(listing.cancel || ''))
-    ? 'Free cancellation up to 72 hours before check-in'
+  const cancellationSummary = !isSaleOrRent
+    ? 'Cancel up to 48 hours before the scheduled start or check-in'
     : null;
   return (
     <div className="min-h-screen overflow-x-hidden p-0 app-safe-content-bottom pb-36 lg:pb-0 bg-white text-slate-900">
@@ -1447,10 +1437,15 @@ export default function Listing() {
       )}
 
       {/* Main Content - Overlapping sheet matching Helper and Services standard */}
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         <section className="mx-auto mb-8 max-w-4xl border-b border-slate-200 px-1 pb-7 text-center" aria-labelledby="listing-title">
-          <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{listing.name}</h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">{listingType.label}{listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''}</p>
+          <h1 id="listing-title" className="text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl">{formatListingTitle(listing.name)}</h1>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            {pricePeriod === 'night' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per night` : 'Per night') :
+             pricePeriod === 'day' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per day` : 'Per day') :
+             pricePeriod === 'hour' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} · Per hour` : 'Per hour') :
+             `${listingType.label}${listing.kind ? ` · ${listing.kind.replace(/_/g, ' ')}` : ''} · Per month`}
+          </p>
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-sm text-slate-700">
             <span className="inline-flex items-center gap-1.5">
               <StarIconSolid className="h-4 w-4 text-amber-400" />
@@ -1499,12 +1494,26 @@ export default function Listing() {
 
             {/* Property Highlights */}
             <div className="border-y border-gray-200 dark:border-gray-800 py-6">
-               <div className="flex flex-wrap gap-3 mt-6">
-              {listing.bedrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
-                  <FaBed className="text-slate-500" /> {listing.bedrooms} {listing.bedrooms === 1 ? "bedroom" : "bedrooms"}
-                </div>
-              )}
+              <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">Property details</h2>
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Bedrooms", value: listing.bedrooms ?? 1, icon: <FaBed className="text-slate-500" /> },
+                  { label: "Bathrooms", value: listing.bathrooms ?? 1, icon: <FaBath className="text-rose-400" /> },
+                  { label: "Toilets", value: (listing.toilets !== undefined && listing.toilets !== null && listing.toilets !== "") ? listing.toilets : (listing.bathrooms ?? 1), icon: <span aria-hidden="true">🚽</span> },
+                  { label: "Garages", value: (listing.garages !== undefined && listing.garages !== null && listing.garages !== "") ? listing.garages : 0, icon: <span aria-hidden="true">🚗</span> },
+                  { label: "Parking spaces", value: (listing.parkingSpaces !== undefined && listing.parkingSpaces !== null && listing.parkingSpaces !== "") ? listing.parkingSpaces : (listing.parking ? 1 : 0), icon: <FaParking className="text-slate-500" /> },
+                ].map((detail) => (
+                  <div key={detail.label} className="min-w-0 rounded-xl bg-gray-50 px-3 py-3 dark:bg-gray-800 sm:px-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                      {detail.icon}<span>{detail.label}</span>
+                    </div>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                      {detail.value === null || detail.value === undefined || detail.value === "" ? "Not provided" : detail.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
               {listing.numberOfApartments > 0 && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-2xl text-sm font-bold text-blue-700">
                   🏢 {listing.numberOfApartments} Apartment{listing.numberOfApartments > 1 ? "s" : ""} in complex
@@ -1513,11 +1522,6 @@ export default function Listing() {
               {listing.numberOfRooms > 1 && listing.numberOfRooms !== listing.bedrooms && (
                 <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-2xl text-sm font-bold text-purple-700">
                   🛌 {listing.numberOfRooms} Guest Rooms Available
-                </div>
-              )}
-              {listing.bathrooms && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-2xl text-sm font-bold text-gray-700 dark:text-gray-300">
-                  <FaBath className="text-rose-400" /> {listing.bathrooms} bath{listing.bathrooms > 1 ? "s" : ""}
                 </div>
               )}
               {listing.kind && (
@@ -1539,21 +1543,22 @@ export default function Listing() {
                 to={`/user-profile/${listing.userRef?._id || listing.userRef}`}
                 className="flex items-center gap-4 hover:opacity-80 transition-opacity w-fit"
               >
-                {listing.userRef?.avatar ? (
-                  <img
-                    src={listing.userRef.avatar}
-                    alt={listing.userRef.username}
-                    className="w-12 h-12 lg:w-14 lg:h-14 rounded-full object-cover border border-gray-100 dark:border-gray-800 shadow-sm"
-                  />
-                ) : (
-                  <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-100 dark:border-gray-800 shadow-sm text-gray-400">
-                    <UserIcon className="w-6 h-6 lg:w-7 lg:h-7" />
-                  </div>
-                )}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-100 bg-gray-100 text-2xl shadow-sm dark:border-gray-800 dark:bg-gray-800 lg:h-14 lg:w-14">
+                  {hostAvatarSrc && failedHostAvatar !== hostAvatarSrc ? (
+                    <img
+                      src={hostAvatarSrc}
+                      alt={listing.userRef?.username ? `${listing.userRef.username}'s profile photo` : 'Host profile photo'}
+                      className="h-full w-full rounded-full object-cover"
+                      onError={() => setFailedHostAvatar(hostAvatarSrc)}
+                    />
+                  ) : (
+                    <span role="img" aria-label="Host profile icon">👤</span>
+                  )}
+                </div>
                 <div>
                   <h2 className="text-base lg:text-lg font-semibold text-gray-900 dark:text-white">Hosted by {listing.userRef?.username || 'Host'}</h2>
                   <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm">
-                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isVerifiedHost ? 'Verified Host · ' : 'Host · '}
+                    {listing.userRef?.isSuperhost ? 'Superhost · ' : isIdentityVerifiedHost ? 'Identity checked · ' : 'Host · '}
                     {listing.userRef?.createdAt ? (() => {
                       const months = Math.max(1, Math.floor((new Date() - new Date(listing.userRef.createdAt)) / (1000 * 60 * 60 * 24 * 30)));
                       return months < 12 ? `${months} month${months > 1 ? 's' : ''} hosting` : `${Math.floor(months / 12)} year${Math.floor(months / 12) > 1 ? 's' : ''} hosting`;
@@ -1790,7 +1795,7 @@ export default function Listing() {
 
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 flex items-center gap-1.5">
                   <BanknotesIcon className="w-3.5 h-3.5" />
-                  Monthly rent: <span className="font-semibold text-gray-900 dark:text-white">R{listing.regularPrice.toLocaleString('en-ZA')}/month</span>
+                  Monthly rent: <span className="font-semibold text-gray-900 dark:text-white">R{Number(listing.regularPrice || 0).toLocaleString('en-ZA')}/month</span>
                 </p>
               </div>
             )}
@@ -1805,43 +1810,61 @@ export default function Listing() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                   {isDailyStay && (
                     <div>
+                      <p className="mb-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                        Choose a check-in date, then a check-out date. Booked nights are unavailable; you may check out on the day another stay begins.
+                      </p>
                       <Calendar
-                        onChange={setDateRange}
+                        onChange={(nextRange) => setDateRange(Array.isArray(nextRange) ? nextRange : [nextRange, null])}
                         value={dateRange}
                         selectRange={true}
-                        minDate={new Date()}
-                        tileDisabled={({ date, view }) => {
-                          if (view === 'month') {
-                            return bookedDates.some(range => {
-                              const start = new Date(range.start);
-                              const end = new Date(range.end);
-                              // Set all to midnight for precise comparison
-                              const current = new Date(date);
-                              current.setHours(0, 0, 0, 0);
-                              start.setHours(0, 0, 0, 0);
-                              end.setHours(0, 0, 0, 0);
-                              return current >= start && current <= end;
-                            });
-                          }
-                          return false;
+                        minDate={startOfLocalDay(new Date())}
+                        tileClassName={({ date, view }) => {
+                          if (view !== 'month') return null;
+                          const day = startOfLocalDay(date);
+                          const today = startOfLocalDay(new Date());
+                          if (!day || day < today) return null;
+                          const checkIn = dateRange[0] && !dateRange[1] ? startOfLocalDay(dateRange[0]) : null;
+                          const unavailable = bookedDates.some((range) => {
+                            const bookedStart = startOfLocalDay(range.start);
+                            const bookedEnd = startOfLocalDay(range.end);
+                            if (!bookedStart || !bookedEnd) return false;
+                            if (!checkIn) return day >= bookedStart && day < bookedEnd;
+                            if (day <= checkIn) return true;
+                            return checkIn < bookedEnd && day > bookedStart;
+                          });
+                          return unavailable ? 'listing-calendar-unavailable' : null;
                         }}
-                        className="rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm w-full"
+                        tileDisabled={({ date, view }) => {
+                          if (view !== 'month') return false;
+                          const day = startOfLocalDay(date);
+                          const today = startOfLocalDay(new Date());
+                          if (!day || day < today) return true;
+                          const checkIn = dateRange[0] && !dateRange[1] ? startOfLocalDay(dateRange[0]) : null;
+                          return bookedDates.some((range) => {
+                            const bookedStart = startOfLocalDay(range.start);
+                            const bookedEnd = startOfLocalDay(range.end);
+                            if (!bookedStart || !bookedEnd) return false;
+                            if (!checkIn) return day >= bookedStart && day < bookedEnd;
+                            if (day <= checkIn) return true;
+                            return checkIn < bookedEnd && day > bookedStart;
+                          });
+                        }}
+                        className="listing-booking-calendar rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm w-full"
                       />
 
-                      {dateRange && dateRange[0] && dateRange[1] && bookedDates.some(range => {
-                        const checkIn = new Date(dateRange[0]);
-                        const checkOut = new Date(dateRange[1]);
-                        const start = new Date(range.start);
-                        const end = new Date(range.end);
-                        checkIn.setHours(0, 0, 0, 0);
-                        checkOut.setHours(0, 0, 0, 0);
-                        start.setHours(0, 0, 0, 0);
-                        end.setHours(0, 0, 0, 0);
-                        return checkIn < end && checkOut > start;
-                      }) && (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                        <span>Unavailable dates are disabled. Your checkout date is not charged as a night.</span>
+                        {(dateRange[0] || dateRange[1]) && (
+                          <button type="button" onClick={() => setDateRange([null, null])} className="font-semibold text-rose-600 underline underline-offset-2 hover:text-rose-700 dark:text-rose-400">
+                            Clear dates
+                          </button>
+                        )}
+                      </div>
+
+                      {dateRange?.[0] && dateRange?.[1] && hasBookedNightOverlap(dateRange[0], dateRange[1], bookedDates) && (
                         <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs font-semibold flex items-center gap-2">
                           <span className="text-base">⚠️</span>
-                          <span>Selected dates include already booked / occupied days. Please select available dates.</span>
+                          <span>Those nights overlap an existing booking. Please choose different dates.</span>
                         </div>
                       )}
                     </div>
@@ -1853,9 +1876,9 @@ export default function Listing() {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Date</label>
                         <input
                           type="date"
-                          value={selectedDate.toISOString().split('T')[0]}
-                          onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                          min={new Date().toISOString().split('T')[0]}
+                          value={dateOnlyString(selectedDate)}
+                          onChange={(e) => setSelectedDate(new Date(`${e.target.value}T00:00:00`))}
+                          min={dateOnlyString(new Date())}
                           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm"
                         />
                       </div>
@@ -1888,39 +1911,34 @@ export default function Listing() {
                 </> : <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">Reviews</h2>}
               </div>
 
-              {commentCount > 0 ? (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                    {/* Cleanliness */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <MdCleanHands className="text-xl" />
-                        <span>Cleanliness</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.cleanliness?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.cleanliness / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    {/* Accuracy */}
-                    <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 sm:border-0 sm:pb-0">
-                      <div className="flex items-center gap-3 text-gray-800 dark:text-gray-200">
-                        <MdOutlineGppGood className="text-xl" />
-                        <span>Accuracy</span>
-                      </div>
-                      <div className="flex items-center gap-4 w-1/2">
-                        <span className="font-semibold text-sm">{ratings?.accuracy?.toFixed(1) || '0.0'}</span>
-                        <div className="h-[4px] bg-gray-200 w-full rounded-full overflow-hidden">
-                          <div className="h-full bg-gray-900 rounded-full" style={{ width: `${(ratings?.accuracy / 5) * 100 || 0}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+              <>
+                <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <Swiper
+                      spaceBetween={12}
+                      slidesPerView="auto"
+                      freeMode
+                      modules={[FreeMode]}
+                      className="listing-rating-carousel"
+                    >
+                      {LISTING_EMOJI_RATINGS.map(({ label, emoji, key }) => {
+                        const score = Number(listingRatingScores[key]) || 0;
+                        return (
+                          <SwiperSlide key={key} className="!w-[112px] sm:!w-[128px]">
+                            <div className="h-full min-h-[100px] rounded-2xl bg-gray-50 dark:bg-gray-900/60 px-3 py-3 flex flex-col items-center justify-center text-center">
+                              <span className="text-2xl leading-none" aria-hidden="true">{emoji}</span>
+                              <span className="mt-2 text-xs font-medium text-gray-700 dark:text-gray-200">{label}</span>
+                              <span className={`mt-1 text-center ${score > 0 ? 'text-sm font-semibold text-gray-950 dark:text-white' : 'text-[11px] font-medium text-gray-500 dark:text-gray-400'}`}>
+                                {score > 0 ? `${score.toFixed(1)} / 5` : 'Not rated yet'}
+                              </span>
+                            </div>
+                          </SwiperSlide>
+                        );
+                      })}
+                    </Swiper>
+                </div>
 
-                  {/* Top Comments Swiper */}
-                  {topComments.length > 0 && (
+                {/* Top Comments Swiper */}
+                {topComments.length > 0 && (
                     <div className="mb-8">
                       <Swiper
                         spaceBetween={16}
@@ -1980,18 +1998,20 @@ export default function Listing() {
                         })}
                       </Swiper>
                     </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
-              )}
+                )}
+                {commentCount === 0 && (
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
+                )}
+              </>
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
-              >
-                Show all {commentCount} reviews
-              </button>
+              {commentCount >= 10 && (
+                <button
+                  onClick={() => setShowCommentsPanel(true)}
+                  className="px-6 py-3 border border-gray-900 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors w-full sm:w-auto"
+                >
+                  Show all {commentCount} reviews
+                </button>
+              )}
             </div>
 
             {/* Location */}
@@ -2041,7 +2061,7 @@ export default function Listing() {
                       ))
                     ) : (
                       <>
-                        <p className="leading-relaxed">Free cancellation before check-in. Cancel before arrival for a partial refund.</p>
+                        <p className="leading-relaxed">Cancel up to 48 hours before the scheduled start or check-in. Any payment or refund is arranged directly with the host.</p>
                       </>
                     )}
                     <button className="text-gray-900 dark:text-white font-semibold underline underline-offset-2 text-xs mt-1 hover:text-rose-500 transition-colors">
@@ -2150,7 +2170,7 @@ export default function Listing() {
                 <div className="flex items-baseline justify-between mb-4 lg:mb-6">
                   <div>
                     <span className="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white">R{displayedPrice.toLocaleString('en-ZA')}</span>
-                    <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">{listingType.period}</span>
+                    <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">/{pricePeriod}</span>
                   </div>
                   {hasOfferPrice && (
                     <span className="text-gray-400 line-through text-sm lg:text-base">R{Number(listing.regularPrice).toLocaleString('en-ZA')}</span>
@@ -2194,8 +2214,12 @@ export default function Listing() {
                     /* Non-rent: existing listing type info */
                     <>
                       <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
+                        <span className="font-semibold text-gray-600 dark:text-gray-400">Rate:</span>
+                        <span className="capitalize font-bold text-gray-900 dark:text-white">Per {pricePeriod}</span>
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
                         <span className="font-semibold text-gray-600 dark:text-gray-400">Listing Type:</span>
-                        <span>{listingType.label}</span>
+                        <span>{pricePeriod === 'night' ? (listing.kind ? `${listing.kind.replace(/_/g, ' ')} Stay` : 'Overnight Stay') : pricePeriod === 'day' ? (listing.kind === 'house' ? 'Full House Stay' : 'Daily Stay') : pricePeriod === 'hour' ? 'Hourly Room' : listingType.label}</span>
                       </p>
                       {listing.kind && (
                         <p className="text-gray-700 dark:text-gray-300 flex justify-between gap-2">
@@ -2315,7 +2339,8 @@ export default function Listing() {
             </div>
           </div>
         </div>
-      </main>
+        <ListingWeatherForecast listing={listing} />
+      </ListingDetailShell>
 
       {/* WhatsApp Booking Modal */}
       <WhatsAppBookingModal
@@ -2327,12 +2352,13 @@ export default function Listing() {
         }}
         bookedDates={bookedDates}
         initialDates={{
-          checkIn: dateRange && dateRange[0] ? new Date(dateRange[0].getTime() - dateRange[0].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
-          checkOut: dateRange && dateRange[1] ? new Date(dateRange[1].getTime() - dateRange[1].getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
-          selectedDate: selectedDate ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000).toISOString().split('T')[0] : '',
+          checkIn: dateRange?.[0] ? dateOnlyString(dateRange[0]) : '',
+          checkOut: dateRange?.[1] ? dateOnlyString(dateRange[1]) : '',
+          selectedDate: selectedDate ? dateOnlyString(selectedDate) : '',
           startTime,
           endTime,
-          selectedUnit
+          selectedUnit,
+          guests: numberOfGuests || 2
         }}
       />
 
@@ -2366,7 +2392,7 @@ export default function Listing() {
             <span className="text-gray-600 dark:text-gray-400 text-sm">
               {isDailyStay ? (days > 0 ? ` (${days} day${days > 1 ? 's' : ''})` : ' / day') : 
                isHourlyRoom ? (totalHours > 0 ? ` (${totalHours} hr)` : ' / hour') : 
-               isRent ? ' / month' : ''}
+               isRent ? ' / month' : ` / ${pricePeriod}`}
             </span>
           </div>
           <button

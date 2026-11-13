@@ -389,7 +389,7 @@ export default function MyFoodOrders() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {searchQuery
                   ? `We couldn't find any orders matching "${searchQuery}". Try a different keyword.`
-                  : 'Order tasty meals, sides, and refreshing drinks from local shops right on the Home page.'}
+                  : 'Browse local shops in the Food Hub to find meals, sides, and drinks you can order.'}
               </p>
             </div>
             <Link

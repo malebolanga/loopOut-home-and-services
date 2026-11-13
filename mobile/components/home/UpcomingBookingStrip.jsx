@@ -250,7 +250,8 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
           {/* Header Image */}
           <div className="relative h-44 w-full overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-rose-950 flex-shrink-0">
             {booking.image ? (
-              <img src={booking.image} alt={booking.title} className="w-full h-full object-cover opacity-85" />
+              <img src={booking.image} alt={booking.title} className="w-full h-full object-cover opacity-85"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl">{booking.emoji}</div>
             )}
@@ -289,7 +290,8 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <img src={booking.selectedPerformer ? (booking.performerImage || booking.proAvatar) : booking.proAvatar} alt={booking.proName} className="w-11 h-11 rounded-full object-cover border-2 border-slate-100" onError={(e) => { e.target.src = 'https://i.pravatar.cc/150?u=pro'; }} />
+                    <span className="w-11 h-11 rounded-full bg-rose-50 text-rose-700 flex items-center justify-center font-bold">{(booking.selectedPerformer || booking.proName || 'P').trim().charAt(0).toUpperCase()}</span>
+                    {(booking.performerImage || booking.proAvatar) && <img src={booking.performerImage || booking.proAvatar} alt={`${booking.selectedPerformer || booking.proName}'s profile`} className="absolute inset-0 h-11 w-11 rounded-full border-2 border-slate-100 object-cover" onError={(e) => e.currentTarget.remove()} />}
                     <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white" />
                   </div>
                   <div>
@@ -331,7 +333,7 @@ const BookingDetailModal = ({ booking, onClose, navigate }) => {
           {/* Footer */}
           <div className="p-4 bg-slate-50 dark:bg-gray-900 border-t border-slate-100 dark:border-gray-800 flex items-center gap-2.5 flex-shrink-0">
             <button
-              onClick={() => { const r = `/${booking.type === 'listing' ? 'listing' : booking.type}/${booking.itemId}`; onClose(); navigate(r); }}
+              onClick={() => { onClose(); navigate(booking.itemRoute || `/${booking.type}/${booking.itemId}`); }}
               className="flex-1 py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-200 active:scale-98 transition-all cursor-pointer"
             >
               View Item Details
@@ -394,14 +396,27 @@ export const UpcomingBookingStrip = ({ navigate }) => {
               diffDays, urgency, isToday, isTomorrow,
               type: b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service',
               itemId: b.listing?._id || b.helper?._id || b.service?._id || b.event?._id,
+              itemRoute: (() => {
+                const id = b.listing?._id || b.helper?._id || b.service?._id || b.event?._id;
+                if (b.listing) return `/listing/${id}`;
+                if (b.event) return `/event/${id}`;
+                if (b.service) return b.service.type === 'carwash' ? `/carwash/${id}` : b.service.type === 'storage' ? `/storage/${id}` : `/service/${id}`;
+                if (b.helper) {
+                  const ht = b.helper.type;
+                  if (['beauty','photography','barber','tattoo','chef'].includes(ht)) return `/${ht}/${id}`;
+                  if (ht === 'tutor') return `/privatetutor/${id}`;
+                  return `/helper/${id}`;
+                }
+                return `/service/${id}`;
+              })(),
               emoji: b.listing ? '🏡' : b.helper ? '🧹' : b.event ? '🎟️' : '🛠️',
               proName: b.listing ? (b.listing.userRef?.username || b.listing.name || 'Host') : (b.helper?.name || b.service?.name || b.event?.name || 'Professional'),
-              proAvatar: b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.listing?.userRef?.avatar || b.helper?.userRef?.avatar || b.service?.userRef?.avatar || b.event?.userRef?.avatar || b.listing?.imageUrls?.[0] || b.helper?.imageUrls?.[0] || b.service?.imageUrls?.[0] || b.event?.imageUrls?.[0] || '',
               proWhatsapp: b.phone || b.helper?.phone || b.service?.phone || '',
               proPhone: b.phone || b.helper?.phone || b.service?.phone || '',
               selectedPerformer: b.selectedPerformer || null,
               performerExperience: b.performerExperience || null,
-              performerImage: b.performerImage || null,
+              performerImage: b.performerImage || b.helper?.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || null,
               address: b.address || b.listing?.address || b.service?.address || b.event?.address || b.location || '',
               price: b.totalPrice || b.totalAmount || b.price || b.listing?.price || b.service?.price || b.helper?.price || null,
               notes: b.notes || b.specialInstructions || '',
@@ -484,7 +499,7 @@ export const UpcomingBookingStrip = ({ navigate }) => {
                     >
                       {/* Image / Emoji */}
                       <div className="relative shrink-0 w-10 h-10 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xl">
-                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" /> : b.emoji}
+                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : b.emoji}
                         <span className={`absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-950 ${u.dot}`} />
                       </div>
 
@@ -532,7 +547,7 @@ export const UpcomingBookingStrip = ({ navigate }) => {
                       className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 cursor-pointer hover:border-rose-300 transition-colors"
                     >
                       <div className="w-9 h-9 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-xl shrink-0">
-                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" /> : b.emoji}
+                        {b.image ? <img src={b.image} alt={b.title} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} /> : b.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-black text-gray-900 dark:text-white truncate">{b.title}</p>

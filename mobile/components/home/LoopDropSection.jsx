@@ -156,6 +156,7 @@ export default function LoopDropSection({
                     alt={drop.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                   <div className="absolute top-1 left-1 bg-rose-600 text-white font-black text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-sm">
                     <Flame className="w-2.5 h-2.5 fill-white" />

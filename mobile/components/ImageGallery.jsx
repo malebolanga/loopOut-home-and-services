@@ -16,10 +16,19 @@ const FALLBACK_IMAGES = {
     default: 'https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=800'
 };
 
-const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
+const ImageGallery = ({ imageUrls, alt, type, className = "", compactIndicator = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [failedUrls, setFailedUrls] = useState(new Set());
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  const imageUrlsKey = Array.isArray(imageUrls) ? imageUrls.join('|') : '';
+
+  useEffect(() => {
+    setCurrentIndex(0);
+    setFailedUrls(new Set());
+    setImageLoaded(false);
+    setFallbackFailed(false);
+  }, [imageUrlsKey, type]);
 
   // Filter out empty strings or failed URLs
   const validImages = imageUrls
@@ -59,25 +68,33 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
 
   const fallbackImage = FALLBACK_IMAGES[type] || FALLBACK_IMAGES.default;
   const currentImage = validImages[currentIndex] || fallbackImage;
+  const fallbackEmoji = ({ property: '🏡', apartment: '🏢', rent: '🏠', sale: '🏠', office: '🏬', service: '🛠️', helper: '🤝', event: '🎉', avatar: '👤', category: '✨' })[type] || '📷';
 
   return (
     <div className={`relative w-full h-full group ${className}`}>
       {!imageLoaded && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse z-0 rounded-[inherit]" />
       )}
-      <img
-        src={currentImage}
-        alt={alt || "Image"}
-        onError={(e) => {
-          handleError();
-          if (!validImages[currentIndex] && e.currentTarget.src !== FALLBACK_IMAGES.default) {
-            e.currentTarget.src = FALLBACK_IMAGES.default;
-          }
-        }}
-        onLoad={() => setImageLoaded(true)}
-        className={`w-full h-full object-cover transition-all duration-500 z-10 relative ${imageLoaded ? 'scale-100 opacity-100 group-hover:scale-105' : 'scale-105 opacity-0'}`}
-        loading="lazy"
-      />
+      {fallbackFailed ? (
+        <div role="img" aria-label={alt || 'Image unavailable'} className="absolute inset-0 z-10 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-4xl dark:from-slate-800 dark:to-slate-900">
+          <span aria-hidden="true">{fallbackEmoji}</span>
+        </div>
+      ) : (
+        <img
+          src={currentImage}
+          alt={alt || "Image"}
+          onError={() => {
+            if (validImages[currentIndex]) handleError();
+            else {
+              setFallbackFailed(true);
+              setImageLoaded(true);
+            }
+          }}
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-all duration-500 z-10 relative ${imageLoaded ? 'scale-100 opacity-100 group-hover:scale-105' : 'scale-105 opacity-0'}`}
+          loading="lazy"
+        />
+      )}
       
       {/* Navigation Arrows - Only show if multiple valid images */}
       {validImages.length > 1 && (
@@ -95,17 +112,22 @@ const ImageGallery = ({ imageUrls, alt, type, className = "" }) => {
             <ChevronRightIcon className="w-4 h-4 text-gray-800" />
           </button>
           
-          {/* Dots Indicator */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
-            {validImages.map((_, idx) => (
-              <div 
-                key={idx}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${
-                  idx === currentIndex ? 'bg-white w-2' : 'bg-white/60'
-                }`}
-              />
-            ))}
-          </div>
+          {compactIndicator ? (
+            <span className="absolute bottom-2 right-2 z-20 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold leading-none text-white backdrop-blur-sm">
+              {currentIndex + 1} / {validImages.length}
+            </span>
+          ) : (
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+              {validImages.map((_, idx) => (
+                <div
+                  key={idx}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${
+                    idx === currentIndex ? 'bg-white w-2' : 'bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

@@ -4,6 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { FiBell, FiCheck, FiTrash2, FiClock, FiArrowLeft } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import FoodCollectionReadyBanner from '../components/home/FoodCollectionReadyBanner';
+import { getBarberBookingDetails, isBarberBooking as isBarberBookingRecord } from '../utils/barberBookingDetails';
+import { getCarWashBookingDetails, isCarWashBooking as isCarWashBookingRecord } from '../utils/carWashBookingDetails';
+import BookingRequestDetails from '../components/BookingRequestDetails';
+import RatingModal from '../components/RatingModal';
+import { parseBookingMessageDetails } from '../utils/bookingMessageDetails';
+import { requestCancellationReason } from '../utils/requestCancellationReason';
 
 const parsePriceFromText = (text) => {
     if (!text || typeof text !== 'string') return null;
@@ -18,11 +24,24 @@ const parsePriceFromText = (text) => {
     return null;
 };
 
+const getBookingNotificationPrice = (notification, booking) => {
+    const candidates = [
+        notification?.data?.totalPrice,
+        notification?.data?.price,
+        parsePriceFromText(notification?.message),
+        booking?.totalPrice,
+        booking?.price,
+    ];
+    const value = candidates.find((candidate) => candidate !== undefined && candidate !== null && candidate !== '');
+    const price = Number(value);
+    return Number.isFinite(price) && price >= 0 ? price : 0;
+};
+
 const extractAddressFromBookingMessage = (message) => {
     if (typeof message !== 'string' || !message.trim()) return '';
     const normalized = message.replace(/%0A/gi, '\n').replace(/\\n/g, '\n');
-    
-    // 1. Try explicit "Address:" line
+
+    // 1. Try explicit "Address:" line (with optional emoji, markdown asterisks, or underscores)
     const match = normalized.match(/(?:🏠|📍)?\s*(?:\*|_)?Address:?(?:\*|_)?\s*([^\r\n]+)/i);
     if (match?.[1]?.trim()) {
         const addr = match[1].trim().replace(/^[*_]+|[*_]+$/g, '');
@@ -32,14 +51,33 @@ const extractAddressFromBookingMessage = (message) => {
     }
 
     // 2. Try extracting from Navigate URL query parameter
+    // e.g. Navigate: https://www.google.com/maps/search/?api=1&query=5%20tungstate%20street%20Madiba%20Park%20Polokwane%200600
     const navMatch = normalized.match(/query=([^&\s\r\n]+)/i);
     if (navMatch?.[1]) {
         try {
             const decoded = decodeURIComponent(navMatch[1]).replace(/\+/g, ' ').trim();
             if (decoded) return decoded;
-        } catch (_e) {}
+        } catch (_e) {
+            // Ignore malformed map URLs and continue with the explicit address if available.
+        }
     }
 
+    return '';
+};
+
+const isWhatsAppBookingMessage = (message) => {
+    if (typeof message !== 'string' || !message.trim()) return false;
+    return /https?:\/\/(?:api\.)?whatsapp\.com\/send|https?:\/\/(?:www\.)?wa\.me\//i.test(message) ||
+        (/\*[^\n*]*(?:booking|service details|client details)[^\n*]*\*/i.test(message) &&
+            /\*ACTION REQUIRED\*/i.test(message));
+};
+
+const getNotificationDisplayMessage = (notification) => {
+    const message = notification?.message || '';
+    const isBookingNotification = notification?.type === 'booking' || Boolean(notification?.data?.bookingId);
+    if (!isBookingNotification || !isWhatsAppBookingMessage(message)) return message;
+
+    // WhatsApp booking templates belong in WhatsApp, not in the notification UI.
     return '';
 };
 
@@ -110,6 +148,23 @@ const extractPriceInfo = (notification, priceMap = {}) => {
     };
 };
 
+const formatScheduleTime = (value) => {
+    if (!value) return 'Not provided';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Not provided';
+    return date.toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const formatBarberScheduleTime = (value) => {
+    if (!value) return 'Not provided';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'Not provided';
+    return date.toLocaleString('en-ZA', {
+        weekday: 'short', day: '2-digit', month: 'short',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    });
+};
+
 export default function Notifications() {
     const { currentUser } = useSelector((state) => state.user);
     const navigate = useNavigate();
@@ -117,21 +172,21 @@ export default function Notifications() {
     const [bookingPriceMap, setBookingPriceMap] = useState({});
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [bookingDetails, setBookingDetails] = useState(null);
+    const [ratingBooking, setRatingBooking] = useState(null);
     const [loadingBooking, setLoadingBooking] = useState(false);
+    const [foodOrderDetails, setFoodOrderDetails] = useState(null);
+    const [foodShopDetails, setFoodShopDetails] = useState(null);
+    const [loadingFoodOrder, setLoadingFoodOrder] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const [nextOffset, setNextOffset] = useState(0);
+    const [serverUnreadCount, setServerUnreadCount] = useState(0);
     const [error, setError] = useState(null);
 
     const getToken = useCallback(() => {
         return localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.access_token || currentUser?.token || '';
     }, [currentUser?._id]);
-
-    useEffect(() => {
-        if (!currentUser) {
-            navigate('/sign-in');
-            return;
-        }
-        fetchNotifications();
-    }, [currentUser?._id, navigate]);
 
     useEffect(() => {
         if (!currentUser?._id) return;
@@ -206,14 +261,57 @@ export default function Notifications() {
         fetchBookingDetails();
     }, [selectedNotification, getToken]);
 
-    const fetchNotifications = async () => {
+    useEffect(() => {
+        let active = true;
+        const fetchFoodOrderDetails = async () => {
+            const notification = selectedNotification;
+            const orderId = notification?.data?.orderId;
+            const orderCode = notification?.data?.orderCode;
+            const isFoodNotification = notification?.type === 'food_order' || Boolean(orderId || orderCode);
+            setFoodOrderDetails(null);
+            setFoodShopDetails(null);
+            if (!isFoodNotification || (!orderId && !orderCode)) return;
+            setLoadingFoodOrder(true);
+            try {
+                const token = getToken();
+                const [ordersResponse, shopsResponse] = await Promise.all([
+                    fetch('/api/lunch/orders', { credentials: 'include', headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }),
+                    fetch('/api/lunch/shops'),
+                ]);
+                const orders = ordersResponse.ok ? await ordersResponse.json() : [];
+                const shops = shopsResponse.ok ? await shopsResponse.json() : [];
+                const order = (Array.isArray(orders) ? orders : []).find((entry) =>
+                    String(entry._id || entry.id || '') === String(orderId || '') ||
+                    (orderCode && String(entry.orderCode || '') === String(orderCode))
+                );
+                if (!active) return;
+                if (order) {
+                    setFoodOrderDetails(order);
+                    const shop = (Array.isArray(shops) ? shops : []).find((entry) => String(entry._id || entry.id || '') === String(order.shopId || ''));
+                    setFoodShopDetails(shop || null);
+                }
+            } catch (err) {
+                console.error('Failed to fetch food order notification details:', err);
+            } finally {
+                if (active) setLoadingFoodOrder(false);
+            }
+        };
+        fetchFoodOrderDetails();
+        return () => { active = false; };
+    }, [selectedNotification, getToken]);
+
+    const fetchNotifications = useCallback(async ({ silent = false, append = false } = {}) => {
         try {
-            setLoading(true);
-            setError(null);
+            if (append) setLoadingMore(true);
+            if (!silent) {
+                setLoading(true);
+                setError(null);
+            }
             let apiNotifs = [];
             try {
                 const token = getToken();
-                const res = await fetch('/api/notifications', {
+                const offset = append ? nextOffset : 0;
+                const res = await fetch(`/api/notifications?limit=20&offset=${offset}`, {
                     credentials: 'include',
                     headers: {
                         ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -222,9 +320,15 @@ export default function Notifications() {
                 if (res.ok) {
                     const data = await res.json();
                     apiNotifs = data.notifications || [];
+                    setServerUnreadCount(Number(data.unreadCount) || 0);
+                    setHasMore(Boolean(data.hasMore));
+                    setNextOffset(Number(data.nextOffset) || 0);
+                } else {
+                    throw new Error(`Could not load notifications (${res.status}).`);
                 }
             } catch (err) {
                 console.warn('[NOTIF CLIENT] API fetch error, using local fallback:', err?.message);
+                if (silent) return;
             }
 
             // Fetch local storage notifications for current user
@@ -255,15 +359,44 @@ export default function Notifications() {
                 (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
             );
 
-            setNotifications(combined);
+            setNotifications((previous) => {
+                if (!append) return combined;
+                const byId = new Map(previous.map((entry) => [String(entry._id || entry.id), entry]));
+                combined.forEach((entry) => byId.set(String(entry._id || entry.id), entry));
+                return [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+            });
         } catch (err) {
-            setError(err.message);
+            if (!silent) setError(err.message);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
+            if (append) setLoadingMore(false);
         }
-    };
+    }, [currentUser?._id, getToken, nextOffset]);
+
+    useEffect(() => {
+        if (!currentUser) {
+            navigate('/sign-in');
+            return;
+        }
+
+        fetchNotifications();
+
+        const refreshWhenVisible = () => {
+            if (document.visibilityState === 'visible') {
+                fetchNotifications({ silent: true });
+            }
+        };
+        const intervalId = window.setInterval(refreshWhenVisible, 15000);
+        document.addEventListener('visibilitychange', refreshWhenVisible);
+
+        return () => {
+            window.clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', refreshWhenVisible);
+        };
+    }, [currentUser?._id, navigate, fetchNotifications]);
 
     const markAsRead = async (id) => {
+        const wasUnread = notifications.some((notification) => (notification._id === id || notification.id === id) && !notification.read);
         try {
             const token = getToken();
             await fetch(`/api/notifications/${id}/read`, {
@@ -278,6 +411,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.map(n => ((n._id === id || n.id === id) ? { ...n, read: true } : n)));
+        if (wasUnread) setServerUnreadCount((count) => Math.max(0, count - 1));
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -289,6 +423,7 @@ export default function Notifications() {
     };
 
     const deleteNotification = async (id) => {
+        const removedUnread = notifications.some((notification) => (notification._id === id || notification.id === id) && !notification.read);
         try {
             const token = getToken();
             await fetch(`/api/notifications/${id}`, {
@@ -303,6 +438,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
+        if (removedUnread) setServerUnreadCount((count) => Math.max(0, count - 1));
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -328,6 +464,7 @@ export default function Notifications() {
         }
 
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setServerUnreadCount(0);
         try {
             const raw = localStorage.getItem('loopout_local_notifications');
             if (raw) {
@@ -353,10 +490,11 @@ export default function Notifications() {
         }
 
         setNotifications([]);
+        setServerUnreadCount(0);
         localStorage.removeItem('loopout_local_notifications');
     };
 
-    const getNotificationIcon = (type) => {
+    const getNotificationIcon = (type, data = {}) => {
         switch (type) {
             case 'reference':
                 return <span className="text-2xl">🤝</span>;
@@ -373,7 +511,7 @@ export default function Notifications() {
             case 'comment':
                 return <span className="text-2xl">💭</span>;
             case 'food_order':
-                return <span className="text-2xl">🍱</span>;
+                return <span className="text-2xl">{data.goodsOrderId ? '🛍️' : '🍱'}</span>;
             default:
                 return <span className="text-2xl">🔔</span>;
         }
@@ -388,6 +526,12 @@ export default function Notifications() {
 
     const handleNotificationAction = (notification) => {
         if (!notification) return;
+        const notificationRoute = notification.data?.route;
+        if (typeof notificationRoute === 'string' && notificationRoute.startsWith('/')) {
+            navigate(notificationRoute);
+            setSelectedNotification(null);
+            return;
+        }
         if (notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) {
             const convId = notification.data?.conversationId;
             navigate(convId ? `/messages/${convId}` : '/messages');
@@ -396,12 +540,18 @@ export default function Notifications() {
         }
 
         if (notification.data) {
-            const { itemType, itemId, orderId, orderCode, canReview } = notification.data;
+            const { itemType, itemId, orderId, orderCode, goodsOrderId, canReview, serviceRequestId } = notification.data;
             
-            if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
-                navigate(notification.data?.link || '/food');
+            if (serviceRequestId) {
+                navigate('/work-now');
+            } else if (goodsOrderId) {
+                navigate('/my-loopout');
+            } else if (orderId || orderCode || (notification.title && notification.title.includes('Food'))) {
+                navigate('/my-orders');
             } else if (notification.type === 'review' || canReview) {
-                if (itemType && itemId) {
+                if (notification.data.bookingId) {
+                    navigate('/my-loopout', { state: { reviewBookingId: String(notification.data.bookingId) } });
+                } else if (itemType && itemId) {
                     navigate(`/${itemType}/${itemId}`);
                 } else {
                     navigate('/dashboard');
@@ -495,24 +645,62 @@ export default function Notifications() {
     const isRequester = isClientMatch || (!isHostMatch && looksLikeRequesterNotif);
     // If current user is the one who is providing the service/listing/booking
     const isProvider = (isHostMatch && !isClientMatch) || (!isClientMatch && !isRequester && looksLikeProviderNotif);
+    const providerContact = bookingDetails?.listing?.contact || bookingDetails?.listing?.phone || bookingDetails?.listing?.userRef?.phone ||
+        bookingDetails?.helper?.contact || bookingDetails?.helper?.phone || bookingDetails?.helper?.userRef?.phone ||
+        bookingDetails?.service?.contact || bookingDetails?.service?.phone || bookingDetails?.service?.userRef?.phone || bookingDetails?.service?.creator?.phone ||
+        bookingDetails?.event?.contact || bookingDetails?.event?.phone || bookingDetails?.event?.userRef?.phone;
+    const bookingContact = isRequester
+        ? providerContact
+        : (bookingDetails?.user?.phone || bookingDetails?.phone || providerContact);
+    const bookingContactLabel = isRequester ? 'Provider contact' : isProvider ? 'Client contact' : 'Contact';
 
     const isPending = bookingDetails?.status === 'pending';
     const isConfirmed = bookingDetails?.status === 'confirmed' || bookingDetails?.status === 'approved';
     const isCompleted = bookingDetails?.status === 'completed';
+    const bookingHasEnded = bookingDetails?.endDate && new Date(bookingDetails.endDate).getTime() <= Date.now();
+    const isBarberBooking = isBarberBookingRecord(bookingDetails || {});
+    const barberBookingDetails = getBarberBookingDetails(bookingDetails || {}, selectedNotification?.message || '');
+    const isCarWash = isCarWashBookingRecord(bookingDetails || {}) || isCarWashBookingRecord(selectedNotification || {});
+    const carWashDetails = isCarWash ? getCarWashBookingDetails(bookingDetails || {}, selectedNotification?.message || '') : null;
+    const requestMessageDetails = parseBookingMessageDetails(bookingDetails?.message);
+    const cancelDeadline = bookingDetails?.startDate ? new Date(bookingDetails.startDate).getTime() - (48 * 60 * 60 * 1000) : NaN;
+    const canRequesterCancel = Number.isFinite(cancelDeadline) && Date.now() <= cancelDeadline;
 
     const itemType = bookingDetails?.listing ? 'listing' : bookingDetails?.helper ? 'helper' : bookingDetails?.service ? 'service' : 'event';
     const itemId = bookingDetails?.listing?._id || bookingDetails?.helper?._id || bookingDetails?.service?._id || bookingDetails?.event?._id;
-
+    const canReviewCompletedBooking = Boolean(isCompleted && bookingHasEnded && isRequester && itemId && !bookingDetails?.isReviewed);
+    // Show the image the host posted for this service/listing, not a worker or account avatar.
+    const bookingProviderImage = bookingDetails?.helper?.imageUrls?.[0] || bookingDetails?.service?.imageUrls?.[0] || bookingDetails?.event?.imageUrls?.[0] || bookingDetails?.listing?.imageUrls?.[0] || '';
+    const bookingProviderName = bookingDetails?.helper?.name || bookingDetails?.service?.name || bookingDetails?.service?.title || bookingDetails?.event?.title || bookingDetails?.listing?.userRef?.username || bookingDetails?.selectedPerformer || 'Service provider';
     const messageAddress = extractAddressFromBookingMessage(bookingDetails?.message) || extractAddressFromBookingMessage(selectedNotification?.message);
     const parsedLocOption = bookingDetails?.locationOption || selectedNotification?.data?.locationOption || extractLocationOptionFromMessage(bookingDetails?.message) || extractLocationOptionFromMessage(selectedNotification?.message) || '';
     const customerWorkAddress = bookingDetails?.requestLocation || selectedNotification?.data?.requestLocation || selectedNotification?.data?.clientAddress || messageAddress || '';
     const providerLocation = bookingDetails?.listing?.businessAddress || bookingDetails?.listing?.address || bookingDetails?.helper?.businessAddress || bookingDetails?.helper?.address || bookingDetails?.service?.businessAddress || bookingDetails?.service?.address || bookingDetails?.event?.businessAddress || bookingDetails?.event?.address || '';
+
+    // Match the WhatsApp booking format:
+    // When the client requested home service (comeToYou): client's address is used
+    // When the client visits the provider (goToThem): provider's location is used
     const resolvedLocationOption = parsedLocOption || (customerWorkAddress ? 'comeToYou' : (providerLocation ? 'goToThem' : ''));
     const isClientWorkLocation = resolvedLocationOption === 'comeToYou' || Boolean(customerWorkAddress);
     const bookingLocation = isClientWorkLocation
         ? (customerWorkAddress || providerLocation)
         : (resolvedLocationOption === 'goToThem' ? (providerLocation || customerWorkAddress) : (customerWorkAddress || providerLocation));
-    const detailMapLink = selectedNotification?.data?.mapLink || (bookingLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bookingLocation)}` : '');
+    const bookingTravelLabel = isClientWorkLocation
+        ? (isRequester ? 'Provider comes to you' : 'Client requested: Come to his place')
+        : (resolvedLocationOption === 'goToThem' ? (isRequester ? 'You go to the provider' : 'Client is coming to you') : '');
+
+    const foodLocation = foodOrderDetails?.fulfilment === 'delivery' ? foodOrderDetails?.deliveryAddress : foodShopDetails?.address;
+    const isFoodDetails = selectedNotification?.type === 'food_order' || Boolean(selectedNotification?.data?.orderId || selectedNotification?.data?.orderCode);
+    const detailLocation = isFoodDetails ? (foodLocation || '') : bookingLocation;
+    const detailMapLink = selectedNotification?.data?.mapLink || (detailLocation ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detailLocation)}` : '');
+    const bookingDurationMinutes = bookingDetails?.startDate && bookingDetails?.endDate
+        ? Math.max(0, (new Date(bookingDetails.endDate).getTime() - new Date(bookingDetails.startDate).getTime()) / 60000)
+        : 0;
+    const bookingDuration = bookingDurationMinutes >= 1440
+        ? `${Math.round(bookingDurationMinutes / 1440)} day${Math.round(bookingDurationMinutes / 1440) === 1 ? '' : 's'}`
+        : bookingDurationMinutes >= 60
+            ? `${Math.round(bookingDurationMinutes / 60)} hour${Math.round(bookingDurationMinutes / 60) === 1 ? '' : 's'}`
+            : bookingDurationMinutes > 0 ? `${Math.round(bookingDurationMinutes)} minutes` : '';
 
     if (loading) {
         return (
@@ -543,7 +731,7 @@ export default function Notifications() {
         );
     }
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadCount = Math.max(notifications.filter(n => !n.read).length, serverUnreadCount);
 
     return (
         <div className="app-safe-top max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 app-safe-content-bottom pb-36 min-h-screen">
@@ -588,7 +776,6 @@ export default function Notifications() {
                     </div>
                 )}
             </div>
-
             <FoodCollectionReadyBanner navigate={navigate} />
 
             {error && (
@@ -639,7 +826,7 @@ export default function Notifications() {
                                     )}
 
                                     <div className="flex-shrink-0 mt-1">
-                                        {getNotificationIcon(notification.type)}
+                                        {getNotificationIcon(notification.type, notification.data)}
                                     </div>
 
                                     <div className="flex-1 min-w-0 pr-2 sm:pr-8">
@@ -673,9 +860,48 @@ export default function Notifications() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className={`text-xs sm:text-sm mb-2.5 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
-                                            {notification.message}
-                                        </p>
+                                        {getNotificationDisplayMessage(notification) && (
+                                            <p className={`text-xs sm:text-sm mb-2.5 line-clamp-2 sm:line-clamp-none ${notification.read ? 'text-gray-500 dark:text-white' : 'text-gray-700 dark:text-white'}`}>
+                                                {getNotificationDisplayMessage(notification)}
+                                            </p>
+                                        )}
+
+                                        {(() => {
+                                            const notifIsBarber = isBarberBookingRecord(notification) || (notification.type === 'booking' && /barber|barbar/i.test(`${notification.title || ''} ${notification.message || ''}`));
+                                            if (!notifIsBarber) return null;
+                                            const details = getBarberBookingDetails({ message: notification.message, ...(notification.data || {}) }, notification.message);
+                                            const hasAnyDetail = Boolean(details.selectedPerformer || details.serviceDuration || details.selectedHaircut || details.foodProvided || details.electricityProvided);
+                                            if (!hasAnyDetail) return null;
+                                            return (
+                                                <div className="mb-3 grid grid-cols-1 gap-1.5 rounded-xl bg-blue-50/70 p-3 text-[11px] text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    <span>👤 Member: {details.selectedPerformer || 'Any available member'}</span>
+                                                    {details.serviceDuration && <span>⏱️ Duration: {details.serviceDuration}</span>}
+                                                    {details.selectedHaircut && <span>✂️ Haircut: {details.selectedHaircut}</span>}
+                                                    {details.beardGrooming && <span>🧔 Beard grooming: {details.beardGrooming}</span>}
+                                                    {details.foodProvided && <span>🍽️ Food: {details.foodProvided === 'yes' ? 'Provided' : 'Not provided'}</span>}
+                                                    {details.electricityProvided && <span>⚡ Electricity: {details.electricityProvided === 'yes' ? 'Available' : 'Not available'}</span>}
+                                                    {details.specialRequirements && <span className="truncate sm:col-span-2" title={details.specialRequirements}>📝 Special request: {details.specialRequirements}</span>}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {(() => {
+                                            const notifIsCarWash = isCarWashBookingRecord(notification) || (notification.type === 'booking' && /car\s*wash|carwash|auto\s*wash|valet/i.test(`${notification.title || ''} ${notification.message || ''}`));
+                                            if (!notifIsCarWash) return null;
+                                            const details = getCarWashBookingDetails({ message: notification.message, ...(notification.data || {}) }, notification.message);
+                                            const hasAnyDetail = Boolean(details.vehicleType || details.vehicleMake || details.vehicleModel || details.selectedServices || details.waterSource);
+                                            if (!hasAnyDetail) return null;
+                                            return (
+                                                <div className="mb-3 grid grid-cols-1 gap-1.5 rounded-xl bg-cyan-50/70 p-3 text-[11px] text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    {details.vehicleType && <span>🚗 Type: {details.vehicleType}</span>}
+                                                    {(details.vehicleMake || details.vehicleModel) && <span>🚘 Vehicle: {[details.vehicleMake, details.vehicleModel].filter(Boolean).join(' ')}</span>}
+                                                    {details.selectedServices && <span>🧼 Package: {details.selectedServices}</span>}
+                                                    {details.waterSource && <span>💧 Water: {details.waterSource}</span>}
+                                                    {details.electricityAccess && <span>⚡ Electricity: {details.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
+                                                    {details.specialRequirements && <span className="truncate sm:col-span-2" title={details.specialRequirements}>📝 Special request: {details.specialRequirements}</span>}
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Display price just below the notification information */}
                                         {priceInfo && (
@@ -694,7 +920,7 @@ export default function Notifications() {
                                             </div>
                                         )}
 
-                                        {(notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) && (
+                            {(notification.type === 'reference' || notification.type === 'message' || notification.data?.conversationId) && (
                                             <div className="mb-3 flex items-center gap-2">
                                                 <button
                                                     onClick={(e) => {
@@ -723,21 +949,31 @@ export default function Notifications() {
                 </div>
             )}
 
+            {hasMore && (
+                <div className="mt-6 flex justify-center">
+                    <button type="button" disabled={loadingMore} onClick={() => fetchNotifications({ append: true })}
+                        className="rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-800 shadow-sm disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
+                        {loadingMore ? 'Loading…' : 'Load more notifications'}
+                    </button>
+                </div>
+            )}
+
             <AnimatePresence>
                 {selectedNotification && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 flex items-end justify-center bg-gray-900/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
                         onClick={() => setSelectedNotification(null)}
                     >
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            initial={{ y: '100%', opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0 }}
+                            transition={{ type: 'spring', damping: 30, stiffness: 260 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative"
+                            className="bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl p-5 sm:p-8 max-w-2xl w-full max-h-[92svh] overflow-hidden flex flex-col shadow-2xl relative"
                         >
                             <button
                                 onClick={() => setSelectedNotification(null)}
@@ -748,7 +984,7 @@ export default function Notifications() {
 
                             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8 pr-8 sm:pr-0">
                                 <div className="p-3 sm:p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-800 scale-100 sm:scale-125 flex-shrink-0">
-                                    {getNotificationIcon(selectedNotification.type)}
+                                    {getNotificationIcon(selectedNotification.type, selectedNotification.data)}
                                 </div>
                                 <div>
                                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{selectedNotification.title}</h2>
@@ -760,9 +996,11 @@ export default function Notifications() {
                             </div>
 
                             <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-6 border border-gray-100 dark:border-gray-800 mb-4 sm:mb-8 flex-1 overflow-y-auto">
-                                <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
-                                    {selectedNotification.message}
-                                </p>
+                                {getNotificationDisplayMessage(selectedNotification) && (
+                                    <p className="text-gray-700 dark:text-white text-base sm:text-lg leading-relaxed whitespace-pre-wrap">
+                                        {getNotificationDisplayMessage(selectedNotification)}
+                                    </p>
+                                )}
 
                                 {(selectedNotification.type === 'reference' || selectedNotification.data?.isReference) && (
                                     <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700/60">
@@ -817,53 +1055,70 @@ export default function Notifications() {
 
                                 {bookingDetails && !loadingBooking && (
                                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
-                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Booking Request Details</h3>
+                                        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{isBarberBooking ? '📋 Booking details · helper' : isCarWash ? '📋 Booking details · car wash' : '📋 Booking Request Details'}</h3>
+                                        {(isBarberBooking || isCarWash) && <p className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase ${isPending ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' : isConfirmed ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-gray-300'}`}>📌 Status: {bookingDetails.status}</p>}
+                                        <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-2xl dark:bg-gray-800">
+                                                <span aria-hidden="true">👤</span>
+                                                {bookingProviderImage && <img src={bookingProviderImage} alt={`${bookingProviderName}, service provider`} className="absolute inset-0 h-full w-full object-cover" onError={(event) => { event.currentTarget.remove(); }} />}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{isBarberBooking || isCarWash ? 'Service provider' : 'Service photo'}</p>
+                                                <p className="truncate font-semibold text-gray-900 dark:text-white">{bookingProviderName}</p>
+                                                {!isBarberBooking && !isCarWash && bookingDetails.selectedPerformer && bookingDetails.helper?.name && bookingDetails.selectedPerformer !== bookingDetails.helper.name && <p className="text-xs text-slate-500 dark:text-gray-400">Provider account: {bookingDetails.helper.name}</p>}
+                                            </div>
+                                        </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Service / Listing</p>
+                                            {!isBarberBooking && !isCarWash && <div>
+                                                <p className="text-sm text-gray-500 dark:text-white">🧰 Service / Listing</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Service Request'}
                                                 </p>
-                                            </div>
-                                            <div>
+                                            </div>}
+                                            {!isBarberBooking && !isCarWash && <div>
                                                 <p className="text-sm text-gray-500 dark:text-white">
-                                                    {isRequester ? 'Provider / Host' : 'Client Name'}
+                                                    {isRequester ? '👤 Provider / Host' : '👤 Client Name'}
                                                 </p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
                                                     {isRequester
                                                         ? (bookingDetails.listing?.userRef?.username || bookingDetails.helper?.userRef?.username || bookingDetails.service?.userRef?.username || bookingDetails.service?.creator?.username || bookingDetails.helper?.name || bookingDetails.listing?.name || 'Provider / Host')
                                                         : (bookingDetails.user?.username || 'Client')}
                                                 </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Total Price</p>
+                                            </div>}
+                                            {!isBarberBooking && !isCarWash && <div>
+                                                <p className="text-sm text-gray-500 dark:text-white">💰 Total Price</p>
                                                 <p className="font-medium text-emerald-600 font-bold">
-                                                    ZAR {Number(
-                                                        selectedNotification?.data?.price ||
-                                                        selectedNotification?.data?.totalPrice ||
-                                                        parsePriceFromText(selectedNotification?.message) ||
-                                                        bookingDetails.totalPrice ||
-                                                        0
-                                                    ).toLocaleString()}
+                                                    ZAR {getBookingNotificationPrice(selectedNotification, bookingDetails).toLocaleString()}
                                                 </p>
-                                            </div>
+                                            </div>}
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-white">Dates</p>
+                                                <p className="text-sm text-gray-500 dark:text-white">📅 Date &amp; time</p>
                                                 <p className="font-medium text-gray-900 dark:text-white">
-                                                    {bookingDetails.startDate ? new Date(bookingDetails.startDate).toLocaleDateString() : 'N/A'} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? `- ${new Date(bookingDetails.endDate).toLocaleDateString()}` : ''}
+                                                    {isBarberBooking ? formatBarberScheduleTime(bookingDetails.startDate) : formatScheduleTime(bookingDetails.startDate)} {bookingDetails.endDate && bookingDetails.endDate !== bookingDetails.startDate ? (isBarberBooking ? <><br /><span className="text-xs text-gray-500 dark:text-gray-400">Until {formatBarberScheduleTime(bookingDetails.endDate)}</span></> : `– ${formatScheduleTime(bookingDetails.endDate)}`) : ''}
                                                 </p>
                                             </div>
-                                            {bookingDetails.phone && (
-                                                <div>
-                                                    <p className="text-sm text-gray-500 dark:text-white">Contact Number</p>
-                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.phone}</p>
-                                                </div>
-                                            )}
+                                            {bookingDetails._id && <div>
+                                                <p className="text-sm text-gray-500 dark:text-white">🔖 Booking reference</p>
+                                                <p className="break-all font-medium text-gray-900 dark:text-white">{bookingDetails._id}</p>
+                                            </div>}
+                                            {bookingDetails.listing && <>
+                                                {(bookingDetails.listing.propertyType || bookingDetails.listing.type || bookingDetails.subtype) && <div>
+                                                    <p className="text-sm text-gray-500 dark:text-white">🏠 Stay type</p>
+                                                    <p className="font-medium capitalize text-gray-900 dark:text-white">{bookingDetails.listing.propertyType || bookingDetails.listing.type || bookingDetails.subtype}</p>
+                                                </div>}
+                                                {bookingDetails.numberOfRooms && <div>
+                                                    <p className="text-sm text-gray-500 dark:text-white">🛏️ Rooms booked</p>
+                                                    <p className="font-medium text-gray-900 dark:text-white">{bookingDetails.numberOfRooms}</p>
+                                                </div>}
+                                            </>}
+                                            {!isBarberBooking && bookingDuration && <div>
+                                                <p className="text-sm text-gray-500 dark:text-white">⏱️ Duration</p>
+                                                <p className="font-medium text-gray-900 dark:text-white">{bookingDuration}</p>
+                                            </div>}
                                             <div className="sm:col-span-2 rounded-2xl border border-rose-200/80 bg-rose-50/60 p-4 sm:p-5 dark:border-rose-900/50 dark:bg-rose-950/20 shadow-xs">
                                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-rose-200/60 dark:border-rose-900/40 pb-2.5 mb-3">
                                                     <p className="text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
-                                                        <span>📍</span>
-                                                        <span>LOCATION &amp; NAVIGATION</span>
+                                                        <span>{isBarberBooking ? '📍 Location' : 'LOCATION & NAVIGATION'}</span>
                                                     </p>
                                                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                                                         isClientWorkLocation
@@ -876,7 +1131,11 @@ export default function Notifications() {
                                                     </span>
                                                 </div>
 
-                                                <div className="space-y-3">
+                                                {isBarberBooking ? <div className="space-y-2">
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white">{detailLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}</p>
+                                                    {isClientWorkLocation && detailLocation && <p className="text-xs text-gray-600 dark:text-gray-300">The provider comes to your address</p>}
+                                                    {detailMapLink && <a href={detailMapLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:underline dark:text-rose-300">🗺️ Open in Maps</a>}
+                                                </div> : <div className="space-y-3">
                                                     <div>
                                                         <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                             📍 Type
@@ -893,9 +1152,9 @@ export default function Notifications() {
                                                             🏠 Address
                                                         </p>
                                                         <p className="mt-0.5 text-sm font-bold text-gray-900 dark:text-white break-words">
-                                                            {bookingLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}
+                                                            {detailLocation || (isClientWorkLocation ? 'Client work address was not saved with this booking' : (resolvedLocationOption === 'goToThem' ? 'At the provider’s location' : 'Location to be confirmed with client'))}
                                                         </p>
-                                                        {isClientWorkLocation && bookingLocation && (
+                                                        {isClientWorkLocation && detailLocation && (
                                                             <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-300">
                                                                 This is the address the client entered for the service visit.
                                                             </p>
@@ -916,13 +1175,50 @@ export default function Notifications() {
                                                             </a>
                                                         </div>
                                                     )}
-                                                </div>
+                                                </div>}
                                             </div>
+                                            {(bookingDuration || bookingContact) && <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                {bookingDuration && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">⏱️ Duration</p><p className="mt-1 font-semibold text-slate-900 dark:text-white">{bookingDuration}</p></div>}
+                                                {bookingContact && <div className="rounded-xl bg-white p-3 dark:bg-gray-900"><p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">📞 {bookingContactLabel}</p><a href={`tel:${String(bookingContact).replace(/[^\d+]/g, '')}`} className="mt-1 inline-block font-semibold text-slate-900 underline underline-offset-2 dark:text-white">{bookingContact}</a></div>}
+                                            </div>}
+                                            {(isBarberBooking || isCarWash || bookingDetails.subtype || bookingDetails.functionType || bookingDetails.selectedPerformer || bookingDetails.performerExperience || bookingDetails.numberOfGuests || barberBookingDetails.serviceDuration || barberBookingDetails.selectedHaircut || barberBookingDetails.beardGrooming || barberBookingDetails.specialRequirements || barberBookingDetails.foodProvided || barberBookingDetails.electricityProvided || (bookingDetails.message && !requestMessageDetails.length && !isBarberBooking && !isCarWash)) && <div className={`sm:col-span-2 rounded-xl p-3 ${isBarberBooking ? 'bg-blue-50/70 dark:bg-blue-950/20' : isCarWash ? 'bg-cyan-50/70 dark:bg-cyan-950/20' : 'bg-white dark:bg-gray-900'}`}>
+                                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{isBarberBooking || isCarWash ? '🧰 What you booked' : '📝 Services and booking details'}</p>
+                                                {bookingDetails.subtype && <p className="mt-1 font-semibold text-gray-900 dark:text-white">{bookingDetails.subtype}</p>}
+                                                {bookingDetails.functionType && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">{bookingDetails.functionType}</p>}
+                                                {isBarberBooking && requestMessageDetails.length === 0 && <div className="mt-3 grid gap-2 rounded-xl bg-blue-50/70 p-3 text-xs text-slate-700 dark:bg-blue-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    <span>👤 Selected member: {barberBookingDetails.selectedPerformer || 'Any available member'}</span>
+                                                    {(barberBookingDetails.serviceDuration || bookingDuration) && <span>⏱️ Selected duration: {barberBookingDetails.serviceDuration || bookingDuration}</span>}
+                                                    {barberBookingDetails.selectedHaircut && <span>✂️ Haircut style: {barberBookingDetails.selectedHaircut}</span>}
+                                                    {barberBookingDetails.beardGrooming && <span>🧔 Beard grooming: {barberBookingDetails.beardGrooming}</span>}
+                                                    {barberBookingDetails.foodProvided && <span>🍽️ Food provided: {barberBookingDetails.foodProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                                                    {barberBookingDetails.electricityProvided && <span>⚡ Electricity available: {barberBookingDetails.electricityProvided === 'yes' ? 'Yes' : 'No'}</span>}
+                                                    {barberBookingDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {barberBookingDetails.specialRequirements}</p>}
+                                                </div>}
+                                                {isCarWash && carWashDetails && requestMessageDetails.length === 0 && <div className="mt-3 grid gap-2 rounded-xl bg-cyan-50/70 p-3 text-xs text-slate-700 dark:bg-cyan-950/20 dark:text-gray-200 sm:grid-cols-2">
+                                                    {carWashDetails.vehicleType && <span>🚗 Vehicle type: {carWashDetails.vehicleType}</span>}
+                                                    {(carWashDetails.vehicleMake || carWashDetails.vehicleModel) && <span>🚘 Vehicle: {[carWashDetails.vehicleMake, carWashDetails.vehicleModel].filter(Boolean).join(' ')}</span>}
+                                                    {carWashDetails.selectedServices && <span>🧼 Wash package: {carWashDetails.selectedServices}</span>}
+                                                    {carWashDetails.waterSource && <span>💧 Water source: {carWashDetails.waterSource}</span>}
+                                                    {carWashDetails.electricityAccess && <span>⚡ Electricity access: {carWashDetails.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
+                                                    {carWashDetails.specialRequirements && <p className="whitespace-pre-wrap break-words sm:col-span-2">📝 Special request: {carWashDetails.specialRequirements}</p>}
+                                                </div>}
+                                                {!isBarberBooking && !isCarWash && bookingDetails.selectedPerformer && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Requested worker: {bookingDetails.selectedPerformer}</p>}
+                                                {bookingDetails.performerExperience && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">Experience: {bookingDetails.performerExperience}</p>}
+                                                {bookingDetails.numberOfGuests && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">👥 {bookingDetails.numberOfGuests} guest{Number(bookingDetails.numberOfGuests) === 1 ? '' : 's'}</p>}
+                                                {bookingDetails.listing && bookingDetails.numberOfRooms && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">🏠 {bookingDetails.accommodationSelection === 'entire' ? `Full ${String(bookingDetails.listing.kind || 'property').toLowerCase()} · ${bookingDetails.numberOfRooms} bedrooms` : `${bookingDetails.numberOfRooms} room${Number(bookingDetails.numberOfRooms) === 1 ? '' : 's'} booked`}</p>}
+                                                {!isBarberBooking && !isCarWash && barberBookingDetails.serviceDuration && <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">⏱️ Selected duration: {barberBookingDetails.serviceDuration}</p>}
+                                                {bookingDetails.message && !requestMessageDetails.length && !isBarberBooking && !isCarWash && !isWhatsAppBookingMessage(bookingDetails.message) && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-gray-200">{String(bookingDetails.message)}</p>}
+                                            </div>}
+                                            {requestMessageDetails.length > 0 && <div className="sm:col-span-2"><BookingRequestDetails message={bookingDetails.message} /></div>}
+                                            {(isBarberBooking || isCarWash) && <div className="sm:col-span-2 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-gray-800">
+                                                <span className="text-sm font-semibold text-slate-600 dark:text-gray-300">💰 Booking total</span>
+                                                <span className="text-lg font-black text-slate-900 dark:text-white">R{getBookingNotificationPrice(selectedNotification, bookingDetails).toLocaleString('en-ZA', { maximumFractionDigits: 2 })}</span>
+                                            </div>}
                                             {bookingDetails.status && (
                                                 <div className="col-span-full pt-2">
-                                                    <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>
+                                                    {!isBarberBooking && !isCarWash && <p className="text-sm text-gray-500 dark:text-white mb-2">Status</p>}
                                                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
+                                                        {!isBarberBooking && !isCarWash && <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider ${
                                                             isConfirmed ? 'bg-green-100 text-green-800 border border-green-200' :
                                                             isPending ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
                                                             isCompleted ? 'bg-purple-100 text-purple-800 border border-purple-200' :
@@ -931,7 +1227,7 @@ export default function Notifications() {
                                                             'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-200 dark:border-gray-800'
                                                         }`}>
                                                             {bookingDetails.status}
-                                                        </span>
+                                                        </span>}
 
                                                         {/* 1. PROVIDER ACTIONS: If user is the provider and booking is pending */}
                                                         {isPending && isProvider && !isRequester && (
@@ -986,7 +1282,7 @@ export default function Notifications() {
                                                                     }}
                                                                     className="flex-1 sm:flex-none px-5 py-2 text-white bg-green-600 hover:bg-green-700 font-semibold rounded-lg transition-colors shadow-sm"
                                                                 >
-                                                                    ✓ Accept Request
+                                                                    ✓ Accept
                                                                 </button>
                                                             </div>
                                                         )}
@@ -994,8 +1290,12 @@ export default function Notifications() {
                                                         {/* 2. REQUESTER ACTIONS: If user requested the booking, show ONLY "Cancel your booking" */}
                                                         {isRequester && (isPending || isConfirmed) && (
                                                             <button
+                                                                disabled={!canRequesterCancel}
                                                                 onClick={async () => {
+                                                                    if (!canRequesterCancel) return;
                                                                     if (!window.confirm('Are you sure you want to cancel your booking?')) return;
+                                                                    const cancellationReason = requestCancellationReason();
+                                                                    if (!cancellationReason) return;
                                                                     try {
                                                                         const token = getToken();
                                                                         const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
@@ -1005,7 +1305,7 @@ export default function Notifications() {
                                                                                 'Content-Type': 'application/json',
                                                                                 ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                             },
-                                                                            body: JSON.stringify({ status: 'cancelled', cancelledBy: 'user' })
+                                                                            body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                                                         });
                                                                         if (res.ok) {
                                                                             const updatedBooking = await res.json();
@@ -1016,9 +1316,9 @@ export default function Notifications() {
                                                                         console.error('Failed to cancel booking:', err);
                                                                     }
                                                                 }}
-                                                                className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200 shadow-sm"
+                                                                className="px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200 shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                                                             >
-                                                                Cancel your booking
+                                                                {canRequesterCancel ? 'Cancel your booking' : 'Cancellation closes 48 hours before start'}
                                                             </button>
                                                         )}
 
@@ -1054,6 +1354,8 @@ export default function Notifications() {
                                                                 <button
                                                                     onClick={async () => {
                                                                         if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+                                                                        const cancellationReason = requestCancellationReason();
+                                                                        if (!cancellationReason) return;
                                                                         try {
                                                                             const token = getToken();
                                                                             const res = await fetch(`/api/bookings/update/${bookingDetails._id}`, {
@@ -1063,7 +1365,7 @@ export default function Notifications() {
                                                                                     'Content-Type': 'application/json',
                                                                                     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                                                                                 },
-                                                                                body: JSON.stringify({ status: 'cancelled', cancelledBy: 'host' })
+                                                                                body: JSON.stringify({ status: 'cancelled', cancellationReason })
                                                                             });
                                                                             if (res.ok) {
                                                                                 const updatedBooking = await res.json();
@@ -1082,22 +1384,76 @@ export default function Notifications() {
                                                         )}
 
                                                         {/* 4. REQUESTER REVIEW: Review button for requester */}
-                                                        {(isConfirmed || isCompleted) && isRequester && itemId && (
+                                                        {canReviewCompletedBooking && (
                                                             <button
                                                                 onClick={() => {
-                                                                    navigate(`/${itemType}/${itemId}`);
-                                                                    setSelectedNotification(null);
+                                                                    setRatingBooking({
+                                                                        ...bookingDetails,
+                                                                        bookingId: bookingDetails._id,
+                                                                        type: itemType,
+                                                                        itemId,
+                                                                        title: bookingDetails.listing?.name || bookingDetails.helper?.name || bookingDetails.service?.name || bookingDetails.service?.title || bookingDetails.event?.title || 'Your booking',
+                                                                        proName: bookingProviderName,
+                                                                        proAvatar: bookingProviderImage,
+                                                                    });
                                                                 }}
                                                                 className="px-5 py-2 text-white bg-amber-500 hover:bg-amber-600 font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-1.5"
                                                             >
                                                                 ⭐ Leave a Review
                                                             </button>
                                                         )}
+                                                        {isCompleted && isRequester && !bookingHasEnded && <p className="text-xs text-slate-500 dark:text-gray-400">You can review after the scheduled stay or service has ended.</p>}
+                                                        {isCompleted && isRequester && bookingDetails.isReviewed && <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">✓ You have reviewed this booking.</p>}
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
+                                )}
+                                {(selectedNotification.type === 'food_order' || selectedNotification.data?.orderId || selectedNotification.data?.orderCode) && (
+                                    <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-900/50 dark:bg-amber-950/20 sm:p-5">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">Food order details</p>
+                                                <h3 className="mt-1 text-base font-bold text-slate-900 dark:text-white">{foodOrderDetails?.shopName || foodShopDetails?.name || 'Your food order'}</h3>
+                                                {(foodOrderDetails?.orderCode || selectedNotification.data?.orderCode) && <p className="mt-1 text-xs text-slate-500 dark:text-gray-300">Order #{foodOrderDetails?.orderCode || selectedNotification.data.orderCode}</p>}
+                                            </div>
+                                            {(foodOrderDetails?.status || selectedNotification.data?.status) && <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-amber-800 dark:bg-gray-900 dark:text-amber-200">{foodOrderDetails?.status || selectedNotification.data.status}</span>}
+                                        </div>
+
+                                        {loadingFoodOrder ? <div className="mt-4 animate-pulse space-y-2"><div className="h-4 w-2/3 rounded bg-amber-100 dark:bg-amber-900/50" /><div className="h-4 w-1/2 rounded bg-amber-100 dark:bg-amber-900/50" /></div> : foodOrderDetails ? <>
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{foodOrderDetails.fulfilment === 'delivery' ? 'Delivery' : 'Collection'} time</p>
+                                                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{foodOrderDetails.scheduledFor ? formatScheduleTime(foodOrderDetails.scheduledFor) : 'As soon as the shop can prepare it'}</p>
+                                                    {foodOrderDetails.createdAt && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">Placed {formatScheduleTime(foodOrderDetails.createdAt)}</p>}
+                                                </div>
+                                                <div className="rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{foodOrderDetails.fulfilment === 'delivery' ? 'Delivery address' : 'Shop location'}</p>
+                                                    <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-white">{detailLocation || 'Location not available'}</p>
+                                                    {foodShopDetails?.phone && <p className="mt-1 text-[11px] text-slate-500 dark:text-gray-400">Shop contact: {foodShopDetails.phone}</p>}
+                                                    {detailMapLink && <a href={detailMapLink} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 underline underline-offset-2 dark:text-rose-300">📍 Open location in map</a>}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Items in your order</p>
+                                                <div className="mt-2 space-y-2">
+                                                    {(foodOrderDetails.items || []).map((item, index) => <div key={`${item.id || item.name}-${index}`} className="flex items-start justify-between gap-3 text-sm">
+                                                        <div><span className="font-semibold text-slate-900 dark:text-white">{item.quantity || 1} × {item.name}</span>{item.sides?.length > 0 && <p className="text-xs text-slate-500 dark:text-gray-400">{item.sides.join(', ')}</p>}</div>
+                                                        <span className="shrink-0 font-semibold text-slate-700 dark:text-gray-200">R{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</span>
+                                                    </div>)}
+                                                </div>
+                                                <div className="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm dark:border-gray-800"><span className="font-bold text-slate-600 dark:text-gray-300">Order total</span><span className="font-black text-slate-900 dark:text-white">R{Number(foodOrderDetails.total || 0).toFixed(2)}</span></div>
+                                            </div>
+
+                                            {(foodOrderDetails.orderComments || foodOrderDetails.deliveryNotes) && <div className="mt-3 rounded-xl bg-white p-3 dark:bg-gray-900">
+                                                <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Order description &amp; instructions</p>
+                                                {foodOrderDetails.orderComments && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-gray-200">{foodOrderDetails.orderComments}</p>}
+                                                {foodOrderDetails.deliveryNotes && <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-gray-300">Delivery: {foodOrderDetails.deliveryNotes}</p>}
+                                            </div>}
+                                        </> : <p className="mt-3 text-sm text-slate-600 dark:text-gray-300">Order details could not be loaded. Check your orders page for the latest status.</p>}
+                                    </section>
                                 )}
                             </div>
 
@@ -1120,20 +1476,26 @@ export default function Notifications() {
                                     selectedNotification.type === 'reference' ||
                                     selectedNotification.type === 'message' ||
                                     selectedNotification.data?.conversationId ||
+                                    selectedNotification.data?.route ||
+                                    selectedNotification.data?.goodsOrderId ||
                                     (selectedNotification.type === 'food_order' && (selectedNotification.data?.orderId || selectedNotification.data?.orderCode))
                                 ) && (
                                     <button
                                         onClick={() => handleNotificationAction(selectedNotification)}
                                         className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20 text-center flex items-center justify-center gap-2"
                                     >
-                                        {selectedNotification.type === 'reference' || selectedNotification.data?.isReference
+                                        {selectedNotification.data?.adminAlertType
+                                            ? 'Open admin dashboard'
+                                            : selectedNotification.type === 'reference' || selectedNotification.data?.isReference
                                             ? '💬 Reply to Reference Request'
                                             : selectedNotification.type === 'message' || selectedNotification.data?.conversationId
                                             ? '💬 Open Message'
                                             : selectedNotification.type === 'review' || selectedNotification.data?.canReview 
                                             ? '⭐ Write Review' 
-                                            : selectedNotification.type === 'food_order'
-                                            ? '🍱 Track Order'
+                                            : selectedNotification.data?.goodsOrderId || selectedNotification.type === 'food_order'
+                                            ? '🛍️ Track Order'
+                                            : selectedNotification.type === 'booking'
+                                            ? 'Open booking page'
                                             : 'View Details'}
                                     </button>
                                 )}
@@ -1142,6 +1504,16 @@ export default function Notifications() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            <RatingModal
+                isOpen={Boolean(ratingBooking)}
+                booking={ratingBooking}
+                onClose={() => setRatingBooking(null)}
+                onReviewSubmitted={() => {
+                    setBookingDetails((current) => current ? { ...current, isReviewed: true } : current);
+                    setRatingBooking(null);
+                    fetchNotifications();
+                }}
+            />
         </div>
     );
 }

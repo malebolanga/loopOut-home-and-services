@@ -788,6 +788,10 @@ export default function ListingBookingSheet({
     const hostPhone = getHostPhone();
     if (!hostPhone) { alert('Host contact information is not currently available'); setIsSubmitting(false); return; }
     if (!currentUser) { alert('Please sign in to make a reservation.'); setIsSubmitting(false); return; }
+    if (currentUser.shareDetailedActivityWithAdmins === true) {
+      const activityToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser.token || currentUser.access_token || '';
+      fetch('/api/stats/activity-history', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...(activityToken ? { Authorization: `Bearer ${activityToken}` } : {}) }, body: JSON.stringify({ action: 'booking_started', section: 'Bookings', workflow: 'booking' }) }).catch(() => {});
+    }
 
     let savedBookingId = null;
     try {
@@ -836,6 +840,10 @@ export default function ListingBookingSheet({
 
       const bookingResult = await bookingRes.json();
       savedBookingId = bookingResult.booking?._id;
+      if (currentUser.shareDetailedActivityWithAdmins === true) {
+        const activityToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser.token || currentUser.access_token || '';
+        fetch('/api/stats/activity-history', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', ...(activityToken ? { Authorization: `Bearer ${activityToken}` } : {}) }, body: JSON.stringify({ action: 'booking_submitted', section: 'Bookings', workflow: 'booking' }) }).catch(() => {});
+      }
     } catch (err) {
       console.error('Failed to save booking:', err);
     }

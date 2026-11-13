@@ -38,20 +38,74 @@ const BottomNav = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
   const { hideBottomNav } = useSelector((state) => state.frontend || {});
+  const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
+    String(currentUser?.email || '').trim().toLowerCase()
+  );
   
   const [showProfileDropup, setShowProfileDropup] = useState(false);
   const [unreadInboxCount, setUnreadInboxCount] = useState(0);
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
   const navRef = useRef(null);
+  const lastDirectionChangeYRef = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY || 0;
+      if (currentY < 24) {
+        setIsNavVisible(true);
+        lastDirectionChangeYRef.current = currentY;
+      } else if (Math.abs(currentY - lastDirectionChangeYRef.current) >= 12) {
+        const scrollingUp = currentY < lastDirectionChangeYRef.current;
+        setIsNavVisible(scrollingUp);
+        if (!scrollingUp) setShowProfileDropup(false);
+        lastDirectionChangeYRef.current = currentY;
+      }
+    };
+    const handlePointerDown = (event) => {
+      // A tap brings the navigation back until scrolling resumes.
+      if (!navRef.current?.contains(event.target)) setIsNavVisible(true);
+    };
+
+    lastDirectionChangeYRef.current = window.scrollY || 0;
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('pointerdown', handlePointerDown, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     if (hideBottomNav) {
       setShowProfileDropup(false);
     }
   }, [hideBottomNav]);
+
+  useEffect(() => {
+    if (hideBottomNav) {
+      setIsFooterVisible(false);
+      return undefined;
+    }
+
+    const footer = document.querySelector('[data-app-mobile-footer]');
+    if (!footer || typeof IntersectionObserver === 'undefined') {
+      setIsFooterVisible(false);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsFooterVisible(Boolean(entry?.isIntersecting));
+    }, { threshold: 0.01 });
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [location.pathname, hideBottomNav]);
   
   const hiddenBottomNavRoutes = [
+    '/sign-in',
+    '/sign-up',
+    '/forgot-password',
     '/wishlist',
-    '/profile',
     '/dashboard',
     '/calendar',
     '/planner',
@@ -69,7 +123,8 @@ const BottomNav = () => {
     '/food',
     '/notifications',
     '/my-orders',
-    '/food-orders'
+    '/food-orders',
+    '/my-loopout'
   ];
   const hiddenBottomNavPrefixes = [
     '/food',
@@ -197,21 +252,24 @@ const BottomNav = () => {
   if (isBottomNavHidden) return null;
 
   const isProvider = currentUser && canCreateListings(currentUser) && currentUser.offeringType !== 'viewer';
+  const hostingMenuPath = isProvider ? '/hosting-menu' : '/become';
+  const hostingMenuLabel = isProvider ? 'Hosting menu' : 'Become a host or provider';
+  const hostingMenuDescription = isProvider ? 'Manage your hosting account and listings' : 'Choose property, services, food, or goods';
 
   const navItems = [
     { id: 'home', label: 'Home', icon: HomeIcon, activeIcon: HomeIconSolid, route: '/' },
-    { id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' },
+    ...(currentUser ? [{ id: 'wishlist', label: 'Saved', icon: HeartIcon, activeIcon: HeartIconSolid, route: '/wishlist' }] : []),
     ...(isProvider
       ? [{ id: 'create', label: 'Create', icon: PlusCircleIcon, activeIcon: PlusCircleIcon, route: getCreationRoute(currentUser) }]
       : [{ id: 'become', label: 'Become', icon: Sparkles, activeIcon: Sparkles, route: '/become' }]),
-    { 
-      id: 'inbox', 
-      label: 'Inbox', 
-      icon: InboxIcon, 
-      activeIcon: InboxIconSolid, 
+    ...(currentUser ? [{
+      id: 'inbox',
+      label: 'Inbox',
+      icon: InboxIcon,
+      activeIcon: InboxIconSolid,
       route: '/messages',
       badge: unreadInboxCount
-    },
+    }] : []),
     { id: 'profile', label: 'Profile', icon: UserIcon, activeIcon: UserIconSolid, route: '/profile', isProfile: true }
   ];
 
@@ -220,17 +278,15 @@ const BottomNav = () => {
       ref={navRef}
       initial={false}
       animate={{
-        y: hideBottomNav ? 120 : 0,
-        opacity: hideBottomNav ? 0 : 1,
+        y: hideBottomNav || isFooterVisible || !isNavVisible ? 120 : 0,
+        opacity: hideBottomNav || isFooterVisible || !isNavVisible ? 0 : 1,
       }}
       transition={{
-        type: 'spring',
-        damping: 26,
-        stiffness: 240,
-        mass: 0.8
+        duration: 0.85,
+        ease: [0.22, 1, 0.36, 1]
       }}
-      className={`app-safe-bottom bg-white dark:bg-gray-950 fixed bottom-0 left-0 right-0 z-[100] md:hidden ${
-        hideBottomNav ? 'pointer-events-none' : ''
+      className={`app-safe-bottom bottom-nav-edge bg-white dark:bg-gray-950 fixed bottom-[0.9px] left-0 right-0 z-[100] md:hidden ${
+        hideBottomNav || isFooterVisible || !isNavVisible ? 'pointer-events-none' : ''
       }`}
     >
       {/* Profile Dropup Menu */}
@@ -278,15 +334,12 @@ const BottomNav = () => {
                 {/* Grid of master commands (compact version) */}
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'LoopBot AI', route: '/loopbot', icon: <Sparkles className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-amber-500' },
-                    { label: 'Profile', route: '/profile', icon: <UserIcon className="w-5 h-5" />, color: 'bg-rose-500' },
-                    { label: 'Dashboard', route: '/dashboard', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-indigo-500' },
+                    { label: 'Bookings', route: '/dashboard', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-emerald-500' },
                     { label: 'Calendar', route: '/calendar', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-purple-600 to-violet-500' },
                     { label: 'Listings', route: `/${currentUser._id}/listings`, icon: <QueueListIcon className="w-5 h-5" />, color: 'bg-blue-500' },
-                    { label: 'Wishlist', route: '/wishlist', icon: <HeartIcon className="w-5 h-5" />, color: 'bg-pink-500' },
-                    { label: 'Inbox', route: '/messages', icon: <InboxIcon className="w-5 h-5" />, color: 'bg-cyan-500' },
-                    { label: 'Planner', route: '/planner', icon: <MapIcon className="w-5 h-5" />, color: 'bg-orange-500' },
-                    { label: 'Settings', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-gray-600' }
+                    { label: 'Activity', route: '/my-loopout', icon: <CalendarIcon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-500 to-purple-500' },
+                    { label: 'Settings', route: '/settings', icon: <Cog6ToothIcon className="w-5 h-5" />, color: 'bg-gray-600' },
+                    ...(isLoopOutAdmin ? [{ label: 'Admin Review', route: '/admin/verification', icon: <Squares2X2Icon className="w-5 h-5" />, color: 'bg-gradient-to-tr from-rose-600 to-red-500' }] : [])
                   ].map((cmd) => (
                     <button
                       key={cmd.label}
@@ -305,6 +358,23 @@ const BottomNav = () => {
                     </button>
                   ))}
                 </div>
+
+                <button
+                  onClick={() => {
+                    navigate(hostingMenuPath);
+                    setShowProfileDropup(false);
+                  }}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/80 p-3 text-left transition active:scale-[0.98] dark:border-rose-900/40 dark:bg-rose-950/20"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-500 text-white shadow-sm">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-black text-slate-900 dark:text-white">{hostingMenuLabel}</span>
+                    <span className="mt-0.5 block text-[10px] text-slate-600 dark:text-gray-400">{hostingMenuDescription}</span>
+                  </span>
+                  <ChevronRightIcon className="h-4 w-4 text-rose-500" />
+                </button>
 
                 {/* Sign Out Button */}
                 <div className="border-t border-slate-100 dark:border-gray-800 pt-3 mt-1">
@@ -345,7 +415,7 @@ const BottomNav = () => {
       </AnimatePresence>
 
       {/* App-like Bottom Navigation Bar */}
-      <div className="glass-bottom-nav px-4 py-1.5 pb-2 flex items-center justify-between gap-1">
+      <div className="glass-bottom-nav bottom-nav-edge px-4 py-1.5 pb-2 flex items-center justify-between gap-1">
         {navItems.map((item) => {
           const isActive = item.isProfile 
             ? showProfileDropup
@@ -355,6 +425,9 @@ const BottomNav = () => {
           const handleClick = () => {
             if (item.isProfile) {
               setShowProfileDropup(!showProfileDropup);
+            } else if (item.id === 'home') {
+              setShowProfileDropup(false);
+              window.location.assign('/');
             } else {
               setShowProfileDropup(false);
               navigate(item.route);

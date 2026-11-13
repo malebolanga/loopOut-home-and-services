@@ -10,7 +10,6 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronLeftIcon,
   ClockIcon,
-  ShieldCheckIcon,
   MagnifyingGlassIcon,
   XMarkIcon,
   ArrowTopRightOnSquareIcon,
@@ -19,6 +18,7 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
 import RatingModal from '../components/RatingModal';
+import BookingLiveLocation from '../components/BookingLiveLocation';
 
 export default function UpcomingBookings() {
   const navigate = useNavigate();
@@ -61,20 +61,30 @@ export default function UpcomingBookings() {
           .filter((b) => {
             const d = new Date(b.startDate || b.date || b.createdAt);
             d.setHours(0, 0, 0, 0);
-            return d >= now && !['cancelled', 'declined'].includes(b.status);
+            return d >= now && !['cancelled', 'declined', 'completed'].includes(b.status) && !b.service;
           })
           .sort((a, b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date))
           .map((b) => {
             const due = new Date(b.startDate || b.date || b.createdAt);
             const diffMs = due - new Date();
-            const diffDays = Math.floor(diffMs / 86400000);
-            const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+            const dayKey = (date) => Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+            const diffDays = Math.round((dayKey(due) - dayKey(now)) / 86400000);
             const isToday = diffDays === 0;
             const isTomorrow = diffDays === 1;
             const urgency = isToday ? 'today' : isTomorrow ? 'tomorrow' : diffDays <= 3 ? 'soon' : 'upcoming';
 
             const type = b.listing ? 'listing' : b.helper ? 'helper' : b.event ? 'event' : 'service';
             const targetItem = b.listing || b.helper || b.service || b.event || {};
+            // Determine the correct navigation path for specialized helper types
+            const SPECIALIZED_HELPER_TYPES = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+            const helperSubtype = b.helper?.type || '';
+            const itemRoute = type === 'helper'
+              ? SPECIALIZED_HELPER_TYPES.includes(helperSubtype)
+                ? `/${helperSubtype}/${targetItem._id || b.itemId}`
+                : helperSubtype === 'tutor'
+                ? `/privatetutor/${targetItem._id || b.itemId}`
+                : `/helper/${targetItem._id || b.itemId}`
+              : `/${type}/${targetItem._id || b.itemId}`;
 
             return {
               id: b._id,
@@ -84,20 +94,23 @@ export default function UpcomingBookings() {
               dateStr: due.toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
               timeStr: due.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               diffDays,
-              diffHrs,
               urgency,
               isToday,
               isTomorrow,
               type,
               itemId: targetItem._id || b.itemId,
+              itemRoute,
               emoji: type === 'listing' ? '🏡' : type === 'helper' ? '🧹' : type === 'event' ? '🎟️' : '🛠️',
               proName: type === 'listing' ? (targetItem.userRef?.username || targetItem.name || 'Host') : (targetItem.name || 'Professional'),
-              proAvatar: targetItem.userRef?.avatar || targetItem.imageUrls?.[0] || 'https://i.pravatar.cc/150?u=pro',
+              proAvatar: b.performerImage || targetItem.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || targetItem.userRef?.avatar || targetItem.imageUrls?.[0] || '',
               proWhatsapp: b.phone || targetItem.phone || targetItem.contact || '',
               proPhone: b.phone || targetItem.phone || targetItem.contact || '',
               address: b.address || targetItem.address || targetItem.location || 'Polokwane, Limpopo',
               price: b.totalPrice || b.totalAmount || b.price || targetItem.price || null,
               notes: b.notes || b.specialInstructions || '',
+              selectedPerformer: b.selectedPerformer || null,
+              performerImage: b.performerImage || targetItem.performers?.find((performer) => performer.name === b.selectedPerformer)?.image || null,
+              helper: b.helper || null,
               raw: b
             };
           });
@@ -185,7 +198,7 @@ export default function UpcomingBookings() {
     <div className="min-h-screen bg-white app-safe-content-bottom pb-36 md:pb-12">
       <Helmet>
         <title>Your Upcoming Bookings | loopOut</title>
-        <meta name="description" content="View and manage all your upcoming stays, helpers, services and event bookings." />
+        <meta name="description" content="View and manage all your upcoming stays, helpers and event bookings." />
       </Helmet>
 
       {/* Top sticky navigation bar */}
@@ -212,7 +225,7 @@ export default function UpcomingBookings() {
                 )}
               </div>
               <p className="text-xs text-gray-400 font-semibold mt-0.5 hidden sm:block">
-                Manage your reservations, scheduled services &amp; appointments
+                Manage your stays, helpers and event bookings
               </p>
             </div>
           </div>
@@ -244,7 +257,6 @@ export default function UpcomingBookings() {
             {[
               { id: 'all', label: 'All ', emoji: '✨' },
               { id: 'listing', label: 'Stays ', emoji: '🏡' },
-              { id: 'service', label: 'Services', emoji: '🛠️' },
               { id: 'helper', label: 'Helpers', emoji: '🧹' },
               { id: 'event', label: 'Events', emoji: '🎟️' }
             ].map((tab) => (
@@ -342,7 +354,7 @@ export default function UpcomingBookings() {
             <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">
               {searchQuery || filterType !== 'all' || filterUrgency !== 'all'
                 ? 'Try adjusting your filters or search query to find your reservations.'
-                : 'Discover top stays, hire trusted domestic helpers, or schedule daily services today.'}
+                : 'Discover stays, book trusted helpers, or find events to attend.'}
             </p>
             <button
               onClick={() => navigate('/')}
@@ -548,18 +560,23 @@ export default function UpcomingBookings() {
                   </div>
                 </div>
 
-                {/* Price & Escrow Protection */}
+                {(selectedBooking.type === 'helper' || selectedBooking.type === 'service') && (
+                  <BookingLiveLocation
+                    bookingId={selectedBooking.id}
+                    booking={selectedBooking.raw}
+                    status={selectedBooking.status}
+                    viewerRole="customer"
+                  />
+                )}
+
+                {/* Booking total */}
                 {selectedBooking.price && (
-                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                  <div className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl">
                     <div>
-                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Total Amount</p>
+                      <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Booking total</p>
                       <p className="font-black text-emerald-900 text-base">
                         {typeof selectedBooking.price === 'number' ? `R${selectedBooking.price.toLocaleString()}` : `R${selectedBooking.price}`}
                       </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-white/80 px-2.5 py-1 rounded-full border border-emerald-200">
-                      <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
-                      <span>Escrow Protected</span>
                     </div>
                   </div>
                 )}
@@ -621,22 +638,9 @@ export default function UpcomingBookings() {
 
               {/* Modal Footer Actions */}
               <div className="p-4 border-t border-slate-100 bg-white flex items-center gap-2">
-                {selectedBooking.status !== 'completed' && selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'work_completed' && (
+                {selectedBooking.itemRoute && (
                   <button
-                    onClick={() => handleCloseWork(selectedBooking)}
-                    disabled={closingId === selectedBooking.id}
-                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer disabled:opacity-50"
-                  >
-                    <SparklesIcon className="w-3.5 h-3.5" />
-                    <span>Close Work &amp; Rate</span>
-                  </button>
-                )}
-                {selectedBooking.itemId && (
-                  <button
-                    onClick={() => {
-                      const type = selectedBooking.type === 'listing' ? 'listing' : selectedBooking.type;
-                      navigate(`/${type}/${selectedBooking.itemId}`);
-                    }}
+                    onClick={() => navigate(selectedBooking.itemRoute)}
                     className="flex-1 py-3 bg-slate-900 hover:bg-black text-white text-xs font-black uppercase tracking-wider rounded-2xl transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
                   >
                     <span>View Details</span>

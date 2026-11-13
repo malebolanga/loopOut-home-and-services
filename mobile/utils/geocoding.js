@@ -10,13 +10,14 @@ const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
  * @param {string} address - The address to geocode.
  * @returns {Promise<{lat: number, lng: number} | null>}
  */
-export const geocodeAddress = async (address) => {
+export const geocodeAddress = async (address, signal) => {
   if (!address) return null;
 
   try {
     // Attempt Nominatim (OpenStreetMap) - Free and no key required for low volume
     const response = await fetch(
-      `${NOMINATIM_BASE_URL}?format=json&q=${encodeURIComponent(address)}&limit=1`
+      `${NOMINATIM_BASE_URL}?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      { signal }
     );
     
     if (!response.ok) {

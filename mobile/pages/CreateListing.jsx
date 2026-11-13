@@ -53,6 +53,7 @@ import imageCompression from 'browser-image-compression';
 import MutualFriends from '../components/MutualFriends';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSelector, useDispatch } from "react-redux";
+import { authenticatedFetch } from "../utils/authenticatedFetch";
 import { updateUserSuccess } from "../redux/user/userSlice";
 import { getServiceProviderVerificationStatus } from "../utils/offeringPermissions";
 
@@ -115,7 +116,7 @@ const SectionCard = ({ title, subtitle, children, className = "" }) => (
   </motion.div>
 );
 
-const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null }) => (
+const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, placeholder, required = false, className = "", rows = 4, helpText = "", children = null, showCurrency = true, min, max }) => (
   <div className={`group/form ${className}`}>
     {label && (
       <label htmlFor={id} className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -136,17 +137,17 @@ const FormInput = ({ label, icon: Icon, type = "text", id, value, onChange, plac
         />
       ) : type === "number" ? (
         <div className="relative">
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">
-            R
-          </div>
+          {showCurrency && <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-semibold text-sm">R</div>}
           <input
             type="number"
             id={id}
+            min={min}
+            max={max}
             value={value}
             onChange={onChange}
             placeholder={placeholder}
             required={required}
-            className="w-full pl-9 pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-semibold shadow-xs hover:border-gray-300 dark:hover:border-gray-600"
+            className={`w-full ${showCurrency ? 'pl-9' : 'pl-4'} pr-4 py-2.5 sm:py-3 bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-xl text-sm sm:text-base text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-semibold shadow-xs hover:border-gray-300 dark:hover:border-gray-600`}
           />
         </div>
       ) : type === "select" ? (
@@ -223,26 +224,26 @@ const CategoryCard = ({ id, emoji, label, description, selected, onSelect }) => 
   </div>
 );
 
-const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect }) => (
+const TypeCard = ({ id, label, icon: Icon, emoji, selected, onSelect, compact = false }) => (
   <div
     onClick={() => onSelect(id)}
     className={`
-      p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center relative group
+      ${compact ? 'min-h-[68px] flex-row justify-start gap-3 px-3 py-3 text-left' : 'p-4 sm:p-5 flex-col items-center justify-center text-center'} rounded-2xl border-2 transition-all duration-200 cursor-pointer flex relative group
       ${selected 
         ? 'border-gray-900 dark:border-white bg-gray-900 dark:bg-gray-800 text-white shadow-md' 
         : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-xs'}
     `}
   >
     <div className={`
-      w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-colors
+      ${compact ? 'w-10 h-10 shrink-0 rounded-lg' : 'w-12 h-12 mb-3 rounded-xl'} flex items-center justify-center transition-colors
       ${selected ? 'bg-rose-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}
     `}>
-       {emoji ? <span className="text-2xl">{emoji}</span> : <Icon className="w-6 h-6" />}
+       {emoji ? <span className={compact ? 'text-xl' : 'text-2xl'}>{emoji}</span> : <Icon className="w-6 h-6" />}
     </div>
     <span className={`text-xs sm:text-sm font-semibold tracking-tight ${selected ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{label}</span>
 
     {selected && (
-      <div className="absolute top-2.5 right-2.5">
+      <div className={`absolute ${compact ? 'top-1 right-1' : 'top-2.5 right-2.5'}`}>
         <div className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center">
           <CheckCircleIcon className="w-3 h-3" />
         </div>
@@ -361,11 +362,21 @@ const getVisibleSteps = (category, type) => {
     { id: 10, label: "Review", icon: CheckCircleIcon }
   ];
 
+  const placePhotosAfterBasics = (steps) => {
+    const ordered = [...steps];
+    const mediaIndex = ordered.findIndex((step) => step.id === 8);
+    if (mediaIndex < 0) return ordered;
+    const [mediaStep] = ordered.splice(mediaIndex, 1);
+    const detailsIndex = ordered.findIndex((step) => step.id === 3);
+    ordered.splice(detailsIndex < 0 ? 0 : detailsIndex + 1, 0, mediaStep);
+    return ordered;
+  };
+
   if (!category) {
-    return allSteps.filter(s => s.id <= 3 || s.id >= 8);
+    return placePhotosAfterBasics(allSteps.filter(s => s.id <= 3 || s.id >= 8));
   }
 
-  return allSteps.filter(step => {
+  const filteredSteps = allSteps.filter(step => {
     if (category === 'selling') {
       return step.id === 1 || step.id === 2 || step.id === 3 || step.id === 8 || step.id === 9 || step.id === 10;
     }
@@ -382,6 +393,7 @@ const getVisibleSteps = (category, type) => {
     }
     return true;
   });
+  return placePhotosAfterBasics(filteredSteps);
 };
 
 const getCurrentPhase = (step) => {
@@ -400,7 +412,7 @@ const getPhaseMeta = (phase) => {
   if (phase === 2) {
     return {
       phase: 2,
-      label: 'Details & Photos',
+      label: 'Photos & Details',
     };
   }
   return {
@@ -488,6 +500,18 @@ export default function CreateListing() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const helperTypesScrollerRef = useRef(null);
+  const sellingTypesScrollerRef = useRef(null);
+
+  useEffect(() => {
+    const className = 'create-listing-scrollbars-hidden';
+    document.documentElement.classList.add(className);
+    document.body.classList.add(className);
+    return () => {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+    };
+  }, []);
 
   // Verification state for service providers / helpers
   const [verificationStatus, setVerificationStatus] = useState(() => getServiceProviderVerificationStatus(currentUser));
@@ -572,11 +596,15 @@ export default function CreateListing() {
     // Property specific - ALL REQUIRED FIELDS
     near: "",
     rules: "",
-    kind: "apartment",
+    kind: "",
     period: "Immediate",
     cancel: "Flexible - Free cancellation 48 hours before check-in",
     bedrooms: 1,
     bathrooms: 1,
+    toilets: 1,
+    garages: 0,
+    parkingSpaces: 0,
+    pricePeriod: 'day',
     numberOfGuests: 2,
     numberOfApartments: 0,
     numberOfRooms: 1,
@@ -711,27 +739,27 @@ export default function CreateListing() {
   // Update form when category or type changes
   useEffect(() => {
     if (selectedCategory && selectedType) {
-      setListingForm(prev => ({
-        ...prev,
-        category: selectedCategory,
-        type: selectedType,
-        kind: selectedCategory === 'property' ? getDefaultKind(selectedType) : prev.kind,
-        near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
-      }));
+      setListingForm(prev => {
+        const isSameType = prev.category === selectedCategory && prev.type === selectedType;
+        const resolvedKind = isSameType ? prev.kind : (prev.kind || (selectedCategory === 'property' ? 'house' : ''));
+        const resolvedPricePeriod = prev.pricePeriod || (selectedCategory === 'property' ? ((resolvedKind === 'house' || resolvedKind === 'apartment') ? 'day' : getDefaultPricePeriod(selectedType)) : prev.pricePeriod);
+
+        return {
+          ...prev,
+          category: selectedCategory,
+          type: selectedType,
+          kind: resolvedKind,
+          pricePeriod: resolvedPricePeriod,
+          near: prev.near || getDefaultNearPlaceholder(selectedCategory, selectedType),
+        };
+      });
     }
   }, [selectedCategory, selectedType]);
 
-  const getDefaultKind = (type) => {
-    switch(type) {
-      case 'rent': return 'apartment';
-      case 'over': return 'guest_house';
-      case 'hotel': return 'hotel';
-      case 'apartment': return 'apartment';
-      case 'office': return 'hourly_room';
-      case 'land': return 'self_catering';
-      case 'resort': return 'resort';
-      default: return 'apartment';
-    }
+  const getDefaultPricePeriod = (type) => {
+    if (type === 'office') return 'hour';
+    if (type === 'rent') return 'month';
+    return 'day';
   };
 
   const getDefaultNearPlaceholder = (category, type) => {
@@ -761,21 +789,37 @@ export default function CreateListing() {
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl) {
+      const normalizedTab = tabFromUrl.trim().toLowerCase();
+      const categoryByTab = {
+        property: 'property',
+        stay: 'property',
+        stays: 'property',
+        experiences: 'online',
+        service: 'online',
+        services: 'online',
+        online: 'online',
+        helper: 'online',
+        helpers: 'online',
+        selling: 'selling',
+        goods: 'selling',
+      };
+      const requestedCategory = categoryByTab[normalizedTab];
+
       if (currentUser?.offeringType === 'services') {
-        if (tabFromUrl === 'experiences' || tabFromUrl === 'service' || tabFromUrl === 'services') {
-          setSelectedCategory('experiences');
-          setCurrentStep(2);
-        } else if (tabFromUrl === 'online' || tabFromUrl === 'helper' || tabFromUrl === 'helpers') {
-          setSelectedCategory('online');
+        if (requestedCategory === 'experiences' || requestedCategory === 'online') {
+          setSelectedCategory(requestedCategory);
           setCurrentStep(2);
         } else {
           // Service providers can only post services and helpers; disallow properties/goods/events
           setSelectedCategory('');
           setCurrentStep(1);
         }
-      } else {
-        setSelectedCategory(tabFromUrl);
+      } else if (requestedCategory) {
+        setSelectedCategory(requestedCategory);
         setCurrentStep(2);
+      } else {
+        setSelectedCategory('');
+        setCurrentStep(1);
       }
     }
   }, [searchParams, currentUser?.offeringType]);
@@ -800,6 +844,8 @@ export default function CreateListing() {
               hasIdDocument: data.hasIdDocument,
               hasFaceScan: data.hasFaceScan,
               hasProfilePicture: data.hasProfilePicture,
+              isIdentityReviewed: data.kycStatus === 'verified',
+              kycStatus: data.kycStatus || 'unverified',
               missing: data.missing || [],
               missingCount: (data.missing || []).length
             };
@@ -811,6 +857,7 @@ export default function CreateListing() {
                 liveSelfieUrl: data.liveSelfieUrl || currentUser.liveSelfieUrl,
                 avatar: data.avatar || currentUser.avatar,
                 kycStatus: data.kycStatus || currentUser.kycStatus,
+                kycReviewNote: data.kycReviewNote || currentUser.kycReviewNote,
                 isVerified: data.isVerified !== undefined ? data.isVerified : currentUser.isVerified
               }));
             }
@@ -980,6 +1027,11 @@ export default function CreateListing() {
       setError("Please select a type");
       return;
     }
+
+    if (currentStep === 2 && selectedCategory === 'property' && !listingForm.kind.trim()) {
+      setError("Please choose a property classification");
+      return;
+    }
     
     if (currentStep === 3) {
       if (!listingForm.name.trim()) {
@@ -1029,7 +1081,7 @@ export default function CreateListing() {
         }
       }
       
-      if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+      if ((selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash') {
         if (!listingForm.carWashPackages) {
           setError("Please select at least one car wash package");
           return;
@@ -1136,6 +1188,25 @@ export default function CreateListing() {
     }
     
     setError(null);
+    if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+      const workflow = selectedCategory === 'property' ? 'property'
+        : selectedCategory === 'experiences' ? 'service'
+        : selectedCategory === 'online' || selectedCategory === 'helping' ? 'helper'
+        : selectedCategory === 'selling' ? 'sale' : null;
+      if (workflow) {
+        const startedAction = { property: 'property_listing_started', service: 'service_listing_started', helper: 'helper_listing_started', sale: 'sale_item_started' }[workflow];
+        if (currentStep === 1) {
+          authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: startedAction, workflow, section: workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell' }) }).catch(() => {});
+        } else {
+          const step = currentStep === 1 || currentStep === 2 ? 'category'
+            : currentStep === 4 || currentStep === 5 ? 'availability'
+            : currentStep === 8 ? 'photos'
+            : currentStep === 9 ? 'pricing'
+            : currentStep === 10 ? 'review' : 'details';
+          authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'listing_step_completed', workflow, step, section: workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell' }) }).catch(() => {});
+        }
+      }
+    }
     const visible = getVisibleSteps(selectedCategory, selectedType);
     const currIdx = visible.findIndex(s => s.id === currentStep);
     if (currIdx !== -1 && currIdx < visible.length - 1) {
@@ -1496,6 +1567,18 @@ export default function CreateListing() {
         providerType: value,
         citizenship: value === "individual" ? listingForm.citizenship : "",
       });
+    } else if (['toilets', 'garages', 'parkingSpaces', 'bedrooms', 'bathrooms'].includes(id)) {
+      const numVal = value === '' ? '' : Math.max(0, parseInt(value, 10) || 0);
+      setListingForm(prev => {
+        const nextGarages = id === 'garages' ? (Number(numVal) || 0) : (Number(prev.garages) || 0);
+        const nextParkingSpaces = id === 'parkingSpaces' ? (Number(numVal) || 0) : (Number(prev.parkingSpaces) || 0);
+        return {
+          ...prev,
+          [id]: numVal,
+          parking: Boolean(prev.parking) || nextGarages > 0 || nextParkingSpaces > 0,
+          parkingAvailable: Boolean(prev.parkingAvailable) || nextGarages > 0 || nextParkingSpaces > 0,
+        };
+      });
     } else {
       setListingForm({ ...listingForm, [id]: value });
     }
@@ -1554,7 +1637,7 @@ export default function CreateListing() {
       }
     }
     
-    if (selectedCategory === 'experiences' && selectedType === 'carwash') {
+    if ((selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash') {
       if (!listingForm.carWashPackages) {
         return setError("Please select at least one car wash package");
       }
@@ -1635,7 +1718,19 @@ export default function CreateListing() {
         type: selectedType,
         category: selectedCategory === 'selling' ? selectedType : selectedCategory,
         listingType: selectedCategory,
-        kind: listingForm.kind || "apartment",
+        pricePeriod: selectedCategory === 'property' ? (listingForm.pricePeriod || 'day') : undefined,
+        bedrooms: selectedCategory === 'property' ? Math.max(1, Number(listingForm.bedrooms) || 1) : (Number(listingForm.bedrooms) || 1),
+        bathrooms: selectedCategory === 'property' ? Math.max(1, Number(listingForm.bathrooms) || 1) : (Number(listingForm.bathrooms) || 1),
+        toilets: selectedCategory === 'property' ? Math.max(0, Number(listingForm.toilets !== undefined && listingForm.toilets !== '' ? listingForm.toilets : (listingForm.bathrooms ?? 1))) : undefined,
+        garages: selectedCategory === 'property' ? Math.max(0, Number(listingForm.garages) || 0) : undefined,
+        parkingSpaces: selectedCategory === 'property' ? Math.max(0, Number(listingForm.parkingSpaces) || 0) : undefined,
+        parking: selectedCategory === 'property'
+          ? (Boolean(listingForm.parking) || (Number(listingForm.garages) || 0) > 0 || (Number(listingForm.parkingSpaces) || 0) > 0)
+          : Boolean(listingForm.parking),
+        parkingAvailable: selectedCategory === 'property'
+          ? (Boolean(listingForm.parkingAvailable) || (Number(listingForm.garages) || 0) > 0 || (Number(listingForm.parkingSpaces) || 0) > 0)
+          : Boolean(listingForm.parkingAvailable),
+        kind: listingForm.kind || (selectedCategory === 'property' ? 'house' : 'apartment'),
         cancel: listingForm.cancel || "Flexible - Free cancellation 48 hours before check-in",
         period: listingForm.period || "Immediate",
         near: listingForm.near || "",
@@ -1693,11 +1788,12 @@ export default function CreateListing() {
         storagePolicyDocUrl: selectedType === 'storage' ? listingForm.storagePolicyDocUrl : undefined,
       };
 
+      const authToken = localStorage.getItem('access_token') || localStorage.getItem('token') || currentUser?.token || currentUser?.access_token || '';
       const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {})
         },
         credentials: 'include',
         body: JSON.stringify(requestBody),
@@ -1721,13 +1817,33 @@ export default function CreateListing() {
         
         setError(errorMessage);
       } else {
+        if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+          const workflow = selectedCategory === 'property' ? 'property' : selectedCategory === 'experiences' ? 'service' : selectedCategory === 'online' ? 'helper' : selectedCategory === 'selling' ? 'sale' : null;
+          if (workflow) {
+            const section = workflow === 'property' ? 'Property' : workflow === 'service' ? 'Services' : workflow === 'helper' ? 'Helpers' : 'Sell';
+            authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'listing_published', workflow, step: 'submitted', section }) }).catch(() => {});
+          }
+        }
         setNewListingId(data._id || data.listing?._id);
         if (selectedCategory === 'selling') {
           navigate('/listing-success', { state: { listingId: data._id || data.listing?._id, type: selectedCategory } });
         } else if (selectedCategory !== 'property') {
-          const path = selectedCategory === 'experiences' ? `/service/${data._id || data.listing?._id}` :
-                       selectedCategory === 'online' ? `/helper/${data._id || data.listing?._id}` :
-                       `/event/${data._id || data.listing?._id}`;
+          const id = data._id || data.listing?._id;
+          let path = `/service/${id}`;
+          if (selectedCategory === 'experiences') {
+            if (selectedType === 'carwash') path = `/carwash/${id}`;
+            else if (selectedType === 'storage') path = `/storage/${id}`;
+            else path = `/service/${id}`;
+          } else if (selectedCategory === 'online') {
+            const specialized = ['beauty', 'photography', 'barber', 'tattoo', 'chef'];
+            if (specialized.includes(selectedType)) path = `/${selectedType}/${id}`;
+            else if (selectedType === 'tutor') path = `/privatetutor/${id}`;
+            else if (selectedType === 'carwash') path = `/carwash/${id}`;
+            else if (selectedType === 'storage') path = `/storage/${id}`;
+            else path = `/helper/${id}`;
+          } else {
+            path = `/event/${id}`;
+          }
           navigate(path);
         } else {
           setShowPromotionPopup(true);
@@ -1762,10 +1878,10 @@ export default function CreateListing() {
           { id: "party", label: "No Parties", emoji: "🔇", checked: listingForm.party },
         
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       case 'experiences':
         if (selectedType === 'carwash') {
@@ -1782,10 +1898,10 @@ export default function CreateListing() {
           { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
           { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       case 'online':
         if (selectedType === 'sneaker') {
@@ -1815,10 +1931,10 @@ export default function CreateListing() {
           { id: "familyFriendly", label: "Family Friendly", emoji: "👨‍👩‍👧‍👦", checked: listingForm.familyFriendly },
         
           { id: "instantConfirmation", label: "Instant confirmation", emoji: "⚡", checked: listingForm.instantConfirmation },
-          { id: "kidFriendly", label: "Kid-friendly", emoji: "U0001F476", checked: listingForm.kidFriendly },
+          { id: "kidFriendly", label: "Kid-friendly", emoji: "👶", checked: listingForm.kidFriendly },
           { id: "wheelchairAccessible", label: "Wheelchair accessible", emoji: "♿", checked: listingForm.wheelchairAccessible },
-          { id: "parkingAvailable", label: "Parking available", emoji: "U0001F17F️", checked: listingForm.parkingAvailable },
-          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "U0001F331", checked: listingForm.environmentallyFriendly },
+          { id: "parkingAvailable", label: "Parking available", emoji: "🅿️", checked: listingForm.parkingAvailable },
+          { id: "environmentallyFriendly", label: "Environmentally friendly", emoji: "🌱", checked: listingForm.environmentallyFriendly },
         ];
       default:
         return [];
@@ -1827,10 +1943,8 @@ export default function CreateListing() {
 
   const getPricingLabel = () => {
     if (selectedCategory === 'property') {
-      if (['over', 'hotel', 'land', 'resort'].includes(selectedType)) return "Regular Price (per day)";
-      if (['rent', 'rent-long', 'rent-short', 'apartment'].includes(selectedType)) return "Regular Price (per month)";
-      if (selectedType === 'office') return "Regular Price (per hour)";
-      return "Regular Price";
+      const period = listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : getDefaultPricePeriod(selectedType));
+      return `Price (per ${period})`;
     }
     if (selectedCategory === 'experiences' || selectedCategory === 'online') {
       if (['tutor', 'cleaner', 'domestic', 'maid', 'beauty', 'barber', 'chef'].includes(selectedType)) {
@@ -1851,13 +1965,9 @@ export default function CreateListing() {
     switch (selectedCategory) {
       case 'property':
         return [
-          { id: "rent", label: "Room / Home to Rent", emoji: "🏠", description: "Monthly & short/long-term rental" },
-          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "Per-day guest house & BnB stays" },
-          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "Hotels, lodges & multi-room suites (per day)" },
-          { id: "apartment", label: "Apartment / Complex", emoji: "🏢", description: "Single or multi-unit apartment complexes" },
-          { id: "land", label: "Self Catering", emoji: "🍳", description: "Self catering chalets & houses (per day)" },
-          { id: "resort", label: "Resort & Holiday Park", emoji: "🏖️", description: "Holiday resorts & vacation chalets (per day)" },
-          { id: "office", label: "Room Per Hour", emoji: "🚪", description: "Hourly rooms & private spaces (per hour)" },
+          { id: "rent", label: "Room / House", emoji: "🏠", description: "A whole home or private room for guests" },
+          { id: "over", label: "Guest House / B&B", emoji: "🛌", description: "A guest room or bed and breakfast stay" },
+          { id: "hotel", label: "Hotel / Lodge", emoji: "🏨", description: "A hotel, lodge, or private guest unit" },
         ];
       case 'experiences':
         return [
@@ -1872,15 +1982,15 @@ export default function CreateListing() {
         ];
       case 'online':
         return [
-          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
-          { id: "tutor", label: "Private Tutor", emoji: "📚", description: "Academic tutoring" },
-          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
-          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
-          { id: "tattoo", label: "Tattoo Artist", emoji: "🖌️", description: "Tattoo design" },
           { id: "barber", label: "Barber", emoji: "✂️", description: "Haircuts, grooming" },
+          { id: "beauty", label: "Beauty Specialist", emoji: "💅", description: "Hair, nails, makeup" },
+          { id: "domestic", label: "Domestic Helper", emoji: "🧹", description: "Cleaning, laundry, chores" },
+          { id: "chef", label: "Private Chef", emoji: "👨‍🍳", description: "Meal preparation" },
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
           { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
-          { id: "animals", label: "Animal Care", emoji: "🐕", description: "Pet sitting, walking, grooming" },
+          { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Mobile car cleaning and detailing" },
+          { id: "moving", label: "Moving", emoji: "🚚", description: "Home and office relocation" },
+          { id: "other", label: "Other Services", emoji: "✨", description: "Offer another skill or local service" },
         ];
       case 'events':
         return [
@@ -1898,6 +2008,7 @@ export default function CreateListing() {
           { id: "clothes", label: "Clothes", emoji: "👕", description: "Apparel, shoes, accessories" },
           { id: "universities", label: "Universities", emoji: "🎓", description: "University related items" },
           { id: "books", label: "Books", emoji: "📚", description: "Textbooks, novels" },
+          { id: "other", label: "Other Items", emoji: "🏷️", description: "Anything that does not fit another category" },
         ];
       default:
         return [];
@@ -2003,26 +2114,12 @@ export default function CreateListing() {
   const nextPhaseMeta = getPhaseMeta(nextPhase, selectedCategory);
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden bg-gray-50/70 dark:bg-gray-950 app-safe-content-bottom pb-32 md:pb-36">
+    <div className="min-h-screen relative overflow-x-hidden bg-gray-50/70 dark:bg-gray-950 pb-[70px] md:pb-8">
       {/* Sleek Modern Header */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 shadow-xs">
         <div className="app-safe-top max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <button 
-              type="button"
-              onClick={() => {
-                if (currStepIdx > 0) {
-                  handlePrevStep();
-                } else {
-                  navigate('/user-listings');
-                }
-              }}
-              className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 transition-colors cursor-pointer"
-              title="Go back"
-              aria-label="Go back"
-            >
-              <ArrowLeftIcon className="w-5 h-5" />
-            </button>
+            <div className="h-9 w-9" aria-hidden="true" />
             
             <div className="flex items-center gap-2 sm:gap-2.5">
               <span className="font-extrabold text-xl tracking-tight text-[#FF5A5F]">
@@ -2049,7 +2146,7 @@ export default function CreateListing() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-40 sm:pb-44 md:pb-48">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-2 sm:pb-4 md:pb-6">
         {/* Step Progress */}
         <div className="mt-4 mb-8 sm:mt-6 sm:mb-10">
           <StepProgress 
@@ -2060,8 +2157,8 @@ export default function CreateListing() {
         </div>
 
         {/* Main Form Container */}
-        <div className={`transition-all duration-500 ${fadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8 pb-24 sm:pb-28">
+        <div className={`transition-opacity duration-500 ${fadeIn ? 'opacity-100' : 'opacity-0'}`}>
+          <form onSubmit={handleSubmit} ref={stepRef} className="space-y-8 pb-4">
             
             {/* Step 1: Select Category */}
             {currentStep === 1 && (
@@ -2078,25 +2175,29 @@ export default function CreateListing() {
                           <div>
                             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 mb-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                              Verification Required to Post
+                              {verificationStatus.kycStatus === 'pending' ? 'Identity Review Pending' : verificationStatus.kycStatus === 'rejected' ? 'Identity Review Needs Changes' : 'Verification Required to Post'}
                             </div>
                             <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                               Complete your Provider Credentials
                             </h4>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => navigate('/verification')}
-                          className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
-                        >
-                          <span>Verify Now</span>
-                          <ArrowRightIcon className="w-3.5 h-3.5" />
-                        </button>
+                        {verificationStatus.kycStatus === 'pending' ? (
+                          <span className="shrink-0 rounded-xl bg-amber-100 px-4 py-2 text-xs font-bold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">Waiting for review</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate('/verification')}
+                            className="px-4 py-2 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold text-xs rounded-xl shadow-sm hover:opacity-95 transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                          >
+                            <span>{verificationStatus.kycStatus === 'rejected' ? 'Resubmit documents' : 'Verify now'}</span>
+                            <ArrowRightIcon className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
 
                       <p className="mt-3 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                        To protect our community, service providers and helpers must submit their government ID, complete a face scan, and upload a profile picture before publishing listings.
+                        Uploading documents does not verify identity. An administrator checks the number on your PDF, confirms it shows a face, and compares that photo with your live selfie before you can publish.
                       </p>
 
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2105,7 +2206,7 @@ export default function CreateListing() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xl">📄</span>
                             {verificationStatus.hasIdDocument ? (
-                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">{verificationStatus.isIdentityReviewed ? 'Reviewed' : 'Submitted'}</span>
                             ) : (
                               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
                             )}
@@ -2128,7 +2229,7 @@ export default function CreateListing() {
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xl">🤳</span>
                             {verificationStatus.hasFaceScan ? (
-                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Done</span>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">{verificationStatus.isIdentityReviewed ? 'Reviewed' : 'Submitted'}</span>
                             ) : (
                               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">Required</span>
                             )}
@@ -2207,28 +2308,28 @@ export default function CreateListing() {
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a place</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
 
-                    {(!currentUser?.offeringType || currentUser.offeringType === 'services') && <button
+                    {!currentUser?.offeringType && <button
                       type="button"
-                      onClick={() => setSelectedCategory('experiences')}
-                      aria-pressed={selectedCategory === 'experiences'}
+                      onClick={() => setSelectedCategory('online')}
+                      aria-pressed={selectedCategory === 'online'}
                       className={`group relative min-h-52 sm:min-h-60 overflow-hidden rounded-[1.75rem] border p-6 sm:p-7 text-left transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/25 ${
-                        selectedCategory === 'experiences'
+                        selectedCategory === 'online'
                           ? 'border-rose-500 bg-rose-50 text-gray-950 shadow-lg shadow-rose-500/10 dark:bg-rose-950/25 dark:text-white'
                           : 'border-gray-200 bg-white text-gray-950 shadow-sm hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:border-gray-600'
                       }`}
                     >
                       <div className="flex items-start justify-between">
-                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'experiences' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200'}`}><BriefcaseIcon className="h-6 w-6" /></div>
-                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'experiences' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
-                          {selectedCategory === 'experiences' && <CheckCircleIcon className="h-4 w-4" />}
+                        <div className={`grid h-12 w-12 place-items-center rounded-2xl ${selectedCategory === 'online' ? 'bg-rose-500 text-white' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300'}`}><UserGroupIcon className="h-6 w-6" /></div>
+                        <div className={`grid h-6 w-6 place-items-center rounded-full border-2 ${selectedCategory === 'online' ? 'border-rose-500 bg-rose-500 text-white' : 'border-gray-300 dark:border-gray-600'}`}>
+                          {selectedCategory === 'online' && <CheckCircleIcon className="h-4 w-4" />}
                         </div>
                       </div>
                       <div className="mt-7">
-                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rose-600 dark:text-rose-300">Services</p>
-                        <p className="mt-1 text-xl font-bold tracking-tight">A service to offer</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Beauty, transport, trades, cleaning, and professional local services.</p>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
+                        <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Offer your skills, personal support, car wash, moving, and other local services.</p>
                       </div>
-                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing a service</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
+                      <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
 
                     {/* For Service Providers, display Helper as a prominent, matching top-level card */}
@@ -2251,7 +2352,7 @@ export default function CreateListing() {
                       <div className="mt-7">
                         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
                         <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Tutors, domestic help, animal care, sneaker cleaning, and personal support.</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Barbering, beauty, domestic help, car wash, moving, and more.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
@@ -2262,8 +2363,6 @@ export default function CreateListing() {
                     <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
                       <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {!currentUser?.offeringType && <CategoryCard id="online" emoji="🤝" label="Helper" description="Tutor, specialist, or personal helper" selected={selectedCategory === 'online'} onSelect={setSelectedCategory} />}
-                        {(!currentUser?.offeringType || currentUser.offeringType === 'property' || currentUser.offeringType === 'goods') && <CategoryCard id="events" emoji="🎉" label="Event" description="A local occasion or activity" selected={selectedCategory === 'events'} onSelect={setSelectedCategory} />}
                         {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
                       </div>
                     </div>
@@ -2279,16 +2378,111 @@ export default function CreateListing() {
                 selectedCategory === 'experiences' ? 'service' :
                 selectedCategory === 'online' ? 'helper' : 
                 selectedCategory === 'selling' ? 'item' : 'event'}?`}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {getTypesByCategory().map((type) => (
-                    <TypeCard
-                      key={type.id}
-                      {...type}
-                      selected={selectedType === type.id}
-                      onSelect={setSelectedType}
-                    />
-                  ))}
+                <div className={selectedCategory === 'online' ? 'space-y-2' : ''}>
+                  {(selectedCategory === 'online' || selectedCategory === 'selling') && (
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => (selectedCategory === 'online' ? helperTypesScrollerRef : sellingTypesScrollerRef).current?.scrollBy({ left: -360, behavior: 'smooth' })}
+                        aria-label={`Scroll ${selectedCategory === 'selling' ? 'item' : 'helper'} options left`}
+                        title="Scroll left"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        <ChevronLeftIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => (selectedCategory === 'online' ? helperTypesScrollerRef : sellingTypesScrollerRef).current?.scrollBy({ left: 360, behavior: 'smooth' })}
+                        aria-label={`Scroll ${selectedCategory === 'selling' ? 'item' : 'helper'} options right`}
+                        title="Scroll right"
+                        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-700 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                      >
+                        <ChevronRightIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                  <div
+                    ref={selectedCategory === 'online' ? helperTypesScrollerRef : selectedCategory === 'selling' ? sellingTypesScrollerRef : null}
+                    className={selectedCategory === 'online' || selectedCategory === 'selling'
+                      ? 'grid grid-flow-col grid-rows-2 auto-cols-[minmax(180px,1fr)] gap-3 overflow-x-auto overscroll-x-contain scrollbar-hide pb-2'
+                      : 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'}
+                  >
+                    {getTypesByCategory().map((type) => (
+                      <TypeCard
+                        key={type.id}
+                        {...type}
+                        selected={selectedType === type.id}
+                        onSelect={setSelectedType}
+                        compact={selectedCategory === 'online'}
+                      />
+                    ))}
+                  </div>
                 </div>
+                {selectedCategory === 'property' && (
+                  <div className="mt-8 border-t border-gray-200 pt-6 dark:border-gray-800">
+                    <label className="mb-3 block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                      Choose the property style
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { id: 'house', label: '🏠 Full house' },
+                        { id: 'apartment', label: '🏢 Apartment' },
+                        { id: 'single_room', label: '🚪 Single room' },
+                        { id: 'townhouse', label: '🏘️ Townhouse' },
+                        { id: 'studio', label: '🛋️ Studio' },
+                        { id: 'penthouse', label: '🏙️ Penthouse' },
+                        { id: 'loft', label: '🪟 Loft' },
+                      ].map((kind) => (
+                        <button
+                          key={kind.id}
+                          type="button"
+                          onClick={() => setListingForm((prev) => ({
+                            ...prev,
+                            kind: kind.id,
+                            pricePeriod: (kind.id === 'house' || kind.id === 'apartment') && (!prev.pricePeriod || prev.pricePeriod === 'month')
+                              ? 'day'
+                              : (prev.pricePeriod || 'day')
+                          }))}
+                          aria-pressed={listingForm.kind === kind.id}
+                          className={`min-h-11 rounded-xl px-3 py-2 text-left text-xs font-bold transition-colors sm:text-sm ${
+                            listingForm.kind === kind.id
+                              ? 'bg-rose-500 text-white shadow-sm'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          {kind.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-7">
+                      <label className="mb-3 block text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                        Choose how you charge
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {[
+                          { id: 'night', label: 'Per night', icon: '🌙' },
+                          { id: 'day', label: 'Per day', icon: '🌤️' },
+                          { id: 'month', label: 'Per month', icon: '📅' },
+                          { id: 'hour', label: 'Per hour', icon: '⏱️' },
+                        ].map((rate) => (
+                          <button
+                            key={rate.id}
+                            type="button"
+                            onClick={() => setListingForm((prev) => ({ ...prev, pricePeriod: rate.id }))}
+                            aria-pressed={listingForm.pricePeriod === rate.id}
+                            className={`min-h-14 rounded-xl px-2 py-3 text-center text-xs font-bold transition-colors sm:text-sm ${
+                              listingForm.pricePeriod === rate.id
+                                ? 'bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-900'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            <span className="mr-1.5" aria-hidden="true">{rate.icon}</span>{rate.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </SectionCard>
             )}
 
@@ -2300,7 +2494,7 @@ export default function CreateListing() {
                   selectedCategory === 'experiences' ? 'service' :
                   selectedCategory === 'online' ? 'helper' : 
                   selectedCategory === 'selling' ? 'item' : 'event'}`}>
-                  <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
                     <FormInput
                       label="Create a title"
                       icon={selectedCategory === 'property' ? HomeIcon : 
@@ -2311,11 +2505,12 @@ export default function CreateListing() {
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'property' ? "Cozy mountain cabin with amazing views" :
-                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
+                        (selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' ? "Premium Car Wash & Detailing Service" :
                         selectedCategory === 'experiences' ? "Professional Handyman Service" :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert Sneaker Cleaning & Restoration" :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving Pet Care & Walking Services" :
                         selectedCategory === 'online' ? "John's Tutoring Services" :
+                        selectedCategory === 'selling' && selectedType === 'other' ? "Item for sale" :
                         selectedCategory === 'selling' ? "Vintage Leather Sofa in Excellent Condition" :
                         "Summer Music Festival"
                       }
@@ -2324,17 +2519,19 @@ export default function CreateListing() {
                     
                     <FormInput
                       label="Describe your place"
+                      className="md:col-span-2"
                       type="textarea"
                       id="description"
                       value={listingForm.description}
                       onChange={handleFormChange}
                       placeholder={
                         selectedCategory === 'property' ? "Describe what makes your place special..." :
-                        selectedCategory === 'experiences' && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
+                        (selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' ? "Professional car wash and detailing services..." :
                         selectedCategory === 'experiences' ? "Describe your service in detail..." :
                         selectedCategory === 'online' && selectedType === 'sneaker' ? "Expert sneaker cleaning using premium products. I restore and clean all types of sneakers..." :
                         selectedCategory === 'online' && selectedType === 'animals' ? "Loving and experienced animal care provider. I offer pet sitting, walking, and grooming..." :
                         selectedCategory === 'online' ? "Describe your skills and experience..." :
+                        selectedCategory === 'selling' && selectedType === 'other' ? "Describe the item, its condition, features, and any useful details..." :
                         selectedCategory === 'selling' ? "Describe the item's condition, features, history, or why you are selling it..." :
                         "Describe the event, activities, and what attendees can expect..."
                       }
@@ -2342,7 +2539,7 @@ export default function CreateListing() {
                       rows={5}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
                       <FormInput
                         label="Address"
                         icon={MapPinIcon}
@@ -2440,7 +2637,7 @@ export default function CreateListing() {
                     />
 
                     {(selectedCategory === 'experiences' || selectedCategory === 'online') && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2">
                         <FormInput
                           label="Provider Type"
                           type="select"
@@ -2470,6 +2667,7 @@ export default function CreateListing() {
 
                     <FormInput
                       label={getNearLabel(selectedCategory, selectedType).charAt(0).toUpperCase() + getNearLabel(selectedCategory, selectedType).slice(1)}
+                      className="md:col-span-2"
                       type="textarea"
                       id="near"
                       value={listingForm.near}
@@ -2480,55 +2678,13 @@ export default function CreateListing() {
                     />
 
                     {selectedCategory === 'property' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <div>
-                          <label className="block text-xs font-black text-gray-500 dark:text-white uppercase tracking-wider mb-3">
-                            Property Classification / Kind *
-                          </label>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {[
-                              { id: 'apartment', label: '🏢 Apartment / Flat' },
-                              { id: 'guest_house', label: '🛌 Guest House / B&B' },
-                              { id: 'hotel', label: '🏨 Hotel / Lodge' },
-                              { id: 'room', label: '🚪 Room / Hourly Room' },
-                              { id: 'house', label: '🏠 Entire House' },
-                              { id: 'villa', label: '🏰 Villa / Mansion' },
-                              { id: 'townhouse', label: '🏘️ Townhouse' },
-                              { id: 'studio', label: '🛋️ Studio / Bachelor' },
-                              { id: 'cottage', label: '🏡 Cottage / Chalet' },
-                              { id: 'resort', label: '🏖️ Resort' },
-                              { id: 'complex', label: '🏬 Multi-Unit Complex' },
-                              { id: 'office', label: '💼 Office / Workspace' },
-                            ].map((k) => (
-                              <button
-                                key={k.id}
-                                type="button"
-                                onClick={() => setListingForm(prev => ({ ...prev, kind: k.id }))}
-                                className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
-                                  listingForm.kind === k.id
-                                    ? 'bg-rose-500 text-white shadow-md shadow-rose-200 scale-105'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-200'
-                                }`}
-                              >
-                                {k.label}
-                              </button>
-                            ))}
-                          </div>
-                          <FormInput
-                            label="Or Custom Property Type"
-                            id="kind"
-                            value={listingForm.kind}
-                            onChange={handleFormChange}
-                            placeholder="e.g., Apartment, Guest House, Hotel, Room"
-                            required
-                          />
-                        </div>
-
+                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800 md:col-span-2">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <FormInput
                             label="Max Guests / Capacity"
                             id="numberOfGuests"
                             type="number"
+                            showCurrency={false}
                             value={listingForm.numberOfGuests || 2}
                             onChange={handleFormChange}
                             placeholder="e.g., 2 Guests"
@@ -2550,6 +2706,33 @@ export default function CreateListing() {
                             placeholder="e.g., Flexible - Free cancellation 48 hours before check-in"
                             required
                           />
+                        </div>
+
+                        <div className="rounded-2xl bg-gray-50 dark:bg-gray-800/60 p-4 sm:p-5">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Rooms &amp; parking</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Enter the number available for guests.</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {[
+                              { id: 'bedrooms', label: 'Bedrooms', min: 0 },
+                              { id: 'bathrooms', label: 'Bathrooms', min: 0 },
+                              { id: 'toilets', label: 'Toilets', min: 0 },
+                              { id: 'garages', label: 'Garages', min: 0 },
+                              { id: 'parkingSpaces', label: 'Parking spaces', min: 0 },
+                            ].map((field) => (
+                              <FormInput
+                                key={field.id}
+                                label={field.label}
+                                id={field.id}
+                                type="number"
+                                min={field.min}
+                                max={100}
+                                showCurrency={false}
+                                value={listingForm[field.id] ?? 0}
+                                onChange={handleFormChange}
+                                placeholder="0"
+                              />
+                            ))}
+                          </div>
                         </div>
 
                         {/* Individual Units / Rooms / Apartments Builder */}
@@ -2897,6 +3080,7 @@ export default function CreateListing() {
                         <FormInput
                           label="Number of Times Used"
                           type="number"
+                          showCurrency={false}
                           id="numberOfUsed"
                           value={listingForm.numberOfUsed}
                           onChange={handleFormChange}
@@ -2906,7 +3090,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'experiences' && selectedType === 'carwash' && (
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'carwash' && (
                       <div className="space-y-8 pt-4 border-t border-gray-200 dark:border-gray-800">
                         {/* 1. VEHICLE TYPES SECTION */}
                         <div className="bg-gray-50 dark:bg-gray-800/60 p-5 rounded-2xl border border-gray-200 dark:border-gray-700">
@@ -3232,7 +3416,7 @@ export default function CreateListing() {
                       </div>
                     )}
 
-                    {selectedCategory === 'experiences' && selectedType === 'moving' && (
+                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'moving' && (
                       <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Moving Rates Configuration</h3>
@@ -3446,6 +3630,15 @@ export default function CreateListing() {
                           value={listingForm.time}
                           onChange={handleFormChange}
                           required
+                        />
+                        <FormInput
+                          label="Ticket capacity (optional)"
+                          type="number"
+                          id="capacity"
+                          value={listingForm.capacity}
+                          onChange={handleFormChange}
+                          placeholder="Leave blank for unlimited tickets"
+                          min="1"
                         />
                       </div>
                     )}
@@ -4043,16 +4236,32 @@ export default function CreateListing() {
                           <span className="text-gray-500 dark:text-gray-400">Location</span>
                           <span className="font-semibold text-gray-900 dark:text-white text-right max-w-xs truncate">{listingForm.address}</span>
                         </div>
+                        {selectedCategory === 'property' && (
+                          <>
+                            <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                              <span className="text-gray-500 dark:text-gray-400">Property Style &amp; Rate</span>
+                              <span className="font-semibold text-gray-900 dark:text-white capitalize">
+                                {listingForm.kind || 'House'} · Per {listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}
+                              </span>
+                            </div>
+                            <div className="flex justify-between py-1.5 border-b border-gray-200/80 dark:border-gray-700/60">
+                              <span className="text-gray-500 dark:text-gray-400">Rooms &amp; Parking</span>
+                              <span className="font-semibold text-gray-900 dark:text-white text-right">
+                                {listingForm.bedrooms || 1} bed · {listingForm.bathrooms || 1} bath · {listingForm.toilets !== undefined && listingForm.toilets !== '' ? listingForm.toilets : (listingForm.bathrooms || 1)} toilet · {listingForm.garages || 0} garage · {listingForm.parkingSpaces || 0} parking
+                              </span>
+                            </div>
+                          </>
+                        )}
                         <div className="flex justify-between items-center py-1.5">
                           <span className="text-gray-500 dark:text-gray-400">Base Price</span>
                           <div className="flex items-center gap-2">
                             {listingForm.offer && listingForm.discountPrice ? (
                               <>
-                                <span className="line-through text-gray-400 text-xs">R{listingForm.regularPrice}</span>
+                                <span className="line-through text-gray-400 text-xs">R{listingForm.regularPrice}{selectedCategory === 'property' ? `/${listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}` : ''}</span>
                                 <span className="font-bold text-rose-600 dark:text-rose-400 text-sm sm:text-base">R{listingForm.discountPrice}</span>
                               </>
                             ) : (
-                              <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">R{listingForm.regularPrice}</span>
+                              <span className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">R{listingForm.regularPrice}{selectedCategory === 'property' ? `/${listingForm.pricePeriod || ((listingForm.kind === 'house' || listingForm.kind === 'apartment') ? 'day' : 'month')}` : ''}</span>
                             )}
                             <button
                               type="button"
@@ -4453,7 +4662,7 @@ export default function CreateListing() {
                   Verification Required to Post
                 </h3>
                 <p className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                  As a service provider or helper, you cannot post until your identity documents, face scan, and profile picture are submitted.
+                  Your PDF number and photo must be reviewed against your live selfie before you can post. Uploading a document or selfie alone does not verify identity.
                 </p>
               </div>
 
@@ -4463,11 +4672,11 @@ export default function CreateListing() {
                     <span className="text-2xl">📄</span>
                     <div>
                       <p className="text-xs font-bold text-gray-900 dark:text-white">ID Document or Passport</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasIdDocument ? 'Uploaded & verified' : 'Not submitted yet'}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasIdDocument ? (verificationStatus.isIdentityReviewed ? 'Reviewed by LoopOut' : 'Submitted · awaiting review') : 'Not submitted yet'}</p>
                     </div>
                   </div>
                   {verificationStatus.hasIdDocument ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                    <span className={`${verificationStatus.isIdentityReviewed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300'} font-bold text-xs`}>{verificationStatus.isIdentityReviewed ? '✓ Reviewed' : 'Pending review'}</span>
                   ) : (
                     <button
                       type="button"
@@ -4484,11 +4693,11 @@ export default function CreateListing() {
                     <span className="text-2xl">🤳</span>
                     <div>
                       <p className="text-xs font-bold text-gray-900 dark:text-white">Face Scan / Live Selfie</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasFaceScan ? 'Biometric scan complete' : 'Not scanned yet'}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400">{verificationStatus.hasFaceScan ? (verificationStatus.isIdentityReviewed ? 'Compared with ID photo' : 'Captured · awaiting comparison') : 'Not scanned yet'}</p>
                     </div>
                   </div>
                   {verificationStatus.hasFaceScan ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">✓ Done</span>
+                    <span className={`${verificationStatus.isIdentityReviewed ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300'} font-bold text-xs`}>{verificationStatus.isIdentityReviewed ? '✓ Reviewed' : 'Pending review'}</span>
                   ) : (
                     <button
                       type="button"

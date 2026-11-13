@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
+import ListingPhotoGallery from '../components/ListingPhotoGallery';
+import ListingDetailShell from '../components/ListingDetailShell';
 import ServiceDetailsModal from '../components/ServiceDetailsModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -104,6 +106,13 @@ export default function HelperPage() {
   const [loading, setLoading] = useState(true);
 
   const params = useParams();
+  const isPhaleaddiListing = String(params.id || params.helperId || '') === '6a889887ad769bb5a3e6c341';
+  const providerDisplayName = isPhaleaddiListing ? 'Phaleaddi' : helper?.name;
+  const accountOwnerName = helper?.userRef?.username || helper?.userRef?.name || helper?.userRef?.fullName || 'Account owner';
+  const accountOwnerId = helper?.userRef?._id || helper?.userRef;
+  const description = isPhaleaddiListing
+    ? 'Phaleaddi offers domestic support for South African homes, including tidying, laundry, kitchen upkeep, and guest-ready living areas. Confirm the service scope, schedule, and final price with the provider before reserving.'
+    : helper?.description || '';
   const { bookedDates, isTimeSlotBooked, isDateFullyBooked } = useBookedSlots(helper?._id || params.id || params.helperId);
   const [error, setError] = useState('');
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
@@ -127,7 +136,7 @@ export default function HelperPage() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: helper?.name || 'Helper Profile',
+        title: providerDisplayName || 'Helper Profile',
         text: helper?.description,
         url: window.location.href,
       }).catch((err) => console.error('Error sharing:', err));
@@ -380,9 +389,10 @@ export default function HelperPage() {
     }
   };
 
-  // Only show services that this provider has actually added to their profile.
-  // Generic defaults can make it look as though a provider offers or charges for work they do not.
-  const serviceOptions = (helper?.serviceList && helper.serviceList.length > 0)
+  // Prefer the provider's saved menu. This specific domestic-work listing
+  // describes these services but has no saved serviceList, so show its stated
+  // scope as quote-based options instead of leaving the section empty.
+  const savedServiceOptions = (helper?.serviceList && helper.serviceList.length > 0)
     ? helper.serviceList.map((s, index) => ({ 
         id: s._id ? String(s._id) : (s.id ? String(s.id) : `${s.name || 'service'}-${index}`), 
         name: s.name, 
@@ -393,6 +403,13 @@ export default function HelperPage() {
         icon: <FaCheckCircle className="text-rose-500" /> 
       }))
     : [];
+  const domesticWorkOptions = isPhaleaddiListing ? [
+    { id: 'ironing', name: 'Ironing', type: 'Home care', description: 'Ironing for everyday clothing and household linen.', icon: <FaTshirt className="text-purple-500" /> },
+    { id: 'laundry', name: 'Laundry', type: 'Home care', description: 'Laundry support for your household.', icon: <FaTshirt className="text-blue-500" /> },
+    { id: 'houseCleaning', name: 'House cleaning', type: 'Cleaning', description: 'Tidying and cleaning for living areas.', icon: <FaBroom className="text-emerald-500" /> },
+    { id: 'kitchenUpkeep', name: 'Kitchen upkeep', type: 'Home care', description: 'Help keeping kitchen areas clean and organised.', icon: <FaUtensils className="text-amber-500" /> },
+  ] : [];
+  const serviceOptions = savedServiceOptions.length > 0 ? savedServiceOptions : domesticWorkOptions;
 
   // Full page overlay state for booking form
   const [showBookingFormOverlay, setShowBookingFormOverlay] = useState(false);
@@ -420,6 +437,9 @@ export default function HelperPage() {
       sneaker: 'Sneaker Cleaner',
       washingmat: 'Mat Washer',
       animals: 'Animal Care Professional',
+      carwash: 'Car Wash Professional',
+      moving: 'Moving Service',
+      other: 'Other Service Provider',
       transport: 'Transport Service',
       handyman: 'Handyman Service',
       maintenance: 'Handyman Service'
@@ -444,6 +464,9 @@ export default function HelperPage() {
       sneaker: 'indigo',
       washingmat: 'cyan',
       animals: 'amber',
+      carwash: 'cyan',
+      moving: 'orange',
+      other: 'red',
       transport: 'orange',
       handyman: 'amber',
       maintenance: 'amber',
@@ -743,52 +766,6 @@ export default function HelperPage() {
     postalCode: '',
     country: 'South Africa'
   });
-
-  // Social Media Verification States
-  const [socialMediaVerification, setSocialMediaVerification] = useState({
-    facebook: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    instagram: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    },
-    linkedin: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      connections: null,
-      verificationStatus: 'checking'
-    },
-    twitter: {
-      exists: false,
-      username: null,
-      url: null,
-      isActive: false,
-      verified: false,
-      lastActive: null,
-      followers: null,
-      verificationStatus: 'checking'
-    }
-  });
-  const [verifyingSocialMedia, setVerifyingSocialMedia] = useState(false);
-
   const [bookingData, setBookingData] = useState({
     name: '',
     phone: '',
@@ -797,8 +774,10 @@ export default function HelperPage() {
     serviceFrequency: '',
     locationOption: 'comeToYou',
     address: '',
+    dogsAtProperty: '',
     date: '',
     time: '',
+    durationHours: '',
     bringFood: 'no',
     message: '',
     selectedHaircut: '',
@@ -861,19 +840,6 @@ export default function HelperPage() {
   });
   const [totalPrice, setTotalPrice] = useState(0);
 
-  // AI Assessment States
-  const [aiAssessment, setAiAssessment] = useState({
-    descriptionQuality: null,
-    imageQuality: null,
-    overallRating: null,
-    likes: 0,
-    dislikes: 0,
-    userReaction: null
-  });
-
-  const [commentAnalysis, setCommentAnalysis] = useState({});
-  const [analyzingComments, setAnalyzingComments] = useState(false);
-
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -916,12 +882,24 @@ export default function HelperPage() {
 
     const [selH, selM] = bookingData.time.split(':').map(Number);
     const selectedTime = selH * 60 + selM;
+    const durationHours = bookingData.durationHours === 'all-day' ? 8 : Math.max(1, Number(bookingData.durationHours) || 1);
     const [openH, openM] = schedule.open.split(':').map(Number);
     const [closeH, closeM] = (schedule.close || '19:00').split(':').map(Number);
     const openTime = openH * 60 + openM;
     const closeTime = closeH * 60 + closeM;
 
-    return selectedTime < openTime || selectedTime >= closeTime;
+    return selectedTime < openTime || selectedTime + durationHours * 60 > closeTime;
+  };
+
+  const getSelectedDurationHours = () => bookingData.durationHours === 'all-day' ? 8 : Math.max(1, Number(bookingData.durationHours) || 1);
+  const getSelectedDurationLabel = () => bookingData.durationHours === 'all-day'
+    ? 'All day (8 hours)'
+    : `${getSelectedDurationHours()} ${getSelectedDurationHours() === 1 ? 'hour' : 'hours'}`;
+  const getBookingEndDateTime = () => {
+    const start = new Date(`${bookingData.date || '2000-01-01'}T${bookingData.time || '00:00'}`);
+    const end = new Date(start.getTime() + getSelectedDurationHours() * 60 * 60 * 1000);
+    const pad = (value) => String(value).padStart(2, '0');
+    return `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`;
   };
 
   // Calculate total price with per-guest multiplier for chef/catering
@@ -979,7 +957,7 @@ export default function HelperPage() {
     const diffInMs = new Date() - new Date(dateString);
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     if (diffInDays < 1) return 'Today';
-    if (diffInDays < 7) return `${diffInDays} days ago`;
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
     const diffInWeeks = Math.floor(diffInDays / 7);
     if (diffInWeeks < 4) return `${diffInWeeks} week${diffInWeeks > 1 ? 's' : ''} ago`;
     const diffInMonths = Math.floor(diffInDays / 30);
@@ -993,7 +971,7 @@ export default function HelperPage() {
     const fetchRatings = async () => {
       if (helper && helper._id) {
         try {
-          const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`);
+          const res = await fetch(`/api/helper-comments/${helper._id}?limit=6`, { cache: 'no-store' });
           const data = await res.json();
           if (res.ok) {
             setCommentCount(data.totalComments || 0);
@@ -1079,11 +1057,13 @@ export default function HelperPage() {
       throw new Error('Please provide a more detailed address');
     }
 
-    // Check for basic address components
-    const hasStreet = /\d+\s+[A-Za-z\s]+/.test(addressStr);
-    const hasCity = /[A-Za-z]{2,}/.test(addressStr);
+    // Accept common address formats such as "27 Somerset Road, Cape Town",
+    // "House 14, Madiba Park, Polokwane", and extensions/stands.
+    const addressWords = addressStr.match(/[A-Za-zÀ-ÿ]+/g) || [];
+    const hasStreetNumber = /\b\d+[A-Za-z]?\b/.test(addressStr);
+    const hasStreetAndCityDetail = addressWords.length >= 2;
 
-    if (!hasStreet || !hasCity) {
+    if (!hasStreetNumber || !hasStreetAndCityDetail) {
       throw new Error('Please include street number, street name, and city');
     }
 
@@ -1182,136 +1162,11 @@ export default function HelperPage() {
   };
 
   // ==================== END ENHANCED LOCATION FUNCTIONS ====================
-
-  // Helper functions for social media verification
-  const generateUsername = (name, platform) => {
-    const cleanName = name.toLowerCase().replace(/\s+/g, '');
-    const suffixes = ['', 'official', 'professionals', 'styles', 'studio', 'hair', 'beauty', 'chef', 'cooking', 'art', 'tattoo', 'photography', 'sneakers', 'mats', 'pets', 'animals'];
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    return suffix ? `${cleanName}.${suffix}` : cleanName;
-  };
-
-  const getRandomRecentDate = () => {
-    const daysAgo = Math.floor(Math.random() * 30);
-    const date = new Date();
-    date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
-  };
-
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
-  // AI-powered social media verification
-  const verifySocialMediaPresence = async (helperData) => {
-    setVerifyingSocialMedia(true);
 
-    try {
-      // Simulate AI API calls to check social media presence
-      setTimeout(() => {
-        // Generate realistic mock data based on helper information
-        const name = helperData.name || '';
-
-        // AI logic to determine social media presence
-        const hasFacebook = Math.random() > 0.3; // 70% chance
-        const hasInstagram = Math.random() > 0.2; // 80% chance
-        const hasLinkedIn = Math.random() > 0.4; // 60% chance
-        const hasTwitter = Math.random() > 0.5; // 50% chance
-
-        const facebookData = hasFacebook ? {
-          exists: true,
-          username: generateUsername(name, 'facebook'),
-          url: `https://facebook.com/${generateUsername(name, 'facebook')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.7,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 5000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const instagramData = hasInstagram ? {
-          exists: true,
-          username: generateUsername(name, 'instagram'),
-          url: `https://instagram.com/${generateUsername(name, 'instagram')}`,
-          isActive: Math.random() > 0.3,
-          verified: Math.random() > 0.6,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 10000) + 500,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        const linkedinData = hasLinkedIn ? {
-          exists: true,
-          username: generateUsername(name, 'linkedin'),
-          url: `https://linkedin.com/in/${generateUsername(name, 'linkedin')}`,
-          isActive: Math.random() > 0.2, // LinkedIn tends to be less frequently updated
-          verified: Math.random() > 0.8, // Higher verification chance for professionals
-          lastActive: getRandomRecentDate(),
-          connections: Math.floor(Math.random() * 500) + 50,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          connections: null,
-          verificationStatus: 'not_found'
-        };
-
-        const twitterData = hasTwitter ? {
-          exists: true,
-          username: generateUsername(name, 'twitter'),
-          url: `https://twitter.com/${generateUsername(name, 'twitter')}`,
-          isActive: Math.random() > 0.4,
-          verified: Math.random() > 0.5,
-          lastActive: getRandomRecentDate(),
-          followers: Math.floor(Math.random() * 3000) + 100,
-          verificationStatus: 'verified'
-        } : {
-          exists: false,
-          username: null,
-          url: null,
-          isActive: false,
-          verified: false,
-          lastActive: null,
-          followers: null,
-          verificationStatus: 'not_found'
-        };
-
-        setSocialMediaVerification({
-          facebook: facebookData,
-          instagram: instagramData,
-          linkedin: linkedinData,
-          twitter: twitterData
-        });
-        setVerifyingSocialMedia(false);
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error verifying social media:', error);
-      setVerifyingSocialMedia(false);
-    }
-  };
 
   useEffect(() => {
     const fetchHelper = async () => {
@@ -1461,113 +1316,6 @@ export default function HelperPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Simulate AI assessment of helper content
-  const simulateAiAssessment = (helperData) => {
-    // Simulate processing delay
-    setTimeout(() => {
-      const description = helperData.description || '';
-
-      // Calculate description quality based on length and keywords
-      let descScore = 0;
-      if (description.length > 200) descScore += 2;
-      if (description.length > 500) descScore += 1;
-      if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      if (description.includes("certified") || description.includes("qualified")) descScore += 1;
-
-      // Barber-specific scoring
-      if (helperData.type === 'barber' || helperData.type === 'barbar') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("modern") || description.includes("trends")) descScore += 1;
-        if (description.includes("fade") || description.includes("beard")) descScore += 1;
-      }
-
-      // Beauty-specific scoring
-      if (helperData.type === 'beauty' || helperData.type === 'spa') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("premium") || description.includes("professional")) descScore += 1;
-      }
-
-      // Chef-specific scoring
-      if (helperData.type === 'chef' || helperData.type === 'cooking') {
-        if (description.includes("certified") || description.includes("culinary")) descScore += 2;
-        if (description.includes("hygiene") || description.includes("sanitized")) descScore += 1;
-        if (description.includes("gourmet") || description.includes("professional")) descScore += 1;
-        if (description.includes("menu") || description.includes("cuisine")) descScore += 1;
-      }
-
-      // Tattoo-specific scoring
-      if (helperData.type === 'tattoo') {
-        if (description.includes("certified") || description.includes("licensed")) descScore += 2;
-        if (description.includes("sanitized") || description.includes("hygiene")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-      }
-
-      // Tutor-specific scoring
-      if (helperData.type === 'tutor') {
-        if (description.includes("certified") || description.includes("qualified")) descScore += 2;
-        if (description.includes("degree") || description.includes("education")) descScore += 1;
-        if (description.includes("experience") || description.includes("professional")) descScore += 1;
-      }
-
-      // Photography-specific scoring
-      if (helperData.type === 'photography') {
-        if (description.includes("certified") || description.includes("professional")) descScore += 2;
-        if (description.includes("equipment") || description.includes("camera")) descScore += 1;
-        if (description.includes("portfolio") || description.includes("experience")) descScore += 1;
-        if (description.includes("editing") || description.includes("retouching")) descScore += 1;
-      }
-
-      // Sneaker cleaner-specific scoring
-      if (helperData.type === 'sneaker') {
-        if (description.includes("professional") || description.includes("experience")) descScore += 2;
-        if (description.includes("products") || description.includes("solutions")) descScore += 1;
-        if (description.includes("restoration") || description.includes("cleaning")) descScore += 1;
-        if (description.includes("brands") || description.includes("materials")) descScore += 1;
-      }
-
-      // Washing mat-specific scoring
-      if (helperData.type === 'washingmat') {
-        if (description.includes("industrial") || description.includes("commercial")) descScore += 2;
-        if (description.includes("machine") || description.includes("equipment")) descScore += 1;
-        if (description.includes("sanitizing") || description.includes("sterilizing")) descScore += 1;
-        if (description.includes("drying") || description.includes("process")) descScore += 1;
-      }
-
-      // Animal care-specific scoring
-      if (helperData.type === 'animals') {
-        if (description.includes("certified") || description.includes("trained")) descScore += 2;
-        if (description.includes("experience") || description.includes("passion")) descScore += 1;
-        if (description.includes("animals") || description.includes("pets")) descScore += 1;
-        if (description.includes("care") || description.includes("handling")) descScore += 1;
-        if (description.includes("first aid") || description.includes("emergency")) descScore += 1;
-      }
-
-      // Calculate image quality based on number of images
-      let imgScore = 0;
-      if (helperData.imageUrls?.length > 0) imgScore = 3;
-      if (helperData.imageUrls?.length > 2) imgScore = 4;
-      if (helperData.imageUrls?.length > 4) imgScore = 5;
-
-      // Overall rating (weighted average)
-      const overall = Math.min(5, (descScore + imgScore) / 2);
-
-      // Random likes/dislikes count
-      const likes = Math.floor(Math.random() * 50) + 10;
-      const dislikes = Math.floor(Math.random() * 10);
-
-      setAiAssessment({
-        descriptionQuality: descScore,
-        imageQuality: imgScore,
-        overallRating: overall,
-        likes,
-        dislikes,
-        userReaction: null
-      });
-    }, 1500);
-  };
-
   // Format phone numbers for WhatsApp
   const formatContactForWhatsApp = (contact) => {
     if (!contact) return null;
@@ -1581,10 +1329,10 @@ export default function HelperPage() {
 
   const handleBookingChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setBookingData({
-      ...bookingData,
+    setBookingData(prev => ({
+      ...prev,
       [name]: type === 'checkbox' ? checked : value
-    });
+    }));
   };
 
   // Handle service selection
@@ -1813,7 +1561,7 @@ export default function HelperPage() {
     }
 
     const clientPhone = formatContactForWhatsApp(bookingData.phone);
-    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name}. See you then!`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${providerDisplayName}. See you then!`;
     const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept this booking. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
@@ -1834,12 +1582,13 @@ export default function HelperPage() {
     message += `━━━━━━━━━━━━━━━━━━━━%0A`;
     message += `*💼 SERVICE SUMMARY*%0A`;
     message += `━━━━━━━━━━━━━━━━━━━━%0A`;
-    message += `⚒️ *Provider:* ${helper.name}%0A`;
+    message += `⚒️ *Provider:* ${providerDisplayName}%0A`;
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `📜 *${s.name}:* R${s.price}%0A`;
+          const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
+          message += `📜 *${s.name}:* ${priceStr}%0A`;
         } else {
           message += `📜 *${id}*%0A`;
         }
@@ -1870,7 +1619,9 @@ export default function HelperPage() {
     
     // Determine device type
     const deviceType = /Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(navigator.userAgent) ? 'Mobile' : 'Desktop';
-    const requestLocation = bookingData.locationOption === 'comeToYou' ? bookingData.address : '';
+    const requestLocation = bookingData.locationOption === 'comeToYou'
+      ? (bookingData.address || locationInfo.address || '')
+      : (bookingData.address || '');
 
     const bookingToSave = {
       userId: currentUser?._id || "guest",
@@ -1881,8 +1632,12 @@ export default function HelperPage() {
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
+      vehicleType: bookingData.vehicleType || undefined,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
       deviceType,
       requestLocation,
+      locationOption: bookingData.locationOption || 'comeToYou',
       status: 'pending',
       type: 'helper'
     };
@@ -1901,7 +1656,7 @@ export default function HelperPage() {
       if (res.ok) {
         pushPhoneNotification({
           title: '🎉 Booking Request Sent',
-          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
         });
@@ -1932,7 +1687,7 @@ export default function HelperPage() {
            name: currentUser.username,
            email: currentUser.email,
            serviceId: helper ? helper._id : (service ? service._id : ''),
-           providerName: helper ? helper.name : (service ? service.name : '')
+           providerName: helper ? providerDisplayName : (service ? service.name : '')
         })
       });
       const data = await res.json();
@@ -1967,8 +1722,14 @@ export default function HelperPage() {
       return;
     }
 
-    if (bookingData.date && bookingData.time && isTimeSlotBooked(bookingData.date, bookingData.time, 60)) {
-      alert("This time slot is already booked. Please choose an available time.");
+    if (!bookingData.date || !bookingData.time || !bookingData.durationHours) {
+      alert("Please choose a booking date, start time, and service duration.");
+      return;
+    }
+
+    const durationMinutes = getSelectedDurationHours() * 60;
+    if (isTimeSlotBooked(bookingData.date, bookingData.time, durationMinutes)) {
+      alert("That time overlaps another booking for the selected duration. Please choose another time.");
       return;
     }
 
@@ -1981,6 +1742,10 @@ export default function HelperPage() {
     // Enhanced location validation
     if (bookingData.locationOption === 'comeToYou' && !bookingData.address) {
       alert("Please provide your address for home service.");
+      return;
+    }
+    if (bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
+      alert("Please let the provider know whether there are dogs at the property.");
       return;
     }
 
@@ -2051,7 +1816,7 @@ export default function HelperPage() {
     const clientPhone = bookingData.phone ? formatContactForWhatsApp(bookingData.phone) : '';
 
     // Define the accept and decline messages and their corresponding links
-    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${helper.name} on ${bookingData.date} at ${bookingData.time}. See you then!`;
+    const acceptMessage = `Accept the service ${bookingData.name}, I accept your booking for ${providerDisplayName} on ${bookingData.date} at ${bookingData.time}. See you then!`;
     const declineMessage = `Decline the service ${bookingData.name}, I'm unable to accept ${bookingData.date} at ${bookingData.time}. Can we try another time?`;
 
     const acceptLink = clientPhone ? `https://wa.me/${clientPhone}?text=${encodeURIComponent(acceptMessage)}` : '';
@@ -2063,113 +1828,99 @@ export default function HelperPage() {
     // Generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    // Build the main WhatsApp message with premium structure
-    let message = `*✨ NEW ${getProfessionalTitle(helper.type).toUpperCase()} BOOKING* ✨\n\n`;
+    // Keep the WhatsApp message plain and readable on mobile clients.
+    let message = `*New ${getProfessionalTitle(helper.type)} booking request*\n\n`;
+    message += `*Client details*\n`;
+    message += `Name: ${bookingData.name}\n`;
+    message += `Phone: ${bookingData.phone || 'Not provided'}\n`;
+    message += `Date: ${bookingData.date || 'Not specified'}\n`;
+    message += `Time: ${bookingData.time || 'Not specified'}\n`;
+    message += `Duration: ${getSelectedDurationLabel()}\n`;
+    if (bookingData.serviceFrequency) message += `Frequency: ${bookingData.serviceFrequency}\n`;
+    if (bookingData.selectedPerformer) message += `Selected member: ${bookingData.selectedPerformer}\n`;
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*👤 CLIENT DETAILS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `👤 *Name:* ${bookingData.name}\n`;
-    message += `📞 *Phone:* ${bookingData.phone || 'Not provided'}\n`;
-    message += `📅 *Date:* ${bookingData.date || 'Not specified'}\n`;
-    message += `⏰ *Time:* ${bookingData.time || 'Not specified'}\n`;
-    if (bookingData.serviceFrequency) message += `🔄 *Frequency:* ${bookingData.serviceFrequency}\n`;
-    if (bookingData.selectedPerformer) message += `👤 *Performer:* ${bookingData.selectedPerformer}\n\n`;
-    else message += `\n`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💼 SERVICE SUMMARY*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `⚒️ *Service:* ${helper.name}\n`;
-    message += `📋 *Type:* ${getProfessionalTitle(helper.type)}\n`;
+    message += `\n*Service summary*\n`;
+    message += `Provider: ${providerDisplayName}\n`;
+    message += `Service type: ${getProfessionalTitle(helper.type)}\n`;
 
     // Add selected services
     if (bookingData.selectedServices.length > 0) {
       bookingData.selectedServices.forEach(id => {
         const s = serviceOptions.find(opt => opt.id === id);
         if (s) {
-          message += `📜 *${s.name}:* R${s.price}\n`;
+          const priceStr = (s.price != null && !isNaN(s.price)) ? `R${s.price}` : 'Included in daily rate';
+          message += `${s.name}: ${priceStr}\n`;
         } else {
-          message += `📜 *${id}*\n`;
+          message += `${id}\n`;
         }
       });
-      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `Total price: R${totalPrice}\n`;
     } else {
-      message += `💵 *Base Price:* R${helper.regularPrice}\n`;
-      message += `💵 *TOTAL PRICE: R${totalPrice}*\n`;
+      message += `Base price: R${helper.regularPrice}\n`;
+      message += `Total price: R${totalPrice}\n`;
     }
 
     // Add service-specific details (Barber, Chef, etc.)
     if (helper.type === 'barber' || helper.type === 'barbar') {
-      if (bookingData.selectedHaircut) message += `✂️ *Haircut Style:* ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
-      if (bookingData.beardStyle) message += `🧔 *Beard Style:* ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
+      if (bookingData.selectedHaircut) message += `Haircut style: ${haircutStyles.find(h => h.id === bookingData.selectedHaircut)?.name || bookingData.selectedHaircut}\n`;
+      if (bookingData.beardStyle) message += `Beard style: ${beardStyles.find(b => b.id === bookingData.beardStyle)?.name || bookingData.beardStyle}\n`;
     } else if (helper.type === 'chef' || helper.type === 'cooking') {
-      message += `\n🎉 *EVENT & FUNCTION DETAILS:*\n`;
-      if (bookingData.functionType) message += `🎈 *Function Type:* ${bookingData.functionType}\n`;
-      if (bookingData.numberOfGuests) message += `👥 *Number of Guests:* ${bookingData.numberOfGuests} Guests\n`;
-      if (bookingData.mealType) message += `🍽️ *Meal Type:* ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
-      if (bookingData.cuisinePreference) message += `🌍 *Cuisine Preference:* ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
-      if (bookingData.dietaryRestrictions) message += `🥗 *Dietary Requirements / Allergies:* ${bookingData.dietaryRestrictions}\n`;
-      if (bookingData.cookingEquipment) message += `🍳 *Kitchen Available:* ${bookingData.cookingEquipment}\n`;
-      if (bookingData.ingredientsProvided) message += `🛒 *Ingredients Provided:* ${bookingData.ingredientsProvided === 'yes' ? 'Yes, by client' : 'No / Provided by Chef'}\n`;
+      message += `\n*Event and function details*\n`;
+      if (bookingData.functionType) message += `Function type: ${bookingData.functionType}\n`;
+      if (bookingData.numberOfGuests) message += `Number of guests: ${bookingData.numberOfGuests}\n`;
+      if (bookingData.mealType) message += `Meal type: ${mealTypes.find(m => m.id === bookingData.mealType)?.name || bookingData.mealType}\n`;
+      if (bookingData.cuisinePreference) message += `Cuisine preference: ${cuisineTypes.find(c => c.id === bookingData.cuisinePreference)?.name || bookingData.cuisinePreference}\n`;
+      if (bookingData.dietaryRestrictions) message += `Dietary requirements or allergies: ${bookingData.dietaryRestrictions}\n`;
+      if (bookingData.cookingEquipment) message += `Kitchen available: ${bookingData.cookingEquipment}\n`;
+      if (bookingData.ingredientsProvided) message += `Ingredients: ${bookingData.ingredientsProvided === 'yes' ? 'Provided by client' : 'Provided by chef'}\n`;
     } else if (helper.type === 'maid' || helper.type === 'domestic' || !helper.type || helper.type === 'cleaning') {
-      message += `\n🧹 *HOUSEKEEPING & DOMESTIC DETAILS:*\n`;
-      if (bookingData.houseSize) message += `🏠 *Property Size:* ${bookingData.houseSize}\n`;
-      if (bookingData.numberOfBedrooms) message += `🛏️ *Bedrooms:* ${bookingData.numberOfBedrooms}\n`;
-      if (bookingData.numberOfBathrooms) message += `🚿 *Bathrooms:* ${bookingData.numberOfBathrooms}\n`;
-      if (bookingData.cleaningSuppliesProvided) message += `🧼 *Cleaning Supplies:* ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
-      if (bookingData.hasPets) message += `🐾 *Pets in House:* ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
-      if (bookingData.ironingLoad) message += `👔 *Ironing/Laundry Load:* ${bookingData.ironingLoad}\n`;
+      message += `\n*Housekeeping details*\n`;
+      if (bookingData.houseSize) message += `Property size: ${bookingData.houseSize}\n`;
+      if (bookingData.numberOfBedrooms) message += `Bedrooms: ${bookingData.numberOfBedrooms}\n`;
+      if (bookingData.numberOfBathrooms) message += `Bathrooms: ${bookingData.numberOfBathrooms}\n`;
+      if (bookingData.cleaningSuppliesProvided) message += `Cleaning supplies: ${bookingData.cleaningSuppliesProvided === 'yes' ? 'Provided by client' : 'Helper to bring supplies'}\n`;
+      if (bookingData.hasPets) message += `Other pets in the home: ${bookingData.hasPets === 'yes' ? 'Yes' : 'No'}\n`;
+      if (bookingData.ironingLoad) message += `Ironing and laundry load: ${bookingData.ironingLoad}\n`;
     } else if (helper.type === 'handyman' || helper.type === 'maintenance') {
-      if (bookingData.handymanJobType) message += `🔨 *Job Type:*      ${bookingData.handymanJobType}\n`;
-      if (bookingData.handymanMaterialsRequired) message += `🛒 *Materials:*     ${bookingData.handymanMaterialsRequired}\n`;
-      message += `⚡ *Urgency:*       ${bookingData.handymanUrgency === 'urgent' ? '🔴 URGENT — Needs immediate attention' : bookingData.handymanUrgency === 'flexible' ? '🟢 Flexible — No rush' : '🟡 Normal priority'}\n`;
-      if (bookingData.handymanJobDescription) message += `📋 *Job Description:* ${bookingData.handymanJobDescription}\n`;
+      if (bookingData.handymanJobType) message += `Job type: ${bookingData.handymanJobType}\n`;
+      if (bookingData.handymanMaterialsRequired) message += `Materials: ${bookingData.handymanMaterialsRequired}\n`;
+      message += `Urgency: ${bookingData.handymanUrgency === 'urgent' ? 'Urgent' : bookingData.handymanUrgency === 'flexible' ? 'Flexible' : 'Normal'}\n`;
+      if (bookingData.handymanJobDescription) message += `Job description: ${bookingData.handymanJobDescription}\n`;
+    } else if (helper.type === 'carwash') {
+      if (bookingData.vehicleType) message += `🚗 *Vehicle Type:* ${bookingData.vehicleType}\n`;
+      if (bookingData.vehicleMake) message += `🔖 *Vehicle Make:* ${bookingData.vehicleMake}\n`;
+      if (bookingData.vehicleModel) message += `🚘 *Vehicle Model:* ${bookingData.vehicleModel}\n`;
     }
-    message += `\n`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*📍 LOCATION & NAVIGATION*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📌 *Type:* ${locationInfo.displayName}\n`;
+    message += `\n*Location*\n`;
+    message += `Service location: ${locationInfo.displayName}\n`;
+    if (bookingData.locationOption === 'comeToYou') {
+      message += `Dogs at the property: ${bookingData.dogsAtProperty === 'yes' ? 'Yes' : 'No'}\n`;
+    }
     if (locationInfo.address && locationInfo.address !== 'Address not specified') {
-      message += `🏠 *Address:* ${locationInfo.address}\n`;
+      message += `Address: ${locationInfo.address}\n`;
       const mapLink = generateMapLink(locationInfo.address);
-      if (mapLink) message += `🗺️ *Navigate:* ${mapLink}\n`;
+      if (mapLink) message += `Map: ${mapLink}\n`;
     }
-    if (locationInfo.travelFee > 0) message += `🚗 *Travel Fee:* R${locationInfo.travelFee}\n`;
-    message += `\n`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*🍴 PROVISIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🍽️ *Food provided by client:* ${bookingData.foodProvided === 'yes' ? '✅ Yes' : '❌ No'}\n`;
-    message += `⚡ *Electricity available:* ${bookingData.electricityProvided === 'yes' ? '✅ Yes' : '❌ No'}\n\n`;
-
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*💬 COMMENTS & NOTES*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `📝 ${bookingData.specialRequirements ? bookingData.specialRequirements : 'No special requirements'}\n\n`;
+    if (locationInfo.travelFee > 0) message += `Travel fee: R${locationInfo.travelFee}\n`;
+    message += `\n*Provisions*\n`;
+    message += `Food provided: ${bookingData.foodProvided === 'yes' ? 'Yes' : 'No'}\n`;
+    message += `Electricity available: ${bookingData.electricityProvided === 'yes' ? 'Yes' : 'No'}\n`;
+    message += `\n*Notes*\n`;
+    message += `${bookingData.specialRequirements || 'No special requirements'}\n`;
 
     // Add attachments if they exist
     if (uploadedFiles.length > 0) {
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `*📎 ATTACHMENTS*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `\n*Attachments*\n`;
       uploadedFiles.forEach((file) => {
-        message += `• ${file.name}: ${file.url}\n`;
+        message += `${file.name}: ${file.url}\n`;
       });
-      message += `\n`;
     }
 
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*⚡ QUICK ACTIONS*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━\n`;
-    if (acceptLink) message += `✅ *ACCEPT:*\n${acceptLink}\n\n`;
-    if (declineLink) message += `❌ *REJECT:*\n${declineLink}\n\n`;
-
-    message += `🔐 *Verification Code:* ${verificationCode}\n`;
-    message += `_Sent via loopOut_`;
+    message += `\n*Booking actions*\n`;
+    if (acceptLink) message += `Accept: ${acceptLink}\n`;
+    if (declineLink) message += `Decline: ${declineLink}\n`;
+    message += `Verification code: ${verificationCode}\n`;
+    message += `Sent via LoopOut`;
 
     // Open WhatsApp with properly encoded message
     const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(helper.contact)}?text=${encodeURIComponent(message)}`;
@@ -2205,16 +1956,19 @@ export default function HelperPage() {
       userId: currentUser?._id || "guest",
       helperId: helper._id,
       startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
-      endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
+      endDate: getBookingEndDateTime(),
       totalPrice: totalPrice,
       phone: bookingData.phone,
-      message: message,
+      message: message, // Save full structured message preserving client details, services, location, provisions, and comments & notes
       subtype: bookingSubtype,
       numberOfGuests: bookingData.numberOfGuests || undefined,
       functionType: bookingData.functionType || undefined,
       selectedPerformer: bookingData.selectedPerformer,
       performerExperience: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.experience,
       performerImage: helper.performers?.find(p => p.name === bookingData.selectedPerformer)?.image,
+      vehicleType: bookingData.vehicleType || undefined,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
       deviceType,
       requestLocation,
       locationOption: bookingData.locationOption || 'comeToYou',
@@ -2235,7 +1989,7 @@ export default function HelperPage() {
       if (res.ok) {
         pushPhoneNotification({
           title: '🎉 Booking Request Sent',
-          message: `Your booking for ${helper?.name || 'Helper'} has been placed. Check notifications for updates!`,
+          message: `Your booking with ${providerDisplayName || 'the provider'} has been placed. Check notifications for updates!`,
           type: 'success',
           link: '/notifications'
         });
@@ -2254,49 +2008,6 @@ export default function HelperPage() {
     setAttachments([]);
   };
   // ==================== END ENHANCED BOOKING SUBMIT FUNCTION ====================
-
-  // Simulate AI analysis of comments
-  const analyzeCommentsWithAI = () => {
-    setAnalyzingComments(true);
-
-    // Simulate API call to AI service
-    setTimeout(() => {
-      // Generate random quality scores for comments
-      const analysis = {};
-      const comments = document.querySelectorAll('.comment-item');
-
-      comments.forEach((_, index) => {
-        const qualityScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        const sentiment = qualityScore > 80 ? 'positive' :
-          qualityScore > 60 ? 'neutral' : 'negative';
-
-        analysis[index] = { qualityScore, sentiment };
-      });
-
-      setCommentAnalysis(analysis);
-      setAnalyzingComments(false);
-    }, 2000);
-  };
-
-  const handleLike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 :
-        prev.userReaction === 'dislike' ? prev.likes + 1 : prev.likes + 1,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 : prev.dislikes,
-      userReaction: prev.userReaction === 'like' ? null : 'like'
-    }));
-  };
-
-  const handleDislike = () => {
-    setAiAssessment(prev => ({
-      ...prev,
-      dislikes: prev.userReaction === 'dislike' ? prev.dislikes - 1 :
-        prev.userReaction === 'like' ? prev.dislikes + 1 : prev.dislikes + 1,
-      likes: prev.userReaction === 'like' ? prev.likes - 1 : prev.likes,
-      userReaction: prev.userReaction === 'dislike' ? null : 'dislike'
-    }));
-  };
 
   // Function to open full-page booking form overlay
   const openBookingFormOverlay = () => {
@@ -2344,7 +2055,7 @@ export default function HelperPage() {
 
   const whatsappNumber = helper ? formatContactForWhatsApp(helper.contact) : null;
   const whatsappLink = whatsappNumber
-    ? `https://wa.me/${whatsappNumber}?text=Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
+    ? `https://wa.me/${whatsappNumber}?text=Hi ${providerDisplayName}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`
     : null;
 
   const handleInternalMessage = async () => {
@@ -2354,7 +2065,7 @@ export default function HelperPage() {
     }
     
     // Check if the user is trying to message themselves
-    if (currentUser._id === helper.userRef) {
+    if (String(currentUser._id) === String(accountOwnerId)) {
       alert("You cannot message yourself.");
       return;
     }
@@ -2367,8 +2078,8 @@ export default function HelperPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          receiverId: helper.userRef,
-          content: `Hi ${helper.name}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`,
+          receiverId: accountOwnerId,
+          content: `Hi ${providerDisplayName}, I'm interested in your ${getProfessionalTitle(helper.type).toLowerCase()} services.`,
         }),
       });
       const data = await res.json();
@@ -2443,7 +2154,6 @@ export default function HelperPage() {
     );
   }
 
-  const description = helper.description || '';
   const displayText = showFullDescription
     ? description
     : description.slice(0, 300) + (description.length > 300 ? "..." : "");
@@ -2511,47 +2221,17 @@ export default function HelperPage() {
       </nav>
 
       {/* Image Gallery - Full Width */}
-      <div className="w-full relative">
-        {galleryImages.length > 0 ? (
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-2 h-[45svh] sm:h-[45svh] md:h-[440px] lg:h-[520px] w-full bg-slate-100 overflow-hidden">
-            <div className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(0)}>
-              <img src={galleryImages[0]} alt={helper.name} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/15 to-transparent pointer-events-none" />
-            </div>
-            <div className="hidden md:grid grid-cols-2 gap-2 h-full">
-              {galleryImages.slice(1, 5).map((url, index) => (
-                <div key={index} className="relative h-full cursor-pointer overflow-hidden group" onClick={() => openFullScreenGallery(index + 1)}>
-                  <img src={url} alt={`${helper.name} ${index + 2}`} className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-500" />
-                </div>
-              ))}
-              {galleryImages.length < 5 && Array(4 - Math.min(4, galleryImages.length - 1)).fill(null).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-900 h-full" />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="h-[45svh] md:h-[430px] bg-slate-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-3 text-center px-6">
-            <div className="w-14 h-14 rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-              <PhotoIcon className="w-7 h-7 text-slate-400" />
-            </div>
-            <div>
-              <p className="font-black text-slate-900 dark:text-white">Photos coming soon</p>
-              <p className="text-sm text-slate-500 mt-1">This provider has not added portfolio photos yet.</p>
-            </div>
-          </div>
-        )}
-      </div>
+      <ListingPhotoGallery images={galleryImages} alt={providerDisplayName} onOpen={openFullScreenGallery} emptyEmoji="🧰" emptyTitle="Photos coming soon" emptyDescription="This provider has not added portfolio photos yet." />
 
-      <main className="relative z-10 -mt-7 md:-mt-10 min-h-[55svh] max-w-6xl mx-auto rounded-t-[1.75rem] md:rounded-t-[2rem] bg-white px-5 sm:px-8 lg:px-12 pb-32 lg:pb-16 shadow-[0_-12px_30px_rgba(15,23,42,0.08)]">
+      <ListingDetailShell>
         {/* Content Section */}
         <div className="mb-8 border-b border-slate-200 pb-7 pt-7">
           <div className="mb-3 -mt-12 flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-sm">
-            {helper.userRef?.avatar ? <img src={helper.userRef.avatar} alt={helper.userRef?.username || helper.name} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
+            {helper.imageUrls?.[0] ? <img src={helper.imageUrls[0]} alt={providerDisplayName} className="h-full w-full object-cover" /> : <FaUser className="text-xl text-slate-400" />}
           </div>
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-600">{getCategoryIcon(helper.type)}<span>{getProfessionalTitle(helper.type)}</span></div>
           <h1 className="mb-3 max-w-4xl text-2xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
-            {helper.name}
+            {providerDisplayName}
           </h1>
           <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">{displayText.split('\n')[0] || `Professional services in ${helper.address || 'your area'}`}</p>
           <div className="flex flex-wrap items-center gap-2.5 text-sm text-slate-600">
@@ -2577,6 +2257,9 @@ export default function HelperPage() {
                 From R{helper.regularPrice}
               </span>
             )}
+            <span className="inline-flex items-center rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-2 text-xs font-medium text-emerald-800">
+              Cancel up to 48 hours before the service
+            </span>
             {operatingStatus?.isClosed ? (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-600">
                 <ClockIcon className="w-3.5 h-3.5" /> Closed
@@ -2586,8 +2269,8 @@ export default function HelperPage() {
                 <ClockIcon className="w-3.5 h-3.5" /> Open
               </span>
             )}
-            <button onClick={() => setShowCommentsPanel(true)} className="text-sm text-rose-500 underline hover:text-rose-700 ml-1 font-medium">
-              View reviews
+            <button onClick={() => document.getElementById('helper-review-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="text-sm text-rose-500 underline hover:text-rose-700 ml-1 font-medium">
+              Browse reviews
             </button>
           </div>
         </div>
@@ -2596,42 +2279,33 @@ export default function HelperPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Host Info Bar */}
-            <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-center sm:justify-between">
+            {/* Host row: account owner is the host; named worker is shown separately. */}
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 pb-6">
               <Link
-                to={`/user-profile/${helper.userRef?._id || helper.userRef}`}
-                className="flex items-center justify-between gap-4 transition-opacity hover:opacity-80 sm:w-fit"
+                to={accountOwnerId ? `/user-profile/${accountOwnerId}` : '#'}
+                onClick={(event) => { if (!accountOwnerId) event.preventDefault(); }}
+                className="flex min-w-0 items-center gap-4 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                aria-label={`View host profile: ${accountOwnerName}`}
               >
-                <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
-                    Hosted by {helper.userRef?.username || helper.name}
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    {isSuperhelper ? 'Superhelper' : (isVerifiedProvider ? 'Verified provider' : 'Provider')}
-                  </p>
-                  {helper.providerType === 'company' && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm font-medium">Company</p>
-                  )}
-                  {helper.providerType === 'individual' && helper.citizenship && (
-                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm font-medium">Citizenship: {helper.citizenship}</p>
-                  )}
-                </div>
-                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-50 shadow-sm">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-slate-400 ring-1 ring-slate-200">
                   {helper.userRef?.avatar ? (
-                    <img
-                      src={helper.userRef.avatar}
-                      alt={helper.userRef?.username || helper.name}
-                      className="h-full w-full object-cover object-center"
-                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
-                    />
-                  ) : (
-                    <FaUser className="text-2xl text-gray-400" />
-                  )}
-                </div>
+                    <img src={helper.userRef.avatar} alt="" className="h-full w-full object-cover" />
+                  ) : <FaUser className="text-xl" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-base font-semibold text-slate-900">Hosted by {accountOwnerName}</span>
+                  <span className="mt-1 block text-sm text-slate-500">Account owner · Worker: {providerDisplayName}</span>
+                </span>
               </Link>
-
-              
-              <button type="button" onClick={handleInternalMessage} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-slate-400 hover:bg-slate-50 sm:w-auto"><ChatBubbleLeftRightIcon className="h-4 w-4" />Message</button>
+              <button
+                type="button"
+                onClick={handleInternalMessage}
+                aria-label={`Chat with host ${accountOwnerName}`}
+                title="Chat with host"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-800 transition hover:border-slate-500 hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+              >
+                <ChatBubbleLeftRightIcon className="h-5 w-5" />
+              </button>
             </div>
 
             {(isSuperhelper || isVerifiedProvider || helper.operatingHours) && (
@@ -2645,13 +2319,13 @@ export default function HelperPage() {
                 {isVerifiedProvider && (
                   <div className="flex items-start gap-4">
                     <ShieldCheckIcon className="w-6 h-6 text-blue-500 mt-1" />
-                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">This provider’s account has been verified by LoopOut.</p></div>
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Verified provider</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">LoopOut has verified this provider's account.</p></div>
                   </div>
                 )}
                 {helper.operatingHours && (
                   <div className="flex items-start gap-4">
                     <ClockIcon className="w-6 h-6 text-teal-500 mt-1" />
-                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Hours shared</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">See the schedule below to choose an available time.</p></div>
+                    <div><p className="font-black uppercase tracking-widest text-xs text-gray-950 dark:text-white">Availability</p><p className="text-gray-500 dark:text-gray-400 text-xs font-medium mt-1">Check the schedule below to choose an available time.</p></div>
                   </div>
                 )}
               </div>
@@ -2688,6 +2362,32 @@ export default function HelperPage() {
                 </div>
               </div>
             </section>
+
+            {helper.type === 'carwash' && (helper.vehicleTypes || helper.serviceDuration || helper.carWashPackages) && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-carwash-title">
+                <h2 id="helper-carwash-title" className="mb-4 text-xl font-semibold text-slate-900">Car wash details</h2>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {helper.vehicleTypes && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Vehicles serviced</p><p className="mt-1 text-sm text-slate-700">{helper.vehicleTypes}</p></div>}
+                  {helper.serviceDuration && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Typical duration</p><p className="mt-1 text-sm text-slate-700">{helper.serviceDuration}</p></div>}
+                  {helper.mobileService && <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-4"><p className="text-sm font-semibold text-slate-700">🚗 Mobile service available</p></div>}
+                </div>
+              </section>
+            )}
+
+            {helper.type === 'moving' && (
+              <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-moving-title">
+                <h2 id="helper-moving-title" className="mb-4 text-xl font-semibold text-slate-900">Moving rates</h2>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {[
+                    ['By box', helper.moveCostPerBox], ['By kilo', helper.moveCostPerKilo], ['Van', helper.movePriceVan],
+                    ['Van with trailer', helper.movePriceVanTrailer], ['Mini truck', helper.movePriceMiniTruck],
+                    ['Other truck', helper.movePriceOtherTruck], ['Big truck with trailer', helper.movePriceBigTruckTrailer],
+                  ].filter(([, price]) => Number(price) > 0).map(([label, price]) => (
+                    <div key={label} className="rounded-2xl border border-amber-100 bg-amber-50/70 p-4"><p className="text-xs font-bold uppercase tracking-wide text-amber-700">{label}</p><p className="mt-1 text-sm font-semibold text-slate-800">R{Number(price).toLocaleString()}</p></div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Sneaker Cleaning Details */}
             {helper.type === 'sneaker' && (helper.shoeTypes || helper.cleaningMethod || helper.turnaroundTime) && (
@@ -2840,13 +2540,13 @@ export default function HelperPage() {
             {galleryImages.length > 0 && (
               <section className="border-b border-slate-200 pb-7" aria-labelledby="helper-portfolio-title">
                 <div className="mb-4 flex items-end justify-between gap-4">
-                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider’s work</p></div>
+                  <div><h2 id="helper-portfolio-title" className="text-xl font-semibold text-slate-900">My portfolio</h2><p className="mt-1 text-sm text-slate-500">A selection of this provider's work</p></div>
                   <button type="button" onClick={() => openFullScreenGallery(0)} className="shrink-0 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600">View all {galleryImages.length}</button>
                 </div>
                 <div className="grid aspect-[1.8/1] grid-cols-[1.25fr_1fr] grid-rows-2 gap-1 overflow-hidden rounded-2xl bg-white sm:aspect-[2.15/1]">
                   {galleryImages.slice(0, 3).map((url, index) => (
                     <button key={`portfolio-${url}-${index}`} type="button" onClick={() => openFullScreenGallery(index)} aria-label={`View portfolio photo ${index + 1}`} className={`group relative overflow-hidden bg-slate-100 focus:outline-none focus-visible:z-10 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-rose-500 ${index === 0 ? 'row-span-2' : ''}`}>
-                      <img src={url} alt={`${helper.name} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
+                      <img src={url} alt={`${providerDisplayName} portfolio work ${index + 1}`} className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105" />
                     </button>
                   ))}
                 </div>
@@ -2874,7 +2574,7 @@ export default function HelperPage() {
                 <div className="h-[360px] sm:h-[420px] border-t border-slate-100 dark:border-gray-800 bg-slate-950">
                   <GoogleMapComponent
                     address={helper.address}
-                    title={`${helper.name}'s Location`}
+                    title={`${providerDisplayName}'s Location`}
                   />
                 </div>
                 {helper.near && (
@@ -2902,7 +2602,7 @@ export default function HelperPage() {
                   </span>
                   <span className="mt-0.5 block text-xs text-slate-500 dark:text-gray-400">Swipe through client reviews</span>
                 </span>
-                <span className="text-xl text-slate-400" aria-hidden="true">›</span>
+                <ChevronRightIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
               </button>
 
               <Swiper
@@ -2930,71 +2630,71 @@ export default function HelperPage() {
 
               {commentCount > 0 ? (
                 <>
-                  {/* Top Comments Swiper */}
+                  {/* Fade-in comment cards */}
                   {topComments.length > 0 && (
                     <>
-                    <div id="helper-review-cards" className="mb-8 scroll-mt-24">
-                      <Swiper
-                        spaceBetween={16}
-                        slidesPerView={1.1}
-                        breakpoints={{ 
-                          640: { slidesPerView: 2.1 },
-                          1024: { slidesPerView: 3.2 }
-                        }}
-                        freeMode={true}
-                        modules={[FreeMode]}
-                        className="-mx-4 px-4 sm:mx-0 sm:px-0"
-                      >
-                        {topComments.map(comment => {
-                          const scores = ['punctualityRating', 'qualityRating', 'communicationRating', 'cleanlinessRating', 'respectfulnessRating', 'valueRating', 'recommendationRating'].map((field) => Number(comment[field])).filter((score) => Number.isFinite(score) && score >= 1 && score <= 5);
-                          const rating = scores.length ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
-                          
-                          return (
+                    <Swiper
+                      id="helper-review-cards"
+                      spaceBetween={16}
+                      slidesPerView={1.08}
+                      breakpoints={{ 640: { slidesPerView: 2.1 }, 1024: { slidesPerView: 2.4 } }}
+                      freeMode={true}
+                      modules={[FreeMode]}
+                      className="mb-8 -mx-4 px-4 scroll-mt-24 sm:mx-0 sm:px-0"
+                    >
+                      {topComments.map((comment, idx) => {
+                        const commentRatingFields = ['cleanlinessRating', 'communicationRating', 'punctualityRating', 'qualityRating', 'respectfulnessRating', 'valueRating', 'recommendationRating'];
+                        const commentRatings = commentRatingFields.map((field) => Number(comment[field])).filter((value) => Number.isFinite(value) && value >= 1 && value <= 5);
+                        const rating = commentRatings.length ? commentRatings.reduce((sum, value) => sum + value, 0) / commentRatings.length : 0;
+
+                        return (
                           <SwiperSlide key={comment._id} className="h-auto">
-                            <div className="h-full bg-gradient-to-br from-[#F8F9FA] to-white dark:from-gray-900 dark:to-gray-800 border border-[#EBEBEB] dark:border-gray-700 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
-                              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#FFB400]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                              <div className="relative z-10">
-                                <div className="flex items-center justify-between mb-4">
-                                  <div className="flex items-center gap-3">
-                                    <img 
-                                      src={comment.userAvatar || '/default-avatar.jpg'} 
-                                      alt={comment.userName}
-                                      className="w-12 h-12 rounded-full object-cover border border-gray-100 dark:border-gray-700 shadow-sm"
-                                      onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
-                                    />
-                                    <div>
-                                      <h4 className="font-semibold text-[#222222] dark:text-white leading-tight">{comment.userName}</h4>
-                                      <p className="text-sm text-[#717171] dark:text-gray-400 mt-0.5">{getRelativeTime(comment.createdAt)}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-4 mb-4">
+                          <motion.div
+                            initial={{ opacity: 0, y: 24 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-40px' }}
+                            transition={{ duration: 0.45, delay: idx * 0.07, ease: 'easeOut' }}
+                            className="h-full rounded-2xl border border-[#EBEBEB] dark:border-gray-700 bg-white dark:bg-gray-900 p-5 shadow-sm"
+                          >
+                            {/* Header */}
+                            <div className="flex items-center gap-3 mb-3">
+                              <img
+                                src={comment.userAvatar || '/default-avatar.jpg'}
+                                alt={comment.userName}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-gray-700 shadow-sm flex-shrink-0"
+                                onError={(e) => { e.target.src = '/default-avatar.jpg'; }}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{comment.userName}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
                                   <div className="flex items-center">
-                                  {[...Array(5)].map((_, i) => (
-                                      <FaStar 
-                                        key={i} 
-                                        className={`text-[12px] mr-1 ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`} 
+                                    {[...Array(5)].map((_, i) => (
+                                      <FaStar
+                                        key={i}
+                                        className={`text-[10px] ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`}
                                       />
                                     ))}
                                   </div>
-                                  <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{rating ? `${rating.toFixed(1)} / 5` : 'Review'}</span>
-                                  {comment.likes?.length > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-rose-500 font-medium">
-                                      <FaHeart />
-                                      {comment.likes.length}
-                                    </div>
-                                  )}
+                                  <span className="text-xs text-gray-400 dark:text-gray-500">{getRelativeTime(comment.createdAt)}</span>
                                 </div>
-                                <p className="text-gray-700 dark:text-gray-300 line-clamp-4 leading-relaxed whitespace-pre-line">
-                                  {comment.content}
-                                </p>
                               </div>
                             </div>
+                              <div className="mb-3 flex items-center gap-2">
+                                <div className="flex items-center">
+                                  {[...Array(5)].map((_, i) => <FaStar key={i} className={`text-[10px] ${i < Math.round(rating) ? 'text-[#FFB400]' : 'text-gray-200 dark:text-gray-700'}`} />)}
+                                </div>
+                                <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{rating ? `${rating.toFixed(1)} / 5` : 'Review'}</span>
+                              </div>
+                            {/* Comment text only */}
+                            <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line line-clamp-5">
+                              {comment.content}
+                            </p>
+                          </motion.div>
                           </SwiperSlide>
-                        )})}
-                      </Swiper>
-                    </div>
-                    {commentCount > 10 && (
+                        );
+                      })}
+                    </Swiper>
+                    {commentCount >= 10 && (
                       <button type="button" onClick={() => setShowAllReviewsPanel(true)} className="mt-2 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 sm:w-auto">
                         See all {commentCount} reviews
                       </button>
@@ -3006,15 +2706,6 @@ export default function HelperPage() {
                 <p className="text-gray-600 dark:text-gray-400 mb-6">No reviews yet. Be the first to leave a review!</p>
               )}
 
-              <button
-                onClick={() => setShowCommentsPanel(true)}
-                aria-haspopup="dialog"
-                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800 sm:w-auto"
-              >
-                <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                Read guest comments
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-gray-800 dark:text-gray-300">{commentCount}</span>
-              </button>
             </div>
 
           </div>
@@ -3123,7 +2814,7 @@ export default function HelperPage() {
                     })
                   ) : (
                     <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400 italic">Base Deployment</span>
+                      <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Base service</span>
                       <span className="text-xs font-black text-gray-950 dark:text-white">R{helper.regularPrice}</span>
                     </div>
                   )}
@@ -3159,7 +2850,7 @@ export default function HelperPage() {
         {/* Recent Bookers Section */}
         <BookingHistory 
           bookingSummary={bookingSummary} 
-          providerName={helper?.name} 
+          providerName={providerDisplayName}
           providerType={helper?.type || 'domestic'} 
           providerImage={helper?.imageUrls?.[0]} 
           providerId={helper?._id} 
@@ -3172,7 +2863,7 @@ export default function HelperPage() {
             <div className="mt-12 md:mt-16 border-t border-slate-200/50 pt-10 md:pt-12">
               <h2 className="text-xl md:text-2xl font-black text-gray-900 mb-6 md:mb-8 flex items-center gap-3 tracking-tighter  uppercase">
                 <MapPinIcon className="text-rose-500 w-6 h-6" />
-                Other professionals in the matrix
+                More helpers nearby
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {similarHelpers.map((item) => (
@@ -3181,7 +2872,7 @@ export default function HelperPage() {
               </div>
             </div>
           )}
-      </main>
+      </ListingDetailShell>
 
       {/* Full Screen Gallery Overlay */}
       {showFullScreenGallery && galleryImages.length > 0 && (
@@ -3247,17 +2938,17 @@ export default function HelperPage() {
           <div className="flex-1 mr-4">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-black text-slate-900 tracking-tighter">R{totalPrice}</span>
-              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest italic">Total Est.</span>
+              <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Est. total incl. 10% fee</span>
             </div>
             <div className="text-rose-600 text-[10px] font-black uppercase tracking-widest truncate max-w-[160px] opacity-80">
-              {helper?.name}
+              {providerDisplayName}
             </div>
           </div>
           <button
             onClick={() => setShowBookingFormOverlay(true)}
-            className="px-8 py-4 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
+            className="px-5 py-3 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-[0.12em] rounded-xl transition-all active:scale-95"
           >
-            Review & Reserve
+            Book
           </button>
         </div>
       </div>
@@ -3270,9 +2961,6 @@ export default function HelperPage() {
           totalComments={commentCount}
           onTotalComments={setCommentCount}
           onRatingsChange={setRatings}
-          onAnalyzeComments={analyzeCommentsWithAI}
-          commentAnalysis={commentAnalysis}
-          analyzingComments={analyzingComments}
         />
       )}
       {showAllReviewsPanel && (

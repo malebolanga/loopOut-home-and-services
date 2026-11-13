@@ -1,243 +1,86 @@
-import React from 'react';
-import {
-  FaHome,
-  FaCoins,
-  FaBookOpen,
-  FaUsers,
-  FaToolbox,
-  FaChartLine,
-  FaVideo,
-  FaFileContract,
- 
-  FaComments,
- 
-  FaQuestionCircle
-} from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { ArrowRight, BookOpen, CalendarDays, CircleHelp, ClipboardList, MessageSquareText, Plus, Store } from 'lucide-react';
+import { getCreationRoute } from '../utils/offeringPermissions';
+
+const categories = [
+  { emoji: '🏡', title: 'Property host', text: 'Describe the space, location, house rules, availability and price. Use clear photos of the actual property.' },
+  { emoji: '🛠️', title: 'Service provider', text: 'Explain the work you do, the areas you serve, your availability and how your pricing works.' },
+  { emoji: '🍱', title: 'Food business', text: 'Prepare your shop details, pickup information, menu items, prices and opening hours.' },
+  { emoji: '🛍️', title: 'Goods seller', text: 'Show the actual item, describe its condition honestly, set a clear price and explain pickup.' },
+];
+
+const gettingStarted = [
+  { number: '01', title: 'Choose what you offer', text: 'Select the LoopOut category that best fits your space, service, food business or item.' },
+  { number: '02', title: 'Add accurate details', text: 'Use a clear description, real photos, correct prices and information customers need before they contact you.' },
+  { number: '03', title: 'Manage requests', text: 'Check your bookings and messages regularly, then keep availability and listing details up to date.' },
+];
+
+function QuickLink({ to, icon: Icon, title, description }) {
+  return (
+    <Link to={to} className="group flex min-h-28 items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-rose-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-rose-900">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+      <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-slate-900 dark:text-white">{title}</span><span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">{description}</span></span>
+      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-rose-500" aria-hidden="true" />
+    </Link>
+  );
+}
 
 export default function HostingResources() {
-
-  const gettingStarted = [
-    {
-      step: 1,
-      title: "Create Your Listing",
-      content: "Learn how to showcase your space with great photos and descriptions"
-    },
-    {
-      step: 2,
-      title: "Set Your Price",
-      content: "Use our pricing tool to find the optimal rate for your market"
-    },
-    {
-      step: 3,
-      title: "Welcome Guests",
-      content: "Master check-in procedures and communication best practices"
-    }
-  ];
-
-  const resources = [
-    {
-      icon: <FaToolbox />,
-      title: "Hosting Toolkit",
-      content: "Downloadable checklists and templates"
-    },
-    {
-      icon: <FaChartLine />,
-      title: "Performance Dashboard",
-      content: "Track your bookings and earnings"
-    },
-    {
-      icon: <FaFileContract />,
-      title: "Legal Guides",
-      content: "Local regulations and rental agreements"
-    }
-  ];
-
-  const faqs = [
-    {
-      question: "How do I handle difficult guests?",
-      answer: "Access our de-escalation guide and 24/7 support line"
-    },
-    {
-      question: "What insurance do I need?",
-      answer: "Learn about our Host Protection Insurance program"
-    }
-  ];
+  const { currentUser } = useSelector((state) => state.user);
+  const createListingPath = getCreationRoute(currentUser) || '/become';
+  const listingsPath = currentUser?._id ? `/${currentUser._id}/list` : '/sign-in';
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <div className="bg-airbnb-red text-white py-20 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Hosting Resources Center
-          </h1>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Everything you need to succeed as a LoupeOut host
-          </p>
-          <div className="flex justify-center gap-4">
-            <button className="bg-white text-airbnb-red px-8 py-3 rounded-lg font-semibold hover:bg-gray-100">
-              Start Hosting
-            </button>
-            <button className="border-2 border-white px-8 py-3 rounded-lg font-semibold hover:bg-white/10">
-              Existing Host Tools
-            </button>
+    <main className="min-h-screen bg-[#f7f7f7] pb-36 text-slate-900 dark:bg-gray-950 dark:text-white md:pb-20">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <section className="mb-10 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-10">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">LoopOut hosting resources</p>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">A clear start for your listing</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">Practical guidance for property hosts, service providers, food businesses and sellers. Prepare accurate details, publish your listing and manage customer requests in LoopOut.</p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link to={createListingPath} className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-600">Create a listing <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+              <Link to="/become" className="inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-500 dark:border-gray-700 dark:text-slate-200 dark:hover:border-gray-500">Choose a category</Link>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <section aria-labelledby="resources-quick-links" className="mb-12">
+          <div className="mb-4"><h2 id="resources-quick-links" className="text-xl font-semibold tracking-tight">Useful links</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Go directly to the tools you use to run your LoopOut account.</p></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <QuickLink to={createListingPath} icon={Plus} title="Create a listing" description="Add a property, service, helper listing, event or item." />
+            <QuickLink to="/dashboard" icon={CalendarDays} title="Bookings" description="Review booking requests and their current status." />
+            <QuickLink to={listingsPath} icon={Store} title="Your listings" description="View and manage listings associated with your account." />
+            <QuickLink to="/help-center" icon={CircleHelp} title="Help centre" description="Browse LoopOut help articles and support information." />
+          </div>
+        </section>
+
+        <section aria-labelledby="getting-started-heading" className="mb-12">
+          <div className="mb-4"><h2 id="getting-started-heading" className="text-xl font-semibold tracking-tight">Getting started</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Three useful steps to prepare and manage your listing.</p></div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {gettingStarted.map((step) => <article key={step.number} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"><span className="text-xs font-semibold tracking-wider text-rose-600 dark:text-rose-400">{step.number}</span><h3 className="mt-3 text-base font-semibold">{step.title}</h3><p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{step.text}</p></article>)}
+          </div>
+        </section>
+
+        <section aria-labelledby="category-guides-heading" className="mb-12">
+          <div className="mb-4"><h2 id="category-guides-heading" className="text-xl font-semibold tracking-tight">Prepare for your category</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">The details customers need depend on what you are offering.</p></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {categories.map((category) => <article key={category.title} className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"><div className="flex items-center gap-3"><span className="text-2xl" aria-hidden="true">{category.emoji}</span><h3 className="text-base font-semibold">{category.title}</h3></div><p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{category.text}</p></article>)}
+          </div>
+        </section>
+
+        <section aria-labelledby="hosting-faq-heading" className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 sm:p-7">
+          <div className="mb-4 flex items-center gap-3"><ClipboardList className="h-5 w-5 text-rose-500" aria-hidden="true" /><div><h2 id="hosting-faq-heading" className="text-lg font-semibold">Common questions</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Quick answers for getting started.</p></div></div>
+          <div className="divide-y divide-slate-100 dark:divide-gray-800">
+            <details className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">Can I still browse and book after choosing a provider category?<span className="text-lg font-normal text-slate-400 transition group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">Yes. Choosing a provider category adds the relevant listing tools to your account; browsing and booking remain available.</p></details>
+            <details className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">Where can I get help with a LoopOut feature?<span className="text-lg font-normal text-slate-400 transition group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">Visit the <Link to="/help-center" className="font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400">Help Centre</Link> to browse support articles.</p></details>
+            <details className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold">How do I choose a different listing category?<span className="text-lg font-normal text-slate-400 transition group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 dark:text-slate-300">Open <Link to="/become" className="font-semibold text-rose-600 hover:text-rose-700 dark:text-rose-400">category selection</Link> to review the available options.</p></details>
+          </div>
+        </section>
+
+        <p className="mt-5 flex items-start gap-2 px-1 text-xs leading-5 text-slate-500 dark:text-slate-400"><MessageSquareText className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />Listing requirements and available tools may differ by category. Use the listing flow and Help Centre for the latest account-specific guidance.</p>
       </div>
-
-      {/* Getting Started */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold mb-12 text-center flex items-center justify-center">
-          <FaHome className="mr-3 text-airbnb-red" />
-          New Host Journey
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {gettingStarted.map((step) => (
-            <div key={step.step} className="bg-white p-6 rounded-xl shadow-lg">
-              <div className="flex items-center mb-4">
-                <div className="bg-airbnb-red text-white w-8 h-8 rounded-full flex items-center justify-center">
-                  {step.step}
-                </div>
-                <h3 className="text-xl font-semibold ml-4">{step.title}</h3>
-              </div>
-              <p className="text-gray-600">{step.content}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Educational Resources */}
-      <section className="bg-gray-100 py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div>
-              <h2 className="text-3xl font-bold mb-8 flex items-center">
-                <FaVideo className="mr-3 text-airbnb-red" />
-                Video Guides
-              </h2>
-              <div className="aspect-w-16 aspect-h-9 bg-gray-200 rounded-xl overflow-hidden">
-                <iframe 
-                  src="https://www.youtube.com/embed/example" 
-                  className="w-full h-full"
-                  title="Hosting Tutorial"
-                  allowFullScreen
-                ></iframe>
-              </div>
-            </div>
-            
-            <div>
-              <h2 className="text-3xl font-bold mb-8 flex items-center">
-                <FaBookOpen className="mr-3 text-airbnb-red" />
-                Knowledge Base
-              </h2>
-              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold">Optimizing Your Listing</h3>
-                  <p className="text-gray-600 text-sm">SEO tips and photography guides</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg hover:shadow-md transition-shadow">
-                  <h3 className="font-semibold">Seasonal Pricing Strategies</h3>
-                  <p className="text-gray-600 text-sm">Maximize your earnings year-round</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Financial Tools */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold mb-12 text-center flex items-center justify-center">
-          <FaCoins className="mr-3 text-airbnb-red" />
-          Financial Management
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Earnings Calculator</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm mb-2">Nightly Rate</label>
-                <input type="number" className="w-full p-2 border rounded" />
-              </div>
-              <div>
-                <label className="block text-sm mb-2">Occupancy Rate</label>
-                <input type="number" className="w-full p-2 border rounded" />
-              </div>
-              <div className="bg-gray-100 p-4 rounded">
-                <p className="font-semibold">Estimated Monthly Earnings: <span className="text-airbnb-red">$2,800</span></p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-xl font-semibold mb-4">Tax Resources</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center">
-                <FaFileContract className="mr-2 text-airbnb-red" />
-                Deduction Checklist
-              </li>
-              <li className="flex items-center">
-                <FaFileContract className="mr-2 text-airbnb-red" />
-                Local Tax Guides
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Support */}
-      <section className="bg-airbnb-red text-white py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center">
-            Host Community
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white/10 p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <FaUsers className="mr-2" />
-                Local Meetups
-              </h3>
-              <p>Connect with hosts in your area</p>
-              <button className="mt-4 border-2 border-white px-4 py-2 rounded-lg hover:bg-white/10">
-                Find Events
-              </button>
-            </div>
-            
-            <div className="bg-white/10 p-6 rounded-xl">
-              <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <FaComments className="mr-2" />
-                Discussion Forum
-              </h3>
-              <p>Get advice from experienced hosts</p>
-              <button className="mt-4 border-2 border-white px-4 py-2 rounded-lg hover:bg-white/10">
-                Join Conversations
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold mb-12 text-center">
-          Hosting Support
-        </h2>
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
-              <details className="group">
-                <summary className="flex justify-between items-center font-medium cursor-pointer">
-                  <span>{faq.question}</span>
-                  <FaQuestionCircle className="text-airbnb-red ml-2 transform transition-transform group-open:rotate-180" />
-                </summary>
-                <p className="mt-3 text-gray-600">{faq.answer}</p>
-              </details>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
+    </main>
   );
 }

@@ -132,7 +132,7 @@ export default function CompareItemReviews({ item }) {
       )}
 
       {/* Show all / hide toggle */}
-      {reviews.length > 2 && (
+      {reviews.length >= 10 && (
         <button
           onClick={() => setShowAllReviews(!showAllReviews)}
           className="text-[10px] font-bold text-rose-500 hover:text-rose-600 tracking-wide transition-colors flex items-center gap-1 mt-1"

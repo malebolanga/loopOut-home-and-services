@@ -187,6 +187,13 @@ const HelpersHomePage = () => {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-sm font-black text-gray-900 dark:text-white">Need a worker soon?</h1>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Send a job request to matching local workers. No passenger rides.</p>
+            </div>
+            <button type="button" onClick={() => navigate('/work-now')} className="shrink-0 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-rose-700">Find a worker</button>
+         </div>
          <div className="flex justify-between items-center mb-6 md:hidden">
             {/* Mobile Filters and Sort */}
             <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-full px-2 py-1 pr-3 shadow-sm">

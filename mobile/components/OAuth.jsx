@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
-import { GoogleAuthProvider, getAuth, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, getAuth, signInWithCredential, signInWithPopup } from 'firebase/auth';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Capacitor } from '@capacitor/core';
 import { app } from '../firebase';
 import { useDispatch, useSelector } from 'react-redux';
 import { signInStart, signInSuccess, signInFailure } from '../redux/user/userSlice';
@@ -26,31 +28,38 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
   const handleGoogleClick = async () => {
     if (isSigningIn.current || loading) return;
 
-    if (isNativeApp()) {
-      dispatch(signInFailure('Google Sign-In is not supported inside the native app wrapper. Please use email and password sign-in.'));
-      return;
-    }
-
     isSigningIn.current = true;
     let timeoutId;
     try {
       dispatch(signInStart());
       let idToken = pendingGoogleToken;
       if (!idToken) {
-        const provider = new GoogleAuthProvider();
-        provider.setCustomParameters({ prompt: 'select_account' });
         const auth = getAuth(app);
-        const popupPromise = signInWithPopup(auth, provider);
-        const timeoutPromise = new Promise((_, reject) => {
-          timeoutId = setTimeout(() => {
-            const timeoutErr = new Error('Google Sign-In timed out. If the window was stuck on a loading screen, please ensure this live domain is added under Firebase Console > Authentication > Settings > Authorized domains.');
-            timeoutErr.code = 'auth/timeout';
-            reject(timeoutErr);
-          }, 45000);
-        });
-        const result = await Promise.race([popupPromise, timeoutPromise]);
-        clearTimeout(timeoutId);
-        idToken = await result.user.getIdToken();
+        if (isNativeApp()) {
+          if (Capacitor.getPlatform() !== 'android') {
+            throw new Error('Google sign-in is currently available in the Android app and web browser.');
+          }
+          const nativeResult = await FirebaseAuthentication.signInWithGoogle({ skipNativeAuth: true });
+          const googleIdToken = nativeResult.credential?.idToken;
+          if (!googleIdToken) throw new Error('Google sign-in did not return an ID token. Check the Android Firebase SHA fingerprints and google-services.json.');
+          const credential = GoogleAuthProvider.credential(googleIdToken);
+          const result = await signInWithCredential(auth, credential);
+          idToken = await result.user.getIdToken(true);
+        } else {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: 'select_account' });
+          const popupPromise = signInWithPopup(auth, provider);
+          const timeoutPromise = new Promise((_, reject) => {
+            timeoutId = setTimeout(() => {
+              const timeoutErr = new Error('Google Sign-In timed out. If the window was stuck on a loading screen, please ensure this live domain is added under Firebase Console > Authentication > Settings > Authorized domains.');
+              timeoutErr.code = 'auth/timeout';
+              reject(timeoutErr);
+            }, 45000);
+          });
+          const result = await Promise.race([popupPromise, timeoutPromise]);
+          clearTimeout(timeoutId);
+          idToken = await result.user.getIdToken();
+        }
       }
 
       const res = await fetchWithRetry('/api/auth/google', {
@@ -67,6 +76,12 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
       if (data.requiresOfferingType) {
         setPendingGoogleToken(idToken);
         dispatch(signInSuccess(null));
+        return;
+      }
+
+      if (data.requiresTwoFactor) {
+        dispatch(signInFailure(null));
+        navigate('/sign-in', { state: { twoFactorEmail: data.email } });
         return;
       }
 

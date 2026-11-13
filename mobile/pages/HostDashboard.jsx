@@ -136,11 +136,11 @@ const BookingProtocolCard = ({ booking, idx, handleUpdateStatusGlobal }) => {
               </div>
            ) : booking.status === 'confirmed' || booking.status === 'approved' ? (
               <button 
-                onClick={() => handleStatusUpdate('completed')}
+                onClick={() => handleStatusUpdate('work_completed')}
                 className="w-full py-5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-2xl transition-all shadow-[0_15px_30px_rgba(225,29,72,0.2)] flex items-center justify-center gap-2 group-hover:animate-pulse"
               >
                  <SignalIcon className="w-4 h-4" />
-                 Signal Completed
+                 Mark Work Complete
               </button>
            ) : (
               <div className="w-full py-4 bg-white/5 border border-white/5 rounded-2xl text-center">

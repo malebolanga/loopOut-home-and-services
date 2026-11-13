@@ -92,6 +92,7 @@ const ForBusiness = lazy(() => import('./pages/ForBusiness'));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Become = lazy(() => import("./pages/Become"));
+const HostingMenu = lazy(() => import("./pages/HostingMenu"));
 const Adiver = lazy(() => import("./pages/Adiver"));
 const LifestyleDecor = lazy(() => import("./pages/LifestyleDecor"));
 const Users = lazy(() => import('./pages/Users'));
@@ -283,6 +284,7 @@ const AnimatedRoutes = () => {
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
         <Route path="/become" element={<PageTransition><Become /></PageTransition>} />
+        <Route path="/hosting-menu" element={<PageTransition><HostingMenu /></PageTransition>} />
         <Route path="/adiver" element={<PageTransition><Adiver /></PageTransition>} />
         <Route path="/lifestyle-decor" element={<PageTransition><LifestyleDecor /></PageTransition>} />
 
@@ -421,7 +423,7 @@ function AppContent() {
       : /booking|calendar|trip/.test(path) ? 'Bookings'
       : /message|conversation/.test(path) ? 'Messages'
       : /profile|settings/.test(path) ? 'Profile'
-      : /sale|sell-item|for-sale/.test(path) ? 'Sell'
+      : /sell|sale|for-sale/.test(path) ? 'Sell'
       : 'Other';
     const sessionId = globalThis.crypto?.randomUUID?.() || (Date.now() + '-' + Math.random().toString(36).slice(2));
     const recordActivity = (durationSeconds) => authenticatedFetch('/api/stats/section-activity', {
@@ -435,6 +437,30 @@ function AppContent() {
     }, 30000);
     return () => window.clearInterval(intervalId);
   }, [currentUser?._id, currentUser?.shareActivityWithAdmins, location.pathname]);
+
+  useEffect(() => {
+    if (!currentUser?._id || currentUser.shareDetailedActivityWithAdmins !== true) return;
+    const path = location.pathname.toLowerCase();
+    const pageKey = path === '/' ? 'home'
+      : /search/.test(path) ? 'search'
+      : /helper|barber|beauty|photography|tattoo|chef|carwash|privatetutor|animals|washingmat/.test(path) ? 'helper'
+      : /service|provider/.test(path) ? 'service'
+      : /property|listing|rent|overnight|for-rent/.test(path) ? 'property'
+      : /food|lunch/.test(path) ? 'food'
+      : /shop/.test(path) ? 'shop'
+      : /event/.test(path) ? 'event'
+      : /booking|calendar|trip/.test(path) ? 'booking'
+      : /message|conversation/.test(path) ? 'messages'
+      : /profile|settings/.test(path) ? 'profile'
+      : /sell|sale|for-sale/.test(path) ? 'sell'
+      : 'other';
+    const section = ({ home: 'Home', search: 'Search', property: 'Property', service: 'Services', helper: 'Helpers', food: 'Food', shop: 'Shops', event: 'Events', booking: 'Bookings', messages: 'Messages', profile: 'Profile', sell: 'Sell', other: 'Other' })[pageKey];
+    authenticatedFetch('/api/stats/activity-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'page_view', section, pageKey }),
+    }).catch(() => {});
+  }, [currentUser?._id, currentUser?.shareDetailedActivityWithAdmins, location.pathname]);
 
   useEffect(() => {
     if (!currentUser?._id || currentUser.shareLoginGpsArea !== true || !navigator.geolocation) return;
@@ -488,6 +514,8 @@ function AppContent() {
     '/host-tools',
     '/for-business',
     '/become',
+    '/hosting-menu',
+    '/hosting-resources',
     '/cookies',
     '/privacy',
     '/trust',

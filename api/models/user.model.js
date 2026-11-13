@@ -295,6 +295,8 @@ const userSchema = new mongoose.Schema({
     lastLoginRecorded: { type: Boolean, default: false },
     kycSubmittedAt: { type: Date, default: null },
     shareActivityWithAdmins: { type: Boolean, default: false },
+    shareDetailedActivityWithAdmins: { type: Boolean, default: false },
+    shareDetailedActivityWithAdmins: { type: Boolean, default: false },
     shareLoginGpsArea: { type: Boolean, default: false },
     accountStatus: { type: String, enum: ['active', 'suspended'], default: 'active', index: true },
     accountStatusChangedAt: { type: Date, default: null },

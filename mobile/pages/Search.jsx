@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 import { motion, AnimatePresence } from 'framer-motion';
 import NeuralLoader from '../components/NeuralLoader';
 import ImageWithFallback from '../components/ImageWithFallback';
@@ -79,6 +81,16 @@ import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 const RECENT_SEARCHES_KEY = 'recentPropertySearches';
 const MAX_RECENT_SEARCHES = 5;
 const DEFAULT_LISTING_LIMIT = 12;
+const QUICK_SEARCH_TYPES = [
+  { id: 'all', label: 'All', icon: Sparkles },
+  { id: 'properties', label: 'Stays', icon: HomeIcon },
+  { id: 'helpers', label: 'Helpers', icon: UserGroupIcon },
+  { id: 'food', label: 'Food', icon: UtensilsCrossed },
+  { id: 'events', label: 'Events', icon: CalendarIcon },
+];
+
+// Quick search types shown in the Search page tab bar (Services removed per user request)
+const VISIBLE_QUICK_SEARCH_TYPES = QUICK_SEARCH_TYPES.filter(t => t.id !== 'services');
 
 const CITY_COORDS = {
   'polokwane': { lat: -23.9058, lng: 29.4505 },
@@ -100,14 +112,21 @@ const ALL_CATEGORIES = [
   { id: 'resort', label: 'Resort & Holiday Park', type: 'properties', icon: Sparkles, color: 'bg-cyan-100 text-cyan-800', description: 'Holiday resorts & parks (per day)' },
   { id: 'office', label: 'Room Per Hour', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-purple-100 text-purple-800', description: 'Hourly rooms & short stays' },
   { id: 'rent', label: 'Room / Home to Rent', type: 'properties', icon: HomeIcon, color: 'bg-blue-100 text-blue-800', description: 'Rental properties (monthly)' },
+  { id: 'apartment', label: 'Apartment', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Apartments, flats & complexes' },
+  { id: 'full_house', label: 'Full House', type: 'properties', icon: HomeIcon, color: 'bg-emerald-100 text-emerald-800', description: 'Entire houses and homes' },
+  { id: 'single_room', label: 'Single Room', type: 'properties', icon: HomeModernIcon, color: 'bg-sky-100 text-sky-800', description: 'Private rooms for rent' },
+  { id: 'studio', label: 'Studio', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-violet-100 text-violet-800', description: 'Studio and bachelor apartments' },
+  { id: 'townhouse', label: 'Townhouse', type: 'properties', icon: HomeModernIcon, color: 'bg-teal-100 text-teal-800', description: 'Townhouses and cluster homes' },
+  { id: 'loft', label: 'Loft', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Loft apartments' },
+  { id: 'penthouse', label: 'Penthouse', type: 'properties', icon: BuildingOfficeIcon, color: 'bg-fuchsia-100 text-fuchsia-800', description: 'Penthouses and top-floor homes' },
 
   // Services
   { id: 'photography', label: 'Photography', type: 'helper', icon: CameraIcon, color: 'bg-indigo-100 text-indigo-800', description: 'Photo & video services' },
-  { id: 'carwash', label: 'Car Wash', type: 'services', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
+  { id: 'carwash', label: 'Car Wash', type: 'helper', icon: BoltIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Vehicle cleaning' },
   { id: 'landscaping', label: 'Landscaping', type: 'services', icon: SunIcon, color: 'bg-green-100 text-green-800', description: 'Garden & lawn care' },
   { id: 'electrician', label: 'Electrician', type: 'services', icon: BoltIcon, color: 'bg-yellow-100 text-yellow-800', description: 'Electrical services' },
   { id: 'catering', label: 'Catering', type: 'services', icon: BriefcaseIcon, color: 'bg-orange-100 text-orange-800', description: 'Event catering' },
-  { id: 'moving', label: 'Moving & Transport', type: 'services', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
+  { id: 'moving', label: 'Moving & Transport', type: 'helper', icon: TruckIcon, color: 'bg-amber-100 text-amber-800', description: 'Relocation services' },
 
   // Helpers
   { id: 'domestic', label: 'Domestic Help', type: 'helper', icon: HomeIcon, color: 'bg-teal-100 text-teal-800', description: 'Household assistance' },
@@ -122,6 +141,7 @@ const ALL_CATEGORIES = [
   { id: 'washingmat', label: 'Washing Mat', type: 'helper', icon: HomeModernIcon, color: 'bg-cyan-100 text-cyan-800', description: 'Expert mat cleaning' },
   { id: 'animals', label: 'Animal Care', type: 'helper', icon: Sparkles, color: 'bg-amber-100 text-amber-800', description: 'Pet & animal services' },
   { id: 'handyman', label: 'Handyman', type: 'helper', icon: WrenchIcon, color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', description: 'Repair & maintenance' },
+  { id: 'other', label: 'Other Services', type: 'helper', icon: Sparkles, color: 'bg-rose-100 text-rose-800', description: 'Other skills and local services' },
   { id: 'storage', label: 'Booking Storage', type: 'services', icon: BuildingOfficeIcon, color: 'bg-slate-100 text-slate-800', description: 'Secure storage units' },
 
   // Transport
@@ -146,7 +166,13 @@ const PROPERTY_TYPE_CONFIG = {
   land: { label: 'Self Catering', color: 'bg-amber-100 text-amber-800', icon: '🍳', endpoint: 'listing' },
   resort: { label: 'Resort & Holiday Park', color: 'bg-cyan-100 text-cyan-800', icon: '🏖️', endpoint: 'listing' },
   office: { label: 'Room Per Hour', color: 'bg-purple-100 text-purple-800', icon: '🚪', endpoint: 'listing' },
-  apartment: { label: 'Apartment / Complex', color: 'bg-indigo-100 text-indigo-800', icon: '🏢', endpoint: 'listing' }
+  apartment: { label: 'Apartment', color: 'bg-indigo-100 text-indigo-800', icon: '🏢', endpoint: 'listing' },
+  full_house: { label: 'Full House', color: 'bg-emerald-100 text-emerald-800', icon: '🏡', endpoint: 'listing' },
+  single_room: { label: 'Single Room', color: 'bg-sky-100 text-sky-800', icon: '🛏️', endpoint: 'listing' },
+  studio: { label: 'Studio', color: 'bg-violet-100 text-violet-800', icon: '🪴', endpoint: 'listing' },
+  townhouse: { label: 'Townhouse', color: 'bg-teal-100 text-teal-800', icon: '🏘️', endpoint: 'listing' },
+  loft: { label: 'Loft', color: 'bg-slate-100 text-slate-800', icon: '🏙️', endpoint: 'listing' },
+  penthouse: { label: 'Penthouse', color: 'bg-fuchsia-100 text-fuchsia-800', icon: '🌇', endpoint: 'listing' }
 };
 
 // Helper Categories Configuration
@@ -168,6 +194,9 @@ const HELPER_CATEGORY_CONFIG = {
   animals: { label: 'Animal Care', color: 'bg-amber-100 text-amber-800', icon: '🐾', endpoint: 'helper' },
   cleaner: { label: 'Cleaning', color: 'bg-cyan-100 text-cyan-800', icon: '🧼', endpoint: 'helper' },
   handyman: { label: 'Handyman', color: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white', icon: '🔧', endpoint: 'helper' },
+  carwash: { label: 'Car Wash', color: 'bg-cyan-100 text-cyan-800', icon: '🚗', endpoint: 'helper' },
+  moving: { label: 'Moving & Transport', color: 'bg-amber-100 text-amber-800', icon: '🚚', endpoint: 'helper' },
+  other: { label: 'Other Services', color: 'bg-rose-100 text-rose-800', icon: '✨', endpoint: 'helper' },
   maintenance: { label: 'Maintenance', color: 'bg-amber-100 text-amber-800', icon: '🔧', endpoint: 'helper' }
 };
 
@@ -270,7 +299,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 }
+    transition: { staggerChildren: 0.025 }
   }
 };
 
@@ -347,12 +376,14 @@ const fetchLegacySearchResults = async (urlParams, signal) => {
       params.set('address', location);
       params.set('location', location);
     }
-    ['minPrice', 'maxPrice', 'minRating'].forEach((key) => {
+    ['minPrice', 'maxPrice', 'minRating', 'pricePeriod'].forEach((key) => {
       const value = urlParams.get(key) || (key === 'maxPrice' ? urlParams.get('priceMax') : '');
       if (value) params.set(key, value);
     });
 
-    if (endpoint === 'listing' && subType && PROPERTY_TYPE_CONFIG[subType]) params.set('type', subType);
+    const propertyPeriodCategory = { per_day: 'day', per_month: 'month', per_hour: 'hour' }[subType];
+    if (endpoint === 'listing' && propertyPeriodCategory) params.set('pricePeriod', propertyPeriodCategory);
+    if (endpoint === 'listing' && ['rent', 'over', 'hotel', 'land', 'resort', 'office', 'apartment'].includes(subType)) params.set('type', subType);
     if (endpoint === 'helper' && subType && HELPER_CATEGORY_CONFIG[subType]) {
       params.set('type', ({ maid: 'domestic', nanny: 'domestic', hair: 'beauty', nail: 'beauty' })[subType] || subType);
     }
@@ -542,17 +573,21 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
     const val = item.regularPrice || item.price || item.cost || item.pricePerHour || item.ticketPrice;
     if (!val) return 'Contact';
     const formatted = typeof val === 'number' ? `R${val.toLocaleString()}` : val;
-    if (type === 'properties' && item.type === 'rent') return `${formatted} / mo`;
-    if (type === 'properties' && item.type === 'resort') return `${formatted} / day`;
-    if (type === 'properties' && ['over', 'sale', 'land'].includes(item.type)) return `${formatted} / night`;
+    if (type === 'properties') {
+      const period = item.pricePeriod || (item.type === 'rent' ? 'month' : item.type === 'resort' ? 'day' : ['over', 'hotel', 'land'].includes(item.type) ? 'night' : '');
+      if (period === 'hour') return `${formatted} / hour`;
+      if (period === 'day') return `${formatted} / day`;
+      if (period === 'month') return `${formatted} / month`;
+      if (period === 'night') return `${formatted} / night`;
+    }
     return formatted;
   };
 
   const getLocation = () => item.address || item.location || item.city || 'Private Location';
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: "easeOut" } }
+    hidden: { opacity: 0, y: 8 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: 'easeOut' } }
   };
 
   if (type === 'looking-for') {
@@ -666,6 +701,7 @@ const SkeletonCard = () => (
 );
 
 const SearchPage = () => {
+  const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -673,12 +709,7 @@ const SearchPage = () => {
   const [searchSubType, setSearchSubType] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState(() => {
-    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      return 'grid';
-    }
-    return 'map';
-  });
+  const [viewMode, setViewMode] = useState('grid');
   const [loading, setLoading] = useState(false);
   const [loadingMoreResults, setLoadingMoreResults] = useState(false);
   const [searchError, setSearchError] = useState('');
@@ -692,10 +723,12 @@ const SearchPage = () => {
     minRating: '',
     location: '',
     bedroomsMin: '',
-    bathroomsMin: ''
+    bathroomsMin: '',
+    pricePeriod: ''
   });
 
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categorySearch, setCategorySearch] = useState('');
 
   // Map center state
   const [mapCenter, setMapCenter] = useState({ lat: -26.1076, lng: 28.0567 }); // Default Sandton
@@ -733,6 +766,7 @@ const SearchPage = () => {
       location: urlParams.get('location') || urlParams.get('address') || '',
       bedroomsMin: urlParams.get('bedroomsMin') || '',
       bathroomsMin: urlParams.get('bathroomsMin') || '',
+      pricePeriod: urlParams.get('pricePeriod') || '',
       center: urlParams.get('center') || '',
       distance: urlParams.get('distance') || '',
       mode: urlParams.get('mode') || ''
@@ -824,10 +858,12 @@ const SearchPage = () => {
       });
       const subType = urlParams.get('subType') || urlParams.get('category') || '';
       const searchTerm = urlParams.get('searchTerm') || '';
-      const locationQuery = urlParams.get('location') || urlParams.get('address') || '';
+      // When the user did not type a location, use the town detected from the
+      // device GPS so the initial results are local as well as the filter UI.
+      const locationQuery = urlParams.get('location') || urlParams.get('address') || detectedCity || '';
       const maxPrice = urlParams.get('maxPrice') || urlParams.get('priceMax') || '';
 
-      ['minPrice', 'minRating', 'bedroomsMin', 'bathroomsMin'].forEach((key) => {
+      ['minPrice', 'minRating', 'bedroomsMin', 'bathroomsMin', 'pricePeriod'].forEach((key) => {
         const value = urlParams.get(key);
         if (value) params.set(key, value);
       });
@@ -874,7 +910,7 @@ const SearchPage = () => {
         setLoadingMoreResults(false);
       }
     }
-  }, [location.search]);
+  }, [location.search, detectedCity]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -894,11 +930,21 @@ const SearchPage = () => {
     if (matchedCity) {
       setMapCenter(CITY_COORDS[matchedCity]);
     } else {
-      import('../utils/geocoding').then(({ geocodeAddress }) => {
-        geocodeAddress(filters.location).then(coords => {
-          if (coords) setMapCenter(coords);
-        });
-      });
+      let cancelled = false;
+      const timer = window.setTimeout(async () => {
+        try {
+          const { geocodeAddress } = await import('../utils/geocoding');
+          if (cancelled) return;
+          const coords = await geocodeAddress(filters.location.trim());
+          if (!cancelled && coords) setMapCenter(coords);
+        } catch {
+          // The map is optional; search results remain usable if geocoding fails.
+        }
+      }, 350);
+      return () => {
+        cancelled = true;
+        window.clearTimeout(timer);
+      };
     }
   }, [filters.location]);
 
@@ -919,6 +965,7 @@ const SearchPage = () => {
     if (nextFilters.minRating) urlParams.set('minRating', nextFilters.minRating);
     if (nextFilters.bedroomsMin) urlParams.set('bedroomsMin', nextFilters.bedroomsMin);
     if (nextFilters.bathroomsMin) urlParams.set('bathroomsMin', nextFilters.bathroomsMin);
+    if (nextFilters.pricePeriod) urlParams.set('pricePeriod', nextFilters.pricePeriod);
     if (nextFilters.center) urlParams.set('center', nextFilters.center);
     if (nextFilters.distance) urlParams.set('distance', nextFilters.distance);
     if (nextViewMode === 'map') urlParams.set('mode', 'map');
@@ -931,27 +978,15 @@ const SearchPage = () => {
     const maxPrice = Number(filters.maxPrice);
     if ((filters.minPrice && (!Number.isFinite(minPrice) || minPrice < 0)) ||
         (filters.maxPrice && (!Number.isFinite(maxPrice) || maxPrice < 0)) ||
-        (Number.isFinite(minPrice) && Number.isFinite(maxPrice) && minPrice > maxPrice)) {
+        (filters.minPrice && filters.maxPrice && minPrice > maxPrice)) {
       setSearchError('Enter a valid price range where the minimum is not greater than the maximum.');
-      return;
+      return false;
     }
     setSearchError('');
     const urlParams = buildSearchParams();
 
-    // Geocode location if searching for a specific place
-    if (filters.location) {
-      const lowerLoc = filters.location.toLowerCase();
-      const matchedCity = Object.keys(CITY_COORDS).find(city => lowerLoc.includes(city));
-
-      if (matchedCity) {
-        setMapCenter(CITY_COORDS[matchedCity]);
-      } else {
-        import('../utils/geocoding').then(({ geocodeAddress }) => {
-          geocodeAddress(filters.location).then(coords => {
-            if (coords) setMapCenter(coords);
-          });
-        });
-      }
+    if (currentUser?._id && currentUser.shareDetailedActivityWithAdmins === true) {
+      authenticatedFetch('/api/stats/activity-history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'search_submitted', section: 'Search' }) }).catch(() => {});
     }
 
     navigate(`/search?${urlParams.toString()}`);
@@ -962,14 +997,15 @@ const SearchPage = () => {
       setRecentSearches(newRecent);
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(newRecent));
     }
-  }, [buildSearchParams, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
+    return true;
+  }, [buildSearchParams, currentUser?._id, currentUser?.shareDetailedActivityWithAdmins, filters.location, filters.minPrice, filters.maxPrice, navigate, recentSearches, searchTerm]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSearchType('all');
     setSearchSubType('');
     setSelectedCategory(null);
-    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '', bedroomsMin: '', bathroomsMin: '' });
+    setFilters({ minPrice: '', maxPrice: '', minRating: '', location: '', bedroomsMin: '', bathroomsMin: '', pricePeriod: '' });
     navigate('/search');
   };
 
@@ -1006,6 +1042,18 @@ const SearchPage = () => {
     navigate(`/search?${urlParams.toString()}`);
   };
 
+  const handleTypeSelect = (type) => {
+    setSelectedCategory(null);
+    setSearchType(type);
+    setSearchSubType('');
+    const params = buildSearchParams({ searchType: type, searchSubType: '' });
+    navigate(`/search?${params.toString()}`);
+  };
+
+  const visibleFilterCategories = ALL_CATEGORIES.filter((category) =>
+    `${category.label} ${category.description}`.toLowerCase().includes(categorySearch.trim().toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col relative overflow-x-hidden no-scrollbar">
       <style>{`
@@ -1015,7 +1063,7 @@ const SearchPage = () => {
 
       {/* Clean Airbnb-style Header */}
       <div className="app-safe-top sticky top-0 z-[60] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-[2520px] mx-auto px-6 py-3 flex items-center gap-4">
+        <div className="max-w-[2520px] mx-auto px-3 sm:px-6 py-2.5 flex items-center gap-3 sm:gap-4">
 
           {/* Logo */}
           <button onClick={() => navigate('/')} aria-label="Go to home" className="hidden md:flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -1025,27 +1073,31 @@ const SearchPage = () => {
             <span className="text-lg font-black tracking-tighter">loopOut</span>
           </button>
 
-          {/* Compact Search Bar */}
-          <div className="flex-1 max-w-2xl mx-auto">
-            <button
-              type="button"
-              onClick={() => setShowFilters(true)}
-              aria-label="Open search filters"
-              className="flex items-center gap-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-full px-5 py-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <SearchIconLucide className="w-4 h-4 text-gray-500 dark:text-white flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-semibold text-gray-800 dark:text-white truncate block">
-                  {searchTerm || filters.location
-                    ? `${searchTerm || 'Anywhere'} / ${filters.location || 'Anywhere'}`
-                    : 'Search services, venues...'}
-                </span>
-              </div>
-              <div className="flex-shrink-0 w-7 h-7 bg-rose-500 rounded-full flex items-center justify-center">
-                <AdjustmentsHorizontalIcon className="w-4 h-4 text-white" />
-              </div>
+          {/* Search directly from the header; filters stay one tap away. */}
+          <form onSubmit={(event) => { event.preventDefault(); handleSearch(); }} className="mx-auto flex w-full max-w-2xl items-center gap-2 rounded-full border border-gray-200 bg-white p-1.5 shadow-sm transition-shadow focus-within:shadow-md dark:border-gray-700 dark:bg-gray-900">
+            <SearchIconLucide className="ml-3 h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={filters.location ? `Search near ${filters.location}` : 'Search services, places, food…'}
+              aria-label="Search LoopOut"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 dark:text-white"
+            />
+            {searchTerm && (
+              <button type="button" onClick={() => setSearchTerm('')} aria-label="Clear search" className="rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800">
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            )}
+            <button type="submit" className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-rose-600 px-4 text-xs font-bold text-white transition hover:bg-rose-700 active:scale-95">
+              <SearchIconLucide className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Search</span>
             </button>
-          </div>
+            <button type="button" onClick={() => setShowFilters(true)} aria-label="Open filters" className="mr-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">
+              <AdjustmentsHorizontalIcon className="h-4 w-4" />
+            </button>
+          </form>
 
           {/* Map Toggle - Desktop */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
@@ -1061,40 +1113,26 @@ const SearchPage = () => {
         </div>
       </div>
 
-      {/* Airbnb-style Category Bar */}
-      <div className="sticky top-[61px] z-[50] bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-[2520px] mx-auto">
-          <div className="overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1 px-6 py-3">
-              {/* All / Universe */}
+      {/* Simple quick categories; detailed categories remain in Filters. */}
+      <div className="sticky top-[61px] z-[50] border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="mx-auto flex max-w-[2520px] items-center gap-2 overflow-x-auto px-3 py-2.5 no-scrollbar sm:px-6">
+          {VISIBLE_QUICK_SEARCH_TYPES.map(({ id, label, icon: Icon }) => {
+            const isActive = searchType === id && (id !== 'all' || !selectedCategory);
+            return (
               <button
-                onClick={() => handleCategorySelect(null)}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
-                  !selectedCategory
-                    ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
-                    : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
-                }`}
+                key={id}
+                type="button"
+                onClick={() => id === 'all' ? handleCategorySelect(null) : handleTypeSelect(id)}
+                aria-pressed={isActive}
+                className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full px-4 text-xs font-semibold transition-colors ${isActive ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300'}`}
               >
-                <Sparkles className="w-5 h-5" />
-                <span className="text-[10px] font-semibold whitespace-nowrap">All</span>
+                <Icon className="h-4 w-4" />{label}
               </button>
-
-              {ALL_CATEGORIES.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleCategorySelect(cat)}
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all flex-shrink-0 min-w-[60px] ${
-                    selectedCategory === cat.id
-                      ? 'text-gray-900 dark:text-white border-b-2 border-gray-900'
-                      : 'text-gray-400 hover:text-gray-700 dark:hover:text-white border-b-2 border-transparent'
-                  }`}
-                >
-                  <cat.icon className="w-5 h-5" />
-                  <span className="text-[10px] font-semibold whitespace-nowrap">{cat.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+            );
+          })}
+          <button type="button" onClick={() => setShowFilters(true)} className="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-gray-200 px-4 text-xs font-semibold text-gray-600 transition-colors hover:border-gray-400 dark:border-gray-700 dark:text-gray-300">
+            <AdjustmentsHorizontalIcon className="h-4 w-4" />More categories
+          </button>
         </div>
       </div>
 
@@ -1103,7 +1141,7 @@ const SearchPage = () => {
 
         {/* Left Column: Results List */}
         <div
-          className={`overflow-y-auto no-scrollbar transition-all duration-500 ${
+          className={`overflow-y-auto no-scrollbar transition-all duration-200 ${
             viewMode === 'map'
               ? 'hidden lg:block lg:w-[45%] xl:w-[40%] flex-shrink-0'
               : 'w-full'
@@ -1239,7 +1277,7 @@ const SearchPage = () => {
 
         {/* Right Column: Map */}
         <div
-          className={`transition-all duration-500 overflow-hidden relative ${
+          className={`transition-all duration-200 overflow-hidden relative ${
             viewMode === 'map'
               ? 'w-full lg:flex-1 fixed inset-0 lg:relative lg:inset-auto z-[150] lg:z-auto h-[100dvh] lg:h-auto'
               : 'hidden'
@@ -1361,11 +1399,18 @@ const SearchPage = () => {
                   {/* Category */}
                   <div className="space-y-3">
                     <label className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider">Category</label>
+                    <input
+                      type="search"
+                      value={categorySearch}
+                      onChange={(event) => setCategorySearch(event.target.value)}
+                      placeholder="Find a category"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    />
                     <div className="grid grid-cols-2 gap-2">
-                      {ALL_CATEGORIES.slice(0, 10).map(cat => (
+                      {visibleFilterCategories.map(cat => (
                         <button
                           key={cat.id}
-                          onClick={() => handleCategorySelect(cat)}
+                          onClick={() => { handleCategorySelect(cat); setShowFilters(false); }}
                           className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left ${
                             selectedCategory === cat.id
                               ? 'bg-gray-900 text-white border-gray-900'
@@ -1376,6 +1421,7 @@ const SearchPage = () => {
                           <span className="text-xs font-semibold truncate">{cat.label}</span>
                         </button>
                       ))}
+                      {visibleFilterCategories.length === 0 && <p className="col-span-2 py-5 text-center text-sm text-gray-500">No categories match that search.</p>}
                     </div>
                   </div>
 
@@ -1400,6 +1446,23 @@ const SearchPage = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Property price period */}
+                  {searchType === 'properties' && <div className="space-y-3">
+                    <label htmlFor="property-price-period" className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-white">Price period</label>
+                    <select
+                      id="property-price-period"
+                      value={filters.pricePeriod}
+                      onChange={(event) => setFilters((prev) => ({ ...prev, pricePeriod: event.target.value }))}
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-gray-900 dark:border-gray-800 dark:bg-gray-800"
+                    >
+                      <option value="">Any period</option>
+                      <option value="hour">Per hour</option>
+                      <option value="day">Per day</option>
+                      <option value="night">Per night</option>
+                      <option value="month">Per month</option>
+                    </select>
+                  </div>}
 
                   {/* Property Basics */}
                   <div className="space-y-3">
@@ -1446,7 +1509,7 @@ const SearchPage = () => {
                   Clear all
                 </button>
                 <button
-                  onClick={() => { handleSearch(); setShowFilters(false); }}
+                  onClick={() => { if (handleSearch()) setShowFilters(false); }}
                   className="flex-1 bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm shadow-md hover:bg-gray-800 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <SearchIconLucide className="w-4 h-4" />

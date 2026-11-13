@@ -57,6 +57,7 @@ export default function StoragePage() {
   const [activeImg, setActiveImg]       = useState(0);
   const [lightbox, setLightbox]         = useState(false);
   const [isSaved, setIsSaved]           = useState(false);
+  const [shareCopied, setShareCopied]   = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
   const [duration, setDuration]         = useState('monthly');
@@ -86,8 +87,15 @@ export default function StoragePage() {
         url: window.location.href,
       }).catch((error) => console.error('Error sharing:', error));
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => {
+          setShareCopied(true);
+          window.setTimeout(() => setShareCopied(false), 1800);
+        })
+        .catch((error) => {
+          console.error('Error copying storage link:', error);
+          alert('Could not copy the link. Please copy it from your browser address bar.');
+        });
     }
   };
 
@@ -233,7 +241,7 @@ export default function StoragePage() {
             {storageAddress && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-2 text-xs font-medium text-slate-600 dark:border-gray-700 dark:text-slate-300"><FaMapMarkerAlt className="shrink-0 text-slate-400" /><span className="truncate">{storageAddress}</span></span>}
             {Number(storage.storagePriceDay) > 0 && <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-800">{formatPrice(storage.storagePriceDay)} <span className="ml-1 font-medium text-blue-600">/ day</span></span>}
             {Number(storage.storagePriceMonth) > 0 && <span className="inline-flex items-center rounded-full border border-rose-100 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-800">{formatPrice(storage.storagePriceMonth)} <span className="ml-1 font-medium text-rose-600">/ month</span></span>}
-            <button onClick={() => setShowComments(true)} className="text-sm text-rose-500 underline hover:text-rose-700">View reviews</button>
+            {commentCount >= 10 && <button onClick={() => setShowComments(true)} className="text-sm text-rose-500 underline hover:text-rose-700">View reviews</button>}
           </div>
         </div>
 

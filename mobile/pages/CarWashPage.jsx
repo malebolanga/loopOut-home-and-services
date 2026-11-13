@@ -30,8 +30,10 @@ import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
 
 import ServiceComments from '../components/ServiceComments';
+import CommentsSidePanelService from '../components/CommentsSidePanelService';
 import HelperBookingSheet from '../components/HelperBookingSheet';
 import { useBookedSlots } from '../hooks/useBookedSlots';
+import { authenticatedFetch } from '../utils/authenticatedFetch';
 
 export default function CarWashPage() {
   const { currentUser } = useSelector((state) => state.user);
@@ -42,6 +44,7 @@ export default function CarWashPage() {
   const [attachments, setAttachments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [showCommentsPanel, setShowCommentsPanel] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const hasReviews = commentCount > 0 && Number(carWash?.rating) > 0;
@@ -347,6 +350,12 @@ export default function CarWashPage() {
   const handleBookingSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
+    if (!currentUser?._id && !currentUser?.id) {
+      alert('Please sign in before requesting a car wash so the booking and review stay linked to your account.');
+      navigate('/sign-in');
+      return;
+    }
+
     if (!carWash?.contact) {
       alert("Contact information is missing.");
       return;
@@ -365,6 +374,11 @@ export default function CarWashPage() {
 
     if (!bookingData.address) {
       alert("Please provide your address for mobile service.");
+      return;
+    }
+
+    if (!bookingData.date || !bookingData.time) {
+      alert('Please choose a booking date and time.');
       return;
     }
 
@@ -415,6 +429,12 @@ export default function CarWashPage() {
     message += `*🛎️ SERVICE DETAILS*%0A`;
     message += `• Selected Services: ${selectedServiceDetails}%0A`;
     message += `• Vehicle Type: ${vehicleTypeDetails}%0A`;
+    if (bookingData.vehicleMake) {
+      message += `• Vehicle Make: ${bookingData.vehicleMake}%0A`;
+    }
+    if (bookingData.vehicleModel) {
+      message += `• Vehicle Model: ${bookingData.vehicleModel}%0A`;
+    }
     message += `• Total Price: R${totalPrice}%0A%0A`;
 
     message += `*👤 CLIENT DETAILS*%0A`;
@@ -426,8 +446,8 @@ export default function CarWashPage() {
     message += `*📍 SERVICE LOCATION*%0A`;
     message += `• Address: ${bookingData.address}%0A`;
     
-    if (bookingData.vehicleMake) {
-      message += `• Vehicle Make/Model: ${bookingData.vehicleMake} ${bookingData.vehicleModel || ''}%0A`;
+    if (bookingData.vehicleMake || bookingData.vehicleModel) {
+      message += `• Vehicle Make/Model: ${[bookingData.vehicleMake, bookingData.vehicleModel].filter(Boolean).join(' ')}%0A`;
     }
     
     if (bookingData.specialRequirements) {
@@ -461,8 +481,46 @@ export default function CarWashPage() {
 
     message += `_Sent via loopOut Car Wash Booking_`;
 
-    const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(carWash.contact)}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    const bookingMessage = message.replace(/%0A/g, '\n');
+    const bookingStart = new Date(`${bookingData.date}T${bookingData.time}`);
+    const bookingEnd = new Date(bookingStart.getTime() + 60 * 60 * 1000);
+    const resolvedVehicleType = (vehicleTypeDetails && vehicleTypeDetails !== 'Not specified') ? vehicleTypeDetails : (bookingData.vehicleType || undefined);
+    const bookingPayload = {
+      serviceId: carWash._id,
+      startDate: bookingStart.toISOString(),
+      endDate: bookingEnd.toISOString(),
+      totalPrice,
+      phone: bookingData.phone,
+      message: bookingMessage,
+      subtype: `${selectedServiceDetails}${resolvedVehicleType ? `; Vehicle: ${resolvedVehicleType}` : ''}`,
+      requestLocation: bookingData.address,
+      locationOption: 'comeToYou',
+      vehicleType: resolvedVehicleType,
+      vehicleMake: bookingData.vehicleMake || undefined,
+      vehicleModel: bookingData.vehicleModel || undefined,
+    };
+
+    // Open a temporary window during the user gesture so the browser does not
+    // block WhatsApp while the booking is being saved.
+    const whatsappWindow = window.open('about:blank', '_blank');
+    try {
+      const response = await authenticatedFetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload),
+      });
+      const responseData = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(responseData.message || responseData.error || 'Could not save this booking request.');
+
+      const whatsappUrl = `https://wa.me/${formatContactForWhatsApp(carWash.contact)}?text=${encodeURIComponent(bookingMessage)}`;
+      if (whatsappWindow) whatsappWindow.location.href = whatsappUrl;
+      else window.location.href = whatsappUrl;
+    } catch (saveError) {
+      if (whatsappWindow) whatsappWindow.close();
+      console.error('Car wash booking save failed:', saveError);
+      alert(saveError.message || 'Could not save this booking. Please try again.');
+      return;
+    }
 
     // Close the booking form overlay
     closeBookingFormOverlay();
@@ -715,6 +773,7 @@ export default function CarWashPage() {
                 categoryMode="carwash"
                 hideEmptyState
               />
+              {commentCount >= 10 && <button type="button" onClick={() => setShowCommentsPanel(true)} className="mt-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">View all {commentCount} reviews</button>}
             </div>
 
             {/* Car wash booking experience */}
@@ -761,6 +820,8 @@ export default function CarWashPage() {
 
         </div>
       </ListingDetailShell>
+
+      {showCommentsPanel && <CommentsSidePanelService serviceId={carWash?._id} onClose={() => setShowCommentsPanel(false)} totalComments={commentCount} categoryMode="carwash" title="Car wash reviews" />}
 
       {/* Full Screen Image Modal */}
       {showImageModal && (

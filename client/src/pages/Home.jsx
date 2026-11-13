@@ -3583,7 +3583,7 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
                   <button
                     type="button"
                     onClick={(e) => handleQuickAdd(e, item)}
-                    className="absolute bottom-1 right-1 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md transition-all duration-200 active:scale-90 dark:bg-gray-950/95"
+                    className="absolute bottom-1 right-1 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-transparent shadow-none transition-all duration-200 active:scale-90"
                     title={`Add ${item.name} to basket`}
                     aria-label={`Add ${item.name} to basket`}
                   >
@@ -3623,9 +3623,9 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
             type="button"
             whileTap={{ scale: 0.99 }}
             onClick={() => handleFoodSelect(item)}
-            className="group w-full overflow-hidden rounded-2xl bg-transparent text-left transition"
+            className="group w-full overflow-hidden rounded-2xl border-0 bg-transparent p-0 text-left shadow-none transition"
           >
-            <span className="relative block aspect-[1.45/1] w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+            <span className="relative block aspect-[1.45/1] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
               <FoodMedia
                 src={item.image}
                 alt={item.name}

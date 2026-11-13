@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSelector } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
   ShoppingBag,
@@ -24,9 +24,10 @@ import {
   Sparkles,
   AlertCircle,
   RefreshCw,
-  X
+  X,
+  Star
 } from 'lucide-react';
-import { subscribeToOrders } from '../services/lunchService';
+import { subscribeToOrders, updateOrderStatus, rateShop } from '../services/lunchService';
 
 const STATUS_STEPS = [
   { key: 'received', label: 'Order Received', desc: 'Shop acknowledged order', icon: CheckCircle2, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200' },
@@ -41,6 +42,22 @@ const getStepIndex = (status) => {
   if (norm.includes('ready') || norm.includes('out') || norm.includes('transit') || norm.includes('driver')) return 2;
   if (norm.includes('prep') || norm.includes('cook') || norm.includes('kitchen') || norm.includes('process')) return 1;
   return 0;
+};
+
+const getOrderTotal = (order) => {
+  const savedTotals = [order?.total, order?.totalAmount, order?.grandTotal];
+  const savedTotal = savedTotals.map(Number).find((value) => Number.isFinite(value) && value > 0);
+  if (savedTotal !== undefined) return savedTotal;
+
+  const legacyPrice = Number(order?.price);
+  if (Number.isFinite(legacyPrice) && legacyPrice > 0) return legacyPrice;
+
+  const itemsTotal = (order?.items || []).reduce((sum, item) => {
+    const quantity = Number(item.quantity ?? item.qty ?? 1) || 1;
+    return sum + (Number(item.price ?? item.unitPrice) || 0) * quantity;
+  }, 0);
+  if (itemsTotal > 0) return itemsTotal;
+  return savedTotals.map(Number).find(Number.isFinite) ?? 0;
 };
 
 const isFoodImageUrl = (val) => {
@@ -77,13 +94,97 @@ const getItemEmojiFallback = (item) => {
 
 export default function MyFoodOrders() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { currentUser } = useSelector((state) => state.user || {});
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all' | 'active' | 'completed'
+  const [filter, setFilter] = useState(() => searchParams.get('filter') === 'active' ? 'active' : 'all'); // 'all' | 'active' | 'completed'
   const [searchQuery, setSearchQuery] = useState('');
   const [activeReceiptOrder, setActiveReceiptOrder] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [ratingTargetOrder, setRatingTargetOrder] = useState(null);
+  const [shopRating, setShopRating] = useState(5);
+  const [itemRatings, setItemRatings] = useState({});
+  const [ratingComment, setRatingComment] = useState('');
+  const [ratingError, setRatingError] = useState('');
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [orderActionError, setOrderActionError] = useState('');
+  const [orderSyncError, setOrderSyncError] = useState('');
+
+  const openRatingForOrder = (order) => {
+    setShopRating(5);
+    setItemRatings({});
+    setRatingComment('');
+    setRatingError('');
+    setRatingTargetOrder(order);
+  };
+
+  const completeCustomerOrder = async (order) => {
+    const orderId = order._id || order.id || order.orderId;
+    try {
+      setOrderActionError('');
+      const savedOrder = await updateOrderStatus(orderId, 'Completed');
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, ...savedOrder } : entry
+      ));
+      if (!order.isRated) {
+        openRatingForOrder({ ...order, ...savedOrder });
+      }
+    } catch (error) {
+      setOrderActionError(error.message || 'Could not complete this order. Please try again.');
+    }
+  };
+
+  const cancelCustomerOrder = async (order) => {
+    const orderId = order._id || order.id || order.orderId;
+    if (!window.confirm('Cancel this food order? You can cancel before the shop marks it ready.')) return;
+    try {
+      setOrderActionError('');
+      const savedOrder = await updateOrderStatus(orderId, 'Cancelled');
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, ...savedOrder } : entry
+      ));
+    } catch (error) {
+      setOrderActionError(error.message || 'Could not cancel this order. Please try again.');
+    }
+  };
+
+  const submitOrderRating = async (event) => {
+    event.preventDefault();
+    if (!ratingTargetOrder) return;
+    setRatingSubmitting(true);
+    setRatingError('');
+    try {
+      const orderId = ratingTargetOrder._id || ratingTargetOrder.id || ratingTargetOrder.orderId;
+      const orderItems = ratingTargetOrder.items || (ratingTargetOrder.mealName ? [{ id: ratingTargetOrder.mealId, name: ratingTargetOrder.mealName }] : []);
+      const itemRatingsPayload = orderItems.map((item, itemIndex) => ({
+        itemIndex,
+        mealId: item.id || '',
+        rating: Number(itemRatings[itemIndex]),
+      }));
+      if (!orderItems.length || itemRatingsPayload.some((entry) => !entry.mealId || !Number.isInteger(entry.rating) || entry.rating < 1 || entry.rating > 5)) {
+        setRatingError('Please rate each food item before submitting.');
+        setRatingSubmitting(false);
+        return;
+      }
+      await rateShop(ratingTargetOrder.shopId, {
+        orderId,
+        shopRating,
+        itemRatings: itemRatingsPayload,
+        comment: ratingComment,
+      });
+      setOrders((current) => current.map((entry) =>
+        (entry._id || entry.id || entry.orderId) === orderId ? { ...entry, isRated: true } : entry
+      ));
+      setRatingTargetOrder(null);
+      setItemRatings({});
+      setRatingComment('');
+    } catch (error) {
+      setRatingError(error.message || 'Could not save your rating. Please try again.');
+    } finally {
+      setRatingSubmitting(false);
+    }
+  };
 
   // Load orders from API + fallback to localStorage cached orders
   useEffect(() => {
@@ -102,24 +203,22 @@ export default function MyFoodOrders() {
     const unsubscribe = subscribeToOrders((apiOrders, error) => {
       if (!isMounted) return;
       setLoading(false);
-      
-      let merged = [];
-      if (Array.isArray(apiOrders) && apiOrders.length > 0) {
-        merged = apiOrders;
+      if (error) {
+        setOrderSyncError('Could not sync the latest order updates. Showing saved orders until the connection returns.');
+      } else {
+        setOrderSyncError('');
       }
-      
-      // Merge with localStorage orders ensuring uniqueness by _id / id
-      const seen = new Set();
-      const combined = [];
-      [...localOrders, ...merged].forEach((ord) => {
-        const id = ord._id || ord.id || ord.orderId;
-        if (id && !seen.has(id)) {
-          seen.add(id);
-          combined.push(ord);
-        } else if (!id) {
-          combined.push(ord);
-        }
+
+      // Keep offline-only cached orders, but let the server replace duplicates
+      // so status changes made on Lunch are always the source of truth here.
+      const ordersById = new Map();
+      const withoutId = [];
+      [...localOrders, ...(Array.isArray(apiOrders) ? apiOrders : [])].forEach((order) => {
+        const id = order._id || order.id || order.orderId;
+        if (id) ordersById.set(String(id), order);
+        else withoutId.push(order);
       });
+      const combined = [...ordersById.values(), ...withoutId];
 
       // Sort newest first
       combined.sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
@@ -132,11 +231,23 @@ export default function MyFoodOrders() {
     };
   }, [refreshKey]);
 
+  // Match Lunch's customer receipt list. The API also returns shop orders
+  // for vendors; those belong in the shop dashboard, not personal history.
+  const customerOrders = useMemo(() => {
+    if (!currentUser) return [];
+    const userId = String(currentUser._id || currentUser.id || '');
+    return orders.filter((order) => {
+      const matchesUser = userId && String(order.customerId || order.customer?._id || order.userId || '') === userId;
+      const matchesPhone = currentUser.phone && order.customerPhone && order.customerPhone === currentUser.phone;
+      return matchesUser || matchesPhone;
+    });
+  }, [orders, currentUser]);
+
   // Filtered orders list
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    return customerOrders.filter((order) => {
       const stepIdx = getStepIndex(order.status);
-      const isCompleted = stepIdx === 3 || order.status === 'cancelled';
+      const isCompleted = stepIdx === 3 || String(order.status || '').toLowerCase() === 'cancelled';
       const isActive = !isCompleted;
 
       if (filter === 'active' && !isActive) return false;
@@ -155,11 +266,11 @@ export default function MyFoodOrders() {
 
       return true;
     });
-  }, [orders, filter, searchQuery]);
+  }, [customerOrders, filter, searchQuery]);
 
   const activeCount = useMemo(() => {
-    return orders.filter((o) => getStepIndex(o.status) < 3 && o.status !== 'cancelled').length;
-  }, [orders]);
+    return customerOrders.filter((order) => getStepIndex(order.status) < 3 && String(order.status || '').toLowerCase() !== 'cancelled').length;
+  }, [customerOrders]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
@@ -215,6 +326,8 @@ export default function MyFoodOrders() {
 
       {/* Main Container */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+
+        {(orderSyncError || orderActionError) && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">{orderActionError || orderSyncError}</p>}
         
         {/* Search & Filter Bar */}
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
@@ -276,7 +389,7 @@ export default function MyFoodOrders() {
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {searchQuery
                   ? `We couldn't find any orders matching "${searchQuery}". Try a different keyword.`
-                  : 'Order tasty meals, sides, and refreshing drinks from local shops right on the Home page.'}
+                  : 'Browse local shops in the Food Hub to find meals, sides, and drinks you can order.'}
               </p>
             </div>
             <Link
@@ -294,11 +407,12 @@ export default function MyFoodOrders() {
               const isCompleted = currentStep === 3;
               const dateStr = order.createdAt || order.date ? new Date(order.createdAt || order.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Recently placed';
               
-              const totalAmount = order.totalAmount || order.price || order.grandTotal || 0;
+              const totalAmount = getOrderTotal(order);
               const shopName = order.shopName || order.shop?.name || 'Local Kitchen';
               const shopPhone = order.shopPhone || order.shop?.phone || '';
               const fulfilment = order.fulfilment || order.type || 'pickup';
               const items = order.items || (order.mealName ? [{ name: order.mealName, qty: order.qty || 1, price: order.price }] : []);
+              const isCustomerOrder = Boolean(currentUser?._id || currentUser?.id) && String(order.customerId || '') === String(currentUser?._id || currentUser?.id);
 
               return (
                 <motion.div
@@ -343,6 +457,44 @@ export default function MyFoodOrders() {
                       </span>
                     </div>
                   </div>
+
+                  {isCustomerOrder && order.status === 'Ready for Collection' && (
+                    <div className="space-y-2">
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                        {fulfilment === 'delivery'
+                          ? 'Confirm after your delivery arrives.'
+                          : 'Confirm after collection. Unconfirmed pickup orders close automatically 2 hours after the shop marks them ready.'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => completeCustomerOrder(order)}
+                        className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-emerald-700"
+                      >
+                        {fulfilment === 'delivery' ? 'Confirm delivery received' : 'I collected it — complete order'}
+                      </button>
+                    </div>
+                  )}
+
+                  {isCustomerOrder && ['Pending', 'Preparing'].includes(order.status) && (
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5 dark:bg-gray-800/70">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">Cancel before the shop marks your order ready.</p>
+                      <button type="button" onClick={() => cancelCustomerOrder(order)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-rose-950/30">
+                        Cancel order
+                      </button>
+                    </div>
+                  )}
+
+                  {isCustomerOrder && order.status === 'Completed' && !order.isRated && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        openRatingForOrder(order);
+                      }}
+                      className="w-full rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-black text-white transition hover:bg-amber-600"
+                    >
+                      Rate your meal and shop
+                    </button>
+                  )}
 
                   {/* Real-time 4-step progress tracker */}
                   <div className="px-2 py-3 rounded-2xl bg-gray-50/80 dark:bg-gray-950/50 border border-gray-100 dark:border-gray-800">
@@ -418,7 +570,7 @@ export default function MyFoodOrders() {
                             )}
                             <div className="min-w-0">
                               <p className="text-xs font-black text-gray-900 dark:text-white truncate">
-                                {item.name || item.title || 'Special Meal'} {item.qty > 1 ? `× ${item.qty}` : ''}
+                                {item.name || item.title || 'Special Meal'} {(item.quantity || item.qty || 1) > 1 ? `× ${item.quantity || item.qty}` : ''}
                               </p>
                               {Array.isArray(item.sides) && item.sides.length > 0 && (
                                 <p className="text-[10px] text-amber-700 dark:text-amber-400 font-bold mt-0.5 truncate">
@@ -433,7 +585,7 @@ export default function MyFoodOrders() {
                             </div>
                           </div>
                           <span className="text-xs font-bold text-gray-900 dark:text-white shrink-0">
-                            R{Number(item.price || (item.qty * (item.unitPrice || 0))).toFixed(2)}
+                            R{((Number(item.price ?? item.unitPrice) || 0) * Number(item.quantity || item.qty || 1)).toFixed(2)}
                           </span>
                         </div>
                       ))}
@@ -498,6 +650,45 @@ export default function MyFoodOrders() {
         )}
       </main>
 
+      {ratingTargetOrder && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setRatingTargetOrder(null)}>
+          <form onSubmit={submitOrderRating} onClick={(event) => event.stopPropagation()} className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-5 shadow-2xl dark:bg-gray-900">
+            <div>
+              <h2 className="text-base font-black text-gray-900 dark:text-white">How was {ratingTargetOrder.shopName}?</h2>
+              <p className="mt-1 text-xs text-gray-500">Only the customer who placed this order can leave a review.</p>
+            </div>
+            <div className="flex justify-center gap-2" aria-label={`Rating: ${shopRating} out of 5 stars`}>
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button key={value} type="button" onClick={() => setShopRating(value)} aria-label={`${value} star${value === 1 ? '' : 's'}`}>
+                  <Star className={`h-8 w-8 ${value <= shopRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                </button>
+              ))}
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-gray-800 dark:text-gray-100">Rate each food item</p>
+              {(ratingTargetOrder.items || (ratingTargetOrder.mealName ? [{ name: ratingTargetOrder.mealName }] : [])).map((item, itemIndex) => (
+                <div key={`${item.id || item.name || 'meal'}-${itemIndex}`} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 px-3 py-2 dark:bg-gray-800">
+                  <span className="min-w-0 truncate text-sm font-medium text-gray-800 dark:text-gray-100">{item.name || item.title || `Food item ${itemIndex + 1}`}</span>
+                  <span className="flex shrink-0 gap-0.5" role="group" aria-label={`Rate ${item.name || item.title || `food item ${itemIndex + 1}`}`}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button key={value} type="button" onClick={() => setItemRatings((current) => ({ ...current, [itemIndex]: value }))} aria-label={`${value} stars`}>
+                        <Star className={`h-5 w-5 ${value <= (itemRatings[itemIndex] || 0) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <textarea value={ratingComment} onChange={(event) => setRatingComment(event.target.value)} rows={3} maxLength={500} placeholder="Share a few words (optional)" className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800" />
+            {ratingError && <p role="alert" className="text-xs font-semibold text-rose-600">{ratingError}</p>}
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setRatingTargetOrder(null)} className="flex-1 rounded-xl bg-gray-100 px-3 py-2.5 text-xs font-bold text-gray-700 dark:bg-gray-800 dark:text-gray-200">Later</button>
+              <button type="submit" disabled={ratingSubmitting} className="flex-1 rounded-xl bg-amber-500 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-60">{ratingSubmitting ? 'Saving…' : 'Submit rating'}</button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* ── DIGITAL RECEIPT MODAL ── */}
       <AnimatePresence>
         {activeReceiptOrder && (
@@ -543,16 +734,17 @@ export default function MyFoodOrders() {
                 <div className="flex flex-col gap-1.5 py-1">
                   {(activeReceiptOrder.items || [{ name: activeReceiptOrder.mealName, qty: activeReceiptOrder.qty || 1, price: activeReceiptOrder.price }]).map((it, idx) => (
                     <div key={idx} className="flex justify-between">
-                      <span className="truncate pr-2">{it.name || 'Meal'} x{it.qty || 1}</span>
-                      <span>R{Number(it.price || 0).toFixed(2)}</span>
+                      <span className="truncate pr-2">{it.name || 'Meal'} x{it.quantity || it.qty || 1}</span>
+                      <span>R{((Number(it.price ?? it.unitPrice) || 0) * Number(it.quantity || it.qty || 1)).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-800 flex justify-between font-black text-sm text-gray-900 dark:text-white">
-                  <span>TOTAL PAID</span>
-                  <span className="text-amber-600">R{Number(activeReceiptOrder.totalAmount || activeReceiptOrder.price || 0).toFixed(2)}</span>
+                  <span>ORDER TOTAL</span>
+                  <span className="text-amber-600">R{getOrderTotal(activeReceiptOrder).toFixed(2)}</span>
                 </div>
+                {activeReceiptOrder.paymentStatus && <div className="flex justify-between text-[10px] text-gray-500"><span>PAYMENT</span><span>{activeReceiptOrder.paymentStatus}</span></div>}
               </div>
 
               <div className="flex items-center gap-2 pt-2">
