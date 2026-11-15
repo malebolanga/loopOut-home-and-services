@@ -75,6 +75,9 @@ const UpdateService = lazy(() => import('./pages/UpdateService'));
 // Car Wash Page
 const CarWashPage = lazy(() => import('./pages/CarWashPage'));
 
+// Shuttle & Transport Page
+const ShuttlePage = lazy(() => import('./pages/ShuttlePage'));
+
 // Storage Page
 const StoragePage = lazy(() => import('./pages/StoragePage'));
 
@@ -226,6 +229,11 @@ const AnimatedRoutes = () => {
         <Route path="/neighborhood-gigs" element={<PageTransition><MicroGigs /></PageTransition>} />
         <Route path="/create-request" element={<PageTransition><CreateRequest /></PageTransition>} />
         <Route path="/work-now" element={<PageTransition><WorkNow /></PageTransition>} />
+
+        {/* Shuttle & Transport Routes */}
+        <Route path="/shuttles" element={<PageTransition><ShuttlePage /></PageTransition>} />
+        <Route path="/shuttle" element={<Navigate to="/shuttles" replace />} />
+        <Route path="/transport" element={<Navigate to="/shuttles" replace />} />
 
         {/* Trip Routes */}
         <Route path="/trips" element={<PageTransition><Trips /></PageTransition>} />
@@ -501,11 +509,18 @@ function AppContent() {
     '/my-loopout',
     '/messages',
     '/inbox',
+    '/admin/verification',
+    '/shuttles',
+    '/shuttle',
+    '/transport'
   ];
   const hideHeaderPaths = [
     '/sign-in',
     '/sign-up',
     '/forgot-password',
+    '/shuttles',
+    '/shuttle',
+    '/transport',
     '/calendar',
     '/schedule',
     '/host-dashboard',
@@ -539,7 +554,8 @@ function AppContent() {
     '/food-orders',
     '/my-loopout',
     '/messages',
-    '/inbox'
+    '/inbox',
+    '/admin/verification'
   ];
 
   const specializedHelperPaths = [
@@ -553,9 +569,11 @@ function AppContent() {
   const isUserListingsPage = /^\/[a-f0-9]{24}\/(listings|list)(\/.*)?$/.test(location.pathname);
   const isFoodPage = location.pathname.startsWith('/food') || location.pathname.startsWith('/lunch');
   const isInboxPage = location.pathname.startsWith('/messages') || location.pathname.startsWith('/inbox');
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const isShuttlePage = location.pathname.startsWith('/shuttle') || location.pathname.startsWith('/transport');
   const isMyLoopOutPage = location.pathname === '/my-loopout';
   const isHomePage = location.pathname === '/';
-  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage || isInboxPage;
+  const hideHeader = hideHeaderPaths.includes(location.pathname) || isSpecializedPage || isStoragePage || isCreateListingPage || isUserListingsPage || isFoodPage || isInboxPage || isAdminPage || isShuttlePage;
   // Footer carries required legal links (Privacy, Terms) — keep it reachable
   // even on specialized detail pages, which only suppress the top Header.
   const isListingsPage = location.pathname.startsWith('/listings') || isUserListingsPage;
@@ -564,7 +582,9 @@ function AppContent() {
     isStoragePage ||
     isCreateListingPage ||
     isListingsPage ||
-    isInboxPage;
+    isInboxPage ||
+    isAdminPage ||
+    isShuttlePage;
   
   return (
     <div className="loopout-app">
@@ -583,7 +603,7 @@ function AppContent() {
           <AnimatedRoutes />
         </Suspense>
       </div>
-      {!isStoragePage && !isInboxPage && <BottomNav />}
+      {!isStoragePage && !isInboxPage && !isAdminPage && !isShuttlePage && <BottomNav />}
       {!hideFooter && <Footer />}
     </div>
   );

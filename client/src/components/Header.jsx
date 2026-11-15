@@ -705,8 +705,8 @@ export default function Header() {
     }
   };
 
-  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders', '/my-loopout'];
-  const hiddenPrefixes = ['/food', '/lunch', '/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/'];
+  const hiddenRoutes = ['/profile', '/wishlist', '/search', '/dashboard', '/host-dashboard', '/planner', '/lunch', '/food', '/notifications', '/my-orders', '/food-orders', '/my-loopout', '/admin/verification'];
+  const hiddenPrefixes = ['/food', '/lunch', '/user/', '/user-profile/', '/listing/', '/rent/', '/helper/', '/service/', '/event/', '/carwash/', '/admin'];
   
   const isHeaderHidden = 
     hiddenRoutes.includes(location.pathname) || 

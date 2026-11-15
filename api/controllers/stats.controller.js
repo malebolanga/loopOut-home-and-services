@@ -173,6 +173,10 @@ export const getAdminPerformance = async (req, res, next) => {
   try {
     const now = new Date();
     const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const monthParts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit',
+    }).formatToParts(now).reduce((parts, item) => ({ ...parts, [item.type]: item.value }), {});
+    const bookingMonthStartsAt = new Date(`${monthParts.year}-${monthParts.month}-01T00:00:00+02:00`);
     const [optedInUsers, suspendedOwnerIds] = await Promise.all([
       User.find({ shareActivityWithAdmins: true }).distinct('_id'),
       getSuspendedOwnerIds(),
@@ -183,7 +187,7 @@ export const getAdminPerformance = async (req, res, next) => {
     const excludeSuspendedShops = suspendedOwnerIds.length
       ? { $nor: [{ ownerId: { $in: suspendedOwnerIds.map(String) } }] }
       : {};
-    const [activityRows, propertyPosts, servicePosts, helperPosts, foodShops, eventPosts, salePosts, bookingRows, foodReservations, foodOrders, goodsRequests] = await Promise.all([
+    const [activityRows, propertyPosts, servicePosts, helperPosts, foodShops, eventPosts, salePosts, bookingRows, foodReservations, foodOrders, goodsRequests, itemsSoldThisMonth] = await Promise.all([
       optedInUsers.length ? UserSectionActivity.aggregate([
         { $match: { userId: { $in: optedInUsers }, createdAt: { $gte: since } } },
         { $group: { _id: '$section', count: { $sum: 1 }, durationSeconds: { $sum: '$durationSeconds' } } },
@@ -195,7 +199,7 @@ export const getAdminPerformance = async (req, res, next) => {
       Event.countDocuments(excludeSuspended('userRef')),
       Sell.countDocuments(excludeSuspended('creator')),
       Booking.aggregate([
-        { $match: { createdAt: { $gte: since } } },
+        { $match: { createdAt: { $gte: bookingMonthStartsAt } } },
         { $project: { category: { $switch: { branches: [
           { case: { $eq: [{ $type: '$listing' }, 'objectId'] }, then: 'Property' },
           { case: { $eq: [{ $type: '$service' }, 'objectId'] }, then: 'Services' },
@@ -204,9 +208,10 @@ export const getAdminPerformance = async (req, res, next) => {
         ], default: 'Other' } } } },
         { $group: { _id: '$category', count: { $sum: 1 } } },
       ]),
-      TableBooking.countDocuments({ createdAt: { $gte: since } }),
+      TableBooking.countDocuments({ createdAt: { $gte: bookingMonthStartsAt } }),
       FoodOrder.countDocuments({ createdAt: { $gte: since } }),
       GoodsOrder.countDocuments({ createdAt: { $gte: since } }),
+      GoodsOrder.countDocuments({ statusHistory: { $elemMatch: { status: 'Completed', createdAt: { $gte: bookingMonthStartsAt } } } }),
     ]);
     const sectionCounts = Object.fromEntries(activityRows.map(({ _id, count }) => [_id, count]));
     const sectionSeconds = Object.fromEntries(activityRows.map(({ _id, durationSeconds = 0 }) => [_id, durationSeconds]));
@@ -222,7 +227,8 @@ export const getAdminPerformance = async (req, res, next) => {
       { key: 'LegacyListings', label: 'Older, unclassified listing activity', activity: sectionCounts.Listings || 0, activeMinutes: sectionTime('Listings'), posts: null, bookings: null, orders: null },
       { key: 'Other', label: 'Other app sections', activity: ['Home', 'Search', 'Bookings', 'Messages', 'Profile', 'Other'].reduce((sum, key) => sum + (sectionCounts[key] || 0), 0), activeMinutes: ['Home', 'Search', 'Bookings', 'Messages', 'Profile', 'Other'].reduce((sum, key) => sum + sectionTime(key), 0), posts: null, bookings: null, orders: null },
     ];
-    return res.json({ success: true, generatedAt: now.toISOString(), period: { startsAt: since.toISOString(), endsAt: now.toISOString() }, activityAvailable: optedInUsers.length > 0, timeAvailable: categories.some((category) => category.activeMinutes > 0), activityOptedInUsers: optedInUsers.length, activityNote: 'Sampled section activity and visible-tab time from users who opted in; it does not count individual clicks. Active-time collection starts with this update. Older Listings activity is kept unclassified because the previous tracker combined property and sale pages.', postsNote: 'Current post records visible to users; content owned by suspended accounts is excluded. Food counts shops.', bookingsNote: 'Booking requests created in the last 30 days, including all statuses; Food counts restaurant reservations. The orders series counts food orders in Food and item purchase requests in Items for sale, including all statuses.', categories });
+    const bookingsThisMonth = Number(bookingCounts.Property || 0) + Number(bookingCounts.Helpers || 0) + Number(foodReservations || 0);
+    return res.json({ success: true, generatedAt: now.toISOString(), period: { startsAt: since.toISOString(), endsAt: now.toISOString() }, bookingMonth: { startsAt: bookingMonthStartsAt.toISOString(), endsAt: now.toISOString(), timeZone: 'Africa/Johannesburg' }, bookingsThisMonth, itemsSoldThisMonth, activityAvailable: optedInUsers.length > 0, timeAvailable: categories.some((category) => category.activeMinutes > 0), activityOptedInUsers: optedInUsers.length, activityNote: 'Sampled section activity and visible-tab time from users who opted in; it does not count individual clicks. Active-time collection starts with this update. Older Listings activity is kept unclassified because the previous tracker combined property and sale pages.', postsNote: 'Current post records visible to users; content owned by suspended accounts is excluded. Food counts shops.', bookingsNote: 'Calendar-month requests in South Africa time, including all statuses. The total includes property and helper requests plus food table reservations. Items sold counts item orders marked Completed in the calendar month. The orders series counts food orders in Food and item purchase requests in Items for sale, including all statuses.', categories });
   } catch (error) { return next(error); }
 };
 

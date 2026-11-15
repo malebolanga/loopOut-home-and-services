@@ -2358,15 +2358,40 @@ export default function CreateListing() {
                     </button>}
                   </div>
 
-                  {/* Other listing options (hidden for service providers) */}
-                  {currentUser?.offeringType !== 'services' && (
-                    <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
-                      <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">Other listing options</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && <CategoryCard id="selling" emoji="🛍️" label="Item for sale" description="Furniture, electronics, books, and more" selected={selectedCategory === 'selling'} onSelect={setSelectedCategory} />}
-                      </div>
+                  {/* Additional Hubs: Shuttle Transport, Food & Meals, Item for sale */}
+                  <div className="border-t border-gray-100 pt-5 dark:border-gray-800">
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                      Transport, Food & Other Offerings
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <CategoryCard
+                        id="shuttle"
+                        emoji="🚐"
+                        label="Register Shuttle"
+                        description="Drive passenger shuttles, local & inter-provincial trips with bus-style seat booking"
+                        selected={false}
+                        onSelect={() => navigate('/shuttles?register=true')}
+                      />
+                      <CategoryCard
+                        id="food"
+                        emoji="🍲"
+                        label="Food & Meals"
+                        description="Home cooking, daily lunch delivery, bakery, catering & chef services"
+                        selected={false}
+                        onSelect={() => navigate('/food/register')}
+                      />
+                      {(!currentUser?.offeringType || currentUser.offeringType === 'goods') && (
+                        <CategoryCard
+                          id="selling"
+                          emoji="🛍️"
+                          label="Item for sale"
+                          description="Furniture, electronics, books, appliances, and more"
+                          selected={selectedCategory === 'selling'}
+                          onSelect={setSelectedCategory}
+                        />
+                      )}
                     </div>
-                  )}
+                  </div>
 
                 </div>
               </SectionCard>

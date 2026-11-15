@@ -58,6 +58,21 @@ export default function AdminVerificationReview() {
   const isLoopOutAdmin = ['malebolanga3@gmail.com', 'admin@loopout.co.za'].includes(
     String(currentUser?.email || '').trim().toLowerCase()
   );
+  const sectionCategories = (performance?.categories || []).filter((category) =>
+    ['food', 'helpers', 'property', 'sell'].includes(String(category.key || '').toLowerCase())
+  );
+  const sectionMeasures = [
+    { key: 'activity', label: 'Activity', available: performance?.activityAvailable },
+    { key: 'posts', label: 'Posts', available: true },
+    { key: 'bookings', label: 'Requests', available: true },
+    { key: 'orders', label: 'Orders', available: true },
+    { key: 'activeMinutes', label: 'Minutes', available: performance?.timeAvailable },
+  ].filter((measure) => measure.available && sectionCategories.some((category) => category[measure.key] !== null && category[measure.key] !== undefined));
+  const sectionLineColors = { food: '#e11d48', helpers: '#7c3aed', property: '#0284c7', sell: '#059669' };
+  const sectionPostCount = (key) => {
+    const category = sectionCategories.find((item) => String(item.key).toLowerCase() === key);
+    return category?.posts === null || category?.posts === undefined ? 'Unavailable' : Number(category.posts).toLocaleString();
+  };
 
   const loadSubmissions = useCallback(async () => {
     setLoading(true);
@@ -191,23 +206,18 @@ export default function AdminVerificationReview() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 pt-16 pb-8 dark:bg-gray-950 sm:px-6 sm:pt-24 lg:px-8">
+    <main className="admin-operations-dashboard min-h-screen bg-slate-100 px-3 pt-6 pb-12 text-slate-950 dark:bg-gray-950 sm:px-6 sm:pt-8 sm:pb-12 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-7 flex flex-col gap-4 border-b border-slate-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-rose-600 dark:text-rose-400">LoopOut admin</p>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white sm:text-3xl">Operations dashboard</h1>
-            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">Platform activity, account safety and verification. Reporting periods use South Africa time.</p>
-          </div>
-          <div className="flex shrink-0 gap-2 sm:pl-4">
-            <button type="button" onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/profile')} className="hidden items-center gap-2 rounded-lg border border-slate-300 bg-transparent px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900 sm:inline-flex" aria-label="Go back">
+        <div className="mb-4 flex items-center justify-between gap-2 sm:mb-5">
+            <button type="button" onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/profile')} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-transparent px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900 sm:px-3.5 sm:py-2 sm:text-sm" aria-label="Go back">
               <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" className="h-4 w-4"><path d="M12.5 4.5 7 10l5.5 5.5M7.25 10h9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>
               Back
             </button>
-            <button type="button" onClick={() => { loadSubmissions(); if (usersOpen) loadUsers(usersPage); }} className="rounded-lg border border-slate-300 bg-transparent px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900">Refresh</button>
-            <Link to="/profile" className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800">Profile</Link>
-          </div>
-        </header>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => { loadSubmissions(); if (usersOpen) loadUsers(usersPage); }} className="min-h-10 rounded-lg border border-slate-300 bg-transparent px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-white dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-900 sm:px-3.5 sm:py-2 sm:text-sm">Refresh</button>
+              <Link to="/profile" className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800 sm:px-3.5 sm:py-2 sm:text-sm">Profile</Link>
+            </div>
+        </div>
 
         <section aria-label="Platform activity report" className="mb-8">
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -217,10 +227,10 @@ export default function AdminVerificationReview() {
           {overviewLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-gray-800" />)}</div>
             : overview ? <>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-2xl bg-slate-950 p-5 text-white shadow-sm"><p className="text-xs text-slate-300">Registered accounts</p><p className="mt-2 text-3xl font-black">{Number(overview.users.total).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-400">All time</p></div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"><p className="text-xs text-slate-500 dark:text-slate-400">Open marketplace reports</p><p className="mt-2 text-3xl font-black text-amber-600">{Number(overview.reports.openMarketplaceIssues).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-400">Order issues awaiting resolution</p></div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"><p className="text-xs text-slate-500 dark:text-slate-400">Failed sign-in alerts · this month</p><p className="mt-2 text-3xl font-black text-rose-600">{Number(overview.security.recordedAlertsThisMonth).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-400">Alerts created after repeated sign-in failures</p></div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900"><p className="text-xs text-slate-500 dark:text-slate-400">Database allocated</p><p className="mt-2 text-3xl font-black text-slate-900 dark:text-white">{overview.storage ? `${Number(overview.storage.allocatedMB).toLocaleString()} MB` : 'Unavailable'}</p><p className="mt-1 text-[10px] text-slate-400">MongoDB data {overview.storage ? `${overview.storage.dataMB} MB · indexes ${overview.storage.indexesMB} MB` : 'stats unavailable'}</p></div>
+                <div className="rounded-2xl bg-slate-950 p-4 text-white shadow-sm sm:p-5"><p className="text-xs text-slate-300">Registered accounts</p><p className="mt-2 text-3xl font-black">{Number(overview.users.total).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-400">All time</p></div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5"><p className="text-xs text-slate-600 dark:text-slate-300">Open marketplace reports</p><p className="mt-2 text-3xl font-black text-amber-600">{Number(overview.reports.openMarketplaceIssues).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-500">Order issues awaiting resolution</p></div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5"><p className="text-xs text-slate-600 dark:text-slate-300">Failed sign-in alerts · this month</p><p className="mt-2 text-3xl font-black text-rose-600">{Number(overview.security.recordedAlertsThisMonth).toLocaleString()}</p><p className="mt-1 text-[10px] text-slate-500">Alerts created after repeated sign-in failures</p></div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5"><p className="text-xs text-slate-600 dark:text-slate-300">Database allocated</p><p className="mt-2 text-3xl font-black text-slate-900 dark:text-white">{overview.storage ? `${Number(overview.storage.allocatedMB).toLocaleString()} MB` : 'Unavailable'}</p><p className="mt-1 text-[10px] text-slate-500">MongoDB data {overview.storage ? `${overview.storage.dataMB} MB · indexes ${overview.storage.indexesMB} MB` : 'stats unavailable'}</p></div>
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-3">
                 {[
@@ -233,42 +243,58 @@ export default function AdminVerificationReview() {
             </> : <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Dashboard metrics unavailable: {overviewError}</div>}
         </section>
 
-<section className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+<section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><h2 className="text-lg font-bold text-slate-900 dark:text-white">Section performance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Real LoopOut records by category. Activity and bookings cover the last 30 days; posts are current records. Each bar series is scaled to its own highest category.</p></div>
+            <div><h2 className="text-lg font-bold text-slate-900 dark:text-white">Section performance</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">One compact graph comparing Food, Helpers, Property and Items. Each measure is shown relative to its highest category.</p></div>
             {performance?.generatedAt && <p className="text-[10px] text-slate-400">Updated {new Date(performance.generatedAt).toLocaleString()}</p>}
           </div>
           {performanceLoading ? <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-500 dark:bg-gray-800">Loading section performance…</p>
             : performanceError ? <p role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Section performance unavailable: {performanceError}</p>
               : performance ? <>
-                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-600 dark:text-slate-300">
-                  {[['activity', 'Opt-in section activity', 'bg-sky-500'], ['posts', 'Visible posts', 'bg-violet-500'], ['bookings', 'Booking requests / reservations', 'bg-emerald-500'], ['orders', 'Orders / item requests', 'bg-amber-500'], ['activeMinutes', 'Active minutes', 'bg-cyan-500']].map(([key, label, color]) => <span key={key} className="inline-flex items-center gap-2"><i className={"h-2.5 w-2.5 rounded-sm " + color} />{label}</span>)}
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-slate-600 dark:text-slate-300">
+                  {sectionCategories.map((category) => <span key={category.key} className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full" style={{ backgroundColor: sectionLineColors[String(category.key).toLowerCase()] || '#64748b' }} />{category.label}</span>)}
                 </div>
-                <div className="mt-4 space-y-4">
-                  {performance.categories.map((category) => <div key={category.key} className="grid gap-2 sm:grid-cols-[130px_1fr] sm:items-center">
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">{category.label}</p>
-                    <div className="space-y-1.5">
-                      {[
-                        ['activity', 'Activity', 'bg-sky-500', performance.activityAvailable ? Number(category.activity) : null],
-                        ['posts', 'Visible posts', 'bg-violet-500', category.posts === null ? null : Number(category.posts)],
-                        ['bookings', 'Requests', 'bg-emerald-500', category.bookings === null ? null : Number(category.bookings)],
-                        ['orders', 'Orders / requests', 'bg-amber-500', category.orders === null ? null : Number(category.orders)],
-                        ['activeMinutes', 'Active minutes', 'bg-cyan-500', performance.timeAvailable ? Number(category.activeMinutes) : null],
-                      ].map(([key, label, color, value]) => {
-                        const max = Math.max(1, ...performance.categories.map((item) => Number(item[key] || 0)));
-                        return <div key={key} className="flex items-center gap-2" aria-label={category.label + ' ' + label + ': ' + (value === null ? 'not available' : value)}>
-                          <span className="w-[68px] shrink-0 text-[10px] text-slate-500 dark:text-slate-400">{label}</span>
-                          {value === null ? <span className="text-[10px] text-slate-400">Not available</span> : <><div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-gray-800"><div className={"h-full rounded-full " + color} style={{ width: value > 0 ? Math.max(2, (value / max) * 100) + '%' : '0%' }} /></div><span className="w-10 text-right text-[10px] font-semibold tabular-nums text-slate-700 dark:text-slate-300">{value.toLocaleString()}</span></>}
-                        </div>;
-                      })}
-                    </div>
-                  </div>)}
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {[
+                    ['Food shops', sectionPostCount('food')],
+                    ['Helper posts', sectionPostCount('helpers')],
+                    ['Properties', sectionPostCount('property')],
+                    ['Items sold this month', Number.isFinite(Number(performance.itemsSoldThisMonth)) ? Number(performance.itemsSoldThisMonth).toLocaleString() : 'Unavailable'],
+                    ['Bookings this month', Number.isFinite(Number(performance.bookingsThisMonth)) ? Number(performance.bookingsThisMonth).toLocaleString() : 'Unavailable'],
+                  ].map(([label, value]) => <div key={label} className="rounded-xl bg-slate-50 px-3 py-2 dark:bg-gray-800"><p className="text-xl font-black tabular-nums text-slate-900 dark:text-white">{value}</p><p className="text-[10px] font-medium text-slate-600 dark:text-slate-300">{label}</p></div>)}
                 </div>
+                <div className="mt-2 overflow-hidden">
+                  <svg viewBox="0 0 600 190" role="img" aria-label="Relative section performance line graph" className="h-auto w-full">
+                    {[0, 50, 100].map((percent) => { const y = 142 - percent * 1.18; return <g key={percent}><line x1="38" x2="590" y1={y} y2={y} stroke="currentColor" strokeOpacity="0.12" /><text x="30" y={y + 3} textAnchor="end" fontSize="9" fill="currentColor" opacity="0.55">{percent}%</text></g>; })}
+                    {sectionMeasures.map((measure, index) => <text key={measure.key} x={sectionMeasures.length === 1 ? 314 : 48 + index * (532 / (sectionMeasures.length - 1))} y="166" textAnchor="middle" fontSize="10" fill="currentColor" opacity="0.72">{measure.label}</text>)}
+                    {sectionCategories.map((category) => {
+                      const values = sectionMeasures.map((measure) => category[measure.key] === null || category[measure.key] === undefined ? null : Number(category[measure.key]));
+                      const segments = [];
+                      let current = [];
+                      values.forEach((value, index) => {
+                        if (value === null || !Number.isFinite(value)) { if (current.length) segments.push(current); current = []; }
+                        else current.push({ index, value });
+                      });
+                      if (current.length) segments.push(current);
+                      const pointFor = ({ index, value }) => {
+                        const x = sectionMeasures.length === 1 ? 314 : 48 + index * (532 / (sectionMeasures.length - 1));
+                        const max = Math.max(1, ...sectionCategories.map((item) => Number(item[sectionMeasures[index].key] || 0)));
+                        return { x, y: 142 - (value / max) * 118 };
+                      };
+                      const color = sectionLineColors[String(category.key).toLowerCase()] || '#64748b';
+                      return <g key={category.key} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        {segments.filter((segment) => segment.length > 1).map((segment, index) => <polyline key={index} points={segment.map((point) => { const position = pointFor(point); return `${position.x},${position.y}`; }).join(' ')} />)}
+                        {values.map((value, index) => { if (value === null || !Number.isFinite(value)) return null; const point = pointFor({ index, value }); return <circle key={index} cx={point.x} cy={point.y} r="3.5"><title>{`${category.label} · ${sectionMeasures[index].label}: ${value.toLocaleString()}`}</title></circle>; })}
+                      </g>;
+                    })}
+                  </svg>
+                </div>
+                <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Lines compare categories across measures, not over time. Hover or tap a point for its recorded value. Measures are independently scaled; unavailable data is left blank.</p>
                 <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">{performance.activityNote} Individual clicks are not collected. Active minutes are approximate 30-second samples while an opted-in user’s tab is visible. Activity counts can be zero when no opted-in users have records. {performance.postsNote} {performance.bookingsNote}</p>
               </> : null}
         </section>
 
-        <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+        <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><h2 className="text-lg font-bold text-slate-900 dark:text-white">User activity</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Recorded last login, profile area and saved marketplace post totals. Approximate GPS is shown only when a user opted in.</p></div>
             <button type="button" onClick={() => { const open = !usersOpen; setUsersOpen(open); if (open && !users.length) loadUsers(1); }} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900">{usersOpen ? 'Hide users' : `List users${overview ? ` (${Number(overview.users.total).toLocaleString()})` : ''}`}</button>
@@ -303,12 +329,12 @@ export default function AdminVerificationReview() {
         </section>
 
         {overview && <section className="mb-8 grid gap-5 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
             <div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-bold text-slate-900 dark:text-white">Reported accounts & order issues</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Recent open marketplace reports show the reporting and reported account.</p></div><span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-200">{overview.reports.openMarketplaceIssues} open</span></div>
             {!overview.reports.directUserReportsAvailable && <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">Direct user or listing reports are not currently saved in the app database. This list contains submitted marketplace order issues only.</p>}
             {overview.reports.recentMarketplaceIssues.length ? <div className="mt-4 space-y-2">{overview.reports.recentMarketplaceIssues.map((report) => <article key={report.id} className="rounded-xl border border-slate-100 p-3 dark:border-gray-800"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold text-slate-900 dark:text-white">{report.category} · {report.orderTitle}</p><span className="text-[10px] text-slate-400">{new Date(report.createdAt).toLocaleDateString()}</span></div><p className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Reported account: <strong>{report.reportedUser?.username || 'Unknown'}</strong> ({report.reportedUser?.email || 'email unavailable'})</p><p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Reported by: {report.reporter?.username || 'Unknown'} · {String(report.details || '').slice(0, 240)}</p></article>)}</div> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500 dark:bg-gray-800 dark:text-slate-400">No open marketplace order issues are recorded.</p>}
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
             <div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-bold text-slate-900 dark:text-white">Failed sign-in activity</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Recorded alerts after repeated unsuccessful sign-ins.</p></div><span className="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-200">{overview.security.accountsWith3OrMoreFailedLogins} accounts · 3+ current failures</span></div>
             <div className="mt-4 grid grid-cols-3 gap-2">{[['Today', overview.security.recordedAlertsToday], ['This week', overview.security.recordedAlertsThisWeek], ['This month', overview.security.recordedAlertsThisMonth]].map(([period, count]) => <div key={period} className="rounded-xl bg-slate-50 p-3 text-center dark:bg-gray-800"><p className="text-lg font-black text-rose-600 dark:text-rose-300">{Number(count).toLocaleString()}</p><p className="text-[10px] text-slate-500 dark:text-slate-400">{period}</p></div>)}</div>
             {overview.security.recentAlerts.length ? <div className="mt-4 space-y-2">{overview.security.recentAlerts.map((alert) => <article key={alert.id} className="rounded-xl border border-slate-100 p-3 dark:border-gray-800"><div className="flex flex-wrap justify-between gap-2"><p className="text-xs font-semibold text-slate-900 dark:text-white">{alert.title || 'Security alert'} · {alert.user?.email || 'Account unavailable'}</p><span className="text-[10px] text-slate-400">{new Date(alert.createdAt).toLocaleString()}</span></div><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{alert.message}</p></article>)}</div> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500 dark:bg-gray-800 dark:text-slate-400">No recorded security alert notifications.</p>}
@@ -316,7 +342,7 @@ export default function AdminVerificationReview() {
           </div>
         </section>}
 
-        {overview && <section aria-label="Provider panic alerts" className="mb-8 rounded-2xl border border-rose-200 bg-white p-5 dark:border-rose-900/60 dark:bg-gray-900">
+        {overview && <section aria-label="Provider panic alerts" className="mb-8 rounded-2xl border border-rose-200 bg-white p-4 shadow-sm dark:border-rose-900/60 dark:bg-gray-900 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-bold text-slate-900 dark:text-white">Provider panic alerts</h2><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">GPS alerts recorded from service providers. Treat map pins and contact details as sensitive.</p></div><span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-200">{overview.panicAlerts.active} active</span></div>
           <div className="mt-4 grid grid-cols-3 gap-2">{[['Today', overview.panicAlerts.today], ['This week', overview.panicAlerts.thisWeek], ['This month', overview.panicAlerts.thisMonth]].map(([period, count]) => <div key={period} className="rounded-xl bg-rose-50 p-3 text-center dark:bg-rose-950/30"><p className="text-lg font-black text-rose-700 dark:text-rose-300">{Number(count).toLocaleString()}</p><p className="text-[10px] text-slate-500 dark:text-slate-400">{period}</p></div>)}</div>
           {overview.panicAlerts.recent.length ? <div className="mt-4 space-y-2">{overview.panicAlerts.recent.map((alert) => <article key={alert.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 p-3 dark:border-gray-800"><div><p className="text-xs font-bold text-slate-900 dark:text-white">{alert.code} · {alert.user?.username || 'Service provider'}</p><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{alert.user?.email || 'Email unavailable'} · {new Date(alert.triggeredAt).toLocaleString()} · {alert.status}</p></div><a href={alert.mapUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300">Open map pin</a></article>)}</div> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500 dark:bg-gray-800 dark:text-slate-400">No provider panic alerts have been recorded.</p>}
@@ -331,7 +357,7 @@ export default function AdminVerificationReview() {
               const userId = String(submission._id);
               const submissionChecks = checks[userId] || {};
               return (
-                <section key={userId} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+                <section key={userId} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{submission.username || 'Applicant'}</h2>
