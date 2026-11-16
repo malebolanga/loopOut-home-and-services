@@ -56,12 +56,29 @@ const isValidCoord = (lat, lng) => {
   );
 };
 
+// Haversine geodesic distance in kilometres
+const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 const ShuttleMap = ({ 
   shuttles = [], 
   selectedShuttle, 
   onSelectShuttle, 
   onRequestPickup,
   onLiveRefresh,
+  userLocation,
+  onUserLocationChange,
+  onProximityAlert,
   heightClass = 'h-[75vh] sm:h-[82vh] lg:h-[86vh]' 
 }) => {
   const mapContainerRef = useRef(null);
@@ -70,6 +87,25 @@ const ShuttleMap = ({
   const userGprsMarkerRef = useRef(null);
   const markersRef = useRef([]);
   const livePollingRef = useRef(null);
+
+  // 2km Proximity & live motion tracking refs
+  const proximityCircleRef = useRef(null);
+  const routeLineRef = useRef(null);
+  const routeLabelRef = useRef(null);
+  const shuttleTrailsRef = useRef({});
+  const trailLayersRef = useRef({});
+
+  // Stable callback refs — updated every render but never in dep arrays.
+  // This prevents infinite loops caused by callback identity changes.
+  const onSelectShuttleRef = useRef(onSelectShuttle);
+  useEffect(() => { onSelectShuttleRef.current = onSelectShuttle; });
+
+  const onProximityAlertRef = useRef(onProximityAlert);
+  useEffect(() => { onProximityAlertRef.current = onProximityAlert; });
+
+  // Track which shuttle already fired a proximity alert (reset when it leaves 2km range)
+  const proximityAlertSentRef = useRef(null);
+
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapStyle, setMapStyle] = useState('googleRoad');
@@ -96,9 +132,6 @@ const ShuttleMap = ({
           attributionControl: false,
           scrollWheelZoom: true,
         }).setView([initialLat, initialLng], 7);
-
-        // Add standard zoom control at bottom-right
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         // Default: Free Google Streets Tile Layer (no API key required)
         const provider = MAP_PROVIDERS.googleRoad;
@@ -209,14 +242,69 @@ const ShuttleMap = ({
 
     const bounds = [];
 
+    // Group shuttles that are collocated (within ~150m of each other)
+    const clusterMap = {};
+    shuttles.forEach((s) => {
+      const c = s.currentCoordinates;
+      if (!c || !isValidCoord(c.lat, c.lng)) return;
+      const key = `${Number(c.lat).toFixed(3)}_${Number(c.lng).toFixed(3)}`;
+      if (!clusterMap[key]) clusterMap[key] = [];
+      clusterMap[key].push(s);
+    });
+
     shuttles.forEach((shuttle) => {
       const coords = shuttle.currentCoordinates;
       if (!coords || !isValidCoord(coords.lat, coords.lng)) return;
+
+      const clusterKey = `${Number(coords.lat).toFixed(3)}_${Number(coords.lng).toFixed(3)}`;
+      const cluster = clusterMap[clusterKey] || [shuttle];
+      const clusterSize = cluster.length;
+      const clusterIndex = cluster.findIndex((item) => String(item._id) === String(shuttle._id));
+
+      // Calculate spread position if multiple cars share the location so none are blocked
+      let markerLat = Number(coords.lat);
+      let markerLng = Number(coords.lng);
+
+      if (clusterSize > 1) {
+        // Disperse overlapping vehicles into a neat fan circle (~35m radius)
+        const angle = (clusterIndex / clusterSize) * 2 * Math.PI - Math.PI / 2;
+        const radiusLat = 0.00035; // ~38m
+        const radiusLng = radiusLat / Math.cos((markerLat * Math.PI) / 180);
+        markerLat += Math.sin(angle) * radiusLat;
+        markerLng += Math.cos(angle) * radiusLng;
+      }
 
       const isSelected = selectedShuttle && String(selectedShuttle._id) === String(shuttle._id);
       const isEnRoute = shuttle.currentStatus === 'en_route';
       const isBoarding = shuttle.currentStatus === 'boarding';
       const isLiveGprs = shuttle.currentCoordinates?.isLive === true;
+
+      // Movement breadcrumb trail for live moving vehicles
+      if (isLiveGprs || isEnRoute) {
+        if (!shuttleTrailsRef.current[shuttle._id]) {
+          shuttleTrailsRef.current[shuttle._id] = [];
+        }
+        const trail = shuttleTrailsRef.current[shuttle._id];
+        const lastPoint = trail[trail.length - 1];
+        if (!lastPoint || Math.abs(lastPoint[0] - markerLat) > 0.0001 || Math.abs(lastPoint[1] - markerLng) > 0.0001) {
+          trail.push([markerLat, markerLng]);
+          if (trail.length > 20) trail.shift();
+        }
+
+        if (trail.length > 1) {
+          if (trailLayersRef.current[shuttle._id]) {
+            trailLayersRef.current[shuttle._id].setLatLngs(trail);
+          } else {
+            const poly = L.polyline(trail, {
+              color: '#0d9488',
+              weight: 3.5,
+              opacity: 0.75,
+              dashArray: '6, 6',
+            }).addTo(leafletMapRef.current);
+            trailLayersRef.current[shuttle._id] = poly;
+          }
+        }
+      }
 
       // Custom HTML Marker Icon
       const customIcon = L.divIcon({
@@ -225,11 +313,18 @@ const ShuttleMap = ({
           <div class="relative flex flex-col items-center group cursor-pointer transition-all duration-300 ${
             isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[100]'
           }">
+            <!-- Multi-car cluster indicator (e.g. Car 1/3 at this station) -->
+            ${clusterSize > 1 ? `
+              <div class="absolute -top-3.5 -left-3 z-20 bg-gray-900/95 text-amber-400 text-[8.5px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-400/80 flex items-center gap-0.5 whitespace-nowrap">
+                <span>Car ${clusterIndex + 1}/${clusterSize}</span>
+              </div>
+            ` : ''}
+
             <!-- Live GPS Satellite badge (only when driver GPRS beacon is ON) -->
             ${isLiveGprs ? `
-              <div class="absolute -top-3 right-0 z-10 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow flex items-center gap-0.5 whitespace-nowrap">
+              <div class="absolute -top-3.5 right-0 z-10 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-1 whitespace-nowrap border border-blue-300 animate-pulse">
                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block"></span>
-                <span>LIVE GPS</span>
+                <span>LIVE GPS • MOVING</span>
               </div>
             ` : ''}
 
@@ -247,9 +342,10 @@ const ShuttleMap = ({
             </div>
 
             <!-- Vehicle Pin Pointer -->
-            <div class="w-8 h-8 -mt-1 rounded-full bg-white dark:bg-gray-900 shadow-md border-2 ${
+            <div class="relative w-8 h-8 -mt-1 rounded-full bg-white dark:bg-gray-900 shadow-md border-2 ${
               isSelected ? 'border-amber-500' : isLiveGprs ? 'border-blue-500' : 'border-teal-600'
             } flex items-center justify-center text-teal-700 dark:text-teal-300">
+              ${isLiveGprs ? '<div class="absolute -inset-2 rounded-full bg-blue-500/20 animate-ping pointer-events-none"></div>' : ''}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C18.1 6.8 17.2 6 16.1 6H7.9C6.8 6 5.9 6.8 5.6 7.8L4.2 12.8c-.1.4-.2.8-.2 1.2 0 .4.1.8.2 1.2.3 1.1.8 2.8.8 2.8h3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>
               </svg>
@@ -262,41 +358,115 @@ const ShuttleMap = ({
         iconAnchor: [40, 58],
       });
 
-      const marker = L.marker([Number(coords.lat), Number(coords.lng)], { icon: customIcon });
+      const marker = L.marker([markerLat, markerLng], { icon: customIcon });
 
-      // Popup with trip snapshot
-      const popupHtml = `
-        <div class="p-2 text-gray-900 min-w-[210px]">
-          <div class="flex items-center justify-between gap-1 mb-1">
-            <span class="text-[10px] font-bold text-teal-600 uppercase tracking-wide">
-              ${shuttle.serviceType === 'interprovincial' ? '🛣️ Inter-Provincial' : '📍 Local Transit'}
-            </span>
-            ${shuttle.isHouseToHouse !== false ? '<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">🏠 House-to-House</span>' : ''}
-          </div>
-          <div class="font-black text-sm mb-1">${shuttle.originCity} ➔ ${shuttle.destinationCity}</div>
-          <div class="text-xs text-gray-600 mb-1">
-            ${shuttle.carType} • <span class="font-mono font-semibold">${shuttle.plateNumber}</span>
-          </div>
-          <div class="text-[11px] text-teal-700 font-medium mb-2">
-            ${shuttle.leavesWhenFull !== false ? '⚡ Leaves when full / almost full' : 'Departure: ' + (shuttle.departureTime || 'Scheduled')}
-          </div>
-          <div class="flex items-center justify-between text-xs pt-1 border-t border-gray-100">
-            <span class="font-bold text-emerald-600">${shuttle.availableSeats} of ${shuttle.totalSeats} seats open</span>
-            <span class="font-black text-amber-600">R${shuttle.pricePerSeat}</span>
-          </div>
-        </div>
-      `;
-
-      marker.bindPopup(popupHtml);
+      // Selected marker always pops on top of all others!
+      marker.setZIndexOffset(isSelected ? 2000 : 100 + clusterIndex);
 
       marker.on('click', () => {
-        if (onSelectShuttle) onSelectShuttle(shuttle);
+        // If this vehicle is already selected and there are other cars in this cluster,
+        // tapping again automatically cycles to the car in the back!
+        if (selectedShuttle && String(selectedShuttle._id) === String(shuttle._id) && clusterSize > 1) {
+          const nextIndex = (clusterIndex + 1) % clusterSize;
+          const nextShuttle = cluster[nextIndex];
+          if (onSelectShuttleRef.current) onSelectShuttleRef.current(nextShuttle);
+        } else {
+          if (onSelectShuttleRef.current) onSelectShuttleRef.current(shuttle);
+        }
       });
 
       marker.addTo(leafletMapRef.current);
       markersRef.current.push(marker);
-      bounds.push([Number(coords.lat), Number(coords.lng)]);
+      bounds.push([markerLat, markerLng]);
     });
+
+    // ── 2km Proximity Trip Alert & Route Visuals ─────────────────
+    if (leafletMapRef.current && userLocation && isValidCoord(userLocation.lat, userLocation.lng)) {
+      const uLat = Number(userLocation.lat);
+      const uLng = Number(userLocation.lng);
+
+      if (proximityCircleRef.current) {
+        proximityCircleRef.current.remove();
+        proximityCircleRef.current = null;
+      }
+      if (routeLineRef.current) {
+        routeLineRef.current.remove();
+        routeLineRef.current = null;
+      }
+      if (routeLabelRef.current) {
+        routeLabelRef.current.remove();
+        routeLabelRef.current = null;
+      }
+
+      // Check distance for selected shuttle, or any shuttle within 2km
+      const targetShuttle = selectedShuttle || shuttles.find((s) => {
+        const c = s.currentCoordinates;
+        if (!c || !isValidCoord(c.lat, c.lng)) return false;
+        const d = calculateDistanceKm(Number(c.lat), Number(c.lng), uLat, uLng);
+        return d !== null && d <= 2.0;
+      });
+
+      if (targetShuttle?.currentCoordinates) {
+        const sLat = Number(targetShuttle.currentCoordinates.lat);
+        const sLng = Number(targetShuttle.currentCoordinates.lng);
+
+        if (isValidCoord(sLat, sLng)) {
+          const distKm = calculateDistanceKm(sLat, sLng, uLat, uLng);
+
+          // If within 2km, draw 2km boundary circle and live connecting line
+          if (distKm !== null && distKm <= 2.0) {
+            // Draw 2km Proximity Circle around user pickup point
+            const circle = L.circle([uLat, uLng], {
+              radius: 2000,
+              color: '#0d9488',
+              fillColor: '#14b8a6',
+              fillOpacity: 0.08,
+              weight: 2,
+              dashArray: '6, 8',
+            }).addTo(leafletMapRef.current);
+            proximityCircleRef.current = circle;
+
+            // Draw dashed connecting route line between vehicle and user
+            const line = L.polyline([[sLat, sLng], [uLat, uLng]], {
+              color: '#0f766e',
+              weight: 3.5,
+              opacity: 0.85,
+              dashArray: '8, 8',
+            }).addTo(leafletMapRef.current);
+            routeLineRef.current = line;
+
+            // Floating midpoint distance badge
+            const midLat = (sLat + uLat) / 2;
+            const midLng = (sLng + uLng) / 2;
+            const midIcon = L.divIcon({
+              className: 'proximity-midpoint-badge',
+              html: `
+                <div class="px-2.5 py-1 rounded-full bg-amber-400 text-gray-950 font-black text-[10px] shadow-xl border border-amber-500 whitespace-nowrap animate-pulse flex items-center gap-1">
+                  <span>🚨</span>
+                  <span>${distKm.toFixed(1)} km away (~${Math.max(1, Math.ceil(distKm * 2))}m)</span>
+                </div>
+              `,
+              iconAnchor: [55, 14],
+            });
+            const label = L.marker([midLat, midLng], { icon: midIcon, zIndexOffset: 3000 }).addTo(leafletMapRef.current);
+            routeLabelRef.current = label;
+
+            // Trigger Trip Alert callback to parent — gate by ref to avoid identity loop
+            const alertKey = String(targetShuttle._id);
+            if (proximityAlertSentRef.current !== alertKey) {
+              proximityAlertSentRef.current = alertKey;
+              if (onProximityAlertRef.current) {
+                onProximityAlertRef.current({
+                  shuttle: targetShuttle,
+                  distanceKm: distKm,
+                  userLocation,
+                });
+              }
+            }
+          }
+        }
+      }
+    }
 
     // Fit map bounds if multiple markers exist
     if (bounds.length > 1 && !selectedShuttle) {
@@ -304,7 +474,9 @@ const ShuttleMap = ({
         leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
       } catch (e) {}
     }
-  }, [shuttles, selectedShuttle, mapReady, onSelectShuttle]);
+  // ⚠️ onSelectShuttle & onProximityAlert intentionally omitted — stored in refs above
+  // to prevent their identity changes from triggering an infinite re-render loop.
+  }, [shuttles, selectedShuttle, userLocation, mapReady]);
 
   // Fly to selected shuttle
   useEffect(() => {
@@ -357,24 +529,14 @@ const ShuttleMap = ({
         });
 
         const marker = L.marker([latitude, longitude], { icon: gprsIcon });
-        marker.bindPopup(`
-          <div class="p-2 text-xs text-gray-900 font-sans">
-            <div class="font-black text-blue-600 flex items-center gap-1 mb-1">
-              <span>📍 Your Phone GPRS Location</span>
-            </div>
-            <div class="text-[11px] text-gray-600 font-mono">
-              ${latitude.toFixed(4)}, ${longitude.toFixed(4)}
-            </div>
-            <div class="text-[10px] text-emerald-600 mt-1 font-semibold">
-              Accuracy: ~${Math.round(accuracy || 10)}m
-            </div>
-          </div>
-        `);
 
         marker.addTo(leafletMapRef.current);
         userGprsMarkerRef.current = marker;
 
         leafletMapRef.current.flyTo([latitude, longitude], 14, { duration: 1.5 });
+        if (onUserLocationChange) {
+          onUserLocationChange({ lat: latitude, lng: longitude, accuracy });
+        }
         setGprsStatus(`📍 GPRS Allocated (~${Math.round(accuracy || 10)}m accuracy)`);
         setTimeout(() => setGprsStatus(null), 5000);
       },
@@ -400,125 +562,18 @@ const ShuttleMap = ({
         isFullscreen ? 'fixed inset-0 z-50 rounded-none h-screen' : `${heightClass} rounded-none border-x-0 border-t-0 shadow-md`
       }`}
     >
-      {/* Map Leaflet Container */}
+      {/* Hide map zoom / scrolling buttons & controls */}
+      <style>{`
+        .leaflet-control-zoom,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-bar {
+          display: none !important;
+        }
+      `}</style>
+
+      {/* Map Leaflet Container - Clean edge-to-edge view with no belt menu */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
-
-      {/* Top Map Floating Bar */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10 flex-wrap gap-2">
-        <div className="pointer-events-auto flex items-center gap-2 flex-wrap">
-          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-gray-200/80 dark:border-gray-700 shadow-md flex items-center gap-2 text-xs font-bold text-gray-800 dark:text-gray-200">
-            <Bus className="w-4 h-4 text-teal-600" />
-            <span className="hidden xs:inline">Live Radar</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-gray-400 font-normal">({shuttles.length})</span>
-          </div>
-
-          {/* Live GPS drivers badge */}
-          {liveActiveCount > 0 && (
-            <div className="bg-blue-600/95 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-pulse">
-              <Wifi className="w-3 h-3" />
-              <span>{liveActiveCount} Live GPS</span>
-            </div>
-          )}
-
-          {/* Free Google Map Layer Selector */}
-          <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md p-0.5 rounded-full border border-gray-200/80 dark:border-gray-700 shadow-md flex items-center gap-1">
-            {Object.values(MAP_PROVIDERS).map((prov) => (
-              <button
-                key={prov.id}
-                type="button"
-                onClick={() => switchMapStyle(prov.id)}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1 ${
-                  mapStyle === prov.id
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-                title={prov.name}
-              >
-                <span>{prov.icon}</span>
-                <span className="hidden sm:inline text-[11px]">{prov.name}</span>
-              </button>
-            ))}
-          </div>
-
-          {gprsStatus && (
-            <div className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg animate-in fade-in flex items-center gap-1.5">
-              <Radio className="w-3 h-3 animate-ping" />
-              <span>{gprsStatus}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="pointer-events-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleLocateMe}
-            disabled={locatingUser}
-            className="p-2.5 rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 shadow-md hover:bg-gray-50 border border-gray-200 dark:border-gray-700 transition-transform active:scale-95 flex items-center gap-1.5"
-            title="Allocate phone GPRS position on Google Map"
-          >
-            <Navigation className={`w-4 h-4 text-blue-600 ${locatingUser ? 'animate-spin' : ''}`} />
-            <span className="hidden md:inline text-xs font-bold text-blue-600">
-              {locatingUser ? 'GPRS...' : 'Phone GPRS'}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleResetView}
-            className="p-2.5 rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 shadow-md hover:bg-gray-50 border border-gray-200 dark:border-gray-700 transition-transform active:scale-95"
-            title="Reset South Africa View"
-          >
-            <Compass className="w-4 h-4 text-amber-500" />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2.5 rounded-full bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 shadow-md hover:bg-gray-50 border border-gray-200 dark:border-gray-700 transition-transform active:scale-95"
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen Map'}
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Selected Shuttle mini popup strip at bottom of map */}
-      {selectedShuttle && (
-        <div className="absolute bottom-3 left-3 right-3 sm:left-auto sm:right-3 sm:max-w-md pointer-events-auto bg-white/95 dark:bg-gray-900/95 backdrop-blur-md p-3.5 rounded-2xl border border-gray-200/80 dark:border-gray-700 shadow-xl z-10 flex items-center justify-between gap-3 animate-in slide-in-from-bottom-2 duration-200">
-          <div>
-            <div className="text-[11px] font-bold text-teal-600 uppercase">
-              {selectedShuttle.originCity} ➔ {selectedShuttle.destinationCity}
-            </div>
-            <div className="text-sm font-bold text-gray-900 dark:text-gray-100">
-              {selectedShuttle.carType}
-            </div>
-            <div className="text-xs text-gray-500">
-              {selectedShuttle.availableSeats} of {selectedShuttle.totalSeats} seats open •{' '}
-              {selectedShuttle.leavesWhenFull !== false
-                ? '⚡ Leaves when full'
-                : `Departure: ${selectedShuttle.departureTime}`}
-              {selectedShuttle.isHouseToHouse !== false && ' • 🏠 House-to-House'}
-            </div>
-          </div>
-
-          <div className="text-right shrink-0">
-            <div className="text-base font-black text-amber-500">
-              R{selectedShuttle.pricePerSeat}
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (onRequestPickup) onRequestPickup(selectedShuttle);
-                else if (onSelectShuttle) onSelectShuttle(selectedShuttle);
-              }}
-              className="mt-1 px-3 py-1 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition"
-            >
-              Request Pickup ➔
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

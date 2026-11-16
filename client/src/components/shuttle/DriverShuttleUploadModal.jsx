@@ -90,6 +90,14 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
   const [driverLicenceNumber, setDriverLicenceNumber] = useState('');
   const [yearsExperience, setYearsExperience] = useState('5+ years');
 
+  // ── Banking Details (for passenger EFT payments) ─────────────
+  const [bankName, setBankName] = useState('');
+  const [bankAccountHolder, setBankAccountHolder] = useState(currentUser?.name || currentUser?.username || '');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankBranchCode, setBankBranchCode] = useState('');
+  const [bankAccountType, setBankAccountType] = useState('Savings');
+  const [bankReference, setBankReference] = useState('');
+
   // ── Step 3: Pricing, Route & House-to-House Collection ───────
   const [departureProvince, setDepartureProvince] = useState('Gauteng');
   const [destinationProvince, setDestinationProvince] = useState('Limpopo');
@@ -303,6 +311,13 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         driverIdScan: driverIdScan.trim(),
         driverFaceScan: driverFaceScan.trim(),
         driverLicenceNumber: driverLicenceNumber.trim(),
+        // Banking details for direct EFT from passengers
+        bankName: bankName.trim(),
+        bankAccountHolder: bankAccountHolder.trim() || driverName.trim(),
+        bankAccountNumber: bankAccountNumber.trim(),
+        bankBranchCode: bankBranchCode.trim(),
+        bankAccountType: bankAccountType.trim(),
+        bankReference: bankReference.trim(),
         features,
         notes: `Experience: ${yearsExperience}. Home base: ${driverHomeTown}, ${driverHomeProvince}.`,
         currentCoordinates: {
@@ -334,10 +349,10 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in-quick">
       {/* 100% Real Popup Container (From down and going up + fade-in) */}
       <div 
-        className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[94vh] animate-in slide-in-from-bottom duration-300"
+        className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[94vh] animate-slide-up-fade"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator */}
@@ -746,6 +761,90 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                 <span>
                   LoopOut displays your verified status badge to passengers, ensuring safer bookings and higher passenger trust.
                 </span>
+              </div>
+
+              {/* ── Banking Details Section ───────────────────── */}
+              <div className="p-4 rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                  <span>🏦</span>
+                  <span>Banking Details (Passengers pay you directly via EFT)</span>
+                </div>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  Passengers will EFT their fare directly to your account. You'll confirm receipt on LoopOut before their ticket is activated.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Bank Name</label>
+                    <select
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Bank</option>
+                      <option value="ABSA">ABSA</option>
+                      <option value="Capitec">Capitec</option>
+                      <option value="FNB">FNB (First National Bank)</option>
+                      <option value="Nedbank">Nedbank</option>
+                      <option value="Standard Bank">Standard Bank</option>
+                      <option value="African Bank">African Bank</option>
+                      <option value="Discovery Bank">Discovery Bank</option>
+                      <option value="TymeBank">TymeBank</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Type</label>
+                    <select
+                      value={bankAccountType}
+                      onChange={(e) => setBankAccountType(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Savings">Savings Account</option>
+                      <option value="Cheque">Cheque / Current Account</option>
+                      <option value="Transmission">Transmission Account</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Holder Name</label>
+                    <input
+                      type="text"
+                      value={bankAccountHolder}
+                      onChange={(e) => setBankAccountHolder(e.target.value)}
+                      placeholder="Full name as registered with bank"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      value={bankAccountNumber}
+                      onChange={(e) => setBankAccountNumber(e.target.value)}
+                      placeholder="e.g. 62012345678"
+                      className="w-full px-3.5 py-2.5 text-sm font-mono rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Branch / Sort Code</label>
+                    <input
+                      type="text"
+                      value={bankBranchCode}
+                      onChange={(e) => setBankBranchCode(e.target.value)}
+                      placeholder="e.g. 250655"
+                      className="w-full px-3.5 py-2.5 text-sm font-mono rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Payment Reference <span className="text-gray-400 font-normal">(optional — your name or preferred ref)</span></label>
+                    <input
+                      type="text"
+                      value={bankReference}
+                      onChange={(e) => setBankReference(e.target.value)}
+                      placeholder="e.g. Sipho Shuttle or leave blank (ticket code will be used)"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

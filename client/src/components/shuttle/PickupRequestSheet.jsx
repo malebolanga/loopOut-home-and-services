@@ -58,6 +58,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
   const [passengerName, setPassengerName] = useState(currentUser?.name || currentUser?.username || '');
   const [passengerPhone, setPassengerPhone] = useState(currentUser?.phone || '');
   const [pickupAddress, setPickupAddress] = useState(pickupStation || originCity);
+  const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffAddress, setDropoffAddress] = useState(dropoffStation || destinationCity);
   const [seatsCount, setSeatsCount] = useState(1);
   const [selectedSeatNumbers, setSelectedSeatNumbers] = useState(['Seat 1']);
@@ -106,6 +107,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
           streetAddress = `GPS Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
         }
 
+        setPickupCoords({ lat: latitude, lng: longitude });
         setPickupAddress(streetAddress);
         setLocating(false);
       },
@@ -161,6 +163,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
         seatNumbers: selectedSeatNumbers,
         extraBagsCount,
         pickupLocation: pickupAddress.trim(),
+        pickupCoordinates: pickupCoords,
         dropoffLocation: dropoffAddress.trim(),
         passengerNotes: passengerNotes.trim(),
       };
@@ -219,10 +222,10 @@ Hi ${driverName}, I just submitted my pickup request on LoopOut! Please confirm 
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in-quick">
       {/* Slide-Up Filler Panel ("Second page going up") */}
       <div 
-        className="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[92vh] animate-in slide-in-from-bottom duration-300"
+        className="relative w-full max-w-xl bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col max-h-[92vh] animate-slide-up-fade"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Handle bar on mobile */}

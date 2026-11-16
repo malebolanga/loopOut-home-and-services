@@ -79,6 +79,14 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
   const [currentStatus, setCurrentStatus] = useState(shuttle.currentStatus || 'scheduled');
   const [currentAddress, setCurrentAddress] = useState(shuttle.currentCoordinates?.address || '');
   const [coordinates, setCoordinates] = useState(shuttle.currentCoordinates || { lat: -26.2041, lng: 28.0473 });
+
+  // Banking details (editable from this modal too)
+  const [bankName, setBankName] = useState(shuttle.bankName || '');
+  const [bankAccountHolder, setBankAccountHolder] = useState(shuttle.bankAccountHolder || shuttle.driverName || '');
+  const [bankAccountNumber, setBankAccountNumber] = useState(shuttle.bankAccountNumber || '');
+  const [bankBranchCode, setBankBranchCode] = useState(shuttle.bankBranchCode || '');
+  const [bankAccountType, setBankAccountType] = useState(shuttle.bankAccountType || 'Savings');
+  const [bankReference, setBankReference] = useState(shuttle.bankReference || '');
   
   // States
   const [loading, setLoading] = useState(false);
@@ -109,6 +117,12 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
       setCurrentStatus(shuttle.currentStatus || 'scheduled');
       setCurrentAddress(shuttle.currentCoordinates?.address || '');
       setCoordinates(shuttle.currentCoordinates || { lat: -26.2041, lng: 28.0473 });
+      setBankName(shuttle.bankName || '');
+      setBankAccountHolder(shuttle.bankAccountHolder || shuttle.driverName || '');
+      setBankAccountNumber(shuttle.bankAccountNumber || '');
+      setBankBranchCode(shuttle.bankBranchCode || '');
+      setBankAccountType(shuttle.bankAccountType || 'Savings');
+      setBankReference(shuttle.bankReference || '');
       setError(null);
       setSuccessMsg(null);
     }
@@ -358,7 +372,14 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
           lng: Number(coordinates.lng) || 28.0473,
           address: currentAddress.trim() || shuttle.originCity,
           updatedAt: new Date()
-        }
+        },
+        // Banking details update
+        bankName: bankName.trim(),
+        bankAccountHolder: bankAccountHolder.trim() || shuttle.driverName,
+        bankAccountNumber: bankAccountNumber.trim(),
+        bankBranchCode: bankBranchCode.trim(),
+        bankAccountType: bankAccountType.trim(),
+        bankReference: bankReference.trim(),
       };
 
       const res = await axios.put(`/api/shuttles/update/${shuttle._id}`, payload, {
@@ -749,6 +770,86 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
               <span>{successMsg}</span>
             </div>
           )}
+
+          {/* ── Banking Details ─────────────────────────────── */}
+          <div className="p-4 rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/50 dark:bg-blue-950/20 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
+              🏦 <span>Banking Details (Passenger EFT Payments)</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Bank Name</label>
+                <select
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full px-2.5 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Bank</option>
+                  <option value="ABSA">ABSA</option>
+                  <option value="Capitec">Capitec</option>
+                  <option value="FNB">FNB</option>
+                  <option value="Nedbank">Nedbank</option>
+                  <option value="Standard Bank">Standard Bank</option>
+                  <option value="African Bank">African Bank</option>
+                  <option value="Discovery Bank">Discovery Bank</option>
+                  <option value="TymeBank">TymeBank</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Type</label>
+                <select
+                  value={bankAccountType}
+                  onChange={(e) => setBankAccountType(e.target.value)}
+                  className="w-full px-2.5 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Savings">Savings</option>
+                  <option value="Cheque">Cheque / Current</option>
+                  <option value="Transmission">Transmission</option>
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Holder</label>
+                <input
+                  type="text"
+                  value={bankAccountHolder}
+                  onChange={(e) => setBankAccountHolder(e.target.value)}
+                  placeholder="Full name as on bank account"
+                  className="w-full px-2.5 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
+                <input
+                  type="text"
+                  value={bankAccountNumber}
+                  onChange={(e) => setBankAccountNumber(e.target.value)}
+                  placeholder="e.g. 62012345678"
+                  className="w-full px-2.5 py-2 text-xs font-mono rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Branch Code</label>
+                <input
+                  type="text"
+                  value={bankBranchCode}
+                  onChange={(e) => setBankBranchCode(e.target.value)}
+                  placeholder="e.g. 250655"
+                  className="w-full px-2.5 py-2 text-xs font-mono rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Payment Reference <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input
+                  type="text"
+                  value={bankReference}
+                  onChange={(e) => setBankReference(e.target.value)}
+                  placeholder="e.g. your name, or leave blank"
+                  className="w-full px-2.5 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Submit Footer */}
           <div className="pt-2 flex items-center justify-end gap-3 border-t border-gray-100 dark:border-gray-800">

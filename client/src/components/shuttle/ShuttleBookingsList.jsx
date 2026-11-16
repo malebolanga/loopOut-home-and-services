@@ -9,11 +9,16 @@ import {
   Ticket, 
   CreditCard, 
   User, 
-  ArrowRight,
-  ShieldCheck,
-  Calendar,
-  MapPin,
-  RefreshCw
+  ArrowRight, 
+  ShieldCheck, 
+  Calendar, 
+  MapPin, 
+  RefreshCw, 
+  Star, 
+  X,
+  Copy,
+  Check,
+  Building2
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -135,26 +140,61 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
     }
   };
 
-  // Handle Passenger Paying within 24 hours
-  const handlePay = async (bookingId) => {
-    if (!window.confirm('Confirm payment to lock in your seat and generate your official boarding ticket?')) {
+  const [copiedField, setCopiedField] = useState(null);
+  const copyToClipboard = (text, fieldName) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  // Handle Driver Confirming Passenger EFT Payment in their bank account
+  const handleConfirmPayment = async (booking) => {
+    if (!window.confirm(`Confirm that you have received R${booking.totalPrice} from ${booking.passengerName} in your bank account?\n\nThis will mark the seat as paid and issue their official boarding ticket.`)) {
       return;
     }
 
-    setActionLoading(bookingId);
+    setActionLoading(booking._id);
     try {
-      const res = await axios.put(`/api/shuttle-bookings/pay/${bookingId}`, {
-        paymentMethod: 'Instant LoopPay Card / EFT'
+      const res = await axios.put(`/api/shuttle-bookings/pay/${booking._id}`, {
+        paymentMethod: 'Direct EFT / Bank Account Transfer (Confirmed by Driver)'
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
 
       if (res.data?.success) {
-        alert('🎉 Payment confirmed! Your digital boarding pass is issued.');
+        alert('🎉 Payment confirmed! Passenger has been notified and their ticket is now active.');
         fetchBookings();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Payment failed.');
+      alert(err.response?.data?.message || 'Could not confirm payment.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle Passenger Rating a completed/paid trip
+  const [ratingModal, setRatingModal] = useState(null); // { bookingId, selectedStars, review }
+
+  const handleRateTrip = async () => {
+    if (!ratingModal || !ratingModal.selectedStars) {
+      alert('Please select a star rating (1–5).');
+      return;
+    }
+    setActionLoading(ratingModal.bookingId);
+    try {
+      const res = await axios.put(`/api/shuttle-bookings/rate/${ratingModal.bookingId}`, {
+        rating: ratingModal.selectedStars,
+        review: ratingModal.review || '',
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      if (res.data?.success) {
+        setRatingModal(null);
+        fetchBookings();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not submit rating.');
     } finally {
       setActionLoading(null);
     }
@@ -256,9 +296,9 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
                   )}
 
                   {isApproved && (
-                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Approved! Pay within 24h
+                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {role === 'passenger' ? 'Approved! Send EFT to Driver' : 'Awaiting EFT Payment'}
                     </span>
                   )}
 
@@ -403,20 +443,107 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
                     )}
 
                     {isApproved && (
-                      <button
-                        type="button"
-                        onClick={() => handlePay(booking._id)}
-                        disabled={actionLoading === booking._id}
-                        className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2"
-                      >
-                        <CreditCard className="w-4 h-4" />
-                        <span>Pay R{booking.totalPrice} to Confirm Seat</span>
-                      </button>
+                      <div className="space-y-3">
+                        {/* Banking Details Card */}
+                        {shuttle.bankAccountNumber ? (
+                          <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 space-y-2 text-xs">
+                            <div className="flex items-center gap-1.5 font-black text-blue-800 dark:text-blue-200 uppercase tracking-wide text-[10px]">
+                              <Building2 className="w-3.5 h-3.5" />
+                              Pay via EFT to Driver's Bank Account
+                            </div>
+                            {shuttle.bankName && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-700 dark:text-blue-300">🏦 Bank:</span>
+                                <span className="font-bold text-blue-900 dark:text-blue-100">{shuttle.bankName}</span>
+                              </div>
+                            )}
+                            {(shuttle.bankAccountHolder || shuttle.driverName) && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-700 dark:text-blue-300">👤 Account Holder:</span>
+                                <span className="font-bold text-blue-900 dark:text-blue-100">{shuttle.bankAccountHolder || shuttle.driverName}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-blue-700 dark:text-blue-300">🔢 Account No:</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono font-black text-blue-900 dark:text-blue-100 tracking-widest">{shuttle.bankAccountNumber}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(shuttle.bankAccountNumber, 'accNum')}
+                                  className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 hover:bg-blue-200 transition"
+                                  title="Copy account number"
+                                >
+                                  {copiedField === 'accNum' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                </button>
+                              </div>
+                            </div>
+                            {shuttle.bankBranchCode && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-700 dark:text-blue-300">🏢 Branch Code:</span>
+                                <span className="font-mono font-bold text-blue-900 dark:text-blue-100">{shuttle.bankBranchCode}</span>
+                              </div>
+                            )}
+                            {shuttle.bankAccountType && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-blue-700 dark:text-blue-300">💳 Account Type:</span>
+                                <span className="font-bold text-blue-900 dark:text-blue-100 capitalize">{shuttle.bankAccountType}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between">
+                              <span className="text-blue-700 dark:text-blue-300">📝 Reference:</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono font-black text-blue-900 dark:text-blue-100">{shuttle.bankReference || booking.ticketCode}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(shuttle.bankReference || booking.ticketCode, 'ref')}
+                                  className="p-1 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 hover:bg-blue-200 transition"
+                                  title="Copy reference"
+                                >
+                                  {copiedField === 'ref' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                </button>
+                              </div>
+                            </div>
+                            <div className="mt-2 p-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-[10px] text-blue-800 dark:text-blue-200 font-semibold">
+                              💡 Once you've made the EFT, the driver will confirm receipt on LoopOut and your ticket will be ready.
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-200">
+                            <p className="font-bold mb-1">💳 Payment Instructions</p>
+                            <p>Contact the driver directly at <a href={`tel:${shuttle.driverPhone}`} className="underline font-bold">{shuttle.driverPhone}</a> for banking details to pay R{booking.totalPrice}.</p>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {isPaid && (
-                      <div className="text-xs text-center text-emerald-600 font-bold py-1">
-                        ✓ Ready to Board. Present ticket code to driver at pickup.
+                      <div className="space-y-2">
+                        <div className="text-xs text-center text-emerald-600 font-bold py-1">
+                          ✓ Ready to Board. Present ticket code to driver at pickup.
+                        </div>
+                        {/* Rate Trip button — only if not yet rated */}
+                        {!booking.passengerRating && (
+                          <button
+                            type="button"
+                            onClick={() => setRatingModal({ bookingId: booking._id, selectedStars: 0, review: '' })}
+                            className="w-full py-2 px-4 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center justify-center gap-2 transition"
+                          >
+                            <Star className="w-4 h-4 text-amber-500" />
+                            <span>Rate Your Trip</span>
+                          </button>
+                        )}
+                        {/* Show submitted rating */}
+                        {booking.passengerRating && (
+                          <div className="flex items-center justify-center gap-1 py-1 text-xs text-amber-600 font-bold">
+                            {[1,2,3,4,5].map((s) => (
+                              <Star
+                                key={s}
+                                className={`w-4 h-4 ${s <= booking.passengerRating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+                              />
+                            ))}
+                            <span className="ml-1 text-gray-500 font-normal">You rated {booking.passengerRating}★</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
@@ -449,8 +576,35 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
                     )}
 
                     {isApproved && (
-                      <div className="text-xs text-center text-amber-600 dark:text-amber-400 py-1 font-medium">
-                        Waiting for passenger to complete payment within 24h.
+                      <div className="space-y-2.5">
+                        <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs space-y-1">
+                          <p className="text-amber-800 dark:text-amber-200 font-bold">⏳ Waiting for EFT payment from passenger</p>
+                          <p className="text-amber-700 dark:text-amber-300">
+                            👤 <strong>{booking.passengerName}</strong>
+                            {booking.passengerPhone && (
+                              <> — <a href={`tel:${booking.passengerPhone}`} className="underline font-bold">{booking.passengerPhone}</a></>
+                            )}
+                          </p>
+                          <p className="text-amber-700 dark:text-amber-300">
+                            💰 Amount due: <strong>R{booking.totalPrice}</strong>
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleConfirmPayment(booking)}
+                          disabled={actionLoading === booking._id}
+                          className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {actionLoading === booking._id ? (
+                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4" />
+                          )}
+                          <span>✅ Confirm EFT Payment Received</span>
+                        </button>
+                        <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 italic">
+                          Only confirm after you see the EFT in your bank account
+                        </p>
                       </div>
                     )}
 
@@ -467,6 +621,107 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
           );
         })}
       </div>
+
+      {/* ── Rate Trip Modal ──────────────────────────────────────── */}
+      {ratingModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div
+            className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-500 fill-amber-400" />
+                <h4 className="text-base font-bold text-gray-900 dark:text-gray-100">
+                  Rate Your Trip
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRatingModal(null)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="py-5 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                How was your journey? Your rating directly updates the driver's verified score on the live radar.
+              </p>
+
+              {/* 5 Interactive Stars */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRatingModal({ ...ratingModal, selectedStars: star })}
+                    className="p-1 transition-transform hover:scale-125 active:scale-95"
+                  >
+                    <Star
+                      className={`w-8 h-8 transition-colors ${
+                        star <= (ratingModal.selectedStars || 0)
+                          ? 'fill-amber-400 text-amber-400'
+                          : 'text-gray-300 dark:text-gray-700 hover:text-amber-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+
+              {ratingModal.selectedStars > 0 && (
+                <div className="text-sm font-bold text-amber-500 mb-4">
+                  {ratingModal.selectedStars === 5 && '🌟 Excellent / 5 Stars'}
+                  {ratingModal.selectedStars === 4 && '👍 Great Service / 4 Stars'}
+                  {ratingModal.selectedStars === 3 && '👌 Good Trip / 3 Stars'}
+                  {ratingModal.selectedStars === 2 && '⚠️ Fair / 2 Stars'}
+                  {ratingModal.selectedStars === 1 && '👎 Poor / 1 Star'}
+                </div>
+              )}
+
+              {/* Optional Text Review */}
+              <textarea
+                value={ratingModal.review || ''}
+                onChange={(e) => setRatingModal({ ...ratingModal, review: e.target.value })}
+                placeholder="Write a brief comment about the driver, punctuality, or car comfort (optional)..."
+                rows="3"
+                className="w-full px-3.5 py-2.5 text-xs rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 outline-none resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => setRatingModal(null)}
+                disabled={actionLoading === ratingModal.bookingId}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRateTrip}
+                disabled={actionLoading === ratingModal.bookingId || !ratingModal.selectedStars}
+                className={`px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md ${
+                  ratingModal.selectedStars
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-amber-500/20 hover:brightness-105 active:scale-95'
+                    : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
+                }`}
+              >
+                {actionLoading === ratingModal.bookingId ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    <span>Submit Rating</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Bus, 
@@ -15,7 +15,8 @@ import {
   ArrowLeft,
   X,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Phone
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
@@ -52,6 +53,30 @@ const ShuttlePage = () => {
   const [selectedShuttleForBooking, setSelectedShuttleForBooking] = useState(null);
   const [shuttleForScheduleModal, setShuttleForScheduleModal] = useState(null);
   const [highlightedShuttle, setHighlightedShuttle] = useState(null);
+  const [isCardOpen, setIsCardOpen] = useState(false);
+
+  // 2km Trip Alert & User Location States
+  const [userLocation, setUserLocation] = useState(null);
+  const [tripAlert, setTripAlert] = useState(null);
+  // Use a ref (not state) for dismissedAlerts so dismissing doesn't trigger
+  // a re-render that re-creates handleProximityAlert and re-fires the map effect.
+  const dismissedAlertsRef = useRef({});
+
+  // Auto-locate passenger GPS for 2km proximity alerts
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const { latitude, longitude } = pos.coords;
+          if (latitude && longitude) {
+            setUserLocation({ lat: latitude, lng: longitude });
+          }
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    }
+  }, []);
 
   // Data states
   const [shuttles, setShuttles] = useState([]);
@@ -100,13 +125,23 @@ const ShuttlePage = () => {
         const list = res.data.shuttles || [];
         setShuttles(list);
 
-        // Keep current selected shuttle or default to first
-        setHighlightedShuttle((prev) => {
-          if (prev && list.some((s) => String(s._id) === String(prev._id))) {
-            return list.find((s) => String(s._id) === String(prev._id));
+        // If shuttleId was requested via query param, select it and open card
+        const paramId = searchParams.get('shuttleId');
+        if (paramId) {
+          const match = list.find((s) => String(s._id) === String(paramId));
+          if (match) {
+            setHighlightedShuttle(match);
+            setIsCardOpen(true);
           }
-          return list.length > 0 ? list[0] : null;
-        });
+        } else {
+          // Keep current selected shuttle or default to first for quick reference
+          setHighlightedShuttle((prev) => {
+            if (prev && list.some((s) => String(s._id) === String(prev._id))) {
+              return list.find((s) => String(s._id) === String(prev._id));
+            }
+            return list.length > 0 ? list[0] : null;
+          });
+        }
       }
     } catch (err) {
       console.error('Error fetching shuttles:', err);
@@ -154,8 +189,74 @@ const ShuttlePage = () => {
     });
   }, []);
 
+  // Map Car Click: opens card by fade-in; tapping same car toggles fade-out
+  const handleSelectShuttle = (shuttle) => {
+    if (!shuttle) {
+      setIsCardOpen(false);
+      return;
+    }
+    if (isCardOpen && highlightedShuttle && String(highlightedShuttle._id) === String(shuttle._id)) {
+      setIsCardOpen(false); // Toggle fade-out
+    } else {
+      setHighlightedShuttle(shuttle);
+      setIsCardOpen(true); // Open by fade-in
+    }
+  };
+
+  // Web Audio Proximity Alert Chime (880Hz ➔ 1174Hz sine chime) + Haptics
+  const playTripAlertChime = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.6);
+      if (navigator.vibrate) {
+        navigator.vibrate([250, 100, 250]);
+      }
+    } catch (e) {}
+  }, []);
+
+  // 2km Proximity Alert Callback from map
+  const handleProximityAlert = useCallback((alertData) => {
+    const { shuttle, distanceKm } = alertData;
+    if (!shuttle?._id) return;
+
+    // Check if dismissed recently (within 10 minutes) — read from ref to avoid dep changes
+    const dismissedAt = dismissedAlertsRef.current[shuttle._id];
+    if (dismissedAt && Date.now() - dismissedAt < 1000 * 60 * 10) {
+      return;
+    }
+
+    setTripAlert((prev) => {
+      // If newly entering within 2km, play chime
+      if (!prev || String(prev.shuttle?._id) !== String(shuttle._id)) {
+        playTripAlertChime();
+      }
+      return { shuttle, distanceKm };
+    });
+  // dismissedAlertsRef is a ref — stable, never changes identity, so empty deps is correct
+  }, [playTripAlertChime]);
+
+  const handleDismissAlert = (shuttleId) => {
+    setTripAlert(null);
+    if (shuttleId) {
+      // Write to ref instead of state to avoid re-render → re-trigger chain
+      dismissedAlertsRef.current[shuttleId] = Date.now();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col justify-between pb-6">
+    <div className="h-screen w-screen overflow-hidden bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col relative">
       {/* ── Top Sleek Uber Navigation Bar ─────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 px-3 sm:px-6 py-2.5 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
@@ -219,45 +320,129 @@ const ShuttlePage = () => {
         </div>
       </header>
 
-      {/* ── Main Uber Layout: 100% Full Width Map Edge-to-Edge ── */}
-      <main className="flex-1 w-full flex flex-col">
-        {/* BIG MAP AT THE TOP (100% at Left and Right) */}
-        <div className="w-full">
+      {/* ── Main Uber Layout: 100% Full Width Map Edge-to-Edge with 100% Bottom Card ── */}
+      <main className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
+        {/* ── 2km Trip Proximity Alert Banner ── */}
+        {tripAlert && (
+          <div className="fixed top-14 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl z-50 animate-slide-up-fade">
+            <div className="bg-gradient-to-r from-gray-950 via-teal-950 to-gray-900 text-white rounded-3xl p-4 sm:p-5 shadow-2xl border-2 border-teal-400 flex items-center justify-between gap-3 backdrop-blur-md">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400 text-teal-300 flex items-center justify-center shrink-0 relative">
+                  <span className="w-3.5 h-3.5 rounded-full bg-teal-400 animate-ping absolute -top-1 -right-1" />
+                  <Navigation className="w-6 h-6 animate-pulse" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-400 text-gray-950">
+                      🚨 2 KM TRIP ALERT
+                    </span>
+                    <span className="text-xs font-bold text-amber-300 animate-pulse">
+                      ~{tripAlert.distanceKm.toFixed(1)} km away ({Math.max(1, Math.ceil(tripAlert.distanceKm * 2))} mins)
+                    </span>
+                  </div>
+
+                  <div className="text-sm font-extrabold truncate text-white mt-1">
+                    {tripAlert.shuttle?.plateNumber} • {tripAlert.shuttle?.driverName}
+                  </div>
+
+                  <p className="text-[11px] text-gray-300 truncate">
+                    Shuttle is approaching your pickup point. Please get ready to board!
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {tripAlert.shuttle?.driverPhone && (
+                  <a
+                    href={`tel:${tripAlert.shuttle.driverPhone}`}
+                    className="px-3 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition shadow active:scale-95"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Call</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleDismissAlert(tripAlert.shuttle?._id)}
+                  className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition active:scale-95"
+                  title="Dismiss Alert"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BIG MAP FILLING FULL SCREEN */}
+        <div className="w-full h-full flex-1">
           <ShuttleMap
             shuttles={shuttles}
-            selectedShuttle={highlightedShuttle}
-            onSelectShuttle={(shuttle) => {
-              setHighlightedShuttle(shuttle);
-            }}
+            selectedShuttle={isCardOpen ? highlightedShuttle : null}
+            onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
               setHighlightedShuttle(shuttle);
+              setIsCardOpen(true);
               setSelectedShuttleForBooking(shuttle);
             }}
             onLiveRefresh={handleLiveRefresh}
-            heightClass="h-[75vh] sm:h-[82vh] lg:h-[86vh]"
+            userLocation={userLocation}
+            onUserLocationChange={(loc) => setUserLocation(loc)}
+            onProximityAlert={handleProximityAlert}
+            heightClass="h-full"
           />
         </div>
 
-        {/* SELECTED CAR APPEARS UNDERNEATH THE MAP */}
-        <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-4">
-          {highlightedShuttle ? (
-            <div className="animate-in fade-in slide-in-from-bottom-3 duration-300">
+        {/* 100% FULL WIDTH BOTTOM CARD (COMING UP FROM DOWN / FADE-IN & SLIDE DOWN / FADE-OUT) */}
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-30 w-full transition-all duration-300 ease-out ${
+            isCardOpen && highlightedShuttle
+              ? 'translate-y-0 opacity-100 pointer-events-auto'
+              : 'translate-y-full opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="w-full">
+            {highlightedShuttle && (
               <UberDriverCard
+                key={highlightedShuttle._id}
                 shuttle={highlightedShuttle}
                 allShuttles={shuttles}
-                onSelectShuttle={(s) => setHighlightedShuttle(s)}
+                onSelectShuttle={handleSelectShuttle}
                 onRequestPickup={(s) => setSelectedShuttleForBooking(s)}
                 currentUser={currentUser}
+                userLocation={userLocation}
+                onClose={() => setIsCardOpen(false)}
               />
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-200 dark:border-gray-800 text-center shadow-lg">
-              <Bus className="w-10 h-10 mx-auto text-teal-600 mb-2 animate-pulse" />
-              <p className="text-sm font-bold text-gray-800 dark:text-gray-200">
-                👆 Tap any vehicle on the live map above to view the driver and request pickup.
-              </p>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+
+        {/* Small floating prompt pill when card is closed */}
+        <div
+          className={`fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ease-out ${
+            !isCardOpen
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-6 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                if (highlightedShuttle) {
+                  setIsCardOpen(true);
+                } else if (shuttles.length > 0) {
+                  setHighlightedShuttle(shuttles[0]);
+                  setIsCardOpen(true);
+                }
+              }}
+              className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-center shadow-xl flex items-center gap-2 text-xs font-bold text-gray-800 dark:text-gray-200 hover:scale-105 active:scale-95 transition"
+            >
+              <Bus className="w-4 h-4 text-teal-600 animate-pulse" />
+              <span>👆 Tap any vehicle on the map to view driver & book</span>
+            </button>
+          </div>
         </div>
       </main>
 

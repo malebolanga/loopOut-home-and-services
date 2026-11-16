@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Zap,
   Home as HomeIcon,
-  Settings
+  Settings,
+  Star
 } from 'lucide-react';
 
 const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, currentUser }) => {
@@ -54,6 +55,9 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
     luggageNotes = '',
     driverLicenceScan = '',
     driverVerificationStatus = 'verified',
+    driverRating = 0,
+    driverRatingCount = 0,
+    completedTrips = 0,
   } = shuttle;
 
   const isDriver = Boolean(
@@ -281,9 +285,19 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
                   {driverName}
                   <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 </p>
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                  ✓ Verified Licence & ID on file
-                </p>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400">
+                  {driverRatingCount > 0 ? (
+                    <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                      <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                      <span>{Number(driverRating).toFixed(1)}</span>
+                      <span className="text-gray-400 font-normal">({driverRatingCount})</span>
+                    </span>
+                  ) : (
+                    <span className="text-teal-600 font-semibold">New Driver</span>
+                  )}
+                  <span>•</span>
+                  <span>{completedTrips > 0 ? `${completedTrips} trips` : '0 trips'}</span>
+                </div>
               </div>
             </div>
 

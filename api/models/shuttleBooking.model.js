@@ -70,10 +70,18 @@ const shuttleBookingSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    pickupCoordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
     dropoffLocation: {
       type: String,
       default: '',
       trim: true,
+    },
+    proximityAlertSent: {
+      type: Boolean,
+      default: false,
     },
     status: {
       type: String,
@@ -111,6 +119,23 @@ const shuttleBookingSchema = new mongoose.Schema(
       type: String,
       default: '',
       trim: true,
+    },
+    // ── Passenger Rating (after trip completed) ─────────────────
+    passengerRating: {
+      type: Number,
+      default: null,  // null = not yet rated
+      min: 1,
+      max: 5,
+    },
+    passengerReview: {
+      type: String,
+      default: '',
+      trim: true,
+      maxlength: 400,
+    },
+    ratedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

@@ -23,6 +23,7 @@ export const createBookingRequest = async (req, res, next) => {
       seatsBooked,
       seatNumbers,
       pickupLocation,
+      pickupCoordinates,
       dropoffLocation,
       passengerNotes,
       extraBagsCount,  // number of EXTRA bags beyond the 1 free bag
@@ -94,6 +95,10 @@ export const createBookingRequest = async (req, res, next) => {
       seatNumbers: Array.isArray(seatNumbers) ? seatNumbers : [],
       totalPrice,
       pickupLocation: pickupLocation || shuttle.pickupStation,
+      pickupCoordinates: pickupCoordinates && pickupCoordinates.lat ? {
+        lat: Number(pickupCoordinates.lat),
+        lng: Number(pickupCoordinates.lng),
+      } : null,
       dropoffLocation: dropoffLocation || shuttle.dropoffStation,
       passengerNotes: passengerNotes || '',
       extraBagsCount: extraBags,
@@ -113,15 +118,27 @@ export const createBookingRequest = async (req, res, next) => {
     try {
       await Notification.create({
         userId: shuttle.driverRef,
-        type: 'booking',
+        type: 'shuttle',
         title: 'New Shuttle Pickup Request 🚐',
         message: `${booking.passengerName} requested pickup at "${booking.pickupLocation || shuttle.originCity}" (${requestedSeatsCount} seat(s)${extraBags > 0 ? ` + ${extraBags} extra bag(s)` : ''}) for ${shuttle.originCity} → ${shuttle.destinationCity}. Fare: R${totalPrice}.`,
         data: {
           bookingId: savedBooking._id,
           shuttleId: shuttle._id,
+          plateNumber: shuttle.plateNumber,
+          carType: shuttle.carType,
+          carColor: shuttle.carColor,
+          passengerName: booking.passengerName,
+          passengerPhone: booking.passengerPhone,
+          seatsBooked: requestedSeatsCount,
+          extraBagsCount: extraBags,
+          totalPrice,
+          seatCharge,
+          luggageCharge,
           pickupLocation: booking.pickupLocation,
           dropoffLocation: booking.dropoffLocation,
-          passengerPhone: booking.passengerPhone,
+          originCity: shuttle.originCity,
+          destinationCity: shuttle.destinationCity,
+          ticketCode: savedBooking.ticketCode,
           route: '/shuttles?tab=driver-desk',
         },
       });
@@ -164,16 +181,35 @@ export const approveBooking = async (req, res, next) => {
 
     const saved = await booking.save();
 
-    // Send high-priority notification to passenger
+    // Send high-priority notification to passenger with driver bank details
     try {
       await Notification.create({
         userId: booking.passengerRef,
-        type: 'booking',
-        title: 'Trip Approved! Pay within 24 hours 🕒',
-        message: `Your trip on ${booking.shuttleRef?.carType || 'Shuttle'} was approved! You have 24 hours to complete payment and secure your seat.`,
+        type: 'shuttle',
+        title: '✅ Trip Approved! Send EFT to Driver 🕒',
+        message: `Your ${booking.seatsBooked} seat(s) on ${booking.shuttleRef?.carType || 'Shuttle'} (${booking.shuttleRef?.plateNumber || ''}) ${booking.shuttleRef?.originCity} → ${booking.shuttleRef?.destinationCity} were approved! Transfer R${booking.totalPrice} directly to the driver's bank account within 24 hours. Once the driver confirms receipt on LoopOut, your boarding ticket is ready.`,
         data: {
           bookingId: saved._id,
           shuttleId: booking.shuttleRef?._id,
+          plateNumber: booking.shuttleRef?.plateNumber,
+          carType: booking.shuttleRef?.carType,
+          carColor: booking.shuttleRef?.carColor,
+          driverName: booking.shuttleRef?.driverName,
+          driverPhone: booking.shuttleRef?.driverPhone,
+          originCity: booking.shuttleRef?.originCity,
+          destinationCity: booking.shuttleRef?.destinationCity,
+          pickupLocation: booking.pickupLocation,
+          dropoffLocation: booking.dropoffLocation,
+          seatsBooked: booking.seatsBooked,
+          totalPrice: booking.totalPrice,
+          ticketCode: booking.ticketCode,
+          paymentDeadline: deadline,
+          bankName: booking.shuttleRef?.bankName,
+          bankAccountHolder: booking.shuttleRef?.bankAccountHolder || booking.shuttleRef?.driverName,
+          bankAccountNumber: booking.shuttleRef?.bankAccountNumber,
+          bankBranchCode: booking.shuttleRef?.bankBranchCode,
+          bankAccountType: booking.shuttleRef?.bankAccountType,
+          bankReference: booking.shuttleRef?.bankReference || booking.ticketCode,
           route: '/shuttles?tab=my-tickets',
         },
       });
@@ -183,7 +219,7 @@ export const approveBooking = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Booking approved! Passenger notified to pay within 24 hours.',
+      message: 'Booking approved! Passenger notified with your banking details to send EFT.',
       booking: saved,
     });
   } catch (error) {
@@ -214,10 +250,10 @@ export const declineBooking = async (req, res, next) => {
     try {
       await Notification.create({
         userId: booking.passengerRef,
-        type: 'booking',
-        title: 'Shuttle Request Declined',
-        message: `Your seat request was declined by the driver: ${booking.declineReason}`,
-        data: { bookingId: saved._id, route: '/shuttles' },
+        type: 'shuttle',
+        title: '❌ Shuttle Request Declined',
+        message: `Your seat request for ${booking.pickupLocation || 'your pickup'} was declined by the driver: ${booking.declineReason}`,
+        data: { bookingId: saved._id, pickupLocation: booking.pickupLocation, dropoffLocation: booking.dropoffLocation, route: '/shuttles' },
       });
     } catch (notifErr) {
       console.warn('Decline notification error:', notifErr.message);
@@ -233,22 +269,23 @@ export const declineBooking = async (req, res, next) => {
   }
 };
 
-// 4. Passenger pays within the 24-hour window
+// 4. Driver confirms passenger payment received via bank account / EFT
 export const payBooking = async (req, res, next) => {
   try {
     const booking = await ShuttleBooking.findById(req.params.id).populate('shuttleRef');
     if (!booking) return next(errorHandler(404, 'Booking not found.'));
 
-    if (String(booking.passengerRef) !== String(req.user.id) && !req.user.isAdmin) {
-      return next(errorHandler(403, 'Unauthorized to pay for this booking.'));
+    // Only the driver (or admin) can confirm that payment was received
+    if (String(booking.driverRef) !== String(req.user.id) && !req.user.isAdmin) {
+      return next(errorHandler(403, 'Only the driver can confirm that payment has been received in their bank account.'));
     }
 
     if (booking.status === 'paid') {
-      return res.status(200).json({ success: true, message: 'Already paid.', booking });
+      return res.status(200).json({ success: true, message: 'Already confirmed as paid.', booking });
     }
 
     if (booking.status !== 'approved') {
-      return next(errorHandler(400, 'Trip must be approved by driver before payment.'));
+      return next(errorHandler(400, 'Trip must be approved before payment can be confirmed.'));
     }
 
     // Check if 24-hour window has expired
@@ -259,38 +296,53 @@ export const payBooking = async (req, res, next) => {
       await Shuttle.findByIdAndUpdate(booking.shuttleRef?._id, {
         $inc: { availableSeats: booking.seatsBooked || 1 },
       });
-      return next(errorHandler(400, 'Payment deadline (24 hours) has expired. Please rebook your seat.'));
+      return next(errorHandler(400, 'Payment deadline (24 hours) has expired.'));
     }
 
     const { paymentMethod } = req.body;
     booking.status = 'paid';
     booking.paidAt = new Date();
-    booking.paymentMethod = paymentMethod || 'LoopPay / Instant EFT';
+    booking.paymentMethod = paymentMethod || 'Direct EFT / Bank Transfer (Confirmed by Driver)';
     if (!booking.ticketCode) {
       booking.ticketCode = generateTicketCode();
     }
 
     const saved = await booking.save();
 
-    // Notify driver of confirmed payment
+    // Send high-priority notification to passenger that driver confirmed payment!
     try {
       await Notification.create({
-        userId: booking.driverRef,
-        type: 'payment',
-        title: 'Shuttle Seat Paid & Confirmed! 💳',
-        message: `${booking.passengerName} paid R${booking.totalPrice} for ${booking.seatsBooked} seat(s). Ticket: ${booking.ticketCode}`,
+        userId: booking.passengerRef,
+        type: 'shuttle',
+        title: '🎉 Payment Confirmed by Driver!',
+        message: `Driver ${booking.shuttleRef?.driverName || 'Driver'} confirmed receipt of R${booking.totalPrice} for your ${booking.seatsBooked} seat(s) on ${booking.shuttleRef?.originCity || ''} → ${booking.shuttleRef?.destinationCity || ''}. Your ticket ${booking.ticketCode} is ready for boarding!`,
         data: {
           bookingId: saved._id,
-          route: '/shuttles?tab=driver-bookings',
+          shuttleId: booking.shuttleRef?._id,
+          plateNumber: booking.shuttleRef?.plateNumber,
+          carType: booking.shuttleRef?.carType,
+          carColor: booking.shuttleRef?.carColor,
+          driverName: booking.shuttleRef?.driverName,
+          driverPhone: booking.shuttleRef?.driverPhone,
+          passengerName: booking.passengerName,
+          seatsBooked: booking.seatsBooked,
+          totalPrice: booking.totalPrice,
+          ticketCode: booking.ticketCode,
+          pickupLocation: booking.pickupLocation,
+          dropoffLocation: booking.dropoffLocation,
+          originCity: booking.shuttleRef?.originCity,
+          destinationCity: booking.shuttleRef?.destinationCity,
+          paymentMethod: booking.paymentMethod,
+          route: '/shuttles?tab=my-tickets',
         },
       });
     } catch (notifErr) {
-      console.warn('Driver paid notification error:', notifErr.message);
+      console.warn('Passenger paid confirmation notification error:', notifErr.message);
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Seat confirmed & paid successfully! Your boarding ticket is ready.',
+      message: 'Payment confirmed successfully! Passenger has been notified and their ticket is active.',
       booking: saved,
     });
   } catch (error) {
@@ -360,6 +412,71 @@ export const getDriverBookings = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       bookings,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 8. Passenger rates a completed or paid trip
+// PUT /api/shuttle-bookings/rate/:id
+export const rateTrip = async (req, res, next) => {
+  try {
+    const booking = await ShuttleBooking.findById(req.params.id);
+    if (!booking) return next(errorHandler(404, 'Booking not found.'));
+
+    if (String(booking.passengerRef) !== String(req.user.id)) {
+      return next(errorHandler(403, 'Only the passenger who booked can rate this trip.'));
+    }
+
+    if (!['paid', 'completed'].includes(booking.status)) {
+      return next(errorHandler(400, 'You can only rate trips that are paid or completed.'));
+    }
+
+    if (booking.passengerRating !== null && booking.passengerRating !== undefined) {
+      return next(errorHandler(400, 'You have already rated this trip.'));
+    }
+
+    const { rating, review } = req.body;
+    const stars = Number(rating);
+    if (!stars || stars < 1 || stars > 5) {
+      return next(errorHandler(400, 'Rating must be between 1 and 5 stars.'));
+    }
+
+    booking.passengerRating = stars;
+    booking.passengerReview = (review || '').trim().slice(0, 400);
+    booking.ratedAt = new Date();
+    await booking.save();
+
+    // Recalculate and persist driver rating on the shuttle doc
+    try {
+      const allRatings = await ShuttleBooking.find({
+        shuttleRef: booking.shuttleRef,
+        passengerRating: { $ne: null, $exists: true },
+      }).select('passengerRating').lean();
+
+      const totalStars = allRatings.reduce((sum, b) => sum + (b.passengerRating || 0), 0);
+      const avgRating = allRatings.length > 0 ? Math.round((totalStars / allRatings.length) * 10) / 10 : 0;
+
+      // Also count all completed/paid bookings for this driver to get real trip count
+      const completedCount = await ShuttleBooking.countDocuments({
+        driverRef: booking.driverRef,
+        status: { $in: ['paid', 'completed'] },
+      });
+
+      await Shuttle.findByIdAndUpdate(booking.shuttleRef, {
+        driverRating: avgRating,
+        driverRatingCount: allRatings.length,
+        completedTrips: completedCount,
+      });
+    } catch (statErr) {
+      console.warn('Could not update driver stats:', statErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Thank you! Your ${stars}★ rating has been submitted.`,
+      booking,
     });
   } catch (error) {
     next(error);

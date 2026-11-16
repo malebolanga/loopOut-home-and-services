@@ -498,9 +498,14 @@ export default function Notifications() {
         switch (type) {
             case 'reference':
                 return <span className="text-2xl">🤝</span>;
+            case 'shuttle':
+                return <span className="text-2xl">🚐</span>;
             case 'booking':
+                // Shuttle booking notifications have a shuttleId in data
+                if (data?.shuttleId || data?.plateNumber) return <span className="text-2xl">🚐</span>;
                 return <span className="text-2xl">📅</span>;
             case 'payment':
+                if (data?.shuttleId || data?.plateNumber) return <span className="text-2xl">🚐</span>;
                 return <span className="text-2xl">💳</span>;
             case 'message':
                 return <span className="text-2xl">💬</span>;
@@ -839,6 +844,11 @@ export default function Notifications() {
                                                     Review
                                                 </span>
                                             )}
+                                            {notification.type === 'shuttle' && (
+                                                <span className="px-2 py-0.5 text-xs font-semibold bg-teal-100 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300 rounded-full flex-shrink-0">
+                                                    Shuttle
+                                                </span>
+                                            )}
                                             {notification.type === 'reference' && (
                                                 <span className="px-2 py-0.5 text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-950/40 dark:text-purple-300 rounded-full flex-shrink-0">
                                                     Reference Request
@@ -899,6 +909,117 @@ export default function Notifications() {
                                                     {details.waterSource && <span>💧 Water: {details.waterSource}</span>}
                                                     {details.electricityAccess && <span>⚡ Electricity: {details.electricityAccess === 'yes' ? 'Client provides' : 'Not required'}</span>}
                                                     {details.specialRequirements && <span className="truncate sm:col-span-2" title={details.specialRequirements}>📝 Special request: {details.specialRequirements}</span>}
+                                                </div>
+                                            );
+                                        })()}
+
+                                        {/* ── Shuttle-specific inline detail card ── */}
+                                        {(() => {
+                                            const isShuttleNotif = notification.type === 'shuttle' || Boolean(notification.data?.shuttleId || notification.data?.plateNumber);
+                                            if (!isShuttleNotif) return null;
+                                            const d = notification.data || {};
+                                            const hasRoute = d.originCity && d.destinationCity;
+                                            const hasPlate = d.plateNumber;
+                                            const hasDist  = d.distanceKm != null;
+                                            const hasTicket = d.ticketCode;
+                                            if (!hasRoute && !hasPlate && !hasDist && !hasTicket) return null;
+                                            return (
+                                                <div className="mb-3 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 p-3 text-xs text-teal-900 dark:text-teal-100 space-y-1.5">
+                                                    {/* Route pill */}
+                                                    {hasRoute && (
+                                                        <div className="flex items-center gap-1.5 font-bold text-sm">
+                                                            <span>🗺️</span>
+                                                            <span>{d.originCity}</span>
+                                                            <span className="text-teal-500">→</span>
+                                                            <span>{d.destinationCity}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                                                        {hasPlate && (
+                                                            <span className="flex items-center gap-1 font-mono font-bold bg-teal-100 dark:bg-teal-900/50 rounded-lg px-2 py-0.5 col-span-2">
+                                                                🚐 {d.plateNumber}{d.carType ? ` • ${d.carType}` : ''}{d.carColor ? ` (${d.carColor})` : ''}
+                                                            </span>
+                                                        )}
+                                                        {d.driverName && (
+                                                            <span>👤 Driver: <strong>{d.driverName}</strong></span>
+                                                        )}
+                                                        {d.driverPhone && (
+                                                            <a
+                                                                href={`tel:${d.driverPhone}`}
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-bold hover:underline"
+                                                            >
+                                                                📞 {d.driverPhone}
+                                                            </a>
+                                                        )}
+                                                        {d.pickupLocation && (
+                                                            <span className="col-span-2">📍 Pickup: <strong>{d.pickupLocation}</strong></span>
+                                                        )}
+                                                        {d.dropoffLocation && (
+                                                            <span className="col-span-2">🏁 Dropoff: <strong>{d.dropoffLocation}</strong></span>
+                                                        )}
+                                                        {d.seatsBooked != null && (
+                                                            <span>💺 Seats: <strong>{d.seatsBooked}</strong></span>
+                                                        )}
+                                                        {d.totalPrice != null && (
+                                                            <span>💰 Fare: <strong>R{d.totalPrice}</strong></span>
+                                                        )}
+                                                        {hasTicket && (
+                                                            <span className="font-mono text-teal-700 dark:text-teal-300 col-span-2">🎫 Ticket: <strong>{d.ticketCode}</strong></span>
+                                                        )}
+                                                        {hasDist && (
+                                                            <span className="font-bold text-amber-700 dark:text-amber-300 col-span-2 animate-pulse">
+                                                                🚨 {d.distanceKm} km away (~{d.estimatedMinutes || Math.max(1, Math.ceil(d.distanceKm * 2))} min)
+                                                            </span>
+                                                        )}
+                                                        {d.paymentDeadline && (
+                                                            <span className="col-span-2 text-rose-600 dark:text-rose-400">
+                                                                ⏰ Pay by: <strong>{new Date(d.paymentDeadline).toLocaleString('en-ZA', { weekday:'short', hour:'2-digit', minute:'2-digit' })}</strong>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* Banking details box — only when approval notification includes bank info */}
+                                                    {d.bankAccountNumber && (
+                                                        <div className="mt-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 space-y-1 text-xs">
+                                                            <span className="block text-[10px] font-black uppercase text-blue-700 dark:text-blue-300 tracking-wide">🏦 Pay via EFT to Driver's Account:</span>
+                                                            {d.bankName && <span className="block">Bank: <strong>{d.bankName}</strong></span>}
+                                                            {(d.bankAccountHolder) && <span className="block">👤 Account Holder: <strong>{d.bankAccountHolder}</strong></span>}
+                                                            <span className="block font-mono">🔢 Account No: <strong className="tracking-widest">{d.bankAccountNumber}</strong></span>
+                                                            {d.bankBranchCode && <span className="block">🏢 Branch: <strong>{d.bankBranchCode}</strong></span>}
+                                                            {d.bankAccountType && <span className="block">💳 Type: <strong className="capitalize">{d.bankAccountType}</strong></span>}
+                                                            {(d.bankReference || d.ticketCode) && <span className="block">📝 Reference: <strong className="font-mono">{d.bankReference || d.ticketCode}</strong></span>}
+                                                            <span className="block pt-1 text-blue-600 dark:text-blue-400 italic">Driver will confirm on LoopOut once EFT is received.</span>
+                                                        </div>
+                                                    )}
+                                                    {/* CTA buttons */}
+                                                    <div className="flex gap-2 pt-1 flex-wrap">
+                                                        {d.driverPhone && (
+                                                            <a
+                                                                href={`tel:${d.driverPhone}`}
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition"
+                                                            >
+                                                                📞 Call Driver
+                                                            </a>
+                                                        )}
+                                                        {d.passengerPhone && (
+                                                            <a
+                                                                href={`tel:${d.passengerPhone}`}
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition"
+                                                            >
+                                                                📞 Call Passenger
+                                                            </a>
+                                                        )}
+                                                        {d.route && (
+                                                            <button
+                                                                onClick={e => { e.stopPropagation(); handleNotificationAction(notification); }}
+                                                                className="px-3 py-1.5 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 transition"
+                                                            >
+                                                                🚐 View Shuttle
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             );
                                         })()}

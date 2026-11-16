@@ -1,7 +1,22 @@
 import Shuttle from '../models/shuttle.model.js';
 import ShuttleBooking from '../models/shuttleBooking.model.js';
 import User from '../models/user.model.js';
+import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
+
+// Haversine formula to compute geodesic distance in kilometres
+const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 // Pre-seeded high quality South African routes if the database is initially empty
 const defaultSouthAfricanShuttles = [
@@ -232,6 +247,13 @@ export const createShuttle = async (req, res, next) => {
       driverIdScan,
       driverFaceScan,
       driverLicenceNumber,
+      // Driver Banking Details (For direct passenger EFT payments)
+      bankAccountHolder,
+      bankName,
+      bankAccountNumber,
+      bankBranchCode,
+      bankAccountType,
+      bankReference,
     } = req.body;
 
     if (!carType || !plateNumber || !originCity || !destinationCity || !pricePerSeat) {
@@ -251,6 +273,12 @@ export const createShuttle = async (req, res, next) => {
       driverFaceScan: driverFaceScan || user.liveSelfieUrl || user.avatar || '',
       driverLicenceNumber: driverLicenceNumber || '',
       driverVerificationStatus: driverLicenceScan && (driverIdScan || user.idDocumentUrl) ? 'verified' : 'pending',
+      bankAccountHolder: (bankAccountHolder || user.name || user.username || '').trim(),
+      bankName: (bankName || '').trim(),
+      bankAccountNumber: (bankAccountNumber || '').trim(),
+      bankBranchCode: (bankBranchCode || '').trim(),
+      bankAccountType: (bankAccountType || 'Savings').trim(),
+      bankReference: (bankReference || '').trim(),
       carType: carType.trim(),
       plateNumber: plateNumber.trim().toUpperCase(),
       carColor: (carColor || 'White').trim(),
@@ -374,11 +402,48 @@ export const getShuttles = async (req, res, next) => {
       Shuttle.countDocuments(query),
     ]);
 
+    // ── Enrich each shuttle with live stats from real bookings ───
+    // This ensures rating and completedTrips are always accurate
+    // even if the driver hasn't received a rating yet.
+    const enrichedShuttles = await Promise.all(
+      shuttles.map(async (shuttle) => {
+        try {
+          // Completed trip count for this driver
+          const completedCount = await ShuttleBooking.countDocuments({
+            driverRef: shuttle.driverRef,
+            status: { $in: ['paid', 'completed'] },
+          });
+
+          // Average rating across all rated bookings for this shuttle
+          const ratedBookings = await ShuttleBooking.find({
+            shuttleRef: shuttle._id,
+            passengerRating: { $ne: null, $exists: true },
+          }).select('passengerRating').lean();
+
+          const ratingCount = ratedBookings.length;
+          const avgRating = ratingCount > 0
+            ? Math.round(
+                (ratedBookings.reduce((sum, b) => sum + (b.passengerRating || 0), 0) / ratingCount) * 10
+              ) / 10
+            : shuttle.driverRating || 0;
+
+          return {
+            ...shuttle,
+            completedTrips: completedCount,
+            driverRating: avgRating,
+            driverRatingCount: ratingCount,
+          };
+        } catch (e) {
+          return shuttle; // fail gracefully — return original
+        }
+      })
+    );
+
     return res.status(200).json({
       success: true,
       totalCount,
-      count: shuttles.length,
-      shuttles,
+      count: enrichedShuttles.length,
+      shuttles: enrichedShuttles,
     });
   } catch (error) {
     next(error);
@@ -404,12 +469,34 @@ export const getShuttleById = async (req, res, next) => {
       }
     });
 
+    // Calculate real stats for this shuttle and driver
+    const [completedTrips, ratedBookings] = await Promise.all([
+      ShuttleBooking.countDocuments({
+        driverRef: shuttle.driverRef,
+        status: { $in: ['paid', 'completed'] },
+      }),
+      ShuttleBooking.find({
+        shuttleRef: shuttle._id,
+        passengerRating: { $ne: null, $exists: true },
+      }).select('passengerRating').lean(),
+    ]);
+
+    const ratingCount = ratedBookings.length;
+    const avgRating = ratingCount > 0
+      ? Math.round(
+          (ratedBookings.reduce((sum, b) => sum + (b.passengerRating || 0), 0) / ratingCount) * 10
+        ) / 10
+      : shuttle.driverRating || 0;
+
     return res.status(200).json({
       success: true,
       shuttle: {
         ...shuttle,
         bookedSeatNumbers,
-        activeBookingsCount: activeBookings.length
+        activeBookingsCount: activeBookings.length,
+        completedTrips,
+        driverRating: avgRating,
+        driverRatingCount: ratingCount,
       }
     });
   } catch (error) {
@@ -451,6 +538,63 @@ export const updateShuttleLocation = async (req, res, next) => {
     }
 
     const updated = await shuttle.save();
+
+    // ── 2km Proximity Trip Alert Trigger ─────────────────────────────
+    // When driver is moving (with GPRS) and enters within 2km of a passenger's pickup location
+    if (lat !== undefined && lng !== undefined) {
+      try {
+        const activeBookings = await ShuttleBooking.find({
+          shuttleRef: shuttle._id,
+          status: { $in: ['approved', 'paid'] },
+          proximityAlertSent: { $ne: true },
+        });
+
+        for (const booking of activeBookings) {
+          let pickLat = booking.pickupCoordinates?.lat;
+          let pickLng = booking.pickupCoordinates?.lng;
+
+          // If coordinates are available, check distance
+          if (pickLat && pickLng) {
+            const distKm = calculateDistanceKm(Number(lat), Number(lng), pickLat, pickLng);
+            if (distKm !== null && distKm <= 2.0) {
+              booking.proximityAlertSent = true;
+              await booking.save();
+
+              await Notification.create({
+                userId: booking.passengerRef,
+                type: 'shuttle',
+                title: '🚨 Shuttle Within 2 km!',
+                message: `Your shuttle (${shuttle.plateNumber} • ${shuttle.carType}) is ~${distKm.toFixed(1)} km away from your pickup at "${booking.pickupLocation || shuttle.originCity}". Please get ready to board!`,
+                data: {
+                  shuttleId: shuttle._id,
+                  bookingId: booking._id,
+                  ticketCode: booking.ticketCode,
+                  plateNumber: shuttle.plateNumber,
+                  carType: shuttle.carType,
+                  carColor: shuttle.carColor,
+                  driverName: shuttle.driverName,
+                  driverPhone: shuttle.driverPhone,
+                  originCity: shuttle.originCity,
+                  destinationCity: shuttle.destinationCity,
+                  pickupLocation: booking.pickupLocation || shuttle.pickupStation,
+                  dropoffLocation: booking.dropoffLocation || shuttle.dropoffStation,
+                  seatsBooked: booking.seatsBooked,
+                  totalPrice: booking.totalPrice,
+                  distanceKm: Number(distKm.toFixed(1)),
+                  estimatedMinutes: Math.max(1, Math.ceil(distKm * 2)),
+                  currentLat: Number(lat),
+                  currentLng: Number(lng),
+                  route: `/shuttles?shuttleId=${shuttle._id}`,
+                }
+              });
+            }
+          }
+        }
+      } catch (alertErr) {
+        console.warn('Proximity alert notification check error:', alertErr.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Driver live GPRS location updated successfully.',

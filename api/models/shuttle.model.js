@@ -47,6 +47,54 @@ const shuttleSchema = new mongoose.Schema(
       enum: ['pending', 'verified', 'rejected'],
       default: 'verified',
     },
+    // ── Driver Banking Details (For direct passenger EFT payments) ──
+    bankAccountHolder: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankName: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankAccountNumber: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankBranchCode: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    bankAccountType: {
+      type: String,
+      default: 'Savings',
+      trim: true,
+    },
+    bankReference: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    // ── Driver Stats (auto-updated from bookings) ───────────────
+    driverRating: {
+      type: Number,
+      default: 0,       // 0 means no ratings yet
+      min: 0,
+      max: 5,
+    },
+    driverRatingCount: {
+      type: Number,
+      default: 0,       // total number of ratings received
+      min: 0,
+    },
+    completedTrips: {
+      type: Number,
+      default: 0,       // total paid/completed bookings handled
+      min: 0,
+    },
     carType: {
       type: String,
       required: true,
