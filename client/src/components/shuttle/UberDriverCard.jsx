@@ -75,19 +75,19 @@ const UberDriverCard = ({
 
   const {
     _id,
-    driverName = 'Sipho Ndlovu',
-    driverPhone = '+27825550192',
+    driverName = 'LoopOut driver',
+    driverPhone = '',
     driverAvatar = '',
-    driverVerificationStatus = 'verified',
-    carType = 'Toyota Quantum 15-Seater',
-    plateNumber = 'DZ 88 YK GP',
+    driverVerificationStatus = 'pending',
+    carType = 'Vehicle details unavailable',
+    plateNumber = '',
     carColor = 'White',
     carImages = [],
-    pricePerSeat = 180,
-    totalSeats = 15,
-    availableSeats = 4,
-    originCity = 'Johannesburg',
-    destinationCity = 'Polokwane',
+    pricePerSeat = null,
+    totalSeats = 0,
+    availableSeats = 0,
+    originCity = '',
+    destinationCity = '',
     departureProvince = 'Gauteng',
     destinationProvince = 'Limpopo',
     pickupStation = 'Park Station Central',
@@ -107,6 +107,7 @@ const UberDriverCard = ({
   } = shuttle;
 
   const isDriverLiveGprs = currentCoordinates?.isLive === true;
+  const isDemo = shuttle?.isDemo === true;
   const gpsAccuracy = currentCoordinates?.accuracy;
 
   const displayImage = (carImages && carImages.length > 0)
@@ -126,7 +127,7 @@ const UberDriverCard = ({
 
   // Live Distance to Passenger (for 2km Proximity alert)
   let distanceToUserKm = null;
-  if (userLocation && currentCoordinates?.lat && currentCoordinates?.lng) {
+  if (userLocation && currentCoordinates?.isLive === true && currentCoordinates?.lat && currentCoordinates?.lng) {
     distanceToUserKm = calculateDistanceKm(
       Number(currentCoordinates.lat),
       Number(currentCoordinates.lng),
@@ -199,8 +200,9 @@ const UberDriverCard = ({
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 min-w-0">
           <div className="w-8 h-1 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0" />
           <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0">
-            {isExpanded ? 'Full Details' : 'Live Shuttle'}
+            {isDemo ? 'Demo vehicle' : isExpanded ? 'Full Details' : 'Live Shuttle'}
           </span>
+          {isDemo && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">DEMO · not bookable</span>}
 
           {/* Quick Prev / Next Switcher for overlapping or route cars */}
           {hasMultiple && (
@@ -372,17 +374,17 @@ const UberDriverCard = ({
 
             <button
               type="button"
-              onClick={() => onRequestPickup && onRequestPickup(shuttle)}
-              disabled={isSoldOut}
+              onClick={() => !isDemo && onRequestPickup && onRequestPickup(shuttle)}
+              disabled={isSoldOut || isDemo}
               className={`py-2.5 px-3.5 sm:px-5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-md active:scale-95 transition ${
-                isSoldOut
+                isSoldOut || isDemo
                   ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
                   : 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-teal-600/20 hover:brightness-105'
               }`}
             >
               <Bus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>{isSoldOut ? 'Sold Out' : 'Request'}</span>
-              {!isSoldOut && <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />}
+              <span>{isDemo ? 'Demo only' : isSoldOut ? 'Sold Out' : 'Request'}</span>
+              {!isSoldOut && !isDemo && <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />}
             </button>
           </div>
         </div>
@@ -401,7 +403,7 @@ const UberDriverCard = ({
                   alt={driverName}
                   className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-teal-500 shadow-md ring-2 ring-teal-500/20"
                 />
-                <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-900" title="Online & Active" />
+                {isDriverLiveGprs && <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white dark:border-gray-900" title="Sharing live GPS" />}
               </div>
 
               <div className="min-w-0">
@@ -409,10 +411,9 @@ const UberDriverCard = ({
                   <h3 className="text-base sm:text-lg font-extrabold text-gray-900 dark:text-gray-100 truncate">
                     {driverName}
                   </h3>
-                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                    <ShieldCheck className="w-3 h-3 text-teal-600" />
-                    <span>Verified</span>
-                  </span>
+                  {driverVerificationStatus === 'verified' ? (
+                    <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800"><ShieldCheck className="w-3 h-3 text-teal-600" /><span>Verified</span></span>
+                  ) : <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Not verified by LoopOut</span>}
                   {/* Live GPRS badge */}
                   {isDriverLiveGprs && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 animate-pulse">
@@ -447,16 +448,7 @@ const UberDriverCard = ({
                 </div>
 
                 {/* Driver Contact Number with quick Call / WhatsApp */}
-                <div className="flex items-center gap-2 mt-1.5">
-                  <a
-                    href={`tel:${cleanPhone}`}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/40 px-2.5 py-1 rounded-lg border border-teal-200 dark:border-teal-800 hover:bg-teal-100 transition"
-                    title="Call Driver"
-                  >
-                    <Phone className="w-3 h-3" />
-                    <span>{driverPhone || '+27 82 555 0192'}</span>
-                  </a>
-                </div>
+                <p className="mt-1.5 text-[11px] text-gray-500 dark:text-gray-400">Driver contact details are shared after your request is approved.</p>
               </div>
             </div>
 
@@ -467,7 +459,7 @@ const UberDriverCard = ({
               </div>
               <div className="mt-1">
                 <span className="text-2xl font-black text-amber-500">
-                  R{pricePerSeat}
+                  {pricePerSeat === null || pricePerSeat === undefined ? 'Fare unavailable' : `R${pricePerSeat}`}
                 </span>
                 <span className="text-[11px] text-gray-400 block -mt-0.5 font-medium">per seat</span>
               </div>
@@ -548,7 +540,7 @@ const UberDriverCard = ({
                 </span>
               </span>
 
-              {currentCoordinates?.address && (
+              {currentCoordinates?.isLive === true && currentCoordinates?.address && (
                 <span className={`flex items-center gap-1 text-[11px] truncate max-w-[180px] ${isDriverLiveGprs ? 'text-blue-600 dark:text-blue-400 font-bold' : ''}`} title={currentCoordinates.address}>
                   <Navigation className={`w-3 h-3 shrink-0 ${isDriverLiveGprs ? 'text-blue-500 animate-pulse' : 'text-blue-500'}`} />
                   <span>{isDriverLiveGprs ? '🛰️ ' : ''}Now: {currentCoordinates.address}</span>
@@ -591,21 +583,23 @@ const UberDriverCard = ({
           {/* Click Here to Request Pickup Button at the Bottom */}
           <button
             type="button"
-            onClick={() => onRequestPickup && onRequestPickup(shuttle)}
-            disabled={isSoldOut}
+            onClick={() => !isDemo && onRequestPickup && onRequestPickup(shuttle)}
+            disabled={isSoldOut || isDemo}
             className={`w-full py-4 px-6 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all duration-200 ${
-              isSoldOut
+              isSoldOut || isDemo
                 ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
                 : 'bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-teal-600/30 hover:brightness-105'
             }`}
           >
             <Bus className="w-5 h-5" />
             <span>
-              {isSoldOut
+              {isDemo
+                ? 'Demo vehicle • Booking unavailable'
+                : isSoldOut
                 ? 'All Seats Fully Booked'
-                : `Click Here to Request Pickup • R${pricePerSeat}`}
+                : `Click Here to Request Pickup • ${pricePerSeat === null || pricePerSeat === undefined ? 'Fare unavailable' : `R${pricePerSeat}`}`}
             </span>
-            {!isSoldOut && <ArrowRight className="w-5 h-5 ml-1" />}
+            {!isSoldOut && !isDemo && <ArrowRight className="w-5 h-5 ml-1" />}
           </button>
         </div>
       )}

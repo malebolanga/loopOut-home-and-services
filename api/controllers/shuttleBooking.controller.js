@@ -5,10 +5,18 @@ import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
 
+const SEEDED_SAMPLE_SCAN_URL = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=compress&cs=tinysrgb&w=600';
+
 // Generate clean booking ticket code (e.g. SHTL-8B29X)
 const generateTicketCode = () => {
   const hex = crypto.randomBytes(3).toString('hex').toUpperCase();
   return `SHTL-${hex}`;
+};
+
+const releaseReservedSeats = async (booking) => {
+  const update = { $inc: { availableSeats: booking.seatsBooked || 1 } };
+  if (booking.seatNumbers?.length) update.$pull = { reservedSeatNumbers: { $in: booking.seatNumbers.map(String) } };
+  await Shuttle.findByIdAndUpdate(booking.shuttleRef?._id || booking.shuttleRef, update);
 };
 
 // 1. Create a seat booking request (User requests seat like a bus)
@@ -34,13 +42,19 @@ export const createBookingRequest = async (req, res, next) => {
     }
 
     const shuttle = await Shuttle.findById(shuttleId);
-    if (!shuttle || !shuttle.active) {
+    if (!shuttle || !shuttle.active || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || new Date(shuttle.departureDate) < new Date()) {
+      return next(errorHandler(404, 'Shuttle route not found or is no longer active.'));
+    }
+    if (shuttle.driverVerificationStatus === 'rejected') {
       return next(errorHandler(404, 'Shuttle route not found or is no longer active.'));
     }
 
     const requestedSeatsCount = Number(seatsBooked) || (Array.isArray(seatNumbers) ? seatNumbers.length : 1);
-    if (requestedSeatsCount <= 0) {
+    if (!Number.isInteger(requestedSeatsCount) || requestedSeatsCount <= 0 || requestedSeatsCount > shuttle.totalSeats) {
       return next(errorHandler(400, 'Please select at least 1 seat.'));
+    }
+    if (Array.isArray(seatNumbers) && (seatNumbers.length !== requestedSeatsCount || new Set(seatNumbers.map(String)).size !== seatNumbers.length || seatNumbers.some((seat) => !/^[1-9]\d*$/.test(String(seat)) || Number(seat) > shuttle.totalSeats))) {
+      return next(errorHandler(400, 'Select a valid, unique seat for each passenger.'));
     }
 
     if (shuttle.availableSeats < requestedSeatsCount) {
@@ -66,6 +80,16 @@ export const createBookingRequest = async (req, res, next) => {
         return next(errorHandler(400, `Seat ${clash} is already occupied. Please pick another seat.`));
       }
     }
+
+    const reservationFilter = { _id: shuttle._id, active: true, availableSeats: { $gte: requestedSeatsCount } };
+    const normalizedSeats = Array.isArray(seatNumbers) ? seatNumbers.map(String) : [];
+    const reservationUpdate = { $inc: { availableSeats: -requestedSeatsCount } };
+    if (normalizedSeats.length) {
+      reservationFilter.reservedSeatNumbers = { $nin: normalizedSeats };
+      reservationUpdate.$addToSet = { reservedSeatNumbers: { $each: normalizedSeats } };
+    }
+    const reservedShuttle = await Shuttle.findOneAndUpdate(reservationFilter, reservationUpdate, { new: true });
+    if (!reservedShuttle) return next(errorHandler(409, 'Those seats were just reserved. Refresh the seat map and choose again.'));
 
     // ── Price calculation ────────────────────────────────────────
     // Rule: 1 normal bag FREE per passenger. Extra bags cost extraBagPrice each.
@@ -108,11 +132,16 @@ export const createBookingRequest = async (req, res, next) => {
       ticketCode: generateTicketCode(),
     });
 
-    const savedBooking = await booking.save();
-
-    // Decrement available seats so others cannot overbook
-    shuttle.availableSeats = Math.max(0, shuttle.availableSeats - requestedSeatsCount);
-    await shuttle.save();
+    let savedBooking;
+    try {
+      savedBooking = await booking.save();
+    } catch (saveError) {
+      await Shuttle.findByIdAndUpdate(shuttle._id, {
+        $inc: { availableSeats: requestedSeatsCount },
+        ...(normalizedSeats.length ? { $pull: { reservedSeatNumbers: { $in: normalizedSeats } } } : {}),
+      });
+      throw saveError;
+    }
 
     // Notify Driver via LoopOut In-App Notification
     try {
@@ -148,10 +177,9 @@ export const createBookingRequest = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Pickup requested successfully! Driver notified on LoopOut and WhatsApp.',
+      message: 'Pickup request sent to the driver in LoopOut.',
       booking: savedBooking,
-      driverPhone: shuttle.driverPhone || '',
-      driverName: shuttle.driverName || 'Verified Driver',
+      driverName: shuttle.driverName || 'LoopOut driver',
     });
   } catch (error) {
     next(error);
@@ -236,16 +264,19 @@ export const declineBooking = async (req, res, next) => {
     if (String(booking.driverRef) !== String(req.user.id) && !req.user.isAdmin) {
       return next(errorHandler(403, 'Unauthorized to decline this booking.'));
     }
+    if (booking.status !== 'pending_approval') {
+      return next(errorHandler(409, 'Only pending booking requests can be declined.'));
+    }
 
     const { reason } = req.body;
-    booking.status = 'declined';
-    booking.declineReason = reason || 'Trip fully booked or route unavailable';
-    const saved = await booking.save();
-
-    // Release seats back
-    await Shuttle.findByIdAndUpdate(booking.shuttleRef, {
-      $inc: { availableSeats: booking.seatsBooked || 1 },
-    });
+    const declineReason = String(reason || 'Trip fully booked or route unavailable').slice(0, 300);
+    const saved = await ShuttleBooking.findOneAndUpdate(
+      { _id: booking._id, status: 'pending_approval' },
+      { $set: { status: 'declined', declineReason } },
+      { new: true }
+    );
+    if (!saved) return next(errorHandler(409, 'This booking request has already changed.'));
+    await releaseReservedSeats(saved);
 
     try {
       await Notification.create({
@@ -293,9 +324,7 @@ export const payBooking = async (req, res, next) => {
       booking.status = 'cancelled';
       await booking.save();
       // Release seats
-      await Shuttle.findByIdAndUpdate(booking.shuttleRef?._id, {
-        $inc: { availableSeats: booking.seatsBooked || 1 },
-      });
+      await releaseReservedSeats(booking);
       return next(errorHandler(400, 'Payment deadline (24 hours) has expired.'));
     }
 
@@ -363,16 +392,17 @@ export const cancelBooking = async (req, res, next) => {
     if (booking.status === 'cancelled') {
       return res.status(200).json({ success: true, message: 'Already cancelled.', booking });
     }
-
-    // If seats were reserved, release them
-    if (['pending_approval', 'approved', 'paid'].includes(booking.status)) {
-      await Shuttle.findByIdAndUpdate(booking.shuttleRef, {
-        $inc: { availableSeats: booking.seatsBooked || 1 },
-      });
+    if (!['pending_approval', 'approved', 'paid'].includes(booking.status)) {
+      return next(errorHandler(409, 'This booking can no longer be cancelled.'));
     }
 
-    booking.status = 'cancelled';
-    const saved = await booking.save();
+    const saved = await ShuttleBooking.findOneAndUpdate(
+      { _id: booking._id, status: { $in: ['pending_approval', 'approved', 'paid'] } },
+      { $set: { status: 'cancelled' } },
+      { new: true }
+    );
+    if (!saved) return next(errorHandler(409, 'This booking has already changed. Refresh and try again.'));
+    await releaseReservedSeats(saved);
 
     return res.status(200).json({
       success: true,
@@ -387,10 +417,28 @@ export const cancelBooking = async (req, res, next) => {
 // 6. Get Passenger Bookings
 export const getPassengerBookings = async (req, res, next) => {
   try {
-    const bookings = await ShuttleBooking.find({ passengerRef: req.user.id })
+    const records = await ShuttleBooking.find({ passengerRef: req.user.id })
       .populate('shuttleRef')
       .sort({ createdAt: -1 })
       .lean();
+    const bookings = records.map((booking) => {
+      if (!booking.shuttleRef) return booking;
+      const shuttle = { ...booking.shuttleRef };
+      delete shuttle.driverLicenceScan;
+      delete shuttle.driverIdScan;
+      delete shuttle.driverFaceScan;
+      delete shuttle.driverLicenceNumber;
+      if (!['approved', 'paid'].includes(booking.status)) {
+        delete shuttle.driverPhone;
+        delete shuttle.bankAccountHolder;
+        delete shuttle.bankName;
+        delete shuttle.bankAccountNumber;
+        delete shuttle.bankBranchCode;
+        delete shuttle.bankAccountType;
+        delete shuttle.bankReference;
+      }
+      return { ...booking, shuttleRef: shuttle };
+    });
 
     return res.status(200).json({
       success: true,

@@ -4,7 +4,6 @@ import {
   ShieldCheck, 
   PhoneCall, 
   AlertTriangle, 
-  CheckCircle2, 
   Lock, 
   Share2, 
   FileText 
@@ -27,10 +26,10 @@ const SafetyModal = ({ isOpen, onClose, shuttle }) => {
             </div>
             <div>
               <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
-                LoopOut Passenger Safety & Trust
+                Shuttle safety information
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Verified drivers, roadworthy vehicles & emergency assistance
+                Important information before you travel
               </p>
             </div>
           </div>
@@ -46,27 +45,8 @@ const SafetyModal = ({ isOpen, onClose, shuttle }) => {
 
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 overflow-y-auto max-h-[75vh]">
-          {/* Driver & Vehicle Verification Badges */}
-          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 space-y-2.5">
-            <div className="font-bold text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-1.5 uppercase tracking-wide">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Verified Operator Safeguards</span>
-            </div>
-            
-            <div className="space-y-1.5 text-xs">
-              <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span><strong>Driver Identity:</strong> National ID / Passport verified on file.</span>
-              </div>
-              <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span><strong>Driving Licence:</strong> Professional Driving Permit (PrDP) validated.</span>
-              </div>
-              <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span><strong>Vehicle Registration:</strong> Number plate & roadworthy profile on record.</span>
-              </div>
-            </div>
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+            <strong>LoopOut has not independently verified this driver’s identity, licence or vehicle documents.</strong> Check the driver and vehicle details before you travel. If anything does not match, do not board and contact local emergency services if you feel unsafe.
           </div>
 
           {/* Current Vehicle & Driver Details */}

@@ -18,6 +18,7 @@ import {
   Coins
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocode } from '../../utils/geocoding';
 
 const STATUS_OPTIONS = [
@@ -149,7 +150,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
         leavesWhenFull: true,
       };
 
-      const res = await axios.put(`/api/shuttles/update/${shuttle._id}`, payload, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttles/update/${shuttle._id}`), payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
 
@@ -237,7 +238,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
 
         // Immediately push to DB so the map pin updates live
         try {
-          await axios.put(`/api/shuttles/update-location/${shuttle._id}`, {
+          await axios.put(resolveApiUrl(`/api/shuttles/update-location/${shuttle._id}`), {
             lat: latitude,
             lng: longitude,
             address: resolvedAddress,
@@ -278,10 +279,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
       setSuccessMsg('Live GPRS broadcast stopped.');
 
       // Mark shuttle as no longer live in DB
-      axios.put(`/api/shuttles/update-location/${shuttle._id}`, {
-        lat: coordinates?.lat || -26.2041,
-        lng: coordinates?.lng || 28.0473,
-        address: currentAddress || shuttle.originCity,
+      axios.put(resolveApiUrl(`/api/shuttles/update-location/${shuttle._id}`), {
         isLive: false,
         currentStatus,
       }, {
@@ -317,7 +315,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
           }
 
           try {
-            await axios.put(`/api/shuttles/update-location/${shuttle._id}`, {
+            await axios.put(resolveApiUrl(`/api/shuttles/update-location/${shuttle._id}`), {
               lat: latitude,
               lng: longitude,
               address: resolvedAddress || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
@@ -382,7 +380,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
         bankReference: bankReference.trim(),
       };
 
-      const res = await axios.put(`/api/shuttles/update/${shuttle._id}`, payload, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttles/update/${shuttle._id}`), payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
 

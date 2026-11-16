@@ -45,7 +45,7 @@ const shuttleSchema = new mongoose.Schema(
     driverVerificationStatus: {
       type: String,
       enum: ['pending', 'verified', 'rejected'],
-      default: 'verified',
+      default: 'pending',
     },
     // ── Driver Banking Details (For direct passenger EFT payments) ──
     bankAccountHolder: {
@@ -130,6 +130,10 @@ const shuttleSchema = new mongoose.Schema(
       required: true,
       min: 0,
       default: 15,
+    },
+    reservedSeatNumbers: {
+      type: [String],
+      default: [],
     },
     serviceType: {
       type: String,
@@ -237,9 +241,9 @@ const shuttleSchema = new mongoose.Schema(
       default: 'scheduled',
     },
     currentCoordinates: {
-      lat: { type: Number, default: -26.2041 },
-      lng: { type: Number, default: 28.0473 },
-      address: { type: String, default: 'Johannesburg' },
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      address: { type: String, default: '' },
       accuracy: { type: Number, default: null },
       isLive: { type: Boolean, default: false },
       updatedAt: { type: Date, default: Date.now },

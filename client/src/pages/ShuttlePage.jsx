@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
+import { resolveApiUrl } from '../utils/apiBaseUrl';
 import ShuttleMap from '../components/shuttle/ShuttleMap';
 import UberDriverCard from '../components/shuttle/UberDriverCard';
 import PickupRequestSheet from '../components/shuttle/PickupRequestSheet';
@@ -34,6 +35,49 @@ const POPULAR_CORRIDORS = [
   { label: 'JHB ➔ Nelspruit', serviceType: 'interprovincial', origin: 'Johannesburg', dest: 'Mbombela' },
   { label: 'Polokwane Local', serviceType: 'local', origin: 'Polokwane', dest: '' },
 ];
+
+// Local-only examples for UI demos. These never get written to the API.
+const getShuttleDemoListings = () => {
+  const isLocalHost = typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+  if (!import.meta.env.DEV && !isLocalHost) return [];
+  const routes = [
+    ['Johannesburg', 'Cape Town', 'Gauteng', -26.2041, 28.0473],
+    ['Cape Town', 'Gqeberha', 'Western Cape', -33.9249, 18.4241],
+    ['Durban', 'Johannesburg', 'KwaZulu-Natal', -29.8587, 31.0218],
+    ['Polokwane', 'Mbombela', 'Limpopo', -23.9045, 29.4689],
+  ];
+  return routes.map(([originCity, destinationCity, province, lat, lng], index) => ({
+    _id: `local-shuttle-demo-${index + 1}`,
+    isDemo: true,
+    driverName: `Demo driver ${index + 1}`,
+    driverVerificationStatus: 'pending',
+    carType: ['Demo sedan', 'Demo minibus', 'Demo SUV', 'Demo shuttle'][index],
+    plateNumber: `DEMO ${index + 1}`,
+    carColor: ['Silver', 'White', 'Blue', 'Grey'][index],
+    pricePerSeat: [120, 180, 250, 90][index],
+    totalSeats: 4,
+    availableSeats: 4,
+    originCity,
+    destinationCity,
+    departureProvince: province,
+    destinationProvince: province,
+    pickupStation: `${originCity} demo pickup`,
+    dropoffStation: `${destinationCity} demo drop-off`,
+    isHouseToHouse: false,
+    leavesWhenFull: false,
+    departureTime: 'Demo schedule',
+    currentStatus: 'scheduled',
+    currentCoordinates: { lat, lng, isLive: false },
+    features: [],
+    driverRating: 0,
+    driverRatingCount: 0,
+    completedTrips: 0,
+  }));
+};
+
+const withLocalShuttleDemos = (list = []) =>
+  list.length ? list : getShuttleDemoListings();
 
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
@@ -78,7 +122,7 @@ const ShuttlePage = () => {
     }
   }, []);
 
-  // Data states
+  // Demo vehicles are shown only in local development when the API has no listings.
   const [shuttles, setShuttles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -93,7 +137,7 @@ const ShuttlePage = () => {
 
   const fetchMyDriverShuttles = async () => {
     try {
-      const res = await axios.get('/api/shuttles/my-shuttles', {
+      const res = await axios.get(resolveApiUrl('/api/shuttles/my-shuttles'), {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
       if (res.data?.success) {
@@ -120,32 +164,27 @@ const ShuttlePage = () => {
       if (destFilter.trim()) params.destinationCity = destFilter.trim();
       if (searchTerm.trim()) params.searchTerm = searchTerm.trim();
 
-      const res = await axios.get('/api/shuttles/get', { params });
-      if (res.data?.success) {
-        const list = res.data.shuttles || [];
-        setShuttles(list);
+      const res = await axios.get(resolveApiUrl('/api/shuttles/get'), { params });
+      if (!res.data?.success) throw new Error(res.data?.message || 'Could not load shuttle listings.');
+      const list = res.data.shuttles || [];
+      const visibleList = withLocalShuttleDemos(list);
+      setShuttles(visibleList);
 
-        // If shuttleId was requested via query param, select it and open card
-        const paramId = searchParams.get('shuttleId');
-        if (paramId) {
-          const match = list.find((s) => String(s._id) === String(paramId));
-          if (match) {
-            setHighlightedShuttle(match);
-            setIsCardOpen(true);
-          }
-        } else {
-          // Keep current selected shuttle or default to first for quick reference
-          setHighlightedShuttle((prev) => {
-            if (prev && list.some((s) => String(s._id) === String(prev._id))) {
-              return list.find((s) => String(s._id) === String(prev._id));
-            }
-            return list.length > 0 ? list[0] : null;
-          });
-        }
+      // If shuttleId was requested via query param, select it and open card.
+      const paramId = searchParams.get('shuttleId');
+      if (paramId) {
+        const match = visibleList.find((s) => String(s._id) === String(paramId));
+        setHighlightedShuttle(match || null);
+        setIsCardOpen(Boolean(match));
+      } else {
+        setHighlightedShuttle((prev) => visibleList.find((s) => String(s._id) === String(prev?._id)) || visibleList[0] || null);
+        if (!visibleList.length) setIsCardOpen(false);
       }
     } catch (err) {
       console.error('Error fetching shuttles:', err);
-      setError('Unable to load shuttles right now. Please try again.');
+      setShuttles([]);
+      setHighlightedShuttle(null);
+      setError('Unable to load current shuttle listings. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -180,11 +219,12 @@ const ShuttlePage = () => {
 
   // Live GPS poll callback — called by ShuttleMap every 10s when drivers broadcast
   const handleLiveRefresh = useCallback((freshShuttles) => {
-    setShuttles(freshShuttles);
+    const visibleShuttles = withLocalShuttleDemos(freshShuttles);
+    setShuttles(visibleShuttles);
     // Keep selected shuttle in sync with its fresh coordinates
     setHighlightedShuttle((prev) => {
       if (!prev) return prev;
-      const updated = freshShuttles.find((s) => String(s._id) === String(prev._id));
+      const updated = visibleShuttles.find((s) => String(s._id) === String(prev._id));
       return updated || prev;
     });
   }, []);
@@ -322,6 +362,13 @@ const ShuttlePage = () => {
 
       {/* ── Main Uber Layout: 100% Full Width Map Edge-to-Edge with 100% Bottom Card ── */}
       <main className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
+        {(loading || error || (!shuttles.length && !loading)) && <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 flex justify-center">
+          <div className="pointer-events-auto max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+            {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading current shuttle listings…</p>
+              : error ? <><p role="alert" className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
+                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No shuttle listings are available for this search.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only registered shuttle listings are shown here.</p></>}
+          </div>
+        </div>}
         {/* ── 2km Trip Proximity Alert Banner ── */}
         {tripAlert && (
           <div className="fixed top-14 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl z-50 animate-slide-up-fade">
@@ -382,6 +429,7 @@ const ShuttlePage = () => {
             selectedShuttle={isCardOpen ? highlightedShuttle : null}
             onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
+              if (shuttle?.isDemo) return;
               setHighlightedShuttle(shuttle);
               setIsCardOpen(true);
               setSelectedShuttleForBooking(shuttle);
@@ -419,7 +467,7 @@ const ShuttlePage = () => {
         </div>
 
         {/* Small floating prompt pill when card is closed */}
-        <div
+        {shuttles.length > 0 && <div
           className={`fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ease-out ${
             !isCardOpen
               ? 'translate-y-0 opacity-100'
@@ -443,7 +491,7 @@ const ShuttlePage = () => {
               <span>👆 Tap any vehicle on the map to view driver & book</span>
             </button>
           </div>
-        </div>
+        </div>}
       </main>
 
       {/* ── Slide-Up Search Modal (Triggered by Search Icon next to Home) ── */}

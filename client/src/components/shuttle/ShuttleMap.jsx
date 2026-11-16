@@ -1,42 +1,51 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   MapPin, 
   Navigation, 
   Bus, 
   Maximize2, 
   Minimize2, 
-  Sparkles,
-  Users,
   Compass,
   Layers,
   Radio,
-  Wifi
+  Map as MapIcon,
+  Satellite,
+  RotateCcw,
+  RefreshCw,
+  Locate,
+  ZoomIn,
+  ZoomOut,
+  Sparkles
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 
 const SA_CENTER = { lat: -26.2041, lng: 28.0473 }; // Johannesburg / central transport hub
 
 const MAP_PROVIDERS = {
   googleRoad: {
     id: 'googleRoad',
-    name: 'Google Map',
-    icon: '🗺️',
+    name: 'Road Map',
+    shortName: 'Road',
+    description: 'Street navigation & roads',
     url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
   },
   googleSatellite: {
     id: 'googleSatellite',
-    name: 'Google Satellite',
-    icon: '🛰️',
-    url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    name: 'Satellite',
+    shortName: 'Satellite',
+    description: 'High-res satellite & terrain',
+    url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', // Google Hybrid: Satellite with road names & labels
     maxZoom: 20,
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
   },
   voyager: {
     id: 'voyager',
     name: 'Clean View',
-    icon: '🧭',
+    shortName: 'Clean',
+    description: 'Clean cartographic map',
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     maxZoom: 19,
     subdomains: ['a', 'b', 'c', 'd'],
@@ -109,11 +118,13 @@ const ShuttleMap = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapStyle, setMapStyle] = useState('googleRoad');
+  const [isLiveRadarMode, setIsLiveRadarMode] = useState(false);
+  const [isLiveSyncing, setIsLiveSyncing] = useState(false);
   const [gprsStatus, setGprsStatus] = useState(null);
   const [locatingUser, setLocatingUser] = useState(false);
   const [liveActiveCount, setLiveActiveCount] = useState(0);
 
-  // Initialize Leaflet map with Free Google Maps
+  // Initialize Leaflet map with Google Streets
   useEffect(() => {
     let mounted = true;
 
@@ -133,7 +144,7 @@ const ShuttleMap = ({
           scrollWheelZoom: true,
         }).setView([initialLat, initialLng], 7);
 
-        // Default: Free Google Streets Tile Layer (no API key required)
+        // Default: Google Streets Tile Layer
         const provider = MAP_PROVIDERS.googleRoad;
         const tileLayer = L.tileLayer(provider.url, {
           maxZoom: provider.maxZoom,
@@ -142,6 +153,14 @@ const ShuttleMap = ({
 
         activeTileLayerRef.current = tileLayer;
         leafletMapRef.current = map;
+
+        // Clicking empty map space deselects current vehicle (returns to overview nicely)
+        map.on('click', () => {
+          if (onSelectShuttleRef.current) {
+            onSelectShuttleRef.current(null);
+          }
+        });
+
         if (mounted) {
           setMapReady(true);
           setTimeout(() => {
@@ -149,6 +168,11 @@ const ShuttleMap = ({
               leafletMapRef.current.invalidateSize();
             }
           }, 150);
+          setTimeout(() => {
+            if (leafletMapRef.current) {
+              leafletMapRef.current.invalidateSize();
+            }
+          }, 500);
         }
 
         const handleResize = () => {
@@ -176,15 +200,13 @@ const ShuttleMap = ({
     };
   }, []);
 
-  // ── Live GPS Polling: re-fetch shuttle positions every 10s ──────
-  // When any driver has GPRS broadcast active, their coords update in DB.
-  // This poll ensures the passenger map stays in sync without a page refresh.
+  // ── Live GPS Polling: re-fetch shuttle positions every 10s (or 5s in Live Radar) ──
   useEffect(() => {
     if (!onLiveRefresh) return;
 
     const poll = async () => {
       try {
-        const res = await axios.get('/api/shuttles/get?limit=50');
+        const res = await axios.get(resolveApiUrl('/api/shuttles/get?limit=50'));
         if (res.data?.shuttles) {
           const liveCount = res.data.shuttles.filter(
             (s) => s.currentCoordinates?.isLive
@@ -193,23 +215,23 @@ const ShuttleMap = ({
           onLiveRefresh(res.data.shuttles);
         }
       } catch (e) {
-        // Silent fail — just wait for next poll
+        // Silent fail — wait for next poll
       }
     };
 
-    // Initial poll after 2 seconds, then every 10 seconds
+    const intervalTime = isLiveRadarMode ? 5000 : 10000;
     const delay = setTimeout(() => {
       poll();
-      livePollingRef.current = setInterval(poll, 10000);
-    }, 2000);
+      livePollingRef.current = setInterval(poll, intervalTime);
+    }, 1500);
 
     return () => {
       clearTimeout(delay);
       if (livePollingRef.current) clearInterval(livePollingRef.current);
     };
-  }, [onLiveRefresh]);
+  }, [onLiveRefresh, isLiveRadarMode]);
 
-  // Switch map between Google Streets, Google Satellite, and Clean view
+  // Switch map between Road Map, Satellite, and Clean View
   const switchMapStyle = (styleId) => {
     if (!leafletMapRef.current) return;
     const L = window.L || window.leaflet;
@@ -227,6 +249,57 @@ const ShuttleMap = ({
 
     activeTileLayerRef.current = newLayer;
     setMapStyle(styleId);
+
+    setGprsStatus(`Switched to ${provider.name}`);
+    setTimeout(() => setGprsStatus(null), 2500);
+  };
+
+  // Toggle Live Radar tracking mode
+  const handleToggleLiveRadar = () => {
+    const nextMode = !isLiveRadarMode;
+    setIsLiveRadarMode(nextMode);
+
+    if (nextMode) {
+      setGprsStatus('📡 Live Map Active • Live GPS vehicle tracking');
+      handleManualLiveSync();
+
+      // Pan/fit to live moving vehicles if any
+      if (leafletMapRef.current && shuttles.length > 0) {
+        const liveShuttles = shuttles.filter((s) => s.currentCoordinates?.isLive || s.isDemo);
+        const liveBounds = liveShuttles
+          .map((s) => [Number(s.currentCoordinates?.lat), Number(s.currentCoordinates?.lng)])
+          .filter(([lat, lng]) => isValidCoord(lat, lng));
+
+        if (liveBounds.length > 0) {
+          leafletMapRef.current.fitBounds(liveBounds, { padding: [70, 70], maxZoom: 14, duration: 1 });
+        }
+      }
+    } else {
+      setGprsStatus('Standard map view restored');
+    }
+    setTimeout(() => setGprsStatus(null), 3000);
+  };
+
+  // Manual trigger to sync live positions immediately
+  const handleManualLiveSync = async () => {
+    if (isLiveSyncing) return;
+    setIsLiveSyncing(true);
+    try {
+      const res = await axios.get(resolveApiUrl('/api/shuttles/get?limit=50'));
+      if (res.data?.shuttles && onLiveRefresh) {
+        const liveCount = res.data.shuttles.filter(
+          (s) => s.currentCoordinates?.isLive
+        ).length;
+        setLiveActiveCount(liveCount);
+        onLiveRefresh(res.data.shuttles);
+        setGprsStatus(`✓ Updated (${res.data.shuttles.length} shuttles, ${liveCount} live)`);
+      }
+    } catch (e) {
+      setGprsStatus('Sync failed — check network');
+    } finally {
+      setTimeout(() => setIsLiveSyncing(false), 600);
+      setTimeout(() => setGprsStatus(null), 3000);
+    }
   };
 
   // Sync shuttle markers whenever shuttles or selectedShuttle changes
@@ -246,7 +319,7 @@ const ShuttleMap = ({
     const clusterMap = {};
     shuttles.forEach((s) => {
       const c = s.currentCoordinates;
-      if (!c || !isValidCoord(c.lat, c.lng)) return;
+      if (!(c?.isLive || s.isDemo) || !isValidCoord(c.lat, c.lng)) return;
       const key = `${Number(c.lat).toFixed(3)}_${Number(c.lng).toFixed(3)}`;
       if (!clusterMap[key]) clusterMap[key] = [];
       clusterMap[key].push(s);
@@ -254,7 +327,7 @@ const ShuttleMap = ({
 
     shuttles.forEach((shuttle) => {
       const coords = shuttle.currentCoordinates;
-      if (!coords || !isValidCoord(coords.lat, coords.lng)) return;
+      if (!(coords?.isLive || shuttle.isDemo) || !isValidCoord(coords.lat, coords.lng)) return;
 
       const clusterKey = `${Number(coords.lat).toFixed(3)}_${Number(coords.lng).toFixed(3)}`;
       const cluster = clusterMap[clusterKey] || [shuttle];
@@ -327,6 +400,9 @@ const ShuttleMap = ({
                 <span>LIVE GPS • MOVING</span>
               </div>
             ` : ''}
+            ${shuttle.isDemo ? `
+              <div class="absolute -top-3.5 right-0 z-10 bg-amber-500 text-gray-950 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-amber-200">DEMO</div>
+            ` : ''}
 
             <!-- Price and Space Badge -->
             <div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
@@ -380,7 +456,7 @@ const ShuttleMap = ({
       bounds.push([markerLat, markerLng]);
     });
 
-    // ── 2km Proximity Trip Alert & Route Visuals ─────────────────
+    // ── 2km Proximity Trip Alert & Route Visuals ──────────────────────────────
     if (leafletMapRef.current && userLocation && isValidCoord(userLocation.lat, userLocation.lng)) {
       const uLat = Number(userLocation.lat);
       const uLng = Number(userLocation.lng);
@@ -413,7 +489,6 @@ const ShuttleMap = ({
         if (isValidCoord(sLat, sLng)) {
           const distKm = calculateDistanceKm(sLat, sLng, uLat, uLng);
 
-          // If within 2km, draw 2km boundary circle and live connecting line
           if (distKm !== null && distKm <= 2.0) {
             // Draw 2km Proximity Circle around user pickup point
             const circle = L.circle([uLat, uLng], {
@@ -451,7 +526,7 @@ const ShuttleMap = ({
             const label = L.marker([midLat, midLng], { icon: midIcon, zIndexOffset: 3000 }).addTo(leafletMapRef.current);
             routeLabelRef.current = label;
 
-            // Trigger Trip Alert callback to parent — gate by ref to avoid identity loop
+            // Trigger Trip Alert callback to parent
             const alertKey = String(targetShuttle._id);
             if (proximityAlertSentRef.current !== alertKey) {
               proximityAlertSentRef.current = alertKey;
@@ -468,15 +543,13 @@ const ShuttleMap = ({
       }
     }
 
-    // Fit map bounds if multiple markers exist
-    if (bounds.length > 1 && !selectedShuttle) {
+    // Fit map bounds if multiple markers exist on initial load
+    if (bounds.length > 1 && !selectedShuttle && !isLiveRadarMode) {
       try {
         leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
       } catch (e) {}
     }
-  // ⚠️ onSelectShuttle & onProximityAlert intentionally omitted — stored in refs above
-  // to prevent their identity changes from triggering an infinite re-render loop.
-  }, [shuttles, selectedShuttle, userLocation, mapReady]);
+  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode]);
 
   // Fly to selected shuttle
   useEffect(() => {
@@ -487,6 +560,7 @@ const ShuttleMap = ({
     }
   }, [selectedShuttle]);
 
+  // Handle GPS Locate Me
   const handleLocateMe = () => {
     if (!navigator.geolocation || !leafletMapRef.current) {
       setGprsStatus('Geolocation not supported by device.');
@@ -494,7 +568,7 @@ const ShuttleMap = ({
     }
 
     setLocatingUser(true);
-    setGprsStatus('Allocating phone GPRS...');
+    setGprsStatus('Acquiring phone GPS position...');
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
@@ -502,7 +576,7 @@ const ShuttleMap = ({
         setLocatingUser(false);
 
         if (!isValidCoord(latitude, longitude)) {
-          setGprsStatus('Invalid coordinates received.');
+          setGprsStatus('Invalid GPS coordinates received.');
           return;
         }
 
@@ -529,7 +603,6 @@ const ShuttleMap = ({
         });
 
         const marker = L.marker([latitude, longitude], { icon: gprsIcon });
-
         marker.addTo(leafletMapRef.current);
         userGprsMarkerRef.current = marker;
 
@@ -537,8 +610,8 @@ const ShuttleMap = ({
         if (onUserLocationChange) {
           onUserLocationChange({ lat: latitude, lng: longitude, accuracy });
         }
-        setGprsStatus(`📍 GPRS Allocated (~${Math.round(accuracy || 10)}m accuracy)`);
-        setTimeout(() => setGprsStatus(null), 5000);
+        setGprsStatus(`📍 Location Locked (~${Math.round(accuracy || 10)}m accuracy)`);
+        setTimeout(() => setGprsStatus(null), 4000);
       },
       (err) => {
         console.warn('Geolocation failed:', err.message);
@@ -550,10 +623,70 @@ const ShuttleMap = ({
     );
   };
 
+  // ── "Return Map" (Recenter / Overview of all shuttles) ──────────────────────
   const handleResetView = () => {
-    if (leafletMapRef.current) {
-      leafletMapRef.current.flyTo([SA_CENTER.lat, SA_CENTER.lng], 6, { duration: 1 });
+    if (!leafletMapRef.current) return;
+
+    // Deselect currently selected shuttle so the full card closes and view returns nicely
+    if (onSelectShuttleRef.current) {
+      onSelectShuttleRef.current(null);
     }
+
+    const bounds = [];
+    shuttles.forEach((s) => {
+      const c = s.currentCoordinates;
+      if (c && isValidCoord(c.lat, c.lng)) {
+        bounds.push([Number(c.lat), Number(c.lng)]);
+      }
+    });
+
+    if (userLocation && isValidCoord(userLocation.lat, userLocation.lng)) {
+      bounds.push([Number(userLocation.lat), Number(userLocation.lng)]);
+    }
+
+    if (bounds.length > 1) {
+      try {
+        leafletMapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 13, duration: 1.2 });
+      } catch (e) {
+        leafletMapRef.current.flyTo([SA_CENTER.lat, SA_CENTER.lng], 7, { duration: 1.2 });
+      }
+    } else if (bounds.length === 1) {
+      leafletMapRef.current.flyTo(bounds[0], 12, { duration: 1.2 });
+    } else {
+      leafletMapRef.current.flyTo([SA_CENTER.lat, SA_CENTER.lng], 6, { duration: 1.2 });
+    }
+
+    setGprsStatus('✓ Map returned to full overview');
+    setTimeout(() => setGprsStatus(null), 3000);
+
+    setTimeout(() => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.invalidateSize();
+      }
+    }, 250);
+  };
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    if (leafletMapRef.current) {
+      leafletMapRef.current.zoomIn();
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (leafletMapRef.current) {
+      leafletMapRef.current.zoomOut();
+    }
+  };
+
+  // Toggle fullscreen
+  const handleToggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+    setTimeout(() => {
+      if (leafletMapRef.current) {
+        leafletMapRef.current.invalidateSize();
+      }
+    }, 250);
   };
 
   return (
@@ -562,7 +695,7 @@ const ShuttleMap = ({
         isFullscreen ? 'fixed inset-0 z-50 rounded-none h-screen' : `${heightClass} rounded-none border-x-0 border-t-0 shadow-md`
       }`}
     >
-      {/* Hide map zoom / scrolling buttons & controls */}
+      {/* Hide native Leaflet controls to keep the UI clean and modern */}
       <style>{`
         .leaflet-control-zoom,
         .leaflet-control-zoom-in,
@@ -572,7 +705,153 @@ const ShuttleMap = ({
         }
       `}</style>
 
-      {/* Map Leaflet Container - Clean edge-to-edge view with no belt menu */}
+      {/* ── Top-Left: Map Layer Selector (Road, Satellite, Live Map) ── */}
+      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90">
+        {/* Road Map Button */}
+        <button
+          type="button"
+          onClick={() => {
+            switchMapStyle('googleRoad');
+            setIsLiveRadarMode(false);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            mapStyle === 'googleRoad' && !isLiveRadarMode
+              ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
+          title="Road Map: Street navigation and road network"
+        >
+          <MapIcon className="w-3.5 h-3.5" />
+          <span>Road</span>
+        </button>
+
+        {/* Satellite Button */}
+        <button
+          type="button"
+          onClick={() => {
+            switchMapStyle('googleSatellite');
+            setIsLiveRadarMode(false);
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            mapStyle === 'googleSatellite' && !isLiveRadarMode
+              ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
+          title="Satellite: Aerial photography with roads and terrain"
+        >
+          <Satellite className="w-3.5 h-3.5" />
+          <span>Satellite</span>
+        </button>
+
+        {/* Live Map / Live Radar Button */}
+        <button
+          type="button"
+          onClick={handleToggleLiveRadar}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            isLiveRadarMode
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/40'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
+          title="Live Map: Real-time vehicle radar and tracking"
+        >
+          <span className="relative flex h-2 w-2">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLiveRadarMode ? 'bg-white' : 'bg-emerald-400'} opacity-75`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveRadarMode ? 'bg-white' : 'bg-emerald-500'}`}></span>
+          </span>
+          <Radio className="w-3.5 h-3.5" />
+          <span>Live Map</span>
+        </button>
+      </div>
+
+      {/* ── Top-Right: Return Map & Floating Utility Controls ── */}
+      <div className="absolute top-3 right-3 z-[1000] flex flex-col items-end gap-2">
+        {/* Main "Return Map" (Recenter / Overview) Button */}
+        <button
+          type="button"
+          onClick={handleResetView}
+          aria-label="Return map to full overview of all shuttles"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-gray-800 shadow-lg ring-1 ring-black/5 backdrop-blur transition hover:bg-white hover:shadow-xl active:scale-95 dark:bg-gray-900/95 dark:text-gray-100 dark:ring-white/10 dark:hover:bg-gray-800"
+          title="Return map to full overview of all shuttles"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+        </button>
+
+        {/* Floating Vertical Utility Stack */}
+        <div className="flex flex-col rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+          {/* GPS Locate Me */}
+          <button
+            type="button"
+            onClick={handleLocateMe}
+            disabled={locatingUser}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            title="My GPS Location"
+          >
+            <Locate className={`w-4 h-4 ${locatingUser ? 'animate-spin text-blue-600' : 'text-gray-700 dark:text-gray-200'}`} />
+          </button>
+
+          {/* Live Sync / Refresh */}
+          <button
+            type="button"
+            onClick={handleManualLiveSync}
+            disabled={isLiveSyncing}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            title="Refresh Live Shuttle Positions"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLiveSyncing ? 'animate-spin text-emerald-600' : 'text-gray-700 dark:text-gray-200'}`} />
+          </button>
+
+          {/* Zoom In */}
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+
+          {/* Zoom Out */}
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+
+          {/* Fullscreen Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Expand Fullscreen'}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Status Toast (Floating at Top-Center) ── */}
+      {gprsStatus && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none transition-all duration-300">
+          <div className="px-4 py-1.5 rounded-full bg-gray-950/90 text-white text-xs font-bold shadow-2xl border border-gray-700 flex items-center gap-2 backdrop-blur-md">
+            <span>{gprsStatus}</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Live Map Active Pill (when Live Map mode is ON) ── */}
+      {isLiveRadarMode && (
+        <div className="absolute bottom-4 left-3 z-[1000] pointer-events-auto">
+          <div className="px-3.5 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/80 text-emerald-300 text-xs font-bold shadow-xl backdrop-blur-md flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>📡 Live Map Tracking • {liveActiveCount || shuttles.length} Vehicles</span>
+          </div>
+        </div>
+      )}
+
+      {/* Map Leaflet Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
     </div>
   );

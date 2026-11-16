@@ -24,28 +24,28 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
 
   const {
     _id,
-    carType = 'Toyota Quantum 15-Seater',
-    plateNumber = 'REG-GP',
-    carColor = 'White',
+    carType = 'Vehicle details not provided',
+    plateNumber = '',
+    carColor = '',
     carImages = [],
-    totalSeats = 15,
-    availableSeats = 15,
+    totalSeats = 0,
+    availableSeats = 0,
     serviceType = 'interprovincial',
     departureProvince = 'Gauteng',
     destinationProvince = 'Limpopo',
-    originCity = 'Johannesburg',
-    destinationCity = 'Polokwane',
-    pickupStation = 'Park Station Central',
-    dropoffStation = '🏠 House-to-House Dropoff',
+    originCity = '',
+    destinationCity = '',
+    pickupStation = '',
+    dropoffStation = '',
     isHouseToHouse = true,
     leavesWhenFull = true,
     departureDate,
     departureTime = 'Leaves when full',
-    estimatedArrival = '11:30 AM',
-    pricePerSeat = 250,
+    estimatedArrival = '',
+    pricePerSeat = null,
     currentStatus = 'scheduled',
     currentCoordinates,
-    driverName = 'Verified Operator',
+    driverName = 'LoopOut driver',
     driverPhone = '',
     driverAvatar = '',
     features = [],
@@ -54,7 +54,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
     extraBagPrice = 0,
     luggageNotes = '',
     driverLicenceScan = '',
-    driverVerificationStatus = 'verified',
+    driverVerificationStatus = 'pending',
     driverRating = 0,
     driverRatingCount = 0,
     completedTrips = 0,
@@ -66,9 +66,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
     )
   );
 
-  const displayImage = (carImages && carImages.length > 0)
-    ? carImages[0]
-    : 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=compress&cs=tinysrgb&w=800';
+  const displayImage = (carImages && carImages.length > 0) ? carImages[0] : '';
 
   const bookedSeats = Math.max(0, totalSeats - availableSeats);
   const occupancyPercent = totalSeats > 0 ? Math.round((bookedSeats / totalSeats) * 100) : 0;
@@ -96,13 +94,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
       {/* Top Media & Vehicle Info Header */}
       <div>
         <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
-          <img
-            src={displayImage}
-            alt={carType}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          {displayImage ? <><img src={displayImage} alt={carType} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" /><div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" /></> : <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-500 dark:text-slate-400"><Bus className="h-10 w-10" /><span className="text-xs">No vehicle photo provided</span></div>}
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
@@ -218,7 +210,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
                 <Calendar className="w-3 h-3" />
                 {formattedDate}
               </span>
-              {currentCoordinates?.address && (
+              {currentCoordinates?.isLive === true && currentCoordinates?.address && (
                 <span className="flex items-center gap-1 truncate max-w-[170px]" title={currentCoordinates.address}>
                   <Navigation className="w-3 h-3 text-blue-500" />
                   Now: {currentCoordinates.address}
@@ -283,7 +275,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
               <div>
                 <p className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1">
                   {driverName}
-                  <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  {driverVerificationStatus === 'verified' && <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
                 </p>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400">
                   {driverRatingCount > 0 ? (

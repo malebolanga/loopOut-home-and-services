@@ -21,6 +21,7 @@ import {
   Building2
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 
 // Live 24-Hour Countdown Component
 const CountdownTimer = ({ deadline }) => {
@@ -84,7 +85,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
         ? '/api/shuttle-bookings/driver-bookings'
         : '/api/shuttle-bookings/my-bookings';
 
-      const res = await axios.get(endpoint, {
+      const res = await axios.get(resolveApiUrl(endpoint), {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
 
@@ -107,7 +108,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
   const handleApprove = async (bookingId) => {
     setActionLoading(bookingId);
     try {
-      const res = await axios.put(`/api/shuttle-bookings/approve/${bookingId}`, {}, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/approve/${bookingId}`), {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
       if (res.data?.success) {
@@ -127,7 +128,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
 
     setActionLoading(bookingId);
     try {
-      const res = await axios.put(`/api/shuttle-bookings/decline/${bookingId}`, { reason }, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/decline/${bookingId}`), { reason }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
       });
       if (res.data?.success) {
@@ -156,7 +157,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
 
     setActionLoading(booking._id);
     try {
-      const res = await axios.put(`/api/shuttle-bookings/pay/${booking._id}`, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/pay/${booking._id}`), {
         paymentMethod: 'Direct EFT / Bank Account Transfer (Confirmed by Driver)'
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
@@ -183,7 +184,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
     }
     setActionLoading(ratingModal.bookingId);
     try {
-      const res = await axios.put(`/api/shuttle-bookings/rate/${ratingModal.bookingId}`, {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/rate/${ratingModal.bookingId}`), {
         rating: ratingModal.selectedStars,
         review: ratingModal.review || '',
       }, {

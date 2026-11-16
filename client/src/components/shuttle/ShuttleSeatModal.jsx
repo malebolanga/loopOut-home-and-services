@@ -13,6 +13,7 @@ import {
   Info
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 
 const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) => {
   if (!isOpen || !shuttle) return null;
@@ -128,7 +129,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
         passengerNotes: passengerNotes.trim(),
       };
 
-      const res = await axios.post('/api/shuttle-bookings/request', payload, {
+      const res = await axios.post(resolveApiUrl('/api/shuttle-bookings/request'), payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },

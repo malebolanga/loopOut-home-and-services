@@ -12,44 +12,31 @@ import {
   Bus, 
   ArrowRight, 
   Clock, 
-  MessageSquare,
   Sparkles,
   ShieldCheck,
   ChevronUp
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocode } from '../../utils/geocoding';
-
-// Helper to format clean South African WhatsApp link
-const formatWhatsAppUrl = (phone, text) => {
-  if (!phone) return null;
-  let clean = phone.replace(/[^0-9]/g, '');
-  if (clean.startsWith('0')) {
-    clean = '27' + clean.slice(1);
-  } else if (!clean.startsWith('27') && clean.length === 9) {
-    clean = '27' + clean;
-  }
-  return `https://wa.me/${clean}?text=${encodeURIComponent(text)}`;
-};
 
 const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) => {
   if (!isOpen || !shuttle) return null;
 
   const {
     _id,
-    carType = 'Toyota Quantum 15-Seater',
+    carType = 'Vehicle details not provided',
     plateNumber = '',
-    pricePerSeat = 180,
-    availableSeats = 15,
-    totalSeats = 15,
-    originCity = 'Johannesburg',
-    destinationCity = 'Polokwane',
-    pickupStation = 'Park Station',
-    dropoffStation = '🏠 House-to-House Dropoff',
+    pricePerSeat = null,
+    availableSeats = 0,
+    totalSeats = 0,
+    originCity = '',
+    destinationCity = '',
+    pickupStation = '',
+    dropoffStation = '',
     isHouseToHouse = true,
-    departureTime = 'Tomorrow at 10:00 AM',
-    driverName = 'Verified Driver',
-    driverPhone = '+27825550192',
+    departureTime = '',
+    driverName = 'LoopOut driver',
     freeBagsPerPassenger = 1,
     extraBagPrice = 50,
   } = shuttle;
@@ -70,7 +57,6 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successBooking, setSuccessBooking] = useState(null);
-  const [whatsAppDirectUrl, setWhatsAppDirectUrl] = useState(null);
 
   // Sync with current user profile
   useEffect(() => {
@@ -168,7 +154,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
         passengerNotes: passengerNotes.trim(),
       };
 
-      const res = await axios.post('/api/shuttle-bookings/request', payload, {
+      const res = await axios.post(resolveApiUrl('/api/shuttle-bookings/request'), payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
@@ -177,34 +163,6 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
       if (res.data?.success) {
         const booking = res.data.booking;
         setSuccessBooking(booking);
-
-        // Prepare full trip WhatsApp message for the driver
-        const waMessage = 
-`🚖 *LoopOut Shuttle Pickup Request*
-👤 *Passenger:* ${passengerName}
-📞 *Phone:* ${passengerPhone}
-📍 *Pickup Location:* ${pickupAddress}
-🎯 *Dropoff Location:* ${dropoffAddress}
-🚐 *Vehicle:* ${carType} (${plateNumber})
-🛣️ *Route:* ${originCity} ➔ ${destinationCity}
-👥 *Seats:* ${seatsCount} (${selectedSeatNumbers.join(', ')})
-🧳 *Luggage:* ${seatsCount} Free Bag(s)${extraBagsCount > 0 ? ` + ${extraBagsCount} Extra Bag(s)` : ''}
-💰 *Total Fare:* R${totalFare}
-🎫 *Booking Code:* ${booking.ticketCode}
-
-Hi ${driverName}, I just submitted my pickup request on LoopOut! Please confirm my pickup. Thank you!`;
-
-        const waUrl = formatWhatsAppUrl(driverPhone, waMessage);
-        setWhatsAppDirectUrl(waUrl);
-
-        // Automatically attempt to open WhatsApp in a new window/tab
-        if (waUrl) {
-          try {
-            window.open(waUrl, '_blank', 'noopener,noreferrer');
-          } catch (e) {
-            console.warn('Popup blocked, user can click button:', e);
-          }
-        }
 
         if (onSuccess) onSuccess(booking);
       } else {
@@ -271,7 +229,7 @@ Hi ${driverName}, I just submitted my pickup request on LoopOut! Please confirm 
                 Pickup Request Sent!
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
-                Your pickup request has been delivered to <strong>{driverName}</strong> via LoopOut notifications and prepared for WhatsApp.
+                Your pickup request has been sent to <strong>{driverName}</strong> in LoopOut. Driver contact details will be shared if the request is approved.
               </p>
             </div>
 
@@ -295,20 +253,8 @@ Hi ${driverName}, I just submitted my pickup request on LoopOut! Please confirm 
               </div>
             </div>
 
-            {/* Dual Action: WhatsApp + In-App */}
+            {/* Confirmation action */}
             <div className="space-y-2.5 max-w-sm mx-auto pt-2">
-              {whatsAppDirectUrl && (
-                <a
-                  href={whatsAppDirectUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-3.5 px-5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Open WhatsApp to Message Driver</span>
-                </a>
-              )}
-
               <button
                 type="button"
                 onClick={onClose}
@@ -532,14 +478,14 @@ Hi ${driverName}, I just submitted my pickup request on LoopOut! Please confirm 
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <MessageSquare className="w-5 h-5" />
-                    <span>Submit Pickup Request (WhatsApp & LoopOut)</span>
+                    <Bus className="w-5 h-5" />
+                    <span>Submit Pickup Request</span>
                     <ArrowRight className="w-4 h-4 ml-1" />
                   </>
                 )}
               </button>
               <p className="text-[11px] text-gray-400 text-center mt-2">
-                Submits request to driver's notifications and opens WhatsApp automatically.
+                Sends your request to the driver through LoopOut.
               </p>
             </div>
           </form>

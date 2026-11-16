@@ -1,0 +1,207 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.scroll-container {
+  overflow-y: auto;
+}
+
+/* First paint: this appears before React and the native app are ready. */
+.initial-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  color: #0f172a;
+  font-family: Inter, system-ui, sans-serif;
+}
+html.dark .initial-splash {
+  background: #030712;
+  color: #f8fafc;
+}
+html.dark .initial-splash__logo { background: #1f2937; }
+html.dark .initial-splash__bar { background: #1f2937; }
+.initial-splash__logo {
+  width: 82px;
+  height: 82px;
+  padding: 13px;
+  border-radius: 27px;
+  background: #fff1f3;
+}
+.initial-splash__name { margin-top: 18px; font-size: 29px; font-weight: 800; letter-spacing: -1px; }
+.initial-splash__name strong { color: #ff385c; }
+.initial-splash__bar { width: 64px; height: 4px; margin-top: 22px; overflow: hidden; border-radius: 999px; background: #f1f5f9; }
+.initial-splash__bar::after { content: ''; display: block; width: 32px; height: 100%; border-radius: inherit; background: #ff385c; animation: initial-splash-load 900ms ease-in-out infinite; }
+@keyframes initial-splash-load { from { transform: translateX(-110%); } to { transform: translateX(210%); } }
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  /* Default Theme */
+  --primary-color: #4a5568;
+  --secondary-color: #718096;
+  --background-color: #f0f2f5;
+  --text-color: #2d3748;
+  --header-bg: rgba(247, 245, 245, 0.9);
+}
+
+[data-theme="duck"] {
+  --primary-color: #ffd700;
+  --secondary-color: #ffaa00;
+  --background-color: #fff9e6;
+  --text-color: #2d3748;
+  --header-bg: rgba(255, 249, 230, 0.9);
+}
+
+[data-theme="white"] {
+  --primary-color: #e2e8f0;
+  --secondary-color: #cbd5e0;
+  --background-color: #ffffff;
+  --text-color: #1a202c;
+  --header-bg: rgba(255, 255, 255, 0.9);
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease;
+}
+
+header {
+   background-color: var(--background-color);
+}
+
+/* Apply padding to all pages except home page */
+body:not(.home-page) {
+  padding-top: 0px;
+}
+
+.flex-child {
+  flex-shrink: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.text-container {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.parent-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content-area {
+  flex: 1;
+  /* Takes remaining space */
+  min-height: 0;
+  /* Fixes Chrome flex overflow bug */
+}
+
+.app-container {
+  overflow: auto;
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  /* Include padding in width calculation */
+}
+
+.app-grid {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  /* Header, content, footer */
+  min-height: 100vh;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.grid-item {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.section {
+  height: 100vh;
+  height: 100dvh;
+  /* Mobile-friendly */
+  max-height: -webkit-fill-available;
+}
+
+.flex-parent {
+  display: flex;
+  min-width: 0;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+header {
+  position: fixed;
+  /* Makes the header fixed */
+  top: 0;
+  /* Positions it at the top */
+  left: 0;
+  /* Positions it at the left */
+  right: 0;
+  /* Positions it at the right */
+  z-index: 50;
+  /* Keeps the header above other content */
+   background-color: var(--background-color);
+  /* Optional: slightly transparent */
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- CLS Prevention: Leaflet & FontAwesome reserved dimensions --- */
+/* Leaflet map containers always reserve space before stylesheet arrives */
+.leaflet-container {
+  min-height: 300px;
+  width: 100%;
+  background: #e5e7eb;
+}
+/* FontAwesome icon containers: reserve line-height so layout doesn't shift */
+.fa, .fas, .far, .fab, .fal {
+  display: inline-block;
+  min-width: 1em;
+  min-height: 1em;
+  line-height: 1;
+  font-style: normal;
+}

@@ -26,6 +26,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import axios from 'axios';
+import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { uploadFiles } from '../../services/upload.service';
 
 const SA_PROVINCES = [
@@ -70,25 +71,21 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
 
   // ── Step 1: Car Information ──────────────────────────────────
   const [serviceType, setServiceType] = useState('interprovincial');
-  const [carType, setCarType] = useState(COMMON_VEHICLES[0]);
+  const [carType, setCarType] = useState('');
   const [customCarType, setCustomCarType] = useState('');
   const [plateNumber, setPlateNumber] = useState('');
-  const [carColor, setCarColor] = useState('White');
-  const [totalSeats, setTotalSeats] = useState(15);
-  const [features, setFeatures] = useState([
-    'Air Conditioning',
-    'Luggage Boot / Trailer',
-    'USB Charging Ports'
-  ]);
+  const [carColor, setCarColor] = useState('');
+  const [totalSeats, setTotalSeats] = useState('');
+  const [features, setFeatures] = useState([]);
 
   // ── Step 2: Driver Information ───────────────────────────────
   const [driverName, setDriverName] = useState(currentUser?.name || currentUser?.username || '');
   const [driverPhone, setDriverPhone] = useState(currentUser?.phone || '');
   const [driverAltPhone, setDriverAltPhone] = useState('');
   const [driverHomeTown, setDriverHomeTown] = useState('');
-  const [driverHomeProvince, setDriverHomeProvince] = useState('Gauteng');
+  const [driverHomeProvince, setDriverHomeProvince] = useState('');
   const [driverLicenceNumber, setDriverLicenceNumber] = useState('');
-  const [yearsExperience, setYearsExperience] = useState('5+ years');
+  const [yearsExperience, setYearsExperience] = useState('');
 
   // ── Banking Details (for passenger EFT payments) ─────────────
   const [bankName, setBankName] = useState('');
@@ -99,24 +96,22 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
   const [bankReference, setBankReference] = useState('');
 
   // ── Step 3: Pricing, Route & House-to-House Collection ───────
-  const [departureProvince, setDepartureProvince] = useState('Gauteng');
-  const [destinationProvince, setDestinationProvince] = useState('Limpopo');
-  const [originCity, setOriginCity] = useState('Johannesburg');
-  const [destinationCity, setDestinationCity] = useState('Polokwane');
-  const [pickupStation, setPickupStation] = useState('Park Station Central Rank');
-  const [dropoffStation, setDropoffStation] = useState('🏠 House-to-House Dropoff (Direct to door / gate)');
+  const [departureProvince, setDepartureProvince] = useState('');
+  const [destinationProvince, setDestinationProvince] = useState('');
+  const [originCity, setOriginCity] = useState('');
+  const [destinationCity, setDestinationCity] = useState('');
+  const [pickupStation, setPickupStation] = useState('');
+  const [dropoffStation, setDropoffStation] = useState('');
   const [isHouseToHouse, setIsHouseToHouse] = useState(true);
-  const [pricePerSeat, setPricePerSeat] = useState(200);
+  const [pricePerSeat, setPricePerSeat] = useState('');
   const [leavesWhenFull, setLeavesWhenFull] = useState(true);
-  const [departureDate, setDepartureDate] = useState(
-    new Date(Date.now() + 86400000).toISOString().split('T')[0]
-  );
-  const [departureTime, setDepartureTime] = useState('Tomorrow at 10:00 AM');
-  const [extraBagPrice, setExtraBagPrice] = useState(50);
-  const [luggageNotes, setLuggageNotes] = useState('1 normal bag (≤20 kg) FREE per passenger. Extra bags R50 each.');
+  const [departureDate, setDepartureDate] = useState('');
+  const [departureTime, setDepartureTime] = useState('');
+  const [extraBagPrice, setExtraBagPrice] = useState(0);
+  const [luggageNotes, setLuggageNotes] = useState('');
 
   // ── Step 4: Documents, Car Photo & Driver Photo ──────────────
-  const [driverFaceScan, setDriverFaceScan] = useState(currentUser?.liveSelfieUrl || currentUser?.avatar || '');
+  const [driverFaceScan, setDriverFaceScan] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [driverLicenceScan, setDriverLicenceScan] = useState('');
   const [driverIdScan, setDriverIdScan] = useState(currentUser?.idDocumentUrl || '');
@@ -247,6 +242,18 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         setError('Please enter a valid price per seat in ZAR.');
         return;
       }
+      if (!departureProvince || (serviceType !== 'local' && !destinationProvince)) {
+        setError('Please choose the correct province for this route.');
+        return;
+      }
+      if (!departureDate || Number.isNaN(new Date(departureDate).getTime())) {
+        setError('Please choose the actual departure date.');
+        return;
+      }
+      if (!leavesWhenFull && !departureTime.trim()) {
+        setError('Please enter the scheduled departure time.');
+        return;
+      }
       setStep(4);
       return;
     }
@@ -281,11 +288,9 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         carType: vehicleTypeFinal,
         plateNumber: plateNumber.trim().toUpperCase(),
         carColor: carColor.trim(),
-        carImages: imageUrl.trim() ? [imageUrl.trim()] : [
-          'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=compress&cs=tinysrgb&w=800'
-        ],
-        totalSeats: Number(totalSeats) || 15,
-        availableSeats: Number(totalSeats) || 15,
+        carImages: imageUrl.trim() ? [imageUrl.trim()] : [],
+        totalSeats: Number(totalSeats),
+        availableSeats: Number(totalSeats),
         serviceType,
         departureProvince,
         destinationProvince: serviceType === 'local' ? departureProvince : destinationProvince,
@@ -298,7 +303,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         leavesWhenFull,
         departureRule: leavesWhenFull ? 'when_full' : 'scheduled',
         departureDate,
-        departureTime,
+        departureTime: departureTime.trim() || 'When full',
         pricePerSeat: Number(pricePerSeat),
         freeBagsPerPassenger: 1,
         extraBagPrice: Number(extraBagPrice) || 0,
@@ -319,16 +324,10 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         bankAccountType: bankAccountType.trim(),
         bankReference: bankReference.trim(),
         features,
-        notes: `Experience: ${yearsExperience}. Home base: ${driverHomeTown}, ${driverHomeProvince}.`,
-        currentCoordinates: {
-          lat: -26.2041,
-          lng: 28.0473,
-          address: originCity.trim(),
-          updatedAt: new Date()
-        }
+        notes: [yearsExperience && `Experience: ${yearsExperience}`, driverHomeTown && `Home base: ${driverHomeTown}${driverHomeProvince ? `, ${driverHomeProvince}` : ''}`].filter(Boolean).join('. ')
       };
 
-      const res = await axios.post('/api/shuttles/create', payload, {
+      const res = await axios.post(resolveApiUrl('/api/shuttles/create'), payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
         },
@@ -759,7 +758,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
               <div className="p-3.5 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 flex items-center gap-3 text-xs text-teal-900 dark:text-teal-200">
                 <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0" />
                 <span>
-                  LoopOut displays your verified status badge to passengers, ensuring safer bookings and higher passenger trust.
+                  Uploaded documents are not reviewed or verified by LoopOut. Passengers will be told that verification has not been completed.
                 </span>
               </div>
 
@@ -880,6 +879,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                       onChange={(e) => setDepartureProvince(e.target.value)}
                       className="w-full px-2.5 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                     >
+                      <option value="" disabled>Select province</option>
                       {SA_PROVINCES.map((p) => (
                         <option key={p} value={p}>{p} Province</option>
                       ))}
@@ -904,6 +904,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                       onChange={(e) => setDestinationProvince(e.target.value)}
                       className="w-full px-2.5 py-1 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                     >
+                      <option value="" disabled>Select province</option>
                       {SA_PROVINCES.map((p) => (
                         <option key={p} value={p}>{p} Province</option>
                       ))}
@@ -1116,7 +1117,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                       <span className="text-[10px] text-red-500 font-bold">*Required</span>
                     </div>
                     <div className="text-[11px] text-gray-500">
-                      {driverLicenceScan ? '✓ Licence document verified on file' : 'Front or back photo of your SA licence / PrDP'}
+                      {driverLicenceScan ? '✓ Licence document uploaded' : 'Front or back photo of your SA licence / PrDP'}
                     </div>
                   </div>
                 </div>
@@ -1139,7 +1140,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                       <span className="text-[10px] text-red-500 font-bold">*Required</span>
                     </div>
                     <div className="text-[11px] text-gray-500">
-                      {driverIdScan ? '✓ Identity document verified on file' : 'SA Smart ID Card, Green ID book, or Passport'}
+                      {driverIdScan ? '✓ Identity document uploaded' : 'SA Smart ID Card, Green ID book, or Passport'}
                     </div>
                   </div>
                 </div>
