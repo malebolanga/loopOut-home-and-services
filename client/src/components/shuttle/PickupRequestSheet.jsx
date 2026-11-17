@@ -48,7 +48,25 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
   const [pickupCoords, setPickupCoords] = useState(null);
   const [dropoffAddress, setDropoffAddress] = useState(dropoffStation || destinationCity);
   const [seatsCount, setSeatsCount] = useState(1);
-  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState(['Seat 1']);
+
+  // Helper to pick available numeric seat numbers (1 to totalSeats) excluding reserved ones
+  const getFreeSeatNumbers = (count) => {
+    const reserved = new Set(
+      [...(shuttle.reservedSeatNumbers || []), ...(shuttle.bookedSeatNumbers || [])]
+        .map((s) => String(s).replace(/\D/g, ''))
+        .filter(Boolean)
+    );
+    const maxSeats = Number(totalSeats) || 15;
+    const free = [];
+    for (let i = 1; i <= maxSeats; i++) {
+      if (!reserved.has(String(i))) {
+        free.push(String(i));
+      }
+    }
+    return free.slice(0, count);
+  };
+
+  const [selectedSeatNumbers, setSelectedSeatNumbers] = useState(() => getFreeSeatNumbers(1));
   const [extraBagsCount, setExtraBagsCount] = useState(0);
   const [passengerNotes, setPassengerNotes] = useState('');
 
@@ -115,7 +133,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
   const handleSeatsChange = (newCount) => {
     const valid = Math.max(1, Math.min(newCount, availableSeats || 15));
     setSeatsCount(valid);
-    setSelectedSeatNumbers(Array.from({ length: valid }, (_, i) => `Seat ${i + 1}`));
+    setSelectedSeatNumbers(getFreeSeatNumbers(valid));
   };
 
   // Submit Pickup Request
@@ -141,12 +159,16 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
     setLoading(true);
 
     try {
+      const cleanSeats = (selectedSeatNumbers && selectedSeatNumbers.length > 0)
+        ? selectedSeatNumbers.map((s) => String(s).replace(/\D/g, '')).filter(Boolean)
+        : getFreeSeatNumbers(seatsCount);
+
       const payload = {
         shuttleId: _id,
         passengerName: passengerName.trim(),
         passengerPhone: passengerPhone.trim(),
         seatsBooked: seatsCount,
-        seatNumbers: selectedSeatNumbers,
+        seatNumbers: cleanSeats.length === seatsCount ? cleanSeats : undefined,
         extraBagsCount,
         pickupLocation: pickupAddress.trim(),
         pickupCoordinates: pickupCoords,

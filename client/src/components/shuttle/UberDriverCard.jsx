@@ -22,7 +22,8 @@ import {
   CheckCircle2,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  CalendarDays
 } from 'lucide-react';
 import SafetyModal from './SafetyModal';
 
@@ -46,6 +47,7 @@ const UberDriverCard = ({
   onRequestPickup,
   currentUser,
   userLocation,
+  onUpdateSchedule,
   onClose
 }) => {
   const [showSafetyModal, setShowSafetyModal] = useState(false);
@@ -107,6 +109,7 @@ const UberDriverCard = ({
   } = shuttle;
 
   const isDriverLiveGprs = currentCoordinates?.isLive === true;
+  const isCurrentDriver = Boolean(currentUser && String(shuttle.driverRef?._id || shuttle.driverRef) === String(currentUser._id || currentUser.id));
   const isDemo = shuttle?.isDemo === true;
   const gpsAccuracy = currentCoordinates?.accuracy;
 
@@ -260,6 +263,11 @@ const UberDriverCard = ({
 
         {/* Right: Expand/Collapse & Fade-out (Hide) Controls */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {isCurrentDriver && onUpdateSchedule && (
+            <button type="button" onClick={() => onUpdateSchedule(shuttle)} className="inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-teal-800" title="Update departure date and time">
+              <CalendarDays className="h-3.5 w-3.5" /><span>Update departure</span>
+            </button>
+          )}
           {/* Control 1: Expand / Collapse Details Toggle */}
           <button
             type="button"

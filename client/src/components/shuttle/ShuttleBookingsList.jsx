@@ -18,7 +18,8 @@ import {
   X,
   Copy,
   Check,
-  Building2
+  Building2,
+  ArrowRightLeft
 } from 'lucide-react';
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
@@ -71,11 +72,13 @@ const CountdownTimer = ({ deadline }) => {
   );
 };
 
-const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
+const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId = '' }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [error, setError] = useState(null);
+  const [referralModal, setReferralModal] = useState(null);
+  const [focusedBookingId, setFocusedBookingId] = useState('');
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -103,6 +106,14 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
   useEffect(() => {
     fetchBookings();
   }, [role]);
+
+  useEffect(() => {
+    if (role !== 'driver' || !focusBookingId || !bookings.some((booking) => String(booking._id) === String(focusBookingId))) return;
+    setFocusedBookingId(String(focusBookingId));
+    requestAnimationFrame(() => {
+      document.querySelector(`[data-booking-id="${String(focusBookingId)}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [role, focusBookingId, bookings]);
 
   // Handle Driver Approving
   const handleApprove = async (bookingId) => {
@@ -136,6 +147,46 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Could not decline booking.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOpenReferral = async (booking) => {
+    setReferralModal({ booking, options: [], selectedShuttleId: '', loading: true, error: '' });
+    try {
+      const res = await axios.get(resolveApiUrl(`/api/shuttle-bookings/referral-options/${booking._id}`), {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      setReferralModal((current) => current ? {
+        ...current,
+        options: res.data?.shuttles || [],
+        loading: false,
+      } : current);
+    } catch (err) {
+      setReferralModal((current) => current ? {
+        ...current,
+        loading: false,
+        error: err.response?.data?.message || 'Could not load matching shuttles.',
+      } : current);
+    }
+  };
+
+  const handleReferBooking = async () => {
+    if (!referralModal?.selectedShuttleId) return;
+    const { booking, selectedShuttleId } = referralModal;
+    setActionLoading(booking._id);
+    try {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/refer/${booking._id}`), {
+        shuttleId: selectedShuttleId,
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      setReferralModal(null);
+      alert(res.data?.message || 'Request referred to the other driver.');
+      await fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not refer this request.');
     } finally {
       setActionLoading(null);
     }
@@ -273,8 +324,11 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
           return (
             <div
               key={booking._id}
+              data-booking-id={booking._id}
               className={`p-5 rounded-3xl border transition-all duration-200 bg-white dark:bg-gray-900 flex flex-col justify-between ${
-                isPaid
+                focusedBookingId === String(booking._id)
+                  ? 'border-teal-500 ring-2 ring-teal-500/30 shadow-lg shadow-teal-500/10'
+                  : isPaid
                   ? 'border-emerald-300 dark:border-emerald-900 shadow-md shadow-emerald-500/5'
                   : isApproved
                   ? 'border-amber-300 dark:border-amber-900 ring-2 ring-amber-400/20'
@@ -292,7 +346,9 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
                   {isPending && (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                       <Clock className="w-3.5 h-3.5 animate-spin" />
-                      Pending Driver Approval
+                      {booking.referralCount > 0
+                        ? role === 'driver' ? 'Referred request · awaiting your decision' : 'Referred · waiting for new driver'
+                        : 'Pending Driver Approval'}
                     </span>
                   )}
 
@@ -554,7 +610,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
                 {role === 'driver' && (
                   <>
                     {isPending && (
-                      <div className="flex items-center gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => handleDecline(booking._id)}
@@ -566,12 +622,21 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
 
                         <button
                           type="button"
+                          onClick={() => handleOpenReferral(booking)}
+                          disabled={actionLoading === booking._id || (booking.referralCount || 0) >= 3}
+                          className="flex-1 py-2 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 dark:text-indigo-300 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 transition disabled:opacity-50"
+                        >
+                          Refer
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleApprove(booking._id)}
                           disabled={actionLoading === booking._id}
                           className="flex-1 py-2 rounded-xl text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 shadow-md shadow-teal-600/20 transition flex items-center justify-center gap-1"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Approve (24h)</span>
+                          <span>Accept</span>
                         </button>
                       </div>
                     )}
@@ -622,6 +687,66 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser }) => {
           );
         })}
       </div>
+
+      {/* ── Refer Request Modal ─────────────────────────────────── */}
+      {referralModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setReferralModal(null)}>
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl p-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-100 dark:border-gray-800">
+              <div>
+                <h4 className="text-base font-bold text-gray-900 dark:text-gray-100">Refer this request</h4>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose an available shuttle on the same route, date and fare. The new driver must accept it.</p>
+              </div>
+              <button type="button" onClick={() => setReferralModal(null)} className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800" aria-label="Close referral dialog">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="py-4 space-y-2 max-h-[55vh] overflow-y-auto">
+              {referralModal.loading ? (
+                <p className="py-8 text-center text-sm text-gray-500">Finding matching shuttles…</p>
+              ) : referralModal.error ? (
+                <p className="py-6 text-center text-sm text-rose-600">{referralModal.error}</p>
+              ) : referralModal.options.length === 0 ? (
+                <p className="py-6 text-center text-sm text-gray-500">No available shuttle matches this route, date and fare right now.</p>
+              ) : referralModal.options.map((option) => (
+                <button
+                  key={option._id}
+                  type="button"
+                  onClick={() => setReferralModal((current) => ({ ...current, selectedShuttleId: option._id }))}
+                  className={`w-full rounded-2xl border p-3 text-left transition ${
+                    referralModal.selectedShuttleId === option._id
+                      ? 'border-teal-500 bg-teal-50 ring-2 ring-teal-500/20 dark:bg-teal-950/30'
+                      : 'border-gray-200 hover:border-teal-300 dark:border-gray-700 dark:hover:border-teal-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{option.driverName || 'LoopOut driver'}</p>
+                      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{option.carType} · {option.carColor} · {option.plateNumber}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">{option.availableSeats} seats</span>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">Same route and fare · R{option.pricePerSeat} per seat</p>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+              <button type="button" onClick={() => setReferralModal(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Cancel</button>
+              <button
+                type="button"
+                onClick={handleReferBooking}
+                disabled={!referralModal.selectedShuttleId || referralModal.loading || actionLoading === referralModal.booking._id}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                Refer request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Rate Trip Modal ──────────────────────────────────────── */}
       {ratingModal && (

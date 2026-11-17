@@ -49,11 +49,20 @@ export const createBookingRequest = async (req, res, next) => {
       return next(errorHandler(404, 'Shuttle route not found or is no longer active.'));
     }
 
-    const requestedSeatsCount = Number(seatsBooked) || (Array.isArray(seatNumbers) ? seatNumbers.length : 1);
+    // Normalize seat numbers (e.g. 'Seat 1' -> '1', 1 -> '1')
+    const normalizedInputSeats = Array.isArray(seatNumbers)
+      ? seatNumbers.map((s) => String(s).replace(/\D/g, '').trim()).filter(Boolean)
+      : undefined;
+
+    const effectiveSeatNumbers = (Array.isArray(normalizedInputSeats) && normalizedInputSeats.length > 0)
+      ? normalizedInputSeats
+      : (Array.isArray(seatNumbers) ? seatNumbers : undefined);
+
+    const requestedSeatsCount = Number(seatsBooked) || (Array.isArray(effectiveSeatNumbers) ? effectiveSeatNumbers.length : 1);
     if (!Number.isInteger(requestedSeatsCount) || requestedSeatsCount <= 0 || requestedSeatsCount > shuttle.totalSeats) {
       return next(errorHandler(400, 'Please select at least 1 seat.'));
     }
-    if (Array.isArray(seatNumbers) && (seatNumbers.length !== requestedSeatsCount || new Set(seatNumbers.map(String)).size !== seatNumbers.length || seatNumbers.some((seat) => !/^[1-9]\d*$/.test(String(seat)) || Number(seat) > shuttle.totalSeats))) {
+    if (Array.isArray(effectiveSeatNumbers) && (effectiveSeatNumbers.length !== requestedSeatsCount || new Set(effectiveSeatNumbers.map(String)).size !== effectiveSeatNumbers.length || effectiveSeatNumbers.some((seat) => !/^[1-9]\d*$/.test(String(seat)) || Number(seat) > shuttle.totalSeats))) {
       return next(errorHandler(400, 'Select a valid, unique seat for each passenger.'));
     }
 
@@ -62,7 +71,7 @@ export const createBookingRequest = async (req, res, next) => {
     }
 
     // Check if any requested seats are already booked
-    if (Array.isArray(seatNumbers) && seatNumbers.length > 0) {
+    if (Array.isArray(effectiveSeatNumbers) && effectiveSeatNumbers.length > 0) {
       const activeBookings = await ShuttleBooking.find({
         shuttleRef: shuttle._id,
         status: { $in: ['pending_approval', 'approved', 'paid'] },
@@ -75,14 +84,14 @@ export const createBookingRequest = async (req, res, next) => {
         }
       });
 
-      const clash = seatNumbers.find((s) => alreadyBooked.has(s));
+      const clash = effectiveSeatNumbers.find((s) => alreadyBooked.has(s));
       if (clash) {
         return next(errorHandler(400, `Seat ${clash} is already occupied. Please pick another seat.`));
       }
     }
 
     const reservationFilter = { _id: shuttle._id, active: true, availableSeats: { $gte: requestedSeatsCount } };
-    const normalizedSeats = Array.isArray(seatNumbers) ? seatNumbers.map(String) : [];
+    const normalizedSeats = Array.isArray(effectiveSeatNumbers) ? effectiveSeatNumbers.map(String) : [];
     const reservationUpdate = { $inc: { availableSeats: -requestedSeatsCount } };
     if (normalizedSeats.length) {
       reservationFilter.reservedSeatNumbers = { $nin: normalizedSeats };
@@ -116,7 +125,7 @@ export const createBookingRequest = async (req, res, next) => {
       passengerPhone: passengerPhone || user?.phone || '',
       passengerEmail: passengerEmail || user?.email || '',
       seatsBooked: requestedSeatsCount,
-      seatNumbers: Array.isArray(seatNumbers) ? seatNumbers : [],
+      seatNumbers: Array.isArray(effectiveSeatNumbers) ? effectiveSeatNumbers : [],
       totalPrice,
       pickupLocation: pickupLocation || shuttle.pickupStation,
       pickupCoordinates: pickupCoordinates && pickupCoordinates.lat ? {
@@ -148,8 +157,8 @@ export const createBookingRequest = async (req, res, next) => {
       await Notification.create({
         userId: shuttle.driverRef,
         type: 'shuttle',
-        title: 'New Shuttle Pickup Request 🚐',
-        message: `${booking.passengerName} requested pickup at "${booking.pickupLocation || shuttle.originCity}" (${requestedSeatsCount} seat(s)${extraBags > 0 ? ` + ${extraBags} extra bag(s)` : ''}) for ${shuttle.originCity} → ${shuttle.destinationCity}. Fare: R${totalPrice}.`,
+        title: 'New Shuttle Booking Request',
+        message: `${booking.passengerName} requested ${requestedSeatsCount} seat(s)${extraBags > 0 ? ` + ${extraBags} extra bag(s)` : ''} from ${shuttle.originCity} to ${shuttle.destinationCity} at R${totalPrice}. Open Driver Request Desk and tap Accept, Decline, or Refer.`,
         data: {
           bookingId: savedBooking._id,
           shuttleId: shuttle._id,
@@ -168,7 +177,7 @@ export const createBookingRequest = async (req, res, next) => {
           originCity: shuttle.originCity,
           destinationCity: shuttle.destinationCity,
           ticketCode: savedBooking.ticketCode,
-          route: '/shuttles?tab=driver-desk',
+          route: `/shuttles?tab=driver-desk&bookingId=${savedBooking._id}`,
         },
       });
     } catch (notifErr) {
@@ -300,6 +309,155 @@ export const declineBooking = async (req, res, next) => {
   }
 };
 
+const getMatchingReferralShuttles = async (booking, originalShuttle) => {
+  const departure = new Date(originalShuttle.departureDate);
+  const dayStart = new Date(Date.UTC(departure.getUTCFullYear(), departure.getUTCMonth(), departure.getUTCDate()));
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+  const exactCity = (city) => new RegExp(`^${String(city || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+
+  return Shuttle.find({
+    _id: { $ne: originalShuttle._id },
+    driverRef: { $ne: booking.driverRef },
+    active: true,
+    departureDate: { $gte: dayStart, $lt: dayEnd },
+    originCity: exactCity(originalShuttle.originCity),
+    destinationCity: exactCity(originalShuttle.destinationCity),
+    pricePerSeat: Number(originalShuttle.pricePerSeat),
+    extraBagPrice: Number(originalShuttle.extraBagPrice) || 0,
+    availableSeats: { $gte: booking.seatsBooked },
+    driverLicenceScan: { $ne: SEEDED_SAMPLE_SCAN_URL },
+    driverVerificationStatus: { $ne: 'rejected' },
+  })
+    .select('_id driverName carType carColor plateNumber totalSeats availableSeats departureDate departureTime pricePerSeat driverRating driverRatingCount +reservedSeatNumbers')
+    .sort({ driverRating: -1, createdAt: -1 })
+    .limit(20)
+    .lean();
+};
+
+// Drivers can only refer a pending request to an available shuttle with the same route, date and fare.
+export const getBookingReferralOptions = async (req, res, next) => {
+  try {
+    const booking = await ShuttleBooking.findById(req.params.id).populate('shuttleRef');
+    if (!booking) return next(errorHandler(404, 'Booking request not found.'));
+    if (String(booking.driverRef) !== String(req.user.id) && !req.user.isAdmin) {
+      return next(errorHandler(403, 'Only the assigned driver can refer this request.'));
+    }
+    if (booking.status !== 'pending_approval') {
+      return next(errorHandler(409, 'Only pending requests can be referred.'));
+    }
+    if (!booking.shuttleRef) return next(errorHandler(404, 'The shuttle for this request is no longer available.'));
+    if ((booking.referralCount || 0) >= 3) {
+      return next(errorHandler(409, 'This request has reached the referral limit.'));
+    }
+
+    const shuttles = await getMatchingReferralShuttles(booking, booking.shuttleRef);
+    return res.status(200).json({ success: true, shuttles });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Transfer an unapproved request to another matching driver without changing the passenger's quoted fare.
+export const referBooking = async (req, res, next) => {
+  try {
+    const { shuttleId } = req.body;
+    if (!shuttleId) return next(errorHandler(400, 'Choose a shuttle to refer this request to.'));
+
+    const booking = await ShuttleBooking.findById(req.params.id).populate('shuttleRef');
+    if (!booking) return next(errorHandler(404, 'Booking request not found.'));
+    if (String(booking.driverRef) !== String(req.user.id) && !req.user.isAdmin) {
+      return next(errorHandler(403, 'Only the assigned driver can refer this request.'));
+    }
+    if (booking.status !== 'pending_approval') {
+      return next(errorHandler(409, 'Only pending requests can be referred.'));
+    }
+    if (!booking.shuttleRef) return next(errorHandler(404, 'The shuttle for this request is no longer available.'));
+    if ((booking.referralCount || 0) >= 3) {
+      return next(errorHandler(409, 'This request has reached the referral limit.'));
+    }
+
+    const originalShuttle = booking.shuttleRef;
+    const originalShuttleId = originalShuttle._id;
+    const candidateShuttles = await getMatchingReferralShuttles(booking, originalShuttle);
+    const targetShuttle = candidateShuttles.find((candidate) => String(candidate._id) === String(shuttleId));
+    if (!targetShuttle) {
+      return next(errorHandler(409, 'That shuttle is no longer available or does not match this route, date and fare. Refresh the referral list.'));
+    }
+
+    const occupiedSeatNumbers = new Set((targetShuttle.reservedSeatNumbers || []).map(String));
+    const activeTargetBookings = await ShuttleBooking.find({
+      shuttleRef: targetShuttle._id,
+      status: { $in: ['pending_approval', 'approved', 'paid'] },
+    }).select('seatNumbers').lean();
+    activeTargetBookings.forEach((activeBooking) => {
+      (activeBooking.seatNumbers || []).forEach((seat) => occupiedSeatNumbers.add(String(seat)));
+    });
+
+    const seatsBooked = Number(booking.seatsBooked) || 1;
+    const targetSeatNumbers = booking.seatNumbers?.length
+      ? Array.from({ length: targetShuttle.totalSeats }, (_, index) => String(index + 1))
+          .filter((seat) => !occupiedSeatNumbers.has(seat))
+          .slice(0, seatsBooked)
+      : [];
+    if (booking.seatNumbers?.length && targetSeatNumbers.length !== seatsBooked) {
+      return next(errorHandler(409, 'The selected shuttle no longer has enough unreserved numbered seats.'));
+    }
+
+    const reservationFilter = { _id: targetShuttle._id, active: true, availableSeats: { $gte: seatsBooked } };
+    const reservationUpdate = { $inc: { availableSeats: -seatsBooked } };
+    if (targetSeatNumbers.length) {
+      reservationFilter.reservedSeatNumbers = { $nin: targetSeatNumbers };
+      reservationUpdate.$addToSet = { reservedSeatNumbers: { $each: targetSeatNumbers } };
+    }
+    const reservedTarget = await Shuttle.findOneAndUpdate(reservationFilter, reservationUpdate, { new: true });
+    if (!reservedTarget) return next(errorHandler(409, 'Seats on that shuttle were just reserved. Refresh and choose another.'));
+
+    const previousDriverId = booking.driverRef;
+    const saved = await ShuttleBooking.findOneAndUpdate(
+      { _id: booking._id, status: 'pending_approval', driverRef: previousDriverId, shuttleRef: originalShuttleId },
+      {
+        $set: { shuttleRef: targetShuttle._id, driverRef: targetShuttle.driverRef, ...(targetSeatNumbers.length ? { seatNumbers: targetSeatNumbers } : {}) },
+        $inc: { referralCount: 1 },
+        $push: { referralHistory: { fromDriverRef: previousDriverId, toDriverRef: targetShuttle.driverRef, fromShuttleRef: originalShuttleId, toShuttleRef: targetShuttle._id, referredAt: new Date() } },
+      },
+      { new: true }
+    );
+
+    if (!saved) {
+      await Shuttle.findByIdAndUpdate(targetShuttle._id, {
+        $inc: { availableSeats: seatsBooked },
+        ...(targetSeatNumbers.length ? { $pull: { reservedSeatNumbers: { $in: targetSeatNumbers } } } : {}),
+      });
+      return next(errorHandler(409, 'This request has already changed. Refresh the driver desk and try again.'));
+    }
+
+    await releaseReservedSeats({ ...booking.toObject(), shuttleRef: originalShuttleId });
+
+    try {
+      await Notification.create({
+        userId: targetShuttle.driverRef,
+        type: 'shuttle',
+        title: 'Shuttle Request Referred to You',
+        message: `${booking.passengerName} was referred to your shuttle for ${originalShuttle.originCity} → ${originalShuttle.destinationCity}. Open Driver Request Desk and tap Accept, Decline, or Refer. The fare remains R${booking.totalPrice}.`,
+        data: { bookingId: saved._id, shuttleId: targetShuttle._id, passengerName: booking.passengerName, seatsBooked, totalPrice: booking.totalPrice, ticketCode: booking.ticketCode, route: `/shuttles?tab=driver-desk&bookingId=${saved._id}` },
+      });
+      await Notification.create({
+        userId: booking.passengerRef,
+        type: 'shuttle',
+        title: 'Your Shuttle Request Was Referred',
+        message: `Your request was referred to another driver for ${originalShuttle.originCity} → ${originalShuttle.destinationCity}. The quoted fare remains R${booking.totalPrice}; the new driver still needs to accept your request.`,
+        data: { bookingId: saved._id, shuttleId: targetShuttle._id, seatsBooked, totalPrice: booking.totalPrice, route: '/shuttles?tab=my-tickets' },
+      });
+    } catch (notifErr) {
+      console.warn('Referral notification error:', notifErr.message);
+    }
+
+    return res.status(200).json({ success: true, message: 'Request referred. The new driver has been asked to accept or decline it.', booking: saved });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 4. Driver confirms passenger payment received via bank account / EFT
 export const payBooking = async (req, res, next) => {
   try {
@@ -422,6 +580,7 @@ export const getPassengerBookings = async (req, res, next) => {
       .sort({ createdAt: -1 })
       .lean();
     const bookings = records.map((booking) => {
+      delete booking.referralHistory;
       if (!booking.shuttleRef) return booking;
       const shuttle = { ...booking.shuttleRef };
       delete shuttle.driverLicenceScan;

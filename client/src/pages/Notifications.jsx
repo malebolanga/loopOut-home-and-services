@@ -1016,7 +1016,7 @@ export default function Notifications() {
                                                                 onClick={e => { e.stopPropagation(); handleNotificationAction(notification); }}
                                                                 className="px-3 py-1.5 rounded-xl bg-teal-700 text-white text-xs font-bold hover:bg-teal-800 transition"
                                                             >
-                                                                🚐 View Shuttle
+                                                                {String(d.route).includes('tab=driver-desk') ? '🚐 Open request desk · Accept / Decline' : '🚐 View Shuttle'}
                                                             </button>
                                                         )}
                                                     </div>

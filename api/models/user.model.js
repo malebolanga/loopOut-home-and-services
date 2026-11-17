@@ -1,5 +1,21 @@
 import mongoose from 'mongoose';
 
+const driverVerificationSchema = new mongoose.Schema({
+    status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+    idDocumentUrl: { type: String, default: '' },
+    facePhotoUrl: { type: String, default: '' },
+    licenceDocumentUrl: { type: String, default: '' },
+    submittedAt: { type: Date, default: null },
+    reviewedAt: { type: Date, default: null },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    reviewNote: { type: String, default: '' },
+    reviewChecks: {
+        idIsReadable: { type: Boolean, default: false },
+        faceMatchesId: { type: Boolean, default: false },
+        licenceIsValid: { type: Boolean, default: false },
+    },
+}, { _id: false });
+
 const pushTokenSchema = new mongoose.Schema({
     token: { type: String, required: true },
     platform: { type: String, enum: ['android', 'ios', 'web'], default: 'android' },
@@ -185,6 +201,13 @@ const userSchema = new mongoose.Schema({
         numberMatches: { type: Boolean, default: false },
         documentHasFace: { type: Boolean, default: false },
         faceMatchesSelfie: { type: Boolean, default: false },
+    },
+    // Sensitive driver documents are private and are exposed only through the
+    // authenticated driver status and administrator review endpoints.
+    driverVerification: {
+        type: driverVerificationSchema,
+        default: () => ({}),
+        select: false,
     },
     idDocumentUrl: {
         type: String,

@@ -53,6 +53,7 @@ const MAP_PROVIDERS = {
 };
 
 const isValidCoord = (lat, lng) => {
+  if (lat === null || lat === undefined || lat === '' || lng === null || lng === undefined || lng === '') return false;
   const numLat = Number(lat);
   const numLng = Number(lng);
   return (
@@ -63,6 +64,41 @@ const isValidCoord = (lat, lng) => {
     numLng >= -180 &&
     numLng <= 180
   );
+};
+
+// City-centre route-start estimates are display-only. They are never treated as live GPS.
+const SA_ROUTE_ORIGINS = [
+  { names: ['johannesburg', 'joburg', 'jhb', 'sandton', 'soweto'], lat: -26.2041, lng: 28.0473 },
+  { names: ['pretoria', 'tshwane', 'centurion'], lat: -25.7479, lng: 28.2293 },
+  { names: ['polokwane', 'pietersburg'], lat: -23.9045, lng: 29.4689 },
+  { names: ['mokopane', 'potgietersrus'], lat: -24.1944, lng: 29.0097 },
+  { names: ['mbombela', 'nelspruit'], lat: -25.4753, lng: 30.9694 },
+  { names: ['durban', 'ethekwini'], lat: -29.8587, lng: 31.0218 },
+  { names: ['cape town'], lat: -33.9249, lng: 18.4241 },
+  { names: ['gqeberha', 'port elizabeth'], lat: -33.9608, lng: 25.6022 },
+  { names: ['bloemfontein'], lat: -29.0852, lng: 26.1596 },
+  { names: ['kimberley'], lat: -28.7282, lng: 24.7499 },
+  { names: ['rustenburg'], lat: -25.6676, lng: 27.2421 },
+  { names: ['east london'], lat: -33.0153, lng: 27.9116 },
+  { names: ['george'], lat: -33.963, lng: 22.461 },
+  { names: ['pietermaritzburg'], lat: -29.6006, lng: 30.3794 },
+  { names: ['witbank', 'emalahleni'], lat: -25.8713, lng: 29.2332 },
+  { names: ['vereeniging'], lat: -26.6736, lng: 27.9261 },
+];
+
+const getShuttleMapCoordinates = (shuttle) => {
+  const coords = shuttle?.currentCoordinates;
+  if (isValidCoord(coords?.lat, coords?.lng)) {
+    return {
+      lat: Number(coords.lat),
+      lng: Number(coords.lng),
+      source: shuttle.isDemo ? 'demo' : coords.isLive === true ? 'live' : 'saved',
+    };
+  }
+
+  const origin = ` ${(shuttle?.originCity || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
+  const city = SA_ROUTE_ORIGINS.find((entry) => entry.names.some((name) => origin.includes(` ${name} `)));
+  return city ? { lat: city.lat, lng: city.lng, source: 'route-origin' } : null;
 };
 
 // Haversine geodesic distance in kilometres
@@ -117,6 +153,7 @@ const ShuttleMap = ({
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [mapZoom, setMapZoom] = useState(7);
   const [mapStyle, setMapStyle] = useState('googleRoad');
   const [isLiveRadarMode, setIsLiveRadarMode] = useState(false);
   const [isLiveSyncing, setIsLiveSyncing] = useState(false);
@@ -134,8 +171,9 @@ const ShuttleMap = ({
       const L = window.L || (await import('leaflet')).default;
       if (!L) return;
 
-      const initialLat = selectedShuttle?.currentCoordinates?.lat || SA_CENTER.lat;
-      const initialLng = selectedShuttle?.currentCoordinates?.lng || SA_CENTER.lng;
+      const initialCoords = getShuttleMapCoordinates(selectedShuttle);
+      const initialLat = initialCoords?.lat ?? SA_CENTER.lat;
+      const initialLng = initialCoords?.lng ?? SA_CENTER.lng;
 
       try {
         const map = L.map(mapContainerRef.current, {
@@ -153,6 +191,7 @@ const ShuttleMap = ({
 
         activeTileLayerRef.current = tileLayer;
         leafletMapRef.current = map;
+        map.on('zoomend', () => setMapZoom(map.getZoom()));
 
         // Clicking empty map space deselects current vehicle (returns to overview nicely)
         map.on('click', () => {
@@ -267,7 +306,11 @@ const ShuttleMap = ({
       if (leafletMapRef.current && shuttles.length > 0) {
         const liveShuttles = shuttles.filter((s) => s.currentCoordinates?.isLive || s.isDemo);
         const liveBounds = liveShuttles
-          .map((s) => [Number(s.currentCoordinates?.lat), Number(s.currentCoordinates?.lng)])
+          .map((s) => {
+            const coords = getShuttleMapCoordinates(s);
+            return coords ? [coords.lat, coords.lng] : null;
+          })
+          .filter(Boolean)
           .filter(([lat, lng]) => isValidCoord(lat, lng));
 
         if (liveBounds.length > 0) {
@@ -315,45 +358,78 @@ const ShuttleMap = ({
 
     const bounds = [];
 
-    // Group shuttles that are collocated (within ~150m of each other)
+    // Group nearby shuttles so coincident vehicles can be spread apart on screen.
     const clusterMap = {};
     shuttles.forEach((s) => {
-      const c = s.currentCoordinates;
-      if (!(c?.isLive || s.isDemo) || !isValidCoord(c.lat, c.lng)) return;
-      const key = `${Number(c.lat).toFixed(3)}_${Number(c.lng).toFixed(3)}`;
+      const c = getShuttleMapCoordinates(s);
+      if (!c) return;
+      const key = `${c.lat.toFixed(3)}_${c.lng.toFixed(3)}`;
       if (!clusterMap[key]) clusterMap[key] = [];
       clusterMap[key].push(s);
     });
 
     shuttles.forEach((shuttle) => {
-      const coords = shuttle.currentCoordinates;
-      if (!(coords?.isLive || shuttle.isDemo) || !isValidCoord(coords.lat, coords.lng)) return;
+      const coords = getShuttleMapCoordinates(shuttle);
+      if (!coords) return;
 
-      const clusterKey = `${Number(coords.lat).toFixed(3)}_${Number(coords.lng).toFixed(3)}`;
+      const clusterKey = `${coords.lat.toFixed(3)}_${coords.lng.toFixed(3)}`;
       const cluster = clusterMap[clusterKey] || [shuttle];
       const clusterSize = cluster.length;
       const clusterIndex = cluster.findIndex((item) => String(item._id) === String(shuttle._id));
 
       // Calculate spread position if multiple cars share the location so none are blocked
-      let markerLat = Number(coords.lat);
-      let markerLng = Number(coords.lng);
+      let markerLat = coords.lat;
+      let markerLng = coords.lng;
 
       if (clusterSize > 1) {
-        // Disperse overlapping vehicles into a neat fan circle (~35m radius)
+        // Spread overlapping markers in screen pixels so their car and schedule labels
+        // stay separate at every zoom level.
         const angle = (clusterIndex / clusterSize) * 2 * Math.PI - Math.PI / 2;
-        const radiusLat = 0.00035; // ~38m
-        const radiusLng = radiusLat / Math.cos((markerLat * Math.PI) / 180);
-        markerLat += Math.sin(angle) * radiusLat;
-        markerLng += Math.cos(angle) * radiusLng;
+        const minMarkerGapPx = 240;
+        const radiusPx = Math.max(100, minMarkerGapPx / (2 * Math.sin(Math.PI / clusterSize)));
+        const projected = leafletMapRef.current.project([coords.lat, coords.lng], mapZoom);
+        projected.x += Math.cos(angle) * radiusPx;
+        projected.y += Math.sin(angle) * radiusPx;
+        const spreadCoords = leafletMapRef.current.unproject(projected, mapZoom);
+        markerLat = spreadCoords.lat;
+        markerLng = spreadCoords.lng;
       }
 
       const isSelected = selectedShuttle && String(selectedShuttle._id) === String(shuttle._id);
       const isEnRoute = shuttle.currentStatus === 'en_route';
       const isBoarding = shuttle.currentStatus === 'boarding';
-      const isLiveGprs = shuttle.currentCoordinates?.isLive === true;
+      const isLiveGprs = coords.source === 'live';
+      const isRouteOriginPin = coords.source === 'route-origin';
+      const isSavedPin = coords.source === 'saved';
+      const departureDay = shuttle.departureDate
+        ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
+        : 'Date to be confirmed';
+      const departureClock = shuttle.departureTime && !/when full/i.test(shuttle.departureTime)
+        ? shuttle.departureTime
+        : 'Time to be confirmed';
+      const abbreviateCity = (city) => {
+        const normalized = String(city || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const knownCodes = {
+          johannesburg: 'JHB',
+          pretoria: 'PTA',
+          polokwane: 'PLK',
+          mokopane: 'MOK',
+          'cape town': 'CPT',
+          durban: 'DUR',
+          bloemfontein: 'BFN',
+          'port elizabeth': 'GQE',
+          'east london': 'ELS',
+          mbombela: 'MBM',
+          nelspruit: 'MBM',
+        };
+        if (knownCodes[normalized]) return knownCodes[normalized];
+        if (!normalized) return '???';
+        return normalized.split(' ').map((part) => part.slice(0, 3).toUpperCase()).join('-');
+      };
+      const routeLabel = `${abbreviateCity(shuttle.originCity)} → ${abbreviateCity(shuttle.destinationCity)}`;
 
       // Movement breadcrumb trail for live moving vehicles
-      if (isLiveGprs || isEnRoute) {
+      if (isLiveGprs) {
         if (!shuttleTrailsRef.current[shuttle._id]) {
           shuttleTrailsRef.current[shuttle._id] = [];
         }
@@ -383,13 +459,13 @@ const ShuttleMap = ({
       const customIcon = L.divIcon({
         className: 'custom-shuttle-marker',
         html: `
-          <div class="relative flex flex-col items-center group cursor-pointer transition-all duration-300 ${
+          <div class="relative flex flex-col items-center  cursor-pointer transition-all duration-300 ${
             isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[100]'
           }">
-            <!-- Multi-car cluster indicator (e.g. Car 1/3 at this station) -->
+            <!-- Show the abbreviated route for each vehicle in a nearby  -->
             ${clusterSize > 1 ? `
-              <div class="absolute -top-3.5 -left-3 z-20 bg-gray-900/95 text-amber-400 text-[8.5px] font-black px-1.5 py-0.5 rounded-full shadow-md border border-amber-400/80 flex items-center gap-0.5 whitespace-nowrap">
-                <span>Car ${clusterIndex + 1}/${clusterSize}</span>
+              <div class="mb-1 max-w-[220px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
+                <span>${routeLabel}</span>
               </div>
             ` : ''}
 
@@ -403,6 +479,16 @@ const ShuttleMap = ({
             ${shuttle.isDemo ? `
               <div class="absolute -top-3.5 right-0 z-10 bg-amber-500 text-gray-950 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-amber-200">DEMO</div>
             ` : ''}
+            ${isRouteOriginPin ? `
+              <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
+            ` : ''}
+            ${isSavedPin ? `
+              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">SAVED PIN · NOT LIVE</div>
+            ` : ''}
+
+            <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">
+              <span>📅 ${departureDay}</span><span class="ml-1 text-teal-700">${departureClock}</span>
+            </div>
 
             <!-- Price and Space Badge -->
             <div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
@@ -430,8 +516,8 @@ const ShuttleMap = ({
             <div class="w-1.5 h-1.5 rounded-full bg-black/40 mt-0.5"></div>
           </div>
         `,
-        iconSize: [80, 60],
-        iconAnchor: [40, 58],
+        iconSize: [240, 86],
+        iconAnchor: [120, 84],
       });
 
       const marker = L.marker([markerLat, markerLng], { icon: customIcon });
@@ -453,7 +539,7 @@ const ShuttleMap = ({
 
       marker.addTo(leafletMapRef.current);
       markersRef.current.push(marker);
-      bounds.push([markerLat, markerLng]);
+      bounds.push([coords.lat, coords.lng]);
     });
 
     // ── 2km Proximity Trip Alert & Route Visuals ──────────────────────────────
@@ -549,14 +635,14 @@ const ShuttleMap = ({
         leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
       } catch (e) {}
     }
-  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode]);
+  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, mapZoom]);
 
   // Fly to selected shuttle
   useEffect(() => {
-    if (!leafletMapRef.current || !selectedShuttle?.currentCoordinates) return;
-    const { lat, lng } = selectedShuttle.currentCoordinates;
-    if (isValidCoord(lat, lng)) {
-      leafletMapRef.current.flyTo([Number(lat), Number(lng)], 13, { duration: 1.2 });
+    if (!leafletMapRef.current || !selectedShuttle) return;
+    const coords = getShuttleMapCoordinates(selectedShuttle);
+    if (coords) {
+      leafletMapRef.current.flyTo([coords.lat, coords.lng], 13, { duration: 1.2 });
     }
   }, [selectedShuttle]);
 
@@ -634,10 +720,8 @@ const ShuttleMap = ({
 
     const bounds = [];
     shuttles.forEach((s) => {
-      const c = s.currentCoordinates;
-      if (c && isValidCoord(c.lat, c.lng)) {
-        bounds.push([Number(c.lat), Number(c.lng)]);
-      }
+      const coords = getShuttleMapCoordinates(s);
+      if (coords) bounds.push([coords.lat, coords.lng]);
     });
 
     if (userLocation && isValidCoord(userLocation.lat, userLocation.lng)) {
@@ -846,7 +930,7 @@ const ShuttleMap = ({
         <div className="absolute bottom-4 left-3 z-[1000] pointer-events-auto">
           <div className="px-3.5 py-1.5 rounded-full bg-emerald-950/90 border border-emerald-500/80 text-emerald-300 text-xs font-bold shadow-xl backdrop-blur-md flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>📡 Live Map Tracking • {liveActiveCount || shuttles.length} Vehicles</span>
+            <span>{liveActiveCount > 0 ? `📡 Live GPS • ${liveActiveCount} driver${liveActiveCount === 1 ? '' : 's'} sharing` : '📡 Live mode · waiting for driver GPS'}</span>
           </div>
         </div>
       )}

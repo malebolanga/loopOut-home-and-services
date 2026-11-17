@@ -24,8 +24,14 @@ const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
 // Create a new Shuttle (Driver registration)
 export const createShuttle = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).select('+driverVerification');
     if (!user) return next(errorHandler(404, 'User profile not found.'));
+    if (user.driverVerification?.status !== 'verified'
+      || !user.driverVerification?.idDocumentUrl
+      || !user.driverVerification?.facePhotoUrl
+      || !user.driverVerification?.licenceDocumentUrl) {
+      return next(errorHandler(403, 'Submit your ID, face photo, and driving licence and wait for administrator approval before adding a shuttle.'));
+    }
 
     const {
       carType,
@@ -57,11 +63,6 @@ export const createShuttle = async (req, res, next) => {
       extraBagPrice,
       maxExtraBagsPerPassenger,
       luggageNotes,
-      // Driver Verification Documents (Licence & ID scan)
-      driverLicenceScan,
-      driverIdScan,
-      driverFaceScan,
-      driverLicenceNumber,
       // Driver Banking Details (For direct passenger EFT payments)
       bankAccountHolder,
       bankName,
@@ -87,12 +88,13 @@ export const createShuttle = async (req, res, next) => {
       driverRef: user._id,
       driverName: user.username || user.name || 'LoopOut driver',
       driverPhone: String(driverPhone || user.phone || '').trim(),
-      driverAvatar: user.avatar || '',
-      driverLicenceScan: driverLicenceScan || '',
-      driverIdScan: driverIdScan || user.idDocumentUrl || '',
-      driverFaceScan: driverFaceScan || user.liveSelfieUrl || user.avatar || '',
-      driverLicenceNumber: driverLicenceNumber || '',
-      driverVerificationStatus: 'pending',
+      driverAvatar: user.driverVerification.facePhotoUrl,
+      // Keep sensitive verification files in the private User driverVerification record.
+      driverLicenceScan: '',
+      driverIdScan: '',
+      driverFaceScan: '',
+      driverLicenceNumber: '',
+      driverVerificationStatus: 'verified',
       bankAccountHolder: (bankAccountHolder || user.name || user.username || '').trim(),
       bankName: (bankName || '').trim(),
       bankAccountNumber: (bankAccountNumber || '').trim(),
@@ -142,6 +144,100 @@ export const createShuttle = async (req, res, next) => {
       message: 'Shuttle route successfully registered!',
       shuttle: saved
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Add a new route using an existing, approved vehicle and driver profile.
+export const addRouteToShuttle = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('+driverVerification');
+    if (!user) return next(errorHandler(404, 'User profile not found.'));
+    if (user.driverVerification?.status !== 'verified'
+      || !user.driverVerification?.idDocumentUrl
+      || !user.driverVerification?.facePhotoUrl
+      || !user.driverVerification?.licenceDocumentUrl) {
+      return next(errorHandler(403, 'Your ID, face photo, and driving licence must be approved before you can add a route.'));
+    }
+
+    const vehicle = await Shuttle.findOne({ _id: req.params.id, driverRef: user._id, active: true });
+    if (!vehicle) return next(errorHandler(404, 'An active vehicle belonging to your account was not found.'));
+
+    const {
+      serviceType, departureProvince, destinationProvince, originCity, destinationCity,
+      pickupStation, dropoffStation, dropoffType, isHouseToHouse, departureRule,
+      leavesWhenFull, departureDate, departureTime, estimatedArrival, pricePerSeat,
+      extraBagPrice, luggageNotes,
+    } = req.body;
+
+    if (![originCity, destinationCity].every((value) => typeof value === 'string' && value.trim()) || !departureDate) {
+      return next(errorHandler(400, 'Enter the route cities and departure date.'));
+    }
+    const departureAt = new Date(departureDate);
+    if (Number.isNaN(departureAt.getTime()) || departureAt <= new Date()) {
+      return next(errorHandler(400, 'Choose a future departure date.'));
+    }
+    const priceNum = Number(pricePerSeat);
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      return next(errorHandler(400, 'Enter a fare greater than zero for this route.'));
+    }
+    const routeType = serviceType === 'local' ? 'local' : 'interprovincial';
+    const originProvince = String(departureProvince || '').trim();
+    const targetProvince = routeType === 'local' ? originProvince : String(destinationProvince || '').trim();
+    if (!originProvince || !targetProvince) return next(errorHandler(400, 'Choose the origin and destination provinces.'));
+    const bagPrice = Number(extraBagPrice ?? vehicle.extraBagPrice ?? 0);
+    if (!Number.isFinite(bagPrice) || bagPrice < 0) return next(errorHandler(400, 'Enter a valid extra-bag price.'));
+
+    const houseToHouse = isHouseToHouse !== undefined ? Boolean(isHouseToHouse) : vehicle.isHouseToHouse;
+    const leaveWhenFull = leavesWhenFull !== undefined ? Boolean(leavesWhenFull) : vehicle.leavesWhenFull;
+    const newRoute = new Shuttle({
+      driverRef: user._id,
+      driverName: vehicle.driverName,
+      driverPhone: vehicle.driverPhone,
+      driverAvatar: user.driverVerification.facePhotoUrl,
+      // Verification documents remain in the private User record, not copied to each route.
+      driverVerificationStatus: 'verified',
+      carType: vehicle.carType,
+      plateNumber: vehicle.plateNumber,
+      carColor: vehicle.carColor,
+      carImages: vehicle.carImages,
+      totalSeats: vehicle.totalSeats,
+      availableSeats: vehicle.totalSeats,
+      serviceType: routeType,
+      departureProvince: originProvince,
+      destinationProvince: targetProvince,
+      originCity: originCity.trim(),
+      destinationCity: destinationCity.trim(),
+      pickupStation: String(pickupStation || originCity).trim(),
+      dropoffStation: String(dropoffStation || destinationCity).trim(),
+      dropoffType: dropoffType || (houseToHouse ? 'house_to_house' : 'station'),
+      isHouseToHouse: houseToHouse,
+      departureRule: departureRule || (leaveWhenFull ? 'when_full' : 'scheduled'),
+      leavesWhenFull: leaveWhenFull,
+      departureDate: departureAt,
+      departureTime: String(departureTime || (leaveWhenFull ? 'When full' : '')).trim(),
+      estimatedArrival: String(estimatedArrival || '').trim(),
+      pricePerSeat: priceNum,
+      freeBagsPerPassenger: vehicle.freeBagsPerPassenger,
+      extraBagPrice: bagPrice,
+      maxExtraBagsPerPassenger: vehicle.maxExtraBagsPerPassenger,
+      luggageNotes: String(luggageNotes || vehicle.luggageNotes || '').trim(),
+      features: vehicle.features || [],
+      notes: vehicle.notes || '',
+      bankAccountHolder: vehicle.bankAccountHolder,
+      bankName: vehicle.bankName,
+      bankAccountNumber: vehicle.bankAccountNumber,
+      bankBranchCode: vehicle.bankBranchCode,
+      bankAccountType: vehicle.bankAccountType,
+      bankReference: vehicle.bankReference,
+      currentStatus: 'scheduled',
+      currentCoordinates: { lat: null, lng: null, address: '', accuracy: null, isLive: false },
+      active: true,
+    });
+
+    const saved = await newRoute.save();
+    return res.status(201).json({ success: true, message: 'New route added using your existing approved vehicle.', shuttle: saved });
   } catch (error) {
     next(error);
   }
@@ -247,7 +343,7 @@ export const getShuttles = async (req, res, next) => {
               : { lat: null, lng: null, address: '', accuracy: null, isLive: false, updatedAt: null },
             // This app has no shuttle-document review workflow. Never expose an
             // unreviewed document upload as a verified identity claim.
-            driverVerificationStatus: 'pending',
+            driverVerificationStatus: shuttle.driverVerificationStatus === 'verified' ? 'verified' : 'pending',
             completedTrips: completedCount,
             driverRating: avgRating,
             driverRatingCount: ratingCount,
@@ -321,7 +417,7 @@ export const getShuttleById = async (req, res, next) => {
         currentCoordinates: shuttle.currentCoordinates?.isLive === true
           ? shuttle.currentCoordinates
           : { lat: null, lng: null, address: '', accuracy: null, isLive: false, updatedAt: null },
-        driverVerificationStatus: 'pending',
+        driverVerificationStatus: shuttle.driverVerificationStatus === 'verified' ? 'verified' : 'pending',
         bookedSeatNumbers,
         activeBookingsCount: activeBookings.length,
         completedTrips,

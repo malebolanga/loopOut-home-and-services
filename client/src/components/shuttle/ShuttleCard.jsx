@@ -90,7 +90,7 @@ const ShuttleCard = ({ shuttle, onSelectSeat, onLocateOnMap, onUpdateSchedule, c
   }[currentStatus] || { label: 'Scheduled', bg: 'bg-blue-50 text-blue-700 border-blue-200' };
 
   return (
-    <div className="group relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between">
+    <div className=" relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between">
       {/* Top Media & Vehicle Info Header */}
       <div>
         <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-gray-100 dark:bg-gray-800">

@@ -115,6 +115,18 @@ const shuttleBookingSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    referralCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    referralHistory: [{
+      fromDriverRef: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      toDriverRef: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      fromShuttleRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Shuttle' },
+      toShuttleRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Shuttle' },
+      referredAt: { type: Date, default: Date.now },
+    }],
     passengerNotes: {
       type: String,
       default: '',

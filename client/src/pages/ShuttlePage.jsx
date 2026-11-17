@@ -25,6 +25,8 @@ import ShuttleMap from '../components/shuttle/ShuttleMap';
 import UberDriverCard from '../components/shuttle/UberDriverCard';
 import PickupRequestSheet from '../components/shuttle/PickupRequestSheet';
 import DriverShuttleUploadModal from '../components/shuttle/DriverShuttleUploadModal';
+import DriverVerificationGate from '../components/shuttle/DriverVerificationGate';
+import DriverAddRouteModal from '../components/shuttle/DriverAddRouteModal';
 import DriverScheduleModal from '../components/shuttle/DriverScheduleModal';
 import ShuttleBookingsList from '../components/shuttle/ShuttleBookingsList';
 
@@ -94,6 +96,8 @@ const ShuttlePage = () => {
   const [showTicketsModal, setShowTicketsModal] = useState(false);
   const [showDriverDeskModal, setShowDriverDeskModal] = useState(false);
   const [showDriverUploadModal, setShowDriverUploadModal] = useState(false);
+  const [showDriverVerificationGate, setShowDriverVerificationGate] = useState(false);
+  const [shuttleForRouteModal, setShuttleForRouteModal] = useState(null);
   const [selectedShuttleForBooking, setSelectedShuttleForBooking] = useState(null);
   const [shuttleForScheduleModal, setShuttleForScheduleModal] = useState(null);
   const [highlightedShuttle, setHighlightedShuttle] = useState(null);
@@ -128,10 +132,18 @@ const ShuttlePage = () => {
   const [error, setError] = useState(null);
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
 
+  const handleDriverVerificationApproved = useCallback(() => {
+    setShowDriverVerificationGate(false);
+    setShowDriverUploadModal(true);
+  }, []);
+
   // Auto-open driver registration modal when URL has ?register=true
   useEffect(() => {
     if (searchParams.get('register') === 'true') {
-      setShowDriverUploadModal(true);
+      setShowDriverVerificationGate(true);
+    }
+    if (searchParams.get('tab') === 'driver-desk') {
+      setShowDriverDeskModal(true);
     }
   }, [searchParams]);
 
@@ -350,7 +362,7 @@ const ShuttlePage = () => {
             {/* Register Shuttle / Drive Button */}
             <button
               type="button"
-              onClick={() => setShowDriverUploadModal(true)}
+              onClick={() => setShowDriverVerificationGate(true)}
               className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 shadow-md shadow-amber-400/20 active:scale-95 transition flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -460,6 +472,10 @@ const ShuttlePage = () => {
                 onRequestPickup={(s) => setSelectedShuttleForBooking(s)}
                 currentUser={currentUser}
                 userLocation={userLocation}
+                onUpdateSchedule={(shuttle) => {
+                  setShuttleForScheduleModal(shuttle);
+                  setIsCardOpen(false);
+                }}
                 onClose={() => setIsCardOpen(false)}
               />
             )}
@@ -663,15 +679,8 @@ const ShuttlePage = () => {
                 <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-teal-900 dark:text-teal-200">
-                      My Registered Shuttles ({myDriverShuttles.length})
+                      My vehicles and routes ({myDriverShuttles.length})
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowDriverUploadModal(true)}
-                      className="text-xs font-bold text-teal-600 hover:underline"
-                    >
-                      + Add Route
-                    </button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -684,23 +693,33 @@ const ShuttlePage = () => {
                           <div className="font-bold truncate">{shuttle.originCity} ➔ {shuttle.destinationCity}</div>
                           <div className="text-[11px] text-gray-500 font-mono">{shuttle.plateNumber}</div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShuttleForScheduleModal(shuttle);
-                            setShowDriverDeskModal(false);
-                          }}
-                          className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-600"
-                        >
-                          ⚙️ Edit
-                        </button>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setShuttleForRouteModal(shuttle)}
+                            className="rounded-lg bg-teal-700 px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-teal-800"
+                            title={`Add another route for ${shuttle.plateNumber}`}
+                          >
+                            + Route
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShuttleForScheduleModal(shuttle);
+                              setShowDriverDeskModal(false);
+                            }}
+                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500 text-white hover:bg-amber-600"
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              <ShuttleBookingsList role="driver" currentUser={currentUser} />
+              <ShuttleBookingsList role="driver" currentUser={currentUser} focusBookingId={searchParams.get('bookingId')} />
             </div>
           </div>
         </div>
@@ -732,7 +751,26 @@ const ShuttlePage = () => {
         />
       )}
 
+      {shuttleForRouteModal && (
+        <DriverAddRouteModal
+          key={`${shuttleForRouteModal._id}-route`}
+          shuttle={shuttleForRouteModal}
+          onClose={() => setShuttleForRouteModal(null)}
+          onSuccess={(newRoute) => {
+            setShuttleForRouteModal(null);
+            setMyDriverShuttles((current) => [newRoute, ...current]);
+            fetchShuttles();
+            fetchMyDriverShuttles();
+          }}
+        />
+      )}
+
       {/* ── Driver Shuttle Registration Modal ────────────────────────── */}
+      <DriverVerificationGate
+        isOpen={showDriverVerificationGate}
+        onClose={() => setShowDriverVerificationGate(false)}
+        onApproved={handleDriverVerificationApproved}
+      />
       {showDriverUploadModal && (
         <DriverShuttleUploadModal
           isOpen={showDriverUploadModal}

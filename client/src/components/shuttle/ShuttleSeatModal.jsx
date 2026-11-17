@@ -117,12 +117,14 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
 
     setLoading(true);
     try {
+      const cleanSeats = selectedSeats.map((s) => String(s).replace(/\D/g, '')).filter(Boolean);
+
       const payload = {
         shuttleId: _id,
         passengerName: passengerName.trim(),
         passengerPhone: passengerPhone.trim(),
         seatsBooked: selectedSeats.length,
-        seatNumbers: selectedSeats,
+        seatNumbers: cleanSeats.length === selectedSeats.length ? cleanSeats : selectedSeats,
         extraBagsCount,
         pickupLocation: pickupLocation.trim(),
         dropoffLocation: dropoffLocation.trim(),

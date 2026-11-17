@@ -269,16 +269,6 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
     e.preventDefault();
     setError(null);
 
-    if (!driverLicenceScan.trim()) {
-      setError("Please upload a scan or clear photo of your Driver's Licence (PrDP).");
-      return;
-    }
-
-    if (!driverIdScan.trim()) {
-      setError('Please upload a scan or clear photo of your National ID Document or Passport.');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -311,11 +301,6 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         luggageNotes: luggageNotes.trim(),
         driverName: driverName.trim(),
         driverPhone: driverPhone.trim(),
-        driverAvatar: driverFaceScan.trim() || currentUser?.avatar || '',
-        driverLicenceScan: driverLicenceScan.trim(),
-        driverIdScan: driverIdScan.trim(),
-        driverFaceScan: driverFaceScan.trim(),
-        driverLicenceNumber: driverLicenceNumber.trim(),
         // Banking details for direct EFT from passengers
         bankName: bankName.trim(),
         bankAccountHolder: bankAccountHolder.trim() || driverName.trim(),
@@ -1040,44 +1025,16 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
           )}
 
           {/* ══════════════════════════════════════════════════════════
-              PAGE 4: SUBMIT DOCUMENTS, CAR PHOTO & DRIVER PHOTO
+              PAGE 4: VEHICLE PHOTO & FINAL REVIEW
           ══════════════════════════════════════════════════════════ */}
           {step === 4 && (
             <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
-                <FileText className="w-4 h-4" />
-                <span>Upload Photos & Verification Documents</span>
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/25">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-300" />
+                <div><p className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Driver documents approved</p><p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">Your ID, face photo, and driving licence were reviewed. This vehicle will be submitted under your approved driver profile.</p></div>
               </div>
 
-              {/* Photo 1: Driver Face Portrait / Selfie */}
-              <div className="p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 border-2 border-teal-500 shrink-0">
-                    {driverFaceScan ? (
-                      <img src={driverFaceScan} alt="Driver" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <User className="w-6 h-6" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-gray-100">
-                      Picture of the Driver (Face Photo / Portrait)
-                    </div>
-                    <div className="text-[11px] text-gray-500">
-                      {driverFaceScan ? '✓ Photo uploaded' : 'Clear face selfie shown to passengers'}
-                    </div>
-                  </div>
-                </div>
-
-                <label className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white cursor-pointer shadow-sm">
-                  {uploadingFace ? 'Uploading...' : driverFaceScan ? 'Change Photo' : 'Upload Face'}
-                  <input type="file" accept="image/*" onChange={handleUploadFacePhoto} className="hidden" />
-                </label>
-              </div>
-
-              {/* Photo 2: Picture of the Car */}
+              {/* Vehicle photo */}
               <div className="p-3.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/30 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-16 h-12 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700 border border-gray-300 shrink-0">
@@ -1102,52 +1059,6 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                 <label className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white cursor-pointer shadow-sm">
                   {uploadingCar ? 'Uploading...' : imageUrl ? 'Change Photo' : 'Upload Car'}
                   <input type="file" accept="image/*" onChange={handleUploadCarPhoto} className="hidden" />
-                </label>
-              </div>
-
-              {/* Document 1: Driver's Licence (PrDP) */}
-              <div className="p-3.5 rounded-2xl border border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-600 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                      <span>Driver's Licence Card (Scan / Photo)</span>
-                      <span className="text-[10px] text-red-500 font-bold">*Required</span>
-                    </div>
-                    <div className="text-[11px] text-gray-500">
-                      {driverLicenceScan ? '✓ Licence document uploaded' : 'Front or back photo of your SA licence / PrDP'}
-                    </div>
-                  </div>
-                </div>
-
-                <label className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:opacity-90 cursor-pointer shadow-sm">
-                  {uploadingLicence ? 'Uploading...' : driverLicenceScan ? 'Replace File' : 'Upload Licence'}
-                  <input type="file" accept="image/*,.pdf" onChange={handleUploadLicence} className="hidden" />
-                </label>
-              </div>
-
-              {/* Document 2: National ID Document / Passport */}
-              <div className="p-3.5 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                      <span>National ID / Passport Scan</span>
-                      <span className="text-[10px] text-red-500 font-bold">*Required</span>
-                    </div>
-                    <div className="text-[11px] text-gray-500">
-                      {driverIdScan ? '✓ Identity document uploaded' : 'SA Smart ID Card, Green ID book, or Passport'}
-                    </div>
-                  </div>
-                </div>
-
-                <label className="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 hover:opacity-90 cursor-pointer shadow-sm">
-                  {uploadingId ? 'Uploading...' : driverIdScan ? 'Replace File' : 'Upload ID'}
-                  <input type="file" accept="image/*,.pdf" onChange={handleUploadId} className="hidden" />
                 </label>
               </div>
 

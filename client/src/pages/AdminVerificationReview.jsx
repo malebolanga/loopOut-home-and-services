@@ -36,6 +36,10 @@ export default function AdminVerificationReview() {
   const { currentUser } = useSelector((state) => state.user);
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState([]);
+  const [driverSubmissions, setDriverSubmissions] = useState([]);
+  const [driverChecks, setDriverChecks] = useState({});
+  const [driverNotes, setDriverNotes] = useState({});
+  const [driverReviewError, setDriverReviewError] = useState('');
   const [checks, setChecks] = useState({});
   const [notes, setNotes] = useState({});
   const [loading, setLoading] = useState(true);
@@ -79,7 +83,7 @@ export default function AdminVerificationReview() {
     setError('');
     setOverviewLoading(true);
     setPerformanceLoading(true);
-    const [reviewsResult, overviewResult, performanceResult] = await Promise.allSettled([
+    const [reviewsResult, overviewResult, performanceResult, driverReviewsResult] = await Promise.allSettled([
       authenticatedFetch('/api/verification/admin/pending').then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'Could not load identity reviews.');
@@ -95,9 +99,20 @@ export default function AdminVerificationReview() {
         if (!response.ok) throw new Error(data.message || 'Could not load section performance.');
         return data;
       }),
+      authenticatedFetch('/api/verification/admin/driver-pending').then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Could not load shuttle driver reviews.');
+        return data;
+      }),
     ]);
     if (reviewsResult.status === 'fulfilled') setSubmissions(reviewsResult.value.submissions || []);
     else setError(reviewsResult.reason?.message || 'Could not load identity reviews.');
+    if (driverReviewsResult.status === 'fulfilled') {
+      setDriverSubmissions(driverReviewsResult.value.submissions || []);
+      setDriverReviewError('');
+    } else {
+      setDriverReviewError(driverReviewsResult.reason?.message || 'Could not load shuttle driver reviews.');
+    }
     if (overviewResult.status === 'fulfilled') {
       setOverview(overviewResult.value);
       setOverviewError('');
@@ -200,6 +215,39 @@ export default function AdminVerificationReview() {
       setNotes((current) => { const next = { ...current }; delete next[userId]; return next; });
     } catch (reviewError) {
       setError(reviewError.message || 'Could not save the review.');
+    } finally {
+      setSavingId('');
+    }
+  };
+
+  const decideDriver = async (submission, status) => {
+    const userId = String(submission._id);
+    const selectedChecks = driverChecks[userId] || {};
+    if (status === 'verified' && !['idIsReadable', 'faceMatchesId', 'licenceIsValid'].every((key) => selectedChecks[key] === true)) {
+      setDriverReviewError('Check all three shuttle driver document review items before approving.');
+      return;
+    }
+    if (status === 'rejected' && !String(driverNotes[userId] || '').trim()) {
+      setDriverReviewError('Add a short correction note before rejecting this driver application.');
+      return;
+    }
+
+    const savingKey = `driver-${userId}`;
+    setSavingId(savingKey);
+    setDriverReviewError('');
+    try {
+      const response = await authenticatedFetch(`/api/verification/admin/driver/${userId}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, checks: selectedChecks, note: driverNotes[userId] || '' }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not save the shuttle driver review.');
+      setDriverSubmissions((current) => current.filter((item) => String(item._id) !== userId));
+      setDriverChecks((current) => { const next = { ...current }; delete next[userId]; return next; });
+      setDriverNotes((current) => { const next = { ...current }; delete next[userId]; return next; });
+    } catch (reviewError) {
+      setDriverReviewError(reviewError.message || 'Could not save the shuttle driver review.');
     } finally {
       setSavingId('');
     }
@@ -347,6 +395,36 @@ export default function AdminVerificationReview() {
           <div className="mt-4 grid grid-cols-3 gap-2">{[['Today', overview.panicAlerts.today], ['This week', overview.panicAlerts.thisWeek], ['This month', overview.panicAlerts.thisMonth]].map(([period, count]) => <div key={period} className="rounded-xl bg-rose-50 p-3 text-center dark:bg-rose-950/30"><p className="text-lg font-black text-rose-700 dark:text-rose-300">{Number(count).toLocaleString()}</p><p className="text-[10px] text-slate-500 dark:text-slate-400">{period}</p></div>)}</div>
           {overview.panicAlerts.recent.length ? <div className="mt-4 space-y-2">{overview.panicAlerts.recent.map((alert) => <article key={alert.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 p-3 dark:border-gray-800"><div><p className="text-xs font-bold text-slate-900 dark:text-white">{alert.code} · {alert.user?.username || 'Service provider'}</p><p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">{alert.user?.email || 'Email unavailable'} · {new Date(alert.triggeredAt).toLocaleString()} · {alert.status}</p></div><a href={alert.mapUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-300">Open map pin</a></article>)}</div> : <p className="mt-4 rounded-xl bg-slate-50 p-4 text-xs text-slate-500 dark:bg-gray-800 dark:text-slate-400">No provider panic alerts have been recorded.</p>}
         </section>}
+
+        <section aria-label="Shuttle driver document approvals" className="mb-8">
+          <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Shuttle driver document approvals</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Review the ID, compare its face with the driver photo, and check the driving licence. Drivers cannot add a shuttle until all three checks are approved.</p></div>
+          {driverReviewError && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">{driverReviewError}</div>}
+          {loading ? <p className="rounded-2xl bg-white p-5 text-sm text-slate-600 dark:bg-gray-900 dark:text-slate-300">Loading driver document applications…</p>
+            : driverReviewError && driverSubmissions.length === 0 ? <button type="button" onClick={loadSubmissions} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-gray-700">Retry loading applications</button>
+              : driverSubmissions.length === 0 ? <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600 dark:border-gray-800 dark:bg-gray-900 dark:text-slate-300">No shuttle driver applications are waiting for review.</p>
+                : <div className="space-y-5">{driverSubmissions.map((submission) => {
+                  const userId = String(submission._id);
+                  const docs = submission.driverVerification || {};
+                  const selected = driverChecks[userId] || {};
+                  const checksList = [
+                    ['idIsReadable', 'ID or passport is readable and belongs to this applicant'],
+                    ['faceMatchesId', 'Driver face photo matches the face on the ID'],
+                    ['licenceIsValid', 'Driving licence is readable and valid'],
+                  ];
+                  return <article key={userId} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-bold text-slate-900 dark:text-white">{submission.username || 'Driver applicant'}</h3><p className="text-xs text-slate-500 dark:text-slate-400">{submission.email}</p></div><p className="text-xs text-slate-500 dark:text-slate-400">Submitted {docs.submittedAt ? new Date(docs.submittedAt).toLocaleString() : 'date not recorded'}</p></div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <div className="rounded-xl border border-slate-200 p-3 dark:border-gray-700"><p className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">ID / passport</p><a href={docs.idDocumentUrl} target="_blank" rel="noreferrer" referrerPolicy="no-referrer" className="text-xs font-semibold text-teal-700 underline dark:text-teal-300">Open submitted document</a></div>
+                      <div className="rounded-xl border border-slate-200 p-3 dark:border-gray-700"><p className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">Driver face photo</p><a href={docs.facePhotoUrl} target="_blank" rel="noreferrer" referrerPolicy="no-referrer"><img src={docs.facePhotoUrl} alt="Submitted driver face photo" referrerPolicy="no-referrer" className="h-32 w-full rounded-lg bg-slate-100 object-contain dark:bg-gray-800" /></a></div>
+                      <div className="rounded-xl border border-slate-200 p-3 dark:border-gray-700"><p className="mb-2 text-xs font-bold text-slate-700 dark:text-slate-200">Driving licence</p><a href={docs.licenceDocumentUrl} target="_blank" rel="noreferrer" referrerPolicy="no-referrer" className="text-xs font-semibold text-teal-700 underline dark:text-teal-300">Open submitted licence</a></div>
+                    </div>
+                    <fieldset className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-gray-800"><legend className="px-1 text-sm font-semibold text-slate-900 dark:text-white">Manual review checks</legend>{checksList.map(([key, label]) => <label key={key} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-200"><input type="checkbox" checked={selected[key] === true} onChange={(event) => setDriverChecks((current) => ({ ...current, [userId]: { ...(current[userId] || {}), [key]: event.target.checked } }))} className="mt-0.5 h-4 w-4 accent-teal-700" /><span>{label}</span></label>)}</fieldset>
+                    <label htmlFor={`driver-review-note-${userId}`} className="mt-3 block text-xs font-semibold text-slate-700 dark:text-slate-200">Review note (required when rejecting)</label>
+                    <textarea id={`driver-review-note-${userId}`} value={driverNotes[userId] || ''} onChange={(event) => setDriverNotes((current) => ({ ...current, [userId]: event.target.value }))} maxLength={500} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm dark:border-gray-700 dark:bg-gray-950 dark:text-white" placeholder="Explain what the driver should correct if rejecting." />
+                    <div className="mt-3 flex justify-end gap-2"><button type="button" disabled={savingId === `driver-${userId}` || !String(driverNotes[userId] || '').trim()} onClick={() => decideDriver(submission, 'rejected')} className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300">Reject and request correction</button><button type="button" disabled={savingId === `driver-${userId}` || !checksList.every(([key]) => selected[key] === true)} onClick={() => decideDriver(submission, 'verified')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{savingId === `driver-${userId}` ? 'Saving…' : 'Approve driver documents'}</button></div>
+                  </article>;
+                })}</div>}
+        </section>
 
         <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Identity reviews</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Open each PDF and compare its number and portrait with the live selfie. Approve only when all three checks are clear.</p></div>
 

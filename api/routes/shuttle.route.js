@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   createShuttle,
+  addRouteToShuttle,
   getShuttles,
   getShuttleById,
   updateShuttleLocation,
@@ -18,6 +19,7 @@ router.get('/get/:id', getShuttleById);
 
 // Driver / Protected routes
 router.post('/create', verifyToken, createShuttle);
+router.post('/add-route/:id', verifyToken, addRouteToShuttle);
 router.get('/my-shuttles', verifyToken, getMyDriverShuttles);
 router.put('/update-location/:id', verifyToken, updateShuttleLocation);
 router.put('/update/:id', verifyToken, updateShuttle);
