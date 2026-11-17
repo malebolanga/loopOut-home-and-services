@@ -170,7 +170,7 @@ const validateSignup = ({ username, email, password, phone, location, offeringTy
   if (!emailPattern.test(normalizeEmail(email))) return 'Enter a valid email address.';
   if (!isStrongPassword(password)) return 'Use a password of at least 8 characters.';
   if (!String(phone || '').trim() || !String(location || '').trim()) return 'Phone number and location are required.';
-  if (!['viewer', 'services', 'property', 'food', 'goods'].includes(offeringType)) return 'Choose how you would like to use LoopOut.';
+  if (!['viewer', 'services', 'property', 'food', 'goods', 'shuttle'].includes(offeringType)) return 'Choose how you would like to use LoopOut.';
   if (acceptedTerms !== true) return 'You must accept the Terms of Service and Privacy Policy.';
   return null;
 };
@@ -280,7 +280,7 @@ export const signin = async (req, res, next) => {
 
 export const google = async (req, res, next) => {
   try {
-    const allowedOfferingTypes = ['viewer', 'services', 'property', 'food', 'goods'];
+    const allowedOfferingTypes = ['viewer', 'services', 'property', 'food', 'goods', 'shuttle'];
     const requestedOfferingType = req.body.offeringType;
     if (requestedOfferingType && (!allowedOfferingTypes.includes(requestedOfferingType) || req.body.acceptedTerms !== true || !String(req.body.phone || '').trim() || !String(req.body.location || '').trim())) {
       return next(errorHandler(400, 'Choose an account type, provide your phone and area, and accept the Terms and Privacy Policy.'));

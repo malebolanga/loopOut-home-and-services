@@ -143,7 +143,7 @@ export const updateUser = async (req, res, next) => {
 
     // Allow account conversion to valid provider roles
     if (req.body.offeringType !== undefined) {
-      const validRoles = ['viewer', 'services', 'property', 'food', 'goods'];
+      const validRoles = ['viewer', 'services', 'property', 'food', 'goods', 'shuttle'];
       if (validRoles.includes(req.body.offeringType)) {
         updateData.offeringType = req.body.offeringType;
       }

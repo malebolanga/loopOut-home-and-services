@@ -283,7 +283,7 @@ export default function Profile() {
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
   const isProvider = canCreateListings(currentUser);
-  const offeringLabels = { viewer: 'Browsing account', services: 'Service provider', property: 'Property host', food: 'Food shop', goods: 'Goods seller' };
+  const offeringLabels = { viewer: 'Browsing account', services: 'Service provider', property: 'Property host', food: 'Food shop', goods: 'Goods seller', shuttle: 'Shuttle driver' };
   const offeringLabel = offeringLabels[currentUser?.offeringType] || 'LoopOut member';
 
   useEffect(() => {

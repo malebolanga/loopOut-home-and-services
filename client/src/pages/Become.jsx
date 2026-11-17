@@ -81,6 +81,36 @@ const PROVIDER_ROLES = [
     actionRoute: (uid) => `/${uid}/create-listing?tab=experiences`
   },
   {
+    id: 'shuttle',
+    name: 'Shuttle Driver',
+    badge: 'Routes & Passenger Requests',
+    emoji: '🚐',
+    color: 'from-cyan-500 to-teal-600',
+    lightBg: 'bg-cyan-50 dark:bg-cyan-950/40',
+    border: 'border-cyan-200 dark:border-cyan-800',
+    textColor: 'text-cyan-700 dark:text-cyan-300',
+    tagline: 'Offer passenger trips using your car, van, or minibus.',
+    description: 'Register your vehicle once, add the routes you drive, and manage passenger booking requests from LoopOut.',
+    whatYouCanList: [
+      'Routes between towns and cities, with your departure schedule and fare',
+      'Available seats and pickup or drop-off details for each trip',
+      'Additional routes using the same approved vehicle and driver profile'
+    ],
+    requirements: [
+      { title: 'South African ID or Passport', desc: 'Submit a clear identity document for driver review.' },
+      { title: 'Face Photo', desc: 'Provide a clear photo of yourself so your identity can be reviewed.' },
+      { title: 'Valid Driving Licence', desc: 'Submit your driving licence and wait for approval before adding a vehicle.' },
+      { title: 'Vehicle and Route Details', desc: 'Add your vehicle information, route, departure schedule, seat fare, and pickup points.' }
+    ],
+    benefits: [
+      'Use one approved vehicle for multiple routes',
+      'Set and update each route’s departure date and time',
+      'Review, accept, decline, or refer passenger requests'
+    ],
+    actionText: 'Set up shuttle driver tools',
+    actionRoute: () => '/shuttles?register=true'
+  },
+  {
     id: 'food',
     name: 'Food Shop Owner',
     badge: 'Food Hub & Culinary',

@@ -69,7 +69,7 @@ const userSchema = new mongoose.Schema({
     },
     offeringType: {
         type: String,
-        enum: ['viewer', 'services', 'property', 'food', 'goods', ''],
+        enum: ['viewer', 'services', 'property', 'food', 'goods', 'shuttle', ''],
         default: '',
     },
     interests: {
