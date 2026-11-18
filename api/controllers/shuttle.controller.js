@@ -26,6 +26,7 @@ export const createShuttle = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('+driverVerification');
     if (!user) return next(errorHandler(404, 'User profile not found.'));
+    if (user.offeringType !== 'shuttle') return next(errorHandler(403, 'Choose Transport Driver in Become before adding a shuttle.'));
     if (user.driverVerification?.status !== 'verified'
       || !user.driverVerification?.idDocumentUrl
       || !user.driverVerification?.facePhotoUrl
@@ -154,6 +155,7 @@ export const addRouteToShuttle = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id).select('+driverVerification');
     if (!user) return next(errorHandler(404, 'User profile not found.'));
+    if (user.offeringType !== 'shuttle') return next(errorHandler(403, 'Choose Transport Driver in Become before adding a shuttle route.'));
     if (user.driverVerification?.status !== 'verified'
       || !user.driverVerification?.idDocumentUrl
       || !user.driverVerification?.facePhotoUrl
@@ -466,11 +468,25 @@ export const updateShuttleLocation = async (req, res, next) => {
       };
     }
 
+    const completingTrip = currentStatus === 'completed' && shuttle.currentStatus !== 'completed';
     if (currentStatus) {
       shuttle.currentStatus = currentStatus;
     }
 
-    const updated = await shuttle.save();
+    let updated = await shuttle.save();
+    if (completingTrip) {
+      await ShuttleBooking.updateMany(
+        { shuttleRef: shuttle._id, status: 'paid' },
+        { $set: { status: 'completed' } }
+      );
+      await ShuttleBooking.updateMany(
+        { shuttleRef: shuttle._id, status: { $in: ['pending_approval', 'approved'] } },
+        { $set: { status: 'cancelled', declineReason: 'Trip completed before this request was paid.' } }
+      );
+      updated = await Shuttle.findByIdAndUpdate(shuttle._id, {
+        $set: { availableSeats: shuttle.totalSeats, reservedSeatNumbers: [] },
+      }, { new: true });
+    }
 
     // ── 2km Proximity Trip Alert Trigger ─────────────────────────────
     // When driver is moving (with GPRS) and enters within 2km of a passenger's pickup location
@@ -553,10 +569,79 @@ export const updateShuttle = async (req, res, next) => {
       'departureProvince', 'destinationProvince', 'originCity', 'destinationCity',
       'pickupStation', 'dropoffStation', 'dropoffType', 'isHouseToHouse', 'departureRule',
       'leavesWhenFull', 'departureDate', 'departureTime', 'estimatedArrival', 'pricePerSeat',
-      'features', 'notes', 'freeBagsPerPassenger', 'extraBagPrice', 'maxExtraBagsPerPassenger', 'luggageNotes',
+      'features', 'notes', 'freeBagsPerPassenger', 'extraBagPrice', 'maxExtraBagsPerPassenger', 'luggageNotes', 'currentStatus',
     ];
     const safeUpdates = Object.fromEntries(allowedFields.filter((field) => req.body[field] !== undefined).map((field) => [field, req.body[field]]));
-    const updated = await Shuttle.findByIdAndUpdate(req.params.id, { $set: safeUpdates }, { new: true, runValidators: true });
+    if (safeUpdates.currentStatus && !['scheduled', 'boarding', 'en_route', 'arrived', 'completed', 'cancelled'].includes(safeUpdates.currentStatus)) {
+      return next(errorHandler(400, 'Invalid shuttle trip status.'));
+    }
+    const safeDateKey = (value) => {
+      const parsed = new Date(value);
+      return Number.isFinite(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : '';
+    };
+    const requestedDateChanged = req.body.departureDate !== undefined
+      && safeDateKey(req.body.departureDate) !== safeDateKey(shuttle.departureDate);
+    const requestedTimeChanged = req.body.departureTime !== undefined
+      && String(req.body.departureTime || '').trim() !== String(shuttle.departureTime || '').trim();
+    if (shuttle.currentStatus === 'completed' && (requestedDateChanged || requestedTimeChanged) && safeUpdates.currentStatus !== 'completed') {
+      safeUpdates.currentStatus = 'scheduled';
+    }
+    const completingTrip = safeUpdates.currentStatus === 'completed' && shuttle.currentStatus !== 'completed';
+    let updated = await Shuttle.findByIdAndUpdate(req.params.id, { $set: safeUpdates }, { new: true, runValidators: true });
+    if (completingTrip) {
+      await ShuttleBooking.updateMany(
+        { shuttleRef: shuttle._id, status: 'paid' },
+        { $set: { status: 'completed' } }
+      );
+      await ShuttleBooking.updateMany(
+        { shuttleRef: shuttle._id, status: { $in: ['pending_approval', 'approved'] } },
+        { $set: { status: 'cancelled', declineReason: 'Trip completed before this request was paid.' } }
+      );
+      updated = await Shuttle.findByIdAndUpdate(shuttle._id, {
+        $set: { availableSeats: shuttle.totalSeats, reservedSeatNumbers: [] },
+      }, { new: true });
+    }
+
+    const dateKey = (value) => value ? new Date(value).toISOString().slice(0, 10) : '';
+    const departureDateChanged = req.body.departureDate !== undefined
+      && dateKey(shuttle.departureDate) !== dateKey(updated.departureDate);
+    const departureTimeChanged = req.body.departureTime !== undefined
+      && String(shuttle.departureTime || '').trim() !== String(updated.departureTime || '').trim();
+
+    if (departureDateChanged || departureTimeChanged) {
+      try {
+        const activeBookings = await ShuttleBooking.find({
+          shuttleRef: shuttle._id,
+          status: { $in: ['pending_approval', 'approved', 'paid'] },
+        }).select('_id passengerRef');
+        const formatDate = (value) => value
+          ? new Date(value).toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+          : 'To be confirmed';
+        const previousSchedule = `${formatDate(shuttle.departureDate)} at ${shuttle.departureTime || 'time to be confirmed'}`;
+        const updatedSchedule = `${formatDate(updated.departureDate)} at ${updated.departureTime || 'time to be confirmed'}`;
+        if (activeBookings.length) {
+          await Notification.insertMany(activeBookings.map((booking) => ({
+            userId: booking.passengerRef,
+            type: 'shuttle',
+            title: 'Shuttle departure schedule changed',
+            message: `The driver changed the departure for ${updated.originCity} → ${updated.destinationCity}. It was ${previousSchedule}; it is now ${updatedSchedule}. Please review your pickup plan.`,
+            data: {
+              bookingId: booking._id,
+              shuttleId: updated._id,
+              originCity: updated.originCity,
+              destinationCity: updated.destinationCity,
+              previousDepartureDate: shuttle.departureDate,
+              previousDepartureTime: shuttle.departureTime,
+              departureDate: updated.departureDate,
+              departureTime: updated.departureTime,
+              route: '/shuttles?tab=my-tickets',
+            },
+          })));
+        }
+      } catch (notificationError) {
+        console.warn('Could not notify shuttle passengers about the schedule change:', notificationError.message);
+      }
+    }
 
     return res.status(200).json({
       success: true,

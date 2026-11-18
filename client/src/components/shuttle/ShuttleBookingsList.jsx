@@ -79,7 +79,6 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
   const [error, setError] = useState(null);
   const [referralModal, setReferralModal] = useState(null);
   const [focusedBookingId, setFocusedBookingId] = useState('');
-
   const fetchBookings = async () => {
     setLoading(true);
     setError(null);

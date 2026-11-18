@@ -16,7 +16,8 @@ import {
   X,
   Sparkles,
   CheckCircle2,
-  Phone
+  Phone,
+  Truck
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
@@ -29,6 +30,11 @@ import DriverVerificationGate from '../components/shuttle/DriverVerificationGate
 import DriverAddRouteModal from '../components/shuttle/DriverAddRouteModal';
 import DriverScheduleModal from '../components/shuttle/DriverScheduleModal';
 import ShuttleBookingsList from '../components/shuttle/ShuttleBookingsList';
+import DriverPickupList from '../components/shuttle/DriverPickupList';
+import MovingVehicleUploadModal from '../components/shuttle/MovingVehicleUploadModal';
+import MovingVehicleCard from '../components/shuttle/MovingVehicleCard';
+import MovingRequestSheet from '../components/shuttle/MovingRequestSheet';
+import MovingRequestsPanel from '../components/shuttle/MovingRequestsPanel';
 
 const POPULAR_CORRIDORS = [
   { label: 'All South Africa', serviceType: 'all', origin: '', dest: '' },
@@ -95,13 +101,33 @@ const ShuttlePage = () => {
   // Modals & Drawers state
   const [showTicketsModal, setShowTicketsModal] = useState(false);
   const [showDriverDeskModal, setShowDriverDeskModal] = useState(false);
+  const [driverDeskTab, setDriverDeskTab] = useState('requests');
   const [showDriverUploadModal, setShowDriverUploadModal] = useState(false);
   const [showDriverVerificationGate, setShowDriverVerificationGate] = useState(false);
+  const [showMovingUploadModal, setShowMovingUploadModal] = useState(false);
+  const [showMovingRequestsPanel, setShowMovingRequestsPanel] = useState(false);
+  const [providerIntent, setProviderIntent] = useState('shuttle');
   const [shuttleForRouteModal, setShuttleForRouteModal] = useState(null);
   const [selectedShuttleForBooking, setSelectedShuttleForBooking] = useState(null);
   const [shuttleForScheduleModal, setShuttleForScheduleModal] = useState(null);
   const [highlightedShuttle, setHighlightedShuttle] = useState(null);
   const [isCardOpen, setIsCardOpen] = useState(false);
+  const [selectedMapVehicleType, setSelectedMapVehicleType] = useState('shuttle');
+  const canOfferTransport = currentUser?.offeringType === 'shuttle';
+
+  const mapControlsVisible = !(
+    isCardOpen ||
+    showSearchModal ||
+    showTicketsModal ||
+    showDriverDeskModal ||
+    showDriverUploadModal ||
+    showDriverVerificationGate ||
+    showMovingUploadModal ||
+    showMovingRequestsPanel ||
+    shuttleForRouteModal ||
+    selectedShuttleForBooking ||
+    shuttleForScheduleModal
+  );
 
   // 2km Trip Alert & User Location States
   const [userLocation, setUserLocation] = useState(null);
@@ -128,24 +154,67 @@ const ShuttlePage = () => {
 
   // Demo vehicles are shown only in local development when the API has no listings.
   const [shuttles, setShuttles] = useState([]);
+  const [movingVehicles, setMovingVehicles] = useState([]);
+  const mapVehicles = [...shuttles, ...movingVehicles];
+  const visibleMapVehicles = mapVehicles.filter((vehicle) => (
+    vehicle.vehicleCategory === 'moving' ? selectedMapVehicleType === 'moving' : selectedMapVehicleType === 'shuttle'
+  ));
+
+  useEffect(() => {
+    if (!highlightedShuttle) return;
+    const isVisible = highlightedShuttle.vehicleCategory === 'moving'
+      ? selectedMapVehicleType === 'moving'
+      : selectedMapVehicleType === 'shuttle';
+    if (!isVisible) {
+      setIsCardOpen(false);
+      setHighlightedShuttle(null);
+    }
+  }, [highlightedShuttle, selectedMapVehicleType]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
 
+  useEffect(() => {
+    if (selectedMapVehicleType !== 'moving') return;
+    if (!userLocation || !Number.isFinite(Number(userLocation.lat)) || !Number.isFinite(Number(userLocation.lng))) return;
+    let cancelled = false;
+    let endpointSupported = true;
+
+    const loadNearbyMovingVehicles = () => {
+      if (!endpointSupported) return;
+      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 50 } })
+        .then((response) => { if (!cancelled) setMovingVehicles(response.data?.vehicles || []); })
+        .catch((err) => {
+          if (err?.response?.status === 404) {
+            endpointSupported = false;
+          }
+          if (!cancelled) setMovingVehicles([]);
+        });
+    };
+
+    loadNearbyMovingVehicles();
+    const refreshInterval = window.setInterval(loadNearbyMovingVehicles, 30000);
+    return () => { cancelled = true; window.clearInterval(refreshInterval); };
+  }, [selectedMapVehicleType, userLocation?.lat, userLocation?.lng]);
+
   const handleDriverVerificationApproved = useCallback(() => {
     setShowDriverVerificationGate(false);
-    setShowDriverUploadModal(true);
-  }, []);
+    if (providerIntent === 'moving') setShowMovingUploadModal(true);
+    else setShowDriverUploadModal(true);
+  }, [providerIntent]);
 
   // Auto-open driver registration modal when URL has ?register=true
   useEffect(() => {
-    if (searchParams.get('register') === 'true') {
+    if (searchParams.get('register') === 'true' && canOfferTransport) {
       setShowDriverVerificationGate(true);
     }
-    if (searchParams.get('tab') === 'driver-desk') {
+    if (searchParams.get('tab') === 'driver-desk' && canOfferTransport) {
+      setDriverDeskTab(searchParams.get('deskTab') === 'pickups' ? 'pickups' : 'requests');
       setShowDriverDeskModal(true);
     }
-  }, [searchParams]);
+    if (searchParams.get('tab') === 'my-tickets') setShowTicketsModal(true);
+    if (searchParams.get('tab') === 'moving-requests') setShowMovingRequestsPanel(true);
+  }, [searchParams, canOfferTransport]);
 
   const fetchMyDriverShuttles = async () => {
     try {
@@ -348,7 +417,8 @@ const ShuttlePage = () => {
               <span className="hidden md:inline">My Passes</span>
             </button>
 
-            {/* Driver Desk Icon Button */}
+            {canOfferTransport && <>
+            {/* Transport Driver Desk */}
             <button
               type="button"
               onClick={() => setShowDriverDeskModal(true)}
@@ -358,27 +428,43 @@ const ShuttlePage = () => {
               <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
               <span className="hidden md:inline">Driver Desk</span>
             </button>
+            </>}
 
-            {/* Register Shuttle / Drive Button */}
-            <button
-              type="button"
-              onClick={() => setShowDriverVerificationGate(true)}
-              className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 shadow-md shadow-amber-400/20 active:scale-95 transition flex items-center gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Drive</span>
+            <button type="button" onClick={() => setShowMovingRequestsPanel(true)} className="px-2.5 py-1.5 rounded-full text-xs font-semibold bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/40 text-teal-800 dark:text-teal-200 transition flex items-center gap-1.5" title="Moving requests">
+              <Truck className="h-3.5 w-3.5" /><span className="hidden md:inline">Moving requests</span>
             </button>
+
+            {canOfferTransport && <>
+              <button type="button" onClick={() => { setProviderIntent('moving'); setShowDriverVerificationGate(true); }} className="px-2.5 py-1.5 rounded-full text-xs font-bold bg-teal-700 hover:bg-teal-800 text-white transition flex items-center gap-1.5" title="Add a truck or minivan for moving delivery">
+                <Truck className="h-3.5 w-3.5" /><span className="hidden sm:inline">Add truck / minivan</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setProviderIntent('shuttle'); setShowDriverVerificationGate(true); }}
+                className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 hover:bg-amber-300 text-gray-950 shadow-md shadow-amber-400/20 active:scale-95 transition flex items-center gap-1"
+                title="Add a shuttle route"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Add shuttle</span>
+              </button>
+            </>}
           </div>
         </div>
       </header>
 
       {/* ── Main Uber Layout: 100% Full Width Map Edge-to-Edge with 100% Bottom Card ── */}
       <main className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
-        {(loading || error || (!shuttles.length && !loading)) && <div className="pointer-events-none absolute left-3 right-3 top-3 z-20 flex justify-center">
+        {mapControlsVisible && <div aria-label="Filter map vehicles" className="absolute bottom-[5.25rem] left-1/2 z-[1100] flex -translate-x-1/2 items-center gap-0.5 rounded-xl border border-gray-200 bg-white/95 p-0.5 shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+          <span className="hidden px-1.5 text-[9px] font-semibold text-gray-500 sm:inline">Show</span>
+          <button type="button" aria-pressed={selectedMapVehicleType === 'shuttle'} onClick={() => setSelectedMapVehicleType('shuttle')} className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${selectedMapVehicleType === 'shuttle' ? 'bg-teal-700 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}><Bus className="mr-1 inline h-3 w-3" />Shuttle</button>
+          <button type="button" aria-pressed={selectedMapVehicleType === 'moving'} onClick={() => setSelectedMapVehicleType('moving')} className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${selectedMapVehicleType === 'moving' ? 'bg-amber-500 text-gray-950' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}><Truck className="mr-1 inline h-3 w-3" />Moving delivery</button>
+        </div>}
+        {(loading || error || (!visibleMapVehicles.length && !loading)) && <div className="pointer-events-none absolute left-3 right-3 top-16 z-20 flex justify-center">
           <div className="pointer-events-auto max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
-            {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading current shuttle listings…</p>
+            {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading available transport…</p>
               : error ? <><p role="alert" className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
-                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No shuttle listings are available for this search.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only registered shuttle listings are shown here.</p></>}
+                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 50 km.</p></>}
           </div>
         </div>}
         {/* ── 2km Trip Proximity Alert Banner ── */}
@@ -437,19 +523,20 @@ const ShuttlePage = () => {
         {/* BIG MAP FILLING FULL SCREEN */}
         <div className="w-full h-full flex-1">
           <ShuttleMap
-            shuttles={shuttles}
+            shuttles={visibleMapVehicles}
             selectedShuttle={isCardOpen ? highlightedShuttle : null}
             onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
               if (shuttle?.isDemo) return;
               setHighlightedShuttle(shuttle);
               setIsCardOpen(true);
-              setSelectedShuttleForBooking(shuttle);
+              if (!shuttle?.vehicleCategory) setSelectedShuttleForBooking(shuttle);
             }}
             onLiveRefresh={handleLiveRefresh}
             userLocation={userLocation}
             onUserLocationChange={(loc) => setUserLocation(loc)}
             onProximityAlert={handleProximityAlert}
+            controlsVisible={mapControlsVisible}
             heightClass="h-full"
           />
         </div>
@@ -463,11 +550,19 @@ const ShuttlePage = () => {
           }`}
         >
           <div className="w-full">
-            {highlightedShuttle && (
+            {highlightedShuttle?.vehicleCategory === 'moving' ? (
+              <MovingVehicleCard
+                key={highlightedShuttle._id}
+                vehicle={highlightedShuttle}
+                currentUser={currentUser}
+                onRequest={(vehicle) => setSelectedShuttleForBooking(vehicle)}
+                onClose={() => setIsCardOpen(false)}
+              />
+            ) : highlightedShuttle && (
               <UberDriverCard
                 key={highlightedShuttle._id}
                 shuttle={highlightedShuttle}
-                allShuttles={shuttles}
+                allShuttles={visibleMapVehicles}
                 onSelectShuttle={handleSelectShuttle}
                 onRequestPickup={(s) => setSelectedShuttleForBooking(s)}
                 currentUser={currentUser}
@@ -476,6 +571,10 @@ const ShuttlePage = () => {
                   setShuttleForScheduleModal(shuttle);
                   setIsCardOpen(false);
                 }}
+                onTripFinished={() => {
+                  fetchShuttles();
+                  fetchMyDriverShuttles();
+                }}
                 onClose={() => setIsCardOpen(false)}
               />
             )}
@@ -483,7 +582,7 @@ const ShuttlePage = () => {
         </div>
 
         {/* Small floating prompt pill when card is closed */}
-        {shuttles.length > 0 && <div
+        {visibleMapVehicles.length > 0 && <div
           className={`fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ease-out ${
             !isCardOpen
               ? 'translate-y-0 opacity-100'
@@ -496,15 +595,15 @@ const ShuttlePage = () => {
               onClick={() => {
                 if (highlightedShuttle) {
                   setIsCardOpen(true);
-                } else if (shuttles.length > 0) {
-                  setHighlightedShuttle(shuttles[0]);
+                } else if (visibleMapVehicles.length > 0) {
+                  setHighlightedShuttle(visibleMapVehicles[0]);
                   setIsCardOpen(true);
                 }
               }}
               className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-center shadow-xl flex items-center gap-2 text-xs font-bold text-gray-800 dark:text-gray-200 hover:scale-105 active:scale-95 transition"
             >
               <Bus className="w-4 h-4 text-teal-600 animate-pulse" />
-              <span>👆 Tap any vehicle on the map to view driver & book</span>
+              <span>Tap a shuttle, truck, or minivan on the map</span>
             </button>
           </div>
         </div>}
@@ -673,7 +772,17 @@ const ShuttlePage = () => {
               </button>
             </div>
 
+            <div className="grid grid-cols-2 gap-2 border-b border-gray-100 p-3 dark:border-gray-800">
+              <button type="button" onClick={() => setDriverDeskTab('requests')} aria-pressed={driverDeskTab === 'requests'} className={`rounded-xl px-3 py-2.5 text-xs font-bold transition ${driverDeskTab === 'requests' ? 'bg-teal-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                Requests
+              </button>
+              <button type="button" onClick={() => setDriverDeskTab('pickups')} aria-pressed={driverDeskTab === 'pickups'} className={`rounded-xl px-3 py-2.5 text-xs font-bold transition ${driverDeskTab === 'pickups' ? 'bg-emerald-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+                Pickups
+              </button>
+            </div>
+
             <div className="p-5 overflow-y-auto space-y-5">
+              {driverDeskTab === 'requests' ? <>
               {/* Fleet List */}
               {myDriverShuttles.length > 0 && (
                 <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800/60 space-y-2">
@@ -720,6 +829,7 @@ const ShuttlePage = () => {
               )}
 
               <ShuttleBookingsList role="driver" currentUser={currentUser} focusBookingId={searchParams.get('bookingId')} />
+              </> : <DriverPickupList />}
             </div>
           </div>
         </div>
@@ -727,7 +837,13 @@ const ShuttlePage = () => {
 
       {/* ── Slide-Up Pickup Request Sheet ("Filler sheet going up") ───── */}
       {selectedShuttleForBooking && (
-        <PickupRequestSheet
+        selectedShuttleForBooking.vehicleCategory === 'moving' ? <MovingRequestSheet
+          vehicle={selectedShuttleForBooking}
+          currentUser={currentUser}
+          userLocation={userLocation}
+          onClose={() => setSelectedShuttleForBooking(null)}
+          onSuccess={() => setShowMovingRequestsPanel(true)}
+        /> : <PickupRequestSheet
           shuttle={selectedShuttleForBooking}
           isOpen={!!selectedShuttleForBooking}
           onClose={() => setSelectedShuttleForBooking(null)}
@@ -737,6 +853,13 @@ const ShuttlePage = () => {
           }}
         />
       )}
+
+      {showMovingRequestsPanel && <MovingRequestsPanel onClose={() => setShowMovingRequestsPanel(false)} />}
+      {showMovingUploadModal && <MovingVehicleUploadModal currentUser={currentUser} onClose={() => setShowMovingUploadModal(false)} onSuccess={() => {
+        setShowMovingRequestsPanel(true);
+        if (!userLocation) return;
+        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 50 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+      }} />}
 
       {/* ── Driver Schedule & Route Edit Modal ───────────────────────── */}
       {shuttleForScheduleModal && (

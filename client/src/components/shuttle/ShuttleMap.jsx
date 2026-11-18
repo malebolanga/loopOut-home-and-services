@@ -124,6 +124,7 @@ const ShuttleMap = ({
   userLocation,
   onUserLocationChange,
   onProximityAlert,
+  controlsVisible = true,
   heightClass = 'h-[75vh] sm:h-[82vh] lg:h-[86vh]' 
 }) => {
   const mapContainerRef = useRef(null);
@@ -398,13 +399,14 @@ const ShuttleMap = ({
       const isSelected = selectedShuttle && String(selectedShuttle._id) === String(shuttle._id);
       const isEnRoute = shuttle.currentStatus === 'en_route';
       const isBoarding = shuttle.currentStatus === 'boarding';
-      const isLiveGprs = coords.source === 'live';
+      const isLiveGprs = coords.source === 'live' && shuttle.vehicleCategory !== 'moving';
       const isRouteOriginPin = coords.source === 'route-origin';
       const isSavedPin = coords.source === 'saved';
-      const departureDay = shuttle.departureDate
+      const isMovingVehicle = shuttle.vehicleCategory === 'moving';
+      const departureDay = isMovingVehicle ? 'Moving help' : shuttle.departureDate
         ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
         : 'Date to be confirmed';
-      const departureClock = shuttle.departureTime && !/when full/i.test(shuttle.departureTime)
+      const departureClock = isMovingVehicle ? `${shuttle.distanceKm} km away` : shuttle.departureTime && !/when full/i.test(shuttle.departureTime)
         ? shuttle.departureTime
         : 'Time to be confirmed';
       const abbreviateCity = (city) => {
@@ -426,7 +428,9 @@ const ShuttleMap = ({
         if (!normalized) return '???';
         return normalized.split(' ').map((part) => part.slice(0, 3).toUpperCase()).join('-');
       };
-      const routeLabel = `${abbreviateCity(shuttle.originCity)} → ${abbreviateCity(shuttle.destinationCity)}`;
+      const routeLabel = isMovingVehicle
+        ? `${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'} · ${shuttle.distanceKm} KM`
+        : `${abbreviateCity(shuttle.originCity)} → ${abbreviateCity(shuttle.destinationCity)}`;
 
       // Movement breadcrumb trail for live moving vehicles
       if (isLiveGprs) {
@@ -483,7 +487,7 @@ const ShuttleMap = ({
               <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
             ` : ''}
             ${isSavedPin ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">SAVED PIN · NOT LIVE</div>
+              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? 'GPS LOCATION' : 'SAVED PIN · NOT LIVE'}</div>
             ` : ''}
 
             <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">
@@ -499,8 +503,9 @@ const ShuttleMap = ({
                 : 'bg-teal-700 text-white border-teal-500'
             }">
               <span class="w-2 h-2 rounded-full ${isEnRoute || isLiveGprs ? 'bg-white animate-ping' : 'bg-amber-300'}"></span>
-              <span>R${shuttle.pricePerSeat}</span>
-              <span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>
+              ${isMovingVehicle
+                ? `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'}</span>`
+                : `<span>R${shuttle.pricePerSeat}</span><span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>`}
             </div>
 
             <!-- Vehicle Pin Pointer -->
@@ -790,7 +795,7 @@ const ShuttleMap = ({
       `}</style>
 
       {/* ── Top-Left: Map Layer Selector (Road, Satellite, Live Map) ── */}
-      <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90">
+      {controlsVisible && <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90">
         {/* Road Map Button */}
         <button
           type="button"
@@ -845,10 +850,10 @@ const ShuttleMap = ({
           <Radio className="w-3.5 h-3.5" />
           <span>Live Map</span>
         </button>
-      </div>
+      </div>}
 
       {/* ── Top-Right: Return Map & Floating Utility Controls ── */}
-      <div className="absolute top-3 right-3 z-[1000] flex flex-col items-end gap-2">
+      {controlsVisible && <div className="absolute top-3 right-3 z-[1000] flex flex-col items-end gap-2">
         {/* Main "Return Map" (Recenter / Overview) Button */}
         <button
           type="button"
@@ -914,7 +919,7 @@ const ShuttleMap = ({
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* ── Status Toast (Floating at Top-Center) ── */}
       {gprsStatus && (

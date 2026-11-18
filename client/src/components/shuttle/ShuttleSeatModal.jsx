@@ -59,7 +59,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
     let isMounted = true;
     const fetchLatestOccupiedSeats = async () => {
       try {
-        const res = await axios.get(`/api/shuttles/get/${_id}`);
+        const res = await axios.get(resolveApiUrl(`/api/shuttles/get/${_id}`));
         if (isMounted && res.data?.shuttle?.bookedSeatNumbers) {
           setOccupiedSeats(res.data.shuttle.bookedSeatNumbers);
         }
@@ -78,7 +78,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
   }, [_id, bookedSeatNumbers]);
 
   const toggleSeat = (seatId) => {
-    if (occupiedSeats.includes(seatId)) return;
+    if (normalizedOccupiedSeats.includes(seatId)) return;
 
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(selectedSeats.filter((s) => s !== seatId));
@@ -93,8 +93,9 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
   const totalPrice = seatCharge + luggageCharge;
   const maxExtraBags = (maxExtraBagsPerPassenger || 2) * Math.max(1, selectedSeats.length);
 
-  // Generate seat grid list
-  const seatList = Array.from({ length: totalSeats }, (_, i) => `Seat ${i + 1}`);
+  // Generate clean numeric seat grid list (e.g. ['1', '2', '3'])
+  const seatList = Array.from({ length: totalSeats }, (_, i) => String(i + 1));
+  const normalizedOccupiedSeats = occupiedSeats.map((s) => String(s).replace(/\D/g, ''));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -255,8 +256,8 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
 
               {/* Seats Grid */}
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
-                {seatList.map((seatId, idx) => {
-                  const isOccupied = occupiedSeats.includes(seatId);
+                {seatList.map((seatId) => {
+                  const isOccupied = normalizedOccupiedSeats.includes(seatId);
                   const isSelected = selectedSeats.includes(seatId);
 
                   return (
@@ -274,7 +275,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
                       }`}
                     >
                       <Bus className="w-4 h-4 opacity-75" />
-                      <span>{seatId.replace('Seat ', '#')}</span>
+                      <span>#{seatId}</span>
                       {isSelected && (
                         <Check className="w-3 h-3 absolute top-1 right-1 text-white" />
                       )}

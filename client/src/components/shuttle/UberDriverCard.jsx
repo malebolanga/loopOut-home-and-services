@@ -26,6 +26,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import SafetyModal from './SafetyModal';
+import DriverTripPassengers from './DriverTripPassengers';
 
 const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -48,6 +49,7 @@ const UberDriverCard = ({
   currentUser,
   userLocation,
   onUpdateSchedule,
+  onTripFinished,
   onClose
 }) => {
   const [showSafetyModal, setShowSafetyModal] = useState(false);
@@ -63,6 +65,11 @@ const UberDriverCard = ({
       setIsVisible(true);
     }
   }, [shuttle?._id]);
+
+  const isCurrentDriver = Boolean(shuttle && currentUser && String(shuttle.driverRef?._id || shuttle.driverRef) === String(currentUser._id || currentUser.id));
+  useEffect(() => {
+    setIsExpanded(isCurrentDriver);
+  }, [isCurrentDriver, shuttle?._id]);
 
   if (!shuttle) {
     return (
@@ -109,7 +116,6 @@ const UberDriverCard = ({
   } = shuttle;
 
   const isDriverLiveGprs = currentCoordinates?.isLive === true;
-  const isCurrentDriver = Boolean(currentUser && String(shuttle.driverRef?._id || shuttle.driverRef) === String(currentUser._id || currentUser.id));
   const isDemo = shuttle?.isDemo === true;
   const gpsAccuracy = currentCoordinates?.accuracy;
 
@@ -556,6 +562,8 @@ const UberDriverCard = ({
               )}
             </div>
           </div>
+
+          {isCurrentDriver && !isDemo && <DriverTripPassengers shuttle={shuttle} onTripFinished={onTripFinished} />}
 
           {/* Available Seats Bar */}
           <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 space-y-2">

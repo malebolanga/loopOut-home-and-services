@@ -40,6 +40,10 @@ export default function AdminVerificationReview() {
   const [driverChecks, setDriverChecks] = useState({});
   const [driverNotes, setDriverNotes] = useState({});
   const [driverReviewError, setDriverReviewError] = useState('');
+  const [movingVehicleReviews, setMovingVehicleReviews] = useState([]);
+  const [movingVehicleChecks, setMovingVehicleChecks] = useState({});
+  const [movingVehicleNotes, setMovingVehicleNotes] = useState({});
+  const [movingVehicleReviewError, setMovingVehicleReviewError] = useState('');
   const [checks, setChecks] = useState({});
   const [notes, setNotes] = useState({});
   const [loading, setLoading] = useState(true);
@@ -83,7 +87,7 @@ export default function AdminVerificationReview() {
     setError('');
     setOverviewLoading(true);
     setPerformanceLoading(true);
-    const [reviewsResult, overviewResult, performanceResult, driverReviewsResult] = await Promise.allSettled([
+    const [reviewsResult, overviewResult, performanceResult, driverReviewsResult, movingVehiclesResult] = await Promise.allSettled([
       authenticatedFetch('/api/verification/admin/pending').then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || 'Could not load identity reviews.');
@@ -104,6 +108,11 @@ export default function AdminVerificationReview() {
         if (!response.ok) throw new Error(data.message || 'Could not load shuttle driver reviews.');
         return data;
       }),
+      authenticatedFetch('/api/shuttles/moving/admin/pending').then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Could not load truck and minivan reviews.');
+        return data;
+      }),
     ]);
     if (reviewsResult.status === 'fulfilled') setSubmissions(reviewsResult.value.submissions || []);
     else setError(reviewsResult.reason?.message || 'Could not load identity reviews.');
@@ -112,6 +121,12 @@ export default function AdminVerificationReview() {
       setDriverReviewError('');
     } else {
       setDriverReviewError(driverReviewsResult.reason?.message || 'Could not load shuttle driver reviews.');
+    }
+    if (movingVehiclesResult.status === 'fulfilled') {
+      setMovingVehicleReviews(movingVehiclesResult.value.vehicles || []);
+      setMovingVehicleReviewError('');
+    } else {
+      setMovingVehicleReviewError(movingVehiclesResult.reason?.message || 'Could not load vehicle reviews.');
     }
     if (overviewResult.status === 'fulfilled') {
       setOverview(overviewResult.value);
@@ -248,6 +263,39 @@ export default function AdminVerificationReview() {
       setDriverNotes((current) => { const next = { ...current }; delete next[userId]; return next; });
     } catch (reviewError) {
       setDriverReviewError(reviewError.message || 'Could not save the shuttle driver review.');
+    } finally {
+      setSavingId('');
+    }
+  };
+
+  const decideMovingVehicle = async (vehicle, status) => {
+    const vehicleId = String(vehicle._id);
+    const selectedChecks = movingVehicleChecks[vehicleId] || {};
+    const keys = ['plateMatchesDocument', 'driverMatchesApprovedAccount', 'vehicleDetailsMatch'];
+    if (status === 'approved' && !keys.every((key) => selectedChecks[key] === true)) {
+      setMovingVehicleReviewError('Confirm the vehicle plate, approved driver account, and listed vehicle details before approval.');
+      return;
+    }
+    if (status === 'rejected' && !String(movingVehicleNotes[vehicleId] || '').trim()) {
+      setMovingVehicleReviewError('Add a correction note before rejecting this vehicle.');
+      return;
+    }
+    const savingKey = `moving-${vehicleId}`;
+    setSavingId(savingKey);
+    setMovingVehicleReviewError('');
+    try {
+      const response = await authenticatedFetch(`/api/shuttles/moving/admin/${vehicleId}/review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, checks: selectedChecks, note: movingVehicleNotes[vehicleId] || '' }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || 'Could not save this vehicle review.');
+      setMovingVehicleReviews((current) => current.filter((entry) => String(entry._id) !== vehicleId));
+      setMovingVehicleChecks((current) => { const next = { ...current }; delete next[vehicleId]; return next; });
+      setMovingVehicleNotes((current) => { const next = { ...current }; delete next[vehicleId]; return next; });
+    } catch (reviewError) {
+      setMovingVehicleReviewError(reviewError.message || 'Could not save this vehicle review.');
     } finally {
       setSavingId('');
     }
@@ -422,6 +470,31 @@ export default function AdminVerificationReview() {
                     <label htmlFor={`driver-review-note-${userId}`} className="mt-3 block text-xs font-semibold text-slate-700 dark:text-slate-200">Review note (required when rejecting)</label>
                     <textarea id={`driver-review-note-${userId}`} value={driverNotes[userId] || ''} onChange={(event) => setDriverNotes((current) => ({ ...current, [userId]: event.target.value }))} maxLength={500} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm dark:border-gray-700 dark:bg-gray-950 dark:text-white" placeholder="Explain what the driver should correct if rejecting." />
                     <div className="mt-3 flex justify-end gap-2"><button type="button" disabled={savingId === `driver-${userId}` || !String(driverNotes[userId] || '').trim()} onClick={() => decideDriver(submission, 'rejected')} className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300">Reject and request correction</button><button type="button" disabled={savingId === `driver-${userId}` || !checksList.every(([key]) => selected[key] === true)} onClick={() => decideDriver(submission, 'verified')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{savingId === `driver-${userId}` ? 'Saving…' : 'Approve driver documents'}</button></div>
+                  </article>;
+                })}</div>}
+        </section>
+
+        <section aria-label="Moving truck and minivan approvals" className="mb-8">
+          <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Truck and minivan approvals</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">The driver’s already-approved account is reused. Review each vehicle’s name, registration plate, assigned driver, and licence/registration PDF. Only approved vehicles appear in the 50 km map search.</p></div>
+          {movingVehicleReviewError && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">{movingVehicleReviewError}</div>}
+          {loading ? <p className="rounded-2xl bg-white p-5 text-sm text-slate-600 dark:bg-gray-900 dark:text-slate-300">Loading truck and minivan submissions…</p>
+            : movingVehicleReviewError && movingVehicleReviews.length === 0 ? <button type="button" onClick={loadSubmissions} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-gray-700">Retry loading vehicle reviews</button>
+              : movingVehicleReviews.length === 0 ? <p className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-600 dark:border-gray-800 dark:bg-gray-900 dark:text-slate-300">No truck or minivan submissions are waiting for review.</p>
+                : <div className="space-y-5">{movingVehicleReviews.map((vehicle) => {
+                  const vehicleId = String(vehicle._id);
+                  const driver = vehicle.driverRef || {};
+                  const selected = movingVehicleChecks[vehicleId] || {};
+                  const checksList = [
+                    ['plateMatchesDocument', 'Registration number plate matches the vehicle licence/registration document'],
+                    ['driverMatchesApprovedAccount', 'Assigned driver matches this already-approved LoopOut driver account'],
+                    ['vehicleDetailsMatch', 'Vehicle make/type and load capacity match the submitted details'],
+                  ];
+                  return <article key={vehicleId} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-2"><div><h3 className="font-bold text-slate-900 dark:text-white">{vehicle.vehicleDescription} · {vehicle.vehicleType}</h3><p className="text-xs text-slate-500 dark:text-slate-400">Colour: {vehicle.carColor} · Plate: {vehicle.plateNumber}</p></div><p className="text-xs text-slate-500 dark:text-slate-400">Submitted {vehicle.verificationSubmittedAt ? new Date(vehicle.verificationSubmittedAt).toLocaleString() : 'date not recorded'}</p></div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-slate-200 p-3 dark:border-gray-700"><p className="text-xs font-bold">Assigned driver</p><p className="mt-1 text-sm">{vehicle.driverDisplayName} · {driver.email || 'email unavailable'}</p><p className="mt-1 text-xs text-gray-500">LoopOut account: {driver.username || 'unknown'}</p></div><div className="rounded-xl border border-slate-200 p-3 dark:border-gray-700"><p className="mb-2 text-xs font-bold">Vehicle licence / registration PDF</p><a href={vehicle.vehicleLicenceDocumentUrl} target="_blank" rel="noreferrer" referrerPolicy="no-referrer" className="text-xs font-semibold text-teal-700 underline dark:text-teal-300">Open submitted document</a></div></div>
+                    <fieldset className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-gray-800"><legend className="px-1 text-sm font-semibold">Manual vehicle review</legend>{checksList.map(([key, label]) => <label key={key} className="flex items-start gap-2 text-xs"><input type="checkbox" checked={selected[key] === true} onChange={(event) => setMovingVehicleChecks((current) => ({ ...current, [vehicleId]: { ...(current[vehicleId] || {}), [key]: event.target.checked } }))} className="mt-0.5 h-4 w-4 accent-teal-700" /><span>{label}</span></label>)}</fieldset>
+                    <label htmlFor={`moving-review-note-${vehicleId}`} className="mt-3 block text-xs font-semibold">Review note (required when rejecting)</label><textarea id={`moving-review-note-${vehicleId}`} value={movingVehicleNotes[vehicleId] || ''} onChange={(event) => setMovingVehicleNotes((current) => ({ ...current, [vehicleId]: event.target.value }))} maxLength={500} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 bg-white p-2.5 text-sm dark:border-gray-700 dark:bg-gray-950" placeholder="Explain what the owner should correct if rejecting." />
+                    <div className="mt-3 flex justify-end gap-2"><button type="button" disabled={savingId === `moving-${vehicleId}` || !String(movingVehicleNotes[vehicleId] || '').trim()} onClick={() => decideMovingVehicle(vehicle, 'rejected')} className="rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-50 dark:border-red-900 dark:text-red-300">Reject and request correction</button><button type="button" disabled={savingId === `moving-${vehicleId}` || !checksList.every(([key]) => selected[key] === true)} onClick={() => decideMovingVehicle(vehicle, 'approved')} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{savingId === `moving-${vehicleId}` ? 'Saving…' : 'Approve vehicle'}</button></div>
                   </article>;
                 })}</div>}
         </section>
