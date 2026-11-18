@@ -234,7 +234,7 @@ export const getMyMovingRequests = async (req, res, next) => {
 export const updateMovingRequest = async (req, res, next) => {
   try {
     const { status } = req.body;
-    if (!['accepted', 'declined', 'service_completed', 'payment_reported', 'paid'].includes(status)) {
+    if (!['accepted', 'declined', 'quote_proposed', 'quote_accepted', 'quote_declined', 'service_completed', 'payment_reported', 'paid'].includes(status)) {
       return next(errorHandler(400, 'Choose an available job or payment action.'));
     }
     const request = await MovingRequest.findById(req.params.id);
@@ -243,11 +243,23 @@ export const updateMovingRequest = async (req, res, next) => {
     if (status === 'accepted' || status === 'declined') {
       if (String(request.driverRef) !== String(req.user.id) || request.status !== 'pending') return next(errorHandler(409, 'Only the assigned driver can accept or decline a pending request.'));
       request.status = status;
+    } else if (status === 'quote_proposed') {
+      if (String(request.driverRef) !== String(req.user.id) || request.status !== 'accepted') return next(errorHandler(409, 'Only the assigned driver can quote an accepted moving request.'));
+      if (request.quoteStatus === 'pending' || request.quoteStatus === 'accepted') return next(errorHandler(409, 'Wait for the customer to respond before changing this quote.'));
+      const quoteAmount = Number(req.body.quoteAmount);
+      if (!Number.isFinite(quoteAmount) || quoteAmount <= 0 || quoteAmount > 10000000) return next(errorHandler(400, 'Enter a valid moving quote amount.'));
+      request.quoteAmount = Math.round(quoteAmount * 100) / 100;
+      request.quoteStatus = 'pending';
+      request.quoteProposedAt = new Date();
+      request.quoteRespondedAt = null;
+    } else if (status === 'quote_accepted' || status === 'quote_declined') {
+      if (String(request.requesterRef) !== String(req.user.id) || request.status !== 'accepted' || request.quoteStatus !== 'pending') return next(errorHandler(409, 'Only the customer can respond to a pending moving quote.'));
+      request.quoteStatus = status === 'quote_accepted' ? 'accepted' : 'declined';
+      request.quoteRespondedAt = new Date();
     } else if (status === 'service_completed') {
       if (String(request.driverRef) !== String(req.user.id) || request.status !== 'accepted') return next(errorHandler(409, 'Only the assigned driver can mark an accepted job as provided.'));
-      const finalPrice = Number(req.body.finalPrice);
-      if (!Number.isFinite(finalPrice) || finalPrice <= 0) return next(errorHandler(400, 'Enter the agreed final amount after the moving service has been provided.'));
-      request.finalPrice = Math.round(finalPrice * 100) / 100;
+      if (request.quoteStatus !== 'accepted' || !Number.isFinite(Number(request.quoteAmount)) || Number(request.quoteAmount) <= 0) return next(errorHandler(409, 'The customer must approve the moving quote before the service can be marked complete.'));
+      request.finalPrice = request.quoteAmount;
       request.serviceCompletedAt = new Date();
       request.status = 'service_completed';
     } else if (status === 'payment_reported') {
@@ -266,6 +278,12 @@ export const updateMovingRequest = async (req, res, next) => {
 
     if (status === 'accepted' || status === 'declined') {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: `Moving request ${status}`, message: status === 'accepted' ? 'The driver accepted your moving request. No payment is due now; pay only after the service is provided.' : 'The driver declined your moving request.', data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    } else if (status === 'quote_proposed') {
+      await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: 'Moving price quote needs your approval', message: `The driver quoted R${request.quoteAmount.toFixed(2)} for your move. Review and approve the price before the service starts. Payment is still due only after the move is complete.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    } else if (status === 'quote_accepted') {
+      await Notification.create({ userId: request.driverRef, type: 'shuttle', title: 'Customer approved your moving quote', message: `The customer approved the R${request.quoteAmount.toFixed(2)} moving quote. Payment is due only after the move is complete.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    } else if (status === 'quote_declined') {
+      await Notification.create({ userId: request.driverRef, type: 'shuttle', title: 'Customer declined your moving quote', message: 'The customer declined the price. You can send a revised quote for approval before starting the move.', data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     } else if (status === 'service_completed') {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: 'Moving service provided · payment due', message: `The driver marked the move complete. Pay the agreed R${request.finalPrice.toFixed(2)} directly to the driver now by cash or EFT, then report payment in Moving requests. LoopOut has not collected payment.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     } else if (status === 'payment_reported') {

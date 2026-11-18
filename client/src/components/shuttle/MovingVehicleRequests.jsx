@@ -7,6 +7,7 @@ const MovingVehicleRequests = ({ vehicleId }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState('');
+  const [quoteAmounts, setQuoteAmounts] = useState({});
   const [error, setError] = useState('');
   const loadRequests = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true);
@@ -29,11 +30,11 @@ const MovingVehicleRequests = ({ vehicleId }) => {
     return () => window.clearInterval(timer);
   }, [loadRequests]);
 
-  const decide = async (request, status) => {
+  const decide = async (request, status, details = {}) => {
     setBusyId(request._id);
     setError('');
     try {
-      await axios.patch(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}`), { status }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
+      await axios.patch(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}`), { status, ...details }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
       await loadRequests();
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Could not update this moving request.');
@@ -59,6 +60,10 @@ const MovingVehicleRequests = ({ vehicleId }) => {
           <p className="mt-2 text-xs"><strong>Deliver to:</strong> {request.dropoffAddress}</p>
           {request.itemDescription && <p className="mt-2 text-xs text-gray-600 dark:text-gray-300"><strong>Items:</strong> {request.itemDescription}</p>}
           {request.status === 'pending' && <div className="mt-3 flex gap-2"><button type="button" disabled={busyId === request._id} onClick={() => decide(request, 'accepted')} className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"><Check className="h-3.5 w-3.5" />{busyId === request._id ? 'Saving…' : 'Accept request'}</button><button type="button" disabled={busyId === request._id} onClick={() => decide(request, 'declined')} className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-800 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-100"><X className="h-3.5 w-3.5" />Decline</button></div>}
+          {request.status === 'accepted' && request.quoteStatus === 'pending' && <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">Quote R{Number(request.quoteAmount || 0).toFixed(2)} sent. Waiting for the customer to approve it before the move.</p>}
+          {request.status === 'accepted' && request.quoteStatus === 'accepted' && <div className="mt-3 rounded-lg bg-emerald-50 p-2 dark:bg-emerald-950/30"><p className="text-xs font-semibold text-emerald-900 dark:text-emerald-100">Customer approved R{Number(request.quoteAmount || 0).toFixed(2)}. Collect payment only after the move.</p><button type="button" disabled={busyId === request._id} onClick={() => decide(request, 'service_completed')} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Service provided · request payment</button></div>}
+          {request.status === 'accepted' && (!request.quoteStatus || request.quoteStatus === 'not_proposed' || request.quoteStatus === 'declined') && <div className="mt-3 rounded-lg bg-slate-50 p-2 dark:bg-gray-800"><label className="block text-xs font-semibold">{request.quoteStatus === 'declined' ? 'Revised quote (R)' : 'Quote for the customer (R)'}<input type="number" min="1" max="10000000" step="0.01" value={quoteAmounts[request._id] || ''} onChange={(event) => setQuoteAmounts((current) => ({ ...current, [request._id]: event.target.value }))} placeholder="Set the total before starting" className="mt-1.5 w-full rounded-lg border bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /></label><button type="button" disabled={busyId === request._id || !Number(quoteAmounts[request._id]) || Number(quoteAmounts[request._id]) <= 0} onClick={() => decide(request, 'quote_proposed', { quoteAmount: Number(quoteAmounts[request._id]) })} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Send quote for approval</button></div>}
+          {request.status === 'service_completed' && <p className="mt-3 rounded-lg bg-amber-50 p-2 text-xs font-bold text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">Service marked complete · agreed payment R{Number(request.finalPrice || 0).toFixed(2)}</p>}
         </article>)}</div>}
   </div>;
 };
