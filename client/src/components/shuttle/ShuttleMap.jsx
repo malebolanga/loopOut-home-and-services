@@ -794,61 +794,52 @@ const ShuttleMap = ({
         }
       `}</style>
 
-      {/* ── Top-Left: Map Layer Selector (Road, Satellite, Live Map) ── */}
-      {controlsVisible && <div className="absolute top-3 left-3 z-[1000] flex items-center gap-1 p-1 rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90">
-        {/* Road Map Button */}
+      {/* ── Bottom-Left: Compact vertical map layer controls ── */}
+      {controlsVisible && <div aria-label="Map display controls" className="absolute bottom-3 left-3 z-[1000] flex flex-col overflow-hidden rounded-2xl border border-gray-200/90 bg-white/95 shadow-xl backdrop-blur-md dark:border-gray-700/90 dark:bg-gray-900/95">
         <button
           type="button"
           onClick={() => {
             switchMapStyle('googleRoad');
             setIsLiveRadarMode(false);
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          aria-label="Road map"
+          className={`flex h-10 w-10 items-center justify-center transition-all ${
             mapStyle === 'googleRoad' && !isLiveRadarMode
-              ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-teal-600 text-white'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
           title="Road Map: Street navigation and road network"
         >
-          <MapIcon className="w-3.5 h-3.5" />
-          <span>Road</span>
+          <MapIcon className="h-4 w-4" />
         </button>
-
-        {/* Satellite Button */}
         <button
           type="button"
           onClick={() => {
             switchMapStyle('googleSatellite');
             setIsLiveRadarMode(false);
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          aria-label="Satellite map"
+          className={`flex h-10 w-10 items-center justify-center border-t border-gray-100 transition-all dark:border-gray-800 ${
             mapStyle === 'googleSatellite' && !isLiveRadarMode
-              ? 'bg-teal-600 text-white shadow-md shadow-teal-600/30'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-teal-600 text-white'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
           title="Satellite: Aerial photography with roads and terrain"
         >
-          <Satellite className="w-3.5 h-3.5" />
-          <span>Satellite</span>
+          <Satellite className="h-4 w-4" />
         </button>
-
-        {/* Live Map / Live Radar Button */}
         <button
           type="button"
           onClick={handleToggleLiveRadar}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+          aria-label="Live map"
+          className={`flex h-10 w-10 items-center justify-center border-t border-gray-100 transition-all dark:border-gray-800 ${
             isLiveRadarMode
-              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/40'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+              ? 'bg-emerald-600 text-white'
+              : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
           }`}
           title="Live Map: Real-time vehicle radar and tracking"
         >
-          <span className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isLiveRadarMode ? 'bg-white' : 'bg-emerald-400'} opacity-75`}></span>
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveRadarMode ? 'bg-white' : 'bg-emerald-500'}`}></span>
-          </span>
-          <Radio className="w-3.5 h-3.5" />
-          <span>Live Map</span>
+          <Radio className="h-4 w-4" />
         </button>
       </div>}
 
