@@ -234,7 +234,7 @@ export const getMyMovingRequests = async (req, res, next) => {
 export const updateMovingRequest = async (req, res, next) => {
   try {
     const { status } = req.body;
-    if (!['accepted', 'declined', 'quote_proposed', 'quote_accepted', 'quote_declined', 'service_completed', 'payment_reported', 'paid'].includes(status)) {
+    if (!['accepted', 'declined', 'cancelled', 'in_progress', 'quote_proposed', 'quote_accepted', 'quote_declined', 'service_completed', 'payment_reported', 'paid'].includes(status)) {
       return next(errorHandler(400, 'Choose an available job or payment action.'));
     }
     const request = await MovingRequest.findById(req.params.id);
@@ -243,6 +243,20 @@ export const updateMovingRequest = async (req, res, next) => {
     if (status === 'accepted' || status === 'declined') {
       if (String(request.driverRef) !== String(req.user.id) || request.status !== 'pending') return next(errorHandler(409, 'Only the assigned driver can accept or decline a pending request.'));
       request.status = status;
+    } else if (status === 'cancelled') {
+      const isRequester = String(request.requesterRef) === String(req.user.id);
+      const isDriver = String(request.driverRef) === String(req.user.id);
+      if ((!isRequester && !isDriver) || !['pending', 'accepted'].includes(request.status)) return next(errorHandler(409, 'Only the customer or assigned driver can cancel before the move starts.'));
+      const reason = String(req.body.reason || '').trim();
+      if (reason.length < 3) return next(errorHandler(400, 'Add a short reason for cancelling this move.'));
+      request.status = 'cancelled';
+      request.cancelledAt = new Date();
+      request.cancelledBy = req.user.id;
+      request.cancelledByRole = isDriver ? 'driver' : 'requester';
+      request.cancellationReason = reason.slice(0, 500);
+    } else if (status === 'in_progress') {
+      if (String(request.driverRef) !== String(req.user.id) || request.status !== 'accepted' || request.quoteStatus !== 'accepted') return next(errorHandler(409, 'The driver can start the move only after the customer approves the quote.'));
+      request.status = 'in_progress';
     } else if (status === 'quote_proposed') {
       if (String(request.driverRef) !== String(req.user.id) || request.status !== 'accepted') return next(errorHandler(409, 'Only the assigned driver can quote an accepted moving request.'));
       if (request.quoteStatus === 'pending' || request.quoteStatus === 'accepted') return next(errorHandler(409, 'Wait for the customer to respond before changing this quote.'));
@@ -257,7 +271,7 @@ export const updateMovingRequest = async (req, res, next) => {
       request.quoteStatus = status === 'quote_accepted' ? 'accepted' : 'declined';
       request.quoteRespondedAt = new Date();
     } else if (status === 'service_completed') {
-      if (String(request.driverRef) !== String(req.user.id) || request.status !== 'accepted') return next(errorHandler(409, 'Only the assigned driver can mark an accepted job as provided.'));
+      if (String(request.driverRef) !== String(req.user.id) || request.status !== 'in_progress') return next(errorHandler(409, 'Only the assigned driver can mark an in-progress move as provided.'));
       if (request.quoteStatus !== 'accepted' || !Number.isFinite(Number(request.quoteAmount)) || Number(request.quoteAmount) <= 0) return next(errorHandler(409, 'The customer must approve the moving quote before the service can be marked complete.'));
       request.finalPrice = request.quoteAmount;
       request.serviceCompletedAt = new Date();
@@ -278,6 +292,11 @@ export const updateMovingRequest = async (req, res, next) => {
 
     if (status === 'accepted' || status === 'declined') {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: `Moving request ${status}`, message: status === 'accepted' ? 'The driver accepted your moving request. No payment is due now; pay only after the service is provided.' : 'The driver declined your moving request.', data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    } else if (status === 'cancelled') {
+      const recipient = String(request.cancelledBy) === String(request.driverRef) ? request.requesterRef : request.driverRef;
+      await Notification.create({ userId: recipient, type: 'shuttle', title: 'Moving request cancelled', message: `The ${request.cancelledByRole} cancelled the move: ${request.cancellationReason}`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    } else if (status === 'in_progress') {
+      await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: 'Your move has started', message: 'The driver marked the moving service as in progress.', data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     } else if (status === 'quote_proposed') {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: 'Moving price quote needs your approval', message: `The driver quoted R${request.quoteAmount.toFixed(2)} for your move. Review and approve the price before the service starts. Payment is still due only after the move is complete.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     } else if (status === 'quote_accepted') {
@@ -292,5 +311,77 @@ export const updateMovingRequest = async (req, res, next) => {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: 'Moving payment receipt confirmed', message: `The driver confirmed receiving R${request.finalPrice.toFixed(2)}. This moving job is marked paid.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     }
     return res.json({ success: true, request });
+  } catch (error) { return next(error); }
+};
+
+export const reportMovingIssue = async (req, res, next) => {
+  try {
+    const request = await MovingRequest.findById(req.params.id);
+    if (!request) return next(errorHandler(404, 'Moving request not found.'));
+    const isRequester = String(request.requesterRef) === String(req.user.id);
+    const isDriver = String(request.driverRef) === String(req.user.id);
+    if (!isRequester && !isDriver) return next(errorHandler(403, 'Only the customer or assigned driver can report an issue.'));
+    if (!['accepted', 'in_progress', 'service_completed', 'payment_reported', 'paid', 'cancelled'].includes(request.status)) return next(errorHandler(409, 'Issues can be reported after the driver accepts the request.'));
+    if (request.issueStatus && request.issueStatus !== 'none') return next(errorHandler(409, 'An issue has already been reported for this move.'));
+    const allowedTypes = ['driver_no_show', 'late_pickup', 'customer_no_show', 'damage', 'price_dispute', 'safety', 'other'];
+    const issueType = String(req.body.issueType || 'other');
+    const description = String(req.body.description || '').trim();
+    if (!allowedTypes.includes(issueType) || description.length < 10) return next(errorHandler(400, 'Choose an issue type and describe what happened in at least 10 characters.'));
+    request.issueStatus = 'open';
+    request.issueType = issueType;
+    request.issueDescription = description.slice(0, 1000);
+    request.issueReportedBy = req.user.id;
+    request.issueReportedByRole = isDriver ? 'driver' : 'requester';
+    request.issueReportedAt = new Date();
+    await request.save();
+    const recipient = isDriver ? request.requesterRef : request.driverRef;
+    await Notification.create({ userId: recipient, type: 'shuttle', title: 'Issue reported for a moving request', message: `A ${issueType.replace(/_/g, ' ')} issue was reported. LoopOut support has been notified.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    await notifyLoopOutAdmins({ title: 'Moving service issue needs review', message: `${issueType.replace(/_/g, ' ')} reported for moving request ${request._id}: ${description.slice(0, 180)}`, data: { movingRequestId: String(request._id), route: '/admin/verification?tab=moving-issues' } });
+    return res.status(201).json({ success: true, request });
+  } catch (error) { return next(error); }
+};
+
+export const rateMovingService = async (req, res, next) => {
+  try {
+    const stars = Number(req.body.stars);
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5) return next(errorHandler(400, 'Choose a rating from 1 to 5 stars.'));
+    const request = await MovingRequest.findById(req.params.id);
+    if (!request) return next(errorHandler(404, 'Moving request not found.'));
+    if (String(request.requesterRef) !== String(req.user.id)) return next(errorHandler(403, 'Only the customer can rate this moving service.'));
+    if (request.status !== 'paid') return next(errorHandler(409, 'You can rate the driver after the service is complete and payment is confirmed.'));
+    const reviewedRequest = await MovingRequest.findOneAndUpdate(
+      { _id: request._id, requesterRef: req.user.id, status: 'paid', ratingStars: null },
+      { $set: { ratingStars: stars, ratingReview: String(req.body.review || '').trim().slice(0, 500), ratedAt: new Date() } },
+      { new: true, runValidators: true },
+    );
+    if (!reviewedRequest) return next(errorHandler(409, 'You have already rated this moving service.'));
+    await MovingVehicle.updateOne({ _id: request.vehicleRef }, { $inc: { ratingTotal: stars, ratingCount: 1 } });
+    const vehicle = await MovingVehicle.findById(request.vehicleRef).select('ratingTotal ratingCount').lean();
+    await Notification.create({ userId: request.driverRef, type: 'shuttle', title: 'New moving service rating', message: `A customer rated your moving service ${stars} out of 5 stars.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    return res.json({ success: true, rating: { stars, review: reviewedRequest.ratingReview, average: vehicle?.ratingCount ? vehicle.ratingTotal / vehicle.ratingCount : stars, count: vehicle?.ratingCount || 1 } });
+  } catch (error) { return next(error); }
+};
+
+export const getPendingMovingIssues = async (req, res, next) => {
+  try {
+    const requests = await MovingRequest.find({ issueStatus: 'open' })
+      .populate('requesterRef', 'username name email phone')
+      .populate('driverRef', 'username name email phone')
+      .populate('vehicleRef', 'vehicleDescription vehicleType plateNumber')
+      .sort({ issueReportedAt: 1 }).lean();
+    return res.json({ success: true, requests });
+  } catch (error) { return next(error); }
+};
+
+export const resolveMovingIssue = async (req, res, next) => {
+  try {
+    const note = String(req.body.note || '').trim();
+    if (note.length < 5) return next(errorHandler(400, 'Add a resolution note of at least 5 characters.'));
+    const request = await MovingRequest.findOneAndUpdate({ _id: req.params.id, issueStatus: 'open' }, { $set: { issueStatus: 'resolved', issueResolutionNote: note.slice(0, 1000), issueResolvedAt: new Date(), issueResolvedBy: req.user.id } }, { new: true });
+    if (!request) return next(errorHandler(404, 'Open moving issue not found.'));
+    for (const userId of [request.requesterRef, request.driverRef]) {
+      await Notification.create({ userId, type: 'shuttle', title: 'Moving issue reviewed', message: `LoopOut support reviewed the reported issue: ${note.slice(0, 220)}`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
+    }
+    return res.json({ success: true, requestId: request._id });
   } catch (error) { return next(error); }
 };

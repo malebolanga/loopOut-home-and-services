@@ -22,7 +22,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, PlusCircle, ShoppingBag, Phone } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, Plus, PlusCircle, ShoppingBag, Phone, Bus } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -89,6 +89,8 @@ const CATEGORY_ICON_BY_ID = {
   helper: HandHeart, domestic: HandHeart, tutor: GraduationCap, chef: ChefHat, beauty: HeartHandshake, tattoo: Palette, barber: Scissors, photography: Camera, sneakers: Shirt, marquees: Store, marquee: Store, animals: Dog,
   event: CalendarDays, music: Music2, sports: Trophy, arts: Palette, community: UsersRound, food: UtensilsCrossed, outdoors: Trees,
   selling: Tags, furniture: Sofa, electronics: Laptop, clothes: Shirt, universities: GraduationCap, books: BookOpen, other: Tags,
+  'looking-for': Megaphone, lookingfor: Megaphone, needs: Megaphone,
+  shuttle: Bus, 'shuttle-interprovincial': Bus, 'shuttle-local': Bus,
 };
 
 const CategoryNavIcon = ({ id, className = 'h-4 w-4' }) => {
@@ -3933,7 +3935,153 @@ const matchItemToSubcategory = (item, tab, subId) => {
     }
   }
 
+  if (tab === 'LookingFor' || tab === 'Needs') {
+    switch (subId) {
+      case 'urgent':
+        return item.urgency === 'immediate' || item.urgency === 'urgent' || Number(item.budget || 0) >= 300 || /urgent|asap|immediate|emergency/i.test(text);
+      case 'highpay':
+        return Number(item.budget || item.price || 0) >= 300;
+      case 'roommate':
+        return item.category === 'roommate' || /roommate|sharing|flatmate|room share/i.test(text);
+      case 'room':
+        return item.category === 'room' || /room|accommodation|place to stay/i.test(text);
+      case 'nanny':
+        return item.category === 'nanny' || item.category === 'household' || /nanny|helper|cleaner|maid|babysit/i.test(text);
+      case 'errand':
+        return item.category === 'errand' || /errand|delivery|pickup|groceries|driver/i.test(text);
+      case 'dog':
+      case 'pets':
+        return item.category === 'dog' || item.category === 'pet' || /dog|cat|pet|walk/i.test(text);
+      case 'other':
+        return item.category === 'other' || item.category === 'pampering' || item.category === 'general';
+      default:
+        return true;
+    }
+  }
+
   return true;
+};
+
+const LookingForFeedCard = ({ item, navigate }) => {
+  const user = typeof item.userRef === 'object' ? item.userRef : null;
+  const username = user?.username || item.name || 'Neighbor';
+  const avatar = user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
+  const isUrgent = item.urgency === 'immediate' || item.urgency === 'urgent';
+  const budget = Number(item.budget || item.price || 0);
+  const phone = user?.phone || item.contactPhone || item.contact;
+
+  const getRemainingTime = (createdAt) => {
+    if (!createdAt) return '24h Broadcast';
+    const created = new Date(createdAt).getTime();
+    const remainingMs = 24 * 60 * 60 * 1000 - (Date.now() - created);
+    if (remainingMs <= 0) return 'Expiring soon';
+    const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+    const mins = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+    return hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
+  };
+
+  const remaining = getRemainingTime(item.createdAt);
+
+  return (
+    <motion.div
+      whileHover={{ y: -4 }}
+      onClick={() => navigate('/micro-gigs')}
+      className="cursor-pointer h-full flex flex-col justify-between rounded-[1.75rem] bg-white dark:bg-gray-900 border border-slate-200/80 dark:border-gray-800 p-5 shadow-[0_2px_10px_-3px_rgba(15,23,42,0.05)] hover:shadow-[0_16px_36px_-6px_rgba(15,23,42,0.12)] transition-all duration-300 group relative"
+    >
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative shrink-0">
+              <img
+                src={avatar}
+                alt={username}
+                className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-gray-700"
+                onError={(e) => { e.currentTarget.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(username); }}
+              />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-gray-900" />
+            </div>
+            <div className="min-w-0">
+              <h4 className="text-xs font-black text-slate-900 dark:text-white truncate">
+                {username}
+              </h4>
+              <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block truncate">
+                {item.location || 'Local Neighbor'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            {isUrgent && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 text-[9px] font-black border border-rose-200 dark:border-rose-900/60">
+                <Flame className="w-2.5 h-2.5 fill-rose-500" /> Urgent
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 text-[10px] font-black border border-amber-200/60 dark:border-amber-900/40">
+              <Clock className="w-2.5 h-2.5" /> {remaining}
+            </span>
+          </div>
+        </div>
+
+        <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white tracking-tight leading-snug group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors line-clamp-2">
+          {item.title}
+        </h3>
+
+        {item.description && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 line-clamp-2 leading-relaxed">
+            {item.description}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-1.5 mt-3">
+          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300 text-[10px] font-bold uppercase tracking-wider">
+            {item.category || 'General Need'}
+          </span>
+          {item.location && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 truncate max-w-[130px]">
+              <MapPin className="w-2.5 h-2.5 text-rose-500 shrink-0" />
+              <span className="truncate">{item.location}</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-gray-800/80 flex items-center justify-between gap-2">
+        <div className="text-left">
+          <span className="text-[9px] uppercase font-black tracking-wider text-slate-400 block leading-tight">
+            Payout Offer
+          </span>
+          <span className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400">
+            {budget > 0 ? `R${budget.toLocaleString()}` : 'Open Bid'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {phone && (
+            <a
+              href={`https://wa.me/${String(phone).replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${username}, I saw your request on LoopOut: "${item.title}". I'm available to help!`)}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 hover:bg-emerald-500 hover:text-white transition-colors"
+              title="Quick WhatsApp message"
+            >
+              <FaWhatsapp className="w-3.5 h-3.5" />
+            </a>
+          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/micro-gigs');
+            }}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-rose-600 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-rose-500 dark:hover:text-white text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer flex items-center gap-1"
+          >
+            <span>Offer Help</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 const RecentlyViewedStrip = ({ items = [], navigate }) => {
@@ -4087,8 +4235,8 @@ const ActiveBookingsPopover = ({ activeTab, bookings, onClose }) => {
 };
 
 function MobileAppHomepage({
-  featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems,
-  loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems,
+  featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems, featuredLookingFor = [],
+  loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems, loadingLookingFor = false,
   stats, onItemClick, recentlyViewedItems, onRecentlyViewedLike,
   currentLocation = 'South Africa', navigate, aiRecommendations, aiInsights, aiTrendData, onAISuggestionClick,
   recentlyAddedItems, locationStatus, requestCount = 0, activeBookings = [], geoCity, geoLoading, geoError, onRequestLocation, currentUser,
@@ -4280,24 +4428,30 @@ function MobileAppHomepage({
       bgColor: 'bg-orange-500'
     },
     {
-      id: 'LookingFor',
-      label: 'Needs',
-      emoji: '📢',
-      icon: Megaphone,
-      desc: 'Live requests',
-      textColor: 'text-rose-600',
-      bgColor: 'bg-rose-500',
-      route: '/looking-for'
+      id: 'Shuttle',
+      label: 'Shuttles',
+      emoji: '🚐',
+      icon: Bus,
+      desc: 'Inter-provincial & Local',
+      textColor: 'text-teal-600',
+      bgColor: 'bg-teal-500',
+      route: '/shuttles',
+      subcategories: [
+        { id: 'all', label: 'All Shuttles', emoji: '🚐', desc: 'All available routes' },
+        { id: 'interprovincial', label: 'Inter-Provincial', emoji: '🛣️', desc: 'Province to Province' },
+        { id: 'local', label: 'Local Transit', emoji: '📍', desc: 'Town & campus routes' },
+        { id: 'urgent', label: 'Boarding Soon', emoji: '⚡', desc: 'Departing within 2 hours' },
+      ]
     }
   ];
 
   // Keep the main discovery routes visible in the horizontal belt. Less-used
   // categories selected from More remain pinned there until another is chosen.
   const visibleTabs = useMemo(() => {
-    const pinnedIds = ['Property', 'Helper', 'Lunch'];
+    const pinnedIds = ['Property', 'Helper', 'Lunch', 'Shuttle'];
     const pinnedTabs = pinnedIds.map(id => tabs.find(tab => tab.id === id)).filter(Boolean);
     const currentTab = tabs.find(t => t.id === activeTab);
-    const hideFromTopBar = ['RecentAdded', 'Property', 'Helper', 'Lunch', 'Selling'].includes(currentTab?.id);
+    const hideFromTopBar = ['RecentAdded', 'Property', 'Helper', 'Lunch', 'Selling', 'Shuttle'].includes(currentTab?.id);
     return currentTab && !pinnedIds.includes(currentTab.id) && !hideFromTopBar
       ? [...pinnedTabs, currentTab]
       : pinnedTabs;
@@ -4316,8 +4470,10 @@ function MobileAppHomepage({
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
     if (tab === 'Events') return featuredEvents || [];
     if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
+    if (tab === 'LookingFor' || tab === 'Needs') return featuredLookingFor || [];
+    if (tab === 'Shuttle' || tab === 'Shuttles') return [];
     return [];
-  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
+  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems, featuredLookingFor]);
 
   const filteredItems = useMemo(() => {
     const source = getSourceForTab(activeTab);
@@ -4382,11 +4538,13 @@ function MobileAppHomepage({
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
+    if (activeTab === 'Shuttle' || activeTab === 'Shuttles') return false;
+    if (activeTab === 'LookingFor' || activeTab === 'Needs') return loadingLookingFor;
     if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
-      return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
+      return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems || loadingLookingFor;
     }
     return false;
-  }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems]);
+  }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems, loadingLookingFor]);
 
   const getTabColor = (id) => {
     switch (id) {
@@ -4402,6 +4560,8 @@ function MobileAppHomepage({
       case 'Selling':
       case 'Sell':
       case 'Marketplace': return 'bg-teal-500';
+      case 'LookingFor':
+      case 'Needs': return 'bg-rose-500';
       default: return 'bg-gray-900';
     }
   };
@@ -4426,11 +4586,13 @@ function MobileAppHomepage({
         featuredHelpers={featuredHelpers}
         featuredEvents={featuredEvents}
         featuredSellItems={featuredSellItems}
+        featuredLookingFor={featuredLookingFor}
         loadingProperties={loadingProperties}
         loadingServices={loadingServices}
         loadingHelpers={loadingHelpers}
         loadingEvents={loadingEvents}
         loadingSellItems={loadingSellItems}
+        loadingLookingFor={loadingLookingFor}
         recentlyAddedItems={recentlyAddedItems}
         recentlyViewedItems={recentlyViewedItems}
         navigate={navigate}
@@ -4473,9 +4635,9 @@ function MobileAppHomepage({
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-            const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
+            const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food', Shuttle: 'shuttle' }[tab.id] || 'all';
             const shortcutLabel = {
-              Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
+              Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food', Shuttle: 'Shuttles'
             }[tab.id] || tab.label;
             return (
               <motion.button
@@ -4644,7 +4806,11 @@ function MobileAppHomepage({
                     ? 'Services near you'
                     : activeTab === 'Lunch'
                       ? 'Food near you'
-                      : <>Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>}
+                      : activeTab === 'LookingFor' || activeTab === 'Needs'
+                        ? 'Community Needs & Requests'
+                        : activeTab === 'Shuttle' || activeTab === 'Shuttles'
+                        ? 'Book a Shuttle Seat'
+                        : <>Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>}
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4654,13 +4820,79 @@ function MobileAppHomepage({
             </div>
           </div>
 
+          {/* Banner for Shuttle */}
+          {(activeTab === 'Shuttle' || activeTab === 'Shuttles') && (
+            <div className="mb-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-950 via-teal-900 to-slate-900 p-4 text-white shadow-md border border-teal-800/40">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-teal-400">
+                      Live Shuttle Radar
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-white leading-tight">
+                    Book seats. Track live. Travel safe.
+                  </h3>
+                  <p className="text-[11px] text-teal-100/70 mt-0.5 line-clamp-1">
+                    Province-to-province & local routes, verified drivers.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/shuttles')}
+                  className="shrink-0 px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-teal-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Bus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Book Seat</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Banner for LookingFor */}
+          {activeTab === 'LookingFor' && (
+            <div className="mb-5 relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 p-4 text-white shadow-md border border-rose-900/40">
+              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-24 h-24 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-rose-400">
+                      Live 24h Radar
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-white leading-tight">
+                    Need community help or an extra hand?
+                  </h3>
+                  <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-1">
+                    Broadcast what you need to local neighbors in your area.
+                  </p>
+                </div>
+                <button
+                  onClick={() => navigate('/micro-gigs')}
+                  className="shrink-0 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-orange-500 hover:from-rose-500 hover:to-orange-400 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-rose-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Post Need</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Listing Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
+          <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3'} gap-4 sm:gap-5`}>
             {isLoadingCurrentTab ? (
               Array.from({ length: 6 }).map((_, idx) => (
                 <AirbnbCardSkeleton key={`skeleton-${idx}`} />
               ))
-            ) : (
+            ) : (activeTab === 'Shuttle' || activeTab === 'Shuttles') ? null : (
               filteredItems.slice(0, visibleCount).map((item, idx) => (
                 <motion.div
                   key={item._id || idx}
@@ -4668,35 +4900,48 @@ function MobileAppHomepage({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
                 >
-                  <AirbnbCard
-                    item={item}
-                    type={
-                      activeTab === 'Helper' || activeTab === 'Helpers'
-                        ? 'helper'
-                        : activeTab === 'Services'
-                          ? 'service'
-                          : activeTab === 'Events'
-                            ? 'event'
-                            : activeTab === 'Selling' || activeTab === 'Marketplace'
-                              ? 'selling'
-                              : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
-                    }
-                    onClick={(path) => navigate(path)}
-                  />
+                  {activeTab === 'LookingFor' ? (
+                    <LookingForFeedCard item={item} navigate={navigate} />
+                  ) : (
+                    <AirbnbCard
+                      item={item}
+                      type={
+                        activeTab === 'Helper' || activeTab === 'Helpers'
+                          ? 'helper'
+                          : activeTab === 'Services'
+                            ? 'service'
+                            : activeTab === 'Events'
+                              ? 'event'
+                              : activeTab === 'Selling' || activeTab === 'Marketplace'
+                                ? 'selling'
+                                : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
+                      }
+                      onClick={(path) => navigate(path)}
+                    />
+                  )}
                 </motion.div>
               ))
             )}
           </div>
 
           {/* Empty State */}
-          {!isLoadingCurrentTab && filteredItems.length === 0 && (
+          {!isLoadingCurrentTab && filteredItems.length === 0 && activeTab !== 'Shuttle' && activeTab !== 'Shuttles' && (
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
-                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} found
+                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} found
               </h3>
-              <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">Be the first to list in this category.</p>
-              {activeSubcategory !== 'all' && (
+              <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">
+                {activeTab === 'LookingFor' ? 'Be the first to post a community request in your area.' : 'Be the first to list in this category.'}
+              </p>
+              {activeTab === 'LookingFor' ? (
+                <button
+                  onClick={() => navigate('/micro-gigs')}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
+                >
+                  Broadcast a Need
+                </button>
+              ) : activeSubcategory !== 'all' && (
                 <button
                   onClick={() => setActiveSubcategory('all')}
                   className="px-4 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider"
@@ -4819,11 +5064,13 @@ function DesktopHomepage({
   featuredHelpers,
   featuredEvents,
   featuredSellItems,
+  featuredLookingFor = [],
   loadingProperties,
   loadingServices,
   loadingHelpers,
   loadingEvents,
   loadingSellItems,
+  loadingLookingFor = false,
   recentlyAddedItems,
   recentlyViewedItems = [],
   navigate,
@@ -4835,7 +5082,8 @@ function DesktopHomepage({
   homeLoadError,
   onRetryHomeData,
   isHeaderVisible = true,
-  isScrolled = false
+  isScrolled = false,
+  currentUser
 }) {
   const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
   const dispatch = useDispatch();
@@ -4862,11 +5110,13 @@ function DesktopHomepage({
     if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
+    if (activeTab === 'Shuttle' || activeTab === 'Shuttles') return false;
+    if (activeTab === 'LookingFor' || activeTab === 'Needs') return loadingLookingFor;
     if (activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') {
-      return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems;
+      return loadingProperties || loadingServices || loadingHelpers || loadingEvents || loadingSellItems || loadingLookingFor;
     }
     return false;
-  }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems]);
+  }, [activeTab, loadingProperties, loadingServices, loadingHelpers, loadingEvents, loadingSellItems, loadingLookingFor]);
 
   const getSourceForTabDesktop = useCallback((tab) => {
     if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
@@ -4875,8 +5125,10 @@ function DesktopHomepage({
     if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
     if (tab === 'Events') return featuredEvents || [];
     if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
+    if (tab === 'LookingFor' || tab === 'Needs') return featuredLookingFor || [];
+    if (tab === 'Shuttle' || tab === 'Shuttles') return [];
     return [];
-  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
+  }, [recentlyAddedItems, featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems, featuredLookingFor]);
 
   const getFilteredItems = useCallback(() => {
     const source = getSourceForTabDesktop(activeTab);
@@ -4953,12 +5205,12 @@ function DesktopHomepage({
       >
         <div className="max-w-7xl mx-auto translate-y-[2px] px-8 flex items-center justify-center relative">
           <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide py-0.5">
-            {(visibleTabs || tabs.slice(0, 3)).map((tab) => {
+            {(visibleTabs || tabs.slice(0, 4)).map((tab) => {
               const isActive = activeTab === tab.id;
               const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-              const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food' }[tab.id] || 'all';
+              const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food', Shuttle: 'shuttle' }[tab.id] || 'all';
               const shortcutLabel = {
-                Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food',
+                Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food', Shuttle: 'Shuttles'
               }[tab.id] || tab.label;
               return (
                 <motion.button
@@ -5125,6 +5377,8 @@ function DesktopHomepage({
                 <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Services near you</span>
               ) : activeTab === 'Lunch' ? (
                 <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Food near you</span>
+              ) : activeTab === 'LookingFor' || activeTab === 'Needs' ? (
+                <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Community Needs &amp; Requests</span>
               ) : (
                 <><span className="text-slate-900 dark:text-white">Explore </span><span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>
               )}
@@ -5139,8 +5393,78 @@ function DesktopHomepage({
           </div>
         </div>
 
+        {/* Banner for LookingFor (Desktop) */}
+        {activeTab === 'LookingFor' && (
+          <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 p-6 text-white shadow-xl border border-rose-900/40">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center justify-between gap-6">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-400">
+                    Live 24h Community Radar
+                  </span>
+                </div>
+                <h2 className="text-2xl font-black text-white tracking-tight leading-snug">
+                  Need an urgent hand or looking for community help?
+                </h2>
+                <p className="text-xs text-slate-300 mt-1 leading-relaxed font-medium">
+                  Broadcast your request to local neighbors and verified helpers. Every broadcast stays fresh for 24 hours.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => navigate('/micro-gigs')}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-orange-500 hover:from-rose-500 hover:to-orange-400 text-white text-xs font-black uppercase tracking-wider shadow-xl shadow-rose-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Broadcast a Need</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Banner for Shuttle (Desktop) */}
+        {(activeTab === 'Shuttle' || activeTab === 'Shuttles') && (
+          <div className="mb-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-950 via-teal-900 to-slate-900 p-6 text-white shadow-xl border border-teal-800/40">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex items-center justify-between gap-6">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-400">
+                    Live Shuttle Radar • 24-Hour Approval
+                  </span>
+                </div>
+                <h2 className="text-2xl font-black text-white tracking-tight leading-snug">
+                  Book shuttle seats. Track live. Travel safe.
+                </h2>
+                <p className="text-xs text-teal-100/70 mt-1 leading-relaxed font-medium">
+                  Province-to-province & local routes. Verified drivers, bus-style seat selection, 24h payment window.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => navigate('/shuttles')}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white text-xs font-black uppercase tracking-wider shadow-xl shadow-teal-600/30 transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <Bus className="w-4 h-4 stroke-[3]" />
+                  <span>Book a Shuttle Seat</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Listings Grid */}
-        {isLoadingCurrentTab ? (
+        {(activeTab === 'Shuttle' || activeTab === 'Shuttles') ? null : isLoadingCurrentTab ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
             {Array.from({ length: 8 }).map((_, idx) => (
               <AirbnbCardSkeleton key={`skeleton-${idx}`} />
@@ -5148,7 +5472,7 @@ function DesktopHomepage({
           </div>
         ) : filteredDesktopItems.length > 0 ? (
           <div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-5 gap-y-10">
+            <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-x-5 gap-y-10`}>
               {filteredDesktopItems.slice(0, visibleCount).map((item, idx) => (
                 <motion.div
                   key={item._id || idx}
@@ -5156,19 +5480,23 @@ function DesktopHomepage({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: idx * 0.03, ease: 'easeOut' }}
                 >
-                  <AirbnbCard
-                    item={item}
-                    type={
-                      activeTab === 'Helper' || activeTab === 'Helpers'
-                        ? 'helper'
-                        : activeTab === 'Services'
-                          ? 'service'
-                          : activeTab === 'Events'
-                            ? 'event'
-                            : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
-                    }
-                    onClick={(path) => navigate(path)}
-                  />
+                  {activeTab === 'LookingFor' ? (
+                    <LookingForFeedCard item={item} navigate={navigate} />
+                  ) : (
+                    <AirbnbCard
+                      item={item}
+                      type={
+                        activeTab === 'Helper' || activeTab === 'Helpers'
+                          ? 'helper'
+                          : activeTab === 'Services'
+                            ? 'service'
+                            : activeTab === 'Events'
+                              ? 'event'
+                              : (item.itemType === 'listing' ? 'property' : item.itemType) || 'property'
+                      }
+                      onClick={(path) => navigate(path)}
+                    />
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -5230,35 +5558,48 @@ function DesktopHomepage({
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">
-              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab} available
+              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} available
             </h3>
             <p className="text-sm text-slate-400 dark:text-gray-500 max-w-xs leading-relaxed mb-6">
-              {activeSubcategory !== 'all'
-                ? `No listings found in ${activeSubcategory.replace('_', ' ')} yet. Try viewing all ${activeTab}.`
-                : `Try exploring other categories or expanding your search.`}
+              {activeTab === 'LookingFor'
+                ? 'Be the first neighbor to broadcast a need or task in your area.'
+                : activeSubcategory !== 'all'
+                  ? `No listings found in ${activeSubcategory.replace('_', ' ')} yet. Try viewing all ${activeTab}.`
+                  : `Try exploring other categories or expanding your search.`}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot', { detail: { initialPrompt: `Find available ${activeSubcategory !== 'all' ? activeSubcategory : activeTab} near me` } }))}
-                className="px-6 py-3.5 bg-gradient-to-r from-rose-600 to-orange-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer flex items-center gap-2"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Find with LoopBot</span>
-              </button>
-              {activeSubcategory !== 'all' ? (
+              {activeTab === 'LookingFor' ? (
                 <button
-                  onClick={() => setActiveSubcategory('all')}
-                  className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                  onClick={() => navigate('/micro-gigs')}
+                  className="px-6 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 cursor-pointer"
                 >
-                  Show All {activeTab}
+                  Broadcast a Need
                 </button>
               ) : (
-                <button
-                  onClick={() => navigate('/search')}
-                  className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
-                >
-                  Browse All Listings
-                </button>
+                <>
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent('open-loopbot', { detail: { initialPrompt: `Find available ${activeSubcategory !== 'all' ? activeSubcategory : activeTab} near me` } }))}
+                    className="px-6 py-3.5 bg-gradient-to-r from-rose-600 to-orange-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer flex items-center gap-2"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Find with LoopBot</span>
+                  </button>
+                  {activeSubcategory !== 'all' ? (
+                    <button
+                      onClick={() => setActiveSubcategory('all')}
+                      className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                    >
+                      Show All {activeTab}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/search')}
+                      className="px-6 py-3.5 bg-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all duration-300 shadow-lg active:scale-95 cursor-pointer"
+                    >
+                      Browse All Listings
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -5327,12 +5668,14 @@ const Home = () => {
   const [featuredHelpers, setFeaturedHelpers] = useState([]);
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [featuredSellItems, setFeaturedSellItems] = useState([]);
+  const [featuredLookingFor, setFeaturedLookingFor] = useState([]);
 
   const [loadingProperties, setLoadingProperties] = useState(true);
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingHelpers, setLoadingHelpers] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [loadingSellItems, setLoadingSellItems] = useState(true);
+  const [loadingLookingFor, setLoadingLookingFor] = useState(true);
   const [homeLoadError, setHomeLoadError] = useState(null);
   const [dataRefreshKey, setDataRefreshKey] = useState(0);
 
@@ -5450,6 +5793,7 @@ const Home = () => {
     setLoadingHelpers(true);
     setLoadingEvents(true);
     setLoadingSellItems(true);
+    setLoadingLookingFor(true);
     setDataRefreshKey((key) => key + 1);
   }, []);
 
@@ -5543,7 +5887,8 @@ const Home = () => {
       services: new AbortController(),
       helpers: new AbortController(),
       events: new AbortController(),
-      sell: new AbortController()
+      sell: new AbortController(),
+      lookingFor: new AbortController()
     };
     const timeoutId = setTimeout(() => {
       Object.values(controllers).forEach(controller => controller.abort());
@@ -5630,7 +5975,21 @@ const Home = () => {
               setFeaturedSellItems([]);
             }
           })
-          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingSellItems(false); })
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingSellItems(false); }),
+
+        fetch(`/api/looking-for/get?limit=${DATA_FETCH_LIMIT}&sort=createdAt&order=desc`, {
+          signal: controllers.lookingFor.signal
+        }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
+          .then(data => {
+            const list = Array.isArray(data) ? data : (data?.data || []);
+            setFeaturedLookingFor(list.map(i => ({
+              ...i,
+              itemType: 'lookingFor',
+              name: i.title,
+              regularPrice: i.budget
+            })));
+          })
+          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingLookingFor(false); })
       ];
 
       try {
@@ -5662,12 +6021,18 @@ const Home = () => {
         itemType: 'selling',
         name: item.title || item.name,
         regularPrice: item.price || item.regularPrice
+      })),
+      ...(featuredLookingFor || []).map(item => ({
+        ...item,
+        itemType: 'lookingFor',
+        name: item.title,
+        regularPrice: item.budget
       }))
     ];
     return combined
       .filter(item => item && (item.createdAt || item._id))
       .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems]);
+  }, [featuredProperties, featuredServices, featuredHelpers, featuredEvents, featuredSellItems, featuredLookingFor]);
 
   useEffect(() => {
     if (featuredProperties && featuredServices && featuredHelpers && featuredEvents) {
@@ -5684,11 +6049,13 @@ const Home = () => {
       featuredHelpers={featuredHelpers}
       featuredEvents={featuredEvents}
       featuredSellItems={featuredSellItems}
+      featuredLookingFor={featuredLookingFor}
       loadingProperties={loadingProperties}
       loadingServices={loadingServices}
       loadingHelpers={loadingHelpers}
       loadingEvents={loadingEvents}
       loadingSellItems={loadingSellItems}
+      loadingLookingFor={loadingLookingFor}
       stats={stats}
       onItemClick={addToRecentlyViewed}
       recentlyViewedItems={recentlyViewedItems}

@@ -81,6 +81,37 @@ const PROVIDER_ROLES = [
     actionRoute: (uid) => `/${uid}/create-listing?tab=experiences`
   },
   {
+    id: 'shuttle',
+    name: 'Transport Driver',
+    badge: 'Shuttle routes & moving delivery',
+    emoji: '🚐',
+    color: 'from-cyan-500 to-teal-600',
+    lightBg: 'bg-cyan-50 dark:bg-cyan-950/40',
+    border: 'border-cyan-200 dark:border-cyan-800',
+    textColor: 'text-cyan-700 dark:text-cyan-300',
+    tagline: 'Drive shuttle passengers or offer a truck or minivan for local moves.',
+    description: 'Use your approved driver account to add shuttle routes and submit trucks or minivans for separate vehicle approval.',
+    whatYouCanList: [
+      'Shuttle routes, departure schedules, seat availability, and passenger fares',
+      'Truck or minivan moving services with load capacity and after-service pricing',
+      'One approved driver account for both services; each vehicle is reviewed before it appears on the map'
+    ],
+    requirements: [
+      { title: 'South African ID or Passport', desc: 'Submit a clear identity document for driver review.' },
+      { title: 'Face Photo', desc: 'Provide a clear photo of yourself so your identity can be reviewed.' },
+      { title: 'Valid Driving Licence', desc: 'Submit your driving licence and wait for approval before adding a vehicle.' },
+      { title: 'Shuttle or Moving Vehicle Review', desc: 'Submit each vehicle’s details and required documents. An administrator must approve the vehicle before it appears on the map.' }
+    ],
+    benefits: [
+      'Use your approved driver account for shuttle and moving services',
+      'Submit each truck or minivan for separate admin approval',
+      'Set and update each route’s departure date and time',
+      'Review, accept, decline, or refer passenger requests'
+    ],
+    actionText: 'Set up transport driver tools',
+    actionRoute: () => '/shuttles?register=true'
+  },
+  {
     id: 'food',
     name: 'Food Shop Owner',
     badge: 'Food Hub & Culinary',

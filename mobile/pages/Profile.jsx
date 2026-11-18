@@ -263,6 +263,8 @@ export default function Profile() {
   const [coverFileUploadError, setCoverFileUploadError] = useState(false);
   const [formData, setFormData] = useState({});
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [savingProfilePhoto, setSavingProfilePhoto] = useState(false);
+  const [profilePhotoSaveError, setProfilePhotoSaveError] = useState('');
   const [showListingsError, setShowListingsError] = useState(false);
   const [userListings, setUserListings] = useState([]);
   const [visibleListings, setVisibleListings] = useState(3);
@@ -281,7 +283,7 @@ export default function Profile() {
   const [isHovering, setIsHovering] = useState(false);
   const safeUserEvents = Array.isArray(userEvents) ? userEvents : [];
   const isProvider = canCreateListings(currentUser);
-  const offeringLabels = { viewer: 'Browsing account', services: 'Service provider', property: 'Property host', food: 'Food shop', goods: 'Goods seller' };
+  const offeringLabels = { viewer: 'Browsing account', services: 'Service provider', property: 'Property host', food: 'Food shop', goods: 'Goods seller', shuttle: 'Shuttle driver' };
   const offeringLabel = offeringLabels[currentUser?.offeringType] || 'LoopOut member';
 
   useEffect(() => {
@@ -752,6 +754,28 @@ export default function Profile() {
     }
   };
 
+  const saveProfilePhoto = async () => {
+    if (!formData.avatar || !currentUser?._id) return;
+    setSavingProfilePhoto(true);
+    setProfilePhotoSaveError('');
+    try {
+      const response = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar: formData.avatar }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.success === false) throw new Error(data.message || 'Could not save your profile photo.');
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+      setTimeout(() => setUpdateSuccess(false), 3000);
+    } catch (saveError) {
+      setProfilePhotoSaveError(saveError.message || 'Could not save your profile photo.');
+    } finally {
+      setSavingProfilePhoto(false);
+    }
+  };
+
   const saveSettings = async (settings) => {
     try {
       dispatch(updateUserStart());
@@ -1107,6 +1131,12 @@ export default function Profile() {
             {fileUploadError && <p role="alert" className="mt-2 text-xs text-rose-600">{typeof fileUploadError === 'string' ? fileUploadError : 'Could not upload your photo.'}</p>}
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{profileName}</h2>
             <p className="mt-0.5 text-sm text-slate-500 dark:text-gray-400">{profileRole}</p>
+            {formData.avatar && formData.avatar !== currentUser?.avatar && <div className="mt-3">
+              <button type="button" onClick={saveProfilePhoto} disabled={savingProfilePhoto} className="rounded-full bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-wait disabled:opacity-60">
+                {savingProfilePhoto ? 'Saving photo…' : 'Save profile photo'}
+              </button>
+              {profilePhotoSaveError && <p role="alert" className="mt-2 text-xs text-rose-600">{profilePhotoSaveError}</p>}
+            </div>}
             <button type="button" onClick={() => navigate(`/user/${currentUser?._id}?tab=about`)} className="mt-3 text-sm font-semibold text-slate-700 underline underline-offset-4 hover:text-rose-600 dark:text-gray-200">
               View your profile
             </button>

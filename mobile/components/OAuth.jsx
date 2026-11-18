@@ -88,7 +88,7 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
       setPendingGoogleToken('');
       persistSessionToken(data);
       dispatch(signInSuccess(data));
-      navigate(data.offeringType === 'services' ? '/verification' : '/');
+      navigate(data.offeringType === 'services' ? '/verification' : data.offeringType === 'shuttle' ? '/shuttles?register=true' : '/');
     } catch (error) {
       if (timeoutId) clearTimeout(timeoutId);
       console.error('Google Auth Error:', error);
@@ -136,7 +136,7 @@ export default function OAuth({ offeringType, phone, location, acceptedTerms }) 
             <p className="mb-5 mt-2 text-sm text-slate-600">Choose the option that fits you best. You can add more later.</p>
             <fieldset className="space-y-2">
               <legend className="mb-2 text-sm font-medium">Choose one to get started</legend>
-              <div className="space-y-2">{[{value:"services",label:"Offer a service",description:"Get bookings for work you do, such as cleaning, repairs or tutoring.",icon:"🛠️"},{value:"property",label:"List a property",description:"Advertise a home, room or holiday stay to rent or sell.",icon:"🏡"},{value:"goods",label:"Sell an item",description:"Post individual items like furniture, clothing or electronics.",icon:"📦"},{value:"food",label:"Open a shop",description:"Set up a food shop and show customers what you have available.",icon:"🏪"},{value:"viewer",label:"Browse and make a request",description:"Find a place, service or item. Ask a question, make a request or book.",icon:"🔎"}].map((option) => (
+              <div className="space-y-2">{[{value:"services",label:"Offer a service",description:"Get bookings for work you do, such as cleaning, repairs or tutoring.",icon:"🛠️"},{value:"property",label:"List a property",description:"Advertise a home, room or holiday stay to rent or sell.",icon:"🏡"},{value:"goods",label:"Sell an item",description:"Post individual items like furniture, clothing or electronics.",icon:"📦"},{value:"food",label:"Open a shop",description:"Set up a food shop and show customers what you have available.",icon:"🏪"},{value:"shuttle",label:"Offer shuttle rides",description:"Register your vehicle, add routes and manage passenger requests.",icon:"🚐"},{value:"viewer",label:"Browse and make a request",description:"Find a place, service or item. Ask a question, make a request or book.",icon:"🔎"}].map((option) => (
                 <label key={option.value} className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors ${roleForm.offeringType === option.value ? 'border-emerald-700 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
                   <span aria-hidden="true" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-50 text-lg">{option.icon}</span>
                   <span className="min-w-0 flex-1">

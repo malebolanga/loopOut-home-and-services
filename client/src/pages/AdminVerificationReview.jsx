@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { authenticatedFetch } from '../utils/authenticatedFetch';
+import MovingIssuesReview from '../components/shuttle/MovingIssuesReview';
 
 const ACTIVITY_ACTION_LABELS = {
   search_submitted: 'Submitted a search (search terms are not stored)',
@@ -499,6 +500,8 @@ export default function AdminVerificationReview() {
                   </article>;
                 })}</div>}
         </section>
+
+        <MovingIssuesReview />
 
         <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Identity reviews</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Open each PDF and compare its number and portrait with the live selfie. Approve only when all three checks are clear.</p></div>
 

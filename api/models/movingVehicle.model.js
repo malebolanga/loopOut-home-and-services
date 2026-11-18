@@ -24,6 +24,8 @@ const movingVehicleSchema = new mongoose.Schema({
     vehiclePhotoMatchesDetails: { type: Boolean, default: false },
   },
   hourlyRate: { type: Number, required: true, min: 1 },
+  ratingTotal: { type: Number, default: 0, min: 0 },
+  ratingCount: { type: Number, default: 0, min: 0 },
   callOutFee: { type: Number, default: 0, min: 0 },
   description: { type: String, trim: true, maxlength: 800, default: '' },
   currentCoordinates: {

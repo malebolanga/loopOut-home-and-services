@@ -124,9 +124,11 @@ const BottomNav = () => {
     '/notifications',
     '/my-orders',
     '/food-orders',
-    '/my-loopout'
+    '/my-loopout',
+    '/admin/verification'
   ];
   const hiddenBottomNavPrefixes = [
+    '/admin',
     '/food',
     '/lunch',
     '/listings/',
@@ -292,13 +294,21 @@ const BottomNav = () => {
       {/* Profile Dropup Menu */}
       <AnimatePresence>
         {showProfileDropup && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="absolute bottom-16 right-4 left-4 bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-[2rem] shadow-[0_-15px_40px_rgba(0,0,0,0.12),0_10px_20px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800 p-4 z-[101] max-h-[80vh] overflow-y-auto scrollbar-hide"
-          >
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowProfileDropup(false)}
+              className="fixed inset-0 z-[100] bg-slate-950/40 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+              className="absolute bottom-full left-0 right-0 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-t-[2.2rem] rounded-b-none shadow-[0_-20px_45px_rgba(0,0,0,0.15)] border-t border-slate-200/80 dark:border-gray-800 p-5 z-[101] max-h-[82vh] overflow-y-auto scrollbar-hide"
+            >
             {currentUser ? (
               <div className="flex flex-col gap-3">
                 {/* User Header */}
@@ -411,8 +421,9 @@ const BottomNav = () => {
               </div>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </>
+      )}
+    </AnimatePresence>
 
       {/* App-like Bottom Navigation Bar */}
       <div className="glass-bottom-nav bottom-nav-edge px-4 py-1.5 pb-2 flex items-center justify-between gap-1">

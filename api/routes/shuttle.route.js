@@ -20,6 +20,10 @@ import {
   getMyMovingVehicles,
   getPendingMovingVehicleReviews,
   reviewMovingVehicle,
+  reportMovingIssue,
+  rateMovingService,
+  getPendingMovingIssues,
+  resolveMovingIssue,
 } from '../controllers/moving.controller.js';
 import { requireLoopOutAdmin } from '../utils/requireLoopOutAdmin.js';
 
@@ -31,6 +35,8 @@ router.get('/get/:id', getShuttleById);
 router.get('/moving/nearby', getNearbyMovingVehicles);
 router.get('/moving/admin/pending', verifyToken, requireLoopOutAdmin, getPendingMovingVehicleReviews);
 router.post('/moving/admin/:vehicleId/review', verifyToken, requireLoopOutAdmin, reviewMovingVehicle);
+router.get('/moving/admin/issues', verifyToken, requireLoopOutAdmin, getPendingMovingIssues);
+router.patch('/moving/admin/issues/:id', verifyToken, requireLoopOutAdmin, resolveMovingIssue);
 
 // Driver / Protected routes
 router.post('/create', verifyToken, createShuttle);
@@ -45,5 +51,7 @@ router.get('/moving/vehicles/mine', verifyToken, getMyMovingVehicles);
 router.post('/moving/requests', verifyToken, createMovingRequest);
 router.get('/moving/requests/mine', verifyToken, getMyMovingRequests);
 router.patch('/moving/requests/:id', verifyToken, updateMovingRequest);
+router.post('/moving/requests/:id/issues', verifyToken, reportMovingIssue);
+router.post('/moving/requests/:id/rating', verifyToken, rateMovingService);
 
 export default router;
