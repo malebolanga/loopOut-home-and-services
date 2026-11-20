@@ -116,7 +116,6 @@ const UberDriverCard = ({
   } = shuttle;
 
   const isDriverLiveGprs = currentCoordinates?.isLive === true;
-  const isDemo = shuttle?.isDemo === true;
   const gpsAccuracy = currentCoordinates?.accuracy;
 
   const displayImage = (carImages && carImages.length > 0)
@@ -209,9 +208,8 @@ const UberDriverCard = ({
         <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 min-w-0">
           <div className="w-8 h-1 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0" />
           <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider shrink-0">
-            {isDemo ? 'Demo vehicle' : isExpanded ? 'Full Details' : 'Live Shuttle'}
+            {isExpanded ? 'Full Details' : 'Live Shuttle'}
           </span>
-          {isDemo && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">DEMO · not bookable</span>}
 
           {/* Quick Prev / Next Switcher for overlapping or route cars */}
           {hasMultiple && (
@@ -388,17 +386,17 @@ const UberDriverCard = ({
 
             <button
               type="button"
-              onClick={() => !isDemo && onRequestPickup && onRequestPickup(shuttle)}
-              disabled={isSoldOut || isDemo}
+              onClick={() => onRequestPickup && onRequestPickup(shuttle)}
+              disabled={isSoldOut}
               className={`py-2.5 px-3.5 sm:px-5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-md active:scale-95 transition ${
-                isSoldOut || isDemo
+                isSoldOut
                   ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
                   : 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-teal-600/20 hover:brightness-105'
               }`}
             >
               <Bus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>{isDemo ? 'Demo only' : isSoldOut ? 'Sold Out' : 'Request'}</span>
-              {!isSoldOut && !isDemo && <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />}
+              <span>{isSoldOut ? 'Sold Out' : 'Request'}</span>
+              {!isSoldOut && <ArrowRight className="w-3.5 h-3.5 hidden sm:inline" />}
             </button>
           </div>
         </div>
@@ -563,7 +561,7 @@ const UberDriverCard = ({
             </div>
           </div>
 
-          {isCurrentDriver && !isDemo && <DriverTripPassengers shuttle={shuttle} onTripFinished={onTripFinished} />}
+          {isCurrentDriver && <DriverTripPassengers shuttle={shuttle} onTripFinished={onTripFinished} />}
 
           {/* Available Seats Bar */}
           <div className="p-3.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 space-y-2">
@@ -599,23 +597,21 @@ const UberDriverCard = ({
           {/* Click Here to Request Pickup Button at the Bottom */}
           <button
             type="button"
-            onClick={() => !isDemo && onRequestPickup && onRequestPickup(shuttle)}
-            disabled={isSoldOut || isDemo}
+            onClick={() => onRequestPickup && onRequestPickup(shuttle)}
+            disabled={isSoldOut}
             className={`w-full py-4 px-6 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-xl active:scale-[0.98] transition-all duration-200 ${
-              isSoldOut || isDemo
+              isSoldOut
                 ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed shadow-none'
                 : 'bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white shadow-teal-600/30 hover:brightness-105'
             }`}
           >
             <Bus className="w-5 h-5" />
             <span>
-              {isDemo
-                ? 'Demo vehicle • Booking unavailable'
-                : isSoldOut
+              {isSoldOut
                 ? 'All Seats Fully Booked'
                 : `Click Here to Request Pickup • ${pricePerSeat === null || pricePerSeat === undefined ? 'Fare unavailable' : `R${pricePerSeat}`}`}
             </span>
-            {!isSoldOut && !isDemo && <ArrowRight className="w-5 h-5 ml-1" />}
+            {!isSoldOut && <ArrowRight className="w-5 h-5 ml-1" />}
           </button>
         </div>
       )}

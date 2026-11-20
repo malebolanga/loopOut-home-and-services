@@ -224,6 +224,22 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
     }
   };
 
+  const handleReportPayment = async (booking) => {
+    if (!window.confirm(`Have you already sent R${booking.totalPrice} to the driver's account?\n\nThis tells the driver to check their bank account. Your ticket will not activate until the driver confirms the funds arrived.`)) return;
+
+    setActionLoading(booking._id);
+    try {
+      const res = await axios.put(resolveApiUrl(`/api/shuttle-bookings/report-payment/${booking._id}`), {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      if (res.data?.success) await fetchBookings();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Could not notify the driver about your payment.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Handle Passenger Rating a completed/paid trip
   const [ratingModal, setRatingModal] = useState(null); // { bookingId, selectedStars, review }
 
@@ -316,7 +332,10 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
           const shuttle = booking.shuttleRef || {};
           const isPending = booking.status === 'pending_approval';
           const isApproved = booking.status === 'approved';
-          const isPaid = booking.status === 'paid';
+          const isPaymentReported = booking.status === 'payment_reported';
+          const isAwaitingPaymentConfirmation = isApproved || isPaymentReported;
+          const isPaid = ['paid', 'completed'].includes(booking.status);
+          const isTripCompleted = booking.status === 'completed';
           const isDeclined = booking.status === 'declined';
           const isCancelled = booking.status === 'cancelled';
 
@@ -329,7 +348,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                   ? 'border-teal-500 ring-2 ring-teal-500/30 shadow-lg shadow-teal-500/10'
                   : isPaid
                   ? 'border-emerald-300 dark:border-emerald-900 shadow-md shadow-emerald-500/5'
-                  : isApproved
+                  : isAwaitingPaymentConfirmation
                   ? 'border-amber-300 dark:border-amber-900 ring-2 ring-amber-400/20'
                   : 'border-gray-200 dark:border-gray-800'
               }`}
@@ -358,10 +377,16 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                     </span>
                   )}
 
+                  {isPaymentReported && (
+                    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-800 dark:bg-orange-950/40 dark:text-orange-200 border border-orange-200 dark:border-orange-800">
+                      <Clock className="w-3.5 h-3.5" />{role === 'passenger' ? 'Payment reported · waiting for driver' : 'Passenger reports payment sent'}
+                    </span>
+                  )}
+
                   {isPaid && (
                     <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      Confirmed & Paid
+                      {isTripCompleted ? 'Trip Completed' : 'Confirmed & Paid'}
                     </span>
                   )}
 
@@ -569,23 +594,39 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                             <p>Contact the driver directly at <a href={`tel:${shuttle.driverPhone}`} className="underline font-bold">{shuttle.driverPhone}</a> for banking details to pay R{booking.totalPrice}.</p>
                           </div>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => handleReportPayment(booking)}
+                          disabled={actionLoading === booking._id}
+                          className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-teal-700 hover:bg-teal-800 text-white flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {actionLoading === booking._id ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                          I sent the EFT · notify driver
+                        </button>
+                        <p className="text-[10px] text-center text-gray-500">The driver checks their bank account and confirms before your ticket activates.</p>
+                      </div>
+                    )}
+
+                    {isPaymentReported && role === 'passenger' && (
+                      <div className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-xs text-orange-900 dark:border-orange-900 dark:bg-orange-950/30 dark:text-orange-100">
+                        You reported that you sent the EFT. The driver has been notified and must confirm the funds arrived before your ticket is activated.
                       </div>
                     )}
 
                     {isPaid && (
                       <div className="space-y-2">
                         <div className="text-xs text-center text-emerald-600 font-bold py-1">
-                          ✓ Ready to Board. Present ticket code to driver at pickup.
+                          {isTripCompleted ? '✓ Trip completed. Thank you for travelling with us.' : '✓ Ready to Board. Present ticket code to driver at pickup.'}
                         </div>
-                        {/* Rate Trip button — only if not yet rated */}
-                        {!booking.passengerRating && (
+                        {/* Rating is available after the driver completes the trip. */}
+                        {isTripCompleted && !booking.passengerRating && (
                           <button
                             type="button"
                             onClick={() => setRatingModal({ bookingId: booking._id, selectedStars: 0, review: '' })}
                             className="w-full py-2 px-4 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center justify-center gap-2 transition"
                           >
                             <Star className="w-4 h-4 text-amber-500" />
-                            <span>Rate Your Trip</span>
+                            <span>Rate Your Driver</span>
                           </button>
                         )}
                         {/* Show submitted rating */}
@@ -640,10 +681,10 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                       </div>
                     )}
 
-                    {isApproved && (
+                    {isAwaitingPaymentConfirmation && (
                       <div className="space-y-2.5">
                         <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs space-y-1">
-                          <p className="text-amber-800 dark:text-amber-200 font-bold">⏳ Waiting for EFT payment from passenger</p>
+                          <p className="text-amber-800 dark:text-amber-200 font-bold">{isPaymentReported ? '⚠️ Passenger reports EFT sent — check your bank account' : '⏳ Waiting for EFT payment from passenger'}</p>
                           <p className="text-amber-700 dark:text-amber-300">
                             👤 <strong>{booking.passengerName}</strong>
                             {booking.passengerPhone && (
@@ -651,8 +692,9 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                             )}
                           </p>
                           <p className="text-amber-700 dark:text-amber-300">
-                            💰 Amount due: <strong>R{booking.totalPrice}</strong>
+                            💰 {isPaymentReported ? 'Reported amount:' : 'Amount due:'} <strong>R{booking.totalPrice}</strong>
                           </p>
+                          {isPaymentReported && booking.paymentReportedAt && <p className="text-amber-700 dark:text-amber-300">Reported: {new Date(booking.paymentReportedAt).toLocaleString('en-ZA')}</p>}
                         </div>
                         <button
                           type="button"
@@ -665,7 +707,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                           ) : (
                             <CheckCircle2 className="w-4 h-4" />
                           )}
-                          <span>✅ Confirm EFT Payment Received</span>
+                          <span>{isPaymentReported ? '✅ Confirm EFT Payment Received' : 'Confirm EFT Payment Received'}</span>
                         </button>
                         <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 italic">
                           Only confirm after you see the EFT in your bank account
@@ -676,7 +718,7 @@ const ShuttleBookingsList = ({ role = 'passenger', currentUser, focusBookingId =
                     {isPaid && (
                       <div className="text-xs text-center text-emerald-600 font-bold py-1 flex items-center justify-center gap-1">
                         <CheckCircle2 className="w-4 h-4" />
-                        Passenger Paid & Confirmed
+                        {isTripCompleted ? 'Trip completed' : 'Passenger Paid & Confirmed'}
                       </div>
                     )}
                   </>

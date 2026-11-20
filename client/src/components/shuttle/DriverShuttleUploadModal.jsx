@@ -28,6 +28,7 @@ import {
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { uploadFiles } from '../../services/upload.service';
+import ShuttleDestinationPicker from './ShuttleDestinationPicker';
 
 const SA_PROVINCES = [
   'Gauteng',
@@ -100,6 +101,8 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
   const [destinationProvince, setDestinationProvince] = useState('');
   const [originCity, setOriginCity] = useState('');
   const [destinationCity, setDestinationCity] = useState('');
+  const [originCoordinates, setOriginCoordinates] = useState(null);
+  const [destinationCoordinates, setDestinationCoordinates] = useState(null);
   const [pickupStation, setPickupStation] = useState('');
   const [dropoffStation, setDropoffStation] = useState('');
   const [isHouseToHouse, setIsHouseToHouse] = useState(true);
@@ -250,8 +253,12 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         setError('Please choose the actual departure date.');
         return;
       }
-      if (!leavesWhenFull && !departureTime.trim()) {
-        setError('Please enter the scheduled departure time.');
+      if (!departureTime.trim()) {
+        setError('Please enter the planned departure time. The shuttle can also leave earlier when full.');
+        return;
+      }
+      if (!originCoordinates || !destinationCoordinates) {
+        setError('Set map pins for the route start and destination so GPS can detect arrival.');
         return;
       }
       setStep(4);
@@ -286,14 +293,16 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
         destinationProvince: serviceType === 'local' ? departureProvince : destinationProvince,
         originCity: originCity.trim(),
         destinationCity: destinationCity.trim(),
-        pickupStation: pickupStation.trim() || originCity,
-        dropoffStation: dropoffStation.trim() || destinationCity,
+        originCoordinates,
+        destinationCoordinates,
+        pickupStation: pickupStation.trim() || `House-to-house near ${originCity}`,
+        dropoffStation: dropoffStation.trim() || `House-to-house near ${destinationCity}`,
         isHouseToHouse,
         dropoffType: isHouseToHouse ? 'house_to_house' : 'station',
         leavesWhenFull,
         departureRule: leavesWhenFull ? 'when_full' : 'scheduled',
         departureDate,
-        departureTime: departureTime.trim() || 'When full',
+        departureTime: departureTime.trim(),
         pricePerSeat: Number(pricePerSeat),
         freeBagsPerPassenger: 1,
         extraBagPrice: Number(extraBagPrice) || 0,
@@ -854,7 +863,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                     <input
                       type="text"
                       value={originCity}
-                      onChange={(e) => setOriginCity(e.target.value)}
+                      onChange={(e) => { setOriginCity(e.target.value); setOriginCoordinates(null); }}
                       placeholder="e.g. Johannesburg"
                       required
                       className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 mb-1.5"
@@ -879,7 +888,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                     <input
                       type="text"
                       value={destinationCity}
-                      onChange={(e) => setDestinationCity(e.target.value)}
+                      onChange={(e) => { setDestinationCity(e.target.value); setDestinationCoordinates(null); }}
                       placeholder="e.g. Polokwane"
                       required
                       className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 mb-1.5"
@@ -897,17 +906,23 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <ShuttleDestinationPicker value={originCoordinates} onChange={setOriginCoordinates} destinationName={originCity || 'route starting city'} />
+                  <ShuttleDestinationPicker value={destinationCoordinates} onChange={setDestinationCoordinates} destinationName={destinationCity || 'destination city'} />
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    Pickup Starting Station / Point
+                    Pickup Coverage Area
                   </label>
                   <input
                     type="text"
                     value={pickupStation}
                     onChange={(e) => setPickupStation(e.target.value)}
-                    placeholder="e.g. Park Station Central / Pretoria Station / Home Collection"
+                    placeholder={`House-to-house near ${originCity || 'the starting city'}`}
                     className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
                   />
+                  <p className="mt-1 text-[11px] text-gray-500">Default pickup is from homes near the route’s starting city. Add covered suburbs if needed; passengers provide their exact address.</p>
                 </div>
               </div>
 
@@ -917,10 +932,10 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                   <div>
                     <label className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                       <HomeIcon className="w-4 h-4 text-emerald-600" />
-                      <span>House-to-House Dropoff & Collection</span>
+                      <span>House-to-house pickup & drop-off (default)</span>
                     </label>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Deliver passengers directly to their home residential gate/door in destination city.
+                      Pick up and drop off near the route ends. The driver confirms whether each exact address is within the areas covered.
                     </p>
                   </div>
 
@@ -934,15 +949,16 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    Dropoff Coverage / Suburbs Description
+                    Drop-off Coverage Area
                   </label>
                   <input
                     type="text"
                     value={dropoffStation}
                     onChange={(e) => setDropoffStation(e.target.value)}
-                    placeholder="e.g. 🏠 House-to-House across Polokwane, Mankweng, Seshego, Flora Park"
+                    placeholder={`House-to-house near ${destinationCity || 'the destination city'}`}
                     className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500"
                   />
+                  <p className="mt-1 text-[11px] text-gray-500">Default drop-off is near the destination city. Add the suburbs served; passengers provide their exact address.</p>
                 </div>
               </div>
 
@@ -995,7 +1011,7 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                     <span>Departure Schedule</span>
                   </span>
                   <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-gray-700 dark:text-gray-300">
-                    <span>Leaves when full</span>
+                    <span>Can leave early when full</span>
                     <input
                       type="checkbox"
                       checked={leavesWhenFull}
@@ -1006,17 +1022,18 @@ const DriverShuttleUploadModal = ({ isOpen, onClose, onSuccess, currentUser }) =
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <input
-                    type="text"
+                    <input
+                      type="time"
                     value={departureTime}
                     onChange={(e) => setDepartureTime(e.target.value)}
-                    placeholder="e.g. Tomorrow at 10:00 AM"
+                    required
                     className="w-full px-3 py-1.5 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
                   />
                   <input
                     type="date"
                     value={departureDate}
                     onChange={(e) => setDepartureDate(e.target.value)}
+                    required
                     className="w-full px-3 py-1.5 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
                   />
                 </div>

@@ -36,7 +36,7 @@ const movingVehicleSchema = new mongoose.Schema({
     isLive: { type: Boolean, default: false },
     updatedAt: { type: Date, default: Date.now },
   },
-  serviceRadiusKm: { type: Number, default: 50, min: 1, max: 50 },
+  serviceRadiusKm: { type: Number, default: 150, min: 1, max: 150 },
   active: { type: Boolean, default: true, index: true },
 }, { timestamps: true });
 

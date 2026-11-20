@@ -1771,13 +1771,6 @@ export default function CreateListing() {
         performers: (selectedCategory === 'experiences' || selectedCategory === 'online') ? listingForm.performers : [],
         
         // Moving specific rates
-        moveCostPerBox: selectedType === 'moving' ? (Number(listingForm.moveCostPerBox) || 50) : undefined,
-        moveCostPerKilo: selectedType === 'moving' ? (Number(listingForm.moveCostPerKilo) || 10) : undefined,
-        movePriceVan: selectedType === 'moving' ? (Number(listingForm.movePriceVan) || 800) : undefined,
-        movePriceVanTrailer: selectedType === 'moving' ? (Number(listingForm.movePriceVanTrailer) || 1200) : undefined,
-        movePriceMiniTruck: selectedType === 'moving' ? (Number(listingForm.movePriceMiniTruck) || 1500) : undefined,
-        movePriceOtherTruck: selectedType === 'moving' ? (Number(listingForm.movePriceOtherTruck) || 2000) : undefined,
-        movePriceBigTruckTrailer: selectedType === 'moving' ? (Number(listingForm.movePriceBigTruckTrailer) || 3500) : undefined,
         
         // Storage specific fields
         storageSize: selectedType === 'storage' ? listingForm.storageSize : undefined,
@@ -1973,7 +1966,6 @@ export default function CreateListing() {
         return [
           { id: "handyman", label: "Handyman", emoji: "🛠️", description: "General home repairs" },
           { id: "storage", label: "Booking Storage", emoji: "📦", description: "Safe storage space" },
-          { id: "moving", label: "Moving", emoji: "🚚", description: "Relocation services" },
           { id: "landscaping", label: "Landscaping", emoji: "🌿", description: "Garden & yard work" },
           { id: "catering", label: "Catering", emoji: "🍽️", description: "Food & catering" },
           { id: "schoolTransport", label: "Transport", emoji: "🚌", description: "School transport" },
@@ -1989,7 +1981,6 @@ export default function CreateListing() {
           { id: "photography", label: "Photographer", emoji: "📷", description: "Photo sessions" },
           { id: "sneaker", label: "Sneaker Cleaner", emoji: "👟", description: "Sneaker cleaning & restoration" },
           { id: "carwash", label: "Car Wash", emoji: "🚗💦", description: "Mobile car cleaning and detailing" },
-          { id: "moving", label: "Moving", emoji: "🚚", description: "Home and office relocation" },
           { id: "other", label: "Other Services", emoji: "✨", description: "Offer another skill or local service" },
         ];
       case 'events':
@@ -2327,7 +2318,7 @@ export default function CreateListing() {
                       <div className="mt-7">
                         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
                         <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Offer your skills, personal support, car wash, moving, and other local services.</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Offer your skills, personal support, car wash, and other local services.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
@@ -2352,7 +2343,7 @@ export default function CreateListing() {
                       <div className="mt-7">
                         <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400">Helper</p>
                         <p className="mt-1 text-xl font-bold tracking-tight">Become a Helper</p>
-                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Barbering, beauty, domestic help, car wash, moving, and more.</p>
+                        <p className="mt-2 max-w-xs text-sm leading-6 text-gray-500 dark:text-gray-400">Barbering, beauty, domestic help, car wash, and more.</p>
                       </div>
                       <div className="mt-6 flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white"><span>Start listing as helper</span><ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" /></div>
                     </button>}
@@ -3437,80 +3428,6 @@ export default function CreateListing() {
                               <span className="text-sm font-semibold text-gray-900 dark:text-white">🌱 Eco-Friendly Products Used</span>
                             </label>
                           </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {(selectedCategory === 'experiences' || selectedCategory === 'online') && selectedType === 'moving' && (
-                      <div className="space-y-6 pt-4 border-t border-gray-200 dark:border-gray-800">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Moving Rates Configuration</h3>
-                          <p className="text-sm text-gray-500 dark:text-white mb-4">Set your rates for boxes, kilos, and transport vehicles. These are used to calculate dynamic totals for clients.</p>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormInput
-                            label="Rate per Box (R)"
-                            type="number"
-                            id="moveCostPerBox"
-                            value={listingForm.moveCostPerBox}
-                            onChange={handleFormChange}
-                            required
-                          />
-                          <FormInput
-                            label="Rate per Kilo (R)"
-                            type="number"
-                            id="moveCostPerKilo"
-                            value={listingForm.moveCostPerKilo}
-                            onChange={handleFormChange}
-                            required
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <FormInput
-                            label="Price for Van (R)"
-                            type="number"
-                            id="movePriceVan"
-                            value={listingForm.movePriceVan}
-                            onChange={handleFormChange}
-                            required
-                          />
-                          <FormInput
-                            label="Price for Van with Trailer (R)"
-                            type="number"
-                            id="movePriceVanTrailer"
-                            value={listingForm.movePriceVanTrailer}
-                            onChange={handleFormChange}
-                            required
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <FormInput
-                            label="Price for Mini Truck (R)"
-                            type="number"
-                            id="movePriceMiniTruck"
-                            value={listingForm.movePriceMiniTruck}
-                            onChange={handleFormChange}
-                            required
-                          />
-                          <FormInput
-                            label="Price for Other Truck (R)"
-                            type="number"
-                            id="movePriceOtherTruck"
-                            value={listingForm.movePriceOtherTruck}
-                            onChange={handleFormChange}
-                            required
-                          />
-                          <FormInput
-                            label="Price for Big Truck with Trailer (R)"
-                            type="number"
-                            id="movePriceBigTruckTrailer"
-                            value={listingForm.movePriceBigTruckTrailer}
-                            onChange={handleFormChange}
-                            required
-                          />
                         </div>
                       </div>
                     )}

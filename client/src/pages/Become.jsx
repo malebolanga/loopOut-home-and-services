@@ -59,7 +59,7 @@ const PROVIDER_ROLES = [
     border: 'border-emerald-200 dark:border-emerald-800',
     textColor: 'text-emerald-600 dark:text-emerald-400',
     tagline: 'Offer beauty, photography, fitness coaching, repairs, catering, and pro skills.',
-    description: 'Get hired by thousands of local clients seeking vetted experts, tradespeople, artists, and personal stylists.',
+    description: 'Create a profile for your skill or trade so local customers can learn about your services and contact you.',
     whatYouCanList: [
       'Pro services: plumbing, electrical, handyman, car wash, beauty, styling, and photography',
       'Local helpers: domestic cleaning, private tutors, animal care, sneaker care, and personal assistance',
@@ -73,9 +73,9 @@ const PROVIDER_ROLES = [
       { title: 'Portfolio / Past Work Photos', desc: 'Showcase your real craft, before-and-after photos, and client reviews.' }
     ],
     benefits: [
-      'Identity verification badge (KYC verified) for top client trust',
-      'In-app chat and scheduling system',
-      'Direct client booking requests and secure payments'
+      'Submit identity details for the app’s verification review',
+      'Use in-app chat and scheduling where available',
+      'Receive client booking requests through the app'
     ],
     actionText: 'Enable Service Provider tools',
     actionRoute: (uid) => `/${uid}/create-listing?tab=experiences`
@@ -93,7 +93,7 @@ const PROVIDER_ROLES = [
     description: 'Use your approved driver account to add shuttle routes and submit trucks or minivans for separate vehicle approval.',
     whatYouCanList: [
       'Shuttle routes, departure schedules, seat availability, and passenger fares',
-      'Truck or minivan moving services with load capacity and after-service pricing',
+      'Truck or minivan moving services with vehicle details and after-service pricing',
       'One approved driver account for both services; each vehicle is reviewed before it appears on the map'
     ],
     requirements: [
@@ -152,7 +152,7 @@ const PROVIDER_ROLES = [
     border: 'border-pink-200 dark:border-pink-800',
     textColor: 'text-pink-600 dark:text-pink-400',
     tagline: 'Sell pre-loved items, electronics, furniture, books, and fashion.',
-    description: 'Reach local buyers in your city looking for great bargains, verified goods, and easy pickup options.',
+    description: 'Post items you want to sell and share clear details so local buyers can decide whether to contact you.',
     whatYouCanList: [
       'Electronics, smartphones, laptops, audio equipment, and gaming consoles',
       'Home furniture, kitchen appliances, and decorative items',
@@ -330,10 +330,10 @@ export default function Become() {
       <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 sm:py-10">
         <div>
           <h3 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white mb-1">
-            Available categories
+            What would you like to offer?
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
-            Select a category to review what you can list and what you will need. Your account changes only after you confirm.
+            Choose the option that matches what you provide. We’ll show only its setup steps. You can still browse and book across LoopOut, and nothing changes until you confirm.
           </p>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">

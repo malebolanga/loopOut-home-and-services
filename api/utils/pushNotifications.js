@@ -65,6 +65,7 @@ export const sendPushNotificationToUser = async (userId, { title, body, data = {
   const messageData = Object.fromEntries(
     Object.entries(data).filter(([, value]) => value !== undefined && value !== null).map(([key, value]) => [key, String(value)])
   );
+  const notificationGroup = typeof data.notificationGroup === 'string' ? data.notificationGroup.slice(0, 64) : '';
   const messaging = getMessaging(getAdminApp());
   const result = await messaging.sendEachForMulticast({
     tokens,
@@ -72,8 +73,9 @@ export const sendPushNotificationToUser = async (userId, { title, body, data = {
     data: messageData,
     android: {
       priority: 'high',
-      notification: { channelId, sound: 'default', icon: 'ic_stat_loopout' },
+      notification: { channelId, sound: 'default', icon: 'ic_stat_loopout', ...(notificationGroup ? { tag: notificationGroup } : {}) },
     },
+    ...(notificationGroup ? { apns: { headers: { 'apns-collapse-id': notificationGroup } } } : {}),
   });
 
   const invalidTokens = result.responses.flatMap((response, index) => {

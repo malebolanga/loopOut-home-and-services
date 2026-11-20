@@ -44,49 +44,6 @@ const POPULAR_CORRIDORS = [
   { label: 'Polokwane Local', serviceType: 'local', origin: 'Polokwane', dest: '' },
 ];
 
-// Local-only examples for UI demos. These never get written to the API.
-const getShuttleDemoListings = () => {
-  const isLocalHost = typeof window !== 'undefined' &&
-    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-  if (!import.meta.env.DEV && !isLocalHost) return [];
-  const routes = [
-    ['Johannesburg', 'Cape Town', 'Gauteng', -26.2041, 28.0473],
-    ['Cape Town', 'Gqeberha', 'Western Cape', -33.9249, 18.4241],
-    ['Durban', 'Johannesburg', 'KwaZulu-Natal', -29.8587, 31.0218],
-    ['Polokwane', 'Mbombela', 'Limpopo', -23.9045, 29.4689],
-  ];
-  return routes.map(([originCity, destinationCity, province, lat, lng], index) => ({
-    _id: `local-shuttle-demo-${index + 1}`,
-    isDemo: true,
-    driverName: `Demo driver ${index + 1}`,
-    driverVerificationStatus: 'pending',
-    carType: ['Demo sedan', 'Demo minibus', 'Demo SUV', 'Demo shuttle'][index],
-    plateNumber: `DEMO ${index + 1}`,
-    carColor: ['Silver', 'White', 'Blue', 'Grey'][index],
-    pricePerSeat: [120, 180, 250, 90][index],
-    totalSeats: 4,
-    availableSeats: 4,
-    originCity,
-    destinationCity,
-    departureProvince: province,
-    destinationProvince: province,
-    pickupStation: `${originCity} demo pickup`,
-    dropoffStation: `${destinationCity} demo drop-off`,
-    isHouseToHouse: false,
-    leavesWhenFull: false,
-    departureTime: 'Demo schedule',
-    currentStatus: 'scheduled',
-    currentCoordinates: { lat, lng, isLive: false },
-    features: [],
-    driverRating: 0,
-    driverRatingCount: 0,
-    completedTrips: 0,
-  }));
-};
-
-const withLocalShuttleDemos = (list = []) =>
-  list.length ? list : getShuttleDemoListings();
-
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [searchParams] = useSearchParams();
@@ -112,7 +69,9 @@ const ShuttlePage = () => {
   const [shuttleForScheduleModal, setShuttleForScheduleModal] = useState(null);
   const [highlightedShuttle, setHighlightedShuttle] = useState(null);
   const [isCardOpen, setIsCardOpen] = useState(false);
-  const [selectedMapVehicleType, setSelectedMapVehicleType] = useState('shuttle');
+  const [selectedMapVehicleType, setSelectedMapVehicleType] = useState(() => (
+    searchParams.get('vehicleType') === 'moving' ? 'moving' : 'shuttle'
+  ));
   const canOfferTransport = currentUser?.offeringType === 'shuttle';
 
   const mapControlsVisible = !(
@@ -173,6 +132,7 @@ const ShuttlePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
+  const [driverGpsStatus, setDriverGpsStatus] = useState('');
 
   useEffect(() => {
     if (selectedMapVehicleType !== 'moving') return;
@@ -182,7 +142,7 @@ const ShuttlePage = () => {
 
     const loadNearbyMovingVehicles = () => {
       if (!endpointSupported) return;
-      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 50 } })
+      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } })
         .then((response) => { if (!cancelled) setMovingVehicles(response.data?.vehicles || []); })
         .catch((err) => {
           if (err?.response?.status === 404) {
@@ -229,6 +189,46 @@ const ShuttlePage = () => {
     }
   };
 
+  // Keep active trips tracked when the schedule modal is closed. Browser GPS
+  // requires this page to remain open and location permission to stay enabled.
+  useEffect(() => {
+    if (!canOfferTransport) return undefined;
+    fetchMyDriverShuttles();
+    const refreshId = window.setInterval(fetchMyDriverShuttles, 30000);
+    return () => window.clearInterval(refreshId);
+  }, [canOfferTransport]);
+
+  useEffect(() => {
+    const activeTrips = myDriverShuttles.filter((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving');
+    if (!activeTrips.length) {
+      setDriverGpsStatus('');
+      return undefined;
+    }
+    if (!navigator.geolocation) {
+      setDriverGpsStatus('Phone GPS is unavailable');
+      return undefined;
+    }
+    setDriverGpsStatus('Waiting for phone GPS…');
+    let lastSentAt = 0;
+    const watchId = navigator.geolocation.watchPosition(async (position) => {
+      const now = Date.now();
+      if (now - lastSentAt < 10000) return;
+      lastSentAt = now;
+      const { latitude, longitude, accuracy } = position.coords;
+      const results = await Promise.allSettled(activeTrips.map((shuttle) => axios.put(
+        resolveApiUrl(`/api/shuttles/update-location/${shuttle._id}`),
+        { lat: latitude, lng: longitude, accuracy: Math.round(accuracy || 0), isLive: true, currentStatus: 'en_route' },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } }
+      )));
+      setDriverGpsStatus(results.some((result) => result.status === 'rejected')
+        ? 'GPS found, but a location update failed'
+        : 'Sharing live GPS during this trip');
+    }, (gpsError) => {
+      setDriverGpsStatus(gpsError.code === 1 ? 'Allow location access to share GPS' : 'Phone GPS signal unavailable');
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [myDriverShuttles]);
+
   useEffect(() => {
     if (showDriverDeskModal) {
       fetchMyDriverShuttles();
@@ -248,18 +248,17 @@ const ShuttlePage = () => {
       const res = await axios.get(resolveApiUrl('/api/shuttles/get'), { params });
       if (!res.data?.success) throw new Error(res.data?.message || 'Could not load shuttle listings.');
       const list = res.data.shuttles || [];
-      const visibleList = withLocalShuttleDemos(list);
-      setShuttles(visibleList);
+      setShuttles(list);
 
       // If shuttleId was requested via query param, select it and open card.
       const paramId = searchParams.get('shuttleId');
       if (paramId) {
-        const match = visibleList.find((s) => String(s._id) === String(paramId));
+        const match = list.find((s) => String(s._id) === String(paramId));
         setHighlightedShuttle(match || null);
         setIsCardOpen(Boolean(match));
       } else {
-        setHighlightedShuttle((prev) => visibleList.find((s) => String(s._id) === String(prev?._id)) || visibleList[0] || null);
-        if (!visibleList.length) setIsCardOpen(false);
+        setHighlightedShuttle((prev) => list.find((s) => String(s._id) === String(prev?._id)) || list[0] || null);
+        if (!list.length) setIsCardOpen(false);
       }
     } catch (err) {
       console.error('Error fetching shuttles:', err);
@@ -300,12 +299,11 @@ const ShuttlePage = () => {
 
   // Live GPS poll callback — called by ShuttleMap every 10s when drivers broadcast
   const handleLiveRefresh = useCallback((freshShuttles) => {
-    const visibleShuttles = withLocalShuttleDemos(freshShuttles);
-    setShuttles(visibleShuttles);
+    setShuttles(freshShuttles);
     // Keep selected shuttle in sync with its fresh coordinates
     setHighlightedShuttle((prev) => {
       if (!prev) return prev;
-      const updated = visibleShuttles.find((s) => String(s._id) === String(prev._id));
+      const updated = freshShuttles.find((s) => String(s._id) === String(prev._id));
       return updated || prev;
     });
   }, []);
@@ -417,6 +415,11 @@ const ShuttlePage = () => {
               <span className="hidden md:inline">My Passes</span>
             </button>
 
+            {canOfferTransport && myDriverShuttles.some((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving') && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-800 dark:bg-blue-950/40 dark:text-blue-200" title="Location updates require this page to stay open and phone location permission">
+                <MapPin className="h-3 w-3" /><span className="hidden md:inline">{driverGpsStatus || 'Starting GPS…'}</span>
+              </span>
+            )}
             {canOfferTransport && <>
             {/* Transport Driver Desk */}
             <button
@@ -464,13 +467,22 @@ const ShuttlePage = () => {
           <div className="pointer-events-auto max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
             {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading available transport…</p>
               : error ? <><p role="alert" className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
-                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 50 km.</p></>}
+                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 150 km.</p></>}
           </div>
         </div>}
         {/* ── 2km Trip Proximity Alert Banner ── */}
         {tripAlert && (
           <div className="fixed top-14 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:max-w-xl z-50 animate-slide-up-fade">
-            <div className="bg-gradient-to-r from-gray-950 via-teal-950 to-gray-900 text-white rounded-3xl p-4 sm:p-5 shadow-2xl border-2 border-teal-400 flex items-center justify-between gap-3 backdrop-blur-md">
+            <div className="relative bg-gradient-to-r from-gray-950 via-teal-950 to-gray-900 text-white rounded-3xl p-4 sm:p-5 shadow-2xl border-2 border-teal-400 flex items-center justify-between gap-3 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={() => handleDismissAlert(tripAlert.shuttle?._id)}
+                className="absolute right-2 top-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-gray-950 shadow-lg ring-2 ring-teal-300 transition hover:bg-teal-50 active:scale-95"
+                aria-label="Close 2 kilometer shuttle alert"
+                title="Close alert"
+              >
+                <X className="h-5 w-5" />
+              </button>
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-teal-500/20 border border-teal-400 text-teal-300 flex items-center justify-center shrink-0 relative">
                   <span className="w-3.5 h-3.5 rounded-full bg-teal-400 animate-ping absolute -top-1 -right-1" />
@@ -507,14 +519,6 @@ const ShuttlePage = () => {
                     <span className="hidden sm:inline">Call</span>
                   </a>
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleDismissAlert(tripAlert.shuttle?._id)}
-                  className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition active:scale-95"
-                  title="Dismiss Alert"
-                >
-                  <X className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </div>
@@ -527,7 +531,6 @@ const ShuttlePage = () => {
             selectedShuttle={isCardOpen ? highlightedShuttle : null}
             onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
-              if (shuttle?.isDemo) return;
               setHighlightedShuttle(shuttle);
               setIsCardOpen(true);
               if (!shuttle?.vehicleCategory) setSelectedShuttleForBooking(shuttle);
@@ -858,7 +861,7 @@ const ShuttlePage = () => {
       {showMovingUploadModal && <MovingVehicleUploadModal currentUser={currentUser} onClose={() => setShowMovingUploadModal(false)} onSuccess={() => {
         setShowMovingRequestsPanel(true);
         if (!userLocation) return;
-        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 50 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
       }} />}
 
       {/* ── Driver Schedule & Route Edit Modal ───────────────────────── */}

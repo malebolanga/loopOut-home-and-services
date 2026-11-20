@@ -15,7 +15,9 @@ import {
   Locate,
   ZoomIn,
   ZoomOut,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
@@ -86,14 +88,25 @@ const SA_ROUTE_ORIGINS = [
   { names: ['vereeniging'], lat: -26.6736, lng: 27.9261 },
 ];
 
+const isFreshLiveLocation = (coords) => {
+  const updatedAt = coords?.updatedAt ? new Date(coords.updatedAt).getTime() : 0;
+  const ageMs = Date.now() - updatedAt;
+  return coords?.isLive === true && Number.isFinite(updatedAt) && updatedAt > 0 && ageMs >= 0 && ageMs <= 60_000;
+};
+
 const getShuttleMapCoordinates = (shuttle) => {
   const coords = shuttle?.currentCoordinates;
   if (isValidCoord(coords?.lat, coords?.lng)) {
     return {
       lat: Number(coords.lat),
       lng: Number(coords.lng),
-      source: shuttle.isDemo ? 'demo' : coords.isLive === true ? 'live' : 'saved',
+      source: isFreshLiveLocation(coords) ? 'live' : 'saved',
     };
+  }
+
+  const originPin = shuttle?.originCoordinates;
+  if (isValidCoord(originPin?.lat, originPin?.lng)) {
+    return { lat: Number(originPin.lat), lng: Number(originPin.lng), source: 'route-origin' };
   }
 
   const origin = ` ${(shuttle?.originCity || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
@@ -155,6 +168,10 @@ const ShuttleMap = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapZoom, setMapZoom] = useState(7);
+  const mapZoomRef = useRef(7);
+  const lastAutoFitVehicleKeyRef = useRef('');
+  const [utilityControlsExpanded, setUtilityControlsExpanded] = useState(true);
+  const [proximityChipVisible, setProximityChipVisible] = useState(true);
   const [mapStyle, setMapStyle] = useState('googleRoad');
   const [isLiveRadarMode, setIsLiveRadarMode] = useState(false);
   const [isLiveSyncing, setIsLiveSyncing] = useState(false);
@@ -179,6 +196,7 @@ const ShuttleMap = ({
       try {
         const map = L.map(mapContainerRef.current, {
           zoomControl: false,
+          minZoom: 2,
           attributionControl: false,
           scrollWheelZoom: true,
         }).setView([initialLat, initialLng], 7);
@@ -192,7 +210,10 @@ const ShuttleMap = ({
 
         activeTileLayerRef.current = tileLayer;
         leafletMapRef.current = map;
-        map.on('zoomend', () => setMapZoom(map.getZoom()));
+        map.on('zoomend', () => {
+          mapZoomRef.current = map.getZoom();
+          setMapZoom(map.getZoom());
+        });
 
         // Clicking empty map space deselects current vehicle (returns to overview nicely)
         map.on('click', () => {
@@ -249,7 +270,7 @@ const ShuttleMap = ({
         const res = await axios.get(resolveApiUrl('/api/shuttles/get?limit=50'));
         if (res.data?.shuttles) {
           const liveCount = res.data.shuttles.filter(
-            (s) => s.currentCoordinates?.isLive
+            (s) => isFreshLiveLocation(s.currentCoordinates)
           ).length;
           setLiveActiveCount(liveCount);
           onLiveRefresh(res.data.shuttles);
@@ -305,7 +326,7 @@ const ShuttleMap = ({
 
       // Pan/fit to live moving vehicles if any
       if (leafletMapRef.current && shuttles.length > 0) {
-        const liveShuttles = shuttles.filter((s) => s.currentCoordinates?.isLive || s.isDemo);
+        const liveShuttles = shuttles.filter((s) => s.currentCoordinates?.isLive);
         const liveBounds = liveShuttles
           .map((s) => {
             const coords = getShuttleMapCoordinates(s);
@@ -388,10 +409,10 @@ const ShuttleMap = ({
         const angle = (clusterIndex / clusterSize) * 2 * Math.PI - Math.PI / 2;
         const minMarkerGapPx = 240;
         const radiusPx = Math.max(100, minMarkerGapPx / (2 * Math.sin(Math.PI / clusterSize)));
-        const projected = leafletMapRef.current.project([coords.lat, coords.lng], mapZoom);
+        const projected = leafletMapRef.current.project([coords.lat, coords.lng], mapZoomRef.current);
         projected.x += Math.cos(angle) * radiusPx;
         projected.y += Math.sin(angle) * radiusPx;
-        const spreadCoords = leafletMapRef.current.unproject(projected, mapZoom);
+        const spreadCoords = leafletMapRef.current.unproject(projected, mapZoomRef.current);
         markerLat = spreadCoords.lat;
         markerLng = spreadCoords.lng;
       }
@@ -403,6 +424,7 @@ const ShuttleMap = ({
       const isRouteOriginPin = coords.source === 'route-origin';
       const isSavedPin = coords.source === 'saved';
       const isMovingVehicle = shuttle.vehicleCategory === 'moving';
+      const movingArea = String(shuttle.currentCoordinates?.address || '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
       const departureDay = isMovingVehicle ? 'Moving help' : shuttle.departureDate
         ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
         : 'Date to be confirmed';
@@ -429,7 +451,7 @@ const ShuttleMap = ({
         return normalized.split(' ').map((part) => part.slice(0, 3).toUpperCase()).join('-');
       };
       const routeLabel = isMovingVehicle
-        ? `${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'} · ${shuttle.distanceKm} KM`
+        ? movingArea || 'GPS street area unavailable'
         : `${abbreviateCity(shuttle.originCity)} → ${abbreviateCity(shuttle.destinationCity)}`;
 
       // Movement breadcrumb trail for live moving vehicles
@@ -466,12 +488,10 @@ const ShuttleMap = ({
           <div class="relative flex flex-col items-center  cursor-pointer transition-all duration-300 ${
             isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[100]'
           }">
-            <!-- Show the abbreviated route for each vehicle in a nearby  -->
-            ${clusterSize > 1 ? `
-              <div class="mb-1 max-w-[220px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
-                <span>${routeLabel}</span>
-              </div>
-            ` : ''}
+            <!-- Keep each route visible above its vehicle, including when unclustered. -->
+            <div class="mb-1 max-w-[220px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
+              <span>${routeLabel}</span>
+            </div>
 
             <!-- Live GPS Satellite badge (only when driver GPRS beacon is ON) -->
             ${isLiveGprs ? `
@@ -479,9 +499,6 @@ const ShuttleMap = ({
                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block"></span>
                 <span>LIVE GPS • MOVING</span>
               </div>
-            ` : ''}
-            ${shuttle.isDemo ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-amber-500 text-gray-950 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-amber-200">DEMO</div>
             ` : ''}
             ${isRouteOriginPin ? `
               <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
@@ -521,8 +538,8 @@ const ShuttleMap = ({
             <div class="w-1.5 h-1.5 rounded-full bg-black/40 mt-0.5"></div>
           </div>
         `,
-        iconSize: [240, 86],
-        iconAnchor: [120, 84],
+        iconSize: [240, 106],
+        iconAnchor: [120, 104],
       });
 
       const marker = L.marker([markerLat, markerLng], { icon: customIcon });
@@ -606,21 +623,26 @@ const ShuttleMap = ({
             const midLng = (sLng + uLng) / 2;
             const midIcon = L.divIcon({
               className: 'proximity-midpoint-badge',
-              html: `
-                <div class="px-2.5 py-1 rounded-full bg-amber-400 text-gray-950 font-black text-[10px] shadow-xl border border-amber-500 whitespace-nowrap animate-pulse flex items-center gap-1">
+              html: proximityChipVisible ? `
+                <div class="px-2.5 py-1 rounded-full bg-amber-400 text-gray-950 font-black text-[10px] shadow-xl border border-amber-500 whitespace-nowrap flex items-center gap-1 cursor-pointer" title="Click to close this distance chip">
                   <span>🚨</span>
                   <span>${distKm.toFixed(1)} km away (~${Math.max(1, Math.ceil(distKm * 2))}m)</span>
+                  <span aria-hidden="true" class="ml-1 rounded-full bg-black/10 px-1.5 py-0.5">×</span>
                 </div>
-              `,
+              ` : '',
               iconAnchor: [55, 14],
             });
-            const label = L.marker([midLat, midLng], { icon: midIcon, zIndexOffset: 3000 }).addTo(leafletMapRef.current);
-            routeLabelRef.current = label;
+            if (proximityChipVisible) {
+              const label = L.marker([midLat, midLng], { icon: midIcon, zIndexOffset: 3000 }).addTo(leafletMapRef.current);
+              label.on('click', () => setProximityChipVisible(false));
+              routeLabelRef.current = label;
+            }
 
             // Trigger Trip Alert callback to parent
             const alertKey = String(targetShuttle._id);
             if (proximityAlertSentRef.current !== alertKey) {
               proximityAlertSentRef.current = alertKey;
+              setProximityChipVisible(true);
               if (onProximityAlertRef.current) {
                 onProximityAlertRef.current({
                   shuttle: targetShuttle,
@@ -634,13 +656,21 @@ const ShuttleMap = ({
       }
     }
 
-    // Fit map bounds if multiple markers exist on initial load
-    if (bounds.length > 1 && !selectedShuttle && !isLiveRadarMode) {
-      try {
-        leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-      } catch (e) {}
+    // Fit only when the set of visible vehicles changes. Polling and manual
+    // zoom changes must not keep snapping the map back to a close view.
+    const vehicleKey = shuttles.map((shuttle) => String(shuttle._id)).sort().join('|');
+    const shouldAutoFit = bounds.length > 0 && vehicleKey !== lastAutoFitVehicleKeyRef.current;
+    if (shouldAutoFit) {
+      lastAutoFitVehicleKeyRef.current = vehicleKey;
     }
-  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, mapZoom]);
+    if (shouldAutoFit && bounds.length > 1 && !selectedShuttle && !isLiveRadarMode) {
+      try {
+        leafletMapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 9 });
+      } catch (e) {}
+    } else if (shouldAutoFit && bounds.length === 1 && !selectedShuttle && !isLiveRadarMode) {
+      leafletMapRef.current.flyTo(bounds[0], 7, { duration: 0.8 });
+    }
+  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, proximityChipVisible]);
 
   // Fly to selected shuttle
   useEffect(() => {
@@ -735,12 +765,12 @@ const ShuttleMap = ({
 
     if (bounds.length > 1) {
       try {
-        leafletMapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 13, duration: 1.2 });
+      leafletMapRef.current.fitBounds(bounds, { padding: [60, 60], maxZoom: 9, duration: 1.2 });
       } catch (e) {
         leafletMapRef.current.flyTo([SA_CENTER.lat, SA_CENTER.lng], 7, { duration: 1.2 });
       }
     } else if (bounds.length === 1) {
-      leafletMapRef.current.flyTo(bounds[0], 12, { duration: 1.2 });
+      leafletMapRef.current.flyTo(bounds[0], 7, { duration: 1.2 });
     } else {
       leafletMapRef.current.flyTo([SA_CENTER.lat, SA_CENTER.lng], 6, { duration: 1.2 });
     }
@@ -763,7 +793,7 @@ const ShuttleMap = ({
   };
 
   const handleZoomOut = () => {
-    if (leafletMapRef.current) {
+    if (leafletMapRef.current && leafletMapRef.current.getZoom() > 2) {
       leafletMapRef.current.zoomOut();
     }
   };
@@ -843,21 +873,21 @@ const ShuttleMap = ({
         </button>
       </div>}
 
-      {/* ── Top-Right: Return Map & Floating Utility Controls ── */}
+      {/* ── Top-Right: Floating Utility Controls ── */}
       {controlsVisible && <div className="absolute top-3 right-3 z-[1000] flex flex-col items-end gap-2">
-        {/* Main "Return Map" (Recenter / Overview) Button */}
         <button
           type="button"
-          onClick={handleResetView}
-          aria-label="Return map to full overview of all shuttles"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-gray-800 shadow-lg ring-1 ring-black/5 backdrop-blur transition hover:bg-white hover:shadow-xl active:scale-95 dark:bg-gray-900/95 dark:text-gray-100 dark:ring-white/10 dark:hover:bg-gray-800"
-          title="Return map to full overview of all shuttles"
+          aria-expanded={utilityControlsExpanded}
+          aria-label={utilityControlsExpanded ? 'Minimize map controls' : 'Expand map controls'}
+          onClick={() => setUtilityControlsExpanded((expanded) => !expanded)}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200/90 bg-white/95 text-gray-700 shadow-lg backdrop-blur-md transition hover:bg-white dark:border-gray-700/90 dark:bg-gray-900/95 dark:text-gray-200 dark:hover:bg-gray-800"
+          title={utilityControlsExpanded ? 'Minimize map controls' : 'Expand map controls'}
         >
-          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          {utilityControlsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </button>
 
-        {/* Floating Vertical Utility Stack */}
-        <div className="flex flex-col rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
+        {/* Collapsible GPS, refresh, zoom and fullscreen controls */}
+        {utilityControlsExpanded && <div className="flex flex-col rounded-2xl bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-xl border border-gray-200/90 dark:border-gray-700/90 overflow-hidden divide-y divide-gray-100 dark:divide-gray-800">
           {/* GPS Locate Me */}
           <button
             type="button"
@@ -894,7 +924,8 @@ const ShuttleMap = ({
           <button
             type="button"
             onClick={handleZoomOut}
-            className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 active:scale-95 transition"
+            disabled={mapZoom <= 2}
+            className="p-2.5 text-gray-700 transition hover:bg-gray-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-200 dark:hover:bg-gray-800"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
@@ -909,8 +940,18 @@ const ShuttleMap = ({
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
-        </div>
+        </div>}
       </div>}
+
+      {controlsVisible && <button
+        type="button"
+        onClick={handleResetView}
+        aria-label="Return map to full overview of all shuttles"
+        className="absolute bottom-3 right-3 z-[1000] inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-gray-800 shadow-lg ring-1 ring-black/5 backdrop-blur transition hover:bg-white hover:shadow-xl active:scale-95 dark:bg-gray-900/95 dark:text-gray-100 dark:ring-white/10 dark:hover:bg-gray-800"
+        title="Return map to full overview of all shuttles"
+      >
+        <RotateCcw className="h-4 w-4" aria-hidden="true" />
+      </button>}
 
       {/* ── Status Toast (Floating at Top-Center) ── */}
       {gprsStatus && (

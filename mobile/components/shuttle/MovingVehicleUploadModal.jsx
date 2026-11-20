@@ -3,6 +3,7 @@ import { Truck, X, MapPin, LoaderCircle, Upload, CheckCircle2, UserRound, Image 
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { uploadFiles } from '../../services/upload.service';
+import { reverseGeocodeArea } from '../../utils/geocoding';
 
 const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const [step, setStep] = useState(1);
@@ -36,8 +37,9 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const captureLocation = () => {
     if (!navigator.geolocation) return setError('This device does not provide GPS location.');
     setBusy(true); setError('');
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      setLocation({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy });
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
+      setLocation({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address });
       setBusy(false);
     }, () => { setError('GPS permission is needed to publish a nearby listing.'); setBusy(false); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };

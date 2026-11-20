@@ -5,11 +5,98 @@ import Listing from '../models/listing.model.js';
 import Helper from '../models/helper.model.js';
 import Service from '../models/service.model.js';
 import Event from '../models/event.model.js';
+import Shuttle from '../models/shuttle.model.js';
+import ShuttleBooking from '../models/shuttleBooking.model.js';
+import { getScheduledShuttleDeparture } from './shuttleTripLifecycle.js';
 
 const isBookingAlertsEnabled = async (userId) => {
   if (!userId) return false;
   const user = await User.findById(userId).select('notificationPreferences').lean();
   return user?.notificationPreferences?.activity?.bookingUpdates !== false;
+};
+
+const checkShuttleDepartureReminders = async (now) => {
+  try {
+    // departureDate is stored as a local calendar date; query a wide range, then
+    // use the shared South Africa timezone parser for the actual departure time.
+    const shuttles = await Shuttle.find({
+      active: true,
+      departureDate: { $gte: new Date(now.getTime() - 26 * 60 * 60 * 1000), $lte: new Date(now.getTime() + 26 * 60 * 60 * 1000) },
+      departureTime: /\d{1,2}:\d{2}/,
+    }).select('_id departureDate departureTime originCity destinationCity');
+
+    const reminderStages = [
+      { label: '1 hour', minutes: 60 },
+      { label: '30 minutes', minutes: 30 },
+    ];
+
+    for (const shuttle of shuttles) {
+      const departureAt = getScheduledShuttleDeparture(shuttle);
+      if (!departureAt) continue;
+      const timeUntilDeparture = departureAt.getTime() - now.getTime();
+      for (const stage of reminderStages) {
+        const stageMs = stage.minutes * 60 * 1000;
+        // The scheduler runs once per minute. A five-minute window tolerates
+        // a short API restart while keeping the reminder close to its target.
+        if (timeUntilDeparture > stageMs || timeUntilDeparture <= stageMs - 5 * 60 * 1000) continue;
+        const reminderKey = `departure_${stage.minutes}m_${departureAt.getTime()}`;
+        const bookings = await ShuttleBooking.find({
+          shuttleRef: shuttle._id,
+          status: { $in: ['approved', 'paid'] },
+          remindersSent: { $ne: reminderKey },
+        }).select('_id passengerRef pickupLocation dropoffLocation');
+
+        for (const booking of bookings) {
+          if (!await isBookingAlertsEnabled(booking.passengerRef)) continue;
+          const claim = await ShuttleBooking.updateOne(
+            { _id: booking._id, status: { $in: ['approved', 'paid'] }, remindersSent: { $ne: reminderKey } },
+            { $addToSet: { remindersSent: reminderKey } }
+          );
+          if (claim.modifiedCount !== 1) continue;
+
+          const title = 'Shuttle departure reminders';
+          const previousReminder = await Notification.findOne({
+            userId: booking.passengerRef,
+            type: 'shuttle',
+            'data.bookingId': booking._id,
+            'data.isDepartureReminderGroup': true,
+            'data.departureAt': departureAt.toISOString(),
+          });
+          const reminderStagesSent = [...new Set([...(previousReminder?.data?.reminderStages || []), `departure_${stage.minutes}m`])]
+            .sort((a, b) => Number(b.match(/_(\d+)m$/)?.[1] || 0) - Number(a.match(/_(\d+)m$/)?.[1] || 0));
+          const stagesText = reminderStagesSent.map((key) => key === 'departure_60m' ? '1 hour' : '30 minutes').join(' and ');
+          const message = `Your confirmed shuttle from ${shuttle.originCity} to ${shuttle.destinationCity} is scheduled to depart in ${stage.label}. Be ready at ${booking.pickupLocation || 'your agreed pickup point'} and watch for driver updates. Reminder(s): ${stagesText}.`;
+          try {
+            const data = {
+                bookingId: booking._id,
+                shuttleId: shuttle._id,
+                isDepartureReminderGroup: true,
+                notificationGroup: `shuttle-booking-reminder-${booking._id}`,
+                departureAt: departureAt.toISOString(),
+                reminderStages: reminderStagesSent,
+                pickupLocation: booking.pickupLocation,
+                dropoffLocation: booking.dropoffLocation,
+                route: '/shuttles?tab=my-tickets',
+              };
+            if (previousReminder) {
+              previousReminder.title = title;
+              previousReminder.message = message;
+              previousReminder.data = data;
+              previousReminder.read = false;
+              await previousReminder.save();
+            } else {
+              await Notification.create({ userId: booking.passengerRef, type: 'shuttle', title, message, data });
+            }
+          } catch (notificationError) {
+            await ShuttleBooking.updateOne({ _id: booking._id }, { $pull: { remindersSent: reminderKey } });
+            console.error(`[SHUTTLE REMINDER] Could not send ${stage.label} reminder for ${booking._id}:`, notificationError.message);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[SHUTTLE REMINDER] Scheduler error:', error.message);
+  }
 };
 
 /**
@@ -18,6 +105,7 @@ const isBookingAlertsEnabled = async (userId) => {
 export const checkBookingsAndActions = async () => {
   try {
     const now = new Date();
+    await checkShuttleDepartureReminders(now);
     
     // -------------------------------------------------------------
     // TASK 1: REMIND BOTH BOOKING PARTIES AT 24, 8, AND 2 HOURS

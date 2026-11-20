@@ -160,6 +160,14 @@ const shuttleSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    originCoordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
+    destinationCoordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
     pickupStation: {
       type: String,
       default: 'Main Station / Central Rank',
@@ -240,6 +248,10 @@ const shuttleSchema = new mongoose.Schema(
       enum: ['scheduled', 'boarding', 'en_route', 'arrived', 'completed', 'cancelled'],
       default: 'scheduled',
     },
+    departedAt: { type: Date, default: null },
+    arrivedAt: { type: Date, default: null },
+    returnRouteFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Shuttle' },
+    returnRouteRef: { type: mongoose.Schema.Types.ObjectId, ref: 'Shuttle', default: null },
     currentCoordinates: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
@@ -269,6 +281,7 @@ shuttleSchema.index({ serviceType: 1, departureProvince: 1, destinationProvince:
 shuttleSchema.index({ originCity: 1, destinationCity: 1 });
 shuttleSchema.index({ driverRef: 1 });
 shuttleSchema.index({ active: 1, currentStatus: 1 });
+shuttleSchema.index({ returnRouteFor: 1 }, { unique: true, sparse: true });
 
 const Shuttle = mongoose.models.Shuttle || mongoose.model('Shuttle', shuttleSchema);
 export default Shuttle;

@@ -5,6 +5,7 @@ import {
   declineBooking,
   getBookingReferralOptions,
   referBooking,
+  reportPayment,
   payBooking,
   cancelBooking,
   getPassengerBookings,
@@ -22,6 +23,7 @@ router.put('/approve/:id', verifyToken, approveBooking);
 router.put('/decline/:id', verifyToken, declineBooking);
 router.get('/referral-options/:id', verifyToken, getBookingReferralOptions);
 router.put('/refer/:id', verifyToken, referBooking);
+router.put('/report-payment/:id', verifyToken, reportPayment);
 router.put('/pay/:id', verifyToken, payBooking);
 router.put('/cancel/:id', verifyToken, cancelBooking);
 router.put('/rate/:id', verifyToken, rateTrip);   // Passenger rates trip ★

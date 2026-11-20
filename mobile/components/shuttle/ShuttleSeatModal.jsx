@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
+import { openShuttleRequestWhatsApp, openWhatsAppWindowForRequest } from '../../utils/shuttleWhatsApp';
 
 const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) => {
   if (!isOpen || !shuttle) return null;
@@ -38,6 +39,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
     leavesWhenFull = true,
     departureDate,
     departureTime = '',
+    driverPhone = '',
     driverName = '',
     bookedSeatNumbers = [],
   } = shuttle;
@@ -47,8 +49,8 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
   const [extraBagsCount, setExtraBagsCount] = useState(0);
   const [passengerName, setPassengerName] = useState(currentUser?.name || currentUser?.username || '');
   const [passengerPhone, setPassengerPhone] = useState(currentUser?.phone || '');
-  const [pickupLocation, setPickupLocation] = useState(pickupStation);
-  const [dropoffLocation, setDropoffLocation] = useState(dropoffStation);
+  const [pickupLocation, setPickupLocation] = useState(isHouseToHouse ? '' : pickupStation);
+  const [dropoffLocation, setDropoffLocation] = useState(isHouseToHouse ? '' : dropoffStation);
   const [passengerNotes, setPassengerNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -116,6 +118,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
       return;
     }
 
+    const whatsappWindow = openWhatsAppWindowForRequest(driverPhone);
     setLoading(true);
     try {
       const cleanSeats = selectedSeats.map((s) => String(s).replace(/\D/g, '')).filter(Boolean);
@@ -139,12 +142,20 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
       });
 
       if (res.data?.success) {
+        openShuttleRequestWhatsApp({
+          driverPhone, driverName, passengerName, passengerPhone,
+          originCity, destinationCity, carType, plateNumber,
+          seatsBooked: selectedSeats.length, pickupLocation: pickupLocation.trim(), dropoffLocation: dropoffLocation.trim(),
+          totalPrice, departureDate, departureTime, ticketCode: res.data.booking?.ticketCode,
+        }, whatsappWindow);
         if (onSuccess) onSuccess(res.data.booking);
         onClose();
       } else {
+        whatsappWindow?.close();
         setError(res.data?.message || 'Could not request booking.');
       }
     } catch (err) {
+      whatsappWindow?.close();
       console.error('Seat booking error:', err);
       setError(
         err.response?.data?.message ||
@@ -335,7 +346,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
 
               <div>
                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Pickup Station / Address
+                  {isHouseToHouse ? '🏠 Your pickup home / gate address *' : 'Pickup station / address'}
                 </label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
@@ -343,7 +354,8 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
                     type="text"
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
-                    placeholder="Pickup location"
+                    required={isHouseToHouse}
+                    placeholder={isHouseToHouse ? `Street address near ${originCity || 'the starting city'}` : 'Pickup location'}
                     className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
@@ -370,7 +382,7 @@ const ShuttleSeatModal = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) 
                 </div>
                 {isHouseToHouse && (
                   <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-1">
-                    ✓ Driver drops you right at your home gate / door in {destinationCity}.
+                    Enter an address near {destinationCity}. The driver will confirm it is within the route’s drop-off area.
                   </p>
                 )}
               </div>

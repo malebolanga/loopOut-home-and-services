@@ -11,6 +11,7 @@ import {
 
 const SafetyModal = ({ isOpen, onClose, shuttle }) => {
   if (!isOpen) return null;
+  const vehicleDocumentsReviewed = shuttle?.vehicleVerificationStatus === 'verified';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
@@ -46,7 +47,7 @@ const SafetyModal = ({ isOpen, onClose, shuttle }) => {
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300 overflow-y-auto max-h-[75vh]">
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs leading-relaxed text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-            <strong>LoopOut has not independently verified this driver’s identity, licence or vehicle documents.</strong> Check the driver and vehicle details before you travel. If anything does not match, do not board and contact local emergency services if you feel unsafe.
+            <strong>{vehicleDocumentsReviewed ? 'This vehicle’s documents were reviewed by LoopOut.' : 'LoopOut has not reviewed this shuttle vehicle’s documents.'}</strong> Check that the driver and number plate match the booking before you board. If anything does not match, do not board and contact local emergency services if you feel unsafe.
           </div>
 
           {/* Current Vehicle & Driver Details */}
@@ -69,10 +70,10 @@ const SafetyModal = ({ isOpen, onClose, shuttle }) => {
           <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 text-xs text-blue-900 dark:text-blue-200 space-y-1">
             <div className="font-bold flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5 text-blue-600" />
-              <span>24-Hour Payment & Approval Protection</span>
+              <span>Booking payment details</span>
             </div>
             <p className="text-blue-800/80 dark:text-blue-300/80 text-[11px] leading-relaxed">
-              You never pay before your driver accepts your trip. Once accepted, you have a 24-hour protected window to confirm your booking payment.
+              After the driver approves your booking, the booking page shows the payment deadline and the driver’s payment details. Payment is transferred directly to the driver; LoopOut does not hold the money or provide payment protection. Only mark it paid after you have sent it.
             </p>
           </div>
 

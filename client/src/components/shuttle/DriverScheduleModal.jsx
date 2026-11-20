@@ -20,6 +20,7 @@ import {
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocode } from '../../utils/geocoding';
+import ShuttleDestinationPicker from './ShuttleDestinationPicker';
 
 const STATUS_OPTIONS = [
   { value: 'scheduled', label: 'Scheduled / Filling Up', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' },
@@ -40,6 +41,9 @@ const SA_PROVINCES = [
   'Western Cape',
   'Northern Cape',
 ];
+const hasRouteCoordinates = (point) => point && point.lat !== null && point.lat !== undefined && point.lat !== ''
+  && point.lng !== null && point.lng !== undefined && point.lng !== ''
+  && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng));
 
 const TIME_PRESETS = [
   'Leaves when full / almost full',
@@ -60,14 +64,16 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
   // Route fields
   const [originCity, setOriginCity] = useState(shuttle.originCity || '');
   const [destinationCity, setDestinationCity] = useState(shuttle.destinationCity || '');
+  const [originCoordinates, setOriginCoordinates] = useState(shuttle.originCoordinates || null);
+  const [destinationCoordinates, setDestinationCoordinates] = useState(shuttle.destinationCoordinates || null);
   const [departureProvince, setDepartureProvince] = useState(shuttle.departureProvince || 'Gauteng');
   const [destinationProvince, setDestinationProvince] = useState(shuttle.destinationProvince || 'Limpopo');
-  const [pickupStation, setPickupStation] = useState(shuttle.pickupStation || '');
+  const [pickupStation, setPickupStation] = useState(shuttle.pickupStation || `House-to-house near ${shuttle.originCity || 'starting city'}`);
   const [dropoffStation, setDropoffStation] = useState(
-    shuttle.dropoffStation || '🏠 House-to-House Dropoff (Direct to door / gate)'
+    shuttle.dropoffStation || `House-to-house near ${shuttle.destinationCity || 'destination city'}`
   );
   const [pricePerSeat, setPricePerSeat] = useState(shuttle.pricePerSeat || 150);
-  const [isHouseToHouse, setIsHouseToHouse] = useState(shuttle.isHouseToHouse !== false);
+  const [isHouseToHouse, setIsHouseToHouse] = useState(true);
 
   // Dynamic Departure Time & Date fields
   const [leavesWhenFull, setLeavesWhenFull] = useState(shuttle.leavesWhenFull !== false);
@@ -79,7 +85,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
   // Status & Location
   const [currentStatus, setCurrentStatus] = useState(shuttle.currentStatus || 'scheduled');
   const [currentAddress, setCurrentAddress] = useState(shuttle.currentCoordinates?.address || '');
-  const [coordinates, setCoordinates] = useState(shuttle.currentCoordinates || { lat: -26.2041, lng: 28.0473 });
+  const [coordinates, setCoordinates] = useState(shuttle.currentCoordinates || { lat: null, lng: null });
 
   // Banking details (editable from this modal too)
   const [bankName, setBankName] = useState(shuttle.bankName || '');
@@ -102,12 +108,14 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
     if (shuttle) {
       setOriginCity(shuttle.originCity || '');
       setDestinationCity(shuttle.destinationCity || '');
+      setOriginCoordinates(shuttle.originCoordinates || null);
+      setDestinationCoordinates(shuttle.destinationCoordinates || null);
       setDepartureProvince(shuttle.departureProvince || 'Gauteng');
       setDestinationProvince(shuttle.destinationProvince || 'Limpopo');
-      setPickupStation(shuttle.pickupStation || '');
-      setDropoffStation(shuttle.dropoffStation || '🏠 House-to-House Dropoff (Direct to door / gate)');
+      setPickupStation(shuttle.pickupStation || `House-to-house near ${shuttle.originCity || 'starting city'}`);
+      setDropoffStation(shuttle.dropoffStation || `House-to-house near ${shuttle.destinationCity || 'destination city'}`);
       setPricePerSeat(shuttle.pricePerSeat || 150);
-      setIsHouseToHouse(shuttle.isHouseToHouse !== false);
+      setIsHouseToHouse(true);
 
       setLeavesWhenFull(shuttle.leavesWhenFull !== false);
       setDepartureTime(shuttle.departureTime || 'Leaves when full / almost full');
@@ -117,7 +125,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
 
       setCurrentStatus(shuttle.currentStatus || 'scheduled');
       setCurrentAddress(shuttle.currentCoordinates?.address || '');
-      setCoordinates(shuttle.currentCoordinates || { lat: -26.2041, lng: 28.0473 });
+      setCoordinates(shuttle.currentCoordinates || { lat: null, lng: null });
       setBankName(shuttle.bankName || '');
       setBankAccountHolder(shuttle.bankAccountHolder || shuttle.driverName || '');
       setBankAccountNumber(shuttle.bankAccountNumber || '');
@@ -186,11 +194,17 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
       setLeavesWhenFull(false);
     } else if (preset.includes('when full')) {
       setLeavesWhenFull(true);
-      setDepartureTime('Leaves when full / almost full');
     } else if (preset === 'Leaving Now!') {
-      setDepartureTime('Leaving Now!');
-      setCurrentStatus('boarding');
+      setDepartureTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Johannesburg' }));
+      setDepartureDate(todayStr);
+      setCurrentStatus('en_route');
       setLeavesWhenFull(true);
+    } else if (preset === 'Leaving in 30 mins') {
+      const later = new Date(Date.now() + 30 * 60 * 1000);
+      setDepartureTime(later.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Johannesburg' }));
+      setDepartureDate(todayStr);
+      setCurrentStatus('scheduled');
+      setLeavesWhenFull(false);
     } else {
       setDepartureTime(preset);
       setLeavesWhenFull(false);
@@ -342,6 +356,14 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
   // Submit all route, schedule, and live status changes
   const handleSave = async (e) => {
     e.preventDefault();
+    if (!departureTime.match(/\d{1,2}:\d{2}/)) {
+      setError('Enter the planned departure time. The shuttle may also leave early when all seats are booked.');
+      return;
+    }
+    if (!hasRouteCoordinates(originCoordinates) || !hasRouteCoordinates(destinationCoordinates)) {
+      setError('Set map pins for the route start and destination so GPS can detect arrival.');
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuccessMsg(null);
@@ -351,6 +373,8 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
         // Route updates
         originCity: originCity.trim() || shuttle.originCity,
         destinationCity: destinationCity.trim() || shuttle.destinationCity,
+        originCoordinates,
+        destinationCoordinates,
         departureProvince,
         destinationProvince,
         pickupStation: pickupStation.trim() || shuttle.pickupStation,
@@ -366,8 +390,8 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
         // Live status & GPRS
         currentStatus,
         currentCoordinates: {
-          lat: Number(coordinates.lat) || -26.2041,
-          lng: Number(coordinates.lng) || 28.0473,
+          lat: coordinates.lat !== null && coordinates.lat !== undefined && coordinates.lat !== '' && Number.isFinite(Number(coordinates.lat)) ? Number(coordinates.lat) : null,
+          lng: coordinates.lng !== null && coordinates.lng !== undefined && coordinates.lng !== '' && Number.isFinite(Number(coordinates.lng)) ? Number(coordinates.lng) : null,
           address: currentAddress.trim() || shuttle.originCity,
           updatedAt: new Date()
         },
@@ -471,7 +495,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
                 <input
                   type="text"
                   value={originCity}
-                  onChange={(e) => setOriginCity(e.target.value)}
+                  onChange={(e) => { setOriginCity(e.target.value); setOriginCoordinates(null); }}
                   placeholder="e.g. Johannesburg / Pretoria"
                   className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 mb-1.5"
                 />
@@ -494,7 +518,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
                 <input
                   type="text"
                   value={destinationCity}
-                  onChange={(e) => setDestinationCity(e.target.value)}
+                  onChange={(e) => { setDestinationCity(e.target.value); setDestinationCoordinates(null); }}
                   placeholder="e.g. Polokwane / Durban"
                   className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500 mb-1.5"
                 />
@@ -510,17 +534,22 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <ShuttleDestinationPicker value={originCoordinates} onChange={setOriginCoordinates} destinationName={originCity || 'route starting city'} />
+              <ShuttleDestinationPicker value={destinationCoordinates} onChange={setDestinationCoordinates} destinationName={destinationCity || 'destination city'} />
+            </div>
+
             {/* Pickup Station & Price per Seat */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Pickup Station / Starting Point
+                  Pickup Coverage Area
                 </label>
                 <input
                   type="text"
                   value={pickupStation}
                   onChange={(e) => setPickupStation(e.target.value)}
-                  placeholder="e.g. Park Station / Pretoria Station / House Pickup"
+                  placeholder={`House-to-house near ${originCity || 'the starting city'}`}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
                 />
               </div>
@@ -553,21 +582,18 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
                   <span>Flexible Leaving Date & Time</span>
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Update departure anytime (e.g. tomorrow at 10 o'clock, or leaves when full).
+                  {shuttle.returnRouteFor
+                    ? 'This return route is bookable at the destination now. Set when you plan to leave; it can depart earlier when every seat is reserved.'
+                    : 'Set your planned departure; the shuttle can leave earlier when every seat is reserved.'}
                 </p>
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer">
-                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">Leaves when full</span>
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">Can leave early when full</span>
                 <input
                   type="checkbox"
                   checked={leavesWhenFull}
-                  onChange={(e) => {
-                    setLeavesWhenFull(e.target.checked);
-                    if (e.target.checked) {
-                      setDepartureTime('Leaves when full / almost full');
-                    }
-                  }}
+                  onChange={(e) => setLeavesWhenFull(e.target.checked)}
                   className="w-5 h-5 rounded-md text-teal-600 focus:ring-teal-500 cursor-pointer"
                 />
               </label>
@@ -600,13 +626,13 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Custom Leaving Time / Description
+                  Planned Departure Time
                 </label>
                 <input
-                  type="text"
+                  type="time"
                   value={departureTime}
                   onChange={(e) => setDepartureTime(e.target.value)}
-                  placeholder="e.g. Tomorrow at 10:00 AM, Leaves when full"
+                  required
                   className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
                 />
               </div>
@@ -634,10 +660,10 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
               <div>
                 <label className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <HomeIcon className="w-4 h-4 text-emerald-600" />
-                  <span>House-to-House Dropoff (Door to Door)</span>
+                  <span>House-to-house pickup & drop-off</span>
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Drop passengers directly at their residential gate / street address in destination city.
+                  Default service covers homes near each route end. Confirm each exact passenger address is within your coverage.
                 </p>
               </div>
 
@@ -647,7 +673,7 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
                 onChange={(e) => {
                   setIsHouseToHouse(e.target.checked);
                   if (e.target.checked && (!dropoffStation || dropoffStation.includes('Terminal'))) {
-                    setDropoffStation('🏠 House-to-House Dropoff (Direct to door / gate)');
+                    setDropoffStation(`House-to-house near ${destinationCity || 'the destination city'}`);
                   }
                 }}
                 className="w-5 h-5 rounded-md text-emerald-600 focus:ring-emerald-500 cursor-pointer"
@@ -656,13 +682,13 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                Dropoff Coverage / Destination Address
+                Drop-off Coverage Area
               </label>
               <input
                 type="text"
                 value={dropoffStation}
                 onChange={(e) => setDropoffStation(e.target.value)}
-                placeholder="e.g. 🏠 House-to-House Dropoff across Polokwane / Mankweng"
+                placeholder={`House-to-house near ${destinationCity || 'the destination city'}`}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -674,10 +700,10 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
               <div>
                 <label className="text-sm font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-600" />
-                  <span>Allocate Vehicle Location via Phone GPRS</span>
+                  <span>Share live vehicle location</span>
                 </label>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Uses your phone's hardware GPS to pin your vehicle location on the live Google Map.
+                  While this page is open and location permission is allowed, your phone GPS updates the vehicle pin. For privacy, sharing should run only during an active trip.
                 </p>
               </div>
 
@@ -703,10 +729,11 @@ const DriverScheduleModal = ({ shuttle, isOpen, onClose, onUpdated }) => {
                   title="Continuously broadcast location while driving"
                 >
                   <Radio className="w-3.5 h-3.5" />
-                  <span>{liveBeaconActive ? '📡 GPRS Live Active' : 'Broadcast Live'}</span>
+                  <span>{liveBeaconActive ? 'GPS sharing on' : 'Start GPS sharing'}</span>
                 </button>
               </div>
             </div>
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">On this web app, GPS sharing may stop when LoopOut is closed or the phone suspends the browser. Keep LoopOut open during the trip to keep the map updated.</p>
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">

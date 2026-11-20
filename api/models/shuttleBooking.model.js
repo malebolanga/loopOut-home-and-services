@@ -83,9 +83,13 @@ const shuttleBookingSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    remindersSent: {
+      type: [String],
+      default: [],
+    },
     status: {
       type: String,
-      enum: ['pending_approval', 'approved', 'paid', 'declined', 'cancelled', 'completed'],
+      enum: ['pending_approval', 'approved', 'payment_reported', 'paid', 'declined', 'cancelled', 'completed'],
       default: 'pending_approval',
     },
     approvedAt: {
@@ -99,6 +103,15 @@ const shuttleBookingSchema = new mongoose.Schema(
     paidAt: {
       type: Date,
       default: null,
+    },
+    paymentReportedAt: {
+      type: Date,
+      default: null,
+    },
+    paymentReportedMethod: {
+      type: String,
+      default: '',
+      trim: true,
     },
     paymentMethod: {
       type: String,

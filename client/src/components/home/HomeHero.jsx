@@ -18,7 +18,7 @@ const SLIDES = [
     image: '/loopout_maid_celebration.png',
     accent: '#F59E0B',
     category: 'YOUR LOCAL MARKETPLACE',
-    headline: 'Trusted help, right when you need it.',
+    headline: 'Find local services for everyday needs.',
     cta: { label: 'Book a service', path: '/search?type=services' },
   },
   {
@@ -26,7 +26,7 @@ const SLIDES = [
     image: '/barber_loopout_campaign.png',
     accent: '#818CF8',
     category: 'YOUR LOCAL MARKETPLACE',
-    headline: 'Book someone you can trust.',
+    headline: 'Find a local helper for the task at hand.',
     cta: { label: 'Find a helper', path: '/search?type=helpers' },
   },
 ];

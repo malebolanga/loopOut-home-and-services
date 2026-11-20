@@ -77,6 +77,7 @@ const CarWashPage = lazy(() => import('./pages/CarWashPage'));
 
 // Shuttle & Transport Page
 const ShuttlePage = lazy(() => import('./pages/ShuttlePage'));
+const DriverVehiclesPage = lazy(() => import('./pages/DriverVehiclesPage'));
 
 // Storage Page
 const StoragePage = lazy(() => import('./pages/StoragePage'));
@@ -232,6 +233,7 @@ const AnimatedRoutes = () => {
 
         {/* Shuttle & Transport Routes */}
         <Route path="/shuttles" element={<PageTransition><ShuttlePage /></PageTransition>} />
+        <Route path="/shuttles/vehicles" element={<PageTransition><DriverVehiclesPage /></PageTransition>} />
         <Route path="/shuttle" element={<Navigate to="/shuttles" replace />} />
         <Route path="/transport" element={<Navigate to="/shuttles" replace />} />
 
@@ -589,14 +591,14 @@ function AppContent() {
   return (
     <div className="loopout-app">
       <OnboardingGuide />
-      {!isMyLoopOutPage && !['/sign-in', '/sign-up', '/forgot-password'].includes(location.pathname) && <AIAssistantWidget />}
+      {isHomePage && <AIAssistantWidget />}
       <NeuralSplash />
       <CompareWidget />
 
       <ScrollToTop />
       <PhoneNotificationManager />
       <AuthSessionManager />
-      {currentUser?.offeringType === 'services' && <EmergencySOS />}
+      {isHomePage && currentUser?.offeringType === 'services' && <EmergencySOS />}
       {!hideHeader && <Header />}
       <div className={`${hideHeader ? 'app-route-content' : 'app-route-content app-route-content-with-header'}${isHomePage ? ' bg-white dark:bg-gray-950 home-route-content' : ''}${location.pathname === '/dashboard' || location.pathname === '/admin/verification' ? ' dashboard-route-content' : ''}${location.pathname === '/profile' ? ' profile-route-content' : ''}`}>
         <Suspense fallback={<NeuralLoader fullScreen={true} />}>

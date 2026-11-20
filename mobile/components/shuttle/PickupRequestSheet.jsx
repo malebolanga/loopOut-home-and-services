@@ -19,6 +19,7 @@ import {
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocode } from '../../utils/geocoding';
+import { openShuttleRequestWhatsApp, openWhatsAppWindowForRequest } from '../../utils/shuttleWhatsApp';
 
 const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }) => {
   if (!isOpen || !shuttle) return null;
@@ -35,8 +36,10 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
     pickupStation = '',
     dropoffStation = '',
     isHouseToHouse = true,
+    departureDate = null,
     departureTime = '',
     driverName = 'LoopOut driver',
+    driverPhone = '',
     freeBagsPerPassenger = 1,
     extraBagPrice = 50,
   } = shuttle;
@@ -44,9 +47,9 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
   // Form State
   const [passengerName, setPassengerName] = useState(currentUser?.name || currentUser?.username || '');
   const [passengerPhone, setPassengerPhone] = useState(currentUser?.phone || '');
-  const [pickupAddress, setPickupAddress] = useState(pickupStation || originCity);
+  const [pickupAddress, setPickupAddress] = useState(isHouseToHouse ? '' : (pickupStation || originCity));
   const [pickupCoords, setPickupCoords] = useState(null);
-  const [dropoffAddress, setDropoffAddress] = useState(dropoffStation || destinationCity);
+  const [dropoffAddress, setDropoffAddress] = useState(isHouseToHouse ? '' : (dropoffStation || destinationCity));
   const [seatsCount, setSeatsCount] = useState(1);
   const [extraBagsCount, setExtraBagsCount] = useState(0);
   const [passengerNotes, setPassengerNotes] = useState('');
@@ -136,6 +139,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
       return;
     }
 
+    const whatsappWindow = openWhatsAppWindowForRequest(driverPhone);
     setLoading(true);
 
     try {
@@ -159,13 +163,21 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
 
       if (res.data?.success) {
         const booking = res.data.booking;
+        openShuttleRequestWhatsApp({
+          driverPhone, driverName, passengerName, passengerPhone,
+          originCity, destinationCity, carType, plateNumber,
+          seatsBooked: seatsCount, pickupLocation: pickupAddress.trim(), dropoffLocation: dropoffAddress.trim(),
+          totalPrice: totalFare, departureDate, departureTime, ticketCode: booking?.ticketCode,
+        }, whatsappWindow);
         setSuccessBooking(booking);
 
         if (onSuccess) onSuccess(booking);
       } else {
+        whatsappWindow?.close();
         setError(res.data?.message || 'Could not submit pickup request.');
       }
     } catch (err) {
+      whatsappWindow?.close();
       console.error('Pickup request error:', err, err.response?.data);
       setError(
         err.response?.data?.message ||
@@ -226,7 +238,9 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
                 Pickup Request Sent!
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">
-                Your pickup request has been sent to <strong>{driverName}</strong> in LoopOut. Driver contact details will be shared if the request is approved.
+                {driverPhone
+                  ? <>Your request is in LoopOut. WhatsApp is opening with the trip details; tap Send to message <strong>{driverName}</strong>. The driver must accept your request in LoopOut.</>
+                  : <>Your request is in LoopOut. This driver has no WhatsApp number listed, so watch LoopOut notifications for a response.</>}
               </p>
             </div>
 
@@ -285,7 +299,7 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <MapPin className="w-3.5 h-3.5 text-teal-600" />
-                  <span>Where Should the Shuttle Pick You Up?</span>
+                  <span>{isHouseToHouse ? 'Your home pickup address' : 'Where should the shuttle pick you up?'}</span>
                 </label>
 
                 <button
@@ -303,27 +317,29 @@ const PickupRequestSheet = ({ shuttle, isOpen, onClose, onSuccess, currentUser }
                 type="text"
                 value={pickupAddress}
                 onChange={(e) => setPickupAddress(e.target.value)}
-                placeholder="e.g. 45 Biccard St, Braamfontein / House address / Rank"
+                placeholder={isHouseToHouse ? `Street address near ${originCity}` : 'Pickup station or address'}
                 required
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
               />
+              {isHouseToHouse && <p className="text-[11px] text-gray-500">Enter your exact street address. The driver will confirm it is inside their pickup coverage area.</p>}
             </div>
 
             {/* Section 2: Dropoff Location */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-amber-500" />
-                <span>Dropoff Address in {destinationCity}</span>
+                <span>{isHouseToHouse ? `Your home drop-off address near ${destinationCity}` : `Drop-off address in ${destinationCity}`}</span>
               </label>
 
               <input
                 type="text"
                 value={dropoffAddress}
                 onChange={(e) => setDropoffAddress(e.target.value)}
-                placeholder="e.g. 12 Hospital St, Mankweng / Seshego Zone 4 Gate"
+                placeholder={isHouseToHouse ? `Street address near ${destinationCity}` : 'Drop-off station or address'}
                 required
                 className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-teal-500"
               />
+              {isHouseToHouse && <p className="text-[11px] text-gray-500">Enter the exact destination address. The driver will confirm it is inside their drop-off coverage area.</p>}
             </div>
 
             {/* Section 3: Passenger Details */}

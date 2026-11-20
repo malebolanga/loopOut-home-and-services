@@ -4,6 +4,7 @@ import Shuttle from '../models/shuttle.model.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
+import { advanceShuttleDeparture } from '../utils/shuttleTripLifecycle.js';
 
 const SEEDED_SAMPLE_SCAN_URL = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=compress&cs=tinysrgb&w=600';
 
@@ -41,8 +42,9 @@ export const createBookingRequest = async (req, res, next) => {
       return next(errorHandler(400, 'Shuttle ID is required.'));
     }
 
-    const shuttle = await Shuttle.findById(shuttleId);
-    if (!shuttle || !shuttle.active || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || new Date(shuttle.departureDate) < new Date()) {
+    let shuttle = await Shuttle.findById(shuttleId);
+    shuttle = await advanceShuttleDeparture(shuttle);
+    if (!shuttle || !shuttle.active || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !['scheduled', 'boarding'].includes(shuttle.currentStatus)) {
       return next(errorHandler(404, 'Shuttle route not found or is no longer active.'));
     }
     if (shuttle.driverVerificationStatus === 'rejected') {
@@ -74,7 +76,7 @@ export const createBookingRequest = async (req, res, next) => {
     if (Array.isArray(effectiveSeatNumbers) && effectiveSeatNumbers.length > 0) {
       const activeBookings = await ShuttleBooking.find({
         shuttleRef: shuttle._id,
-        status: { $in: ['pending_approval', 'approved', 'paid'] },
+        status: { $in: ['pending_approval', 'approved', 'payment_reported', 'paid'] },
       }).select('seatNumbers');
 
       const alreadyBooked = new Set();
@@ -90,7 +92,7 @@ export const createBookingRequest = async (req, res, next) => {
       }
     }
 
-    const reservationFilter = { _id: shuttle._id, active: true, availableSeats: { $gte: requestedSeatsCount } };
+    const reservationFilter = { _id: shuttle._id, active: true, currentStatus: { $in: ['scheduled', 'boarding'] }, availableSeats: { $gte: requestedSeatsCount } };
     const normalizedSeats = Array.isArray(effectiveSeatNumbers) ? effectiveSeatNumbers.map(String) : [];
     const reservationUpdate = { $inc: { availableSeats: -requestedSeatsCount } };
     if (normalizedSeats.length) {
@@ -144,6 +146,12 @@ export const createBookingRequest = async (req, res, next) => {
     let savedBooking;
     try {
       savedBooking = await booking.save();
+      if (reservedShuttle.availableSeats <= 0) {
+        await Shuttle.findOneAndUpdate(
+          { _id: shuttle._id, active: true, currentStatus: { $in: ['scheduled', 'boarding'] }, availableSeats: { $lte: 0 } },
+          { $set: { currentStatus: 'en_route', departedAt: new Date() } }
+        );
+      }
     } catch (saveError) {
       await Shuttle.findByIdAndUpdate(shuttle._id, {
         $inc: { availableSeats: requestedSeatsCount },
@@ -152,7 +160,7 @@ export const createBookingRequest = async (req, res, next) => {
       throw saveError;
     }
 
-    // Notify Driver via LoopOut In-App Notification
+    // Persist a LoopOut notification; the notification model also sends registered-device push alerts.
     try {
       await Notification.create({
         userId: shuttle.driverRef,
@@ -387,7 +395,7 @@ export const referBooking = async (req, res, next) => {
     const occupiedSeatNumbers = new Set((targetShuttle.reservedSeatNumbers || []).map(String));
     const activeTargetBookings = await ShuttleBooking.find({
       shuttleRef: targetShuttle._id,
-      status: { $in: ['pending_approval', 'approved', 'paid'] },
+      status: { $in: ['pending_approval', 'approved', 'payment_reported', 'paid'] },
     }).select('seatNumbers').lean();
     activeTargetBookings.forEach((activeBooking) => {
       (activeBooking.seatNumbers || []).forEach((seat) => occupiedSeatNumbers.add(String(seat)));
@@ -458,6 +466,67 @@ export const referBooking = async (req, res, next) => {
   }
 };
 
+// Passenger reports a payment sent; the driver must still verify bank receipt.
+export const reportPayment = async (req, res, next) => {
+  try {
+    const booking = await ShuttleBooking.findById(req.params.id).populate('shuttleRef');
+    if (!booking) return next(errorHandler(404, 'Booking not found.'));
+    if (String(booking.passengerRef) !== String(req.user.id)) {
+      return next(errorHandler(403, 'Only the passenger who booked can report this payment.'));
+    }
+    if (booking.status === 'payment_reported') {
+      return res.status(200).json({ success: true, message: 'You already reported this payment. The driver still needs to confirm receipt.', booking });
+    }
+    if (booking.status !== 'approved') {
+      return next(errorHandler(409, 'The driver must approve this trip before you can report payment.'));
+    }
+    if (booking.paymentDeadline && new Date() > new Date(booking.paymentDeadline)) {
+      booking.status = 'cancelled';
+      await booking.save();
+      await releaseReservedSeats(booking);
+      return next(errorHandler(400, 'The payment deadline has passed. Contact the driver before sending money.'));
+    }
+
+    const paymentReportedAt = new Date();
+    const saved = await ShuttleBooking.findOneAndUpdate(
+      { _id: booking._id, passengerRef: req.user.id, status: 'approved' },
+      { $set: { status: 'payment_reported', paymentReportedAt, paymentReportedMethod: 'EFT / Bank transfer' } },
+      { new: true }
+    );
+    if (!saved) return next(errorHandler(409, 'This booking changed. Refresh your shuttle tickets and try again.'));
+
+    try {
+      await Notification.create({
+        userId: booking.driverRef,
+        type: 'shuttle',
+        title: 'Passenger reports payment sent',
+        message: `${booking.passengerName} reports sending R${booking.totalPrice} by EFT for ${booking.shuttleRef?.originCity || ''} → ${booking.shuttleRef?.destinationCity || ''}. Check your bank account, then confirm receipt in the Driver Request Desk. The passenger's ticket is not active until you confirm.`,
+        data: {
+          bookingId: saved._id,
+          shuttleId: booking.shuttleRef?._id,
+          passengerName: booking.passengerName,
+          passengerPhone: booking.passengerPhone,
+          totalPrice: booking.totalPrice,
+          paymentReportedAt,
+          paymentReportedMethod: saved.paymentReportedMethod,
+          ticketCode: booking.ticketCode,
+          route: `/shuttles?tab=driver-desk&bookingId=${saved._id}`,
+        },
+      });
+    } catch (notificationError) {
+      console.warn('Driver payment report notification failed:', notificationError.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Payment report sent to the driver. Your ticket will activate after they confirm the funds arrived.',
+      booking: saved,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // 4. Driver confirms passenger payment received via bank account / EFT
 export const payBooking = async (req, res, next) => {
   try {
@@ -473,12 +542,12 @@ export const payBooking = async (req, res, next) => {
       return res.status(200).json({ success: true, message: 'Already confirmed as paid.', booking });
     }
 
-    if (booking.status !== 'approved') {
+    if (!['approved', 'payment_reported'].includes(booking.status)) {
       return next(errorHandler(400, 'Trip must be approved before payment can be confirmed.'));
     }
 
     // Check if 24-hour window has expired
-    if (booking.paymentDeadline && new Date() > new Date(booking.paymentDeadline)) {
+    if (booking.status === 'approved' && booking.paymentDeadline && new Date() > new Date(booking.paymentDeadline)) {
       booking.status = 'cancelled';
       await booking.save();
       // Release seats
@@ -489,7 +558,9 @@ export const payBooking = async (req, res, next) => {
     const { paymentMethod } = req.body;
     booking.status = 'paid';
     booking.paidAt = new Date();
-    booking.paymentMethod = paymentMethod || 'Direct EFT / Bank Transfer (Confirmed by Driver)';
+    booking.paymentMethod = paymentMethod || (booking.paymentReportedMethod
+      ? `${booking.paymentReportedMethod} (Confirmed by Driver)`
+      : 'Direct EFT / Bank Transfer (Confirmed by Driver)');
     if (!booking.ticketCode) {
       booking.ticketCode = generateTicketCode();
     }
@@ -587,7 +658,7 @@ export const getPassengerBookings = async (req, res, next) => {
       delete shuttle.driverIdScan;
       delete shuttle.driverFaceScan;
       delete shuttle.driverLicenceNumber;
-      if (!['approved', 'paid'].includes(booking.status)) {
+      if (!['approved', 'payment_reported', 'paid'].includes(booking.status)) {
         delete shuttle.driverPhone;
         delete shuttle.bankAccountHolder;
         delete shuttle.bankName;
@@ -636,8 +707,8 @@ export const rateTrip = async (req, res, next) => {
       return next(errorHandler(403, 'Only the passenger who booked can rate this trip.'));
     }
 
-    if (!['paid', 'completed'].includes(booking.status)) {
-      return next(errorHandler(400, 'You can only rate trips that are paid or completed.'));
+    if (booking.status !== 'completed') {
+      return next(errorHandler(400, 'You can rate the driver after the shuttle trip is completed.'));
     }
 
     if (booking.passengerRating !== null && booking.passengerRating !== undefined) {

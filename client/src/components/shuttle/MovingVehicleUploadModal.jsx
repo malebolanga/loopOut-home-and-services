@@ -3,6 +3,7 @@ import { Truck, X, MapPin, LoaderCircle, Upload, CheckCircle2, UserRound, Image 
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { uploadFiles } from '../../services/upload.service';
+import { reverseGeocodeArea } from '../../utils/geocoding';
 
 const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const [step, setStep] = useState(1);
@@ -36,8 +37,9 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const captureLocation = () => {
     if (!navigator.geolocation) return setError('This device does not provide GPS location.');
     setBusy(true); setError('');
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      setLocation({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy });
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
+      setLocation({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address });
       setBusy(false);
     }, () => { setError('GPS permission is needed to publish a nearby listing.'); setBusy(false); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };
@@ -124,7 +126,7 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
         {photoUpload('vehicle', 'Truck or minivan photo', vehicleImageUrl, setVehicleImageUrl)}
         <div className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"><p className="text-sm font-semibold">Vehicle licence disc / registration document (PDF)</p><p className="mt-1 text-xs text-gray-500">An administrator checks the document against the registration plate.</p><label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-gray-900 px-3 py-2 text-xs font-bold text-white dark:bg-white dark:text-gray-900">{uploadingKey === 'document' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : vehicleLicenceDocumentUrl ? <CheckCircle2 className="h-4 w-4" /> : <Upload className="h-4 w-4" />}{uploadingKey === 'document' ? 'Uploading…' : vehicleLicenceDocumentUrl ? 'Replace PDF' : 'Upload PDF'}<input type="file" accept="application/pdf,.pdf" disabled={Boolean(uploadingKey) || busy} className="sr-only" onChange={(event) => { uploadVehicleDocument(event.target.files?.[0]); event.target.value = ''; }} /></label>{vehicleLicenceDocumentUrl && <p className="mt-2 text-xs text-emerald-700">PDF uploaded</p>}</div>
         <button type="button" disabled={busy || Boolean(uploadingKey)} onClick={captureLocation} className="flex w-full items-center justify-center gap-2 rounded-xl border border-teal-200 bg-teal-50 px-3 py-3 text-sm font-bold text-teal-800 dark:border-teal-900 dark:bg-teal-950/50 dark:text-teal-200">{busy && !location ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}{location ? 'GPS location captured · update location' : 'Use my current GPS location'}</button>
-        {location && <p className="text-xs text-gray-500">GPS accuracy about {Math.round(location.accuracy)} m. Listing visible up to 50 km away.</p>}
+        {location && <p className="text-xs text-gray-500">GPS accuracy about {Math.round(location.accuracy)} m. Listing visible to customers searching within 150 km.</p>}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
         <div className="flex gap-2"><button type="button" disabled={busy || Boolean(uploadingKey)} onClick={() => setStep(1)} className="rounded-xl border px-4 py-3 text-sm font-semibold dark:border-gray-700">Back</button><button disabled={busy || Boolean(uploadingKey) || checkingShuttlePhoto} className="flex-1 rounded-xl bg-teal-700 px-4 py-3 font-bold text-white disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for admin approval'}</button></div>
         <p className="text-xs text-gray-500">Your listing remains off the map until an administrator approves the vehicle details, photo, plate, and document. No payment is collected here.</p>

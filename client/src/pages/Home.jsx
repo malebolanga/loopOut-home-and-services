@@ -4631,7 +4631,7 @@ function MobileAppHomepage({
         style={{ top: isHeaderVisible ? '92px' : '0px' }}
         className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-0 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex translate-y-[2px] items-center justify-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+        <div className="flex min-w-0 translate-y-[2px] items-center justify-start gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide px-1 py-0.5 snap-x snap-mandatory min-[420px]:justify-center">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
@@ -4660,13 +4660,13 @@ function MobileAppHomepage({
                 }}
                 whileHover={{ scale: 1.08, y: -2 }}
                 whileTap={{ scale: 0.92 }}
-                className={`relative flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
+                className={`relative flex min-w-[60px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none sm:min-w-[75px] ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
                 aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
               >
-                <div className={`${isRecentAdded ? 'h-12 w-12 bg-rose-100/80 dark:bg-rose-900/40' : 'h-12 w-12'} flex items-center justify-center rounded-xl transition-transform group-hover:scale-105`} aria-hidden="true">
-                  <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-7 w-7 text-slate-700 dark:text-slate-200" />
+                <div className={`${isRecentAdded ? 'bg-rose-100/80 dark:bg-rose-900/40' : ''} flex h-[clamp(2.5rem,11vw,3.5rem)] w-[clamp(2.5rem,11vw,3.5rem)] items-center justify-center rounded-xl transition-transform group-hover:scale-105`} aria-hidden="true">
+                  <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-[clamp(1.5rem,6vw,2rem)] w-[clamp(1.5rem,6vw,2rem)] text-slate-700 dark:text-slate-200" />
                 </div>
-                <span className={`mt-0.5 text-center text-xs font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-800 dark:text-rose-200' : 'text-slate-700 dark:text-gray-200'}`}>
+                <span className={`mt-0.5 text-center text-[clamp(10px,2.8vw,12px)] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-800 dark:text-rose-200' : 'text-slate-700 dark:text-gray-200'}`}>
                   {isRecentAdded ? 'New' : shortcutLabel}
                 </span>
                 {isRecentAdded && activeSubcategory !== 'all' && (
@@ -4681,13 +4681,13 @@ function MobileAppHomepage({
             onClick={() => setIsCategoriesSheetOpen(true)}
             whileHover={{ scale: 1.08, y: -2 }}
             whileTap={{ scale: 0.92 }}
-            className="flex min-w-[75px] shrink-0 cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none dark:hover:bg-gray-900"
+            className="flex min-w-[60px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none sm:min-w-[75px] dark:hover:bg-gray-900"
             aria-label="Browse all categories"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl text-[36px] transition-transform group-hover:scale-105" aria-hidden="true">
+            <div className="flex h-[clamp(2.5rem,11vw,3.5rem)] w-[clamp(2.5rem,11vw,3.5rem)] items-center justify-center rounded-xl text-[clamp(28px,8vw,36px)] transition-transform group-hover:scale-105" aria-hidden="true">
               <span role="img" aria-label="Browse categories">🗂️</span>
             </div>
-            <span className="mt-0.5 text-center text-xs font-semibold leading-tight text-slate-700 whitespace-nowrap dark:text-gray-200">
+            <span className="mt-0.5 text-center text-[clamp(10px,2.8vw,12px)] font-semibold leading-tight text-slate-700 whitespace-nowrap dark:text-gray-200">
               More
             </span>
           </motion.button>

@@ -43,6 +43,7 @@ import uploadRouter from './routes/upload.route.js';
 import statsRouter from './routes/stats.route.js';
 import searchRouter from './routes/search.route.js';
 import { initBookingScheduler } from './utils/bookingScheduler.js';
+import { sweepOverdueShuttleArrivals } from './utils/shuttleTripLifecycle.js';
 import path from 'path';
 dotenv.config();
 dotenv.config({ path: new URL('./.env', import.meta.url) });
@@ -192,6 +193,12 @@ const startServer = async () => {
         sweepPickupOrders();
         const pickupOrderSweep = setInterval(sweepPickupOrders, 60_000);
         pickupOrderSweep.unref?.();
+        const sweepShuttleArrivals = () => sweepOverdueShuttleArrivals().catch((error) => {
+            console.error('Could not auto-arrive overdue shuttle trips:', error.message);
+        });
+        sweepShuttleArrivals();
+        const shuttleArrivalSweep = setInterval(sweepShuttleArrivals, 60_000);
+        shuttleArrivalSweep.unref?.();
         const port = process.env.PORT || 3000;
         const server = app.listen(port, () => console.log(`Server is running on port ${port}!`));
         server.on('error', (error) => {

@@ -49,11 +49,14 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
   try {
     const point = { lat: Number(req.query.lat), lng: Number(req.query.lng) };
     if (!validPoint(point)) return next(errorHandler(400, 'A valid phone GPS location is required to find nearby moving vehicles.'));
-    const radius = Math.min(50, Math.max(1, Number(req.query.radiusKm) || 50));
+    const radius = Math.min(150, Math.max(1, Number(req.query.radiusKm) || 150));
     const suspendedUsers = await User.find({ accountStatus: 'suspended' }).distinct('_id');
     const vehicles = await MovingVehicle.find({ active: true, verificationStatus: 'approved', driverRef: { $nin: suspendedUsers } }).sort({ updatedAt: -1 }).lean();
-    const gpsFreshnessLimit = Date.now() - 24 * 60 * 60 * 1000;
-    const nearby = vehicles.filter((vehicle) => new Date(vehicle.currentCoordinates?.updatedAt || 0).getTime() >= gpsFreshnessLimit).map((vehicle) => {
+    // A day-old pin is misleading for a nearby pickup. Ask drivers to refresh
+    // their location at least hourly before showing their vehicle to customers.
+    const gpsFreshnessLimit = Date.now() - 60 * 60 * 1000;
+    const nearby = vehicles.filter((vehicle) => validPoint(vehicle.currentCoordinates)
+      && new Date(vehicle.currentCoordinates?.updatedAt || 0).getTime() >= gpsFreshnessLimit).map((vehicle) => {
       const publicVehicle = { ...vehicle };
       delete publicVehicle.driverPhone;
       delete publicVehicle.vehicleLicenceDocumentUrl;
@@ -66,7 +69,7 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
         distanceKm: Number(distanceKm(point, vehicle.currentCoordinates).toFixed(1)),
         currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat.toFixed(2)), lng: Number(vehicle.currentCoordinates.lng.toFixed(2)) },
       };
-    }).filter((vehicle) => vehicle.distanceKm <= Math.min(radius, vehicle.serviceRadiusKm || 50));
+    }).filter((vehicle) => vehicle.distanceKm <= radius);
     return res.json({ success: true, radiusKm: radius, count: nearby.length, vehicles: nearby });
   } catch (error) { return next(error); }
 };

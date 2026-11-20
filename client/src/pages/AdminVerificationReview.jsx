@@ -476,7 +476,7 @@ export default function AdminVerificationReview() {
         </section>
 
         <section aria-label="Moving truck and minivan approvals" className="mb-8">
-          <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Truck and minivan approvals</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">The driver’s already-approved account is reused. Review each vehicle’s name, registration plate, assigned driver, and licence/registration PDF. Only approved vehicles appear in the 50 km map search.</p></div>
+          <div className="mb-3"><h2 className="text-lg font-bold text-slate-900 dark:text-white">Truck and minivan approvals</h2><p className="mt-1 text-sm text-slate-600 dark:text-slate-300">The driver’s already-approved account is reused. Review each vehicle’s name, registration plate, assigned driver, and licence/registration PDF. Only approved vehicles appear in the 150 km map search.</p></div>
           {movingVehicleReviewError && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">{movingVehicleReviewError}</div>}
           {loading ? <p className="rounded-2xl bg-white p-5 text-sm text-slate-600 dark:bg-gray-900 dark:text-slate-300">Loading truck and minivan submissions…</p>
             : movingVehicleReviewError && movingVehicleReviews.length === 0 ? <button type="button" onClick={loadSubmissions} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold dark:border-gray-700">Retry loading vehicle reviews</button>
