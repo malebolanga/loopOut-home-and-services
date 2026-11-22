@@ -12,8 +12,7 @@ import {
   Car, 
   Users,
   ArrowRightLeft,
-  ArrowRight,
-  ArrowLeft,
+  Home,
   X,
   Sparkles,
   CheckCircle2,
@@ -45,6 +44,44 @@ const POPULAR_CORRIDORS = [
   { label: 'Polokwane Local', serviceType: 'local', origin: 'Polokwane', dest: '' },
 ];
 
+const hasExplicitShuttleSchedule = (shuttle) => {
+  if (!shuttle?.departureDate) return false;
+  const departureDate = new Date(shuttle.departureDate);
+  if (!Number.isFinite(departureDate.getTime())) return false;
+  const timeLabel = String(shuttle.departureTime || '').trim();
+  const match = timeLabel.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM|A\.?M\.?|P\.?M\.?)?/i);
+  if (!match || (!match[2] && !match[3])) return false;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  const meridiem = match[3]?.replace(/\./g, '').toUpperCase();
+  return minutes <= 59 && hours <= (meridiem ? 12 : 23) && !(meridiem && hours === 0);
+};
+
+const hasShuttleDeparturePassed = (shuttle, now = new Date()) => {
+  if (!hasExplicitShuttleSchedule(shuttle)) return false;
+  const departureDate = new Date(shuttle.departureDate);
+  const localDate = `${departureDate.getFullYear()}-${String(departureDate.getMonth() + 1).padStart(2, '0')}-${String(departureDate.getDate()).padStart(2, '0')}`;
+  const timeLabel = String(shuttle.departureTime || '').trim();
+
+  const match = timeLabel.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM|A\.?M\.?|P\.?M\.?)?/i);
+  let departureAt;
+  if (!match) {
+    departureAt = new Date(`${localDate}T23:59:59`);
+  } else {
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] || 0);
+    const meridiem = match[3]?.replace(/\./g, '').toUpperCase();
+    if (minutes > 59 || hours > (meridiem ? 12 : 23) || (meridiem && hours === 0)) {
+      departureAt = new Date(`${localDate}T23:59:59`);
+    } else {
+      if (meridiem === 'PM' && hours !== 12) hours += 12;
+      if (meridiem === 'AM' && hours === 12) hours = 0;
+      departureAt = new Date(`${localDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+    }
+  }
+  return Number.isFinite(departureAt.getTime()) && departureAt <= now;
+};
+
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [searchParams] = useSearchParams();
@@ -74,7 +111,6 @@ const ShuttlePage = () => {
     searchParams.get('vehicleType') === 'moving' ? 'moving' : 'shuttle'
   ));
   const canOfferTransport = currentUser?.offeringType === 'shuttle';
-  const shuttleActionsRef = useRef(null);
 
   const mapControlsVisible = !(
     isCardOpen ||
@@ -116,10 +152,27 @@ const ShuttlePage = () => {
   // Demo vehicles are shown only in local development when the API has no listings.
   const [shuttles, setShuttles] = useState([]);
   const [movingVehicles, setMovingVehicles] = useState([]);
-  const mapVehicles = [...shuttles, ...movingVehicles];
+  const [mapClock, setMapClock] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setMapClock(new Date()), 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const availableShuttles = shuttles.filter((shuttle) => (
+    hasExplicitShuttleSchedule(shuttle) && !hasShuttleDeparturePassed(shuttle, mapClock)
+  ));
+  const mapVehicles = [...availableShuttles, ...movingVehicles];
   const visibleMapVehicles = mapVehicles.filter((vehicle) => (
     vehicle.vehicleCategory === 'moving' ? selectedMapVehicleType === 'moving' : selectedMapVehicleType === 'shuttle'
   ));
+
+  useEffect(() => {
+    if (!highlightedShuttle) return;
+    const stillAvailable = mapVehicles.some((vehicle) => String(vehicle._id) === String(highlightedShuttle._id));
+    if (!stillAvailable) {
+      setHighlightedShuttle(null);
+      setIsCardOpen(false);
+    }
+  }, [mapVehicles, highlightedShuttle]);
 
   useEffect(() => {
     if (!highlightedShuttle) return;
@@ -133,8 +186,20 @@ const ShuttlePage = () => {
   }, [highlightedShuttle, selectedMapVehicleType]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator === 'undefined' || navigator.onLine !== false);
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
   const [driverGpsStatus, setDriverGpsStatus] = useState('');
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedMapVehicleType !== 'moving') return;
@@ -179,6 +244,7 @@ const ShuttlePage = () => {
   }, [searchParams, canOfferTransport]);
 
   const fetchMyDriverShuttles = async () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
     try {
       const res = await axios.get(resolveApiUrl('/api/shuttles/my-shuttles'), {
         headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` }
@@ -217,6 +283,10 @@ const ShuttlePage = () => {
       if (now - lastSentAt < 10000) return;
       lastSentAt = now;
       const { latitude, longitude, accuracy } = position.coords;
+      if (navigator.onLine === false) {
+        setDriverGpsStatus('GPS captured; waiting for internet connection');
+        return;
+      }
       const results = await Promise.allSettled(activeTrips.map((shuttle) => axios.put(
         resolveApiUrl(`/api/shuttles/update-location/${shuttle._id}`),
         { lat: latitude, lng: longitude, accuracy: Math.round(accuracy || 0), isLive: true, currentStatus: 'en_route' },
@@ -238,6 +308,11 @@ const ShuttlePage = () => {
   }, [showDriverDeskModal]);
 
   const fetchShuttles = async () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setError('No internet connection. Connect to load current shuttle listings.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -264,9 +339,10 @@ const ShuttlePage = () => {
       }
     } catch (err) {
       console.error('Error fetching shuttles:', err);
-      setShuttles([]);
-      setHighlightedShuttle(null);
-      setError('Unable to load current shuttle listings. Please try again.');
+      const offline = navigator.onLine === false || err?.code === 'ERR_NETWORK';
+      setError(offline
+        ? 'No internet connection. Showing any shuttle listings already loaded.'
+        : 'Shuttle service is temporarily unavailable. Showing any listings already loaded.');
     } finally {
       setLoading(false);
     }
@@ -274,7 +350,7 @@ const ShuttlePage = () => {
 
   useEffect(() => {
     fetchShuttles();
-  }, [serviceType]);
+  }, [serviceType, isOnline]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -380,34 +456,28 @@ const ShuttlePage = () => {
     <div className="h-screen w-screen overflow-hidden bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-100 flex flex-col relative">
       {/* ── Top Sleek Uber Navigation Bar ─────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/80 dark:border-gray-800 px-3 sm:px-6 py-2.5 shadow-sm">
-        <div className="mx-auto flex max-w-7xl min-w-0 items-center justify-between gap-2">
-          {/* Left: Back to Home + Search Icon Trigger */}
-          <div className="flex shrink-0 items-center gap-2">
+        <div className="mx-auto flex w-full max-w-7xl min-w-0 items-center">
+          {/* Swipe the complete navigation row together, including Home and Search. */}
+          <div role="toolbar" aria-label="Shuttle navigation and actions. Swipe left or right to see all options" className="flex w-full min-w-0 snap-x snap-mandatory items-center gap-2 overflow-x-auto overscroll-x-contain scroll-smooth whitespace-nowrap scrollbar-hide touch-pan-x">
             <Link
               to="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 transition"
-              title="Return to Home"
+              aria-label="Home"
+              className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-gray-100 px-2 text-xs font-bold text-gray-800 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 sm:h-auto sm:w-auto sm:rounded-full sm:px-3 sm:py-1.5"
+              title="Home"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Home</span>
+              <Home className="h-6 w-6 shrink-0" />
+              <span className="hidden sm:inline">Home</span>
             </Link>
 
-            {/* Clean Search Icon Trigger */}
             <button
               type="button"
               onClick={() => setShowSearchModal(true)}
-              className="p-2 rounded-full bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 transition shadow-sm flex items-center gap-1.5"
+              className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl border border-teal-200 bg-teal-50 px-2 text-xs font-semibold text-teal-700 shadow-sm transition hover:bg-teal-100 dark:border-teal-800 dark:bg-teal-950/40 dark:text-teal-300 dark:hover:bg-teal-900/60 sm:h-auto sm:w-auto sm:rounded-full sm:px-3 sm:py-1.5"
               title="Search Shuttle Route"
             >
-              <Search className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline text-xs font-semibold">Search Route</span>
+              <Search className="h-6 w-6 shrink-0" />
+              <span className="hidden sm:inline">Search Route</span>
             </button>
-          </div>
-
-          {/* Right: Boarding Passes, Driver Desk & Register Shuttle */}
-          <div className="relative min-w-0 flex-1">
-          <div ref={shuttleActionsRef} role="group" aria-label="Shuttle actions. Swipe horizontally to see more" className="min-w-0 snap-x snap-mandatory items-center justify-start gap-2 overflow-x-auto overscroll-x-contain whitespace-nowrap scrollbar-hide flex sm:gap-2">
-            {/* My Passes Icon Button */}
             <button
               type="button"
               onClick={() => setShowTicketsModal(true)}
@@ -420,7 +490,7 @@ const ShuttlePage = () => {
 
             {canOfferTransport && myDriverShuttles.some((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving') && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-800 dark:bg-blue-950/40 dark:text-blue-200" title="Location updates require this page to stay open and phone location permission">
-                <MapPin className="h-4 w-4 shrink-0" /><span className="hidden md:inline">{driverGpsStatus || 'Starting GPS…'}</span>
+              <MapPin className="h-5 w-5 shrink-0" /><span className="hidden md:inline">{driverGpsStatus || 'Starting GPS…'}</span>
               </span>
             )}
             {canOfferTransport && <>
@@ -464,8 +534,6 @@ const ShuttlePage = () => {
               </button>
             </>}
           </div>
-          {canOfferTransport && <button type="button" onClick={() => shuttleActionsRef.current?.scrollBy({ left: 180, behavior: 'smooth' })} className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md dark:border-gray-700 dark:bg-gray-900/95 dark:text-gray-200 md:hidden" aria-label="Slide to see more shuttle actions" title="Swipe to see more actions"><ArrowRight className="h-5 w-5" /></button>}
-          </div>
         </div>
       </header>
 
@@ -476,11 +544,13 @@ const ShuttlePage = () => {
           <button type="button" aria-pressed={selectedMapVehicleType === 'shuttle'} onClick={() => setSelectedMapVehicleType('shuttle')} className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${selectedMapVehicleType === 'shuttle' ? 'bg-teal-700 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}><Bus className="mr-1 inline h-3 w-3" />Shuttle</button>
           <button type="button" aria-pressed={selectedMapVehicleType === 'moving'} onClick={() => setSelectedMapVehicleType('moving')} className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${selectedMapVehicleType === 'moving' ? 'bg-amber-500 text-gray-950' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}><Truck className="mr-1 inline h-3 w-3" />Moving delivery</button>
         </div>}
-        {(loading || error || (!visibleMapVehicles.length && !loading)) && <div className="pointer-events-none absolute left-3 right-3 top-16 z-20 flex justify-center">
-          <div className="pointer-events-auto max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
+        {(loading || error || (!visibleMapVehicles.length && !loading)) && <div className="pointer-events-none absolute left-3 right-20 top-3 z-20 flex justify-center sm:left-3 sm:right-20 sm:top-16">
+          <div role={error ? 'alert' : 'status'} className="pointer-events-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
             {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading available transport…</p>
-              : error ? <><p role="alert" className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
-                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 150 km.</p></>}
+              : error ? <><p className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
+                : selectedMapVehicleType === 'moving'
+                  ? <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No approved moving vehicles within 150 km.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Allow location access and make sure your phone GPS is on, or check again later.</p></>
+                  : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No upcoming shuttle departures are available.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only routes with a departure date and time appear here.</p><div className="mt-3 flex flex-wrap items-center justify-center gap-2"><button type="button" onClick={() => setShowSearchModal(true)} className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">Search routes</button>{canOfferTransport && <button type="button" onClick={() => { setProviderIntent('shuttle'); setShowDriverVerificationGate(true); }} className="rounded-full bg-amber-400 px-3 py-2 text-xs font-bold text-gray-950 transition hover:bg-amber-300">Add a shuttle route</button>}</div></>}
           </div>
         </div>}
         {/* ── 2km Trip Proximity Alert Banner ── */}

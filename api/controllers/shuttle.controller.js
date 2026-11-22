@@ -3,7 +3,7 @@ import ShuttleBooking from '../models/shuttleBooking.model.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
-import { advanceShuttleDeparture, distanceBetweenCoordinatesKm, finishShuttleTripAndCreateReturn } from '../utils/shuttleTripLifecycle.js';
+import { advanceShuttleDeparture, distanceBetweenCoordinatesKm, finishShuttleTripAndCreateReturn, hasExplicitShuttleSchedule } from '../utils/shuttleTripLifecycle.js';
 
 const SEEDED_SAMPLE_SCAN_URL = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=compress&cs=tinysrgb&w=600';
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -258,6 +258,108 @@ export const addRouteToShuttle = async (req, res, next) => {
   }
 };
 
+// Create a fresh trip from a driver's completed/cancelled route history.
+// The saved South African departure time is reused for the next matching date.
+export const activateSavedShuttleRoute = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('+driverVerification');
+    if (!user) return next(errorHandler(404, 'User profile not found.'));
+    if (user.accountStatus === 'suspended') return next(errorHandler(403, 'Your account is suspended. Contact support before activating a route.'));
+    if (user.offeringType !== 'shuttle') return next(errorHandler(403, 'Choose Transport Driver in Become before activating a shuttle route.'));
+    if (user.driverVerification?.status !== 'verified'
+      || !user.driverVerification?.idDocumentUrl
+      || !user.driverVerification?.facePhotoUrl
+      || !user.driverVerification?.licenceDocumentUrl) {
+      return next(errorHandler(403, 'Your ID, face photo, and driving licence must be approved before you can activate a route.'));
+    }
+
+    const source = await Shuttle.findOne({ _id: req.params.id, driverRef: user._id, active: true }).lean();
+    if (!source) return next(errorHandler(404, 'Saved route not found for your account.'));
+    if (!['completed', 'arrived', 'cancelled'].includes(source.currentStatus)) {
+      return next(errorHandler(409, 'This route is still scheduled or in progress. Activate a completed or cancelled route.'));
+    }
+    if (!hasExplicitShuttleSchedule(source)) {
+      return next(errorHandler(400, 'This saved route has no valid departure time. Edit its departure details before activating it.'));
+    }
+
+    const now = new Date();
+    const departureTime = String(source.departureTime).trim();
+    const match = departureTime.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM|A\.?M\.?|P\.?M\.?)?/i);
+    if (!match) return next(errorHandler(400, 'This saved route has no valid departure time. Edit its departure details before activating it.'));
+    let hours = Number(match[1]);
+    const minutes = Number(match[2] || 0);
+    const meridiem = match[3]?.replace(/\./g, '').toUpperCase();
+    if (meridiem === 'PM' && hours !== 12) hours += 12;
+    if (meridiem === 'AM' && hours === 12) hours = 0;
+
+    // Use South African calendar dates consistently, independent of server timezone.
+    const southAfricaNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    let year = southAfricaNow.getUTCFullYear();
+    let month = southAfricaNow.getUTCMonth();
+    let day = southAfricaNow.getUTCDate();
+    let departureAt = new Date(Date.UTC(year, month, day, hours, minutes) - 2 * 60 * 60 * 1000);
+    if (departureAt <= now) {
+      const tomorrow = new Date(Date.UTC(year, month, day + 1));
+      year = tomorrow.getUTCFullYear();
+      month = tomorrow.getUTCMonth();
+      day = tomorrow.getUTCDate();
+      departureAt = new Date(Date.UTC(year, month, day, hours, minutes) - 2 * 60 * 60 * 1000);
+    }
+
+    const freshTrip = new Shuttle({
+      driverRef: source.driverRef,
+      driverName: source.driverName,
+      driverPhone: source.driverPhone,
+      driverAvatar: user.driverVerification.facePhotoUrl || source.driverAvatar,
+      driverVerificationStatus: 'verified',
+      bankAccountHolder: source.bankAccountHolder,
+      bankName: source.bankName,
+      bankAccountNumber: source.bankAccountNumber,
+      bankBranchCode: source.bankBranchCode,
+      bankAccountType: source.bankAccountType,
+      bankReference: source.bankReference,
+      carType: source.carType,
+      plateNumber: source.plateNumber,
+      carColor: source.carColor,
+      carImages: source.carImages || [],
+      totalSeats: source.totalSeats,
+      availableSeats: source.totalSeats,
+      reservedSeatNumbers: [],
+      serviceType: source.serviceType,
+      departureProvince: source.departureProvince,
+      destinationProvince: source.destinationProvince,
+      originCity: source.originCity,
+      destinationCity: source.destinationCity,
+      originCoordinates: source.originCoordinates,
+      destinationCoordinates: source.destinationCoordinates,
+      pickupStation: source.pickupStation,
+      dropoffStation: source.dropoffStation,
+      dropoffType: source.dropoffType,
+      isHouseToHouse: source.isHouseToHouse,
+      departureRule: source.departureRule,
+      leavesWhenFull: source.leavesWhenFull,
+      departureDate: departureAt,
+      departureTime,
+      estimatedArrival: source.estimatedArrival,
+      pricePerSeat: source.pricePerSeat,
+      freeBagsPerPassenger: source.freeBagsPerPassenger,
+      extraBagPrice: source.extraBagPrice,
+      maxExtraBagsPerPassenger: source.maxExtraBagsPerPassenger,
+      luggageNotes: source.luggageNotes,
+      currentStatus: 'scheduled',
+      currentCoordinates: { lat: null, lng: null, address: '', accuracy: null, isLive: false },
+      features: source.features || [],
+      notes: source.notes || '',
+      active: true,
+    });
+
+    const saved = await freshTrip.save();
+    return res.status(201).json({ success: true, message: 'Saved route activated for its next departure.', shuttle: saved });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get Shuttles with search, filter, and pagination
 export const getShuttles = async (req, res, next) => {
   try {
@@ -277,6 +379,8 @@ export const getShuttles = async (req, res, next) => {
     const query = {
       active: true,
       currentStatus: { $in: ['scheduled', 'boarding'] },
+      departureDate: { $type: 'date' },
+      departureTime: { $regex: /(\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM|A\.?M\.?|P\.?M\.?))/i },
       driverVerificationStatus: { $ne: 'rejected' },
       driverLicenceScan: { $ne: SEEDED_SAMPLE_SCAN_URL },
     };
@@ -332,7 +436,8 @@ export const getShuttles = async (req, res, next) => {
     ]);
 
     const shuttles = (await Promise.all(candidateShuttles.map((shuttle) => advanceShuttleDeparture(shuttle))))
-      .filter((shuttle) => shuttle && ['scheduled', 'boarding'].includes(shuttle.currentStatus) && Number(shuttle.availableSeats) > 0);
+      .filter((shuttle) => shuttle && hasExplicitShuttleSchedule(shuttle)
+        && ['scheduled', 'boarding'].includes(shuttle.currentStatus) && Number(shuttle.availableSeats) > 0);
 
     // ── Enrich each shuttle with live stats from real bookings ───
     // This ensures rating and completedTrips are always accurate
@@ -395,7 +500,7 @@ export const getShuttleById = async (req, res, next) => {
   try {
     let shuttle = await Shuttle.findById(req.params.id).lean();
     shuttle = await advanceShuttleDeparture(shuttle);
-    if (!shuttle || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !shuttle.active || !['scheduled', 'boarding'].includes(shuttle.currentStatus) || Number(shuttle.availableSeats) <= 0) return next(errorHandler(404, 'Shuttle route not found.'));
+    if (!shuttle || !hasExplicitShuttleSchedule(shuttle) || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !shuttle.active || !['scheduled', 'boarding'].includes(shuttle.currentStatus) || Number(shuttle.availableSeats) <= 0) return next(errorHandler(404, 'Shuttle route not found.'));
     const requesterId = String(req.user?.id || '');
     if (!shuttle.active && requesterId !== String(shuttle.driverRef) && !req.user?.isAdmin) {
       return next(errorHandler(404, 'Shuttle route not found.'));

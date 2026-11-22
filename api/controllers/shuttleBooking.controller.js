@@ -4,7 +4,7 @@ import Shuttle from '../models/shuttle.model.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
-import { advanceShuttleDeparture } from '../utils/shuttleTripLifecycle.js';
+import { advanceShuttleDeparture, hasExplicitShuttleSchedule } from '../utils/shuttleTripLifecycle.js';
 
 const SEEDED_SAMPLE_SCAN_URL = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=compress&cs=tinysrgb&w=600';
 
@@ -44,7 +44,7 @@ export const createBookingRequest = async (req, res, next) => {
 
     let shuttle = await Shuttle.findById(shuttleId);
     shuttle = await advanceShuttleDeparture(shuttle);
-    if (!shuttle || !shuttle.active || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !['scheduled', 'boarding'].includes(shuttle.currentStatus)) {
+    if (!shuttle || !hasExplicitShuttleSchedule(shuttle) || !shuttle.active || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !['scheduled', 'boarding'].includes(shuttle.currentStatus)) {
       return next(errorHandler(404, 'Shuttle route not found or is no longer active.'));
     }
     if (shuttle.driverVerificationStatus === 'rejected') {

@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bus, CalendarClock, Loader2, Plus, RefreshCw, Route, Truck, X } from 'lucide-react';
+import { ArrowLeft, Bus, CalendarClock, CheckCircle2, Loader2, Plus, RefreshCw, Route, Truck, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import axios from 'axios';
 import { resolveApiUrl } from '../utils/apiBaseUrl';
+import { getStoredToken } from '../utils/authenticatedFetch';
 import DriverAddRouteModal from '../components/shuttle/DriverAddRouteModal';
 import DriverScheduleModal from '../components/shuttle/DriverScheduleModal';
 
@@ -15,13 +16,18 @@ const DriverVehiclesPage = () => {
   const [error, setError] = useState('');
   const [routeVehicle, setRouteVehicle] = useState(null);
   const [scheduleVehicle, setScheduleVehicle] = useState(null);
+  const [activatingRouteId, setActivatingRouteId] = useState('');
+  const [activationMessage, setActivationMessage] = useState('');
+  const [activationError, setActivationError] = useState('');
 
   const loadVehicles = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
+      const token = currentUser?.token || currentUser?.access_token || getStoredToken();
       const response = await axios.get(resolveApiUrl('/api/shuttles/my-shuttles'), {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.data?.success) throw new Error(response.data?.message || 'Could not load your vehicles.');
       setVehicles(response.data.shuttles || []);
@@ -37,6 +43,31 @@ const DriverVehiclesPage = () => {
   const onRouteAdded = () => {
     setRouteVehicle(null);
     loadVehicles();
+  };
+
+  const activateRoute = async (route) => {
+    setActivatingRouteId(route._id);
+    setActivationMessage('');
+    setActivationError('');
+    try {
+      const token = currentUser?.token || currentUser?.access_token || getStoredToken();
+      const response = await axios.post(resolveApiUrl(`/api/shuttles/activate-route/${route._id}`), {}, {
+        withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.data?.success) throw new Error(response.data?.message || 'Could not activate this saved route.');
+      setActivationMessage(`${route.originCity} → ${route.destinationCity} is active again with fresh seats. Departure time ${route.departureTime} was reused.`);
+      await loadVehicles();
+    } catch (requestError) {
+      const serverMessage = requestError.response?.data?.message;
+      const endpointUnavailable = requestError.response?.status === 404
+        && (!serverMessage || /api endpoint not found|cannot post/i.test(serverMessage));
+      setActivationError(endpointUnavailable
+        ? 'Route activation is not available on the connected server yet. No trip was created. The shuttle API update must be deployed before you can use this button.'
+        : serverMessage || requestError.message || 'Could not activate this saved route.');
+    } finally {
+      setActivatingRouteId('');
+    }
   };
 
   return (
@@ -66,6 +97,8 @@ const DriverVehiclesPage = () => {
 
         {!currentUser && <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">Sign in to see and manage your vehicles.</div>}
         {error && <div role="alert" className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{error}</div>}
+        {activationMessage && <div role="status" className="mt-5 flex items-start gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />{activationMessage}</div>}
+        {activationError && <div role="alert" className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{activationError}</div>}
         {loading ? <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-500"><Loader2 className="h-5 w-5 animate-spin" />Loading your vehicles…</div> : !error && vehicles.length === 0 ? (
           <section className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center dark:border-gray-700 dark:bg-gray-900">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300"><Bus className="h-7 w-7" /></span>
@@ -84,9 +117,10 @@ const DriverVehiclesPage = () => {
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300">{vehicle.vehicleCategory === 'moving' ? <Truck className="h-5 w-5" /> : <Bus className="h-5 w-5" />}</span>
                       <div className="min-w-0"><h3 className="truncate font-bold">{vehicle.originCity || 'Origin'} <span className="text-teal-600">→</span> {vehicle.destinationCity || 'Destination'}</h3><p className="mt-1 text-xs text-slate-500 dark:text-gray-400">{vehicle.plateNumber || 'Vehicle registration'} · {vehicle.vehicleName || vehicle.vehicleType || 'Shuttle'}</p></div>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${vehicle.currentStatus === 'en_route' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' : 'bg-slate-100 text-slate-600 dark:bg-gray-800 dark:text-gray-300'}`}>{vehicle.currentStatus === 'en_route' ? 'On trip' : 'Available'}</span>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${vehicle.currentStatus === 'en_route' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300' : ['completed', 'arrived', 'cancelled'].includes(vehicle.currentStatus) ? 'bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'}`}>{vehicle.currentStatus === 'en_route' ? 'On trip' : ['completed', 'arrived', 'cancelled'].includes(vehicle.currentStatus) ? (vehicle.currentStatus === 'cancelled' ? 'Cancelled' : 'Trip complete') : vehicle.currentStatus === 'boarding' ? 'Boarding' : 'Scheduled'}</span>
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-gray-800">
+                    {['completed', 'arrived', 'cancelled'].includes(vehicle.currentStatus) && <button type="button" onClick={() => activateRoute(vehicle)} disabled={Boolean(activatingRouteId)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white hover:bg-teal-800 disabled:cursor-wait disabled:opacity-60"><Route className="h-3.5 w-3.5" />{activatingRouteId === vehicle._id ? 'Activating…' : 'Activate Route'}</button>}
                     <button type="button" onClick={() => setRouteVehicle(vehicle)} className="inline-flex items-center gap-1.5 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white hover:bg-teal-800"><Route className="h-3.5 w-3.5" /> Add route</button>
                     <button type="button" onClick={() => setScheduleVehicle(vehicle)} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"><CalendarClock className="h-3.5 w-3.5" /> Departure & details</button>
                   </div>

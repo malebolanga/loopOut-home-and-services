@@ -41,6 +41,12 @@ const calculateDistanceKm = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
+const hasFreshLiveGps = (coordinates) => {
+  const updatedAt = coordinates?.updatedAt ? new Date(coordinates.updatedAt).getTime() : 0;
+  const ageMs = Date.now() - updatedAt;
+  return coordinates?.isLive === true && Number.isFinite(updatedAt) && updatedAt > 0 && ageMs >= 0 && ageMs <= 60_000;
+};
+
 const UberDriverCard = ({
   shuttle,
   allShuttles = [],
@@ -115,7 +121,7 @@ const UberDriverCard = ({
     completedTrips = 0,
   } = shuttle;
 
-  const isDriverLiveGprs = currentCoordinates?.isLive === true;
+  const isDriverLiveGprs = hasFreshLiveGps(currentCoordinates);
   const gpsAccuracy = currentCoordinates?.accuracy;
 
   const displayImage = (carImages && carImages.length > 0)
@@ -135,7 +141,7 @@ const UberDriverCard = ({
 
   // Live Distance to Passenger (for 2km Proximity alert)
   let distanceToUserKm = null;
-  if (userLocation && currentCoordinates?.isLive === true && currentCoordinates?.lat && currentCoordinates?.lng) {
+  if (userLocation && isDriverLiveGprs && currentCoordinates?.lat && currentCoordinates?.lng) {
     distanceToUserKm = calculateDistanceKm(
       Number(currentCoordinates.lat),
       Number(currentCoordinates.lng),
@@ -552,10 +558,10 @@ const UberDriverCard = ({
                 </span>
               </span>
 
-              {currentCoordinates?.isLive === true && currentCoordinates?.address && (
+              {currentCoordinates?.address && (
                 <span className={`flex items-center gap-1 text-[11px] truncate max-w-[180px] ${isDriverLiveGprs ? 'text-blue-600 dark:text-blue-400 font-bold' : ''}`} title={currentCoordinates.address}>
                   <Navigation className={`w-3 h-3 shrink-0 ${isDriverLiveGprs ? 'text-blue-500 animate-pulse' : 'text-blue-500'}`} />
-                  <span>{isDriverLiveGprs ? '🛰️ ' : ''}Now: {currentCoordinates.address}</span>
+                  <span>{isDriverLiveGprs ? '🛰️ Live now: ' : 'Last saved: '}{currentCoordinates.address}</span>
                 </span>
               )}
             </div>

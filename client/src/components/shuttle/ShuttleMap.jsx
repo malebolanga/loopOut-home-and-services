@@ -266,6 +266,7 @@ const ShuttleMap = ({
     if (!onLiveRefresh) return;
 
     const poll = async () => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
       try {
         const res = await axios.get(resolveApiUrl('/api/shuttles/get?limit=50'));
         if (res.data?.shuttles) {
@@ -348,6 +349,11 @@ const ShuttleMap = ({
   // Manual trigger to sync live positions immediately
   const handleManualLiveSync = async () => {
     if (isLiveSyncing) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setGprsStatus('No internet connection; live positions cannot refresh');
+      setTimeout(() => setGprsStatus(null), 3000);
+      return;
+    }
     setIsLiveSyncing(true);
     try {
       const res = await axios.get(resolveApiUrl('/api/shuttles/get?limit=50'));
@@ -380,22 +386,34 @@ const ShuttleMap = ({
 
     const bounds = [];
 
-    // Group nearby shuttles so coincident vehicles can be spread apart on screen.
-    const clusterMap = {};
+    // Group vehicles that would overlap at the current zoom, not just vehicles
+    // whose coordinates happen to be identical.
+    const markerGroups = [];
     shuttles.forEach((s) => {
       const c = getShuttleMapCoordinates(s);
       if (!c) return;
-      const key = `${c.lat.toFixed(3)}_${c.lng.toFixed(3)}`;
-      if (!clusterMap[key]) clusterMap[key] = [];
-      clusterMap[key].push(s);
+      const point = leafletMapRef.current.project([c.lat, c.lng], mapZoomRef.current);
+      let group = markerGroups.find((candidate) => Math.hypot(candidate.center.x - point.x, candidate.center.y - point.y) < 64);
+      if (!group) {
+        group = { items: [], center: { x: point.x, y: point.y } };
+        markerGroups.push(group);
+      }
+      group.items.push(s);
+      group.center.x = group.items.reduce((sum, item) => {
+        const itemCoords = getShuttleMapCoordinates(item);
+        return sum + leafletMapRef.current.project([itemCoords.lat, itemCoords.lng], mapZoomRef.current).x;
+      }, 0) / group.items.length;
+      group.center.y = group.items.reduce((sum, item) => {
+        const itemCoords = getShuttleMapCoordinates(item);
+        return sum + leafletMapRef.current.project([itemCoords.lat, itemCoords.lng], mapZoomRef.current).y;
+      }, 0) / group.items.length;
     });
 
     shuttles.forEach((shuttle) => {
       const coords = getShuttleMapCoordinates(shuttle);
       if (!coords) return;
 
-      const clusterKey = `${coords.lat.toFixed(3)}_${coords.lng.toFixed(3)}`;
-      const cluster = clusterMap[clusterKey] || [shuttle];
+      const cluster = markerGroups.find((group) => group.items.some((item) => String(item._id) === String(shuttle._id)))?.items || [shuttle];
       const clusterSize = cluster.length;
       const clusterIndex = cluster.findIndex((item) => String(item._id) === String(shuttle._id));
 
@@ -404,11 +422,10 @@ const ShuttleMap = ({
       let markerLng = coords.lng;
 
       if (clusterSize > 1) {
-        // Spread overlapping markers in screen pixels so their car and schedule labels
-        // stay separate at every zoom level.
+        // Spread overlapping vehicle pins into a compact ring.
         const angle = (clusterIndex / clusterSize) * 2 * Math.PI - Math.PI / 2;
-        const minMarkerGapPx = 240;
-        const radiusPx = Math.max(100, minMarkerGapPx / (2 * Math.sin(Math.PI / clusterSize)));
+        const minMarkerGapPx = 128;
+        const radiusPx = Math.max(64, minMarkerGapPx / (2 * Math.sin(Math.PI / clusterSize)));
         const projected = leafletMapRef.current.project([coords.lat, coords.lng], mapZoomRef.current);
         projected.x += Math.cos(angle) * radiusPx;
         projected.y += Math.sin(angle) * radiusPx;
@@ -420,10 +437,11 @@ const ShuttleMap = ({
       const isSelected = selectedShuttle && String(selectedShuttle._id) === String(shuttle._id);
       const isEnRoute = shuttle.currentStatus === 'en_route';
       const isBoarding = shuttle.currentStatus === 'boarding';
-      const isLiveGprs = coords.source === 'live' && shuttle.vehicleCategory !== 'moving';
+      const isLiveGprs = coords.source === 'live';
       const isRouteOriginPin = coords.source === 'route-origin';
       const isSavedPin = coords.source === 'saved';
       const isMovingVehicle = shuttle.vehicleCategory === 'moving';
+      const showMarkerDetails = isSelected || mapZoom >= 10;
       const movingArea = String(shuttle.currentCoordinates?.address || '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
       const departureDay = isMovingVehicle ? 'Moving help' : shuttle.departureDate
         ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -488,31 +506,34 @@ const ShuttleMap = ({
           <div class="relative flex flex-col items-center  cursor-pointer transition-all duration-300 ${
             isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[100]'
           }">
-            <!-- Keep each route visible above its vehicle, including when unclustered. -->
-            <div class="mb-1 max-w-[220px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
-              <span>${routeLabel}</span>
-            </div>
+            ${showMarkerDetails ? `
+              <div class="mb-1 max-w-[180px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
+                <span>${routeLabel}</span>
+              </div>
+            ` : ''}
 
             <!-- Live GPS Satellite badge (only when driver GPRS beacon is ON) -->
             ${isLiveGprs ? `
               <div class="absolute -top-3.5 right-0 z-10 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-1 whitespace-nowrap border border-blue-300 animate-pulse">
                 <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block"></span>
-                <span>LIVE GPS • MOVING</span>
+                <span>LIVE GPS</span>
               </div>
             ` : ''}
-            ${isRouteOriginPin ? `
+            ${showMarkerDetails && isRouteOriginPin ? `
               <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
             ` : ''}
-            ${isSavedPin ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? 'GPS LOCATION' : 'SAVED PIN · NOT LIVE'}</div>
+            ${showMarkerDetails && isSavedPin ? `
+              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? 'SAVED GPS · NOT LIVE' : 'SAVED PIN · NOT LIVE'}</div>
             ` : ''}
 
-            <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">
-              <span>📅 ${departureDay}</span><span class="ml-1 text-teal-700">${departureClock}</span>
-            </div>
+            ${showMarkerDetails ? `
+              <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">
+                <span>📅 ${departureDay}</span><span class="ml-1 text-teal-700">${departureClock}</span>
+              </div>
+            ` : ''}
 
             <!-- Price and Space Badge -->
-            <div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
+            ${showMarkerDetails ? `<div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
               isSelected
                 ? 'bg-amber-400 text-gray-900 border-amber-500 ring-2 ring-amber-300'
                 : isEnRoute
@@ -523,7 +544,7 @@ const ShuttleMap = ({
               ${isMovingVehicle
                 ? `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'}</span>`
                 : `<span>R${shuttle.pricePerSeat}</span><span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>`}
-            </div>
+            </div>` : ''}
 
             <!-- Vehicle Pin Pointer -->
             <div class="relative w-8 h-8 -mt-1 rounded-full bg-white dark:bg-gray-900 shadow-md border-2 ${
@@ -670,7 +691,7 @@ const ShuttleMap = ({
     } else if (shouldAutoFit && bounds.length === 1 && !selectedShuttle && !isLiveRadarMode) {
       leafletMapRef.current.flyTo(bounds[0], 7, { duration: 0.8 });
     }
-  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, proximityChipVisible]);
+  }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, proximityChipVisible, mapZoom]);
 
   // Fly to selected shuttle
   useEffect(() => {

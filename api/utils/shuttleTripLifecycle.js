@@ -18,22 +18,28 @@ export const distanceBetweenCoordinatesKm = (a, b) => {
   return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 };
 
+export const hasExplicitShuttleSchedule = (shuttle) => {
+  if (!shuttle?.departureDate || !Number.isFinite(new Date(shuttle.departureDate).getTime())) return false;
+  const label = String(shuttle.departureTime || '').trim();
+  const match = label.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM|A\.?M\.?|P\.?M\.?)?/i);
+  if (!match || (!match[2] && !match[3])) return false;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2] || 0);
+  const meridiem = match[3]?.replace(/\./g, '').toUpperCase();
+  return minutes <= 59 && hours <= (meridiem ? 12 : 23) && !(meridiem && hours === 0);
+};
+
 export const getScheduledShuttleDeparture = (shuttle) => {
-  if (!shuttle?.departureDate) return null;
+  if (!hasExplicitShuttleSchedule(shuttle)) return null;
   // Schedule dates are interpreted in South African local time (UTC+02:00).
   const datePart = new Date(new Date(shuttle.departureDate).getTime() + 2 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const label = String(shuttle.departureTime || '').trim();
-  // A newly opened return leg is bookable immediately; its driver sets the
-  // departure later, so do not expire it based on the arrival date.
-  if (shuttle.returnRouteFor && /^set by driver$/i.test(label)) return null;
-  const match = label.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-  // Older route records sometimes only said “When full”. Keep those available
-  // through their listed date, then retire them instead of showing stale trips.
-  if (!match) return new Date(`${datePart}T23:59:59+02:00`);
+  const match = label.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM|A\.?M\.?|P\.?M\.?)?/i);
+  if (!match) return null;
 
   let hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const meridiem = match[3]?.toUpperCase();
+  const minutes = Number(match[2] || 0);
+  const meridiem = match[3]?.replace(/\./g, '').toUpperCase();
   if (minutes > 59 || hours > (meridiem ? 12 : 23) || (meridiem && hours === 0)) return new Date(`${datePart}T23:59:59+02:00`);
   if (meridiem === 'PM' && hours !== 12) hours += 12;
   if (meridiem === 'AM' && hours === 12) hours = 0;

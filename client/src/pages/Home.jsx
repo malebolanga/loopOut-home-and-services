@@ -4631,7 +4631,8 @@ function MobileAppHomepage({
         style={{ top: isHeaderVisible ? '92px' : '0px' }}
         className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-0 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
       >
-        <div className="flex min-w-0 translate-y-[2px] items-center justify-start gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide px-1 py-0.5 snap-x snap-mandatory min-[420px]:justify-center">
+        <div aria-label="Home categories" className="min-w-0 overflow-x-auto overscroll-x-contain scrollbar-hide snap-x snap-mandatory">
+          <div className="mx-auto flex w-max min-w-full translate-y-[2px] snap-x snap-mandatory items-center justify-center gap-1 px-1 py-0.5">
           {visibleTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
@@ -4691,6 +4692,7 @@ function MobileAppHomepage({
               More
             </span>
           </motion.button>
+          </div>
         </div>
       </div>
 

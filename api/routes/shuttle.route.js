@@ -2,6 +2,7 @@ import express from 'express';
 import {
   createShuttle,
   addRouteToShuttle,
+  activateSavedShuttleRoute,
   getShuttles,
   getShuttleById,
   updateShuttleLocation,
@@ -41,6 +42,7 @@ router.patch('/moving/admin/issues/:id', verifyToken, requireLoopOutAdmin, resol
 // Driver / Protected routes
 router.post('/create', verifyToken, createShuttle);
 router.post('/add-route/:id', verifyToken, addRouteToShuttle);
+router.post('/activate-route/:id', verifyToken, activateSavedShuttleRoute);
 router.get('/my-shuttles', verifyToken, getMyDriverShuttles);
 router.put('/update-location/:id', verifyToken, updateShuttleLocation);
 router.put('/update/:id', verifyToken, updateShuttle);
