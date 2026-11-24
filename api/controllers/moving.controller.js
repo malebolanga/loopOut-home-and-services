@@ -25,10 +25,10 @@ const validMovingLocation = (point) => {
   if (point.locationSource === 'address') return typeof point.address === 'string' && point.address.trim().length > 0;
   if (point.accuracy === null || point.accuracy === undefined || point.accuracy === '') return false;
   const accuracy = Number(point.accuracy);
-  return Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 20;
+  return Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 500;
 };
 
-const movingLocationError = 'Use a mapped street/town address or a phone GPS fix with accuracy of 20 m or better. Move outside and retry GPS if needed.';
+const movingLocationError = 'Use a mapped street/town address or a phone GPS fix with reported accuracy of 500 m or better.';
 
 const isVehicleDocumentUrl = (value, req) => {
   if (typeof value !== 'string' || value.length > 2048) return false;
@@ -81,7 +81,9 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
         vehicleCategory: 'moving',
         bookingStatus: bookedVehicleIds.has(String(vehicle._id)) || Boolean(vehicle.currentRequestRef) ? 'booked' : 'available',
         distanceKm: Number(distanceKm(point, vehicle.currentCoordinates).toFixed(1)),
-        currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat.toFixed(5)), lng: Number(vehicle.currentCoordinates.lng.toFixed(5)) },
+        // Preserve the phone's full GPS coordinate precision; rounding to 5 decimals
+        // can move the map pin by roughly a metre and exceed the requested tolerance.
+        currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat), lng: Number(vehicle.currentCoordinates.lng) },
       };
     }).filter((vehicle) => vehicle.distanceKm <= radius);
     return res.json({ success: true, radiusKm: radius, count: nearby.length, vehicles: nearby });

@@ -661,7 +661,7 @@ const ShuttleMap = ({
               html: proximityChipVisible ? `
                 <div class="px-2.5 py-1 rounded-full bg-amber-400 text-gray-950 font-black text-[10px] shadow-xl border border-amber-500 whitespace-nowrap flex items-center gap-1 cursor-pointer" title="Click to close this distance chip">
                   <span>🚨</span>
-                  <span>${distKm.toFixed(1)} km away (~${Math.max(1, Math.ceil(distKm * 2))}m)</span>
+                  <span>${distKm.toFixed(1)} km away (${Math.round(distKm * 1000)} m)</span>
                   <span aria-hidden="true" class="ml-1 rounded-full bg-black/10 px-1.5 py-0.5">×</span>
                 </div>
               ` : '',
