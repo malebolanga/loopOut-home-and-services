@@ -200,6 +200,10 @@ const ShuttlePage = () => {
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
   const [driverMovingRequests, setDriverMovingRequests] = useState([]);
   const [driverGpsStatus, setDriverGpsStatus] = useState('');
+  const driverMovingVehicleIds = [...new Set(driverMovingRequests
+    .filter((request) => ['accepted', 'in_progress'].includes(request.status))
+    .map((request) => String(request.vehicleRef?._id || request.vehicleRef)).filter(Boolean))];
+  const driverMovingVehicleKey = driverMovingVehicleIds.join('|');
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -367,9 +371,7 @@ const ShuttlePage = () => {
   // Share the driver's position only while they have an accepted/in-progress
   // moving request. The server authorizes each update against that booking.
   useEffect(() => {
-    const activeRequests = driverMovingRequests.filter((request) => ['accepted', 'in_progress'].includes(request.status));
-    const vehicleIds = [...new Set(activeRequests.map((request) => String(request.vehicleRef?._id || request.vehicleRef)).filter(Boolean))];
-    if (!vehicleIds.length || !navigator.geolocation) return undefined;
+    if (!driverMovingVehicleIds.length || !navigator.geolocation) return undefined;
     let lastSentAt = 0;
     const watchId = navigator.geolocation.watchPosition(async ({ coords }) => {
       if (Date.now() - lastSentAt < 10000 || navigator.onLine === false) return;
@@ -379,7 +381,7 @@ const ShuttlePage = () => {
       }
       lastSentAt = Date.now();
       const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
-      const results = await Promise.allSettled(vehicleIds.map((vehicleId) => axios.put(
+      const results = await Promise.allSettled(driverMovingVehicleIds.map((vehicleId) => axios.put(
         resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicleId}/live-location`),
         { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, locationSource: 'gps' } },
         { headers },
@@ -391,7 +393,7 @@ const ShuttlePage = () => {
       setDriverGpsStatus(gpsError.code === 1 ? 'Allow GPS access to share truck location' : 'Waiting for a clear phone GPS signal');
     }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [driverMovingRequests]);
+  }, [driverMovingVehicleKey]);
 
   useEffect(() => {
     if (showDriverDeskModal) {
