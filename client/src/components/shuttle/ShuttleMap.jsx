@@ -1072,7 +1072,7 @@ const ShuttleMap = ({
       {movingTracking?.request && (
         <div className="absolute top-3 left-1/2 z-[1000] w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-full border border-blue-200 bg-white/95 px-3 py-2 text-xs font-bold text-blue-900 shadow-lg backdrop-blur dark:border-blue-900 dark:bg-gray-950/95 dark:text-blue-200">
           <span className={`mr-2 inline-block h-2 w-2 rounded-full ${movingTracking.liveCoordinates ? 'animate-pulse bg-blue-600' : 'bg-amber-500'}`} />
-          {movingTracking.liveCoordinates ? 'Driver live · heading to your pickup' : 'Driver accepted · waiting for live GPS'}
+          {movingTracking.liveCoordinates ? `Driver live ±${Number(movingTracking.liveCoordinates.accuracy || 0).toFixed(0)} m · heading to pickup` : 'Driver accepted · waiting for live GPS'}
         </div>
       )}
 

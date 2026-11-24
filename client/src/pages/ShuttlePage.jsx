@@ -168,7 +168,7 @@ const ShuttlePage = () => {
   });
   const trackedVehicle = movingTracking?.request?.vehicleRef;
   if (trackedVehicle && !mapMovingVehicles.some((vehicle) => String(vehicle._id) === String(trackedVehicle._id))) {
-    mapMovingVehicles.push({ ...trackedVehicle, vehicleCategory: 'moving', ...(movingTracking.liveCoordinates ? { currentCoordinates: movingTracking.liveCoordinates } : {}) });
+    mapMovingVehicles.push({ ...trackedVehicle, vehicleCategory: 'moving', bookingStatus: 'booked', ...(movingTracking.liveCoordinates ? { currentCoordinates: movingTracking.liveCoordinates } : {}) });
   }
   const mapVehicles = [...availableShuttles, ...mapMovingVehicles];
   const visibleMapVehicles = mapVehicles.filter((vehicle) => (
@@ -580,7 +580,7 @@ const ShuttlePage = () => {
               <span className="hidden md:inline">My Passes</span>
             </button>
 
-            {canOfferTransport && myDriverShuttles.some((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving') && (
+            {canOfferTransport && (myDriverShuttles.some((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving') || driverMovingRequests.some((request) => ['accepted', 'in_progress'].includes(request.status))) && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-semibold text-blue-800 dark:bg-blue-950/40 dark:text-blue-200" title="Location updates require this page to stay open and phone location permission">
               <MapPin className="h-5 w-5 shrink-0" /><span className="hidden md:inline">{driverGpsStatus || 'Starting GPS…'}</span>
               </span>
