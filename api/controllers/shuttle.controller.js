@@ -3,7 +3,7 @@ import ShuttleBooking from '../models/shuttleBooking.model.js';
 import User from '../models/user.model.js';
 import Notification from '../models/notification.model.js';
 import { errorHandler } from '../utils/error.js';
-import { advanceShuttleDeparture, distanceBetweenCoordinatesKm, finishShuttleTripAndCreateReturn, hasExplicitShuttleSchedule } from '../utils/shuttleTripLifecycle.js';
+import { advanceShuttleDeparture, distanceBetweenCoordinatesKm, finishShuttleTripAndCreateReturn, getScheduledShuttleDeparture, hasExplicitShuttleSchedule } from '../utils/shuttleTripLifecycle.js';
 
 const SEEDED_SAMPLE_SCAN_URL = 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=compress&cs=tinysrgb&w=600';
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -378,7 +378,11 @@ export const getShuttles = async (req, res, next) => {
 
     const query = {
       active: true,
-      currentStatus: { $in: ['scheduled', 'boarding'] },
+      currentStatus: { $in: ['scheduled', 'boarding', 'en_route', 'arrived'] },
+      $and: [{ $or: [
+        { currentStatus: { $in: ['scheduled', 'boarding'] } },
+        { currentStatus: { $in: ['en_route', 'arrived'] } },
+      ] }],
       departureDate: { $type: 'date' },
       departureTime: { $regex: /(\d{1,2}:\d{2}|\d{1,2}\s*(AM|PM|A\.?M\.?|P\.?M\.?))/i },
       driverVerificationStatus: { $ne: 'rejected' },
@@ -437,7 +441,8 @@ export const getShuttles = async (req, res, next) => {
 
     const shuttles = (await Promise.all(candidateShuttles.map((shuttle) => advanceShuttleDeparture(shuttle))))
       .filter((shuttle) => shuttle && hasExplicitShuttleSchedule(shuttle)
-        && ['scheduled', 'boarding'].includes(shuttle.currentStatus) && Number(shuttle.availableSeats) > 0);
+        && (['en_route', 'arrived'].includes(shuttle.currentStatus)
+          || (['scheduled', 'boarding'].includes(shuttle.currentStatus) && getScheduledShuttleDeparture(shuttle) > new Date())));
 
     // ── Enrich each shuttle with live stats from real bookings ───
     // This ensures rating and completedTrips are always accurate
@@ -500,7 +505,11 @@ export const getShuttleById = async (req, res, next) => {
   try {
     let shuttle = await Shuttle.findById(req.params.id).lean();
     shuttle = await advanceShuttleDeparture(shuttle);
-    if (!shuttle || !hasExplicitShuttleSchedule(shuttle) || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !shuttle.active || !['scheduled', 'boarding'].includes(shuttle.currentStatus) || Number(shuttle.availableSeats) <= 0) return next(errorHandler(404, 'Shuttle route not found.'));
+    const scheduledDeparture = getScheduledShuttleDeparture(shuttle);
+    const isVisibleInProgressTrip = ['en_route', 'arrived'].includes(shuttle?.currentStatus);
+    if (!shuttle || !hasExplicitShuttleSchedule(shuttle) || shuttle.driverLicenceScan === SEEDED_SAMPLE_SCAN_URL || shuttle.driverVerificationStatus === 'rejected' || !shuttle.active
+      || (!['scheduled', 'boarding'].includes(shuttle.currentStatus) && !isVisibleInProgressTrip)
+      || (['scheduled', 'boarding'].includes(shuttle.currentStatus) && scheduledDeparture <= new Date())) return next(errorHandler(404, 'Shuttle route not found.'));
     const requesterId = String(req.user?.id || '');
     if (!shuttle.active && requesterId !== String(shuttle.driverRef) && !req.user?.isAdmin) {
       return next(errorHandler(404, 'Shuttle route not found.'));
@@ -580,7 +589,7 @@ export const updateShuttleLocation = async (req, res, next) => {
         return next(errorHandler(400, 'Provide valid GPS coordinates.'));
       }
     }
-    if (currentStatus && !['scheduled', 'boarding', 'en_route', 'arrived', 'completed', 'cancelled'].includes(currentStatus)) {
+    if (currentStatus && !['scheduled', 'boarding', 'en_route', 'arrived', 'cancelled'].includes(currentStatus)) {
       return next(errorHandler(400, 'Invalid shuttle status.'));
     }
 
@@ -602,7 +611,7 @@ export const updateShuttleLocation = async (req, res, next) => {
       };
     }
 
-    const wasCompleted = shuttle.currentStatus === 'completed';
+    if (currentStatus === 'arrived') return next(errorHandler(400, 'Use the Finish trip button after the trip is complete.'));
     const statusOrder = { scheduled: 0, boarding: 0, en_route: 1, arrived: 2, completed: 3, cancelled: 3 };
     const incomingStatusIsOlder = currentStatus
       && (statusOrder[currentStatus] ?? 0) < (statusOrder[shuttle.currentStatus] ?? 0);
@@ -614,15 +623,7 @@ export const updateShuttleLocation = async (req, res, next) => {
     }
     if (effectiveStatus === 'en_route' && !shuttle.departedAt) shuttle.departedAt = new Date();
 
-    const gpsArrival = effectiveStatus === 'en_route' && gpsPosition && validRouteCoordinates(shuttle.destinationCoordinates)
-      && distanceBetweenCoordinatesKm(gpsPosition, shuttle.destinationCoordinates) <= 2;
-    const arrived = (['arrived', 'completed'].includes(effectiveStatus) && !wasCompleted) || gpsArrival;
-
-    let updated = await shuttle.save();
-    if (arrived) {
-      await finishShuttleTripAndCreateReturn(shuttle._id, gpsPosition || shuttle.destinationCoordinates, new Date());
-      updated = await Shuttle.findById(shuttle._id);
-    }
+    const updated = await shuttle.save();
 
     // ── 2km Proximity Trip Alert Trigger ─────────────────────────────
     // When driver is moving (with GPRS) and enters within 2km of a passenger's pickup location
@@ -732,7 +733,7 @@ export const updateShuttle = async (req, res, next) => {
     if (shuttle.currentStatus === 'completed' && (requestedDateChanged || requestedTimeChanged) && safeUpdates.currentStatus !== 'completed') {
       safeUpdates.currentStatus = 'scheduled';
     }
-    const completingTrip = ['arrived', 'completed'].includes(safeUpdates.currentStatus) && shuttle.currentStatus !== 'completed';
+    const completingTrip = safeUpdates.currentStatus === 'completed' && shuttle.currentStatus !== 'completed';
     if (safeUpdates.currentStatus === 'en_route' && !shuttle.departedAt) safeUpdates.departedAt = new Date();
     let updated = await Shuttle.findByIdAndUpdate(req.params.id, { $set: safeUpdates }, { new: true, runValidators: true });
     if (completingTrip) {

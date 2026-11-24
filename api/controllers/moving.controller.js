@@ -55,6 +55,9 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
     // A day-old pin is misleading for a nearby pickup. Ask drivers to refresh
     // their location at least hourly before showing their vehicle to customers.
     const gpsFreshnessLimit = Date.now() - 60 * 60 * 1000;
+    const activeVehicleIds = vehicles.map((vehicle) => vehicle._id);
+    const activeRequests = await MovingRequest.find({ vehicleRef: { $in: activeVehicleIds }, status: { $in: ['pending', 'accepted', 'in_progress'] } }).select('vehicleRef').lean();
+    const bookedVehicleIds = new Set(activeRequests.map((request) => String(request.vehicleRef)));
     const nearby = vehicles.filter((vehicle) => validPoint(vehicle.currentCoordinates)
       && new Date(vehicle.currentCoordinates?.updatedAt || 0).getTime() >= gpsFreshnessLimit).map((vehicle) => {
       const publicVehicle = { ...vehicle };
@@ -63,9 +66,11 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
       delete publicVehicle.verificationReviewedBy;
       delete publicVehicle.verificationReviewNote;
       delete publicVehicle.verificationChecks;
+      delete publicVehicle.currentRequestRef;
       return {
         ...publicVehicle,
         vehicleCategory: 'moving',
+        bookingStatus: bookedVehicleIds.has(String(vehicle._id)) || Boolean(vehicle.currentRequestRef) ? 'booked' : 'available',
         distanceKm: Number(distanceKm(point, vehicle.currentCoordinates).toFixed(1)),
         currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat.toFixed(2)), lng: Number(vehicle.currentCoordinates.lng.toFixed(2)) },
       };
@@ -143,6 +148,26 @@ export const updateMovingVehicleLocation = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
+export const repostMovingVehicle = async (req, res, next) => {
+  try {
+    const { currentCoordinates } = req.body;
+    if (!validPoint(currentCoordinates)) return next(errorHandler(400, 'Capture your current phone GPS location before reposting this vehicle.'));
+    const vehicle = await MovingVehicle.findOne({ _id: req.params.id, driverRef: req.user.id, verificationStatus: 'approved' });
+    if (!vehicle) return next(errorHandler(404, 'Your approved moving vehicle could not be found.'));
+    if (vehicle.currentRequestRef || await MovingRequest.exists({ vehicleRef: vehicle._id, status: { $in: ['pending', 'accepted', 'in_progress'] } })) {
+      return next(errorHandler(409, 'This vehicle is booked until you finish the current moving job.'));
+    }
+    const owner = await User.findById(req.user.id).select('accountStatus offeringType +driverVerification');
+    if (!owner || owner.accountStatus === 'suspended' || owner.offeringType !== 'shuttle' || owner.driverVerification?.status !== 'verified') {
+      return next(errorHandler(403, 'Your approved transport driver account is required to repost this vehicle.'));
+    }
+    vehicle.active = true;
+    vehicle.currentCoordinates = { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), address: String(currentCoordinates.address || '').trim(), accuracy: Number(currentCoordinates.accuracy) || null, isLive: false, updatedAt: new Date() };
+    await vehicle.save();
+    return res.json({ success: true, message: 'Your approved vehicle has been reposted with its existing details.', vehicle: { ...vehicle.toObject(), vehicleCategory: 'moving' } });
+  } catch (error) { return next(error); }
+};
+
 export const getMyMovingVehicles = async (req, res, next) => {
   try {
     const vehicles = await MovingVehicle.find({ driverRef: req.user.id }).sort({ updatedAt: -1 }).lean();
@@ -202,6 +227,7 @@ export const createMovingRequest = async (req, res, next) => {
     const { vehicleId, requesterName, requesterPhone, pickupAddress, pickupCoordinates, dropoffAddress, itemDescription, requestedAt } = req.body;
     const vehicle = await MovingVehicle.findOne({ _id: vehicleId, active: true, verificationStatus: 'approved' });
     if (!vehicle) return next(errorHandler(404, 'This moving vehicle is no longer available.'));
+    if (vehicle.currentRequestRef || await MovingRequest.exists({ vehicleRef: vehicle._id, status: { $in: ['pending', 'accepted', 'in_progress'] } })) return next(errorHandler(409, 'This vehicle is already booked. Wait for the driver to finish or decline the current request.'));
     if (String(vehicle.driverRef) === String(req.user.id)) return next(errorHandler(400, 'You cannot request your own vehicle.'));
     const provider = await User.findOne({ _id: vehicle.driverRef, accountStatus: { $ne: 'suspended' } }).select('_id');
     if (!provider) return next(errorHandler(404, 'This moving vehicle is no longer available.'));
@@ -210,12 +236,24 @@ export const createMovingRequest = async (req, res, next) => {
       return next(errorHandler(400, 'Enter your contact details, pickup and drop-off, items to move, and a future pickup time.'));
     }
     if (pickupCoordinates && !validPoint(pickupCoordinates)) return next(errorHandler(400, 'Pickup GPS coordinates are invalid.'));
-    const request = await MovingRequest.create({
+    const request = new MovingRequest({
       vehicleRef: vehicle._id, requesterRef: req.user.id, driverRef: vehicle.driverRef,
       requesterName: requesterName.trim(), requesterPhone: requesterPhone.trim(),
       pickupAddress: pickupAddress.trim(), pickupCoordinates: validPoint(pickupCoordinates) ? { lat: Number(pickupCoordinates.lat), lng: Number(pickupCoordinates.lng) } : undefined,
       dropoffAddress: dropoffAddress.trim(), itemDescription: itemDescription.trim(), requestedAt: date,
     });
+    const claimedVehicle = await MovingVehicle.findOneAndUpdate(
+      { _id: vehicle._id, active: true, verificationStatus: 'approved', $or: [{ currentRequestRef: null }, { currentRequestRef: { $exists: false } }] },
+      { $set: { currentRequestRef: request._id } },
+      { new: true },
+    );
+    if (!claimedVehicle) return next(errorHandler(409, 'This vehicle was just booked by another customer.'));
+    try {
+      await request.save();
+    } catch (saveError) {
+      await MovingVehicle.updateOne({ _id: vehicle._id, currentRequestRef: request._id }, { $set: { currentRequestRef: null } }).catch(() => {});
+      throw saveError;
+    }
     await Notification.create({ userId: vehicle.driverRef, type: 'shuttle', title: 'New moving help request', message: `${request.requesterName} requested your ${vehicle.vehicleType} to move items. Review the pickup and job details.`, data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });
     return res.status(201).json({ success: true, message: 'Your request was sent to the driver.', request });
   } catch (error) { return next(error); }
@@ -245,6 +283,15 @@ export const updateMovingRequest = async (req, res, next) => {
 
     if (status === 'accepted' || status === 'declined') {
       if (String(request.driverRef) !== String(req.user.id) || request.status !== 'pending') return next(errorHandler(409, 'Only the assigned driver can accept or decline a pending request.'));
+      if (status === 'accepted') {
+        if (await MovingRequest.exists({ vehicleRef: request.vehicleRef, _id: { $ne: request._id }, status: { $in: ['pending', 'accepted', 'in_progress'] } })) return next(errorHandler(409, 'This vehicle already has another moving request.'));
+        const claimedVehicle = await MovingVehicle.findOneAndUpdate(
+          { _id: request.vehicleRef, driverRef: req.user.id, active: true, verificationStatus: 'approved', $or: [{ currentRequestRef: request._id }, { currentRequestRef: null }, { currentRequestRef: { $exists: false } }] },
+          { $set: { currentRequestRef: request._id } },
+          { new: true },
+        );
+        if (!claimedVehicle) return next(errorHandler(409, 'This vehicle is already booked or no longer available.'));
+      }
       request.status = status;
     } else if (status === 'cancelled') {
       const isRequester = String(request.requesterRef) === String(req.user.id);
@@ -291,7 +338,15 @@ export const updateMovingRequest = async (req, res, next) => {
       request.status = 'paid';
     }
 
-    await request.save();
+    try {
+      await request.save();
+    } catch (saveError) {
+      if (status === 'accepted') await MovingVehicle.updateOne({ _id: request.vehicleRef, currentRequestRef: request._id }, { $set: { currentRequestRef: null } }).catch(() => {});
+      throw saveError;
+    }
+    if (status === 'cancelled' || status === 'declined' || status === 'service_completed') {
+      await MovingVehicle.updateOne({ _id: request.vehicleRef, currentRequestRef: request._id }, { $set: { currentRequestRef: null } }).catch(() => {});
+    }
 
     if (status === 'accepted' || status === 'declined') {
       await Notification.create({ userId: request.requesterRef, type: 'shuttle', title: `Moving request ${status}`, message: status === 'accepted' ? 'The driver accepted your moving request. No payment is due now; pay only after the service is provided.' : 'The driver declined your moving request.', data: { movingRequestId: request._id, route: '/shuttles?tab=moving-requests' } });

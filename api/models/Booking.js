@@ -20,6 +20,7 @@ const bookingSchema = new mongoose.Schema({
   phone: { type: String },
   message: { type: String },
   subtype: { type: String },
+  selectedServices: { type: [String], default: [] },
   numberOfGuests: { type: Number, min: 1 },
   breakfast: { type: Boolean, default: false },
   numberOfRooms: { type: Number, min: 1 },

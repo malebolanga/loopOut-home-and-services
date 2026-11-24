@@ -3,6 +3,12 @@ import { AlertTriangle, Check, Clock, MapPin, RefreshCw, Star, X } from 'lucide-
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocodeArea } from '../../utils/geocoding';
+import { getStoredToken } from '../../utils/authenticatedFetch';
+
+const getAuthHeaders = () => {
+  const token = getStoredToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 const MovingRequestsPanel = ({ onClose }) => {
   const [role, setRole] = useState('driver');
@@ -16,10 +22,10 @@ const MovingRequestsPanel = ({ onClose }) => {
   const [busyId, setBusyId] = useState('');
   const load = useCallback(async () => {
     try {
-      const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
+      const headers = getAuthHeaders();
       const [res, vehicleRes] = await Promise.all([
-        axios.get(resolveApiUrl(`/api/shuttles/moving/requests/mine?role=${role}`), { headers }),
-        axios.get(resolveApiUrl('/api/shuttles/moving/vehicles/mine'), { headers }),
+        axios.get(resolveApiUrl(`/api/shuttles/moving/requests/mine?role=${role}`), { withCredentials: true, headers }),
+        axios.get(resolveApiUrl('/api/shuttles/moving/vehicles/mine'), { withCredentials: true, headers }),
       ]);
       setRequests(res.data.requests || []); setVehicles(vehicleRes.data.vehicles || []); setError('');
     }
@@ -28,21 +34,21 @@ const MovingRequestsPanel = ({ onClose }) => {
   useEffect(() => { load(); }, [load]);
   const update = async (request, status, details = {}) => {
     setBusyId(request._id); setError('');
-    try { await axios.patch(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}`), { status, ...details }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } }); await load(); }
+    try { await axios.patch(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}`), { status, ...details }, { withCredentials: true, headers: getAuthHeaders() }); await load(); }
     catch (err) { setError(err.response?.data?.message || 'Could not update the request.'); }
     finally { setBusyId(''); }
   };
   const reportIssue = async (request) => {
     const form = issueForms[request._id] || {};
     setBusyId(request._id); setError('');
-    try { await axios.post(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/issues`), form, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } }); await load(); }
+    try { await axios.post(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/issues`), form, { withCredentials: true, headers: getAuthHeaders() }); await load(); }
     catch (err) { setError(err.response?.data?.message || 'Could not send the issue report.'); }
     finally { setBusyId(''); }
   };
   const submitRating = async (request) => {
     const rating = ratingDrafts[request._id] || {};
     setBusyId(request._id); setError('');
-    try { await axios.post(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/rating`), { stars: rating.stars, review: rating.review || '' }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } }); await load(); }
+    try { await axios.post(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/rating`), { stars: rating.stars, review: rating.review || '' }, { withCredentials: true, headers: getAuthHeaders() }); await load(); }
     catch (err) { setError(err.response?.data?.message || 'Could not submit your rating.'); }
     finally { setBusyId(''); }
   };
@@ -52,18 +58,37 @@ const MovingRequestsPanel = ({ onClose }) => {
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
         const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
-        await axios.put(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/location`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address } }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
+        await axios.put(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/location`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address } }, { withCredentials: true, headers: getAuthHeaders() });
         await load();
       } catch (err) { setError(err.response?.data?.message || 'Could not update the GPS location.'); }
       finally { setBusyId(''); }
     }, () => { setError('Allow GPS access to update your vehicle location.'); setBusyId(''); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  };
+  const repostVehicle = (vehicle) => {
+    if (!navigator.geolocation) return setError('This device does not provide GPS.');
+    setBusyId(vehicle._id); setError('');
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
+        await axios.post(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/repost`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address } }, { withCredentials: true, headers: getAuthHeaders() });
+        await load();
+      } catch (err) {
+        const serverMessage = err.response?.data?.message;
+        const endpointUnavailable = err.response?.status === 404
+          && (!serverMessage || /api endpoint not found|cannot post/i.test(serverMessage));
+        setError(endpointUnavailable
+          ? 'Vehicle reposting is deploying to the server. Please wait a minute and try again.'
+          : serverMessage || 'Could not repost this approved vehicle.');
+      }
+      finally { setBusyId(''); }
+    }, () => { setError('Allow GPS access to repost this vehicle at its current location.'); setBusyId(''); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };
   const titleCase = (value) => value?.replace(/_/g, ' ');
   return <div className="fixed inset-0 z-[1200] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
     <section onClick={(event) => event.stopPropagation()} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-gray-900 sm:rounded-3xl">
       <div className="flex items-center justify-between"><div><h2 className="text-lg font-extrabold">Moving requests</h2><p className="text-xs text-gray-500">No payment is due before the moving service is provided.</p></div><div className="flex gap-2"><button onClick={load} title="Refresh" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><RefreshCw className="h-4 w-4" /></button><button onClick={onClose} aria-label="Close" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><X /></button></div></div>
       <div className="my-4 grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">{[['driver', 'Requests to me'], ['requester', 'My requests']].map(([value, label]) => <button key={value} onClick={() => setRole(value)} className={`rounded-lg px-3 py-2 text-sm font-bold ${role === value ? 'bg-white shadow dark:bg-gray-700' : ''}`}>{label}</button>)}</div>
-      {role === 'driver' && vehicles.length > 0 && <div className="mb-4 space-y-2"><h3 className="text-sm font-bold">My moving vehicles</h3>{vehicles.map((vehicle) => <div key={vehicle._id} className="flex items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800"><div><p className="text-sm font-bold">{vehicle.vehicleDescription} · {vehicle.plateNumber}</p><p className="text-xs capitalize text-gray-500">Admin review: {vehicle.verificationStatus}</p>{vehicle.verificationReviewNote && <p className="mt-1 text-xs text-rose-700">Review note: {vehicle.verificationReviewNote}</p>}{vehicle.verificationStatus === 'approved' && <p className="text-xs text-gray-500">GPS updated {new Date(vehicle.currentCoordinates.updatedAt).toLocaleString()}</p>}</div>{vehicle.verificationStatus === 'approved' && <button disabled={busyId === vehicle._id} onClick={() => refreshGps(vehicle)} className="shrink-0 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{busyId === vehicle._id ? 'Updating…' : 'Update GPS'}</button>}</div>)}</div>}
+      {role === 'driver' && vehicles.length > 0 && <div className="mb-4 space-y-2"><h3 className="text-sm font-bold">My moving vehicles</h3>{vehicles.map((vehicle) => { const activeJob = requests.find((request) => String(request.vehicleRef?._id || request.vehicleRef) === String(vehicle._id) && ['pending', 'accepted', 'in_progress'].includes(request.status)); return <div key={vehicle._id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800"><div className="min-w-0"><p className="text-sm font-bold">{vehicle.vehicleDescription} · {vehicle.plateNumber}</p><p className="text-xs capitalize text-gray-500">Admin review: {vehicle.verificationStatus}</p>{vehicle.verificationReviewNote && <p className="mt-1 text-xs text-rose-700">Review note: {vehicle.verificationReviewNote}</p>}{vehicle.verificationStatus === 'approved' && <p className="text-xs text-gray-500">GPS updated {vehicle.currentCoordinates?.updatedAt ? new Date(vehicle.currentCoordinates.updatedAt).toLocaleString() : 'time unavailable'}</p>}</div>{vehicle.verificationStatus === 'approved' && <div className="flex gap-2"><button disabled={busyId === vehicle._id || activeJob} onClick={() => repostVehicle(vehicle)} className="shrink-0 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{activeJob?.status === 'pending' ? 'Booked · review request' : activeJob ? 'Booked · finish job first' : busyId === vehicle._id ? 'Reposting…' : 'Repost'}</button><button disabled={busyId === vehicle._id} onClick={() => refreshGps(vehicle)} className="shrink-0 rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50 dark:border-gray-600">{busyId === vehicle._id ? 'Updating…' : 'Update GPS'}</button></div>}</div>; })}</div>}
       {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
       {!requests.length && !error && <p className="rounded-2xl bg-gray-50 p-5 text-center text-sm text-gray-500 dark:bg-gray-800">No moving requests yet.</p>}
       <div className="space-y-3">
@@ -77,7 +102,7 @@ const MovingRequestsPanel = ({ onClose }) => {
 
           {request.status === 'accepted' && role === 'requester' && <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-gray-800">{request.quoteStatus === 'pending' ? <><p className="text-sm font-bold">Driver quote: R{Number(request.quoteAmount || 0).toFixed(2)}</p><p className="mt-1 text-xs text-gray-600 dark:text-gray-300">Approve the price before the move starts. Payment is due only after the service is provided.</p><div className="mt-2 flex gap-2"><button disabled={busyId === request._id} onClick={() => update(request, 'quote_accepted')} className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Approve quote</button><button disabled={busyId === request._id} onClick={() => update(request, 'quote_declined')} className="rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50 dark:border-gray-600">Decline quote</button></div></> : request.quoteStatus === 'accepted' ? <p className="text-xs text-gray-700 dark:text-gray-200">You approved R{Number(request.quoteAmount || 0).toFixed(2)}. No payment is due until the move is complete.</p> : request.quoteStatus === 'declined' ? <p className="text-xs text-gray-700 dark:text-gray-200">You declined the last quote. Wait for the driver to send a revised price.</p> : <p className="text-xs text-gray-700 dark:text-gray-200">The driver accepted your request. No payment is due now; review and approve the quote before the move starts.</p>}</div>}
           {request.status === 'accepted' && role === 'driver' && <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-gray-800">{request.quoteStatus === 'pending' ? <p className="text-xs text-gray-700 dark:text-gray-200">Quote sent: R{Number(request.quoteAmount || 0).toFixed(2)}. Waiting for the customer to approve or decline.</p> : request.quoteStatus === 'accepted' ? <><p className="text-sm font-bold">Customer approved R{Number(request.quoteAmount || 0).toFixed(2)}</p><p className="mt-1 text-xs text-gray-600 dark:text-gray-300">Collect this agreed amount only after the move is complete.</p><button disabled={busyId === request._id} onClick={() => update(request, 'in_progress')} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Start moving service</button></> : <><label className="block text-xs font-semibold">{request.quoteStatus === 'declined' ? 'Revised quote for the customer (R)' : 'Quote for the customer (R)'}<input type="number" min="1" max="10000000" step="0.01" value={quoteAmounts[request._id] || ''} onChange={(event) => setQuoteAmounts((current) => ({ ...current, [request._id]: event.target.value }))} placeholder="Enter the total before starting" className="mt-1.5 w-full rounded-lg border bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-950" /></label><button disabled={busyId === request._id || !Number(quoteAmounts[request._id]) || Number(quoteAmounts[request._id]) <= 0} onClick={() => update(request, 'quote_proposed', { quoteAmount: Number(quoteAmounts[request._id]) })} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Send quote for approval</button></>}</div>}
-          {request.status === 'in_progress' && role === 'driver' && <div className="mt-3 rounded-xl bg-teal-50 p-3 dark:bg-teal-950/30"><p className="text-xs font-semibold">Moving service is in progress · agreed amount R{Number(request.quoteAmount || 0).toFixed(2)}</p><button disabled={busyId === request._id} onClick={() => update(request, 'service_completed')} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Service provided · request payment</button></div>}
+          {request.status === 'in_progress' && role === 'driver' && <div className="mt-3 rounded-xl bg-teal-50 p-3 dark:bg-teal-950/30"><p className="text-xs font-semibold">Moving service is in progress · agreed amount R{Number(request.quoteAmount || 0).toFixed(2)}</p><button disabled={busyId === request._id} onClick={() => update(request, 'service_completed')} className="mt-2 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Finish job · request payment</button></div>}
           {request.status === 'in_progress' && role === 'requester' && <p className="mt-3 rounded-xl bg-teal-50 p-3 text-xs text-teal-900 dark:bg-teal-950/30 dark:text-teal-100">Your move is in progress. Agreed price: R{Number(request.quoteAmount || 0).toFixed(2)}. Payment is due only after the move is complete.</p>}
 
           {['service_completed', 'payment_reported', 'paid'].includes(request.status) && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">Final amount: R{Number(request.finalPrice || 0).toFixed(2)}</p>}

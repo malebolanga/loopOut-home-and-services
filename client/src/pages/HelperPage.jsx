@@ -910,7 +910,7 @@ export default function HelperPage() {
       const guestCount = isChef ? (Number.isInteger(rawGuests) && rawGuests > 0 ? rawGuests : 1) : 1;
       
       const basePrice = parseInt(helper.regularPrice) || (isChef ? 250 : 0);
-      const travelFee = parseInt(helper.travelFee) || 0;
+      const travelFee = bookingData.locationOption === 'comeToYou' ? (parseInt(helper.travelFee) || 0) : 0;
       
       // Calculate selected services price
       let selectedServicesPrice = 0;
@@ -918,7 +918,7 @@ export default function HelperPage() {
         const option = serviceOptions.find(opt => String(opt.id) === String(serviceId));
         if (option && option.price) {
           // Handle "R450" or "450" format
-          const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
+          const price = parseFloat(String(option.price).replace(/[^\d.]/g, '')) || 0;
           selectedServicesPrice += price;
         }
       });
@@ -1629,6 +1629,7 @@ export default function HelperPage() {
       startDate: bookingData.date + "T" + (bookingData.time || "00:00"),
       endDate: bookingData.date + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
+      selectedServices: (bookingData.selectedServices || []).map((id) => serviceOptions.find((option) => String(option.id) === String(id))?.name).filter((name) => name && helper?.serviceList?.some((service) => service.name === name)),
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
@@ -1958,6 +1959,7 @@ export default function HelperPage() {
       startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       endDate: getBookingEndDateTime(),
       totalPrice: totalPrice,
+      selectedServices: (bookingData.selectedServices || []).map((id) => serviceOptions.find((option) => String(option.id) === String(id))?.name).filter((name) => name && helper?.serviceList?.some((service) => service.name === name)),
       phone: bookingData.phone,
       message: message, // Save full structured message preserving client details, services, location, provisions, and comments & notes
       subtype: bookingSubtype,

@@ -25,113 +25,6 @@ const statusColors = {
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-const ALL_CLASSIC_SIDES = ['Chakalaka', 'Potatoes', 'Spinach', 'Sweet Potato', 'Beets', 'Cabbage', 'Pumpkin', 'Atchar', 'Pap', 'Green Salad'];
-
-export const FALLBACK_FOOD_SPECIALS = [
-  { id: 'special-1', name: 'Flame BBQ Ribs',         price: 145, tag: 'Hot Food',      image: '🍖', shopId: 'urban-grill',   shopName: 'Urban Grill',      shopImage: '🥙', shopCuisine: 'Grill & Flame', shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane', shopDistance: '1.2 km away', latitude: -23.8828, longitude: 29.4674, defaultSides: ['Potatoes', 'Sweet Potato', 'Cabbage'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-5', name: 'Special Dagwood Kota',   price:  55, tag: 'Popular',       image: '🥪', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🥙', shopCuisine: 'Street Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away', latitude: -23.9432, longitude: 29.4185, defaultSides: ['Potatoes', 'Chakalaka', 'Atchar'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-2', name: 'Beef Stew & Pap',         price: 115, tag: 'Favorite',      image: '🥘', shopId: 'mamas-kitchen', shopName: "Mama's Kitchen",   shopImage: '🍛', shopCuisine: 'Local Favourites', shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central', shopDistance: '800 m away', latitude: -23.9056, longitude: 29.4589, defaultSides: ['Chakalaka', 'Potatoes', 'Spinach'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-4', name: 'Steak & Chakalaka Pap',  price:  99, tag: 'Hot Food',      image: '🥩', shopId: 'mapho',         shopName: 'Mapho Kitchen',    shopImage: '🏪', shopCuisine: 'Traditional', shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane', shopDistance: '4.8 km away', latitude: -23.8564, longitude: 29.3951, defaultSides: ['Chakalaka', 'Pumpkin', 'Cabbage'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-6', name: 'Loaded Kota Special',    price:  50, tag: 'Popular',       image: '🥪', shopId: 'kota-joint',    shopName: 'Kota Joint',       shopImage: '🥪', shopCuisine: 'Fast Food', shopAddress: '78 Biccard Street, Polokwane Central', shopDistance: '950 m away', latitude: -23.9082, longitude: 29.4556, defaultSides: ['Potatoes', 'Chakalaka', 'Atchar'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-3', name: 'Chicken Caesar Salad',   price: 105, tag: 'Favorite',      image: '🥗', shopId: 'green-table',   shopName: 'The Green Table',  shopImage: '🥗', shopCuisine: 'Healthy & Fresh', shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane', shopDistance: '2.5 km away', latitude: -23.8966, longitude: 29.4856, defaultSides: ['Spinach', 'Beets', 'Cabbage'], sides: ALL_CLASSIC_SIDES },
-  { id: 'special-7', name: 'Crispy Seasoned Chips',  price:  35, tag: 'Special',       image: '🍟', shopId: 'lungile-food',  shopName: 'Lungile & Son',    shopImage: '🍿', shopCuisine: 'Fast Food', shopAddress: 'Stand 204, Extension 44, Polokwane', shopDistance: '3.1 km away', latitude: -23.9432, longitude: 29.4185, defaultSides: ['Potatoes', 'Sweet Potato', 'Chakalaka'], sides: ALL_CLASSIC_SIDES },
-];
-
-export const FoodSpecialsStrip = ({ navigate }) => {
-  const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchShops = async () => {
-      try {
-        const res = await fetch('/api/lunch/shops');
-        if (!res.ok) return;
-        const shops = await res.json();
-        if (!Array.isArray(shops) || shops.length === 0) return;
-        const collected = [];
-        shops.forEach((shop) => {
-          if (!shop.meals?.length) return;
-          const available = shop.meals.filter((m) => m.isAvailable !== false);
-          if (!available.length) return;
-          const sorted = [...available].sort((a, b) => {
-            const aSpec = /(special|popular|hot|chef)/i.test(a.tag || '');
-            const bSpec = /(special|popular|hot|chef)/i.test(b.tag || '');
-            return aSpec && !bSpec ? -1 : !aSpec && bSpec ? 1 : 0;
-          });
-          sorted.slice(0, 2).forEach((meal) => {
-            collected.push({ id: meal.id, name: meal.name, price: meal.price, tag: meal.tag || 'Special', image: meal.image || '🍱', shopId: shop.id || shop._id, shopName: shop.name, shopImage: shop.image || '🏪', shopCuisine: shop.cuisine || 'Local', shopAddress: shop.address || shop.location || 'Polokwane, Limpopo', shopDistance: shop.distance || '' });
-          });
-        });
-        if (isMounted && collected.length > 0) setFoodItems(collected);
-      } catch { /* keep fallback */ }
-    };
-    fetchShops();
-    return () => { isMounted = false; };
-  }, []);
-
-  return (
-    <section className="mb-6 -mx-4 pt-2.5 sm:pt-3">
-      <div className="flex items-center justify-between px-4 mb-3 pt-1">
-        <div className="flex items-center gap-2">
-          <UtensilsCrossed className="w-4 h-4 text-amber-500" />
-          <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em]">Food Specials</span>
-          <span className="text-[9px] font-black bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">Specials</span>
-        </div>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={() => navigate('/lunch')} className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider cursor-pointer hover:underline flex items-center gap-1">
-          See All Food <span aria-hidden="true">→</span>
-        </motion.button>
-      </div>
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-1.5 snap-x snap-mandatory">
-        {foodItems.map((item, i) => (
-          <motion.div
-            key={`${item.shopId}-${item.id || i}`}
-            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/lunch', { state: { selectedShopId: item.shopId, highlightMealId: item.id } })}
-            className="snap-start shrink-0 w-[104px] sm:w-[118px] cursor-pointer flex flex-col group bg-transparent border-0 shadow-none rounded-none"
-          >
-            <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50/50 to-rose-50 dark:from-gray-800 dark:to-gray-900 mb-1 border border-amber-100/70 dark:border-gray-800 shadow-2xs flex items-center justify-center">
-              {item.image && (item.image.startsWith('http') || item.image.startsWith('/')) ? (
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <div className={`w-full h-full ${item.image && (item.image.startsWith('http') || item.image.startsWith('/')) ? 'hidden' : 'flex'} items-center justify-center text-2xl select-none group-hover:scale-110 transition-transform duration-300`}>
-                {(typeof item.image === 'string' && item.image.length <= 4 && !item.image.startsWith('/') && !item.image.startsWith('http')) ? item.image : '🍱'}
-              </div>
-              <div className="absolute top-1.5 right-1.5 px-1 py-0.5 rounded text-[7px] font-black uppercase tracking-wider shadow-sm bg-gradient-to-r from-amber-500 to-rose-500 text-white">{item.tag || 'SPECIAL'}</div>
-              <div className="absolute top-1.5 left-1.5 px-1 py-0.5 bg-black/65 backdrop-blur-md text-white rounded text-[7px] font-bold flex items-center gap-0.5 shadow-sm max-w-[70px] truncate">
-                <span className="text-[8px]">{(typeof item.shopImage === 'string' && item.shopImage.length <= 4) ? item.shopImage : '🏪'}</span>
-                <span className="text-[6.5px] font-black uppercase tracking-wider truncate">{item.shopName}</span>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500" />
-            </div>
-            <div className="flex flex-col">
-              <p className="font-bold text-gray-900 dark:text-white truncate text-[11px] sm:text-xs leading-tight mb-0.5 group-hover:text-amber-600 transition-colors">{item.name}</p>
-              <p className="text-gray-500 dark:text-gray-400 text-[9px] sm:text-[9.5px] truncate leading-tight flex items-center gap-1">
-                <span className="truncate font-medium text-gray-700 dark:text-gray-300">{item.shopName}</span>
-                <span className="text-gray-300 dark:text-gray-600">·</span>
-                <span className="truncate text-gray-400">{item.shopCuisine}</span>
-              </p>
-              <div className="flex items-center justify-between mt-0.5">
-                <span className="font-black text-gray-900 dark:text-white text-[11px] sm:text-xs">R{item.price}</span>
-                <span className="text-[7.5px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 group-hover:bg-amber-500 group-hover:text-white transition-colors">Order</span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </section>
-  );
-};
-
 // ─── Mini Calendar Component ──────────────────────────────────────────────────
 const MiniCalendar = ({ bookings, onDaySelect, selectedDate, currentMonth, setCurrentMonth }) => {
   const today = new Date();
@@ -430,9 +323,9 @@ export const UpcomingBookingStrip = ({ navigate }) => {
     return () => controller.abort();
   }, [currentUser?._id]);
 
-  // No user or no bookings → food specials
+  // No upcoming bookings to show. The homepage food feed is rendered independently.
   if (!loading && (!currentUser || bookings.length === 0)) {
-    return <FoodSpecialsStrip navigate={navigate} />;
+    return null;
   }
 
   // Upcoming bookings list for the next few (sidebar)

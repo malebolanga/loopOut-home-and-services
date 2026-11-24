@@ -51,10 +51,11 @@ export const getScheduledShuttleDeparture = (shuttle) => {
 export const advanceShuttleDeparture = async (shuttle, now = new Date()) => {
   if (!shuttle || !['scheduled', 'boarding'].includes(shuttle.currentStatus)) return shuttle;
   const departureAt = getScheduledShuttleDeparture(shuttle);
-  const isFull = Number(shuttle.availableSeats) <= 0;
   const timeReached = departureAt && departureAt <= now;
   const quickDeparture = /leaving now|boarding now/i.test(String(shuttle.departureTime || ''));
-  if (!isFull && !timeReached && !quickDeparture) return shuttle;
+  // Seat capacity controls booking availability, not departure. Keep full trips
+  // scheduled and visible until their actual departure time is reached.
+  if (!timeReached && !quickDeparture) return shuttle;
 
   const originCoordinates = shuttle.currentCoordinates?.isLive === true && isValidCoordinates(shuttle.currentCoordinates)
     ? { lat: Number(shuttle.currentCoordinates.lat), lng: Number(shuttle.currentCoordinates.lng) }
@@ -161,23 +162,3 @@ export const finishShuttleTripAndCreateReturn = async (shuttleId, arrivalCoordin
   return returnRoute;
 };
 
-// If phone GPS never confirms arrival, close a departed trip after four hours
-// and publish its return route at the saved destination pin. The returnRouteFor
-// unique index keeps this safe to retry from the background scheduler.
-export const sweepOverdueShuttleArrivals = async (now = new Date()) => {
-  const fallbackCutoff = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-  const overdueTrips = await Shuttle.find({
-    active: true,
-    currentStatus: 'en_route',
-    departedAt: { $ne: null, $lte: fallbackCutoff },
-  }).select('_id').sort({ departedAt: 1 }).limit(100).lean();
-
-  const results = await Promise.allSettled(
-    overdueTrips.map((trip) => finishShuttleTripAndCreateReturn(trip._id, null, now))
-  );
-  const failed = results.filter((result) => result.status === 'rejected');
-  if (failed.length) {
-    console.error(`Could not auto-arrive ${failed.length} overdue shuttle trip(s):`, failed[0].reason?.message || failed[0].reason);
-  }
-  return results.length - failed.length;
-};

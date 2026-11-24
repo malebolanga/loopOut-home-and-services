@@ -146,12 +146,6 @@ export const createBookingRequest = async (req, res, next) => {
     let savedBooking;
     try {
       savedBooking = await booking.save();
-      if (reservedShuttle.availableSeats <= 0) {
-        await Shuttle.findOneAndUpdate(
-          { _id: shuttle._id, active: true, currentStatus: { $in: ['scheduled', 'boarding'] }, availableSeats: { $lte: 0 } },
-          { $set: { currentStatus: 'en_route', departedAt: new Date() } }
-        );
-      }
     } catch (saveError) {
       await Shuttle.findByIdAndUpdate(shuttle._id, {
         $inc: { availableSeats: requestedSeatsCount },

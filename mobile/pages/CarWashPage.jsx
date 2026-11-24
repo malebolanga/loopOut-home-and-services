@@ -116,12 +116,12 @@ export default function CarWashPage() {
     if (carWash?.carWashPackages) {
       const pkgList = carWash.carWashPackages.split(',').map(s => s.trim()).filter(Boolean);
       return pkgList.map(pkgId => {
-        if (STANDARD_PACKAGES_MAP[pkgId]) return STANDARD_PACKAGES_MAP[pkgId];
+        if (STANDARD_PACKAGES_MAP[pkgId]) return { ...STANDARD_PACKAGES_MAP[pkgId], price: 0 };
         return {
           id: pkgId,
           name: pkgId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
           description: '',
-          price: Number(carWash?.regularPrice) || 0,
+          price: 0,
           duration: '',
           includes: [],
           popular: false
@@ -200,6 +200,10 @@ export default function CarWashPage() {
   }, [id]);
 
   useEffect(() => {
+    if (!carWash?.serviceList?.length) {
+      setTotalPrice(Number(carWash?.regularPrice) || 0);
+      return;
+    }
     let total = 0;
     selectedServices.forEach(serviceId => {
       const service = activeServices.find(s => s.id === serviceId || s.name === serviceId);
@@ -415,7 +419,7 @@ export default function CarWashPage() {
     // Get selected service details
     const selectedServiceDetails = selectedServices.map(serviceId => {
       const service = carWashServices.find(s => s.id === serviceId);
-      return service ? `${service.name} (R${service.price})` : serviceId;
+      return service ? `${service.name} (${Number(service.price) > 0 ? `R${service.price}` : 'price to confirm'})` : serviceId;
     }).join(', ');
 
     // Get vehicle type details
@@ -490,6 +494,7 @@ export default function CarWashPage() {
       startDate: bookingStart.toISOString(),
       endDate: bookingEnd.toISOString(),
       totalPrice,
+      selectedServices: selectedServices.map((id) => serviceOptions.find((option) => option.id === id)?.name).filter((name) => name && carWash.serviceList?.some((service) => service.name === name)),
       phone: bookingData.phone,
       message: bookingMessage,
       subtype: `${selectedServiceDetails}${resolvedVehicleType ? `; Vehicle: ${resolvedVehicleType}` : ''}`,
@@ -807,7 +812,7 @@ export default function CarWashPage() {
                   {startingPrice && <span className="text-sm text-slate-500">per vehicle</span>}
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">Choose a wash or detailing service to see your estimate.</p>
-                {selectedServices.length > 0 && <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:bg-gray-800 dark:text-slate-200">{selectedServices.length} service{selectedServices.length === 1 ? '' : 's'} selected · R{totalPrice} estimated</p>}
+                {selectedServices.length > 0 && <p className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700 dark:bg-gray-800 dark:text-slate-200">{selectedServices.length} service{selectedServices.length === 1 ? '' : 's'} selected · {carWash?.serviceList?.length ? `R${totalPrice} estimated` : `starting rate R${totalPrice}; package price to confirm with provider`}</p>}
                 <button onClick={openBookingFormOverlay} className="mt-6 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2">
                   Review &amp; reserve
                 </button>
@@ -910,7 +915,7 @@ export default function CarWashPage() {
           <div className="min-w-0 flex-1 mr-2">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{totalPrice > 0 ? `R${totalPrice}` : startingPrice ? `R${startingPrice}` : 'Ask for price'}</span>
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">{selectedServices.length > 0 ? 'Estimated total' : 'Starting at'}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400">{carWash?.serviceList?.length && selectedServices.length > 0 ? 'Estimated total' : 'Starting at'}</span>
             </div>
             <div className="truncate text-[10px] font-bold uppercase tracking-widest text-rose-600">{carWash.name}</div>
           </div>

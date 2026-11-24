@@ -424,6 +424,14 @@ const ShuttleMap = ({
       const isRouteOriginPin = coords.source === 'route-origin';
       const isSavedPin = coords.source === 'saved';
       const isMovingVehicle = shuttle.vehicleCategory === 'moving';
+      const isFullyBooked = !isMovingVehicle && Number(shuttle.availableSeats) <= 0;
+      const isMovingBooked = isMovingVehicle && shuttle.bookingStatus === 'booked';
+      const isTripInProgress = !isMovingVehicle && ['en_route', 'arrived'].includes(shuttle.currentStatus);
+      const isBookedMarker = isFullyBooked || isMovingBooked;
+      const isUnavailable = isBookedMarker || isTripInProgress;
+      const markerEmoji = isMovingVehicle
+        ? (shuttle.vehicleType === 'minivan' ? '🚐' : '🚚')
+        : (/bus|quantum|sprinter|van|shuttle/i.test(String(shuttle.carType || '')) ? '🚐' : '🚗');
       const movingArea = String(shuttle.currentCoordinates?.address || '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
       const departureDay = isMovingVehicle ? 'Moving help' : shuttle.departureDate
         ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -513,26 +521,28 @@ const ShuttleMap = ({
 
             <!-- Price and Space Badge -->
             <div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
-              isSelected
+              isBookedMarker
+                ? 'bg-red-600 text-white border-gray-400 ring-2 ring-gray-300'
+                : isTripInProgress
+                ? 'bg-blue-700 text-white border-blue-400'
+                : isSelected
                 ? 'bg-amber-400 text-gray-900 border-amber-500 ring-2 ring-amber-300'
                 : isEnRoute
                 ? 'bg-emerald-600 text-white border-emerald-400'
                 : 'bg-teal-700 text-white border-teal-500'
             }">
-              <span class="w-2 h-2 rounded-full ${isEnRoute || isLiveGprs ? 'bg-white animate-ping' : 'bg-amber-300'}"></span>
+              <span class="w-2 h-2 rounded-full ${isUnavailable ? 'bg-white' : isEnRoute || isLiveGprs ? 'bg-white animate-ping' : 'bg-amber-300'}"></span>
               ${isMovingVehicle
-                ? `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'}</span>`
-                : `<span>R${shuttle.pricePerSeat}</span><span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>`}
+                ? isMovingBooked ? '<span>Booked</span>' : `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'}</span>`
+                : isTripInProgress ? '<span>Trip in progress · finish pending</span>' : isFullyBooked ? '<span>Fully booked</span>' : `<span>R${shuttle.pricePerSeat}</span><span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>`}
             </div>
 
             <!-- Vehicle Pin Pointer -->
-            <div class="relative w-8 h-8 -mt-1 rounded-full bg-white dark:bg-gray-900 shadow-md border-2 ${
-              isSelected ? 'border-amber-500' : isLiveGprs ? 'border-blue-500' : 'border-teal-600'
-            } flex items-center justify-center text-teal-700 dark:text-teal-300">
-              ${isLiveGprs ? '<div class="absolute -inset-2 rounded-full bg-blue-500/20 animate-ping pointer-events-none"></div>' : ''}
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C18.1 6.8 17.2 6 16.1 6H7.9C6.8 6 5.9 6.8 5.6 7.8L4.2 12.8c-.1.4-.2.8-.2 1.2 0 .4.1.8.2 1.2.3 1.1.8 2.8.8 2.8h3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>
-              </svg>
+            <div class="relative w-11 h-11 -mt-1 rounded-full ${isBookedMarker ? 'bg-red-600' : isTripInProgress ? 'bg-blue-700' : 'bg-white dark:bg-gray-900'} shadow-md border-2 ${
+              isBookedMarker ? 'border-gray-500 ring-2 ring-gray-300' : isTripInProgress ? 'border-blue-400' : isSelected ? 'border-amber-500' : isLiveGprs ? 'border-blue-500' : 'border-teal-600'
+            } flex items-center justify-center ${isUnavailable ? 'text-white' : 'text-teal-700 dark:text-teal-300'}">
+              ${isLiveGprs ? `<div class="absolute -inset-2 rounded-full ${isBookedMarker ? 'bg-red-500/30' : isTripInProgress ? 'bg-blue-500/30' : 'bg-blue-500/20'} animate-ping pointer-events-none"></div>` : ''}
+              <span role="img" aria-label="${isMovingVehicle ? (shuttle.vehicleType === 'minivan' ? 'Moving minivan' : 'Moving truck') : 'Shuttle vehicle'}" class="relative z-[1] text-[30px] leading-none drop-shadow-sm">${markerEmoji}</span>
             </div>
             
             <div class="w-1.5 h-1.5 rounded-full bg-black/40 mt-0.5"></div>

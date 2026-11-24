@@ -14,6 +14,7 @@ import { verifyToken } from '../utils/verifyUser.js';
 import {
   getNearbyMovingVehicles,
   createMovingVehicle,
+  repostMovingVehicle,
   createMovingRequest,
   getMyMovingRequests,
   updateMovingRequest,
@@ -48,6 +49,7 @@ router.put('/update-location/:id', verifyToken, updateShuttleLocation);
 router.put('/update/:id', verifyToken, updateShuttle);
 router.delete('/delete/:id', verifyToken, deleteShuttle);
 router.post('/moving/vehicles', verifyToken, createMovingVehicle);
+router.post('/moving/vehicles/:id/repost', verifyToken, repostMovingVehicle);
 router.put('/moving/vehicles/:id/location', verifyToken, updateMovingVehicleLocation);
 router.get('/moving/vehicles/mine', verifyToken, getMyMovingVehicles);
 router.post('/moving/requests', verifyToken, createMovingRequest);

@@ -13,6 +13,15 @@ const requireDatabase = (res) => {
   return false;
 };
 const format = (document) => ({ id: document._id.toString(), ...document.toObject() });
+const formatShop = (shop) => {
+  const formatted = format(shop);
+  const ratings = (formatted.reviews || []).map((review) => Number(review.shopRating)).filter((rating) => Number.isFinite(rating) && rating >= 1 && rating <= 5);
+  return {
+    ...formatted,
+    ratingsCount: ratings.length,
+    rating: ratings.length ? (ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length).toFixed(1) : '',
+  };
+};
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
 const userId = (req) => String(req.user?.id || req.user?._id || '');
 const cleanText = (value, limit = 500) => String(value || '').trim().slice(0, limit);
@@ -39,6 +48,18 @@ const normalizePortions = (value) => {
     portions.push({ name, price: Math.round(price * 100) / 100 });
   }
   return portions;
+};
+const normalizeAddOns = (value) => {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 20) return null;
+  const addOns = [];
+  for (const entry of value) {
+    const name = cleanText(entry?.name, 80);
+    const price = Number(entry?.price);
+    if (!name || !Number.isFinite(price) || price < 0 || price > 10000 || addOns.some((addOn) => addOn.name.toLowerCase() === name.toLowerCase())) return null;
+    addOns.push({ name, price: Math.round(price * 100) / 100 });
+  }
+  return addOns;
 };
 const getOwnedShop = async (id, req, res) => {
   if (!validId(id)) { res.status(404).json({ success: false, message: 'Shop not found.' }); return null; }
@@ -103,7 +124,7 @@ export const getShops = async (req, res, next) => {
   try {
     if (!requireDatabase(res)) return;
     const shops = await Shop.find({ ownerId: { $ne: 'guest' } }).sort({ createdAt: -1 });
-    return res.json(shops.map(format));
+    return res.json(shops.map(formatShop));
   } catch (error) { return next(error); }
 };
 
@@ -115,7 +136,7 @@ export const getMyShops = async (req, res, next) => {
     const user = await User.findById(currentUid).select('isAdmin role').lean();
     const isAdmin = Boolean(user && (user.isAdmin === true || user.role === 'admin'));
     const shops = await Shop.find(isAdmin ? { ownerId: { $ne: 'guest' } } : { ownerId: currentUid }).sort({ createdAt: -1 });
-    return res.json(shops.map(format));
+    return res.json(shops.map(formatShop));
   } catch (error) { return next(error); }
 };
 
@@ -166,7 +187,9 @@ export const addMealToShop = async (req, res, next) => {
     const portions = normalizePortions(req.body.portions);
     if (portions === null) return res.status(400).json({ success: false, message: 'Enter a valid price for each serving size.' });
     const itemType = ['combo', 'special'].includes(String(req.body.itemType || '').toLowerCase()) ? String(req.body.itemType).toLowerCase() : 'meal';
-    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40) || 'Popular', category: cleanText(req.body.category, 60) || '', itemType, image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns: [], sides, portions };
+    const addOns = normalizeAddOns(req.body.addOns);
+    if (addOns === null) return res.status(400).json({ success: false, message: 'Enter valid add-on names and prices.' });
+    const meal = { id: crypto.randomUUID(), name, description: cleanText(req.body.description, 500), price: Math.round(price * 100) / 100, tag: cleanText(req.body.tag, 40), category: cleanText(req.body.category, 60), itemType, image: cleanImage(req.body.image, '🍽️') || '🍽️', isAvailable: req.body.isAvailable !== false, addOns, sides, portions };
     shop.meals.push(meal); await shop.save(); return res.status(201).json(meal);
   } catch (error) { return next(error); }
 };
@@ -184,6 +207,11 @@ export const updateMealInShop = async (req, res, next) => {
     if (req.body.image !== undefined) meal.image = cleanImage(req.body.image, meal.image || '🍽️');
     if (req.body.isAvailable !== undefined) meal.isAvailable = Boolean(req.body.isAvailable);
     if (req.body.sides !== undefined) meal.sides = Array.isArray(req.body.sides) ? req.body.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
+    if (req.body.addOns !== undefined) {
+      const addOns = normalizeAddOns(req.body.addOns);
+      if (addOns === null) return res.status(400).json({ success: false, message: 'Enter valid add-on names and prices.' });
+      meal.addOns = addOns;
+    }
     if (req.body.portions !== undefined) {
       const portions = normalizePortions(req.body.portions);
       if (portions === null) return res.status(400).json({ success: false, message: 'Enter a valid price for each serving size.' });
@@ -221,22 +249,38 @@ export const createOrder = async (req, res, next) => {
     if (!validId(shopId) || !Array.isArray(items) || !items.length) return res.status(400).json({ success: false, message: 'Choose a shop and at least one meal.' });
     const shop = await Shop.findById(shopId); if (!shop || !shop.isOpen) return res.status(409).json({ success: false, message: 'This shop is not accepting orders.' });
     const normalizedItems = items.map((item) => {
+      if (!item || typeof item !== 'object') return null;
       const meal = shop.meals.find((entry) => entry.id === item.id);
       const quantity = Number(item.quantity);
       if (!meal || !meal.isAvailable || !Number.isInteger(quantity) || quantity < 1 || quantity > 20) return null;
-      const itemSides = Array.isArray(item.sides) ? item.sides.map(s => cleanText(s, 60)).filter(Boolean).slice(0, 3) : [];
+      if ((item.sides !== undefined && !Array.isArray(item.sides)) || (item.addOns !== undefined && !Array.isArray(item.addOns))) return null;
+      const submittedSides = Array.isArray(item.sides) ? item.sides.map(s => cleanText(s, 60)).filter(Boolean) : [];
+      const availableSides = Array.isArray(meal.sides) ? meal.sides : [];
+      if (submittedSides.length > 3 || submittedSides.some((side) => !availableSides.includes(side)) || new Set(submittedSides).size !== submittedSides.length) return null;
+      const itemSides = submittedSides;
+      const submittedAddOns = Array.isArray(item.addOns) ? item.addOns : [];
+      if (submittedAddOns.length > 10) return null;
+      const normalizedAddOns = submittedAddOns.map((addOn) => {
+        const name = cleanText(addOn?.name, 80);
+        const menuAddOn = Array.isArray(meal.addOns) ? meal.addOns.find((entry) => entry.name === name) : null;
+        const addOnQuantity = Number(addOn?.quantity);
+        const menuPrice = Number(menuAddOn?.price);
+        if (!menuAddOn || !Number.isFinite(menuPrice) || menuPrice < 0 || !Number.isInteger(addOnQuantity) || addOnQuantity < 1 || addOnQuantity > 20) return null;
+        return { name: menuAddOn.name, price: menuPrice, quantity: addOnQuantity };
+      });
+      if (normalizedAddOns.some((addOn) => !addOn) || new Set(normalizedAddOns.map((addOn) => addOn.name)).size !== normalizedAddOns.length) return null;
       const portionName = cleanText(item.portionName, 20);
       const selectedPortion = portionName ? meal.portions?.find((portion) => portion.name === portionName) : null;
       if ((meal.portions?.length && !selectedPortion) || (portionName && !selectedPortion)) return null;
       const itemPrice = selectedPortion?.price ?? meal.price;
-      return { id: meal.id, name: selectedPortion ? `${meal.name} (${selectedPortion.name})` : meal.name, portionName: selectedPortion?.name || '', price: itemPrice, quantity, image: meal.image || '🍱', sides: itemSides };
+      return { id: meal.id, name: selectedPortion ? `${meal.name} (${selectedPortion.name})` : meal.name, portionName: selectedPortion?.name || '', price: itemPrice, quantity, image: meal.image || '🍱', sides: itemSides, addOns: normalizedAddOns };
     });
     if (normalizedItems.some((item) => !item)) return res.status(409).json({ success: false, message: 'One or more meals are unavailable. Refresh your basket and try again.' });
     const phone = cleanText(customerPhone, 30); if (!phone) return res.status(400).json({ success: false, message: 'A contact phone number is required.' });
     const requestedFulfilment = fulfilment === 'delivery' ? 'delivery' : 'pickup';
     const cleanDeliveryAddress = cleanText(deliveryAddress, 180);
     if (requestedFulfilment === 'delivery' && !cleanDeliveryAddress) return res.status(400).json({ success: false, message: 'A delivery address is required for delivery orders.' });
-    const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = normalizedItems.reduce((sum, item) => sum + item.price * item.quantity + item.addOns.reduce((addOnSum, addOn) => addOnSum + addOn.price * addOn.quantity, 0), 0);
     const requestedTime = scheduledFor ? new Date(scheduledFor) : null;
     if (requestedTime && (Number.isNaN(requestedTime.getTime()) || requestedTime <= new Date())) return res.status(400).json({ success: false, message: 'Choose a future collection time.' });
     const order = await FoodOrder.create({ orderCode: `LNCH-${crypto.randomInt(100000, 1000000)}`, customerId: userId(req), customerName: cleanText(customerName, 100) || 'Customer', customerPhone: phone, shopId: shop._id.toString(), shopName: shop.name, shopImage: shop.image, items: normalizedItems, total: Math.round(total * 100) / 100, fulfilment: requestedFulfilment, deliveryAddress: cleanDeliveryAddress, deliveryNotes: cleanText(deliveryNotes, 500), orderComments: cleanText(orderComments, 500), scheduledFor: requestedTime || undefined, paymentMethod: 'counter', paymentStatus: requestedFulfilment === 'delivery' ? 'Delivery payment pending' : 'Pay at Counter', status: 'Pending' });

@@ -11,6 +11,7 @@ import ServiceComment from '../models/service-comment.model.js';
 import Comment from '../models/comment.model.js';
 import EventComment from '../models/event-comment.model.js';
 import ProviderLiveLocation from '../models/ProviderLiveLocation.js';
+import BookingSlotLock from '../models/BookingSlotLock.js';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 
@@ -64,6 +65,7 @@ export const calculateBookingDetails = async (req, res) => {
 export const createBooking = async (req, res) => {
   let eventTicketsReserved = 0;
   let eventBookingSaved = false;
+  let activeBookingId = null;
   try {
     // Always use the authenticated user — never trust client-supplied userId
     const authenticatedUserId = req.user.id;
@@ -71,6 +73,7 @@ export const createBooking = async (req, res) => {
       listingId, helperId, serviceId, eventId,
       startDate, endDate,
       totalPrice, price,
+      selectedServices = [],
       phone, message, subtype, numberOfGuests, functionType,
       selectedPerformer, performerExperience, performerImage, numberOfRooms, accommodationSelection,
       serviceDuration, selectedHaircut, beardGrooming, specialRequirements,
@@ -160,12 +163,30 @@ export const createBooking = async (req, res) => {
       resolvedTotalPrice = unitPrice * Math.max(1, Math.ceil(timeDifference / (30 * 24 * 60 * 60 * 1000)));
     }
 
-    // Helper and service forms can combine selected options, packages, travel,
-    // or other form choices that are not represented by the listing base rate.
-    // Keep the submitted form total as the booking amount for these request types
-    // so the booking record and its notifications show the same selected price.
-    if ((helperId || serviceId) && hasFormPrice) {
-      resolvedTotalPrice = formPrice;
+    // Resolve helper/service options from the saved listing. Client totals are
+    // display hints only; accepting them as the amount would let a modified
+    // request set any price.
+    if (helperId || serviceId) {
+      if (!Array.isArray(selectedServices) || selectedServices.length > 20) {
+        return res.status(400).json({ error: 'Choose valid services from this provider.' });
+      }
+      const savedOptions = Array.isArray(item.serviceList) ? item.serviceList : [];
+      const selectedNames = [...new Set(selectedServices.map((name) => String(name || '').trim()).filter(Boolean))];
+      const matchedOptions = selectedNames.map((name) => savedOptions.find((option) => option.name === name));
+      if (matchedOptions.some((option) => !option || !Number.isFinite(Number(option.price)) || Number(option.price) < 0)) {
+        return res.status(400).json({ error: 'A selected service is no longer available. Refresh the page and review the price.' });
+      }
+      const optionTotal = matchedOptions.reduce((sum, option) => sum + Number(option.price), 0);
+      const isChef = helperId && ['chef', 'cooking'].includes(String(item.type || '').toLowerCase());
+      const selectedBase = matchedOptions.length ? optionTotal : basePrice;
+      const selectedServiceTotal = isChef ? selectedBase * (parsedGuestCount || 1) : selectedBase;
+      const travelFee = helperId && locationOption === 'comeToYou' ? Math.max(0, Number(item.travelFee) || 0) : 0;
+      const isCarWashService = serviceId && String(item.type || '').toLowerCase() === 'carwash';
+      const serviceFee = isCarWashService ? 0 : Math.round(selectedServiceTotal * 0.1);
+      resolvedTotalPrice = selectedServiceTotal + travelFee + serviceFee;
+      if (hasFormPrice && Math.abs(formPrice - resolvedTotalPrice) > 0.01) {
+        return res.status(409).json({ error: 'The price changed. Review the updated total before requesting this booking.', totalPrice: resolvedTotalPrice });
+      }
     }
 
     if (!Number.isFinite(resolvedTotalPrice) || resolvedTotalPrice < 0) {
@@ -178,6 +199,9 @@ export const createBooking = async (req, res) => {
     const slotEnd = end.getTime() <= start.getTime()
       ? new Date(start.getTime() + 60 * 60 * 1000)
       : new Date(endDate);
+
+    const bookingId = new mongoose.Types.ObjectId();
+    activeBookingId = bookingId;
 
     const overlapQuery = {
       status: { $in: ['pending', 'confirmed', 'approved', 'ongoing', 'assigned', 'enroute'] },
@@ -227,7 +251,38 @@ export const createBooking = async (req, res) => {
       const existingBooking = await Booking.findOne(overlapQuery);
       if (existingBooking) {
         console.warn('[createBooking] validation failed: time slot already reserved', { overlapQuery, existingBookingId: existingBooking._id });
-        return res.status(400).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+        return res.status(409).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+      }
+    }
+
+    if (helperId || serviceId) {
+      if (slotEnd.getTime() - slotStart.getTime() > 24 * 60 * 60 * 1000) {
+        return res.status(400).json({ error: 'Service bookings cannot exceed 24 hours.' });
+      }
+      const resourceType = helperId ? 'helper' : 'service';
+      const resourceId = helperId || serviceId;
+      const firstMinute = Math.floor(slotStart.getTime() / 60000) * 60000;
+      const lastMinute = Math.ceil(slotEnd.getTime() / 60000) * 60000;
+      const locks = [];
+      for (let minute = firstMinute; minute < lastMinute; minute += 60000) {
+        locks.push({ resourceType, resourceId, minute: new Date(minute), bookingId, expiresAt: new Date(Date.now() + 10 * 60 * 1000) });
+      }
+      try {
+        await BookingSlotLock.insertMany(locks, { ordered: true });
+        // Recheck after acquiring the unique minute locks. This covers a
+        // booking that committed between the first overlap query and lock.
+        const racedBooking = await Booking.findOne(overlapQuery).select('_id');
+        if (racedBooking) {
+          await BookingSlotLock.deleteMany({ bookingId });
+          activeBookingId = null;
+          return res.status(409).json({ error: 'This time slot or date is already reserved. Please select another time.' });
+        }
+      } catch (lockError) {
+        await BookingSlotLock.deleteMany({ bookingId }).catch(() => {});
+        if (lockError?.code === 11000 || lockError?.writeErrors?.some((entry) => entry.code === 11000)) {
+          return res.status(409).json({ error: 'This time slot was just reserved. Please select another time.' });
+        }
+        throw lockError;
       }
     }
 
@@ -252,6 +307,7 @@ export const createBooking = async (req, res) => {
 
     // Create booking with user-selected price
     const newBooking = new Booking({
+      _id: bookingId,
       user: authenticatedUserId,
       listing: listingId || undefined,
       helper: helperId || undefined,
@@ -263,6 +319,7 @@ export const createBooking = async (req, res) => {
       phone,
       message,
       subtype,
+      selectedServices: (helperId || serviceId) ? selectedServices.map((name) => String(name).trim()).filter(Boolean) : [],
       numberOfGuests: parsedGuestCount,
       breakfast: breakfast === true,
       numberOfRooms: listingId ? bookingRoomCount : undefined,
@@ -286,6 +343,13 @@ export const createBooking = async (req, res) => {
     });
 
     await newBooking.save();
+    activeBookingId = null;
+    if (helperId || serviceId) {
+      await BookingSlotLock.updateMany(
+        { bookingId },
+        { $set: { expiresAt: new Date(slotEnd.getTime() + 60 * 1000) } }
+      ).catch((lockError) => console.error('[createBooking] Could not extend slot lock expiry:', lockError.message));
+    }
     eventBookingSaved = true;
 
     // Increment bookingsCount
@@ -364,6 +428,7 @@ export const createBooking = async (req, res) => {
     });
 
   } catch (error) {
+    if (activeBookingId) await BookingSlotLock.deleteMany({ bookingId: activeBookingId }).catch(() => {});
     if (eventTicketsReserved > 0 && !eventBookingSaved) {
       await Event.updateOne({ _id: req.body.eventId }, { $inc: { ticketsBooked: -eventTicketsReserved } }).catch(() => {});
     }
@@ -732,6 +797,7 @@ export const updateBookingStatus = async (req, res) => {
     await booking.save();
     if (['completed', 'cancelled', 'declined', 'work_completed'].includes(status)) {
       await ProviderLiveLocation.deleteOne({ booking: booking._id });
+      await BookingSlotLock.deleteMany({ bookingId: booking._id }).catch((lockError) => console.error('[updateBookingStatus] Could not release slot locks:', lockError.message));
     }
 
     // If client closes and completes work, automatically release any held escrow to the provider

@@ -650,6 +650,7 @@ export default function CreateListing() {
     additionalServices: "",
     serviceDuration: "",
     mobileService: false,
+    serviceLocationMode: 'fixed',
     ecoFriendly: false,
 
     // Moving rate configuration fields
@@ -1879,7 +1880,7 @@ export default function CreateListing() {
       case 'experiences':
         if (selectedType === 'carwash') {
           return [
-            { id: "mobileService", label: "Mobile Service", emoji: "🚗💨", checked: listingForm.mobileService },
+            { id: "mobileService", label: "Mobile wash available", emoji: "🚗💨", checked: listingForm.mobileService },
             { id: "ecoFriendly", label: "Eco-Friendly", emoji: "🌱", checked: listingForm.ecoFriendly },
             { id: "security", label: "Background Check", emoji: "✅", checked: listingForm.security },
             { id: "pets", label: "Pet Friendly", emoji: "🐾", checked: listingForm.pets },
@@ -3406,16 +3407,20 @@ export default function CreateListing() {
                           />
                           
                           <div className="space-y-3 pt-2">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                id="mobileService"
-                                checked={listingForm.mobileService}
-                                onChange={(e) => setListingForm({ ...listingForm, mobileService: e.target.checked })}
-                                className="w-5 h-5 rounded text-rose-500 focus:ring-rose-500 border-gray-300"
-                              />
-                              <span className="text-sm font-semibold text-gray-900 dark:text-white">🚗 Mobile Service (I travel to customer's location)</span>
-                            </label>
+                            <fieldset className="space-y-2">
+                              <legend className="text-sm font-bold text-gray-900 dark:text-white">Where can customers get their car washed?</legend>
+                              <p className="text-xs leading-5 text-gray-500 dark:text-gray-400">Choose the options you actually provide.</p>
+                              {[
+                                ['fixed', 'At my wash location', 'Customers bring their vehicle to the address on this listing.'],
+                                ['mobile', 'I travel to the customer', 'Customers enter the address where the wash should happen.'],
+                                ['both', 'Both options', 'Customers can visit your location or request a mobile wash.'],
+                              ].map(([mode, title, description]) => (
+                                <label key={mode} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition ${listingForm.serviceLocationMode === mode ? 'border-rose-400 bg-rose-50/70 dark:border-rose-800 dark:bg-rose-950/20' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700'}`}>
+                                  <input type="radio" name="serviceLocationMode" value={mode} checked={listingForm.serviceLocationMode === mode} onChange={() => setListingForm((prev) => ({ ...prev, serviceLocationMode: mode, mobileService: mode !== 'fixed' }))} className="mt-0.5 h-4 w-4 accent-rose-500" />
+                                  <span><span className="block text-sm font-semibold text-gray-900 dark:text-white">{title}</span><span className="mt-0.5 block text-xs leading-5 text-gray-500 dark:text-gray-400">{description}</span></span>
+                                </label>
+                              ))}
+                            </fieldset>
                             
                             <label className="flex items-center gap-3 cursor-pointer">
                               <input

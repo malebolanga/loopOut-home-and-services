@@ -338,6 +338,7 @@ const UberDriverCard = ({
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-yellow-300 text-gray-950 border border-gray-900 font-mono">
                   {plateNumber}
                 </span>
+                {isSoldOut && <span className="rounded-full border border-gray-400 bg-red-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white ring-1 ring-gray-300">Fully booked</span>}
                 {isDriverLiveGprs && (
                   <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200 animate-pulse">
                     🛰️ LIVE

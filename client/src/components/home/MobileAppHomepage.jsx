@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Heart,
   Star,
+  ChevronLeft,
   ChevronRight,
   TrendingUp,
   Tag,
@@ -35,7 +36,6 @@ import { RecentAdded3DIcon, MoreCategories3DIcon, ThreeDButton } from './ThreeDC
 import { TOP_CATEGORIES } from '../../data/categories';
 import ContinueSearchingCard from './ContinueSearchingCard';
 import { CompareRecommendedSection, UpcomingBookingsSection } from './HomeSections';
-import FoodMenuSection from './FoodMenuSection';
 import { authenticatedFetch } from '../../utils/authenticatedFetch';
 import { calculateDistance, DISTANCE_TIERS, filterByDistanceTier } from '../../utils/locationUtils';
 import './HomeExperience.css';
@@ -72,6 +72,7 @@ export default function MobileAppHomepage({
   onRequestLocation,
   currentUser = null
 }) {
+  const recentlyViewedRef = useRef(null);
   const [activePulseTab, setActivePulseTab] = useState('available'); // 'available' | 'new' | 'requests' | 'trending'
   const [activeTodayTab, setActiveTodayTab] = useState('all'); // 'all' | 'services' | 'specials' | 'events' | 'nearby'
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,6 +85,10 @@ export default function MobileAppHomepage({
   const greeting = useMemo(() => getTimeGreeting(), []);
   const userName = currentUser?.name?.split(' ')[0] || currentUser?.username || '';
   const displayCity = geoCity || currentLocation || 'your area';
+  const scrollRecentlyViewed = (direction) => {
+    if (!recentlyViewedRef.current) return;
+    recentlyViewedRef.current.scrollBy({ left: direction * Math.max(280, recentlyViewedRef.current.clientWidth * 0.75), behavior: 'smooth' });
+  };
 
   // Fetch active upcoming bookings for the current user
   useEffect(() => {
@@ -975,31 +980,29 @@ export default function MobileAppHomepage({
           <CompareRecommendedSection navigate={navigate} />
         </section>
 
-        {/* ── 10. FOOD & LUNCH SECTION ───────────────────────────────────── */}
-        <section className="mb-14">
-          <FoodMenuSection navigate={navigate} />
-        </section>
-
         {/* ── 11. RECENTLY VIEWED ITEMS ──────────────────────────────────── */}
         {recentlyViewedItems && recentlyViewedItems.length > 0 && (
           <section className="mb-14">
-            <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-slate-400">History</p>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900">Recently viewed by you</h2>
               </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button type="button" onClick={() => scrollRecentlyViewed(-1)} aria-label="Scroll recently viewed left" className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"><ChevronLeft className="h-4 w-4" /></button>
+                <button type="button" onClick={() => scrollRecentlyViewed(1)} aria-label="Scroll recently viewed right" className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50"><ChevronRight className="h-4 w-4" /></button>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {recentlyViewedItems.slice(0, 6).map((item) => (
-                <AirbnbCard
-                  key={`history-${item._id || item.id}`}
-                  item={item}
-                  type={item.itemType === 'listing' ? 'property' : (item.itemType || 'service')}
-                  reducedSize
-                  onClick={(path) => {
-                    navigate(path);
-                  }}
-                />
+            <div ref={recentlyViewedRef} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:px-0">
+              {recentlyViewedItems.slice(0, 12).map((item) => (
+                <div key={`history-${item._id || item.id}`} className="w-[72vw] max-w-[280px] shrink-0 snap-start sm:w-[250px] lg:w-[220px]">
+                  <AirbnbCard
+                    item={item}
+                    type={item.itemType === 'listing' ? 'property' : (item.itemType || 'service')}
+                    reducedSize
+                    onClick={(path) => navigate(path)}
+                  />
+                </div>
               ))}
             </div>
           </section>

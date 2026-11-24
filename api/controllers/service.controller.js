@@ -44,8 +44,13 @@ export const createService = async (req, res, next) => {
       delete serviceData.additionalServices;
       delete serviceData.serviceDuration;
       delete serviceData.mobileService;
+      delete serviceData.serviceLocationMode;
       delete serviceData.ecoFriendly;
       delete serviceData.additionalPricing;
+    }
+
+    if (req.body.type === 'carwash' && serviceData.serviceLocationMode) {
+      serviceData.mobileService = ['mobile', 'both'].includes(serviceData.serviceLocationMode);
     }
 
     if (req.body.type !== 'moving') {
@@ -151,8 +156,13 @@ export const updateService = async (req, res, next) => {
       delete updateData.additionalServices;
       delete updateData.serviceDuration;
       delete updateData.mobileService;
+      delete updateData.serviceLocationMode;
       delete updateData.ecoFriendly;
       delete updateData.additionalPricing;
+    }
+
+    if (req.body.type === 'carwash' && updateData.serviceLocationMode) {
+      updateData.mobileService = ['mobile', 'both'].includes(updateData.serviceLocationMode);
     }
 
     if (req.body.type !== 'moving') {

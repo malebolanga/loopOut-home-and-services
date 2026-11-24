@@ -571,7 +571,7 @@ export default function Notifications() {
                 }
             }
         } else if (notification.title && notification.title.includes('Food')) {
-            navigate('/lunch');
+            navigate('/my-orders');
         } else if (notification.type === 'booking') {
             navigate('/my-bookings');
         }

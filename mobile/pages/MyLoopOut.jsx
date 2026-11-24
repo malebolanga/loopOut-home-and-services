@@ -671,7 +671,7 @@ export default function MyLoopOut() {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-gray-300">{filter === 'needs' ? <CheckCircle2 className="h-7 w-7" /> : <PackageCheck className="h-7 w-7" />}</div>
                 <h2 className="text-lg font-black">{filter === 'needs' ? 'You’re all caught up' : filter === 'completed' ? 'No completed activity yet' : 'No bookings or orders yet'}</h2>
                 <p className="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-gray-400">{filter === 'needs' ? 'We’ll show anything that needs your attention here.' : 'When you book a service or order from a local shop, you can follow it here.'}</p>
-                {filter === 'all' && <div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={() => navigate('/search')} className="rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black text-white">Explore services</button><button onClick={() => navigate('/food')} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black dark:border-gray-700">Browse food</button></div>}
+                {filter === 'all' && <div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={() => navigate('/search')} className="rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-black text-white">Explore services</button><button onClick={() => navigate('/')} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black dark:border-gray-700">Browse food</button></div>}
               </section>
             ) : (
           <div className="grid items-start gap-4 md:grid-cols-2">

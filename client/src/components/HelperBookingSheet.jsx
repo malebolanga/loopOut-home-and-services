@@ -32,6 +32,18 @@ export default function HelperBookingSheet({
 
   if (!isOpen || !helper) return null;
 
+  const carWashLocationMode = helper.type === 'carwash'
+    ? (helper.serviceLocationMode === 'both' ? 'both' : helper.serviceLocationMode === 'mobile' || helper.mobileService ? 'mobile' : 'fixed')
+    : null;
+  const carWashLocationOptions = carWashLocationMode === 'mobile'
+    ? [{ value: 'comeToYou', title: 'Mobile wash at my location', detail: 'The provider travels to the address you enter.' }]
+    : carWashLocationMode === 'both'
+      ? [
+          { value: 'goToThem', title: 'I’ll visit the wash', detail: `Go to ${helper.name} at the listed wash location.` },
+          { value: 'comeToYou', title: 'Mobile wash at my location', detail: 'The provider travels to the address you enter.' },
+        ]
+      : [{ value: 'goToThem', title: 'I’ll visit the wash', detail: `Go to ${helper.name} at the listed wash location.` }];
+
   const handleClose = () => {
     setStep(1);
     onClose();
@@ -47,7 +59,7 @@ export default function HelperBookingSheet({
         alert("Please choose a booking date and start time.");
         return;
       }
-      if (!bookingData.durationHours) {
+      if (helper.type !== 'carwash' && !bookingData.durationHours) {
         alert("Please choose how many hours you need, or select all day.");
         return;
       }
@@ -55,7 +67,7 @@ export default function HelperBookingSheet({
         alert("Please enter your service address.");
         return;
       }
-      if (bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
+      if (helper.type !== 'carwash' && bookingData.locationOption === 'comeToYou' && !bookingData.dogsAtProperty) {
         alert("Please let the provider know whether there are dogs at the property.");
         return;
       }
@@ -278,8 +290,20 @@ export default function HelperBookingSheet({
 
                 {/* Location Option */}
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">Service Location</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">{helper.type === 'carwash' ? 'Where will the wash happen?' : 'Service Location'}</label>
+                  <div className={`grid gap-3 ${helper.type === 'carwash' && carWashLocationOptions.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {helper.type === 'carwash' ? carWashLocationOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setBookingData(prev => ({ ...prev, locationOption: option.value }))}
+                        aria-pressed={bookingData.locationOption === option.value}
+                        className={`rounded-2xl border-2 p-3 text-left transition-all ${bookingData.locationOption === option.value ? 'border-rose-500 bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300' : 'border-gray-200 text-gray-700 dark:border-gray-800 dark:text-gray-300'}`}
+                      >
+                        <span className="block text-xs font-bold">{option.title}</span>
+                        <span className="mt-1 block text-[11px] font-normal leading-4 opacity-80">{option.detail}</span>
+                      </button>
+                    )) : <>
                     <button
                       type="button"
                       onClick={() => setBookingData(prev => ({ ...prev, locationOption: 'comeToYou' }))}
@@ -294,6 +318,7 @@ export default function HelperBookingSheet({
                     >
                       🚶 I will go to them
                     </button>
+                    </>}
                   </div>
                 </div>
 
@@ -301,17 +326,17 @@ export default function HelperBookingSheet({
                 {bookingData.locationOption === 'comeToYou' && (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">📍 Address *</label>
+                        <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1">{helper.type === 'carwash' ? '📍 Where should the provider wash your car? *' : '📍 Address *'}</label>
                       <textarea
                         name="address"
                         value={bookingData.address}
                         onChange={handleBookingChange}
                         rows="2"
                         className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm font-semibold text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none resize-none"
-                        placeholder="e.g. 27 Somerset Road, Greenpoint, Cape Town"
+                        placeholder={helper.type === 'carwash' ? 'Enter street address, suburb and city' : 'e.g. 27 Somerset Road, Greenpoint, Cape Town'}
                       />
                     </div>
-                    <fieldset>
+                    {helper.type !== 'carwash' && <fieldset>
                       <legend className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1.5">🐕 Are there dogs at the property? *</legend>
                       <div className="grid grid-cols-2 gap-3">
                         {[['yes', 'Yes'], ['no', 'No']].map(([value, label]) => (
@@ -326,9 +351,11 @@ export default function HelperBookingSheet({
                           </button>
                         ))}
                       </div>
-                    </fieldset>
+                    </fieldset>}
+                    {helper.type === 'carwash' && <p className="rounded-xl bg-cyan-50 px-3 py-2 text-xs leading-5 text-cyan-900 dark:bg-cyan-950/30 dark:text-cyan-100">Use the exact address where the vehicle will be parked during the wash.</p>}
                   </div>
                 )}
+                {helper.type === 'carwash' && bookingData.locationOption === 'goToThem' && <div className="mt-3 rounded-2xl border border-cyan-100 bg-cyan-50/60 p-3 text-xs leading-5 text-cyan-900 dark:border-cyan-900/40 dark:bg-cyan-950/20 dark:text-cyan-100"><span className="font-bold">Wash location:</span> {helper.address || 'Confirm the exact address with the provider before travelling.'}</div>}
               </div>
             )}
 

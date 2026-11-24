@@ -22,7 +22,7 @@ import {
   HandThumbUpIcon as HandThumbUpIconSolid,
   HandThumbDownIcon as HandThumbDownIconSolid
 } from '@heroicons/react/24/solid';
-import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, Plus, PlusCircle, ShoppingBag, Phone, Bus } from 'lucide-react';
+import { Sparkles, BookOpen, Check, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, SlidersHorizontal, X, MapPin, Loader2, UtensilsCrossed, Store, House, Wrench, HandHeart, CalendarDays, Tags, Megaphone, Car, ChefHat, Camera, Dog, Music2, Trophy, Palette, UsersRound, Trees, Truck, Package, Hammer, GraduationCap, Shirt, Sofa, Laptop, BedDouble, Building2, Scissors, HeartHandshake, Navigation, Play, Flame, ArrowRight, Clock, Plus, PlusCircle, ShoppingBag, Phone, Bus } from 'lucide-react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -71,8 +71,7 @@ import { AirbnbCard, AirbnbCardSkeleton } from '../components/home/AirbnbCard';
 import {
   DISTANCE_TIERS,
   filterByDistanceTier,
-  calculateDistance,
-  POLOKWANE_COORDS
+  calculateDistance
 } from '../utils/locationUtils';
 
 // --- Constants ---
@@ -801,16 +800,6 @@ export const HOMEPAGE_FOOD_SIDES = [
   { id: 'salad', name: 'Green Salad', icon: '🥗', desc: 'Crisp green salad' },
 ];
 
-export const POPULAR_DRINKS = [
-  { id: 'coke', name: 'Coca-Cola', size: '330ml can', icon: '🥤', price: 18, tag: 'Most Popular' },
-  { id: 'coke_zero', name: 'Coke Zero', size: '330ml can', icon: '🥤', price: 18, tag: 'Zero Sugar' },
-  { id: 'fanta', name: 'Fanta Orange', size: '330ml can', icon: '🍊', price: 18, tag: 'Fruity' },
-  { id: 'sprite', name: 'Sprite', size: '330ml can', icon: '🍋', price: 18, tag: 'Crisp' },
-  { id: 'stoney', name: 'Stoney Ginger Beer', size: '330ml can', icon: '🧃', price: 18, tag: 'Fiery' },
-  { id: 'water', name: 'Still Spring Water', size: '500ml', icon: '💧', price: 15, tag: 'Fresh' },
-  { id: 'juice', name: 'Tropical Fruit Juice', size: '350ml', icon: '🧃', price: 22, tag: '100% Juice' },
-];
-
 
 const POPULAR_REQUEST_SUGGESTIONS = [
   { id: 'potato', name: 'Potatoes', icon: '🥔' },
@@ -920,13 +909,9 @@ export const FoodMedia = ({ src, alt = 'Food', fallback = '🍱', className = ''
   }, [src]);
 
   const isShop = fallback === '🏪' || String(alt || '').toLowerCase().includes('shop');
-  const effectiveSrc = (!hasError && isFoodImageUrl(src))
-    ? src.trim()
-    : isShop
-      ? resolveShopPhoto(alt)
-      : resolveFoodPhoto(alt || src);
+  const effectiveSrc = !hasError && isFoodImageUrl(src) ? src.trim() : '';
 
-  if (fallbackFailed) {
+  if (fallbackFailed || !effectiveSrc) {
     return (
       <div role="img" aria-label={alt || 'Image unavailable'} className={`flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 text-3xl dark:from-slate-800 dark:to-slate-900 ${className}`}>
         <span aria-hidden="true">{isShop ? '🏪' : resolveSmartFoodEmoji(alt, fallback)}</span>
@@ -989,36 +974,16 @@ const foodIngredientIcon = (ingredient = '') => {
   return entry?.[1] || '🍽️';
 };
 
-const KNOWN_SHOP_COORDINATES = {
-  'urban-grill': { latitude: -23.8828, longitude: 29.4674 },
-  'mamas-kitchen': { latitude: -23.9056, longitude: 29.4589 },
-  'kota-joint': { latitude: -23.9082, longitude: 29.4556 },
-  'green-table': { latitude: -23.8966, longitude: 29.4856 },
-  'lungile-food': { latitude: -23.9432, longitude: 29.4185 },
-  'mapho': { latitude: -23.8564, longitude: 29.3951 },
-};
-
 const resolveShopCoords = (item = {}) => {
-  if (item.latitude && item.longitude) {
-    return { latitude: Number(item.latitude), longitude: Number(item.longitude) };
-  }
-  if (item.shopId && KNOWN_SHOP_COORDINATES[item.shopId]) {
-    return KNOWN_SHOP_COORDINATES[item.shopId];
-  }
-  const addr = (item.shopAddress || item.address || item.shopName || '').toLowerCase();
-  if (addr.includes('cycad')) return { latitude: -23.8828, longitude: 29.4674 };
-  if (addr.includes('savannah')) return { latitude: -23.8966, longitude: 29.4856 };
-  if (addr.includes('seshego')) return { latitude: -23.8564, longitude: 29.3951 };
-  if (addr.includes('biccard')) return { latitude: -23.9082, longitude: 29.4556 };
-  if (addr.includes('extension 44') || addr.includes('ext 44')) return { latitude: -23.9432, longitude: 29.4185 };
-  if (addr.includes('market') || addr.includes('central')) return { latitude: -23.9056, longitude: 29.4589 };
-  if (addr.includes('mall of the north')) return { latitude: -23.8736, longitude: 29.5086 };
-  return POLOKWANE_COORDS;
+  const latitude = Number(item.latitude);
+  const longitude = Number(item.longitude);
+  return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180 ? { latitude, longitude } : null;
 };
 
 const getAccurateDistanceLabel = (item, userCoords) => {
   if (!item) return null;
   const shopCoords = resolveShopCoords(item);
+  if (!shopCoords) return null;
 
   if (userCoords && typeof userCoords.latitude === 'number' && typeof userCoords.longitude === 'number') {
     const dist = calculateDistance(userCoords.latitude, userCoords.longitude, shopCoords.latitude, shopCoords.longitude);
@@ -1029,14 +994,7 @@ const getAccurateDistanceLabel = (item, userCoords) => {
     }
   }
 
-  // Fallback: estimate physical distance from Polokwane center so it's not a fake hardcoded static 1.5 km
-  const distFromCenter = calculateDistance(POLOKWANE_COORDS.latitude, POLOKWANE_COORDS.longitude, shopCoords.latitude, shopCoords.longitude);
-  if (Number.isFinite(distFromCenter)) {
-    if (distFromCenter < 0.2) return 'Central Polokwane (~200 m)';
-    if (distFromCenter < 1) return `~${Math.round(distFromCenter * 1000)} m away`;
-    return `~${distFromCenter.toFixed(1)} km away`;
-  }
-  return item.shopDistance || null;
+  return null;
 };
 
 const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddToCart, onUpdateCartMeta, shopSiblings = [], onSiblingSelect }) => {
@@ -1064,31 +1022,26 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
   const detectedDescFoods = useMemo(() => detectFoodItemsInText(item?.description), [item?.description]);
   const detectedNotesFoods = useMemo(() => detectFoodItemsInText(orderForm.notes), [orderForm.notes]);
 
-  // Available sides for this item (from item.sides if provided, otherwise standard HOMEPAGE_FOOD_SIDES)
+  // Only show sides and add-ons listed by this shop for this meal.
   const availableSides = useMemo(() => {
-    if (Array.isArray(item?.sides) && item.sides.length > 0) {
-      const customList = item.sides.map((s) => {
-        const match = HOMEPAGE_FOOD_SIDES.find(
-          (known) => known.id === s.toLowerCase() || known.name.toLowerCase() === s.toLowerCase()
-        );
-        return match || { id: s.toLowerCase().replace(/\s+/g, '_'), name: s, icon: '🥗', desc: 'Store side' };
-      });
-      const remaining = HOMEPAGE_FOOD_SIDES.filter(
-        (known) => !customList.some((c) => c.name.toLowerCase() === known.name.toLowerCase())
-      );
-      return [...customList, ...remaining];
-    }
-    return HOMEPAGE_FOOD_SIDES;
+    return [...new Set((Array.isArray(item?.sides) ? item.sides : []).map((side) => String(side).trim()).filter(Boolean))].map((side) => ({ id: side.toLowerCase().replace(/\s+/g, '_'), name: side, icon: '🥗' }));
   }, [item?.sides]);
+  const requiredSidesCount = Math.min(3, availableSides.length);
+  const availableDrinks = useMemo(() => (Array.isArray(item?.addOns) ? item.addOns : [])
+    .filter((addOn) => addOn?.name && Number.isFinite(Number(addOn.price)) && Number(addOn.price) >= 0)
+    .map((addOn, index) => ({ id: `${addOn.name}-${index}`, name: addOn.name, price: Number(addOn.price), icon: '🥤' })), [item?.addOns]);
 
-  // Policy: Must select exactly 3 sides. Default to 3 classic sides: Chakalaka, Potatoes, Spinach
+  // Select up to three sides actually offered for this meal.
   const [selectedSides, setSelectedSides] = useState(() => {
-    if (Array.isArray(item?.sides) && item.sides.length >= 3) {
-      return item.sides.slice(0, 3).map((s) => s.toLowerCase().replace(/\s+/g, '_'));
-    }
-    return ['chakalaka', 'potato', 'spinach'];
+    return (Array.isArray(item?.sides) ? item.sides : []).slice(0, 3).map((side) => String(side).toLowerCase().replace(/\s+/g, '_'));
   });
   const [validationNotice, setValidationNotice] = useState('');
+
+  useEffect(() => {
+    setSelectedSides(availableSides.slice(0, 3).map((side) => side.id));
+    setSelectedDrinks({});
+    setValidationNotice('');
+  }, [item?.id, availableSides]);
 
   // Handle side selection with 3 sides policy: selecting a 4th side is disallowed; sides can be unselected and changed freely
   const handleToggleSide = (sideId) => {
@@ -1098,9 +1051,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
         setValidationNotice('');
         return prev.filter((id) => id !== sideId);
       }
-      // Attempting to select 4 sides: DISALLOW per policy!
-      if (prev.length >= 3) {
-        setValidationNotice('⚠️ Policy limit: You can only select 3 sides. Tap a selected side to unselect it first.');
+      // A meal can include at most three shop-listed sides.
+      if (prev.length >= requiredSidesCount) {
+        setValidationNotice(`This meal includes ${requiredSidesCount} side${requiredSidesCount === 1 ? '' : 's'}. Tap a selected side to change it.`);
         return prev;
       }
       setValidationNotice('');
@@ -1109,7 +1062,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
   };
 
   const selectedSideObjects = useMemo(() => {
-    return selectedSides.map((id) => availableSides.find((s) => s.id === id) || { id, name: id, icon: '🥗' });
+    return selectedSides.map((id) => availableSides.find((side) => side.id === id)).filter(Boolean);
   }, [selectedSides, availableSides]);
 
   const selectedSideNames = useMemo(() => {
@@ -1136,11 +1089,11 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
     return Object.entries(selectedDrinks)
       .filter(([_, qty]) => qty > 0)
       .map(([id, qty]) => {
-        const found = POPULAR_DRINKS.find((d) => d.id === id);
+        const found = availableDrinks.find((drink) => drink.id === id);
         return found ? { ...found, qty } : null;
       })
       .filter(Boolean);
-  }, [selectedDrinks]);
+  }, [selectedDrinks, availableDrinks]);
 
   const drinksTotal = useMemo(() => {
     return drinksList.reduce((sum, d) => sum + d.price * d.qty, 0);
@@ -1226,8 +1179,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
       setValidationNotice('⚠️ Please enter your delivery address.');
       return false;
     }
-    if (selectedSides.length !== 3) {
-      setValidationNotice(`⚠️ Policy: Please select exactly 3 sides (${selectedSides.length}/3 currently selected).`);
+    if (selectedSides.length !== requiredSidesCount) {
+      setValidationNotice(`Please select ${requiredSidesCount} side${requiredSidesCount === 1 ? '' : 's'} offered with this meal.`);
       return false;
     }
     setValidationNotice('');
@@ -1276,7 +1229,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
     setOrderStatus('submitting');
     setErrorMsg('');
 
-    const recordLocalOrder = (finalCode) => {
+    const recordLocalOrder = (finalCode, orderData) => {
       try {
         const newOrderRecord = {
           id: finalCode,
@@ -1286,25 +1239,16 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
           shopName: item.shopName || 'Local Kitchen',
           shopImage: item.shopImage || '🍲',
           shopPhone: item.shopPhone || '',
-          items: [
-            ...cart.map((ci) => ({
-              name: ci.item.name,
-              qty: ci.qty,
-              price: ci.item.price * ci.qty,
-              sides: ci.sideNames || [],
-              drinks: ci.drinks || [],
-            })),
-            {
-              name: item.name,
-              qty: orderForm.qty,
-              price: itemTotal,
-              sides: selectedSideNames,
-              drinks: drinksList,
-            },
-          ],
+          items: (orderData.items || []).map((orderedItem) => ({
+            name: orderedItem.name,
+            qty: orderedItem.quantity,
+            price: orderedItem.price * orderedItem.quantity,
+            sides: orderedItem.sides || [],
+            drinks: orderedItem.addOns || [],
+          })),
           fulfilment: orderForm.fulfilment,
           deliveryAddress: orderForm.deliveryAddress.trim(),
-          totalAmount: allOrdersGrandTotal,
+          totalAmount: Number(orderData.total),
           status: 'received',
           createdAt: new Date().toISOString(),
         };
@@ -1318,8 +1262,8 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
     try {
       // Merge accumulated cart items with current item
       const allItems = [
-        ...cart.map((ci) => ({ id: ci.item.id, quantity: ci.qty, sides: ci.sideNames || [] })),
-        { id: item.id, quantity: orderForm.qty, sides: selectedSideNames },
+        ...cart.map((ci) => ({ id: ci.item.id, quantity: ci.qty, sides: ci.sideNames || [], addOns: (ci.drinks || []).map((drink) => ({ name: drink.name, quantity: drink.qty || 1 })) })),
+        { id: item.id, quantity: orderForm.qty, sides: selectedSideNames, addOns: drinksList.map((drink) => ({ name: drink.name, quantity: drink.qty || 1 })) },
       ];
 
       const allDrinks = [
@@ -1330,7 +1274,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
         ? `Drinks: ${allDrinks.map((d) => `${d.name} x${d.qty}`).join(', ')}`
         : '';
       const allSides = [...new Set([...cart.flatMap((ci) => ci.sideNames || []), ...selectedSideNames])];
-      const sidesSummary = `Sides (3): ${selectedSideNames.join(', ')}`;
+      const sidesSummary = selectedSideNames.length ? `Sides: ${selectedSideNames.join(', ')}` : '';
 
       const combinedNotes = [
         sidesSummary,
@@ -1356,33 +1300,20 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
 
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
-        const code = data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
+        if (!data.orderCode) throw new Error('The server did not confirm this food order. Please try again.');
+        const code = data.orderCode;
         setOrderId(code);
-        recordLocalOrder(code);
+        recordLocalOrder(code, data);
         setOrderStatus('success');
         setModalStep('success');
       } else {
         const data = await res.json().catch(() => ({}));
-        // Fallback for mock/demo shops so user doesn't get stuck!
-        const isDemoShop = !item.shopId || String(item.shopId).startsWith('special') || ['urban-grill', 'lungile-food', 'mamas-kitchen', 'mapho', 'kota-joint', 'green-table'].includes(item.shopId);
-        if (isDemoShop) {
-          const code = `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
-          setOrderId(code);
-          recordLocalOrder(code);
-          setOrderStatus('success');
-          setModalStep('success');
-        } else {
-          setErrorMsg(data.message || 'Could not place order. Please try again.');
-          setOrderStatus('error');
-        }
+        setErrorMsg(data.message || 'Could not place order. Please try again.');
+        setOrderStatus('error');
       }
-    } catch {
-      // Graceful demo fallback
-      const code = `LNCH-${Math.floor(100000 + Math.random() * 900000)}`;
-      setOrderId(code);
-      recordLocalOrder(code);
-      setOrderStatus('success');
-      setModalStep('success');
+    } catch (error) {
+      setErrorMsg(error.message || 'Could not connect to food ordering. Your order was not submitted.');
+      setOrderStatus('error');
     }
   };
 
@@ -1504,13 +1435,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                   className="w-full py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white font-black rounded-2xl text-xs uppercase tracking-wider hover:bg-gray-200 dark:hover:bg-gray-700 active:scale-95 transition-all"
                 >
                   Done ✓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { onClose(); navigate('/food'); }}
-                  className="w-full py-2 text-gray-500 dark:text-gray-400 text-xs font-black uppercase tracking-wider hover:text-gray-800 dark:hover:text-white"
-                >
-                  Browse more food →
                 </button>
               </div>
             </div>
@@ -1880,9 +1804,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
-                        <span className="text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-2xs">
-                          {item.tag || 'SPECIAL'}
-                        </span>
+                        {item.tag && <span className="text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-rose-500 text-white shadow-2xs">{item.tag}</span>}
                         {accurateDistance && (
                           <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                             📍 {accurateDistance}
@@ -2074,27 +1996,26 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                   )}
                 </div>
 
-                {/* ── CHOOSE YOUR 3 SIDES SECTION (STRICT POLICY: 3 SIDES REQUIRED) ── */}
-                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-orange-50/60 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-2 border-amber-200 dark:border-amber-700/60 shadow-xs">
+                {availableSides.length > 0 && <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-orange-50/60 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-2 border-amber-200 dark:border-amber-700/60 shadow-xs">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-base">🥗</span>
                         <label className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider block">
-                          Choose Your 3 Sides
+                          Choose Your Sides
                         </label>
                       </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-0.5">
-                        Policy: 3 sides included · Tap to select or unselect
+                        Choose up to {requiredSidesCount} shop-listed side{requiredSidesCount === 1 ? '' : 's'}
                       </p>
                     </div>
 
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-2xs flex items-center gap-1 ${
-                      selectedSides.length === 3
+                      selectedSides.length === requiredSidesCount
                         ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
                         : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300 dark:border-amber-700'
                     }`}>
-                      {selectedSides.length === 3 ? '✓ 3/3 Selected' : `${selectedSides.length}/3 Selected`}
+                      {selectedSides.length === requiredSidesCount ? `✓ ${requiredSidesCount}/${requiredSidesCount} Selected` : `${selectedSides.length}/${requiredSidesCount} Selected`}
                     </span>
                   </div>
 
@@ -2141,10 +2062,10 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                   {/* Selected Sides Summary Pills */}
                   <div className="mt-2.5 pt-2 border-t border-amber-200/60 dark:border-gray-800 flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300">
-                      Your 3 Sides:
+                      Your Sides:
                     </span>
                     {selectedSides.length === 0 ? (
-                      <span className="text-[10px] font-semibold text-rose-500 italic">No sides chosen yet (select 3 above)</span>
+                      <span className="text-[10px] font-semibold text-rose-500 italic">No sides selected yet.</span>
                     ) : (
                       selectedSideObjects.map((s) => (
                         <span
@@ -2165,9 +2086,10 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                       ))
                     )}
                   </div>
-                </div>
+                </div>}
 
-                {/* ── ADD DRINKS / SELECT COKE (REQUESTED BY USER) ── */}
+                {/* Show only add-ons entered by the shop for this meal. */}
+                {availableDrinks.length > 0 && <>
                 <div className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/70 via-white to-red-50/40 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 border-2 border-rose-200 dark:border-rose-900/60 shadow-xs">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div>
@@ -2190,7 +2112,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
 
                   {/* Cold Drinks Selector Grid */}
                   <div className="grid grid-cols-2 gap-1.5">
-                    {POPULAR_DRINKS.map((drink) => {
+                    {availableDrinks.map((drink) => {
                       const qty = selectedDrinks[drink.id] || 0;
                       const isSelected = qty > 0;
                       return (
@@ -2213,14 +2135,9 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                                 <span className="text-xs font-black text-gray-900 dark:text-white truncate">
                                   {drink.name}
                                 </span>
-                                {drink.id === 'coke' && (
-                                  <span className="text-[7.5px] font-black px-1 rounded-sm bg-red-600 text-white uppercase">
-                                    Top
-                                  </span>
-                                )}
                               </div>
                               <span className="text-[9.5px] font-bold text-rose-600 dark:text-rose-400 block">
-                                +R{drink.price} · <span className="text-gray-400 font-normal">{drink.size}</span>
+                                +R{drink.price.toFixed(2)}
                               </span>
                             </div>
                           </button>
@@ -2267,6 +2184,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     </div>
                   )}
                 </div>
+                </>}
 
                 {/* ── Special Requests / Notes ── */}
                 <div>
@@ -2319,8 +2237,7 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide p-3 bg-white/60 dark:bg-gray-900/60">
                       {shopSiblings.map((sib, idx) => {
                         // Generate pairing reason based on position / tag
-                        const PAIRING_LABELS = ['Great combo!', 'Popular choice', 'Pairs perfectly', 'Customers love', 'Try together', 'Best seller', 'Top pick', 'Goes great'];
-                        const pairingLabel = sib.tag || PAIRING_LABELS[idx % PAIRING_LABELS.length];
+                        const pairingLabel = sib.tag || '';
                         const isInCart = cart.some(ci => ci.item.id === sib.id);
                         return (
                           <div
@@ -2331,11 +2248,11 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
                             <div className="relative h-[52px] bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-gray-800 dark:to-gray-800 flex items-center justify-center overflow-hidden">
                               <FoodMedia src={sib.image} alt={sib.name} fallback="🍱" className="text-3xl select-none" />
                               {/* Pairing tag badge */}
-                              <div className="absolute top-1 left-1">
+                              {pairingLabel && <div className="absolute top-1 left-1">
                                 <span className="text-[7.5px] font-black px-1.5 py-0.5 rounded-md bg-violet-600 text-white uppercase tracking-wider shadow-xs leading-none">
                                   {pairingLabel}
                                 </span>
-                              </div>
+                              </div>}
                               {isInCart && (
                                 <div className="absolute top-1 right-1">
                                   <span className="text-[7px] font-black px-1 py-0.5 rounded bg-emerald-500 text-white">✓ In cart</span>
@@ -2450,152 +2367,6 @@ const FoodDetailModal = ({ item, onClose, navigate, cart = [], cartMeta, onAddTo
 
 // ─── Food Specials Strip (Shown when there is NO "Your Upcoming") ─────────────
 
-const FALLBACK_FOOD_SPECIALS = [
-  {
-    id: 'special-1',
-    name: 'Flame BBQ Ribs',
-    price: 145,
-    tag: 'Hot Food',
-    image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80',
-    shopId: 'urban-grill',
-    shopName: 'Urban Grill',
-    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Grill & Flame',
-    shopAddress: 'Shop 14, Cycad Shopping Centre, Polokwane',
-    shopDistance: '1.2 km away',
-    latitude: -23.8828,
-    longitude: 29.4674,
-    description: 'Slow-cooked pork ribs glazed with our signature spicy smoky BBQ sauce, served with crispy potatoes and sweet potato wedges.',
-    prepTime: '25 min',
-    calories: '820 kcal',
-    ingredients: ['Pork ribs', 'BBQ sauce', 'Potatoes', 'Sweet potato', 'Cabbage coleslaw']
-  },
-  {
-    id: 'special-5',
-    name: 'Special Dagwood Kota',
-    price: 55,
-    tag: 'Popular',
-    image: 'https://images.unsplash.com/photo-1509722747041-616f39b57569?auto=format&fit=crop&w=600&q=80',
-    shopId: 'lungile-food',
-    shopName: 'Lungile & Son',
-    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Street Food',
-    shopAddress: 'Stand 204, Extension 44, Polokwane',
-    shopDistance: '3.1 km away',
-    latitude: -23.9432,
-    longitude: 29.4185,
-    description: 'Quarter loaf loaded with Russian sausage, seasoned potatoes, egg, atchar and spicy chakalaka sauce.',
-    prepTime: '10 min',
-    calories: '580 kcal',
-    ingredients: ['Quarter loaf', 'Russian', 'Potatoes', 'Egg', 'Atchar', 'Chakalaka']
-  },
-  {
-    id: 'special-2',
-    name: 'Beef Stew & Pap',
-    price: 115,
-    tag: 'Favorite',
-    image: 'https://images.unsplash.com/photo-1547496502-affa22d38842?auto=format&fit=crop&w=600&q=80',
-    shopId: 'mamas-kitchen',
-    shopName: "Mama's Kitchen",
-    shopImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Local Favourites',
-    shopAddress: 'Corner Market & Landdros Mare St, Polokwane Central',
-    shopDistance: '800 m away',
-    latitude: -23.9056,
-    longitude: 29.4589,
-    description: 'Rich, slow-simmered beef stew with tender potatoes, sweet potato, spinach, and beets in a rich tomato gravy, served with hot pap.',
-    prepTime: '30 min',
-    calories: '650 kcal',
-    ingredients: ['Beef', 'Potatoes', 'Sweet potato', 'Spinach', 'Beets', 'Pap']
-  },
-  {
-    id: 'special-4',
-    name: 'Steak & Chakalaka Pap',
-    price: 99,
-    tag: 'Hot Food',
-    image: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80',
-    shopId: 'mapho',
-    shopName: 'Mapho Kitchen',
-    shopImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Traditional',
-    shopAddress: 'Zone 1 (Near Seshego Stadium), Seshego, Polokwane',
-    shopDistance: '4.8 km away',
-    latitude: -23.8564,
-    longitude: 29.3951,
-    description: 'Flame-grilled rump steak served alongside spicy chakalaka, braised pumpkin, cabbage, and smooth pap.',
-    prepTime: '20 min',
-    calories: '720 kcal',
-    ingredients: ['Rump steak', 'Chakalaka', 'Pumpkin', 'Cabbage', 'Pap', 'Onion gravy']
-  },
-  {
-    id: 'special-6',
-    name: 'Loaded Kota Special',
-    price: 50,
-    tag: 'Popular',
-    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80',
-    shopId: 'kota-joint',
-    shopName: 'Kota Joint',
-    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Fast Food',
-    shopAddress: '78 Biccard Street, Polokwane Central',
-    shopDistance: '950 m away',
-    latitude: -23.9082,
-    longitude: 29.4556,
-    description: 'Freshly hollowed quarter loaf packed with polony, cheese, potatoes chips and fiery chakalaka.',
-    prepTime: '8 min',
-    calories: '540 kcal',
-    ingredients: ['Quarter loaf', 'Polony', 'Cheese', 'Potatoes', 'Chakalaka']
-  },
-  {
-    id: 'special-3',
-    name: 'Chicken Caesar Salad',
-    price: 105,
-    tag: 'Favorite',
-    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
-    shopId: 'green-table',
-    shopName: 'The Green Table',
-    shopImage: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Healthy & Fresh',
-    shopAddress: 'Savannah Mall, Thabo Mbeki St, Polokwane',
-    shopDistance: '2.5 km away',
-    latitude: -23.8966,
-    longitude: 29.4856,
-    description: 'Grilled chicken breast with fresh spinach, beets, and crisp cabbage tossed with parmesan, croutons and dressing.',
-    prepTime: '10 min',
-    calories: '420 kcal',
-    ingredients: ['Grilled chicken', 'Spinach', 'Beets', 'Cabbage', 'Parmesan', 'Croutons']
-  },
-  {
-    id: 'special-7',
-    name: 'Crispy Seasoned Chips',
-    price: 35,
-    tag: 'Special',
-    image: 'https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80',
-    shopId: 'lungile-food',
-    shopName: 'Lungile & Son',
-    shopImage: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=300&q=80',
-    shopCuisine: 'Fast Food',
-    shopAddress: 'Stand 204, Extension 44, Polokwane',
-    shopDistance: '3.1 km away',
-    latitude: -23.9432,
-    longitude: 29.4185,
-    description: 'Golden crispy potatoes and sweet potato chips seasoned with our house spice blend, served with chilli sauce.',
-    prepTime: '5 min',
-    calories: '310 kcal',
-    ingredients: ['Potatoes', 'Sweet potato', 'House spice blend', 'Sauce of choice']
-  }
-];
-
-// Helper to prioritize: 1. Hot Food, 2. Popular, 3. Favorite, 4. Special
-const getFoodPriorityRank = (tag = '', name = '') => {
-  const combined = `${tag} ${name}`.toLowerCase();
-  if (combined.includes('hot') || combined.includes('flame') || combined.includes('spicy') || combined.includes('fire')) return 1;
-  if (combined.includes('popular')) return 2;
-  if (combined.includes('fav')) return 3;
-  if (combined.includes('chef') || combined.includes('special')) return 4;
-  return 5;
-};
-
 // ─── Order Review Sheet ────────────────────────────────────────────────────────
 // Slide-up panel that lets users review their full cart before placing the order.
 const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMeta, onRemoveItem }) => {
@@ -2673,6 +2444,7 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
         id: ci.item.id,
         quantity: ci.qty,
         sides: ci.sideNames || [],
+        addOns: (ci.drinks || []).map((drink) => ({ name: drink.name, quantity: drink.qty || 1 })),
       }));
       const allSides = [...new Set(cart.flatMap((ci) => ci.sideNames || []))];
       const sidesText = allSides.length ? `Sides: ${allSides.join(', ')}` : '';
@@ -2698,25 +2470,18 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
 
       if (res.ok) {
         const data = await res.json();
-        setOrderId(data.orderCode || `LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
+        if (!data.orderCode) throw new Error('The server did not confirm this food order. Please try again.');
+        setOrderId(data.orderCode);
         onUpdateCartMeta?.(contact);
         setOrderStatus('success');
       } else {
-        const isDemoShop = !shopId || String(shopId).startsWith('special') || ['urban-grill', 'lungile-food', 'mamas-kitchen', 'mapho', 'kota-joint', 'green-table'].includes(shopId);
-        if (isDemoShop) {
-          setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
-          onUpdateCartMeta?.(contact);
-          setOrderStatus('success');
-        } else {
-          const data = await res.json().catch(() => ({}));
-          setErrorMsg(data.message || 'Could not place order. Please try again.');
-          setOrderStatus('error');
-        }
+        const data = await res.json().catch(() => ({}));
+        setErrorMsg(data.message || 'Could not place order. Please try again.');
+        setOrderStatus('error');
       }
-    } catch {
-      setOrderId(`LNCH-${Math.floor(100000 + Math.random() * 900000)}`);
-      onUpdateCartMeta?.(contact);
-      setOrderStatus('success');
+    } catch (error) {
+      setErrorMsg(error.message || 'Could not connect to food ordering. Your order was not submitted.');
+      setOrderStatus('error');
     }
   };
 
@@ -3071,8 +2836,10 @@ const OrderReviewSheet = ({ cart, cartMeta, onClose, onClearCart, onUpdateCartMe
 
 const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => {
   const { currentUser } = useSelector((state) => state.user);
-  const [foodItems, setFoodItems] = useState(FALLBACK_FOOD_SPECIALS);
-  const [activeFoodShortcut, setActiveFoodShortcut] = useState('recommended');
+  const [foodItems, setFoodItems] = useState([]);
+  const [foodRetry, setFoodRetry] = useState(0);
+  const [foodLoadError, setFoodLoadError] = useState(false);
+  const [activeFoodShortcut, setActiveFoodShortcut] = useState('all');
   const [activeFoodOrders, setActiveFoodOrders] = useState([]);
   const [shopsData, setShopsData] = useState([]); // raw shop objects for sibling lookup
   const [loading, setLoading] = useState(true);
@@ -3099,10 +2866,7 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
   });
   const [showOrderReview, setShowOrderReview] = useState(false);
   const displayedFoodItems = useMemo(() => {
-    if (activeFoodShortcut === 'popular') {
-      return foodItems.filter((item) => getFoodPriorityRank(item.tag, item.name) <= 3);
-    }
-    if (activeFoodShortcut === 'specials') {
+    if (activeFoodShortcut === 'offers') {
       return foodItems.filter((item) =>
         Number(item.originalPrice) > Number(item.price) || /special|deal|offer|discount/i.test(item.tag || '')
       );
@@ -3253,7 +3017,7 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
         name: m.name,
         price: m.price,
         image: m.image || '🍱',
-        tag: m.tag,
+        tag: String(m.tag || '').trim().toLowerCase() === 'popular' ? '' : (m.tag || ''),
         description: m.description || '',
         shopId: selectedFood.shopId,
         shopName: selectedFood.shopName,
@@ -3264,6 +3028,7 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
         latitude: selectedFood.latitude,
         longitude: selectedFood.longitude,
         sides: m.sides || [],
+        addOns: m.addOns || [],
         ingredients: m.ingredients || [],
         prepTime: m.prepTime || null,
         calories: m.calories || null,
@@ -3276,8 +3041,9 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
     let isMounted = true;
     const fetchShops = async () => {
       try {
+        setFoodLoadError(false);
         const res = await fetch('/api/lunch/shops');
-        if (!res.ok) return;
+        if (!res.ok) throw new Error(`Food shops request failed (${res.status}).`);
         const shops = await res.json();
         if (!Array.isArray(shops) || shops.length === 0) return;
 
@@ -3286,37 +3052,40 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
 
         const collected = [];
         shops.forEach((shop) => {
+          if (shop.isOpen === false) return;
           if (!shop.meals || !shop.meals.length) return;
-          const available = shop.meals.filter((m) => m.isAvailable !== false);
+          const available = shop.meals.filter((m) => m.isAvailable !== false && Number.isFinite(Number(m.price)) && Number(m.price) >= 0);
           if (!available.length) return;
 
-          // Inside shop: sort items with actual photos first, then by priority tag
+          // Prefer shop-submitted photos, then use a stable name order.
           const sorted = [...available].sort((a, b) => {
             const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
             const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
             if (aHasImg !== bHasImg) return aHasImg - bHasImg;
-            return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
+            return String(a.name || '').localeCompare(String(b.name || ''));
           });
 
           // Take up to 2 items per shop to present a diverse range of foods across different shops
           sorted.slice(0, 2).forEach((meal) => {
-            const resolvedImg = isFoodImageUrl(meal.image) ? meal.image : resolveFoodPhoto(meal.name);
+            const resolvedImg = isFoodImageUrl(meal.image) ? meal.image : '';
             collected.push({
               id: meal.id,
               name: meal.name,
               price: meal.price,
               originalPrice: meal.originalPrice,
-              tag: meal.tag || (getFoodPriorityRank('', meal.name) === 1 ? 'Hot Food' : 'Special'),
+              tag: String(meal.tag || '').trim().toLowerCase() === 'popular' ? '' : (meal.tag || ''),
               image: resolvedImg,
               description: meal.description || '',
               prepTime: meal.prepTime || null,
               calories: meal.calories || null,
               ingredients: meal.ingredients || [],
+              sides: meal.sides || [],
+              addOns: meal.addOns || [],
               shopId: shop.id || shop._id,
               shopName: shop.name,
-              shopImage: isFoodImageUrl(shop.image) ? shop.image : resolveShopPhoto(shop.name),
+              shopImage: isFoodImageUrl(shop.image) ? shop.image : '',
               shopCuisine: shop.cuisine || 'Local',
-              shopAddress: shop.address || shop.location || 'Polokwane, Limpopo',
+              shopAddress: shop.address || shop.location || '',
               shopDistance: shop.distance || '',
               shopPhone: shop.phone || shop.whatsapp || '',
               isSponsored: shop.isPromoted === true && shop.isOpen !== false,
@@ -3326,28 +3095,21 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
           });
         });
 
-        // Show opted-in shop promotions first, then prioritize real food photos.
+        // Paid promotions are shown first; other meals use a stable order.
         collected.sort((a, b) => {
           if (a.isSponsored !== b.isSponsored) return a.isSponsored ? -1 : 1;
           const aHasImg = isFoodImageUrl(a.image) ? 0 : 1;
           const bHasImg = isFoodImageUrl(b.image) ? 0 : 1;
           if (aHasImg !== bHasImg) return aHasImg - bHasImg;
-          return getFoodPriorityRank(a.tag, a.name) - getFoodPriorityRank(b.tag, b.name);
+          return String(a.name || '').localeCompare(String(b.name || ''));
         });
 
-        if (isMounted && collected.length > 0) {
-          // If database has only a few items, supplement with diverse fallback specials
-          // so cards never vanish or leave the carousel sparse upon refresh
-          if (collected.length < 8) {
-            const existingNames = new Set(collected.map(c => c.name.toLowerCase()));
-            const supplement = FALLBACK_FOOD_SPECIALS.filter(f => !existingNames.has(f.name.toLowerCase()));
-            setFoodItems([...collected, ...supplement]);
-          } else {
-            setFoodItems(collected);
-          }
-        }
+        if (isMounted) setFoodItems(collected);
       } catch (err) {
-        // Keep fallback list smoothly
+        if (isMounted) {
+          setFoodItems([]);
+          setFoodLoadError(true);
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -3355,7 +3117,7 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
 
     fetchShops();
     return () => { isMounted = false; };
-  }, []);
+  }, [foodRetry]);
 
   return (
     <section className={`mb-6 bg-white transition-[margin] duration-300 dark:bg-gray-950 ${className}`}>
@@ -3377,8 +3139,8 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
               )}
             </button>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">{browseMode ? 'Explore Food' : 'Food near you'}</h3>
-            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">{browseMode ? 'Dishes from local food shops' : 'Local favourites and shop offers, ready to order'}</p>
+            <h3 className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white sm:text-lg">{browseMode ? 'Explore Food' : 'Food shops'}</h3>
+            <p className="mt-0.5 truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:text-xs">Meals and prices shown from current shop listings</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -3390,24 +3152,6 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span>My Orders</span>
-          </motion.button>
-          {currentUser?.offeringType === 'food' && <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/food/register')}
-            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/20 transition cursor-pointer"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Register Place</span>
-          </motion.button>}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/food')}
-            className="flex min-h-11 items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 text-xs font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 cursor-pointer dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-          >
-            <span>See All</span>
-            <ArrowRight className="w-3.5 h-3.5 text-emerald-600 dark:text-[#1ed760]" />
           </motion.button>
         </div>
       </div>
@@ -3421,9 +3165,8 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
           {[
             { id: 'orders', label: 'Order again' },
             { id: 'active-orders', label: 'Active orders' },
-            { id: 'recommended', label: 'Recommended' },
-            { id: 'popular', label: 'Popular' },
-            { id: 'specials', label: 'Specials' },
+            { id: 'all', label: 'All dishes' },
+            { id: 'offers', label: 'Offers' },
           ].map((shortcut) => {
             const isActive = activeFoodShortcut === shortcut.id;
             return (
@@ -3617,7 +3360,15 @@ const FoodSpecialsStrip = ({ navigate, className = '', browseMode = false }) => 
         ))}
       </div>}
 
-      {/* Uber Eats-inspired browse cards */}
+      {!loading && activeFoodShortcut !== 'active-orders' && displayedFoodItems.length === 0 && (
+        <div role="status" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{foodLoadError ? 'Food shops could not load.' : foodItems.length ? 'No current offers are listed.' : 'No open food shops have menu items available right now.'}</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">{foodLoadError ? 'Check your connection and try again.' : 'Available menus and prices will appear here.'}</p>
+          {foodLoadError && <button type="button" onClick={() => { setLoading(true); setFoodRetry((attempt) => attempt + 1); }} className="mt-3 min-h-10 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">Try again</button>}
+        </div>
+      )}
+
+      {/* Shop menu cards */}
       {activeFoodShortcut !== 'active-orders' && <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {displayedFoodItems.map((item, index) => (
           <motion.button
@@ -4085,15 +3836,27 @@ const LookingForFeedCard = ({ item, navigate }) => {
 };
 
 const RecentlyViewedStrip = ({ items = [], navigate }) => {
+  const stripRef = useRef(null);
   if (!items.length) return null;
+
+  const scrollStrip = (direction) => {
+    if (!stripRef.current) return;
+    stripRef.current.scrollBy({ left: direction * Math.max(260, stripRef.current.clientWidth * 0.75), behavior: 'smooth' });
+  };
 
   return (
     <section aria-label="Recently viewed listings" className="mb-5">
-      <div className="mb-3">
-        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">History</p>
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">Recently viewed</h2>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">History</p>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white sm:text-base">Recently viewed</h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <button type="button" onClick={() => scrollStrip(-1)} aria-label="Scroll recently viewed left" className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"><ChevronLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => scrollStrip(1)} aria-label="Scroll recently viewed right" className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"><ChevronRight className="h-4 w-4" /></button>
+        </div>
       </div>
-      <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:gap-4">
+      <div ref={stripRef} className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:gap-4">
         {items.slice(0, 12).map((item, index) => (
           <div key={`recently-viewed-${item._id || item.id || index}`} className="w-[145px] shrink-0 snap-start sm:w-[180px]">
             <AirbnbCard

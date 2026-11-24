@@ -190,6 +190,12 @@ const serviceSchema = new mongoose.Schema(
       default: false,
       required: function() { return this.type === 'carwash'; }
     },
+    serviceLocationMode: {
+      type: String,
+      enum: ['fixed', 'mobile', 'both'],
+      default: 'fixed',
+      required: function() { return this.type === 'carwash'; }
+    },
     ecoFriendly: {
       type: Boolean,
       default: false,

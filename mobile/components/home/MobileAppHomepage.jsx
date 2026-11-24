@@ -35,7 +35,6 @@ import { RecentAdded3DIcon, MoreCategories3DIcon, ThreeDButton } from './ThreeDC
 import { TOP_CATEGORIES } from '../../data/categories';
 import ContinueSearchingCard from './ContinueSearchingCard';
 import { CompareRecommendedSection, UpcomingBookingsSection } from './HomeSections';
-import FoodMenuSection from './FoodMenuSection';
 import { authenticatedFetch } from '../../utils/authenticatedFetch';
 import { calculateDistance, DISTANCE_TIERS, filterByDistanceTier } from '../../utils/locationUtils';
 import './HomeExperience.css';
@@ -973,11 +972,6 @@ export default function MobileAppHomepage({
         {/* ── 9. COMPARE & VERIFIED LOCAL RECOMMENDATIONS ─────────────────── */}
         <section className="mb-14">
           <CompareRecommendedSection navigate={navigate} />
-        </section>
-
-        {/* ── 10. FOOD & LUNCH SECTION ───────────────────────────────────── */}
-        <section className="mb-14">
-          <FoodMenuSection navigate={navigate} />
         </section>
 
         {/* ── 11. RECENTLY VIEWED ITEMS ──────────────────────────────────── */}

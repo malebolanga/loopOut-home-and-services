@@ -8,6 +8,9 @@ export default defineConfig({
   },
   server: {
     host: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3000',

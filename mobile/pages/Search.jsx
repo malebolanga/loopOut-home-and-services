@@ -659,7 +659,7 @@ const ResultCard = ({ item, index, viewMode, onClick }) => {
         type={airbnbCardType}
         onClick={(path) => {
           if (item.itemType === 'food' || item.route === '/food') {
-            navigate('/food');
+            navigate('/');
             return;
           }
           if (onClick) {
@@ -1190,7 +1190,7 @@ const SearchPage = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate('/food')}
+                  onClick={() => navigate('/')}
                   className="px-4 py-2 bg-white text-orange-600 rounded-full font-black text-xs uppercase tracking-wider hover:bg-orange-50 transition-all shadow-md shrink-0 active:scale-95 cursor-pointer"
                 >
                   Open Lunch Hub →

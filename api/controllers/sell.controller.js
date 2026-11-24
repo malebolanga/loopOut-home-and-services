@@ -228,7 +228,7 @@ export const deleteSellListing = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Sell listing not found' });
     }
     if (listing.creator.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'You can only delete your own items!' });
+      return res.status(403).json({ success: false, message: 'You can only delete your own items.' });
     }
     await Sell.findByIdAndDelete(id);
     return res.status(200).json({ success: true, message: 'Item deleted successfully' });
@@ -249,10 +249,22 @@ export const updateSellListing = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Sell listing not found' });
     }
     if (listing.creator.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: 'You can only update your own items!' });
+      return res.status(403).json({ success: false, message: 'You can only update your own items.' });
     }
 
-    const updated = await Sell.findByIdAndUpdate(id, { $set: req.body }, { new: true });
+    const allowedFields = ['title', 'description', 'price', 'category', 'imageUrls', 'address', 'contact', 'condition', 'bookAuthor', 'bookYear', 'bookUsageHistory'];
+    const updates = Object.fromEntries(Object.entries(req.body || {}).filter(([key]) => allowedFields.includes(key)));
+    const textCheck = validateListingText(updates);
+    if (!textCheck.valid) return res.status(400).json({ success: false, message: textCheck.message });
+    if (updates.price !== undefined && (!Number.isFinite(Number(updates.price)) || Number(updates.price) < 0)) {
+      return res.status(400).json({ success: false, message: 'Enter a valid item price.' });
+    }
+    if (updates.imageUrls !== undefined) {
+      const imageCheck = await validateImages(updates.imageUrls);
+      if (!imageCheck.valid) return res.status(400).json({ success: false, message: imageCheck.message });
+    }
+    if (Object.keys(updates).length === 0) return res.status(400).json({ success: false, message: 'No editable item details were provided.' });
+    const updated = await Sell.findOneAndUpdate({ _id: id, creator: req.user.id }, { $set: updates }, { new: true, runValidators: true });
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
     console.error('Error updating sell listing:', error);

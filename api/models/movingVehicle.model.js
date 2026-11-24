@@ -23,6 +23,7 @@ const movingVehicleSchema = new mongoose.Schema({
     vehicleDetailsMatch: { type: Boolean, default: false },
     vehiclePhotoMatchesDetails: { type: Boolean, default: false },
   },
+  currentRequestRef: { type: mongoose.Schema.Types.ObjectId, ref: 'MovingRequest', default: null, index: true },
   hourlyRate: { type: Number, required: true, min: 1 },
   ratingTotal: { type: Number, default: 0, min: 0 },
   ratingCount: { type: Number, default: 0, min: 0 },

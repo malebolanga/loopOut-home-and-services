@@ -343,7 +343,7 @@ export default function PhotographyHelperPage() {
           icon: <FaCheckCircle className="text-rose-500" />
         };
       })
-    : getServiceOptions(helper?.type);
+    : getServiceOptions(helper?.type).map(({ price, ...option }) => option);
   const listedServicePrices = serviceOptions
     .map((service) => Number(service.price))
     .filter((price) => Number.isFinite(price) && price > 0);
@@ -749,7 +749,7 @@ export default function PhotographyHelperPage() {
   useEffect(() => {
     if (helper) {
       const basePrice = parseInt(helper.regularPrice) || 0;
-      const travelFee = parseInt(helper.travelFee) || 0;
+      const travelFee = bookingData.locationOption === 'comeToYou' ? (parseInt(helper.travelFee) || 0) : 0;
       
       // Calculate selected services price
       let selectedServicesPrice = 0;
@@ -757,7 +757,7 @@ export default function PhotographyHelperPage() {
         const option = serviceOptions.find(opt => opt.id === serviceId);
         if (option && option.price) {
           // Handle "R450" or "450" format
-          const price = parseInt(String(option.price).replace(/[^\d]/g, '')) || 0;
+          const price = parseFloat(String(option.price).replace(/[^\d.]/g, '')) || 0;
           selectedServicesPrice += price;
         }
       });
@@ -1386,6 +1386,7 @@ export default function PhotographyHelperPage() {
       startDate: bookingData.date + "T" + (bookingData.time || "00:00"),
       endDate: bookingData.date + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
+      selectedServices: (bookingData.selectedServices || []).map((id) => serviceOptions.find((option) => String(option.id) === String(id))?.name).filter((name) => name && helper?.serviceList?.some((service) => service.name === name)),
       phone: bookingData.phone,
       message: message,
       subtype: helper.type,
@@ -1657,6 +1658,7 @@ export default function PhotographyHelperPage() {
       startDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       endDate: (bookingData.date || "2000-01-01") + "T" + (bookingData.time || "00:00"),
       totalPrice: totalPrice,
+      selectedServices: (bookingData.selectedServices || []).map((id) => serviceOptions.find((option) => String(option.id) === String(id))?.name).filter((name) => name && helper?.serviceList?.some((service) => service.name === name)),
       phone: bookingData.phone,
       message,
       subtype: bookingSubtype,
