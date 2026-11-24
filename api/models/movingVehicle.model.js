@@ -38,6 +38,15 @@ const movingVehicleSchema = new mongoose.Schema({
     isLive: { type: Boolean, default: false },
     updatedAt: { type: Date, default: Date.now },
   },
+  // Live coordinates are shared only through the authenticated moving-request
+  // tracking endpoint, never through the public nearby-vehicle feed.
+  liveCoordinates: {
+    lat: { type: Number, min: -90, max: 90, default: null },
+    lng: { type: Number, min: -180, max: 180, default: null },
+    accuracy: { type: Number, min: 0, default: null },
+    isLive: { type: Boolean, default: false },
+    updatedAt: { type: Date, default: null },
+  },
   serviceRadiusKm: { type: Number, default: 300, min: 1, max: 300 },
   active: { type: Boolean, default: true, index: true },
 }, { timestamps: true });

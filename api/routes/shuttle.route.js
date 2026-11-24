@@ -19,6 +19,8 @@ import {
   createMovingRequest,
   getMyMovingRequests,
   updateMovingRequest,
+  updateMovingVehicleLiveLocation,
+  getMovingRequestLiveLocation,
   updateMovingVehicleLocation,
   getMyMovingVehicles,
   getPendingMovingVehicleReviews,
@@ -53,9 +55,11 @@ router.post('/moving/vehicles', verifyToken, createMovingVehicle);
 router.post('/moving/vehicles/:id/close', verifyToken, closeMovingVehicle);
 router.post('/moving/vehicles/:id/repost', verifyToken, repostMovingVehicle);
 router.put('/moving/vehicles/:id/location', verifyToken, updateMovingVehicleLocation);
+router.put('/moving/vehicles/:id/live-location', verifyToken, updateMovingVehicleLiveLocation);
 router.get('/moving/vehicles/mine', verifyToken, getMyMovingVehicles);
 router.post('/moving/requests', verifyToken, createMovingRequest);
 router.get('/moving/requests/mine', verifyToken, getMyMovingRequests);
+router.get('/moving/requests/:id/live-location', verifyToken, getMovingRequestLiveLocation);
 router.patch('/moving/requests/:id', verifyToken, updateMovingRequest);
 router.post('/moving/requests/:id/issues', verifyToken, reportMovingIssue);
 router.post('/moving/requests/:id/rating', verifyToken, rateMovingService);

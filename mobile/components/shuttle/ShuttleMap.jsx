@@ -135,6 +135,7 @@ const ShuttleMap = ({
   onRequestPickup,
   onLiveRefresh,
   userLocation,
+  movingTracking = null,
   onUserLocationChange,
   onProximityAlert,
   controlsVisible = true,
@@ -151,6 +152,8 @@ const ShuttleMap = ({
   const proximityCircleRef = useRef(null);
   const routeLineRef = useRef(null);
   const routeLabelRef = useRef(null);
+  const movingRouteRef = useRef(null);
+  const movingPickupMarkerRef = useRef(null);
   const shuttleTrailsRef = useRef({});
   const trailLayersRef = useRef({});
 
@@ -681,6 +684,61 @@ const ShuttleMap = ({
       leafletMapRef.current.flyTo(bounds[0], 7, { duration: 0.8 });
     }
   }, [shuttles, selectedShuttle, userLocation, mapReady, isLiveRadarMode, proximityChipVisible]);
+
+  // Draw a road route to the accepted customer's pickup and a distinct pickup
+  // marker. The live vehicle marker itself is refreshed by the parent page.
+  useEffect(() => {
+    const map = leafletMapRef.current;
+    const L = window.L || window.leaflet;
+    const requestId = movingTracking?.request?._id;
+    const truck = movingTracking?.liveCoordinates;
+    const pickup = movingTracking?.pickupCoordinates;
+    const clearLayers = () => {
+      movingRouteRef.current?.remove();
+      movingPickupMarkerRef.current?.remove();
+      movingRouteRef.current = null;
+      movingPickupMarkerRef.current = null;
+    };
+    if (!map || !L || !mapReady || !requestId || !isValidCoord(pickup?.lat, pickup?.lng)) {
+      clearLayers();
+      return undefined;
+    }
+    clearLayers();
+    const pickupIcon = L.divIcon({
+      className: 'moving-pickup-marker',
+      html: '<div style="background:#0f766e;color:white;border:2px solid white;border-radius:9999px;padding:5px 8px;font-weight:800;white-space:nowrap;box-shadow:0 3px 12px #0006">🏠 PICKUP</div>',
+      iconSize: [84, 34],
+      iconAnchor: [42, 17],
+    });
+    movingPickupMarkerRef.current = L.marker([Number(pickup.lat), Number(pickup.lng)], { icon: pickupIcon, zIndexOffset: 2600 }).addTo(map);
+    if (!isValidCoord(truck?.lat, truck?.lng)) {
+      map.flyTo([Number(pickup.lat), Number(pickup.lng)], Math.max(map.getZoom(), 13), { duration: 0.8 });
+      return clearLayers;
+    }
+
+    const start = [Number(truck.lat), Number(truck.lng)];
+    const end = [Number(pickup.lat), Number(pickup.lng)];
+    const drawFallback = () => {
+      if (!map || !movingTracking?.request?._id) return;
+      movingRouteRef.current = L.polyline([start, end], { color: '#2563eb', weight: 5, opacity: 0.8, dashArray: '10, 8' }).addTo(map);
+    };
+    const controller = new AbortController();
+    fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Route unavailable')))
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const route = data?.routes?.[0]?.geometry?.coordinates;
+        const points = Array.isArray(route) ? route.map(([lng, lat]) => [lat, lng]) : [];
+        movingRouteRef.current = points.length > 1
+          ? L.polyline(points, { color: '#2563eb', weight: 5, opacity: 0.86 }).addTo(map)
+          : L.polyline([start, end], { color: '#2563eb', weight: 5, opacity: 0.8, dashArray: '10, 8' }).addTo(map);
+        map.fitBounds([start, end], { padding: [70, 70], maxZoom: 14, duration: 0.8 });
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') drawFallback();
+      });
+    return () => { controller.abort(); clearLayers(); };
+  }, [mapReady, movingTracking?.request?._id, Boolean(movingTracking?.liveCoordinates), movingTracking?.pickupCoordinates?.lat, movingTracking?.pickupCoordinates?.lng]);
 
   // Fly to selected shuttle
   useEffect(() => {

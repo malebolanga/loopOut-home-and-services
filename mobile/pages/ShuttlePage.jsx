@@ -114,7 +114,17 @@ const ShuttlePage = () => {
   // Demo vehicles are shown only in local development when the API has no listings.
   const [shuttles, setShuttles] = useState([]);
   const [movingVehicles, setMovingVehicles] = useState([]);
-  const mapVehicles = [...shuttles, ...movingVehicles];
+  const [movingTracking, setMovingTracking] = useState(null);
+  const mapMovingVehicles = movingVehicles.map((vehicle) => {
+    const trackedVehicle = movingTracking?.request?.vehicleRef;
+    if (!movingTracking?.liveCoordinates || String(trackedVehicle?._id || trackedVehicle) !== String(vehicle._id)) return vehicle;
+    return { ...vehicle, currentCoordinates: movingTracking.liveCoordinates };
+  });
+  const trackedVehicle = movingTracking?.request?.vehicleRef;
+  if (trackedVehicle && !mapMovingVehicles.some((vehicle) => String(vehicle._id) === String(trackedVehicle._id))) {
+    mapMovingVehicles.push({ ...trackedVehicle, vehicleCategory: 'moving', ...(movingTracking.liveCoordinates ? { currentCoordinates: movingTracking.liveCoordinates } : {}) });
+  }
+  const mapVehicles = [...shuttles, ...mapMovingVehicles];
   const visibleMapVehicles = mapVehicles.filter((vehicle) => (
     vehicle.vehicleCategory === 'moving' ? selectedMapVehicleType === 'moving' : selectedMapVehicleType === 'shuttle'
   ));
@@ -132,6 +142,7 @@ const ShuttlePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [myDriverShuttles, setMyDriverShuttles] = useState([]);
+  const [driverMovingRequests, setDriverMovingRequests] = useState([]);
   const [driverGpsStatus, setDriverGpsStatus] = useState('');
 
   useEffect(() => {
@@ -156,6 +167,35 @@ const ShuttlePage = () => {
     const refreshInterval = window.setInterval(loadNearbyMovingVehicles, 30000);
     return () => { cancelled = true; window.clearInterval(refreshInterval); };
   }, [selectedMapVehicleType, userLocation?.lat, userLocation?.lng]);
+
+  useEffect(() => {
+    if (!currentUser || selectedMapVehicleType !== 'moving') {
+      setMovingTracking(null);
+      return undefined;
+    }
+    let cancelled = false;
+    const refreshTracking = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
+        const requestsResponse = await axios.get(resolveApiUrl('/api/shuttles/moving/requests/mine?role=requester'), { headers });
+        const request = (requestsResponse.data?.requests || []).find((item) => ['accepted', 'in_progress'].includes(item.status));
+        if (!request) {
+          if (!cancelled) setMovingTracking(null);
+          return;
+        }
+        const locationResponse = await axios.get(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/live-location`), { headers });
+        if (cancelled) return;
+        const liveCoordinates = locationResponse.data?.isTracking ? locationResponse.data.liveCoordinates : null;
+        const pickupCoordinates = locationResponse.data?.pickupCoordinates || (userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null);
+        setMovingTracking({ request, liveCoordinates, pickupCoordinates, pickupAddress: locationResponse.data?.pickupAddress || request.pickupAddress });
+      } catch {
+        if (!cancelled) setMovingTracking(null);
+      }
+    };
+    refreshTracking();
+    const timer = window.setInterval(refreshTracking, 10000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [currentUser?._id, selectedMapVehicleType, userLocation?.lat, userLocation?.lng]);
 
   const handleDriverVerificationApproved = useCallback(() => {
     setShowDriverVerificationGate(false);
@@ -234,6 +274,54 @@ const ShuttlePage = () => {
       fetchMyDriverShuttles();
     }
   }, [showDriverDeskModal]);
+
+  useEffect(() => {
+    if (!canOfferTransport) {
+      setDriverMovingRequests([]);
+      return undefined;
+    }
+    let cancelled = false;
+    const refreshMovingRequests = async () => {
+      try {
+        const response = await axios.get(resolveApiUrl('/api/shuttles/moving/requests/mine?role=driver'), {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        });
+        if (!cancelled) setDriverMovingRequests(response.data?.requests || []);
+      } catch {
+        if (!cancelled) setDriverMovingRequests([]);
+      }
+    };
+    refreshMovingRequests();
+    const timer = window.setInterval(refreshMovingRequests, 10000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [canOfferTransport]);
+
+  useEffect(() => {
+    const activeRequests = driverMovingRequests.filter((request) => ['accepted', 'in_progress'].includes(request.status));
+    const vehicleIds = [...new Set(activeRequests.map((request) => String(request.vehicleRef?._id || request.vehicleRef)).filter(Boolean))];
+    if (!vehicleIds.length || !navigator.geolocation) return undefined;
+    let lastSentAt = 0;
+    const watchId = navigator.geolocation.watchPosition(async ({ coords }) => {
+      if (Date.now() - lastSentAt < 10000 || navigator.onLine === false) return;
+      if (!Number.isFinite(coords.accuracy) || coords.accuracy > 100) {
+        setDriverGpsStatus('Moving GPS is too imprecise to share yet');
+        return;
+      }
+      lastSentAt = Date.now();
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
+      const results = await Promise.allSettled(vehicleIds.map((vehicleId) => axios.put(
+        resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicleId}/live-location`),
+        { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, locationSource: 'gps' } },
+        { headers },
+      )));
+      setDriverGpsStatus(results.some((result) => result.status === 'rejected')
+        ? 'Moving live GPS update failed'
+        : 'Sharing live truck location with the customer');
+    }, (gpsError) => {
+      setDriverGpsStatus(gpsError.code === 1 ? 'Allow GPS access to share truck location' : 'Waiting for a clear phone GPS signal');
+    }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [driverMovingRequests]);
 
   const fetchShuttles = async () => {
     setLoading(true);
@@ -537,6 +625,7 @@ const ShuttlePage = () => {
             }}
             onLiveRefresh={handleLiveRefresh}
             userLocation={userLocation}
+            movingTracking={movingTracking}
             onUserLocationChange={(loc) => setUserLocation(loc)}
             onProximityAlert={handleProximityAlert}
             controlsVisible={mapControlsVisible}

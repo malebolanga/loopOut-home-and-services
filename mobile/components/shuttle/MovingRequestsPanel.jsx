@@ -71,12 +71,26 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
   const repostVehicle = async (vehicle) => {
     setBusyId(vehicle._id); setError(''); setSuccessMessage('');
     try {
-      const { coords } = await capturePrecisePhoneLocation();
-      const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
-      await axios.post(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/repost`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address, locationSource: 'gps' } }, { withCredentials: true, headers: getAuthHeaders() });
+      let coords = null;
+      let address = '';
+      try {
+        const loc = await capturePrecisePhoneLocation();
+        coords = loc.coords;
+        address = await reverseGeocodeArea(coords.latitude, coords.longitude);
+      } catch (locErr) {
+        if (!vehicle.currentCoordinates || !vehicle.currentCoordinates.lat) {
+          throw locErr;
+        }
+      }
+      const payload = coords
+        ? { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address, locationSource: 'gps' } }
+        : (vehicle.currentCoordinates ? { currentCoordinates: vehicle.currentCoordinates } : {});
+
+      await axios.post(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/repost`), payload, { withCredentials: true, headers: getAuthHeaders() });
       await load();
-      const displayLocation = address || `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (GPS)`;
-      setSuccessMessage(`${vehicle.vehicleDescription || 'Vehicle'} (${vehicle.plateNumber || 'registration plate unavailable'}) was reposted successfully at ${displayLocation} with ±${coords.accuracy.toFixed(1)} m reported accuracy. It is active on the map.`);
+      const displayLocation = address || (coords ? `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)} (GPS)` : (vehicle.currentCoordinates?.address || 'saved location'));
+      const accText = coords && Number.isFinite(coords.accuracy) ? ` with ±${coords.accuracy.toFixed(1)} m reported accuracy` : '';
+      setSuccessMessage(`${vehicle.vehicleDescription || 'Vehicle'} (${vehicle.plateNumber || 'registration plate unavailable'}) was reposted successfully at ${displayLocation}${accText}. It is active on the map.`);
       if (typeof onUpdated === 'function') onUpdated();
     } catch (err) {
       const serverMessage = err.response?.data?.message;
