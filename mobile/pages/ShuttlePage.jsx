@@ -301,7 +301,8 @@ const ShuttlePage = () => {
   }, [canOfferTransport]);
 
   useEffect(() => {
-    if (!driverMovingVehicleIds.length || !navigator.geolocation) return undefined;
+    const vehicleIds = driverMovingVehicleKey.split('|').filter(Boolean);
+    if (!vehicleIds.length || !navigator.geolocation) return undefined;
     let lastSentAt = 0;
     const watchId = navigator.geolocation.watchPosition(async ({ coords }) => {
       if (Date.now() - lastSentAt < 10000 || navigator.onLine === false) return;
@@ -311,7 +312,7 @@ const ShuttlePage = () => {
       }
       lastSentAt = Date.now();
       const headers = { Authorization: `Bearer ${localStorage.getItem('token') || ''}` };
-      const results = await Promise.allSettled(driverMovingVehicleIds.map((vehicleId) => axios.put(
+      const results = await Promise.allSettled(vehicleIds.map((vehicleId) => axios.put(
         resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicleId}/live-location`),
         { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, locationSource: 'gps' } },
         { headers },
