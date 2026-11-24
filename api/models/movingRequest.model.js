@@ -8,6 +8,14 @@ const movingRequestSchema = new mongoose.Schema({
   requesterPhone: { type: String, required: true, trim: true },
   pickupAddress: { type: String, required: true, trim: true, maxlength: 300 },
   pickupCoordinates: { lat: { type: Number, min: -90, max: 90 }, lng: { type: Number, min: -180, max: 180 } },
+  // Temporary customer location, shared only with the assigned driver while
+  // this request is accepted or in progress.
+  livePickupCoordinates: {
+    lat: { type: Number, min: -90, max: 90, default: null },
+    lng: { type: Number, min: -180, max: 180, default: null },
+    accuracy: { type: Number, min: 0, default: null },
+    updatedAt: { type: Date, default: null },
+  },
   dropoffAddress: { type: String, required: true, trim: true, maxlength: 300 },
   itemDescription: { type: String, required: true, trim: true, maxlength: 1000 },
   requestedAt: { type: Date, required: true },

@@ -748,15 +748,16 @@ const ShuttleMap = ({
 
     const start = [Number(truck.lat), Number(truck.lng)];
     const end = [Number(pickup.lat), Number(pickup.lng)];
+    let cancelled = false;
     const drawFallback = () => {
-      if (!map || !movingTracking?.request?._id) return;
+      if (cancelled || !map || !movingTracking?.request?._id) return;
       movingRouteRef.current = L.polyline([start, end], { color: '#2563eb', weight: 5, opacity: 0.8, dashArray: '10, 8' }).addTo(map);
     };
     const controller = new AbortController();
     fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`, { signal: controller.signal })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('Route unavailable')))
       .then((data) => {
-        if (controller.signal.aborted) return;
+        if (cancelled || controller.signal.aborted) return;
         const route = data?.routes?.[0]?.geometry?.coordinates;
         const points = Array.isArray(route) ? route.map(([lng, lat]) => [lat, lng]) : [];
         movingRouteRef.current = points.length > 1
@@ -765,9 +766,9 @@ const ShuttleMap = ({
         map.fitBounds([start, end], { padding: [70, 70], maxZoom: 14, duration: 0.8 });
       })
       .catch((error) => {
-        if (error.name !== 'AbortError') drawFallback();
+        if (!cancelled && error.name !== 'AbortError') drawFallback();
       });
-    return () => { controller.abort(); clearLayers(); };
+    return () => { cancelled = true; controller.abort(); clearLayers(); };
   }, [mapReady, movingTracking?.request?._id, Boolean(movingTracking?.liveCoordinates), movingTracking?.pickupCoordinates?.lat, movingTracking?.pickupCoordinates?.lng]);
 
   // Fly to selected shuttle

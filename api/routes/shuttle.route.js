@@ -21,6 +21,7 @@ import {
   updateMovingRequest,
   updateMovingVehicleLiveLocation,
   getMovingRequestLiveLocation,
+  updateMovingRequestLivePickup,
   updateMovingVehicleLocation,
   getMyMovingVehicles,
   getPendingMovingVehicleReviews,
@@ -60,6 +61,7 @@ router.get('/moving/vehicles/mine', verifyToken, getMyMovingVehicles);
 router.post('/moving/requests', verifyToken, createMovingRequest);
 router.get('/moving/requests/mine', verifyToken, getMyMovingRequests);
 router.get('/moving/requests/:id/live-location', verifyToken, getMovingRequestLiveLocation);
+router.put('/moving/requests/:id/live-pickup', verifyToken, updateMovingRequestLivePickup);
 router.patch('/moving/requests/:id', verifyToken, updateMovingRequest);
 router.post('/moving/requests/:id/issues', verifyToken, reportMovingIssue);
 router.post('/moving/requests/:id/rating', verifyToken, rateMovingService);

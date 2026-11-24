@@ -242,7 +242,7 @@ const ShuttlePage = () => {
   // Show a confirmed customer's truck live location on their map. The endpoint
   // is private to the requester/driver and only returns fresh coordinates.
   useEffect(() => {
-    if (!currentUser || selectedMapVehicleType !== 'moving') {
+    if (!currentUser) {
       setMovingTracking(null);
       return undefined;
     }
@@ -259,16 +259,37 @@ const ShuttlePage = () => {
         const locationResponse = await axios.get(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}/live-location`), { headers });
         if (cancelled) return;
         const liveCoordinates = locationResponse.data?.isTracking ? locationResponse.data.liveCoordinates : null;
-        const pickupCoordinates = locationResponse.data?.pickupCoordinates || (userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null);
+        const pickupCoordinates = locationResponse.data?.livePickupCoordinates || locationResponse.data?.pickupCoordinates || (userLocation ? { lat: userLocation.lat, lng: userLocation.lng } : null);
         setMovingTracking({ request, liveCoordinates, pickupCoordinates, pickupAddress: locationResponse.data?.pickupAddress || request.pickupAddress });
       } catch {
         if (!cancelled) setMovingTracking(null);
       }
     };
     refreshTracking();
-    const timer = window.setInterval(refreshTracking, 10000);
+    const timer = window.setInterval(refreshTracking, 5000);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, [currentUser?._id, selectedMapVehicleType, userLocation?.lat, userLocation?.lng]);
+  }, [currentUser?._id, userLocation?.lat, userLocation?.lng]);
+
+  // When a customer has an accepted moving request, share their current pickup
+  // point with that assigned driver only. It expires automatically server-side.
+  useEffect(() => {
+    const requestId = movingTracking?.request?._id;
+    if (!requestId || !navigator.geolocation) return undefined;
+    let lastSentAt = 0;
+    const watchId = navigator.geolocation.watchPosition(async ({ coords }) => {
+      if (Date.now() - lastSentAt < 5000 || navigator.onLine === false) return;
+      if (!Number.isFinite(coords.accuracy) || coords.accuracy > 100) return;
+      lastSentAt = Date.now();
+      try {
+        await axios.put(resolveApiUrl(`/api/shuttles/moving/requests/${requestId}/live-pickup`), {
+          coordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy },
+        }, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
+      } catch {
+        // The active request may have ended; the next request refresh clears it.
+      }
+    }, () => {}, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [movingTracking?.request?._id]);
 
   const handleDriverVerificationApproved = useCallback(() => {
     setShowDriverVerificationGate(false);
@@ -372,10 +393,14 @@ const ShuttlePage = () => {
   // moving request. The server authorizes each update against that booking.
   useEffect(() => {
     const vehicleIds = driverMovingVehicleKey.split('|').filter(Boolean);
-    if (!vehicleIds.length || !navigator.geolocation) return undefined;
+    if (!vehicleIds.length) return undefined;
+    if (!navigator.geolocation) {
+      setDriverGpsStatus('This device cannot share truck GPS');
+      return undefined;
+    }
     let lastSentAt = 0;
     const watchId = navigator.geolocation.watchPosition(async ({ coords }) => {
-      if (Date.now() - lastSentAt < 10000 || navigator.onLine === false) return;
+      if (Date.now() - lastSentAt < 5000 || navigator.onLine === false) return;
       if (!Number.isFinite(coords.accuracy) || coords.accuracy > 100) {
         setDriverGpsStatus('Moving GPS is too imprecise to share yet');
         return;

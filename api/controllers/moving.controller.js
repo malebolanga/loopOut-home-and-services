@@ -186,25 +186,46 @@ export const updateMovingVehicleLiveLocation = async (req, res, next) => {
 
 export const getMovingRequestLiveLocation = async (req, res, next) => {
   try {
-    const request = await MovingRequest.findById(req.params.id).select('requesterRef driverRef vehicleRef status pickupCoordinates pickupAddress').lean();
+    const request = await MovingRequest.findById(req.params.id).select('requesterRef driverRef vehicleRef status pickupCoordinates livePickupCoordinates pickupAddress').lean();
     if (!request) return next(errorHandler(404, 'Moving request not found.'));
     if (![String(request.requesterRef), String(request.driverRef)].includes(String(req.user.id))) {
       return next(errorHandler(403, 'Only the customer and assigned driver can view live pickup tracking.'));
     }
     if (!['accepted', 'in_progress'].includes(request.status)) {
-      return res.json({ success: true, isTracking: false, liveCoordinates: null, pickupCoordinates: request.pickupCoordinates || null });
+      return res.json({ success: true, isTracking: false, liveCoordinates: null, pickupCoordinates: request.pickupCoordinates || null, livePickupCoordinates: null });
     }
     const vehicle = await MovingVehicle.findById(request.vehicleRef).select('liveCoordinates').lean();
     const liveCoordinates = vehicle?.liveCoordinates;
     const updatedAt = liveCoordinates?.updatedAt ? new Date(liveCoordinates.updatedAt).getTime() : 0;
     const isTracking = liveCoordinates?.isLive === true && Number.isFinite(updatedAt) && Date.now() - updatedAt >= 0 && Date.now() - updatedAt <= 60000;
+    const pickupUpdatedAt = request.livePickupCoordinates?.updatedAt ? new Date(request.livePickupCoordinates.updatedAt).getTime() : 0;
+    const hasFreshPickup = Number.isFinite(pickupUpdatedAt) && pickupUpdatedAt > 0 && Date.now() - pickupUpdatedAt >= 0 && Date.now() - pickupUpdatedAt <= 60000;
     return res.json({
       success: true,
       isTracking,
       liveCoordinates: isTracking ? { ...liveCoordinates, lat: Number(liveCoordinates.lat), lng: Number(liveCoordinates.lng) } : null,
       pickupCoordinates: request.pickupCoordinates || null,
+      livePickupCoordinates: hasFreshPickup ? { ...request.livePickupCoordinates, lat: Number(request.livePickupCoordinates.lat), lng: Number(request.livePickupCoordinates.lng) } : null,
       pickupAddress: request.pickupAddress,
     });
+  } catch (error) { return next(error); }
+};
+
+export const updateMovingRequestLivePickup = async (req, res, next) => {
+  try {
+    const { coordinates } = req.body;
+    if (!validPoint(coordinates)) return next(errorHandler(400, 'A valid phone GPS position is required.'));
+    const accuracy = Number(coordinates.accuracy);
+    if (!Number.isFinite(accuracy) || accuracy < 0 || accuracy > 100) {
+      return next(errorHandler(400, 'Live pickup sharing needs a phone GPS fix within 100 m.'));
+    }
+    const request = await MovingRequest.findOneAndUpdate(
+      { _id: req.params.id, requesterRef: req.user.id, status: { $in: ['accepted', 'in_progress'] } },
+      { $set: { livePickupCoordinates: { lat: Number(coordinates.lat), lng: Number(coordinates.lng), accuracy, updatedAt: new Date() } } },
+      { new: true, projection: { _id: 1 } },
+    );
+    if (!request) return next(errorHandler(409, 'Live pickup sharing is available only after the driver accepts your request.'));
+    return res.json({ success: true, updatedAt: new Date() });
   } catch (error) { return next(error); }
 };
 
@@ -458,8 +479,10 @@ export const updateMovingRequest = async (req, res, next) => {
         $set: {
           currentRequestRef: null,
           liveCoordinates: { lat: null, lng: null, accuracy: null, isLive: false, updatedAt: null },
+          // The request will no longer expose a live customer pickup once it ends.
         },
       }).catch(() => {});
+      await MovingRequest.updateOne({ _id: request._id }, { $set: { livePickupCoordinates: { lat: null, lng: null, accuracy: null, updatedAt: null } } }).catch(() => {});
     }
 
     if (status === 'accepted' || status === 'declined') {

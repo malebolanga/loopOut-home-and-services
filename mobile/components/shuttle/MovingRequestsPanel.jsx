@@ -35,6 +35,12 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
     catch (err) { setError(err.response?.data?.message || 'Could not load moving requests.'); }
   }, [role]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const hasActiveRequest = requests.some((request) => ['accepted', 'in_progress'].includes(request.status));
+    if (!hasActiveRequest) return undefined;
+    const timer = window.setInterval(load, 5000);
+    return () => window.clearInterval(timer);
+  }, [requests, load]);
   const update = async (request, status, details = {}) => {
     setBusyId(request._id); setError('');
     try { await axios.patch(resolveApiUrl(`/api/shuttles/moving/requests/${request._id}`), { status, ...details }, { withCredentials: true, headers: getAuthHeaders() }); await load(); }
@@ -128,10 +134,21 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
   };
   const titleCase = (value) => value?.replace(/_/g, ' ');
   const pickupDirectionsUrl = (request) => {
-    const destination = request.pickupCoordinates?.lat != null && request.pickupCoordinates?.lng != null
-      ? `${request.pickupCoordinates.lat},${request.pickupCoordinates.lng}`
+    const liveUpdatedAt = request.livePickupCoordinates?.updatedAt ? new Date(request.livePickupCoordinates.updatedAt).getTime() : 0;
+    const hasLivePickup = request.livePickupCoordinates?.lat != null && request.livePickupCoordinates?.lng != null
+      && liveUpdatedAt > 0 && Date.now() - liveUpdatedAt >= 0 && Date.now() - liveUpdatedAt <= 60000;
+    const destination = hasLivePickup
+      ? `${request.livePickupCoordinates.lat},${request.livePickupCoordinates.lng}`
+      : request.pickupCoordinates?.lat != null && request.pickupCoordinates?.lng != null
+        ? `${request.pickupCoordinates.lat},${request.pickupCoordinates.lng}`
       : request.pickupAddress || '';
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+  };
+  const pickupLocationLabel = (request) => {
+    const updatedAt = request.livePickupCoordinates?.updatedAt ? new Date(request.livePickupCoordinates.updatedAt).getTime() : 0;
+    return updatedAt > 0 && Date.now() - updatedAt >= 0 && Date.now() - updatedAt <= 60000
+      ? 'Live customer location'
+      : request.pickupAddress;
   };
   return <div className="fixed inset-0 z-[1200] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
     <section onClick={(event) => event.stopPropagation()} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-gray-900 sm:rounded-3xl">
@@ -144,8 +161,8 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
       <div className="space-y-3">
         {requests.map((request) => <article key={request._id} className="rounded-2xl border border-gray-200 p-4 dark:border-gray-700">
           <div className="flex items-start justify-between gap-2"><div><h3 className="font-bold">{role === 'driver' ? request.requesterName : request.vehicleRef?.vehicleDescription}</h3><p className="text-xs capitalize text-gray-500">{request.vehicleRef?.vehicleType} · {titleCase(request.status)}</p></div><span className="flex items-center gap-1 whitespace-nowrap text-xs text-gray-500"><Clock className="h-3 w-3" />{new Date(request.requestedAt).toLocaleString()}</span></div>
-          <p className="mt-2 text-sm"><MapPin className="mr-1 inline h-3.5 w-3.5" />{request.pickupAddress} → {request.dropoffAddress}</p>
-          {role === 'driver' && <a target="_blank" rel="noreferrer" href={pickupDirectionsUrl(request)} className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-teal-700 underline"><MapPin className="h-3.5 w-3.5" />Navigate to pickup</a>}
+          <p className="mt-2 text-sm"><MapPin className="mr-1 inline h-3.5 w-3.5" />{pickupLocationLabel(request)} → {request.dropoffAddress}</p>
+          {role === 'driver' && <a target="_blank" rel="noreferrer" href={pickupDirectionsUrl(request)} className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-teal-700 underline"><MapPin className="h-3.5 w-3.5" />Navigate to {pickupLocationLabel(request) === 'Live customer location' ? 'live customer' : 'pickup'}</a>}
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{request.itemDescription}</p>
           {role === 'driver' && <p className="mt-2 text-sm">Contact: <a className="font-bold text-teal-700" href={`tel:${request.requesterPhone}`}>{request.requesterName} · {request.requesterPhone}</a></p>}
           {role === 'requester' && request.vehicleRef?.driverPhone && ['accepted', 'service_completed', 'payment_reported', 'paid'].includes(request.status) && <p className="mt-2 text-sm">Driver: <a className="font-bold text-teal-700" href={`tel:${request.vehicleRef.driverPhone}`}>{request.vehicleRef.driverPhone}</a></p>}
