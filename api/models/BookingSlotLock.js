@@ -5,7 +5,7 @@ const bookingSlotLockSchema = new mongoose.Schema({
   resourceId: { type: mongoose.Schema.Types.ObjectId, required: true },
   minute: { type: Date, required: true },
   bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  expiresAt: { type: Date, required: true, expires: 0 },
+  expiresAt: { type: Date, required: true },
 }, { timestamps: true });
 
 // A unique minute key serializes overlapping helper/service bookings across

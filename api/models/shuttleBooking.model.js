@@ -119,7 +119,6 @@ const shuttleBookingSchema = new mongoose.Schema(
     },
     ticketCode: {
       type: String,
-      sparse: true,
       uppercase: true,
       trim: true,
     },
@@ -169,7 +168,7 @@ const shuttleBookingSchema = new mongoose.Schema(
 shuttleBookingSchema.index({ shuttleRef: 1, status: 1 });
 shuttleBookingSchema.index({ passengerRef: 1, createdAt: -1 });
 shuttleBookingSchema.index({ driverRef: 1, createdAt: -1 });
-shuttleBookingSchema.index({ ticketCode: 1 });
+shuttleBookingSchema.index({ ticketCode: 1 }, { sparse: true });
 
 const ShuttleBooking = mongoose.models.ShuttleBooking || mongoose.model('ShuttleBooking', shuttleBookingSchema);
 export default ShuttleBooking;
