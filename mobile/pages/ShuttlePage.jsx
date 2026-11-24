@@ -142,7 +142,7 @@ const ShuttlePage = () => {
 
     const loadNearbyMovingVehicles = () => {
       if (!endpointSupported) return;
-      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } })
+      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } })
         .then((response) => { if (!cancelled) setMovingVehicles(response.data?.vehicles || []); })
         .catch((err) => {
           if (err?.response?.status === 404) {
@@ -467,7 +467,7 @@ const ShuttlePage = () => {
           <div className="pointer-events-auto max-w-md rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-center shadow-lg backdrop-blur dark:border-gray-700 dark:bg-gray-900/95">
             {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading available transport…</p>
               : error ? <><p role="alert" className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
-                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 150 km.</p></>}
+                : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No {selectedMapVehicleType === 'moving' ? 'moving trucks or minivans' : 'shuttles'} are available nearby.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Choose the other vehicle type or allow phone location to find moving vehicles within 300 km.</p></>}
           </div>
         </div>}
         {/* ── 2km Trip Proximity Alert Banner ── */}
@@ -857,11 +857,19 @@ const ShuttlePage = () => {
         />
       )}
 
-      {showMovingRequestsPanel && <MovingRequestsPanel onClose={() => setShowMovingRequestsPanel(false)} />}
+      {showMovingRequestsPanel && <MovingRequestsPanel
+        onClose={() => setShowMovingRequestsPanel(false)}
+        onUpdated={() => {
+          if (!userLocation) return;
+          axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } })
+            .then((response) => setMovingVehicles(response.data?.vehicles || []))
+            .catch(() => setMovingVehicles([]));
+        }}
+      />}
       {showMovingUploadModal && <MovingVehicleUploadModal currentUser={currentUser} onClose={() => setShowMovingUploadModal(false)} onSuccess={() => {
         setShowMovingRequestsPanel(true);
         if (!userLocation) return;
-        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
       }} />}
 
       {/* ── Driver Schedule & Route Edit Modal ───────────────────────── */}

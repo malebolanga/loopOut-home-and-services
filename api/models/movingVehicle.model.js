@@ -34,10 +34,11 @@ const movingVehicleSchema = new mongoose.Schema({
     lng: { type: Number, required: true, min: -180, max: 180 },
     address: { type: String, trim: true, default: '' },
     accuracy: { type: Number, default: null },
+    locationSource: { type: String, enum: ['gps', 'address', 'unknown'], default: 'unknown' },
     isLive: { type: Boolean, default: false },
     updatedAt: { type: Date, default: Date.now },
   },
-  serviceRadiusKm: { type: Number, default: 150, min: 1, max: 150 },
+  serviceRadiusKm: { type: Number, default: 300, min: 1, max: 300 },
   active: { type: Boolean, default: true, index: true },
 }, { timestamps: true });
 

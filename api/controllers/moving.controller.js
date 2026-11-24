@@ -20,6 +20,16 @@ const validPoint = (point) => point
   && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng))
   && Number(point.lat) >= -90 && Number(point.lat) <= 90 && Number(point.lng) >= -180 && Number(point.lng) <= 180;
 
+const validMovingLocation = (point) => {
+  if (!validPoint(point)) return false;
+  if (point.locationSource === 'address') return typeof point.address === 'string' && point.address.trim().length > 0;
+  if (point.accuracy === null || point.accuracy === undefined || point.accuracy === '') return false;
+  const accuracy = Number(point.accuracy);
+  return Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 20;
+};
+
+const movingLocationError = 'Use a mapped street/town address or a phone GPS fix with accuracy of 20 m or better. Move outside and retry GPS if needed.';
+
 const isVehicleDocumentUrl = (value, req) => {
   if (typeof value !== 'string' || value.length > 2048) return false;
   try {
@@ -49,12 +59,11 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
   try {
     const point = { lat: Number(req.query.lat), lng: Number(req.query.lng) };
     if (!validPoint(point)) return next(errorHandler(400, 'A valid phone GPS location is required to find nearby moving vehicles.'));
-    const radius = Math.min(150, Math.max(1, Number(req.query.radiusKm) || 150));
+    const radius = Math.min(300, Math.max(1, Number(req.query.radiusKm) || 300));
     const suspendedUsers = await User.find({ accountStatus: 'suspended' }).distinct('_id');
     const vehicles = await MovingVehicle.find({ active: true, verificationStatus: 'approved', driverRef: { $nin: suspendedUsers } }).sort({ updatedAt: -1 }).lean();
-    // A day-old pin is misleading for a nearby pickup. Ask drivers to refresh
-    // their location at least hourly before showing their vehicle to customers.
-    const gpsFreshnessLimit = Date.now() - 60 * 60 * 1000;
+    // Allow vehicles reposted or location-updated within the past 24 hours to remain visible on the map.
+    const gpsFreshnessLimit = Date.now() - 24 * 60 * 60 * 1000;
     const activeVehicleIds = vehicles.map((vehicle) => vehicle._id);
     const activeRequests = await MovingRequest.find({ vehicleRef: { $in: activeVehicleIds }, status: { $in: ['pending', 'accepted', 'in_progress'] } }).select('vehicleRef').lean();
     const bookedVehicleIds = new Set(activeRequests.map((request) => String(request.vehicleRef)));
@@ -72,7 +81,7 @@ export const getNearbyMovingVehicles = async (req, res, next) => {
         vehicleCategory: 'moving',
         bookingStatus: bookedVehicleIds.has(String(vehicle._id)) || Boolean(vehicle.currentRequestRef) ? 'booked' : 'available',
         distanceKm: Number(distanceKm(point, vehicle.currentCoordinates).toFixed(1)),
-        currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat.toFixed(2)), lng: Number(vehicle.currentCoordinates.lng.toFixed(2)) },
+        currentCoordinates: { ...vehicle.currentCoordinates, lat: Number(vehicle.currentCoordinates.lat.toFixed(5)), lng: Number(vehicle.currentCoordinates.lng.toFixed(5)) },
       };
     }).filter((vehicle) => vehicle.distanceKm <= radius);
     return res.json({ success: true, radiusKm: radius, count: nearby.length, vehicles: nearby });
@@ -98,7 +107,7 @@ export const createMovingVehicle = async (req, res, next) => {
     if (!/^[A-Z0-9 -]{3,24}$/.test(normalizedPlate)) return next(errorHandler(400, 'Enter the truck or minivan registration number plate.'));
     if (!isVehiclePhotoUrl(vehicleImageUrl, req)) return next(errorHandler(400, 'Upload a photo of the truck or minivan.'));
     if (!isVehicleDocumentUrl(vehicleLicenceDocumentUrl, req)) return next(errorHandler(400, 'Upload the vehicle licence disc or registration document as a PDF.'));
-    if (!validPoint(currentCoordinates)) return next(errorHandler(400, 'Allow phone GPS and capture your current vehicle location before listing.'));
+    if (!validMovingLocation(currentCoordinates)) return next(errorHandler(400, movingLocationError));
     const rate = Number(hourlyRate);
     const fee = Number(callOutFee || 0);
     if (!Number.isFinite(rate) || rate < 1 || !Number.isFinite(fee) || fee < 0) return next(errorHandler(400, 'Enter a valid hourly rate and call-out fee.'));
@@ -123,7 +132,7 @@ export const createMovingVehicle = async (req, res, next) => {
       hourlyRate: rate,
       callOutFee: fee,
       description: String(description || '').trim(),
-      currentCoordinates: { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), address: String(currentCoordinates.address || '').trim(), accuracy: Number(currentCoordinates.accuracy) || null, updatedAt: new Date() },
+      currentCoordinates: { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), address: String(currentCoordinates.address || '').trim(), accuracy: currentCoordinates.locationSource === 'address' ? null : Number(currentCoordinates.accuracy), locationSource: currentCoordinates.locationSource === 'address' ? 'address' : 'gps', updatedAt: new Date() },
     });
     await notifyLoopOutAdmins({
       title: 'Moving vehicle needs review',
@@ -137,10 +146,10 @@ export const createMovingVehicle = async (req, res, next) => {
 export const updateMovingVehicleLocation = async (req, res, next) => {
   try {
     const { currentCoordinates } = req.body;
-    if (!validPoint(currentCoordinates)) return next(errorHandler(400, 'Valid phone GPS coordinates are required.'));
+    if (!validMovingLocation(currentCoordinates)) return next(errorHandler(400, movingLocationError));
     const vehicle = await MovingVehicle.findOneAndUpdate(
       { _id: req.params.id, driverRef: req.user.id, active: true, verificationStatus: 'approved' },
-      { $set: { currentCoordinates: { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), accuracy: Number(currentCoordinates.accuracy) || null, address: String(currentCoordinates.address || '').trim(), isLive: false, updatedAt: new Date() } } },
+      { $set: { currentCoordinates: { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), accuracy: currentCoordinates.locationSource === 'address' ? null : Number(currentCoordinates.accuracy), locationSource: currentCoordinates.locationSource === 'address' ? 'address' : 'gps', address: String(currentCoordinates.address || '').trim(), isLive: false, updatedAt: new Date() } } },
       { new: true, runValidators: true },
     );
     if (!vehicle) return next(errorHandler(404, 'Your approved moving vehicle was not found.'));
@@ -151,7 +160,7 @@ export const updateMovingVehicleLocation = async (req, res, next) => {
 export const repostMovingVehicle = async (req, res, next) => {
   try {
     const { currentCoordinates } = req.body;
-    if (!validPoint(currentCoordinates)) return next(errorHandler(400, 'Capture your current phone GPS location before reposting this vehicle.'));
+    if (!validMovingLocation(currentCoordinates)) return next(errorHandler(400, movingLocationError));
     const vehicle = await MovingVehicle.findOne({ _id: req.params.id, driverRef: req.user.id, verificationStatus: 'approved' });
     if (!vehicle) return next(errorHandler(404, 'Your approved moving vehicle could not be found.'));
     if (vehicle.currentRequestRef || await MovingRequest.exists({ vehicleRef: vehicle._id, status: { $in: ['pending', 'accepted', 'in_progress'] } })) {
@@ -162,9 +171,32 @@ export const repostMovingVehicle = async (req, res, next) => {
       return next(errorHandler(403, 'Your approved transport driver account is required to repost this vehicle.'));
     }
     vehicle.active = true;
-    vehicle.currentCoordinates = { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), address: String(currentCoordinates.address || '').trim(), accuracy: Number(currentCoordinates.accuracy) || null, isLive: false, updatedAt: new Date() };
+    vehicle.currentCoordinates = { lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng), address: String(currentCoordinates.address || '').trim(), accuracy: currentCoordinates.locationSource === 'address' ? null : Number(currentCoordinates.accuracy), locationSource: currentCoordinates.locationSource === 'address' ? 'address' : 'gps', isLive: false, updatedAt: new Date() };
     await vehicle.save();
     return res.json({ success: true, message: 'Your approved vehicle has been reposted with its existing details.', vehicle: { ...vehicle.toObject(), vehicleCategory: 'moving' } });
+  } catch (error) { return next(error); }
+};
+
+export const closeMovingVehicle = async (req, res, next) => {
+  try {
+    const vehicle = await MovingVehicle.findOne({ _id: req.params.id, driverRef: req.user.id, verificationStatus: 'approved' });
+    if (!vehicle) return next(errorHandler(404, 'Your approved moving vehicle could not be found.'));
+    if (vehicle.currentRequestRef || await MovingRequest.exists({ vehicleRef: vehicle._id, status: { $in: ['pending', 'accepted', 'in_progress'] } })) {
+      return next(errorHandler(409, 'This vehicle is booked. Finish, decline, or cancel the current request before taking it off the map.'));
+    }
+    const closedVehicle = await MovingVehicle.findOneAndUpdate(
+      { _id: vehicle._id, driverRef: req.user.id, verificationStatus: 'approved', active: true, $or: [{ currentRequestRef: null }, { currentRequestRef: { $exists: false } }] },
+      { $set: { active: false } },
+      { new: true },
+    );
+    if (!closedVehicle) {
+      const latestVehicle = await MovingVehicle.findOne({ _id: vehicle._id, driverRef: req.user.id, verificationStatus: 'approved' }).lean();
+      if (latestVehicle && !latestVehicle.active && !latestVehicle.currentRequestRef) {
+        return res.json({ success: true, message: 'This approved vehicle is already closed and hidden from the map.', vehicle: latestVehicle });
+      }
+      return next(errorHandler(409, 'This vehicle changed while closing. Refresh and try again.'));
+    }
+    return res.json({ success: true, message: 'Your vehicle is closed and no longer appears on the map.', vehicle: closedVehicle });
   } catch (error) { return next(error); }
 };
 

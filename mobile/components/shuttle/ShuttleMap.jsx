@@ -512,7 +512,7 @@ const ShuttleMap = ({
               <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
             ` : ''}
             ${isSavedPin ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? 'GPS LOCATION' : 'SAVED PIN · NOT LIVE'}</div>
+              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? shuttle.currentCoordinates?.locationSource === 'address' ? 'ADDRESS PIN · NOT LIVE' : 'SAVED GPS · NOT LIVE' : 'SAVED PIN · NOT LIVE'}</div>
             ` : ''}
 
             <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">

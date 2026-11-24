@@ -209,7 +209,7 @@ const ShuttlePage = () => {
 
     const loadNearbyMovingVehicles = () => {
       if (!endpointSupported) return;
-      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } })
+      axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } })
         .then((response) => { if (!cancelled) setMovingVehicles(response.data?.vehicles || []); })
         .catch((err) => {
           if (err?.response?.status === 404) {
@@ -549,7 +549,7 @@ const ShuttlePage = () => {
             {loading ? <p className="text-sm text-slate-600 dark:text-slate-300">Loading available transport…</p>
               : error ? <><p className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p><button type="button" onClick={fetchShuttles} className="mt-2 text-xs font-bold text-teal-700 underline dark:text-teal-300">Try again</button></>
                 : selectedMapVehicleType === 'moving'
-                  ? <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No approved moving vehicles within 150 km.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Allow location access and make sure your phone GPS is on, or check again later.</p></>
+                  ? <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No approved moving vehicles within 300 km.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Allow location access and make sure your phone GPS is on, or check again later.</p></>
                   : <><p className="text-sm font-semibold text-slate-800 dark:text-slate-200">No upcoming shuttle departures are available.</p><p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Only routes with a departure date and time appear here.</p><div className="mt-3 flex flex-wrap items-center justify-center gap-2"><button type="button" onClick={() => setShowSearchModal(true)} className="rounded-full border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800">Search routes</button>{canOfferTransport && <button type="button" onClick={() => { setProviderIntent('shuttle'); setShowDriverVerificationGate(true); }} className="rounded-full bg-amber-400 px-3 py-2 text-xs font-bold text-gray-950 transition hover:bg-amber-300">Add a shuttle route</button>}</div></>}
           </div>
         </div>}
@@ -895,11 +895,25 @@ const ShuttlePage = () => {
         />
       )}
 
-      {showMovingRequestsPanel && <MovingRequestsPanel onClose={() => setShowMovingRequestsPanel(false)} />}
+      {showMovingRequestsPanel && (
+        <MovingRequestsPanel
+          onClose={() => {
+            setShowMovingRequestsPanel(false);
+            if (userLocation) {
+              axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+            }
+          }}
+          onUpdated={() => {
+            if (userLocation) {
+              axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+            }
+          }}
+        />
+      )}
       {showMovingUploadModal && <MovingVehicleUploadModal currentUser={currentUser} onClose={() => setShowMovingUploadModal(false)} onSuccess={() => {
         setShowMovingRequestsPanel(true);
         if (!userLocation) return;
-        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 150 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
+        axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
       }} />}
 
       {/* ── Driver Schedule & Route Edit Modal ───────────────────────── */}

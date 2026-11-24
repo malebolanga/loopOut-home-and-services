@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Check, Clock, MapPin, RefreshCw, Star, X } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, Clock, MapPin, Power, RefreshCw, Star, X } from 'lucide-react';
 import axios from 'axios';
 import { resolveApiUrl } from '../../utils/apiBaseUrl';
 import { reverseGeocodeArea } from '../../utils/geocoding';
@@ -10,7 +10,7 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const MovingRequestsPanel = ({ onClose }) => {
+const MovingRequestsPanel = ({ onClose, onUpdated }) => {
   const [role, setRole] = useState('driver');
   const [requests, setRequests] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -19,6 +19,7 @@ const MovingRequestsPanel = ({ onClose }) => {
   const [issueForms, setIssueForms] = useState({});
   const [ratingDrafts, setRatingDrafts] = useState({});
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [busyId, setBusyId] = useState('');
   const load = useCallback(async () => {
     try {
@@ -54,24 +55,30 @@ const MovingRequestsPanel = ({ onClose }) => {
   };
   const refreshGps = (vehicle) => {
     if (!navigator.geolocation) return setError('This device does not provide GPS.');
-    setBusyId(vehicle._id); setError('');
+    setBusyId(vehicle._id); setError(''); setSuccessMessage('');
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
         const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
         await axios.put(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/location`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address } }, { withCredentials: true, headers: getAuthHeaders() });
         await load();
+        const displayLocation = address || `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)} (GPS)`;
+        setSuccessMessage(`GPS location updated for ${vehicle.vehicleDescription || 'Vehicle'} (${vehicle.plateNumber || 'registration plate unavailable'}) at ${displayLocation}.`);
+        if (typeof onUpdated === 'function') onUpdated();
       } catch (err) { setError(err.response?.data?.message || 'Could not update the GPS location.'); }
       finally { setBusyId(''); }
     }, () => { setError('Allow GPS access to update your vehicle location.'); setBusyId(''); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };
   const repostVehicle = (vehicle) => {
     if (!navigator.geolocation) return setError('This device does not provide GPS.');
-    setBusyId(vehicle._id); setError('');
+    setBusyId(vehicle._id); setError(''); setSuccessMessage('');
     navigator.geolocation.getCurrentPosition(async ({ coords }) => {
       try {
         const address = await reverseGeocodeArea(coords.latitude, coords.longitude);
         await axios.post(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/repost`), { currentCoordinates: { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy, address } }, { withCredentials: true, headers: getAuthHeaders() });
         await load();
+        const displayLocation = address || `${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)} (GPS)`;
+        setSuccessMessage(`${vehicle.vehicleDescription || 'Vehicle'} (${vehicle.plateNumber || 'registration plate unavailable'}) was reposted successfully at ${displayLocation}. It is active on the map.`);
+        if (typeof onUpdated === 'function') onUpdated();
       } catch (err) {
         const serverMessage = err.response?.data?.message;
         const endpointUnavailable = err.response?.status === 404
@@ -83,7 +90,23 @@ const MovingRequestsPanel = ({ onClose }) => {
       finally { setBusyId(''); }
     }, () => { setError('Allow GPS access to repost this vehicle at its current location.'); setBusyId(''); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };
+  const closeVehicle = async (vehicle) => {
+    setBusyId(vehicle._id); setError(''); setSuccessMessage('');
+    try {
+      await axios.post(resolveApiUrl(`/api/shuttles/moving/vehicles/${vehicle._id}/close`), {}, { withCredentials: true, headers: getAuthHeaders() });
+      await load();
+      setSuccessMessage(`${vehicle.vehicleDescription || 'Vehicle'} (${vehicle.plateNumber || 'registration plate unavailable'}) is closed and hidden from the map.`);
+      if (typeof onUpdated === 'function') onUpdated();
+    } catch (err) { setError(err.response?.data?.message || 'Could not close this vehicle.'); }
+    finally { setBusyId(''); }
+  };
   const titleCase = (value) => value?.replace(/_/g, ' ');
+  const pickupDirectionsUrl = (request) => {
+    const destination = request.pickupCoordinates?.lat != null && request.pickupCoordinates?.lng != null
+      ? `${request.pickupCoordinates.lat},${request.pickupCoordinates.lng}`
+      : request.pickupAddress || '';
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+  };
   const nextStep = (request) => {
     if (request.status === 'pending') return role === 'driver' ? 'Review the request, then accept or decline it.' : 'Waiting for the driver to accept or decline.';
     if (request.status === 'declined') return 'The driver declined this request. You can request another vehicle.';
@@ -101,7 +124,8 @@ const MovingRequestsPanel = ({ onClose }) => {
     <section onClick={(event) => event.stopPropagation()} className="max-h-[90vh] max-h-[90dvh] overscroll-contain w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] shadow-2xl [-webkit-overflow-scrolling:touch] dark:bg-gray-900 sm:rounded-3xl">
       <div className="flex items-center justify-between"><div><h2 className="text-lg font-extrabold">Moving requests</h2><p className="text-xs text-gray-500">No payment is due before the moving service is provided.</p></div><div className="flex gap-2"><button onClick={load} title="Refresh" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><RefreshCw className="h-4 w-4" /></button><button onClick={onClose} aria-label="Close" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><X /></button></div></div>
       <div className="my-4 grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">{[['driver', 'Requests to me'], ['requester', 'My requests']].map(([value, label]) => <button key={value} onClick={() => setRole(value)} className={`rounded-lg px-3 py-2 text-sm font-bold ${role === value ? 'bg-white shadow dark:bg-gray-700' : ''}`}>{label}</button>)}</div>
-      {role === 'driver' && vehicles.length > 0 && <div className="mb-4 space-y-2"><h3 className="text-sm font-bold">My moving vehicles</h3>{vehicles.map((vehicle) => { const activeJob = requests.find((request) => String(request.vehicleRef?._id || request.vehicleRef) === String(vehicle._id) && ['pending', 'accepted', 'in_progress'].includes(request.status)); return <div key={vehicle._id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800"><div className="min-w-0"><p className="text-sm font-bold">{vehicle.vehicleDescription} · {vehicle.plateNumber}</p><p className="text-xs capitalize text-gray-500">Admin review: {vehicle.verificationStatus}</p>{vehicle.verificationReviewNote && <p className="mt-1 text-xs text-rose-700">Review note: {vehicle.verificationReviewNote}</p>}{vehicle.verificationStatus === 'approved' && <p className="text-xs text-gray-500">GPS updated {vehicle.currentCoordinates?.updatedAt ? new Date(vehicle.currentCoordinates.updatedAt).toLocaleString() : 'time unavailable'}</p>}</div>{vehicle.verificationStatus === 'approved' && <div className="flex gap-2"><button disabled={busyId === vehicle._id || activeJob} onClick={() => repostVehicle(vehicle)} className="shrink-0 rounded-lg bg-teal-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">{activeJob?.status === 'pending' ? 'Booked · review request' : activeJob ? 'Booked · finish job first' : busyId === vehicle._id ? 'Reposting…' : 'Repost'}</button><button disabled={busyId === vehicle._id} onClick={() => refreshGps(vehicle)} className="shrink-0 rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50 dark:border-gray-600">{busyId === vehicle._id ? 'Updating…' : 'Update GPS'}</button></div>}</div>; })}</div>}
+      {role === 'driver' && vehicles.length > 0 && <div className="mb-4 space-y-2"><h3 className="text-sm font-bold">My moving vehicles</h3>{vehicles.map((vehicle) => { const activeJob = requests.find((request) => String(request.vehicleRef?._id || request.vehicleRef) === String(vehicle._id) && ['pending', 'accepted', 'in_progress'].includes(request.status)); return <div key={vehicle._id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-gray-50 p-3 dark:bg-gray-800"><div className="min-w-0"><p className="text-sm font-bold">{vehicle.vehicleDescription} · {vehicle.plateNumber}</p><p className="text-xs capitalize text-gray-500">Admin review: {vehicle.verificationStatus} · {vehicle.active ? 'On map' : 'Hidden from map'}</p>{vehicle.verificationReviewNote && <p className="mt-1 text-xs text-rose-700">Review note: {vehicle.verificationReviewNote}</p>}{vehicle.verificationStatus === 'approved' && <p className="text-xs text-gray-500">GPS updated {vehicle.currentCoordinates?.updatedAt ? new Date(vehicle.currentCoordinates.updatedAt).toLocaleString() : 'time unavailable'}</p>}</div>{vehicle.verificationStatus === 'approved' && <div className="flex flex-wrap gap-2"><button disabled={busyId === vehicle._id || Boolean(activeJob)} onClick={() => vehicle.active ? closeVehicle(vehicle) : repostVehicle(vehicle)} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-bold text-white disabled:opacity-50 ${activeJob ? 'bg-rose-700' : vehicle.active ? 'bg-slate-800 hover:bg-slate-700' : 'bg-teal-700 hover:bg-teal-800'}`}>{activeJob?.status === 'pending' ? 'Booked · review request' : activeJob ? 'Booked · finish job first' : busyId === vehicle._id ? vehicle.active ? 'Closing…' : 'Reposting…' : vehicle.active ? <><Power className="mr-1 inline h-3.5 w-3.5" />Log off truck</> : 'Repost'}</button>{vehicle.active && <button disabled={busyId === vehicle._id} onClick={() => refreshGps(vehicle)} className="shrink-0 rounded-lg border px-3 py-2 text-xs font-bold disabled:opacity-50 dark:border-gray-600">{busyId === vehicle._id ? 'Updating…' : 'Update GPS'}</button>}</div>}</div>; })}</div>}
+      {successMessage && <div role="status" className="mb-3 flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" /><span className="flex-1">{successMessage}</span><button type="button" onClick={() => setSuccessMessage('')} className="text-emerald-700 hover:text-emerald-900 dark:text-emerald-300"><X className="h-3.5 w-3.5" /></button></div>}
       {error && <p role="alert" className="mb-3 text-sm text-red-600">{error}</p>}
       {!requests.length && !error && <p className="rounded-2xl bg-gray-50 p-5 text-center text-sm text-gray-500 dark:bg-gray-800">No moving requests yet.</p>}
       <div className="space-y-3">
@@ -109,7 +133,7 @@ const MovingRequestsPanel = ({ onClose }) => {
           <div className="flex items-start justify-between gap-2"><div><h3 className="font-bold">{role === 'driver' ? request.requesterName : request.vehicleRef?.vehicleDescription}</h3><p className="text-xs capitalize text-gray-500">{request.vehicleRef?.vehicleType} · {titleCase(request.status)}</p></div><span className="flex items-center gap-1 whitespace-nowrap text-xs text-gray-500"><Clock className="h-3 w-3" />{new Date(request.requestedAt).toLocaleString()}</span></div>
           {nextStep(request) && <p className="mt-2 rounded-lg bg-teal-50 px-3 py-2 text-xs font-medium text-teal-900 dark:bg-teal-950/30 dark:text-teal-100"><strong>Next step:</strong> {nextStep(request)}</p>}
           <p className="mt-2 text-sm"><MapPin className="mr-1 inline h-3.5 w-3.5" />{request.pickupAddress} → {request.dropoffAddress}</p>
-          {role === 'driver' && request.pickupCoordinates?.lat != null && request.pickupCoordinates?.lng != null && <a target="_blank" rel="noreferrer" href={`https://www.google.com/maps/dir/?api=1&destination=${request.pickupCoordinates.lat},${request.pickupCoordinates.lng}`} className="mt-1 inline-block text-xs font-bold text-teal-700 underline">Open GPS pickup directions</a>}
+          {role === 'driver' && <a target="_blank" rel="noreferrer" href={pickupDirectionsUrl(request)} className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-teal-700 underline"><MapPin className="h-3.5 w-3.5" />Navigate to pickup</a>}
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{request.itemDescription}</p>
           {role === 'driver' && <p className="mt-2 text-sm">Contact: <a className="font-bold text-teal-700" href={`tel:${request.requesterPhone}`}>{request.requesterName} · {request.requesterPhone}</a></p>}
           {role === 'requester' && request.vehicleRef?.driverPhone && ['accepted', 'service_completed', 'payment_reported', 'paid'].includes(request.status) && <p className="mt-2 text-sm">Driver: <a className="font-bold text-teal-700" href={`tel:${request.vehicleRef.driverPhone}`}>{request.vehicleRef.driverPhone}</a></p>}
