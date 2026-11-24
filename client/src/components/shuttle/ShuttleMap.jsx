@@ -419,12 +419,13 @@ const ShuttleMap = ({
       const cluster = markerGroups.find((group) => group.items.some((item) => String(item._id) === String(shuttle._id)))?.items || [shuttle];
       const clusterSize = cluster.length;
       const clusterIndex = cluster.findIndex((item) => String(item._id) === String(shuttle._id));
+      const isTrackedMovingVehicle = shuttle.vehicleCategory === 'moving' && String(movingTracking?.request?.vehicleRef?._id || movingTracking?.request?.vehicleRef || '') === String(shuttle._id);
 
       // Calculate spread position if multiple cars share the location so none are blocked
       let markerLat = coords.lat;
       let markerLng = coords.lng;
 
-      if (clusterSize > 1) {
+      if (clusterSize > 1 && !isTrackedMovingVehicle) {
         // Spread overlapping vehicle pins into a compact ring.
         const angle = (clusterIndex / clusterSize) * 2 * Math.PI - Math.PI / 2;
         const minMarkerGapPx = 128;
@@ -440,7 +441,7 @@ const ShuttleMap = ({
       const isSelected = selectedShuttle && String(selectedShuttle._id) === String(shuttle._id);
       const isEnRoute = shuttle.currentStatus === 'en_route';
       const isBoarding = shuttle.currentStatus === 'boarding';
-      const isLiveGprs = coords.source === 'live';
+      const isLiveGprs = coords.source === 'live' && (shuttle.vehicleCategory !== 'moving' || isTrackedMovingVehicle);
       const isRouteOriginPin = coords.source === 'route-origin';
       const isSavedPin = coords.source === 'saved';
       const isMovingVehicle = shuttle.vehicleCategory === 'moving';
@@ -454,10 +455,14 @@ const ShuttleMap = ({
         : (/bus|quantum|sprinter|van|shuttle/i.test(String(shuttle.carType || '')) ? '🚐' : '🚗');
       const showMarkerDetails = isSelected || mapZoom >= 10 || isUnavailable;
       const movingArea = String(shuttle.currentCoordinates?.address || '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+      const pickup = isTrackedMovingVehicle ? movingTracking?.pickupCoordinates : null;
+      const distanceToPickupKm = isTrackedMovingVehicle && coords.source === 'live' && isValidCoord(pickup?.lat, pickup?.lng)
+        ? calculateDistanceKm(coords.lat, coords.lng, Number(pickup.lat), Number(pickup.lng))
+        : null;
       const departureDay = isMovingVehicle ? 'Moving help' : shuttle.departureDate
         ? new Date(shuttle.departureDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })
         : 'Date to be confirmed';
-      const departureClock = isMovingVehicle ? `${shuttle.distanceKm} km away` : shuttle.departureTime && !/when full/i.test(shuttle.departureTime)
+      const departureClock = isMovingVehicle ? distanceToPickupKm !== null ? `${distanceToPickupKm.toFixed(1)} km to pickup` : `${shuttle.distanceKm} km away` : shuttle.departureTime && !/when full/i.test(shuttle.departureTime)
         ? shuttle.departureTime
         : 'Time to be confirmed';
       const abbreviateCity = (city) => {
@@ -480,7 +485,7 @@ const ShuttleMap = ({
         return normalized.split(' ').map((part) => part.slice(0, 3).toUpperCase()).join('-');
       };
       const routeLabel = isMovingVehicle
-        ? movingArea || 'GPS street area unavailable'
+        ? isTrackedMovingVehicle && coords.source === 'live' ? 'Driver approaching pickup' : movingArea || 'GPS street area unavailable'
         : `${abbreviateCity(shuttle.originCity)} → ${abbreviateCity(shuttle.destinationCity)}`;
 
       // Movement breadcrumb trail for live moving vehicles
@@ -1063,6 +1068,13 @@ const ShuttleMap = ({
       >
         <RotateCcw className="h-4 w-4" aria-hidden="true" />
       </button>}
+
+      {movingTracking?.request && (
+        <div className="absolute top-3 left-1/2 z-[1000] w-max max-w-[calc(100%-1.5rem)] -translate-x-1/2 rounded-full border border-blue-200 bg-white/95 px-3 py-2 text-xs font-bold text-blue-900 shadow-lg backdrop-blur dark:border-blue-900 dark:bg-gray-950/95 dark:text-blue-200">
+          <span className={`mr-2 inline-block h-2 w-2 rounded-full ${movingTracking.liveCoordinates ? 'animate-pulse bg-blue-600' : 'bg-amber-500'}`} />
+          {movingTracking.liveCoordinates ? 'Driver live · heading to your pickup' : 'Driver accepted · waiting for live GPS'}
+        </div>
+      )}
 
       {/* ── Status Toast (Floating at Top-Center) ── */}
       {gprsStatus && (
