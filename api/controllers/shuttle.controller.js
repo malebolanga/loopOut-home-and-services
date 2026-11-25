@@ -589,9 +589,14 @@ export const updateShuttleLocation = async (req, res, next) => {
         return next(errorHandler(400, 'Provide valid GPS coordinates.'));
       }
     }
-    if (currentStatus && !['scheduled', 'boarding', 'en_route', 'arrived', 'cancelled'].includes(currentStatus)) {
+    if (currentStatus && !['scheduled', 'boarding', 'en_route', 'arrived', 'completed', 'cancelled'].includes(currentStatus)) {
       return next(errorHandler(400, 'Invalid shuttle status.'));
     }
+
+    const previousStatus = shuttle.currentStatus;
+    const previousLiveCoords = validRouteCoordinates(shuttle.currentCoordinates) && shuttle.currentCoordinates.isLive === true
+      ? shuttle.currentCoordinates
+      : null;
 
     let gpsPosition = null;
     if (isLive !== false && lat !== undefined && lng !== undefined) {
@@ -623,7 +628,12 @@ export const updateShuttleLocation = async (req, res, next) => {
     }
     if (effectiveStatus === 'en_route' && !shuttle.departedAt) shuttle.departedAt = new Date();
 
-    const updated = await shuttle.save();
+    let updated = await shuttle.save();
+    if (effectiveStatus === 'completed' && previousStatus !== 'completed') {
+      const arrivalCoordinates = gpsPosition || previousLiveCoords || shuttle.destinationCoordinates;
+      await finishShuttleTripAndCreateReturn(shuttle._id, arrivalCoordinates, new Date());
+      updated = await Shuttle.findById(shuttle._id);
+    }
 
     // ── 2km Proximity Trip Alert Trigger ─────────────────────────────
     // When driver is moving (with GPRS) and enters within 2km of a passenger's pickup location
