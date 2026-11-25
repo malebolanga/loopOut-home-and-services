@@ -109,6 +109,7 @@ const ShuttlePage = () => {
   const [showDriverVerificationGate, setShowDriverVerificationGate] = useState(false);
   const [showMovingUploadModal, setShowMovingUploadModal] = useState(false);
   const [showMovingRequestsPanel, setShowMovingRequestsPanel] = useState(false);
+  const [movingRequestsRole, setMovingRequestsRole] = useState('requester');
   const [providerIntent, setProviderIntent] = useState('shuttle');
   const [shuttleForRouteModal, setShuttleForRouteModal] = useState(null);
   const [selectedShuttleForBooking, setSelectedShuttleForBooking] = useState(null);
@@ -157,11 +158,14 @@ const ShuttlePage = () => {
     }
   }, []);
 
-  // Demo vehicles are shown only in local development when the API has no listings.
+  // Map vehicles come only from approved live API listings; an empty map stays empty.
   const [shuttles, setShuttles] = useState([]);
   const [movingVehicles, setMovingVehicles] = useState([]);
   const [movingTracking, setMovingTracking] = useState(null);
   const [movingArrival, setMovingArrival] = useState(null);
+  // `null` means a road ETA is being requested; no value is displayed if routing fails.
+  const [movingEtaMinutes, setMovingEtaMinutes] = useState(undefined);
+  const [movingEtaEstimated, setMovingEtaEstimated] = useState(false);
   const movingArrivalAlertedRef = useRef('');
   const [mapClock, setMapClock] = useState(() => new Date());
   useEffect(() => {
@@ -214,6 +218,9 @@ const ShuttlePage = () => {
     .filter((request) => ['accepted', 'in_progress'].includes(request.status))
     .map((request) => String(request.vehicleRef?._id || request.vehicleRef)).filter(Boolean))];
   const driverMovingVehicleKey = driverMovingVehicleIds.join('|');
+  const driverActiveShuttleKey = myDriverShuttles
+    .filter((shuttle) => shuttle.currentStatus === 'en_route' && shuttle.vehicleCategory !== 'moving')
+    .map((shuttle) => String(shuttle._id)).filter(Boolean).join('|');
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -287,6 +294,45 @@ const ShuttlePage = () => {
     setShowMovingRequestsPanel(false);
     setIsCardOpen(false);
   }, [movingTracking?.request?._id]);
+
+  // Use the driving-route duration when OSRM responds; fall back to a
+  // distance-based urban speed estimate (~40 km/h) if routing is unavailable.
+  useEffect(() => {
+    const driver = movingTracking?.liveCoordinates;
+    const pickup = movingTracking?.pickupCoordinates;
+    if (!driver || !pickup || !Number.isFinite(Number(driver.lat)) || !Number.isFinite(Number(driver.lng)) || !Number.isFinite(Number(pickup.lat)) || !Number.isFinite(Number(pickup.lng))) {
+      setMovingEtaMinutes(undefined);
+      setMovingEtaEstimated(false);
+      return undefined;
+    }
+    const fallbackMinutes = () => {
+      const distKm = movingDistanceKm(driver, pickup);
+      if (distKm === null) return undefined;
+      return Math.max(1, Math.ceil((distKm / 40) * 60));
+    };
+    const controller = new AbortController();
+    setMovingEtaMinutes(null);
+    setMovingEtaEstimated(false);
+    fetch(`https://router.project-osrm.org/route/v1/driving/${Number(driver.lng)},${Number(driver.lat)};${Number(pickup.lng)},${Number(pickup.lat)}?overview=false`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('Route unavailable')))
+      .then((data) => {
+        const seconds = Number(data?.routes?.[0]?.duration);
+        if (Number.isFinite(seconds) && seconds >= 0) {
+          setMovingEtaMinutes(Math.max(1, Math.ceil(seconds / 60)));
+          setMovingEtaEstimated(false);
+        } else {
+          setMovingEtaMinutes(fallbackMinutes());
+          setMovingEtaEstimated(true);
+        }
+      })
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setMovingEtaMinutes(fallbackMinutes());
+          setMovingEtaEstimated(true);
+        }
+      });
+    return () => controller.abort();
+  }, [movingTracking?.request?._id, movingTracking?.liveCoordinates?.lat, movingTracking?.liveCoordinates?.lng, movingTracking?.pickupCoordinates?.lat, movingTracking?.pickupCoordinates?.lng]);
 
   useEffect(() => {
     const requestId = movingTracking?.request?._id;
@@ -463,6 +509,29 @@ const ShuttlePage = () => {
     }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 20000 });
     return () => navigator.geolocation.clearWatch(watchId);
   }, [driverMovingVehicleKey]);
+
+  // Native Android keeps this foreground service alive when the app is in the
+  // background. It sends GPS only for the driver's authenticated active trips.
+  useEffect(() => {
+    const nativeLocation = window.Capacitor?.Plugins?.DriverLocation;
+    if (!nativeLocation) return undefined;
+    const token = localStorage.getItem('token') || '';
+    const active = Boolean(token && (driverActiveShuttleKey || driverMovingVehicleKey));
+    if (!active) {
+      nativeLocation.stop().catch(() => {});
+      return undefined;
+    }
+    nativeLocation.start({
+      token,
+      shuttleBaseUrl: resolveApiUrl('/api/shuttles'),
+      movingBaseUrl: resolveApiUrl('/api/shuttles/moving/vehicles'),
+      shuttleIds: driverActiveShuttleKey,
+      movingVehicleIds: driverMovingVehicleKey,
+    }).then(() => setDriverGpsStatus('Sharing live GPS in the background during this trip')).catch((nativeError) => {
+      setDriverGpsStatus(nativeError?.message || 'Allow location access to share GPS in the background');
+    });
+    return () => { nativeLocation.stop().catch(() => {}); };
+  }, [driverActiveShuttleKey, driverMovingVehicleKey]);
 
   useEffect(() => {
     if (showDriverDeskModal) {
@@ -656,46 +725,22 @@ const ShuttlePage = () => {
               <MapPin className="h-5 w-5 shrink-0" /><span className="hidden md:inline">{driverGpsStatus || 'Starting GPS…'}</span>
               </span>
             )}
-            {canOfferTransport && <>
-            {/* Transport Driver Desk */}
+            {canOfferTransport && (
             <button
               type="button"
               onClick={() => setShowDriverDeskModal(true)}
               className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-gray-100 px-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 sm:h-auto sm:w-auto sm:rounded-full sm:px-3 sm:py-1.5"
-              title="Driver Request Desk"
+              title="Open Driver Workspace"
             >
               <ShieldCheck className="h-6 w-6 shrink-0 text-amber-500" />
-              <span className="hidden md:inline">Driver Desk</span>
+              <span className="hidden md:inline">Driver workspace</span>
             </button>
-            <Link
-              to="/shuttles/vehicles"
-              className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-teal-50 px-2 text-xs font-semibold text-teal-800 transition hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-200 dark:hover:bg-teal-900/60 sm:h-auto sm:w-auto sm:rounded-full sm:px-3 sm:py-1.5"
-              title="Manage my vehicles and routes"
-            >
-              <Bus className="h-6 w-6 shrink-0" />
-              <span className="hidden md:inline">My vehicles</span>
-            </Link>
-            </>}
+            )}
 
-            <button type="button" onClick={() => setShowMovingRequestsPanel(true)} className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-teal-50 px-2 text-xs font-semibold text-teal-800 transition hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-200 sm:h-auto sm:w-auto sm:rounded-full sm:px-2.5 sm:py-1.5" title="Moving requests">
-              <Truck className="h-6 w-6 shrink-0" /><span className="hidden md:inline">Moving requests</span>
+            <button type="button" onClick={() => { setMovingRequestsRole('requester'); setShowMovingRequestsPanel(true); }} className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-teal-50 px-2 text-xs font-semibold text-teal-800 transition hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-200 sm:h-auto sm:w-auto sm:rounded-full sm:px-2.5 sm:py-1.5" title="My moving requests">
+              <Truck className="h-6 w-6 shrink-0" /><span className="hidden md:inline">My moving requests</span>
             </button>
 
-            {canOfferTransport && <>
-              <button type="button" onClick={() => { setProviderIntent('moving'); setShowDriverVerificationGate(true); }} className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1.5 rounded-xl bg-teal-700 px-2 text-xs font-bold text-white transition hover:bg-teal-800 sm:h-auto sm:w-auto sm:rounded-full sm:px-2.5 sm:py-1.5" title="Add a truck or minivan for moving delivery">
-                <Truck className="h-6 w-6 shrink-0" /><span className="hidden sm:inline">Add truck / minivan</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setProviderIntent('shuttle'); setShowDriverVerificationGate(true); }}
-                className="flex h-12 w-12 shrink-0 snap-start items-center justify-center gap-1 rounded-xl bg-amber-400 px-2 text-xs font-bold text-gray-950 shadow-md shadow-amber-400/20 transition hover:bg-amber-300 active:scale-95 sm:h-auto sm:w-auto sm:rounded-full sm:px-3.5 sm:py-1.5"
-                title="Add a shuttle route"
-              >
-                <Plus className="h-6 w-6 shrink-0" />
-                <span className="hidden sm:inline">Add shuttle</span>
-              </button>
-            </>}
           </div>
         </div>
       </header>
@@ -767,6 +812,13 @@ const ShuttlePage = () => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {movingTracking?.request && movingTracking?.liveCoordinates && !movingArrival && (
+          <div className="fixed left-3 right-3 top-20 z-[1200] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-white/95 px-4 py-3 text-slate-900 shadow-xl backdrop-blur dark:border-blue-900 dark:bg-gray-900/95 dark:text-white">
+            <div className="min-w-0"><p className="font-extrabold">Driver live location</p><p className="truncate text-xs text-slate-600 dark:text-slate-300">{movingEtaMinutes === null ? 'Calculating the road route…' : Number.isFinite(movingEtaMinutes) ? `Driver is on the way · ${movingEtaEstimated ? '~' : 'about '}${movingEtaMinutes} min${movingEtaEstimated ? ' (est.)' : ''}` : 'Location is live.'}</p></div>
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white"><Navigation className="h-4 w-4" /></span>
           </div>
         )}
 
@@ -1018,7 +1070,7 @@ const ShuttlePage = () => {
             <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/40 flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm text-gray-900 dark:text-gray-100">
                 <ShieldCheck className="w-4 h-4 text-amber-500" />
-                <span>Driver Request Desk</span>
+                <span>Driver Workspace</span>
               </div>
               <button
                 type="button"
@@ -1027,6 +1079,13 @@ const ShuttlePage = () => {
               >
                 <X className="w-4 h-4" />
               </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 border-b border-gray-100 p-3 dark:border-gray-800 sm:grid-cols-4">
+              <Link to="/shuttles/vehicles" className="rounded-xl bg-teal-50 px-3 py-3 text-center text-xs font-bold text-teal-800 transition hover:bg-teal-100 dark:bg-teal-950/40 dark:text-teal-200">My vehicles & routes</Link>
+              <button type="button" onClick={() => { setShowDriverDeskModal(false); setProviderIntent('shuttle'); setShowDriverVerificationGate(true); }} className="rounded-xl bg-amber-400 px-3 py-3 text-xs font-bold text-gray-950 transition hover:bg-amber-300">Add shuttle</button>
+              <button type="button" onClick={() => { setShowDriverDeskModal(false); setProviderIntent('moving'); setShowDriverVerificationGate(true); }} className="rounded-xl bg-teal-700 px-3 py-3 text-xs font-bold text-white transition hover:bg-teal-800">Add truck</button>
+              <button type="button" onClick={() => { setShowDriverDeskModal(false); setMovingRequestsRole('driver'); setShowMovingRequestsPanel(true); }} className="rounded-xl bg-gray-100 px-3 py-3 text-xs font-bold text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Moving jobs</button>
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-b border-gray-100 p-3 dark:border-gray-800">
@@ -1054,7 +1113,7 @@ const ShuttlePage = () => {
           currentUser={currentUser}
           userLocation={userLocation}
           onClose={() => setSelectedShuttleForBooking(null)}
-          onSuccess={() => setShowMovingRequestsPanel(true)}
+          onSuccess={() => { setMovingRequestsRole('requester'); setShowMovingRequestsPanel(true); }}
         /> : <PickupRequestSheet
           shuttle={selectedShuttleForBooking}
           isOpen={!!selectedShuttleForBooking}
@@ -1068,6 +1127,8 @@ const ShuttlePage = () => {
 
       {showMovingRequestsPanel && (
         <MovingRequestsPanel
+          initialRole={movingRequestsRole}
+          allowDriverWorkspace={canOfferTransport && movingRequestsRole === 'driver'}
           onClose={() => {
             setShowMovingRequestsPanel(false);
             if (userLocation) {
@@ -1082,6 +1143,7 @@ const ShuttlePage = () => {
         />
       )}
       {showMovingUploadModal && <MovingVehicleUploadModal currentUser={currentUser} onClose={() => setShowMovingUploadModal(false)} onSuccess={() => {
+        setMovingRequestsRole('driver');
         setShowMovingRequestsPanel(true);
         if (!userLocation) return;
         axios.get(resolveApiUrl('/api/shuttles/moving/nearby'), { params: { lat: userLocation.lat, lng: userLocation.lng, radiusKm: 300 } }).then((response) => setMovingVehicles(response.data?.vehicles || [])).catch(() => setMovingVehicles([]));
