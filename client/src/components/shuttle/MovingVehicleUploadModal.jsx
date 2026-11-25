@@ -8,7 +8,7 @@ import { capturePrecisePhoneLocation } from '../../utils/preciseLocation';
 
 const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ vehicleType: 'truck', vehicleDescription: '', carColor: '', driverPhone: currentUser?.phone || '', plateNumber: '', hourlyRate: '', callOutFee: '0', description: '' });
+  const [form, setForm] = useState({ vehicleType: 'mini_truck', vehicleDescription: '', carColor: '', driverPhone: currentUser?.phone || '', plateNumber: '', hourlyRate: '', callOutFee: '0', description: '' });
   const [location, setLocation] = useState(null);
   const [locationAddress, setLocationAddress] = useState('');
   const [vehicleLicenceDocumentUrl, setVehicleLicenceDocumentUrl] = useState('');
@@ -89,9 +89,9 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
   const submit = async (event) => {
     event.preventDefault(); setError('');
     if (!location) return setError('Capture a precise GPS location or set the truck location by address before submitting.');
-    if (!vehicleImageUrl) return setError('Upload a clear photo of the truck or minivan.');
+    if (!vehicleImageUrl) return setError('Upload a clear photo of the vehicle.');
     if (!existingShuttleDriverPhoto && !driverPhotoUrl) return setError('Upload a clear photo of the driver.');
-    if (!vehicleLicenceDocumentUrl) return setError('Upload the truck or minivan licence disc / registration document PDF.');
+    if (!vehicleLicenceDocumentUrl) return setError('Upload the vehicle licence disc / registration document PDF.');
     setBusy(true);
     try {
       const response = await axios.post(resolveApiUrl('/api/shuttles/moving/vehicles'), {
@@ -124,12 +124,12 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
 
   return <div className="fixed inset-0 z-[1200] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
     <form onSubmit={submit} onClick={(event) => event.stopPropagation()} className="max-h-[92vh] w-full max-w-lg space-y-4 overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-gray-900 sm:rounded-3xl">
-      <div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className="rounded-xl bg-amber-100 p-2 text-amber-800"><Truck /></span><div><h2 className="text-lg font-bold">Add truck or minivan</h2><p className="text-xs text-gray-500">Step {step} of 2 · submitted for vehicle approval</p></div></div><button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><X /></button></div>
+      <div className="flex items-center justify-between"><div className="flex items-center gap-3"><span className="rounded-xl bg-amber-100 p-2 text-amber-800"><Truck /></span><div><h2 className="text-lg font-bold">Add a moving vehicle</h2><p className="text-xs text-gray-500">Step {step} of 2 · submitted for vehicle approval</p></div></div><button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><X /></button></div>
       <div className="flex gap-1"><div className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-teal-600' : 'bg-gray-200'}`} /><div className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-teal-600' : 'bg-gray-200'}`} /></div>
 
       {step === 1 ? <div className="space-y-4">
-        <label className="block text-sm font-semibold">Vehicle type<select value={form.vehicleType} onChange={(event) => setForm({ ...form, vehicleType: event.target.value })} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-950"><option value="truck">Truck</option><option value="minivan">Minivan</option></select></label>
-        {field('vehicleDescription', 'Truck or minivan name / make', 'e.g. Nissan Cabstar mini truck')}
+        <label className="block text-sm font-semibold">Vehicle type<select value={form.vehicleType} onChange={(event) => setForm({ ...form, vehicleType: event.target.value })} className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-950"><option value="mini_truck">🛻 Mini truck</option><option value="truck">🚚 Truck</option><option value="large_truck">🚛 Large truck</option></select></label>
+        {field('vehicleDescription', 'Vehicle name / make', 'e.g. Nissan Cabstar mini truck')}
         <div className="grid grid-cols-2 gap-3">{field('carColor', 'Vehicle colour', 'e.g. White')}{field('plateNumber', 'Registration plate', 'e.g. JHB 123 GP')}</div>
         <div className="grid grid-cols-2 gap-3">{field('hourlyRate', 'Hourly rate (R)', 'e.g. 350', 'number')}{field('callOutFee', 'Call-out fee (R)', '0', 'number')}</div>
         <label className="block text-sm font-semibold">Moving service details<textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} maxLength={800} placeholder="Loading help, unloading, and items you can carry" className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 font-normal dark:border-gray-700 dark:bg-gray-950" /></label>
@@ -140,7 +140,7 @@ const MovingVehicleUploadModal = ({ onClose, onSuccess, currentUser }) => {
         {checkingShuttlePhoto ? <p className="rounded-xl bg-gray-50 p-3 text-xs text-gray-500 dark:bg-gray-800">Checking whether your shuttle driver photo can be reused…</p>
           : existingShuttleDriverPhoto ? <div className="rounded-xl border border-emerald-200 p-3 dark:border-emerald-900"><p className="text-sm font-semibold">Driver photo reused from your shuttle</p><img src={existingShuttleDriverPhoto} alt="Existing shuttle driver" className="mt-2 h-28 w-28 rounded-xl object-cover" /></div>
             : photoUpload('driver', 'Driver photo', driverPhotoUrl, setDriverPhotoUrl)}
-        {photoUpload('vehicle', 'Truck or minivan photo', vehicleImageUrl, setVehicleImageUrl)}
+        {photoUpload('vehicle', 'Vehicle photo', vehicleImageUrl, setVehicleImageUrl)}
         <div className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"><p className="text-sm font-semibold">Vehicle licence disc / registration document (PDF)</p><p className="mt-1 text-xs text-gray-500">An administrator checks the document against the registration plate.</p><label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-lg bg-gray-900 px-3 py-2 text-xs font-bold text-white dark:bg-white dark:text-gray-900">{uploadingKey === 'document' ? <LoaderCircle className="h-4 w-4 animate-spin" /> : vehicleLicenceDocumentUrl ? <CheckCircle2 className="h-4 w-4" /> : <Upload className="h-4 w-4" />}{uploadingKey === 'document' ? 'Uploading…' : vehicleLicenceDocumentUrl ? 'Replace PDF' : 'Upload PDF'}<input type="file" accept="application/pdf,.pdf" disabled={Boolean(uploadingKey) || busy} className="sr-only" onChange={(event) => { uploadVehicleDocument(event.target.files?.[0]); event.target.value = ''; }} /></label>{vehicleLicenceDocumentUrl && <p className="mt-2 text-xs text-emerald-700">PDF uploaded</p>}</div>
         <div className="space-y-2 rounded-xl border border-teal-200 p-3 dark:border-teal-900">
           <p className="text-sm font-semibold">Where is the truck parked?</p>

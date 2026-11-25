@@ -13,6 +13,7 @@ public class MainActivity extends BridgeActivity {
         // Install the splash screen before calling super.onCreate()
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
+        registerPlugin(DriverLocationPlugin.class);
         hideSystemBars();
     }
 

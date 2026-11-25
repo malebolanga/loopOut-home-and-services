@@ -103,12 +103,12 @@ export const createMovingVehicle = async (req, res, next) => {
       return next(errorHandler(403, 'Your ID, face photo, and driving licence must be approved before offering moving transport.'));
     }
     const { vehicleType, vehicleDescription, carColor, vehicleImageUrl, driverPhotoUrl, plateNumber, vehicleLicenceDocumentUrl, hourlyRate, callOutFee, description, driverPhone, currentCoordinates } = req.body;
-    if (!['truck', 'minivan'].includes(vehicleType)) return next(errorHandler(400, 'Choose a truck or minivan.'));
-    if (typeof vehicleDescription !== 'string' || !vehicleDescription.trim()) return next(errorHandler(400, 'Enter the truck or minivan details.'));
-    if (typeof carColor !== 'string' || !carColor.trim()) return next(errorHandler(400, 'Enter the truck or minivan colour.'));
+    if (!['mini_truck', 'truck', 'large_truck', 'minivan'].includes(vehicleType)) return next(errorHandler(400, 'Choose a mini truck, truck, or large truck.'));
+    if (typeof vehicleDescription !== 'string' || !vehicleDescription.trim()) return next(errorHandler(400, 'Enter the vehicle details.'));
+    if (typeof carColor !== 'string' || !carColor.trim()) return next(errorHandler(400, 'Enter the vehicle colour.'));
     const normalizedPlate = String(plateNumber || '').trim().toUpperCase();
-    if (!/^[A-Z0-9 -]{3,24}$/.test(normalizedPlate)) return next(errorHandler(400, 'Enter the truck or minivan registration number plate.'));
-    if (!isVehiclePhotoUrl(vehicleImageUrl, req)) return next(errorHandler(400, 'Upload a photo of the truck or minivan.'));
+    if (!/^[A-Z0-9 -]{3,24}$/.test(normalizedPlate)) return next(errorHandler(400, 'Enter the vehicle registration number plate.'));
+    if (!isVehiclePhotoUrl(vehicleImageUrl, req)) return next(errorHandler(400, 'Upload a photo of the vehicle.'));
     if (!isVehicleDocumentUrl(vehicleLicenceDocumentUrl, req)) return next(errorHandler(400, 'Upload the vehicle licence disc or registration document as a PDF.'));
     if (!validMovingLocation(currentCoordinates)) return next(errorHandler(400, movingLocationError));
     const rate = Number(hourlyRate);

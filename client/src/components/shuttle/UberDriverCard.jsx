@@ -90,27 +90,28 @@ const UberDriverCard = ({
 
   const {
     _id,
-    driverName = 'LoopOut driver',
+    driverName = '',
     driverPhone = '',
     driverAvatar = '',
     driverVerificationStatus = 'pending',
-    carType = 'Vehicle details unavailable',
+    carType = '',
     plateNumber = '',
-    carColor = 'White',
+    carColor = '',
     carImages = [],
     pricePerSeat = null,
     totalSeats = 0,
     availableSeats = 0,
     originCity = '',
     destinationCity = '',
-    departureProvince = 'Gauteng',
-    destinationProvince = 'Limpopo',
-    pickupStation = 'Park Station Central',
-    dropoffStation = '🏠 House-to-House Dropoff (Direct to door / gate)',
-    isHouseToHouse = true,
+    departureProvince = '',
+    destinationProvince = '',
+    pickupStation = '',
+    dropoffStation = '',
+    isHouseToHouse = false,
     leavesWhenFull = true,
-    departureTime = 'Tomorrow at 10:00 AM',
+    departureTime = '',
     departureDate,
+    estimatedArrival = '',
     currentStatus = 'scheduled',
     currentCoordinates,
     features = [],
@@ -124,11 +125,10 @@ const UberDriverCard = ({
   const isDriverLiveGprs = hasFreshLiveGps(currentCoordinates);
   const gpsAccuracy = currentCoordinates?.accuracy;
 
-  const displayImage = (carImages && carImages.length > 0)
-    ? carImages[0]
-    : 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=compress&cs=tinysrgb&w=800';
-
-  const driverPhoto = driverAvatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=compress&cs=tinysrgb&w=300';
+  const displayImage = (carImages && carImages.length > 0) ? carImages[0] : '';
+  const driverPhoto = driverAvatar || '';
+  const driverDisplayName = driverName || 'Driver details available after approval';
+  const vehicleDisplayName = carType || 'Vehicle details unavailable';
 
   // Use real rating from bookings
   const hasRatings = driverRatingCount > 0;
@@ -156,7 +156,7 @@ const UberDriverCard = ({
   // Share Trip handler
   const handleShareTrip = async () => {
     const shareUrl = `${window.location.origin}/shuttles?shuttleId=${_id}`;
-    const shareText = `🚖 Tracking Shuttle Trip with ${driverName} on LoopOut!\nRoute: ${originCity} ➔ ${destinationCity}\nVehicle: ${carType} (${plateNumber})\nContact: ${driverPhone || 'On file'}\nLive tracking: ${shareUrl}`;
+    const shareText = `🚖 Tracking Shuttle Trip on LoopOut!\nRoute: ${originCity || 'Origin'} ➔ ${destinationCity || 'Destination'}\nVehicle: ${vehicleDisplayName}${plateNumber ? ` (${plateNumber})` : ''}\nLive tracking: ${shareUrl}`;
 
     if (navigator.share) {
       try {
@@ -322,18 +322,14 @@ const UberDriverCard = ({
           {/* Driver Avatar, Name, Rating & Plate */}
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative shrink-0">
-              <img
-                src={driverPhoto}
-                alt={driverName}
-                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-teal-500 shadow ring-1 ring-teal-500/20"
-              />
+              {driverPhoto ? <img src={driverPhoto} alt={driverDisplayName} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-teal-500 shadow ring-1 ring-teal-500/20" /> : <span aria-label="Driver photo unavailable" className="flex w-11 h-11 sm:w-12 sm:h-12 items-center justify-center rounded-full border-2 border-teal-500 bg-teal-50 text-teal-700 shadow ring-1 ring-teal-500/20"><Users className="w-5 h-5" /></span>}
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white dark:border-gray-900" />
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-sm font-extrabold text-gray-900 dark:text-gray-100 truncate">
-                  {driverName}
+                  {driverDisplayName}
                 </span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-yellow-300 text-gray-950 border border-gray-900 font-mono">
                   {plateNumber}
@@ -362,7 +358,7 @@ const UberDriverCard = ({
                   <span>{displayRating || 'New'}</span>
                 </span>
                 <span>•</span>
-                <span className="truncate">{carType.split(' ')[0]}</span>
+                <span className="truncate">{vehicleDisplayName.split(' ')[0]}</span>
                 <span>•</span>
                 <span className="text-emerald-600 font-semibold">{availableSeats} seats open</span>
               </div>
@@ -377,7 +373,7 @@ const UberDriverCard = ({
               <span>{destinationCity}</span>
             </div>
             <div className="text-[11px] text-teal-600 dark:text-teal-400 truncate">
-              {leavesWhenFull ? '⚡ Leaves when full' : departureTime}
+              {leavesWhenFull ? '⚡ Leaves when full' : (departureTime || 'Departure time not provided')}
               {isHouseToHouse && ' • 🏠 Door-to-Door'}
             </div>
           </div>
@@ -417,18 +413,14 @@ const UberDriverCard = ({
             {/* Driver Face & Details */}
             <div className="flex items-center gap-3 min-w-0">
               <div className="relative shrink-0">
-                <img
-                  src={driverPhoto}
-                  alt={driverName}
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-teal-500 shadow-md ring-2 ring-teal-500/20"
-                />
+                {driverPhoto ? <img src={driverPhoto} alt={driverDisplayName} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-teal-500 shadow-md ring-2 ring-teal-500/20" /> : <span aria-label="Driver photo unavailable" className="flex w-14 h-14 sm:w-16 sm:h-16 items-center justify-center rounded-full border-2 border-teal-500 bg-teal-50 text-teal-700 shadow-md ring-2 ring-teal-500/20"><Users className="w-6 h-6" /></span>}
                 {isDriverLiveGprs && <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white dark:border-gray-900" title="Sharing live GPS" />}
               </div>
 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <h3 className="text-base sm:text-lg font-extrabold text-gray-900 dark:text-gray-100 truncate">
-                    {driverName}
+                    {driverDisplayName}
                   </h3>
                   {driverVerificationStatus === 'verified' ? (
                     <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800"><ShieldCheck className="w-3 h-3 text-teal-600" /><span>Verified</span></span>
@@ -513,21 +505,17 @@ const UberDriverCard = ({
                 Assigned Shuttle Vehicle
               </span>
               <h4 className="text-base sm:text-lg font-extrabold leading-tight">
-                {carType}
+                {vehicleDisplayName}
               </h4>
               <div className="text-xs text-gray-300 mt-1 flex items-center gap-2">
-                <span>Color: {carColor}</span>
-                <span>•</span>
-                <span className="font-mono">{plateNumber}</span>
+                {carColor && <span>Color: {carColor}</span>}
+                {carColor && plateNumber && <span>•</span>}
+                {plateNumber && <span className="font-mono">{plateNumber}</span>}
               </div>
             </div>
 
-            <div className="w-24 h-16 sm:w-28 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-white/20 shadow-md">
-              <img
-                src={displayImage}
-                alt={carType}
-                className="w-full h-full object-cover"
-              />
+            <div className="flex w-24 h-16 sm:w-28 sm:h-20 items-center justify-center rounded-xl overflow-hidden shrink-0 border border-white/20 bg-slate-800 shadow-md">
+              {displayImage ? <img src={displayImage} alt={vehicleDisplayName} className="w-full h-full object-cover" /> : <Car className="w-8 h-8 text-slate-400" aria-label="Vehicle photo unavailable" />}
             </div>
           </div>
 
@@ -542,22 +530,24 @@ const UberDriverCard = ({
 
             <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-gray-100">
               <div className="w-2.5 h-2.5 rounded-full bg-teal-500 shrink-0" />
-              <span>{originCity} ({pickupStation || 'Main Station'})</span>
+              <span>{originCity || 'Origin'}{pickupStation ? ` (${pickupStation})` : ''}</span>
               <span className="text-amber-500 font-extrabold">➔</span>
               <span>{destinationCity}</span>
             </div>
 
             <p className="text-xs text-gray-600 dark:text-gray-300 font-medium pl-4">
-              {isHouseToHouse ? dropoffStation : `Dropoff: ${dropoffStation}`}
+              {dropoffStation ? (isHouseToHouse ? dropoffStation : `Dropoff: ${dropoffStation}`) : 'Drop-off details are not available.'}
             </p>
 
             <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200/60 dark:border-gray-700/60 text-gray-500">
               <span className="flex items-center gap-1 font-semibold text-teal-700 dark:text-teal-300">
                 <Clock className="w-3.5 h-3.5" />
                 <span>
-                  {leavesWhenFull ? `⚡ ${departureTime || 'Leaves when full'}` : departureTime}
+                  {leavesWhenFull ? `⚡ ${departureTime || 'Leaves when full'}` : (departureTime || 'Departure time not provided')}
                 </span>
               </span>
+
+              {estimatedArrival && <span className="font-semibold text-slate-600 dark:text-slate-300">Planned arrival: {estimatedArrival}</span>}
 
               {currentCoordinates?.address && (
                 <span className={`flex items-center gap-1 text-[11px] truncate max-w-[180px] ${isDriverLiveGprs ? 'text-blue-600 dark:text-blue-400 font-bold' : ''}`} title={currentCoordinates.address}>

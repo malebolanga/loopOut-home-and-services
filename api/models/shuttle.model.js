@@ -248,6 +248,11 @@ const shuttleSchema = new mongoose.Schema(
       enum: ['scheduled', 'boarding', 'en_route', 'arrived', 'completed', 'cancelled'],
       default: 'scheduled',
     },
+    // Set only after real trip completion so passengers receive one arrival notice.
+    tripCompletionNotifiedAt: {
+      type: Date,
+      default: null,
+    },
     departedAt: { type: Date, default: null },
     arrivedAt: { type: Date, default: null },
     returnRouteFor: { type: mongoose.Schema.Types.ObjectId, ref: 'Shuttle' },

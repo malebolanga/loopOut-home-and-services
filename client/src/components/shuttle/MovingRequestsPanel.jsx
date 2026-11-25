@@ -11,8 +11,8 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-const MovingRequestsPanel = ({ onClose, onUpdated }) => {
-  const [role, setRole] = useState('driver');
+const MovingRequestsPanel = ({ onClose, onUpdated, initialRole = 'requester', allowDriverWorkspace = false }) => {
+  const [role, setRole] = useState(initialRole === 'driver' && allowDriverWorkspace ? 'driver' : 'requester');
   const [requests, setRequests] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [manualAddresses, setManualAddresses] = useState({});
@@ -23,6 +23,9 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [busyId, setBusyId] = useState('');
+  useEffect(() => {
+    setRole(initialRole === 'driver' && allowDriverWorkspace ? 'driver' : 'requester');
+  }, [initialRole, allowDriverWorkspace]);
   const load = useCallback(async () => {
     try {
       const headers = getAuthHeaders();
@@ -166,7 +169,7 @@ const MovingRequestsPanel = ({ onClose, onUpdated }) => {
   return <div className="fixed inset-0 z-[1200] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
     <section onClick={(event) => event.stopPropagation()} className="max-h-[90vh] max-h-[90dvh] overscroll-contain w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] shadow-2xl [-webkit-overflow-scrolling:touch] dark:bg-gray-900 sm:rounded-3xl">
       <div className="flex items-center justify-between"><div><h2 className="text-lg font-extrabold">Moving requests</h2><p className="text-xs text-gray-500">No payment is due before the moving service is provided.</p></div><div className="flex gap-2"><button onClick={load} title="Refresh" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><RefreshCw className="h-4 w-4" /></button><button onClick={onClose} aria-label="Close" className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"><X /></button></div></div>
-      <div className="my-4 grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">{[['driver', 'Requests to me'], ['requester', 'My requests']].map(([value, label]) => <button key={value} onClick={() => setRole(value)} className={`rounded-lg px-3 py-2 text-sm font-bold ${role === value ? 'bg-white shadow dark:bg-gray-700' : ''}`}>{label}</button>)}</div>
+      {allowDriverWorkspace ? <div className="my-4 grid grid-cols-2 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">{[['driver', 'Requests to me'], ['requester', 'My requests']].map(([value, label]) => <button key={value} onClick={() => setRole(value)} className={`rounded-lg px-3 py-2 text-sm font-bold ${role === value ? 'bg-white shadow dark:bg-gray-700' : ''}`}>{label}</button>)}</div> : <div className="my-4 rounded-xl bg-teal-50 px-3 py-2 text-sm font-semibold text-teal-900 dark:bg-teal-950/40 dark:text-teal-100">My moving requests</div>}
       {role === 'driver' && vehicles.length > 0 && <div className="mb-4 space-y-2">
         <h3 className="text-sm font-bold">My moving vehicles</h3>
         {vehicles.map((vehicle) => {

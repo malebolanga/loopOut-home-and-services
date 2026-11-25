@@ -633,6 +633,21 @@ export const updateShuttleLocation = async (req, res, next) => {
       const arrivalCoordinates = gpsPosition || previousLiveCoords || shuttle.destinationCoordinates;
       await finishShuttleTripAndCreateReturn(shuttle._id, arrivalCoordinates, new Date());
       updated = await Shuttle.findById(shuttle._id);
+      const notificationLock = await Shuttle.findOneAndUpdate(
+        { _id: shuttle._id, tripCompletionNotifiedAt: null },
+        { $set: { tripCompletionNotifiedAt: new Date() } },
+        { new: true, projection: { _id: 1 } }
+      );
+      if (notificationLock) {
+        const completedBookings = await ShuttleBooking.find({ shuttleRef: shuttle._id, status: 'completed' }).select('passengerRef ticketCode');
+        await Promise.all(completedBookings.map((booking) => Notification.create({
+          userId: booking.passengerRef,
+          type: 'shuttle',
+          title: 'Your shuttle has arrived',
+          message: `Your trip to ${shuttle.destinationCity} is complete. Thank you for travelling with LoopOut.`,
+          data: { shuttleId: shuttle._id, bookingId: booking._id, ticketCode: booking.ticketCode, route: `/shuttles?shuttleId=${shuttle._id}` },
+        })));
+      }
     }
 
     // ── 2km Proximity Trip Alert Trigger ─────────────────────────────

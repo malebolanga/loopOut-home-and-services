@@ -450,9 +450,16 @@ const ShuttleMap = ({
       const isTripInProgress = !isMovingVehicle && ['en_route', 'arrived'].includes(shuttle.currentStatus);
       const isBookedMarker = isFullyBooked || isMovingBooked;
       const isUnavailable = isBookedMarker || isTripInProgress;
+      const movingDescription = `${shuttle.vehicleDescription || ''} ${shuttle.carType || ''}`.toLowerCase();
+      const movingVehicleSize = shuttle.vehicleType === 'mini_truck' || shuttle.vehicleType === 'minivan' || /mini|small|bakkie|pickup/.test(movingDescription)
+        ? 'mini'
+        : shuttle.vehicleType === 'large_truck' || /big|large|heavy/.test(movingDescription) ? 'large' : 'standard';
       const markerEmoji = isMovingVehicle
-        ? (shuttle.vehicleType === 'minivan' ? '🚐' : '🚚')
-        : (/bus|quantum|sprinter|van|shuttle/i.test(String(shuttle.carType || '')) ? '🚐' : '🚗');
+        ? (movingVehicleSize === 'mini' ? '🛻' : movingVehicleSize === 'large' ? '🚛' : '🚚')
+        : Number(shuttle.totalSeats || 0) < 7 ? '🚕' : '🚐';
+      const markerDescription = isMovingVehicle
+        ? (movingVehicleSize === 'mini' ? 'Mini truck' : movingVehicleSize === 'large' ? 'Large truck' : 'Truck')
+        : Number(shuttle.totalSeats || 0) < 7 ? 'Yellow taxi' : 'Combi taxi';
       const showMarkerDetails = isSelected || mapZoom >= 10 || isUnavailable;
       const movingArea = String(shuttle.currentCoordinates?.address || '').replace(/,\s*/g, ' ').replace(/\s+/g, ' ').trim();
       const pickup = isTrackedMovingVehicle ? movingTracking?.pickupCoordinates : null;
@@ -562,7 +569,7 @@ const ShuttleMap = ({
             }">
               <span class="w-2 h-2 rounded-full ${isUnavailable ? 'bg-white' : isEnRoute || isLiveGprs ? 'bg-white animate-ping' : 'bg-amber-300'}"></span>
               ${isMovingVehicle
-                ? isMovingBooked ? '<span>Booked</span>' : `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${shuttle.vehicleType === 'minivan' ? 'MINIVAN' : 'TRUCK'}</span>`
+                ? isMovingBooked ? '<span>Booked</span>' : `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${movingVehicleSize === 'mini' ? 'MINI TRUCK' : movingVehicleSize === 'large' ? 'LARGE TRUCK' : 'TRUCK'}</span>`
                 : isTripInProgress
                   ? '<span>Trip in progress · finish pending</span>'
                 : isFullyBooked
@@ -575,7 +582,7 @@ const ShuttleMap = ({
               isBookedMarker ? 'border-gray-500 ring-2 ring-gray-300' : isTripInProgress ? 'border-blue-400' : isSelected ? 'border-amber-500' : isLiveGprs ? 'border-blue-500' : 'border-teal-600'
             } flex items-center justify-center ${isUnavailable ? 'text-white' : 'text-teal-700 dark:text-teal-300'}">
               ${isLiveGprs ? `<div class="absolute -inset-2 rounded-full ${isBookedMarker ? 'bg-red-500/30' : isTripInProgress ? 'bg-blue-500/30' : 'bg-blue-500/20'} animate-ping pointer-events-none"></div>` : ''}
-              <span role="img" aria-label="${isMovingVehicle ? (shuttle.vehicleType === 'minivan' ? 'Moving minivan' : 'Moving truck') : 'Shuttle vehicle'}" class="relative z-[1] text-[30px] leading-none drop-shadow-sm">${markerEmoji}</span>
+              <span role="img" aria-label="${markerDescription}" class="relative z-[1] text-[30px] leading-none drop-shadow-sm">${markerEmoji}</span>
             </div>
             
             <div class="w-1.5 h-1.5 rounded-full bg-black/40 mt-0.5"></div>

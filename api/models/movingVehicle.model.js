@@ -5,7 +5,9 @@ const movingVehicleSchema = new mongoose.Schema({
   driverName: { type: String, required: true, trim: true },
   driverPhone: { type: String, required: true, trim: true },
   driverDisplayName: { type: String, required: true, trim: true },
-  vehicleType: { type: String, enum: ['truck', 'minivan'], required: true },
+  // Keep `minivan` for older approved listings, but all new moving listings use
+  // a clear delivery size so the map marker and customer expectations match.
+  vehicleType: { type: String, enum: ['mini_truck', 'truck', 'large_truck', 'minivan'], required: true },
   vehicleDescription: { type: String, required: true, trim: true, maxlength: 160 },
   carColor: { type: String, required: true, trim: true, maxlength: 40 },
   vehicleImageUrl: { type: String, required: true, trim: true },
