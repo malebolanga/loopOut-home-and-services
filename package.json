@@ -1,14 +1,14 @@
 {
   "name": "loopout-home",
   "version": "1.0.0",
-  "description": "",
+  "description": "South African marketplace for accommodation, shuttles, moving services, and local help.",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon --watch api --watch .env --ext js,json api/index.js",
     "start": "node api/index.js",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules cross-env NODE_ENV=test jest api/tests --detectOpenHandles --forceExit",
-    "build": "npm install --legacy-peer-deps && npm install --prefix client --legacy-peer-deps && npm run build --prefix client"
+    "build": "npm install && npm install --prefix client && npm run build --prefix client"
   },
   "keywords": [],
   "author": "",

@@ -10,10 +10,9 @@ and use an AI help assistant.
 | --- | --- |
 | `api/` | Node.js / Express backend (ES modules) with MongoDB (Mongoose) and Firebase Admin auth. Entry point: `api/index.js` |
 | `client/` | React + Vite web app (PWA), wrapped with Capacitor for Android and iOS |
-| `mobile/` | Expo / React Native shell that loads the hosted web app in a WebView |
 | `scripts/maintenance/` | One-off database scripts (backfills, seeding). Run manually with `node` |
 | `scratch/` | Ad-hoc debugging scripts, not used by the app |
-| `render.yaml`, `railway.json`, `firebase.json` | Deployment configuration |
+| `render.yaml`, `firebase.json` | Deployment configuration (Render for API + web, Firebase for Hosting + Storage) |
 
 ## Local development
 
@@ -21,8 +20,8 @@ Requirements: Node.js 20 or 22, a MongoDB database.
 
 ```bash
 # 1. Install
-npm install --legacy-peer-deps
-npm install --prefix client --legacy-peer-deps
+npm install
+npm install --prefix client
 
 # 2. Configure the backend
 cp api/.env.example api/.env     # then fill in MONGO and JWT_SECRET at minimum
