@@ -16,6 +16,7 @@ const movingRequestSchema = new mongoose.Schema({
     accuracy: { type: Number, min: 0, default: null },
     updatedAt: { type: Date, default: null },
   },
+  driverArrivalNotifiedAt: { type: Date, default: null },
   dropoffAddress: { type: String, required: true, trim: true, maxlength: 300 },
   itemDescription: { type: String, required: true, trim: true, maxlength: 1000 },
   requestedAt: { type: Date, required: true },

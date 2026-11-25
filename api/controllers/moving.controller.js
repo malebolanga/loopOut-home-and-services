@@ -172,7 +172,7 @@ export const updateMovingVehicleLiveLocation = async (req, res, next) => {
       vehicleRef: req.params.id,
       driverRef: req.user.id,
       status: { $in: ['accepted', 'in_progress'] },
-    }).select('_id');
+    }).select('_id requesterRef pickupCoordinates livePickupCoordinates driverArrivalNotifiedAt');
     if (!activeRequest) return next(errorHandler(409, 'Live tracking is available only for an accepted moving request.'));
     const vehicle = await MovingVehicle.findOneAndUpdate(
       { _id: req.params.id, driverRef: req.user.id, active: true, verificationStatus: 'approved', currentRequestRef: activeRequest._id },
@@ -180,6 +180,27 @@ export const updateMovingVehicleLiveLocation = async (req, res, next) => {
       { new: true, projection: { _id: 1 } },
     );
     if (!vehicle) return next(errorHandler(404, 'Your active moving vehicle was not found.'));
+    const livePickupUpdatedAt = activeRequest.livePickupCoordinates?.updatedAt ? new Date(activeRequest.livePickupCoordinates.updatedAt).getTime() : 0;
+    const pickupPoint = livePickupUpdatedAt > 0 && Date.now() - livePickupUpdatedAt <= 60000
+      ? activeRequest.livePickupCoordinates
+      : activeRequest.pickupCoordinates;
+    if (!activeRequest.driverArrivalNotifiedAt && validPoint(pickupPoint)
+      && distanceKm({ lat: Number(currentCoordinates.lat), lng: Number(currentCoordinates.lng) }, pickupPoint) <= 0.15) {
+      const arrivalRecorded = await MovingRequest.findOneAndUpdate(
+        { _id: activeRequest._id, driverArrivalNotifiedAt: null },
+        { $set: { driverArrivalNotifiedAt: new Date() } },
+        { new: true, projection: { _id: 1 } },
+      );
+      if (arrivalRecorded) {
+        await Notification.create({
+          userId: activeRequest.requesterRef,
+          type: 'shuttle',
+          title: 'Your moving driver has arrived',
+          message: 'Your truck or minivan has arrived at your pickup point. Please meet the driver when you are ready.',
+          data: { movingRequestId: activeRequest._id, route: '/shuttles?vehicleType=moving' },
+        });
+      }
+    }
     return res.json({ success: true, updatedAt: new Date() });
   } catch (error) { return next(error); }
 };

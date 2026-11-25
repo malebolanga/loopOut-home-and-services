@@ -82,6 +82,14 @@ const hasShuttleDeparturePassed = (shuttle, now = new Date()) => {
   return Number.isFinite(departureAt.getTime()) && departureAt <= now;
 };
 
+const movingDistanceKm = (first, second) => {
+  if (!first || !second || !Number.isFinite(Number(first.lat)) || !Number.isFinite(Number(first.lng)) || !Number.isFinite(Number(second.lat)) || !Number.isFinite(Number(second.lng))) return null;
+  const dLat = (Number(second.lat) - Number(first.lat)) * Math.PI / 180;
+  const dLng = (Number(second.lng) - Number(first.lng)) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(Number(first.lat) * Math.PI / 180) * Math.cos(Number(second.lat) * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [searchParams] = useSearchParams();
@@ -153,6 +161,8 @@ const ShuttlePage = () => {
   const [shuttles, setShuttles] = useState([]);
   const [movingVehicles, setMovingVehicles] = useState([]);
   const [movingTracking, setMovingTracking] = useState(null);
+  const [movingArrival, setMovingArrival] = useState(null);
+  const movingArrivalAlertedRef = useRef('');
   const [mapClock, setMapClock] = useState(() => new Date());
   useEffect(() => {
     const timer = window.setInterval(() => setMapClock(new Date()), 10000);
@@ -269,6 +279,39 @@ const ShuttlePage = () => {
     const timer = window.setInterval(refreshTracking, 5000);
     return () => { cancelled = true; window.clearInterval(timer); };
   }, [currentUser?._id, userLocation?.lat, userLocation?.lng]);
+
+  useEffect(() => {
+    const requestId = movingTracking?.request?._id;
+    if (!requestId) return;
+    setSelectedMapVehicleType('moving');
+    setShowMovingRequestsPanel(false);
+    setIsCardOpen(false);
+  }, [movingTracking?.request?._id]);
+
+  useEffect(() => {
+    const requestId = movingTracking?.request?._id;
+    const distance = movingDistanceKm(movingTracking?.liveCoordinates, movingTracking?.pickupCoordinates);
+    if (!requestId || distance === null || distance > 0.15 || movingArrivalAlertedRef.current === String(requestId)) return;
+    movingArrivalAlertedRef.current = String(requestId);
+    setMovingArrival({ requestId, driver: movingTracking.request.vehicleRef?.driverName || 'Your driver' });
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        const context = new AudioCtx();
+        [0, 0.28, 0.56].forEach((offset) => {
+          const oscillator = context.createOscillator();
+          const gain = context.createGain();
+          oscillator.connect(gain); gain.connect(context.destination);
+          oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(1568, context.currentTime + offset);
+          gain.gain.setValueAtTime(0.001, context.currentTime + offset);
+          gain.gain.exponentialRampToValueAtTime(0.28, context.currentTime + offset + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + offset + 0.18);
+          oscillator.start(context.currentTime + offset); oscillator.stop(context.currentTime + offset + 0.2);
+        });
+      }
+      if (navigator.vibrate) navigator.vibrate([180, 90, 180, 90, 260]);
+    } catch {}
+  }, [movingTracking?.request?._id, movingTracking?.liveCoordinates?.lat, movingTracking?.liveCoordinates?.lng, movingTracking?.pickupCoordinates?.lat, movingTracking?.pickupCoordinates?.lng]);
 
   // When a customer has an accepted moving request, share their current pickup
   // point with that assigned driver only. It expires automatically server-side.
@@ -724,6 +767,13 @@ const ShuttlePage = () => {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {movingArrival && (
+          <div className="fixed left-3 right-3 top-20 z-[1300] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl bg-emerald-700 px-4 py-3 text-white shadow-2xl">
+            <div><p className="font-extrabold">Your driver has arrived</p><p className="text-xs text-emerald-100">{movingArrival.driver} is at your pickup point.</p></div>
+            <button type="button" onClick={() => setMovingArrival(null)} aria-label="Close arrival notification" className="rounded-full p-1 hover:bg-white/15"><X className="h-5 w-5" /></button>
           </div>
         )}
 
