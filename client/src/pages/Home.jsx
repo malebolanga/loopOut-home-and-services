@@ -378,70 +378,7 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
   );
 };
 
-const UberListingCard = ({ item, type, onClick }) => {
-  const title = item.title || item.name || item.serviceName || 'LoopOut listing';
-  const image = item.imageUrls?.[0] || item.images?.[0] || item.avatar || item.image || '/placeholder.jpg';
-  const locationText = [item.city, item.suburb, item.address].find((v) => typeof v === 'string' && v.trim()) || 'South Africa';
-  const rawPrice = item.discountPrice || item.regularPrice || item.price || item.hourlyRate || item.rate || 0;
-  const formattedPrice = Number(rawPrice) > 0 ? `R${Number(rawPrice).toLocaleString('en-ZA')}` : 'Request quote';
-  const detailPath = type === 'helper'
-    ? `/helper/${item._id}`
-    : type === 'service'
-      ? `/service/${item._id}`
-      : type === 'event'
-        ? `/event/${item._id}`
-        : type === 'selling'
-          ? `/sell-listing/${item._id}`
-          : `/listing/${item._id}`;
 
-  const badgeLabel = type === 'helper'
-    ? 'Helper'
-    : type === 'service'
-      ? 'Service'
-      : type === 'event'
-        ? 'Event'
-        : type === 'selling'
-          ? 'Shop'
-          : 'Stay';
-
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(detailPath)}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#F3F3F3] p-2.5 text-left transition-colors hover:bg-slate-200/80 active:scale-[0.99] dark:bg-slate-900 dark:hover:bg-slate-800"
-    >
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800">
-        <ImageWithFallback
-          src={image}
-          alt={title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          type={type}
-        />
-        <span className="absolute left-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-bold text-slate-950 shadow-sm dark:bg-slate-950/90 dark:text-white">
-          {badgeLabel}
-        </span>
-      </div>
-      <div className="mt-2.5 flex flex-1 flex-col justify-between px-0.5">
-        <div>
-          <h3 className="line-clamp-1 text-sm font-bold text-slate-950 dark:text-white">
-            {title}
-          </h3>
-          <p className="mt-0.5 line-clamp-1 text-xs text-slate-600 dark:text-slate-400">
-            {locationText}
-          </p>
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <span className="text-xs font-extrabold text-slate-950 dark:text-white">
-            {formattedPrice}
-          </span>
-          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-950 shadow-sm transition group-hover:bg-slate-950 group-hover:text-white dark:bg-slate-800 dark:text-white dark:group-hover:bg-white dark:group-hover:text-slate-950">
-            View
-          </span>
-        </div>
-      </div>
-    </button>
-  );
-};
 
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
@@ -4877,7 +4814,7 @@ function MobileAppHomepage({
                   {activeTab === 'LookingFor' ? (
                     <LookingForFeedCard item={item} navigate={navigate} />
                   ) : (
-                    <UberListingCard
+                    <AirbnbCard
                       item={item}
                       type={
                         activeTab === 'Helper' || activeTab === 'Helpers'
@@ -5349,7 +5286,7 @@ function DesktopHomepage({
                   {activeTab === 'LookingFor' ? (
                     <LookingForFeedCard item={item} navigate={navigate} />
                   ) : (
-                    <UberListingCard
+                    <AirbnbCard
                       item={item}
                       type={
                         activeTab === 'Helper' || activeTab === 'Helpers'
