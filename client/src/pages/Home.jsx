@@ -167,45 +167,158 @@ const HomeDataErrorNotice = ({ onRetry }) => (
   </div>
 );
 
-// A compact service hub inspired by the supplied reference: people see one
-// search action and a few clear routes before they see the marketplace feed.
+// Uber-style super-app entry section matching the reference:
+// - Side-scrolling top mode tabs with black underline (no duplicate search bar; Header already has search)
+// - Clean quick-action card (Shuttles, Moving, Nearby)
+// - "For you" side-scrolling circular icon tiles with labels underneath
 const WelcomeChoices = ({ onChoose, navigate }) => {
-  const [query, setQuery] = useState('');
-  const forYou = [
-    { title: 'Book shuttle', emoji: '🚐', action: () => navigate('/shuttles') },
-    { title: 'Move items', emoji: '🚚', action: () => navigate('/shuttles?tab=moving') },
-    { title: 'Order food', emoji: '🍔', action: () => onChoose('Lunch') },
-    { title: 'Find a place', emoji: '🏠', action: () => onChoose('Property') },
+  const [activeMode, setActiveMode] = useState('Shuttle');
+
+  const topModes = [
+    { id: 'Shuttle', label: 'Shuttles', emoji: '🚐', action: () => navigate('/shuttles') },
+    { id: 'Moving', label: 'Moving', emoji: '🚚', action: () => navigate('/shuttles?tab=moving') },
+    { id: 'Lunch', label: 'Food', emoji: '🍕', action: () => onChoose('Lunch') },
+    { id: 'Service', label: 'Services', emoji: '🛠️', action: () => onChoose('Service') },
+    { id: 'Property', label: 'Stays', emoji: '🏠', action: () => onChoose('Property') },
+    { id: 'Event', label: 'Events', emoji: '🎉', action: () => onChoose('Event') },
   ];
 
-  const submitSearch = (event) => {
-    event.preventDefault();
-    const term = query.trim();
-    navigate(term ? `/search?searchTerm=${encodeURIComponent(term)}&type=all` : '/search');
-  };
+  const quickShortcuts = [
+    {
+      id: 'Shuttle',
+      title: 'Book a Shuttle',
+      subtitle: 'Live seats & real-time GPS tracking',
+      accentText: 'Seats available',
+      icon: Bus,
+      iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
+      action: () => navigate('/shuttles'),
+    },
+    {
+      id: 'Moving',
+      title: 'Hire a Moving Truck',
+      subtitle: 'Local trucks & minivans near you',
+      icon: Truck,
+      iconBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+      action: () => navigate('/shuttles?tab=moving'),
+    },
+    {
+      id: 'Explore',
+      title: 'Services, Food & Stays',
+      subtitle: 'Browse verified providers around you',
+      icon: Sparkles,
+      iconBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+      action: () => navigate('/search'),
+    },
+  ];
+
+  const forYouCircles = [
+    { title: 'Shuttles', emoji: '🚐', action: () => navigate('/shuttles') },
+    { title: 'Moving', emoji: '🚚', badge: 'New', action: () => navigate('/shuttles?tab=moving') },
+    { title: 'Food', emoji: '🍕', action: () => onChoose('Lunch') },
+    { title: 'Services', emoji: '🛠️', action: () => onChoose('Service') },
+    { title: 'Stays', emoji: '🏠', action: () => onChoose('Property') },
+    { title: 'Helpers', emoji: '🤝', action: () => onChoose('Helper') },
+    { title: 'Events', emoji: '🎉', action: () => onChoose('Event') },
+    { title: 'Shop', emoji: '🛍️', action: () => onChoose('Selling') },
+  ];
 
   return (
     <section
       aria-labelledby="welcome-choices-title"
-      className="mb-6 mt-[88px] bg-white px-4 pb-1 pt-2 dark:bg-gray-950 sm:px-7 lg:mt-0"
+      className="w-full bg-white px-4 pb-3 pt-2 dark:bg-gray-950 sm:px-7"
     >
-      <h1 id="welcome-choices-title" className="sr-only">Find services and transport on LoopOut</h1>
-      <form onSubmit={submitSearch} className="flex h-12 items-center gap-2 rounded-full border border-slate-300 bg-white px-4 dark:border-slate-700 dark:bg-gray-950">
-        <MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
-        <input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search LoopOut" placeholder="Where do you want to go or find?" className="min-w-0 flex-1 bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-500 dark:text-white" />
-        <button type="submit" className="rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900">Search</button>
-      </form>
+      <h1 id="welcome-choices-title" className="sr-only">LoopOut — Shuttles, Moving, Services, Food, and Stays</h1>
 
-      <div className="mt-6">
-        <h2 className="text-lg font-bold tracking-tight text-slate-950 dark:text-white">For you</h2>
+      {/* 1. Top Mode Switcher (side-scrolling with black underline) */}
+      <div className="flex items-center gap-6 overflow-x-auto border-b border-slate-100 pb-2.5 scrollbar-hide snap-x snap-mandatory dark:border-slate-800">
+        {topModes.map((mode) => {
+          const isActive = activeMode === mode.id;
+          return (
+            <button
+              key={mode.id}
+              type="button"
+              onClick={() => {
+                setActiveMode(mode.id);
+                mode.action();
+              }}
+              className={`relative flex shrink-0 snap-start items-center gap-2 pb-1.5 text-[15px] font-bold tracking-tight transition-colors ${
+                isActive
+                  ? 'text-slate-950 dark:text-white'
+                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              <span className="text-lg leading-none" aria-hidden="true">{mode.emoji}</span>
+              <span>{mode.label}</span>
+              {isActive && (
+                <span className="absolute -bottom-[11px] left-0 right-0 h-[3px] rounded-full bg-slate-950 dark:bg-white" />
+              )}
+            </button>
+          );
+        })}
       </div>
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {forYou.map(({ title, emoji, action }) => (
-          <button key={title} type="button" onClick={action} className="flex min-w-0 flex-col items-center text-center active:scale-[0.97]">
-            <span className="text-[42px] leading-none">{emoji}</span>
-            <span className="mt-2 w-full truncate text-xs font-bold text-slate-800 dark:text-slate-100">{title}</span>
-          </button>
-        ))}
+
+      {/* 2. Quick-Action List Card (Uber Home / Work style) */}
+      <div className="mt-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_-4px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
+        {quickShortcuts.map((item, idx) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={item.action}
+              className={`flex w-full items-center gap-3.5 px-4 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/70 ${
+                idx < quickShortcuts.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''
+              }`}
+            >
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.iconBg}`}>
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate text-[15px] font-bold text-slate-950 dark:text-white">
+                  {item.title}
+                </span>
+                <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                  {item.subtitle}
+                </span>
+                {item.accentText && (
+                  <span className="mt-0.5 block text-[11px] font-semibold text-rose-600 dark:text-rose-400">
+                    {item.accentText}
+                  </span>
+                )}
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. "For you" — Circular Icons + Labels Below (side-scrolling) */}
+      <div className="mt-5">
+        <h2 className="mb-3 text-lg font-extrabold tracking-tight text-slate-950 dark:text-white">
+          For you
+        </h2>
+        <div className="flex items-start gap-4 overflow-x-auto pt-2 pb-1 scrollbar-hide snap-x snap-mandatory">
+          {forYouCircles.map((tile) => (
+            <button
+              key={tile.title}
+              type="button"
+              onClick={tile.action}
+              className="group relative flex w-[72px] shrink-0 snap-start flex-col items-center text-center"
+            >
+              {tile.badge && (
+                <span className="absolute -top-2 z-10 rounded-md bg-rose-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white shadow-sm">
+                  {tile.badge}
+                </span>
+              )}
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl transition-transform group-hover:scale-105 group-active:scale-95 dark:bg-slate-800">
+                <span aria-hidden="true">{tile.emoji}</span>
+              </span>
+              <span className="mt-2 block w-full truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
+                {tile.title}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
