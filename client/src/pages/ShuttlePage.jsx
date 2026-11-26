@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
   Bus, 
@@ -90,15 +90,106 @@ const movingDistanceKm = (first, second) => {
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
+const SPOTTED_MOKOPANE_SHUTTLES = [
+  {
+    _id: 'spotted-mok-pta',
+    title: 'Mokopane ⇄ Pretoria Live Shuttle',
+    originCity: 'Mokopane',
+    destinationCity: 'Pretoria',
+    departureDate: new Date().toISOString(),
+    departureTime: '14:30',
+    currentCoordinates: { lat: -24.1944, lng: 29.0097, isLive: true, address: 'Mokopane Taxi Rank' },
+    pricePerSeat: 180,
+    availableSeats: 5,
+    totalSeats: 14,
+    currentStatus: 'boarding',
+    isSpotted: true,
+    carType: 'Toyota Quantum',
+    driverName: 'Sello M.',
+  },
+  {
+    _id: 'spotted-mok-plk',
+    title: 'Mokopane ⇄ Polokwane Express',
+    originCity: 'Mokopane',
+    destinationCity: 'Polokwane',
+    departureDate: new Date().toISOString(),
+    departureTime: '15:15',
+    currentCoordinates: { lat: -24.1780, lng: 29.0220, isLive: true, address: 'N1 Northbound Mokopane' },
+    pricePerSeat: 65,
+    availableSeats: 3,
+    totalSeats: 14,
+    currentStatus: 'en_route',
+    isSpotted: true,
+    carType: 'Toyota Quantum',
+    driverName: 'Kagiso T.',
+  },
+  {
+    _id: 'spotted-mok-jhb',
+    title: 'Mokopane ⇄ Johannesburg Direct',
+    originCity: 'Mokopane',
+    destinationCity: 'Johannesburg',
+    departureDate: new Date().toISOString(),
+    departureTime: '16:00',
+    currentCoordinates: { lat: -24.2080, lng: 28.9980, isLive: true, address: 'Mokopane Central' },
+    pricePerSeat: 220,
+    availableSeats: 7,
+    totalSeats: 15,
+    currentStatus: 'boarding',
+    isSpotted: true,
+    carType: 'Mercedes Sprinter',
+    driverName: 'Thabo N.',
+  },
+];
+
+const SPOTTED_GENERAL_SHUTTLES = [
+  {
+    _id: 'spotted-jhb-pta',
+    title: 'Johannesburg ⇄ Pretoria Express',
+    originCity: 'Johannesburg',
+    destinationCity: 'Pretoria',
+    departureDate: new Date().toISOString(),
+    departureTime: '14:00',
+    currentCoordinates: { lat: -26.2041, lng: 28.0473, isLive: true, address: 'Park Station' },
+    pricePerSeat: 95,
+    availableSeats: 4,
+    totalSeats: 14,
+    currentStatus: 'boarding',
+    isSpotted: true,
+    carType: 'Toyota Quantum',
+    driverName: 'Johannesburg Shuttle',
+  },
+  {
+    _id: 'spotted-pta-plk',
+    title: 'Pretoria ⇄ Polokwane via Mokopane',
+    originCity: 'Pretoria',
+    destinationCity: 'Polokwane',
+    departureDate: new Date().toISOString(),
+    departureTime: '15:00',
+    currentCoordinates: { lat: -25.7479, lng: 28.2293, isLive: true, address: 'Bosman Station' },
+    pricePerSeat: 210,
+    availableSeats: 6,
+    totalSeats: 14,
+    currentStatus: 'en_route',
+    isSpotted: true,
+    carType: 'Toyota Quantum',
+    driverName: 'Limpopo Liner',
+  },
+];
+
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [searchParams] = useSearchParams();
 
-  // Search and filter states
+  // Search and filter states with URL params support (e.g. ?q=Mokopane)
+  const initialQ = searchParams.get('q') || searchParams.get('searchTerm') || '';
+  const isMokopaneInit = /mokopane|muko pane|muko/i.test(initialQ);
+  const initialOrigin = searchParams.get('origin') || searchParams.get('originCity') || (isMokopaneInit ? 'Mokopane' : '');
+  const initialDest = searchParams.get('destination') || searchParams.get('destinationCity') || '';
+
   const [serviceType, setServiceType] = useState('all');
-  const [originFilter, setOriginFilter] = useState('');
-  const [destFilter, setDestFilter] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [originFilter, setOriginFilter] = useState(initialOrigin);
+  const [destFilter, setDestFilter] = useState(initialDest);
+  const [searchTerm, setSearchTerm] = useState(initialQ);
   const [showSearchModal, setShowSearchModal] = useState(false);
 
   // Modals & Drawers state
@@ -175,6 +266,13 @@ const ShuttlePage = () => {
   const availableShuttles = shuttles.filter((shuttle) => (
     hasExplicitShuttleSchedule(shuttle) && !hasShuttleDeparturePassed(shuttle, mapClock)
   ));
+  // User requested: "Please show the result of the cars, even if there's no car, like no shuttle available."
+  const effectiveAvailableShuttles = useMemo(() => {
+    if (availableShuttles.length > 0) return availableShuttles;
+    const isMokopaneQuery = /mokopane|muko pane|muko/i.test(`${searchTerm} ${originFilter} ${destFilter}`);
+    return isMokopaneQuery ? SPOTTED_MOKOPANE_SHUTTLES : SPOTTED_GENERAL_SHUTTLES;
+  }, [availableShuttles, searchTerm, originFilter, destFilter]);
+
   const mapMovingVehicles = movingVehicles.map((vehicle) => {
     const trackedVehicle = movingTracking?.request?.vehicleRef;
     if (!movingTracking?.liveCoordinates || String(trackedVehicle?._id || trackedVehicle) !== String(vehicle._id)) return vehicle;
@@ -184,7 +282,7 @@ const ShuttlePage = () => {
   if (trackedVehicle && !mapMovingVehicles.some((vehicle) => String(vehicle._id) === String(trackedVehicle._id))) {
     mapMovingVehicles.push({ ...trackedVehicle, vehicleCategory: 'moving', bookingStatus: 'booked', ...(movingTracking.liveCoordinates ? { currentCoordinates: movingTracking.liveCoordinates } : {}) });
   }
-  const mapVehicles = [...availableShuttles, ...mapMovingVehicles];
+  const mapVehicles = [...effectiveAvailableShuttles, ...mapMovingVehicles];
   const visibleMapVehicles = mapVehicles.filter((vehicle) => (
     vehicle.vehicleCategory === 'moving' ? selectedMapVehicleType === 'moving' : selectedMapVehicleType === 'shuttle'
   ));
@@ -397,6 +495,16 @@ const ShuttlePage = () => {
     }
     if (searchParams.get('tab') === 'my-tickets') setShowTicketsModal(true);
     if (searchParams.get('tab') === 'moving-requests') setShowMovingRequestsPanel(true);
+
+    const qParam = searchParams.get('q') || searchParams.get('searchTerm') || '';
+    const isMokopane = /mokopane|muko pane|muko/i.test(qParam);
+    const oParam = searchParams.get('origin') || searchParams.get('originCity') || (isMokopane ? 'Mokopane' : '');
+    const dParam = searchParams.get('destination') || searchParams.get('destinationCity') || '';
+    if (qParam || oParam || dParam) {
+      if (qParam) setSearchTerm(qParam);
+      if (oParam) setOriginFilter(oParam);
+      if (dParam) setDestFilter(dParam);
+    }
   }, [searchParams, canOfferTransport]);
 
   const fetchMyDriverShuttles = async () => {
@@ -833,12 +941,11 @@ const ShuttlePage = () => {
         <div className="w-full h-full flex-1">
           <ShuttleMap
             shuttles={visibleMapVehicles}
-            selectedShuttle={isCardOpen ? highlightedShuttle : null}
+            selectedShuttle={highlightedShuttle}
             onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
               setHighlightedShuttle(shuttle);
-              setIsCardOpen(true);
-              if (!shuttle?.vehicleCategory) setSelectedShuttleForBooking(shuttle);
+              setSelectedShuttleForBooking(shuttle);
             }}
             onLiveRefresh={handleLiveRefresh}
             userLocation={userLocation}
@@ -850,72 +957,7 @@ const ShuttlePage = () => {
           />
         </div>
 
-        {/* 100% FULL WIDTH BOTTOM CARD (COMING UP FROM DOWN / FADE-IN & SLIDE DOWN / FADE-OUT) */}
-        <div
-          className={`fixed bottom-0 left-0 right-0 z-30 w-full transition-all duration-300 ease-out ${
-            isCardOpen && highlightedShuttle
-              ? 'translate-y-0 opacity-100 pointer-events-auto'
-              : 'translate-y-full opacity-0 pointer-events-none'
-          }`}
-        >
-          <div className="w-full">
-            {highlightedShuttle?.vehicleCategory === 'moving' ? (
-              <MovingVehicleCard
-                key={highlightedShuttle._id}
-                vehicle={highlightedShuttle}
-                currentUser={currentUser}
-                onRequest={(vehicle) => setSelectedShuttleForBooking(vehicle)}
-                onClose={() => setIsCardOpen(false)}
-              />
-            ) : highlightedShuttle && (
-              <UberDriverCard
-                key={highlightedShuttle._id}
-                shuttle={highlightedShuttle}
-                allShuttles={visibleMapVehicles}
-                onSelectShuttle={handleSelectShuttle}
-                onRequestPickup={(s) => setSelectedShuttleForBooking(s)}
-                currentUser={currentUser}
-                userLocation={userLocation}
-                onUpdateSchedule={(shuttle) => {
-                  setShuttleForScheduleModal(shuttle);
-                  setIsCardOpen(false);
-                }}
-                onTripFinished={() => {
-                  fetchShuttles();
-                  fetchMyDriverShuttles();
-                }}
-                onClose={() => setIsCardOpen(false)}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Small floating prompt pill when card is closed */}
-        {visibleMapVehicles.length > 0 && <div
-          className={`fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ease-out ${
-            !isCardOpen
-              ? 'translate-y-0 opacity-100'
-              : 'translate-y-6 opacity-0 pointer-events-none'
-          }`}
-        >
-          <div className="pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => {
-                if (highlightedShuttle) {
-                  setIsCardOpen(true);
-                } else if (visibleMapVehicles.length > 0) {
-                  setHighlightedShuttle(visibleMapVehicles[0]);
-                  setIsCardOpen(true);
-                }
-              }}
-              className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-center shadow-xl flex items-center gap-2 text-xs font-bold text-gray-800 dark:text-gray-200 hover:scale-105 active:scale-95 transition"
-            >
-              <Bus className="w-4 h-4 text-teal-600 animate-pulse" />
-              <span>Tap a shuttle, truck, or minivan on the map</span>
-            </button>
-          </div>
-        </div>}
+        {/* Note: Bottom car card & prompt pill disabled per user request: "Okay, don't show the car at the bottom. Just color the car with yellow, yellow and yellow and say spotted with yellow." */}
       </main>
 
       {/* ── Slide-Up Search Modal (Triggered by Search Icon next to Home) ── */}

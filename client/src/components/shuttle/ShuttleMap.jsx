@@ -73,7 +73,7 @@ const SA_ROUTE_ORIGINS = [
   { names: ['johannesburg', 'joburg', 'jhb', 'sandton', 'soweto'], lat: -26.2041, lng: 28.0473 },
   { names: ['pretoria', 'tshwane', 'centurion'], lat: -25.7479, lng: 28.2293 },
   { names: ['polokwane', 'pietersburg'], lat: -23.9045, lng: 29.4689 },
-  { names: ['mokopane', 'potgietersrus'], lat: -24.1944, lng: 29.0097 },
+  { names: ['mokopane', 'potgietersrus', 'muko pane', 'mukopane'], lat: -24.1944, lng: 29.0097 },
   { names: ['mbombela', 'nelspruit'], lat: -25.4753, lng: 30.9694 },
   { names: ['durban', 'ethekwini'], lat: -29.8587, lng: 31.0218 },
   { names: ['cape town'], lat: -33.9249, lng: 18.4241 },
@@ -522,91 +522,92 @@ const ShuttleMap = ({
         }
       }
 
-      // Custom HTML Marker Icon
+      // Custom HTML Marker Icon (colored with vibrant yellow and labeled "Spotted with yellow")
       const customIcon = L.divIcon({
         className: 'custom-shuttle-marker',
         html: `
-          <div class="relative flex flex-col items-center  cursor-pointer transition-all duration-300 ${
+          <div class="relative flex flex-col items-center cursor-pointer transition-all duration-300 ${
             isSelected ? 'scale-110 z-[1000]' : 'hover:scale-105 z-[100]'
           }">
+            <!-- Spotted with yellow badge on top -->
+            <div class="mb-1 rounded-full bg-yellow-400 border border-yellow-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-black shadow-lg flex items-center gap-1.5 whitespace-nowrap animate-bounce">
+              <span class="w-1.5 h-1.5 rounded-full bg-black animate-ping inline-block"></span>
+              <span>Spotted with yellow</span>
+            </div>
+
             ${showMarkerDetails ? `
-              <div class="mb-1 max-w-[180px] truncate rounded-full border border-amber-400/80 bg-gray-900/95 px-2 py-1 text-[9px] font-black text-amber-300 shadow-md whitespace-nowrap">
+              <div class="mb-1 max-w-[190px] truncate rounded-full border border-yellow-500 bg-gray-950/95 px-2.5 py-0.5 text-[9px] font-black text-yellow-300 shadow-md whitespace-nowrap">
                 <span>${routeLabel}</span>
               </div>
             ` : ''}
 
-            <!-- Live GPS Satellite badge (only when driver GPRS beacon is ON) -->
-            ${isLiveGprs ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-blue-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-1 whitespace-nowrap border border-blue-300 animate-pulse">
-                <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block"></span>
-                <span>LIVE GPS</span>
-              </div>
-            ` : ''}
-            ${showMarkerDetails && isRouteOriginPin ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-white text-gray-700 text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-gray-300">ROUTE START · APPROX</div>
-            ` : ''}
-            ${showMarkerDetails && isSavedPin ? `
-              <div class="absolute -top-3.5 right-0 z-10 bg-slate-700 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-md whitespace-nowrap border border-slate-500">${shuttle.vehicleCategory === 'moving' ? shuttle.currentCoordinates?.locationSource === 'address' ? 'ADDRESS PIN · NOT LIVE' : 'SAVED GPS · NOT LIVE' : 'SAVED PIN · NOT LIVE'}</div>
-            ` : ''}
-
-            ${showMarkerDetails ? `
-              <div class="mb-1 rounded-md bg-white/95 px-1.5 py-0.5 text-[9px] font-bold leading-tight text-gray-900 shadow-md border border-gray-200 whitespace-nowrap">
-                <span>📅 ${departureDay}</span><span class="ml-1 text-teal-700">${departureClock}</span>
-              </div>
-            ` : ''}
-
-            <!-- Price and Space Badge -->
-            ${showMarkerDetails ? `<div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border ${
-              isBookedMarker
-                ? 'bg-red-600 text-white border-gray-400 ring-2 ring-gray-300'
-                : isTripInProgress
-                ? 'bg-blue-700 text-white border-blue-400'
-                : isSelected
-                ? 'bg-amber-400 text-gray-900 border-amber-500 ring-2 ring-amber-300'
-                : isEnRoute
-                ? 'bg-emerald-600 text-white border-emerald-400'
-                : 'bg-teal-700 text-white border-teal-500'
-            }">
-              <span class="w-2 h-2 rounded-full ${isUnavailable ? 'bg-white' : isEnRoute || isLiveGprs ? 'bg-white animate-ping' : 'bg-amber-300'}"></span>
+            <!-- Price & seats badge in yellow -->
+            ${showMarkerDetails ? `<div class="px-2.5 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap border bg-yellow-400 text-black border-yellow-500 ring-2 ring-yellow-300/80">
+              <span class="w-2 h-2 rounded-full bg-black"></span>
               ${isMovingVehicle
-                ? isMovingBooked ? '<span>Booked</span>' : `<span>R${shuttle.hourlyRate}/hr</span><span class="text-[10px] opacity-90 font-normal">${movingVehicleSize === 'mini' ? 'MINI TRUCK' : movingVehicleSize === 'large' ? 'LARGE TRUCK' : 'TRUCK'}</span>`
+                ? isMovingBooked ? '<span>Booked</span>' : `<span>R${shuttle.hourlyRate || 250}/hr</span><span class="text-[10px] font-bold opacity-80">${movingVehicleSize === 'mini' ? 'MINI' : movingVehicleSize === 'large' ? 'LARGE' : 'TRUCK'}</span>`
                 : isTripInProgress
-                  ? '<span>Trip in progress · finish pending</span>'
+                  ? '<span>Trip en route</span>'
                 : isFullyBooked
-                  ? '<span>Fully booked</span>'
-                  : `<span>R${shuttle.pricePerSeat}</span><span class="text-[10px] opacity-90 font-normal">(${shuttle.availableSeats} open)</span>`}
+                  ? '<span>Full</span>'
+                  : `<span>R${shuttle.pricePerSeat || 150}</span><span class="text-[10px] font-bold opacity-80">(${shuttle.availableSeats || 4} open)</span>`}
             </div>` : ''}
 
-            <!-- Vehicle Pin Pointer -->
-            <div class="shuttle-vehicle-pin relative w-11 h-11 -mt-1 rounded-full ${isBookedMarker ? 'bg-red-600' : isTripInProgress ? 'bg-blue-700' : 'bg-white dark:bg-gray-900'} shadow-md border-2 ${
-              isBookedMarker ? 'border-gray-500 ring-2 ring-gray-300' : isTripInProgress ? 'border-blue-400' : isSelected ? 'border-amber-500' : isLiveGprs ? 'border-blue-500' : 'border-teal-600'
-            } flex items-center justify-center ${isUnavailable ? 'text-white' : 'text-teal-700 dark:text-teal-300'}">
-              ${isLiveGprs ? `<div class="absolute -inset-2 rounded-full ${isBookedMarker ? 'bg-red-500/30' : isTripInProgress ? 'bg-blue-500/30' : 'bg-blue-500/20'} animate-ping pointer-events-none"></div>` : ''}
-              <span role="img" aria-label="${markerDescription}" class="relative z-[1] text-[30px] leading-none drop-shadow-sm">${markerEmoji}</span>
+            <!-- Vehicle Pin Pointer (colored with yellow, yellow and yellow) -->
+            <div class="shuttle-vehicle-pin relative w-12 h-12 -mt-1 rounded-full bg-yellow-400 shadow-xl border-2 border-yellow-500 ring-4 ring-yellow-300/80 flex items-center justify-center text-black">
+              <div class="absolute -inset-2 rounded-full bg-yellow-400/40 animate-ping pointer-events-none"></div>
+              <span role="img" aria-label="${markerDescription}" class="relative z-[1] text-[32px] leading-none drop-shadow-sm">${markerEmoji}</span>
             </div>
             
-            <div class="w-1.5 h-1.5 rounded-full bg-black/40 mt-0.5"></div>
+            <div class="w-2 h-2 rounded-full bg-black/60 mt-0.5"></div>
           </div>
         `,
-        iconSize: [240, 106],
-        iconAnchor: [120, 104],
+        iconSize: [240, 114],
+        iconAnchor: [120, 112],
       });
 
       const marker = L.marker([markerLat, markerLng], { icon: customIcon });
+
+      // Clean on-map Leaflet popup showing car results directly above the car instead of at bottom of screen
+      const popupHtml = `
+        <div style="font-family: inherit; min-width: 210px; padding: 6px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+            <span style="background: #FACC15; color: #000; font-weight: 900; font-size: 10px; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #EAB308;">Spotted with yellow</span>
+            <span style="font-size: 11px; font-weight: 800; color: #16a34a;">● Live Radar</span>
+          </div>
+          <div style="font-weight: 900; font-size: 13px; color: #0f172a; margin-bottom: 2px; line-height: 1.2;">
+            ${shuttle.originCity || 'Origin'} → ${shuttle.destinationCity || 'Destination'}
+          </div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
+            ${departureDay} · ${departureClock}
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 4px;">
+            <div>
+              <div style="font-size: 15px; font-weight: 900; color: #0f172a;">R${shuttle.pricePerSeat || shuttle.hourlyRate || 150}</div>
+              <div style="font-size: 10px; color: #64748b;">${shuttle.availableSeats || 4} seats open</div>
+            </div>
+            <button id="book-btn-${shuttle._id}" style="background: #0f172a; color: #fff; border: 0; padding: 6px 14px; border-radius: 9999px; font-size: 11px; font-weight: 800; cursor: pointer; transition: background 0.2s;">
+              Book Seat
+            </button>
+          </div>
+        </div>
+      `;
+      marker.bindPopup(popupHtml, { closeButton: false, offset: [0, -40] });
+
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`book-btn-${shuttle._id}`);
+        if (btn) {
+          btn.onclick = () => {
+            if (onRequestPickup) onRequestPickup(shuttle);
+          };
+        }
+      });
 
       // Selected marker always pops on top of all others!
       marker.setZIndexOffset(isSelected ? 2000 : 100 + clusterIndex);
 
       marker.on('click', () => {
-        // If this vehicle is already selected and there are other cars in this cluster,
-        // tapping again automatically cycles to the car in the back!
-        if (selectedShuttle && String(selectedShuttle._id) === String(shuttle._id) && clusterSize > 1) {
-          const nextIndex = (clusterIndex + 1) % clusterSize;
-          const nextShuttle = cluster[nextIndex];
-          if (onSelectShuttleRef.current) onSelectShuttleRef.current(nextShuttle);
-        } else {
-          if (onSelectShuttleRef.current) onSelectShuttleRef.current(shuttle);
-        }
+        if (onSelectShuttleRef.current) onSelectShuttleRef.current(shuttle);
       });
 
       marker.addTo(leafletMapRef.current);

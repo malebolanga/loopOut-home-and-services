@@ -165,16 +165,21 @@ const SearchInput = ({
     if (onSearch) {
       onSearch(trimmedTerm, activeType);
     } else {
-      try {
-        const url = getSearchUrl({
-          searchTerm: trimmedTerm,
-          searchType,
-          [searchField]: trimmedTerm
-        });
-        navigate(url);
-      } catch (navigationError) {
-        console.error('Navigation error:', navigationError);
-        navigate('/search');
+      const isShuttle = activeType === 'shuttle' || /(shuttle|ride|taxi|bus|transport|moving truck|mokopane|muko pane)/i.test(trimmedTerm);
+      if (isShuttle) {
+        navigate(`/shuttles?q=${encodeURIComponent(trimmedTerm)}`);
+      } else {
+        try {
+          const url = getSearchUrl({
+            searchTerm: trimmedTerm,
+            searchType,
+            [searchField]: trimmedTerm
+          });
+          navigate(url);
+        } catch (navigationError) {
+          console.error('Navigation error:', navigationError);
+          navigate('/search');
+        }
       }
     }
 
@@ -206,16 +211,21 @@ const SearchInput = ({
     if (onSearch) {
       onSearch(trimmedTerm, suggestion.type || searchType);
     } else {
-      try {
-        const url = getSearchUrl({
-          searchTerm: trimmedTerm,
-          searchType: searchType,
-          [searchField]: trimmedTerm
-        });
-        navigate(url);
-      } catch (navigationError) {
-        console.error('Navigation error for suggestion:', navigationError);
-        navigate('/search');
+      const isShuttle = (suggestion.type || searchType) === 'shuttle' || /(shuttle|ride|taxi|bus|transport|moving truck|mokopane|muko pane)/i.test(trimmedTerm);
+      if (isShuttle) {
+        navigate(`/shuttles?q=${encodeURIComponent(trimmedTerm)}`);
+      } else {
+        try {
+          const url = getSearchUrl({
+            searchTerm: trimmedTerm,
+            searchType: searchType,
+            [searchField]: trimmedTerm
+          });
+          navigate(url);
+        } catch (navigationError) {
+          console.error('Navigation error for suggestion:', navigationError);
+          navigate('/search');
+        }
       }
     }
   };

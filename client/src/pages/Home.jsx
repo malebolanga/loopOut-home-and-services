@@ -4273,8 +4273,18 @@ function MobileAppHomepage({
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/search?searchTerm=${encodeURIComponent(searchTerm)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+    const query = searchTerm.trim();
+    if (query) {
+      const isShuttle = (
+        activeTab === 'Shuttle' ||
+        activeTab === 'Shuttles' ||
+        /(shuttle|ride|taxi|bus|transport|moving truck|mokopane|muko pane)/i.test(query)
+      );
+      if (isShuttle) {
+        navigate(`/shuttles?q=${encodeURIComponent(query)}`);
+      } else {
+        navigate(`/search?searchTerm=${encodeURIComponent(query)}&type=all&address=${encodeURIComponent(currentLocation)}`);
+      }
       setSearchTerm('');
     }
   };
