@@ -378,6 +378,71 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
   );
 };
 
+const UberListingCard = ({ item, type, onClick }) => {
+  const title = item.title || item.name || item.serviceName || 'LoopOut listing';
+  const image = item.imageUrls?.[0] || item.images?.[0] || item.avatar || item.image || '/placeholder.jpg';
+  const locationText = [item.city, item.suburb, item.address].find((v) => typeof v === 'string' && v.trim()) || 'South Africa';
+  const rawPrice = item.discountPrice || item.regularPrice || item.price || item.hourlyRate || item.rate || 0;
+  const formattedPrice = Number(rawPrice) > 0 ? `R${Number(rawPrice).toLocaleString('en-ZA')}` : 'Request quote';
+  const detailPath = type === 'helper'
+    ? `/helper/${item._id}`
+    : type === 'service'
+      ? `/service/${item._id}`
+      : type === 'event'
+        ? `/event/${item._id}`
+        : type === 'selling'
+          ? `/sell-listing/${item._id}`
+          : `/listing/${item._id}`;
+
+  const badgeLabel = type === 'helper'
+    ? 'Helper'
+    : type === 'service'
+      ? 'Service'
+      : type === 'event'
+        ? 'Event'
+        : type === 'selling'
+          ? 'Shop'
+          : 'Stay';
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(detailPath)}
+      className="group flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#F3F3F3] p-2.5 text-left transition-colors hover:bg-slate-200/80 active:scale-[0.99] dark:bg-slate-900 dark:hover:bg-slate-800"
+    >
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800">
+        <ImageWithFallback
+          src={image}
+          alt={title}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          type={type}
+        />
+        <span className="absolute left-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-bold text-slate-950 shadow-sm dark:bg-slate-950/90 dark:text-white">
+          {badgeLabel}
+        </span>
+      </div>
+      <div className="mt-2.5 flex flex-1 flex-col justify-between px-0.5">
+        <div>
+          <h3 className="line-clamp-1 text-sm font-bold text-slate-950 dark:text-white">
+            {title}
+          </h3>
+          <p className="mt-0.5 line-clamp-1 text-xs text-slate-600 dark:text-slate-400">
+            {locationText}
+          </p>
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-xs font-extrabold text-slate-950 dark:text-white">
+            {formattedPrice}
+          </span>
+          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-950 shadow-sm transition group-hover:bg-slate-950 group-hover:text-white dark:bg-slate-800 dark:text-white dark:group-hover:bg-white dark:group-hover:text-slate-950">
+            View
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+};
+
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
     main: '✨',
@@ -4800,24 +4865,19 @@ function MobileAppHomepage({
             </div>
           )}
 
-          {/* Listing Grid */}
-          <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3'} gap-4 sm:gap-5`}>
+          {/* Listing Grid (capped at 3 rows = 6 items on mobile) */}
+          <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3' : 'grid-cols-2 sm:grid-cols-2 md:grid-cols-3'} gap-3 sm:gap-4`}>
             {isLoadingCurrentTab ? (
               Array.from({ length: 6 }).map((_, idx) => (
                 <AirbnbCardSkeleton key={`skeleton-${idx}`} />
               ))
             ) : (activeTab === 'Shuttle' || activeTab === 'Shuttles') ? null : (
-              filteredItems.slice(0, visibleCount).map((item, idx) => (
-                <motion.div
-                  key={item._id || idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                >
+              filteredItems.slice(0, 6).map((item, idx) => (
+                <div key={item._id || idx}>
                   {activeTab === 'LookingFor' ? (
                     <LookingForFeedCard item={item} navigate={navigate} />
                   ) : (
-                    <AirbnbCard
+                    <UberListingCard
                       item={item}
                       type={
                         activeTab === 'Helper' || activeTab === 'Helpers'
@@ -4833,7 +4893,7 @@ function MobileAppHomepage({
                       onClick={(path) => navigate(path)}
                     />
                   )}
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -4866,51 +4926,16 @@ function MobileAppHomepage({
             </div>
           )}
 
-          {/* Load More / Search */}
-          {visibleCount < filteredItems.length ? (
-            <div ref={loadMoreSentinelRef} className="mt-8 flex flex-col items-center">
-              {isAndroidApp() ? (
-                <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-gray-800/80 text-slate-500 dark:text-gray-400 text-xs font-semibold">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
-                  <span>Loading more {currentTabLabel.toLowerCase()}...</span>
-                </div>
-              ) : (
-                <>
-                  <motion.button
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                      onClick={() => setVisibleCount(prev => prev + 8)}
-                    className="group relative flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                    <Sparkles className="w-3.5 h-3.5 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
-                    <span className="tracking-wide">Load More {currentTabLabel}</span>
-                    <span className="ml-1 px-2 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
-                        +{Math.min(8, filteredItems.length - visibleCount)}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
-                  </motion.button>
-                  <span className="mt-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
-                    Showing {Math.min(visibleCount, filteredItems.length)} of {filteredItems.length} {currentTabLabel.toLowerCase()}
-                  </span>
-                </>
-              )}
-            </div>
-          ) : filteredItems.length > 0 && (
-            <div className="mt-8 flex flex-col items-center justify-center text-center py-3">
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-[10px] font-black text-slate-500">
-                <Check className="w-3 h-3 text-emerald-500 stroke-[3]" />
-                <span>You've viewed all {filteredItems.length} {currentTabLabel.toLowerCase()}</span>
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+          {/* View all link below 3-row mobile grid */}
+          {filteredItems.length > 6 && (
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
                 onClick={() => navigate('/search')}
-                className="mt-2.5 flex items-center gap-1.5 text-xs font-black text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+                className="rounded-lg bg-slate-950 px-6 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-950"
               >
-                <MagnifyingGlassIcon className="w-3.5 h-3.5" />
-                <span>Search all categories</span>
-              </motion.button>
+                See all {filteredItems.length} listings
+              </button>
             </div>
           )}
         </section>}
@@ -5300,18 +5325,31 @@ function DesktopHomepage({
           </div>
         ) : filteredDesktopItems.length > 0 ? (
           <div>
-            <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-x-5 gap-y-10`}>
-              {filteredDesktopItems.slice(0, visibleCount).map((item, idx) => (
-                <motion.div
-                  key={item._id || idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.03, ease: 'easeOut' }}
-                >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">
+                {activeTab === 'Property' || activeTab === 'Properties'
+                  ? 'Stays near you'
+                  : activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services'
+                    ? 'Services near you'
+                    : activeTab === 'Lunch'
+                      ? 'Food near you'
+                      : 'Recent listings'}
+              </h2>
+              <button
+                type="button"
+                onClick={() => navigate('/search')}
+                className="rounded-full bg-[#F3F3F3] px-4 py-1.5 text-xs font-bold text-slate-950 transition hover:bg-slate-950 hover:text-white dark:bg-slate-800 dark:text-white dark:hover:bg-white dark:hover:text-slate-950"
+              >
+                See all →
+              </button>
+            </div>
+            <div className={`grid ${activeTab === 'LookingFor' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'} gap-4`}>
+              {filteredDesktopItems.slice(0, 12).map((item, idx) => (
+                <div key={item._id || idx}>
                   {activeTab === 'LookingFor' ? (
                     <LookingForFeedCard item={item} navigate={navigate} />
                   ) : (
-                    <AirbnbCard
+                    <UberListingCard
                       item={item}
                       type={
                         activeTab === 'Helper' || activeTab === 'Helpers'
@@ -5325,55 +5363,19 @@ function DesktopHomepage({
                       onClick={(path) => navigate(path)}
                     />
                   )}
-                </motion.div>
+                </div>
               ))}
             </div>
 
-            {/* Desktop Load More / End Indicator */}
-            {visibleCount < filteredDesktopItems.length ? (
-              <div ref={loadMoreDesktopSentinelRef} className="mt-14 flex flex-col items-center">
-                {isAndroidApp() ? (
-                  <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-100/90 dark:bg-gray-800/80 text-slate-500 dark:text-gray-400 text-xs font-semibold">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-500" />
-                    <span>Loading more {currentTabLabel.toLowerCase()}...</span>
-                  </div>
-                ) : (
-                  <>
-                    <motion.button
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => setVisibleCount(prev => prev + 12)}
-                      className="group relative flex items-center justify-center gap-3 px-9 py-4 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                      <Sparkles className="w-4 h-4 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
-                      <span className="tracking-wide">Load More {currentTabLabel}</span>
-                      <span className="ml-1 px-2.5 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
-                        +{Math.min(12, filteredDesktopItems.length - visibleCount)}
-                      </span>
-                      <ChevronDown className="w-4 h-4 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
-                    </motion.button>
-                    <span className="mt-2.5 text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-wide">
-                      Showing {Math.min(visibleCount, filteredDesktopItems.length)} of {filteredDesktopItems.length} {currentTabLabel.toLowerCase()}
-                    </span>
-                  </>
-                )}
-              </div>
-            ) : filteredDesktopItems.length > 0 && (
-              <div className="mt-14 flex flex-col items-center justify-center text-center py-4">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-800 text-[11px] font-black text-slate-500">
-                  <Check className="w-3.5 h-3.5 text-emerald-500 stroke-[3]" />
-                  <span>You've viewed all {filteredDesktopItems.length} {currentTabLabel.toLowerCase()}</span>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+            {filteredDesktopItems.length > 12 && (
+              <div className="mt-8 flex justify-center">
+                <button
+                  type="button"
                   onClick={() => navigate('/search')}
-                  className="mt-3 flex items-center gap-1.5 text-xs font-black text-rose-500 hover:text-rose-600 transition-colors cursor-pointer"
+                  className="rounded-lg bg-slate-950 px-7 py-3 text-sm font-bold text-white transition hover:bg-slate-800 active:scale-95 dark:bg-white dark:text-slate-950"
                 >
-                  <MagnifyingGlassIcon className="w-4 h-4" />
-                  <span>Search all categories &amp; locations</span>
-                </motion.button>
+                  See all {filteredDesktopItems.length} listings
+                </button>
               </div>
             )}
           </div>
