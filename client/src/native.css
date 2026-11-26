@@ -30,10 +30,9 @@ html, body {
     padding-top: calc(5rem + max(28px, calc(8px + env(safe-area-inset-top, 28px))));
   }
 
-  /* Home already follows the fixed header's safe-area spacer. Reserve only
-     enough room for its fixed category row to avoid a second large gap. */
+  /* Home already follows the fixed header's safe-area spacer. */
   .app-route-content-with-header.home-route-content {
-    padding-top: 4rem;
+    padding-top: 0;
   }
 
   /* The mobile header is 3.5rem tall; avoid leaving the larger desktop-sized
