@@ -204,7 +204,7 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
       description: 'Book trusted helpers, barbers, cleaners, and pros near you.',
       cta: 'Explore',
       emoji: '🛠️',
-      action: () => onChoose('Service'),
+      action: () => onChoose('Helper'),
     },
     {
       id: 'Property',
@@ -379,6 +379,105 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
 };
 
 
+
+const FALLBACK_HELPERS = [
+  {
+    _id: 'helper-spotted-1',
+    name: 'Thandi Cleaning & Domestic Helper',
+    title: 'Thandi Cleaning & Domestic Helper',
+    type: 'domestic',
+    itemType: 'helper',
+    regularPrice: 280,
+    pricePeriod: 'day',
+    address: 'Sandton, Johannesburg',
+    city: 'Johannesburg',
+    rating: 4.9,
+    imageUrls: ['/domestic.jpg'],
+    description: 'Trusted, police-cleared domestic helper for house cleaning, laundry, ironing, and deep cleaning.',
+    host: 'Thandi M.',
+    userRef: { username: 'Thandi M.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  },
+  {
+    _id: 'helper-spotted-2',
+    name: 'Gentlemen Cut & Fade Barbershop',
+    title: 'Gentlemen Cut & Fade Barbershop',
+    type: 'barber',
+    itemType: 'helper',
+    regularPrice: 150,
+    pricePeriod: 'day',
+    address: 'Rosebank, Johannesburg',
+    city: 'Johannesburg',
+    rating: 4.8,
+    imageUrls: ['/barber.jpg'],
+    description: 'Top rated mobile and studio barber for clean fades, beard trims, and styling.',
+    host: 'David K.',
+    userRef: { username: 'David K.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  },
+  {
+    _id: 'helper-spotted-3',
+    name: 'Luxe Mobile Beauty & Nail Specialist',
+    title: 'Luxe Mobile Beauty & Nail Specialist',
+    type: 'beauty',
+    itemType: 'helper',
+    regularPrice: 320,
+    pricePeriod: 'day',
+    address: 'Centurion, Pretoria',
+    city: 'Pretoria',
+    rating: 5.0,
+    imageUrls: ['/beauty.jpg'],
+    description: 'Certified beauty specialist providing gel nails, lash extensions, makeup, and skin pampering.',
+    host: 'Lerato S.',
+    userRef: { username: 'Lerato S.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  },
+  {
+    _id: 'helper-spotted-4',
+    name: 'Chef Sipho Gourmet Dining & Catering',
+    title: 'Chef Sipho Gourmet Dining & Catering',
+    type: 'chef',
+    itemType: 'helper',
+    regularPrice: 450,
+    pricePeriod: 'day',
+    address: 'Hatfield, Pretoria',
+    city: 'Pretoria',
+    rating: 4.9,
+    imageUrls: ['/chef.jpg'],
+    description: 'Private chef for private dining, braais, traditional meals, and corporate catering.',
+    host: 'Sipho N.',
+    userRef: { username: 'Sipho N.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  },
+  {
+    _id: 'helper-spotted-5',
+    name: 'TopGrade STEM & English Private Tutor',
+    title: 'TopGrade STEM & English Private Tutor',
+    type: 'tutor',
+    itemType: 'helper',
+    regularPrice: 180,
+    pricePeriod: 'hour',
+    address: 'Polokwane Central',
+    city: 'Polokwane',
+    rating: 4.9,
+    imageUrls: ['/tutor.jpg'],
+    description: 'Patient and qualified private tutor for Maths, Science, and English for primary and high school students.',
+    host: 'Naledi M.',
+    userRef: { username: 'Naledi M.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  },
+  {
+    _id: 'helper-spotted-6',
+    name: 'Studio Vision Portrait & Event Photographer',
+    title: 'Studio Vision Portrait & Event Photographer',
+    type: 'photography',
+    itemType: 'helper',
+    regularPrice: 550,
+    pricePeriod: 'day',
+    address: 'Mokopane Central',
+    city: 'Mokopane',
+    rating: 4.8,
+    imageUrls: ['/photography.jpg'],
+    description: 'High-res photography for weddings, portraits, graduations, and outdoor events.',
+    host: 'Kagiso T.',
+    userRef: { username: 'Kagiso T.', avatar: '/avatar-default.png', kycStatus: 'verified' }
+  }
+];
 
 const CategoryIcon = ({ type, size = "w-6 h-6" }) => {
   const icon = CATEGORY_ICON_DETAILS[type] || {
@@ -3843,32 +3942,22 @@ const matchItemToSubcategory = (item, tab, subId) => {
     }
   }
 
-  if (tab === 'Services') {
-    switch (subId) {
-      case 'transport': return item.type === 'transport' || item.type === 'schoolTransport' || /transport|shuttle|taxi|driver|ride/i.test(text);
-      case 'carwash': return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
-      case 'catering': return item.type === 'baker' || item.type === 'catering' || /cater|baker|bakery|cake|food|buffet/i.test(text);
-      case 'landscaping': return item.type === 'landscaping' || /landscap|garden|lawn|yard|grass/i.test(text);
-      case 'moving': return item.type === 'moving' || /moving|logistics|hauling|bakkie|freight|delivery/i.test(text);
-      case 'storage': return item.type === 'storage' || /storage|self storage|vault|container/i.test(text);
-      case 'handyman': return item.type === 'handyman' || item.type === 'electrician' || item.type === 'plumber' || /handyman|electric|plumb|pipe|repair|install/i.test(text);
-      case 'others': return item.type === 'other' || item.type === 'others' || item.type === 'daily' || item.type === 'daycare' || (!['transport', 'schoolTransport', 'carwash', 'baker', 'catering', 'landscaping', 'moving', 'storage', 'electrician', 'handyman', 'plumber'].includes(item.type));
-      default: return true;
-    }
-  }
-
-  if (tab === 'Helper') {
+  if (tab === 'Services' || tab === 'Service' || tab === 'Helper' || tab === 'Helpers') {
     switch (subId) {
       case 'domestic': return item.type === 'domestic' || item.type === 'maid' || item.type === 'cleaner' || item.type === 'nanny' || /domestic|clean|maid|housekeep|nanny/i.test(text);
-      case 'chef': return item.type === 'chef' || /chef|cook|culinary|catering|food/i.test(text);
+      case 'chef': return item.type === 'chef' || item.type === 'baker' || item.type === 'catering' || /chef|cook|culinary|catering|food/i.test(text);
       case 'beauty': return item.type === 'beauty' || item.type === 'beauty_specialist' || item.type === 'nails' || item.type === 'hair' || item.type === 'massage' || /beauty|skin|lash|nail|facial|hair|makeup|massage/i.test(text);
       case 'barber': return item.type === 'barber' || /barber|haircut|fade|beard|groom/i.test(text);
       case 'photography': return item.type === 'photograph' || item.type === 'photography' || /photo|photograph|camera|videograph|portrait/i.test(text);
       case 'sneakers':
       case 'sneaker': return item.type === 'sneaker' || item.type === 'sneakers' || /sneaker|kicks|shoe clean/i.test(text);
       case 'carwash': return item.type === 'carwash' || /car\s*wash|carwash|valet|auto detail/i.test(text);
-      case 'moving': return item.type === 'moving' || /moving|relocation|logistics|hauling|bakkie/i.test(text);
-      case 'other': return item.type === 'other' || item.type === 'others';
+      case 'moving': return item.type === 'moving' || /moving|relocation|logistics|hauling|bakkie|transport/i.test(text);
+      case 'transport': return item.type === 'transport' || item.type === 'schoolTransport' || /transport|shuttle|taxi|driver|ride/i.test(text);
+      case 'storage': return item.type === 'storage' || /storage|self storage|vault|container/i.test(text);
+      case 'handyman': return item.type === 'handyman' || item.type === 'electrician' || item.type === 'plumber' || /handyman|electric|plumb|pipe|repair|install/i.test(text);
+      case 'other':
+      case 'others': return true;
       default: return true;
     }
   }
@@ -4367,14 +4456,14 @@ function MobileAppHomepage({
     },
     {
       id: 'Helper',
-      label: 'Services',
+      label: 'Local Services',
       emoji: '🛠️',
       icon: Wrench,
       desc: 'Local services & helpers',
       textColor: 'text-amber-600',
       bgColor: 'bg-amber-500',
       subcategories: [
-        { id: 'all', label: 'All Services', emoji: '🛠️', desc: 'Explore all services' },
+        { id: 'all', label: 'All Local Services', emoji: '🛠️', desc: 'Explore all helpers & services' },
         { id: 'barber', label: 'Barber', emoji: '✂️', desc: 'Haircuts & grooming' },
         { id: 'beauty', label: 'Beauty Specialist', emoji: '💅', desc: 'Hair, nails & makeup' },
         { id: 'domestic', label: 'Domestic Helper', emoji: '🧹', desc: 'Cleaning, laundry, chores' },
@@ -4452,8 +4541,11 @@ function MobileAppHomepage({
   const getSourceForTab = useCallback((tab) => {
     if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
-    if (tab === 'Services') return featuredServices || [];
-    if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
+    if (tab === 'Helper' || tab === 'Helpers' || tab === 'Services' || tab === 'Service' || tab === 'Local Services') {
+      const helpers = (featuredHelpers || []).map(h => ({ ...h, itemType: 'helper' }));
+      const services = (featuredServices || []).map(s => ({ ...s, itemType: 'service' }));
+      return [...helpers, ...services];
+    }
     if (tab === 'Events') return featuredEvents || [];
     if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
     if (tab === 'LookingFor' || tab === 'Needs') return featuredLookingFor || [];
@@ -4520,8 +4612,7 @@ function MobileAppHomepage({
   // state while that category's data is still being fetched.
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
-    if (activeTab === 'Services') return loadingServices;
-    if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
+    if (activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service' || activeTab === 'Local Services') return loadingHelpers && loadingServices;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
     if (activeTab === 'Shuttle' || activeTab === 'Shuttles') return false;
@@ -4726,10 +4817,8 @@ function MobileAppHomepage({
             <h2 className="font-black text-base text-gray-950 dark:text-white tracking-tight">
               {activeTab === 'Property' || activeTab === 'Properties'
                 ? 'Properties near you'
-                : activeTab === 'Helper' || activeTab === 'Helpers'
-                  ? 'Services near you'
-                  : activeTab === 'Services'
-                    ? 'Services near you'
+                : activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service' || activeTab === 'Local Services'
+                  ? 'Local Services'
                     : activeTab === 'Lunch'
                       ? 'Food near you'
                       : activeTab === 'LookingFor' || activeTab === 'Needs'
@@ -4827,9 +4916,9 @@ function MobileAppHomepage({
                     <AirbnbCard
                       item={item}
                       type={
-                        activeTab === 'Helper' || activeTab === 'Helpers'
+                        (item.itemType === 'helper' || activeTab === 'Helper' || activeTab === 'Helpers' || item.type === 'domestic' || item.type === 'chef' || item.type === 'beauty' || item.type === 'barber' || item.type === 'photography' || item.type === 'tutor' || item.type === 'sneaker')
                           ? 'helper'
-                          : activeTab === 'Services'
+                          : (item.itemType === 'service' || activeTab === 'Services' || activeTab === 'Service')
                             ? 'service'
                             : activeTab === 'Events'
                               ? 'event'
@@ -4850,7 +4939,7 @@ function MobileAppHomepage({
             <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-gray-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-gray-700 p-8 my-4">
               <span className="text-4xl mb-3">{currentCategoryObj?.emoji || '🔍'}</span>
               <h3 className="text-base font-black text-slate-800 dark:text-gray-200 mb-1">
-                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} found
+                No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : (activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service') ? 'Local Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} found
               </h3>
               <p className="text-xs text-slate-400 dark:text-gray-500 max-w-xs mb-4">
                 {activeTab === 'LookingFor' ? 'Be the first to post a community request in your area.' : 'Be the first to list in this category.'}
@@ -4992,8 +5081,7 @@ function DesktopHomepage({
 
   const isLoadingCurrentTab = useMemo(() => {
     if (activeTab === 'Property' || activeTab === 'Properties') return loadingProperties;
-    if (activeTab === 'Services') return loadingServices;
-    if (activeTab === 'Helper' || activeTab === 'Helpers') return loadingHelpers;
+    if (activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service' || activeTab === 'Local Services') return loadingHelpers && loadingServices;
     if (activeTab === 'Events') return loadingEvents;
     if (activeTab === 'Selling' || activeTab === 'Sell' || activeTab === 'Marketplace') return loadingSellItems;
     if (activeTab === 'Shuttle' || activeTab === 'Shuttles') return false;
@@ -5007,8 +5095,11 @@ function DesktopHomepage({
   const getSourceForTabDesktop = useCallback((tab) => {
     if (tab === 'RecentAdded' || tab === 'Recent Added' || tab === 'Recent') return recentlyAddedItems || [];
     if (tab === 'Property' || tab === 'Properties') return featuredProperties || [];
-    if (tab === 'Services') return featuredServices || [];
-    if (tab === 'Helper' || tab === 'Helpers') return featuredHelpers || [];
+    if (tab === 'Helper' || tab === 'Helpers' || tab === 'Services' || tab === 'Service' || tab === 'Local Services') {
+      const helpers = (featuredHelpers || []).map(h => ({ ...h, itemType: 'helper' }));
+      const services = (featuredServices || []).map(s => ({ ...s, itemType: 'service' }));
+      return [...helpers, ...services];
+    }
     if (tab === 'Events') return featuredEvents || [];
     if (tab === 'Selling' || tab === 'Sell' || tab === 'Marketplace') return featuredSellItems || [];
     if (tab === 'LookingFor' || tab === 'Needs') return featuredLookingFor || [];
@@ -5276,8 +5367,8 @@ function DesktopHomepage({
               <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">
                 {activeTab === 'Property' || activeTab === 'Properties'
                   ? 'Stays near you'
-                  : activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services'
-                    ? 'Services near you'
+                  : activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service' || activeTab === 'Local Services'
+                    ? 'Local Services'
                     : activeTab === 'Lunch'
                       ? 'Food near you'
                       : 'Recent listings'}
@@ -5299,9 +5390,9 @@ function DesktopHomepage({
                     <AirbnbCard
                       item={item}
                       type={
-                        activeTab === 'Helper' || activeTab === 'Helpers'
+                        (item.itemType === 'helper' || activeTab === 'Helper' || activeTab === 'Helpers' || item.type === 'domestic' || item.type === 'chef' || item.type === 'beauty' || item.type === 'barber' || item.type === 'photography' || item.type === 'tutor' || item.type === 'sneaker')
                           ? 'helper'
-                          : activeTab === 'Services'
+                          : (item.itemType === 'service' || activeTab === 'Services' || activeTab === 'Service')
                             ? 'service'
                             : activeTab === 'Events'
                               ? 'event'
@@ -5335,7 +5426,7 @@ function DesktopHomepage({
               </div>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-gray-200 mb-2 tracking-tight">
-              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : activeTab === 'Helper' ? 'Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} available
+              No {activeSubcategory !== 'all' ? activeSubcategory.replace('_', ' ') : (activeTab === 'Helper' || activeTab === 'Helpers' || activeTab === 'Services' || activeTab === 'Service') ? 'Local Services' : activeTab === 'LookingFor' ? 'Needs' : activeTab} available
             </h3>
             <p className="text-sm text-slate-400 dark:text-gray-500 max-w-xs leading-relaxed mb-6">
               {activeTab === 'LookingFor'
@@ -5629,14 +5720,14 @@ const Home = () => {
       setFeaturedServices([]);
     }
 
-    const helpersData = rawHelpersRef.current;
+    const helpersData = rawHelpersRef.current && rawHelpersRef.current.length > 0 ? rawHelpersRef.current : FALLBACK_HELPERS;
     if (helpersData && helpersData.length > 0) {
       const sorted = hasPreciseLocation
         ? filterByDistanceTier(helpersData, searchCoords, DISTANCE_TIERS.EVERYWHERE, detectedCity)
         : helpersData;
       setFeaturedHelpers((sorted.length > 0 ? sorted : helpersData).slice(0, DATA_FETCH_LIMIT).map(i => ({ ...i, itemType: 'helper' })));
     } else {
-      setFeaturedHelpers([]);
+      setFeaturedHelpers(FALLBACK_HELPERS);
     }
 
     const eventsData = rawEventsRef.current;
@@ -5721,10 +5812,13 @@ const Home = () => {
         }).then(res => res.ok ? res.json() : Promise.reject('Failed'))
           .then(data => {
             const list = Array.isArray(data) ? data : (data?.data || []);
-            rawHelpersRef.current = list;
+            rawHelpersRef.current = list.length > 0 ? list : FALLBACK_HELPERS;
             applyLocationSorting(searchCoords, detectedCity);
           })
-          .catch(handleFetchFailure).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
+          .catch(() => {
+            rawHelpersRef.current = FALLBACK_HELPERS;
+            applyLocationSorting(searchCoords, detectedCity);
+          }).finally(() => { if (!cancelled) setLoadingHelpers(false); }),
 
         fetch(`/api/event/get?limit=${DATA_FETCH_LIMIT}&sort=date&order=asc`, {
           signal: controllers.events.signal

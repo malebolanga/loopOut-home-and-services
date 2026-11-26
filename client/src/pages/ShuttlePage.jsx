@@ -176,15 +176,42 @@ const SPOTTED_GENERAL_SHUTTLES = [
   },
 ];
 
+const normalizeCityQuery = (raw) => {
+  const val = String(raw || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!val) return '';
+  if (/mokopane|muko\s*pane|mukopane|mkwapane|potgietersrus|^muko$/i.test(val)) return 'mokopane';
+  if (/^(pta|tshwane)$/i.test(val)) return 'pretoria';
+  if (/^(jhb|joburg)$/i.test(val)) return 'johannesburg';
+  if (/^(plk|pietersburg)$/i.test(val)) return 'polokwane';
+  if (/^(dbn|ethekwini)$/i.test(val)) return 'durban';
+  if (/^cpt$/i.test(val)) return 'cape town';
+  if (/^nelspruit$/i.test(val)) return 'mbombela';
+  return val;
+};
+
+const parseShuttleSearchQuery = (qParam) => {
+  const raw = String(qParam || '').trim();
+  if (!raw) return { origin: '', dest: '', search: '' };
+  const routeMatch = raw.match(/^(.+?)\s+(?:to|->|→|⇄|-)\s+(.+)$/i);
+  if (routeMatch) {
+    return {
+      origin: routeMatch[1].trim(),
+      dest: routeMatch[2].trim(),
+      search: raw,
+    };
+  }
+  return { origin: '', dest: '', search: raw };
+};
+
 const ShuttlePage = () => {
   const { currentUser } = useSelector((state) => state.user);
   const [searchParams] = useSearchParams();
 
-  // Search and filter states with URL params support (e.g. ?q=Mokopane)
+  // Search and filter states with URL params support (e.g. ?q=Pretoria+to+Mokopane)
   const initialQ = searchParams.get('q') || searchParams.get('searchTerm') || '';
-  const isMokopaneInit = /mokopane|muko pane|muko/i.test(initialQ);
-  const initialOrigin = searchParams.get('origin') || searchParams.get('originCity') || (isMokopaneInit ? 'Mokopane' : '');
-  const initialDest = searchParams.get('destination') || searchParams.get('destinationCity') || '';
+  const parsedInit = parseShuttleSearchQuery(initialQ);
+  const initialOrigin = searchParams.get('origin') || searchParams.get('originCity') || parsedInit.origin;
+  const initialDest = searchParams.get('destination') || searchParams.get('destinationCity') || parsedInit.dest;
 
   const [serviceType, setServiceType] = useState('all');
   const [originFilter, setOriginFilter] = useState(initialOrigin);
@@ -269,7 +296,7 @@ const ShuttlePage = () => {
   // User requested: "Please show the result of the cars, even if there's no car, like no shuttle available."
   const effectiveAvailableShuttles = useMemo(() => {
     if (availableShuttles.length > 0) return availableShuttles;
-    const isMokopaneQuery = /mokopane|muko pane|muko/i.test(`${searchTerm} ${originFilter} ${destFilter}`);
+    const isMokopaneQuery = /mokopane|muko\s*pane|mukopane|mkwapane|muko/i.test(`${searchTerm} ${originFilter} ${destFilter}`);
     return isMokopaneQuery ? SPOTTED_MOKOPANE_SHUTTLES : SPOTTED_GENERAL_SHUTTLES;
   }, [availableShuttles, searchTerm, originFilter, destFilter]);
 
@@ -286,6 +313,66 @@ const ShuttlePage = () => {
   const visibleMapVehicles = mapVehicles.filter((vehicle) => (
     vehicle.vehicleCategory === 'moving' ? selectedMapVehicleType === 'moving' : selectedMapVehicleType === 'shuttle'
   ));
+
+  const hasActiveRouteSearch = Boolean(originFilter.trim() || destFilter.trim() || searchTerm.trim());
+
+  // Only vehicles that match the active search query/route should be spotted in yellow
+  const matchedShuttles = useMemo(() => {
+    if (!hasActiveRouteSearch) return [];
+    const parsedSearch = parseShuttleSearchQuery(searchTerm);
+    const normOrigin = normalizeCityQuery(originFilter || parsedSearch.origin);
+    const normDest = normalizeCityQuery(destFilter || parsedSearch.dest);
+    const normSearch = normalizeCityQuery(searchTerm);
+
+    return visibleMapVehicles.filter((vehicle) => {
+      const vOrigin = normalizeCityQuery(vehicle.originCity);
+      const vDest = normalizeCityQuery(vehicle.destinationCity);
+      const vText = [
+        vOrigin,
+        vDest,
+        String(vehicle.title || '').toLowerCase(),
+        String(vehicle.currentCoordinates?.address || '').toLowerCase(),
+      ].join(' ');
+
+      if (normOrigin && normDest) {
+        return (
+          (vOrigin.includes(normOrigin) && vDest.includes(normDest)) ||
+          (vOrigin.includes(normDest) && vDest.includes(normOrigin))
+        );
+      }
+      if (normOrigin) {
+        return vOrigin.includes(normOrigin) || vDest.includes(normOrigin) || vText.includes(normOrigin);
+      }
+      if (normDest) {
+        return vDest.includes(normDest) || vOrigin.includes(normDest) || vText.includes(normDest);
+      }
+      if (normSearch) {
+        const tokens = normSearch
+          .split(/\s+/)
+          .map((t) => normalizeCityQuery(t))
+          .filter((t) => t && !['to', 'shuttle', 'ride', 'taxi', 'bus', 'car', 'from'].includes(t));
+        if (tokens.length > 0) {
+          return tokens.every((tok) => vText.includes(tok));
+        }
+        return vText.includes(normSearch);
+      }
+      return false;
+    });
+  }, [hasActiveRouteSearch, visibleMapVehicles, originFilter, destFilter, searchTerm]);
+
+  const matchedShuttleIds = useMemo(
+    () => matchedShuttles.map((shuttle) => String(shuttle._id)),
+    [matchedShuttles]
+  );
+
+  // When a search matches a single car, display only that car at the bottom automatically
+  useEffect(() => {
+    if (!hasActiveRouteSearch) return;
+    if (matchedShuttles.length === 1) {
+      setHighlightedShuttle(matchedShuttles[0]);
+      setIsCardOpen(true);
+    }
+  }, [hasActiveRouteSearch, matchedShuttles]);
 
   useEffect(() => {
     if (!highlightedShuttle) return;
@@ -497,9 +584,9 @@ const ShuttlePage = () => {
     if (searchParams.get('tab') === 'moving-requests') setShowMovingRequestsPanel(true);
 
     const qParam = searchParams.get('q') || searchParams.get('searchTerm') || '';
-    const isMokopane = /mokopane|muko pane|muko/i.test(qParam);
-    const oParam = searchParams.get('origin') || searchParams.get('originCity') || (isMokopane ? 'Mokopane' : '');
-    const dParam = searchParams.get('destination') || searchParams.get('destinationCity') || '';
+    const parsed = parseShuttleSearchQuery(qParam);
+    const oParam = searchParams.get('origin') || searchParams.get('originCity') || parsed.origin;
+    const dParam = searchParams.get('destination') || searchParams.get('destinationCity') || parsed.dest;
     if (qParam || oParam || dParam) {
       if (qParam) setSearchTerm(qParam);
       if (oParam) setOriginFilter(oParam);
@@ -941,11 +1028,13 @@ const ShuttlePage = () => {
         <div className="w-full h-full flex-1">
           <ShuttleMap
             shuttles={visibleMapVehicles}
-            selectedShuttle={highlightedShuttle}
+            matchedShuttleIds={matchedShuttleIds}
+            selectedShuttle={isCardOpen ? highlightedShuttle : null}
             onSelectShuttle={handleSelectShuttle}
             onRequestPickup={(shuttle) => {
               setHighlightedShuttle(shuttle);
-              setSelectedShuttleForBooking(shuttle);
+              setIsCardOpen(true);
+              if (!shuttle?.vehicleCategory) setSelectedShuttleForBooking(shuttle);
             }}
             onLiveRefresh={handleLiveRefresh}
             userLocation={userLocation}
@@ -957,7 +1046,75 @@ const ShuttlePage = () => {
           />
         </div>
 
-        {/* Note: Bottom car card & prompt pill disabled per user request: "Okay, don't show the car at the bottom. Just color the car with yellow, yellow and yellow and say spotted with yellow." */}
+        {/* 100% FULL WIDTH BOTTOM CARD (COMING UP FROM DOWN / FADE-IN & SLIDE DOWN / FADE-OUT) */}
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-30 w-full transition-all duration-300 ease-out ${
+            isCardOpen && highlightedShuttle
+              ? 'translate-y-0 opacity-100 pointer-events-auto'
+              : 'translate-y-full opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="w-full">
+            {highlightedShuttle?.vehicleCategory === 'moving' ? (
+              <MovingVehicleCard
+                key={highlightedShuttle._id}
+                vehicle={highlightedShuttle}
+                currentUser={currentUser}
+                onRequest={(vehicle) => setSelectedShuttleForBooking(vehicle)}
+                onClose={() => setIsCardOpen(false)}
+              />
+            ) : highlightedShuttle && (
+              <UberDriverCard
+                key={highlightedShuttle._id}
+                shuttle={highlightedShuttle}
+                allShuttles={matchedShuttles.length > 0 ? matchedShuttles : visibleMapVehicles}
+                onSelectShuttle={handleSelectShuttle}
+                onRequestPickup={(s) => setSelectedShuttleForBooking(s)}
+                currentUser={currentUser}
+                userLocation={userLocation}
+                onUpdateSchedule={(shuttle) => {
+                  setShuttleForScheduleModal(shuttle);
+                  setIsCardOpen(false);
+                }}
+                onTripFinished={() => {
+                  fetchShuttles();
+                  fetchMyDriverShuttles();
+                }}
+                onClose={() => setIsCardOpen(false)}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Small floating prompt pill when card is closed */}
+        {visibleMapVehicles.length > 0 && <div
+          className={`fixed bottom-3 left-0 right-0 z-20 flex justify-center pointer-events-none transition-all duration-300 ease-out ${
+            !isCardOpen
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-6 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                if (highlightedShuttle) {
+                  setIsCardOpen(true);
+                } else if (matchedShuttles.length > 0) {
+                  setHighlightedShuttle(matchedShuttles[0]);
+                  setIsCardOpen(true);
+                } else if (visibleMapVehicles.length > 0) {
+                  setHighlightedShuttle(visibleMapVehicles[0]);
+                  setIsCardOpen(true);
+                }
+              }}
+              className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md px-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-800 text-center shadow-xl flex items-center gap-2 text-xs font-bold text-gray-800 dark:text-gray-200 hover:scale-105 active:scale-95 transition"
+            >
+              <Bus className="w-4 h-4 text-teal-600 animate-pulse" />
+              <span>Tap a shuttle, truck, or minivan on the map</span>
+            </button>
+          </div>
+        </div>}
       </main>
 
       {/* ── Slide-Up Search Modal (Triggered by Search Icon next to Home) ── */}
