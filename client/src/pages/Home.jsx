@@ -167,157 +167,211 @@ const HomeDataErrorNotice = ({ onRetry }) => (
   </div>
 );
 
-// Uber-style super-app entry section matching the reference:
-// - Side-scrolling top mode tabs with black underline (no duplicate search bar; Header already has search)
-// - Clean quick-action card (Shuttles, Moving, Nearby)
-// - "For you" side-scrolling circular icon tiles with labels underneath
+// Uber ZA (uber.com/za/en/ride/) inspired homepage entry:
+// 1. Clean split hero with vertical dot-to-square route/need inputs + solid black CTA
+// 2. "Suggestions" gray cards with title, 1-line summary, pill CTA, and icon
 const WelcomeChoices = ({ onChoose, navigate }) => {
-  const [activeMode, setActiveMode] = useState('Shuttle');
+  const [pickupInput, setPickupInput] = useState('');
+  const [destinationInput, setDestinationInput] = useState('');
 
-  const topModes = [
-    { id: 'Shuttle', label: 'Shuttles', emoji: '🚐', action: () => navigate('/shuttles') },
-    { id: 'Moving', label: 'Moving', emoji: '🚚', action: () => navigate('/shuttles?tab=moving') },
-    { id: 'Lunch', label: 'Food', emoji: '🍕', action: () => onChoose('Lunch') },
-    { id: 'Service', label: 'Services', emoji: '🛠️', action: () => onChoose('Service') },
-    { id: 'Property', label: 'Stays', emoji: '🏠', action: () => onChoose('Property') },
-    { id: 'Event', label: 'Events', emoji: '🎉', action: () => onChoose('Event') },
-  ];
+  const handleQuickPlan = (event) => {
+    event.preventDefault();
+    const combined = [pickupInput.trim(), destinationInput.trim()].filter(Boolean).join(' ');
+    navigate(combined ? `/shuttles?q=${encodeURIComponent(combined)}` : '/shuttles');
+  };
 
-  const quickShortcuts = [
+  const suggestions = [
     {
       id: 'Shuttle',
-      title: 'Book a Shuttle',
-      subtitle: 'Live seats & real-time GPS tracking',
-      accentText: 'Seats available',
-      icon: Bus,
-      iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
+      title: 'Shuttles',
+      description: 'Go anywhere with live-tracked shuttle seats across South Africa.',
+      cta: 'Book seat',
+      emoji: '🚐',
       action: () => navigate('/shuttles'),
     },
     {
       id: 'Moving',
-      title: 'Hire a Moving Truck',
-      subtitle: 'Local trucks & minivans near you',
-      icon: Truck,
-      iconBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
+      title: 'Moving Trucks',
+      description: 'Hire verified mini-trucks and large trucks for local or long moves.',
+      cta: 'Hire truck',
+      emoji: '🚚',
+      badge: 'New',
       action: () => navigate('/shuttles?tab=moving'),
     },
     {
-      id: 'Explore',
-      title: 'Services, Food & Stays',
-      subtitle: 'Browse verified providers around you',
-      icon: Sparkles,
-      iconBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200',
-      action: () => navigate('/search'),
+      id: 'Service',
+      title: 'Local Services',
+      description: 'Book trusted helpers, barbers, cleaners, and pros near you.',
+      cta: 'Explore',
+      emoji: '🛠️',
+      action: () => onChoose('Service'),
     },
-  ];
-
-  const forYouCircles = [
-    { title: 'Shuttles', emoji: '🚐', action: () => navigate('/shuttles') },
-    { title: 'Moving', emoji: '🚚', badge: 'New', action: () => navigate('/shuttles?tab=moving') },
-    { title: 'Food', emoji: '🍕', action: () => onChoose('Lunch') },
-    { title: 'Services', emoji: '🛠️', action: () => onChoose('Service') },
-    { title: 'Stays', emoji: '🏠', action: () => onChoose('Property') },
-    { title: 'Helpers', emoji: '🤝', action: () => onChoose('Helper') },
-    { title: 'Events', emoji: '🎉', action: () => onChoose('Event') },
-    { title: 'Shop', emoji: '🛍️', action: () => onChoose('Selling') },
+    {
+      id: 'Property',
+      title: 'Stays & Rooms',
+      description: 'Find verified rooms, rentals, and guesthouses in your area.',
+      cta: 'Browse',
+      emoji: '🏠',
+      action: () => onChoose('Property'),
+    },
+    {
+      id: 'Lunch',
+      title: 'Food & Lunch',
+      description: 'Order fresh local meals ready for collection or delivery.',
+      cta: 'Order',
+      emoji: '🍕',
+      action: () => onChoose('Lunch'),
+    },
+    {
+      id: 'Selling',
+      title: 'Marketplace & Events',
+      description: 'Buy, sell locally, and discover upcoming events nearby.',
+      cta: 'See more',
+      emoji: '🛍️',
+      action: () => onChoose('Selling'),
+    },
   ];
 
   return (
     <section
       aria-labelledby="welcome-choices-title"
-      className="w-full bg-white px-4 pb-3 pt-2 dark:bg-gray-950 sm:px-7"
+      className="w-full bg-white px-4 pb-6 pt-3 dark:bg-gray-950 sm:px-8 sm:pt-6"
     >
-      <h1 id="welcome-choices-title" className="sr-only">LoopOut — Shuttles, Moving, Services, Food, and Stays</h1>
-
-      {/* 1. Top Mode Switcher (side-scrolling with black underline) */}
-      <div className="flex items-center gap-6 overflow-x-auto border-b border-slate-100 pb-2.5 scrollbar-hide snap-x snap-mandatory dark:border-slate-800">
-        {topModes.map((mode) => {
-          const isActive = activeMode === mode.id;
-          return (
-            <button
-              key={mode.id}
-              type="button"
-              onClick={() => {
-                setActiveMode(mode.id);
-                mode.action();
-              }}
-              className={`relative flex shrink-0 snap-start items-center gap-2 pb-1.5 text-[15px] font-bold tracking-tight transition-colors ${
-                isActive
-                  ? 'text-slate-950 dark:text-white'
-                  : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
+      <div className="mx-auto max-w-7xl">
+        {/* 1. Uber ZA Split Hero */}
+        <div className="grid items-center gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <h1
+              id="welcome-choices-title"
+              className="text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl sm:leading-[1.08]"
             >
-              <span className="text-lg leading-none" aria-hidden="true">{mode.emoji}</span>
-              <span>{mode.label}</span>
-              {isActive && (
-                <span className="absolute -bottom-[11px] left-0 right-0 h-[3px] rounded-full bg-slate-950 dark:bg-white" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+              Go anywhere with LoopOut
+            </h1>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-base">
+              Book a shuttle seat, hire a moving truck, order local food, or find trusted services and stays across South Africa.
+            </p>
 
-      {/* 2. Quick-Action List Card (Uber Home / Work style) */}
-      <div className="mt-3.5 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_-4px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900">
-        {quickShortcuts.map((item, idx) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={item.action}
-              className={`flex w-full items-center gap-3.5 px-4 py-3 text-left transition-colors hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/70 ${
-                idx < quickShortcuts.length - 1 ? 'border-b border-slate-100 dark:border-slate-800' : ''
-              }`}
-            >
-              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${item.iconBg}`}>
-                <Icon className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-bold text-slate-950 dark:text-white">
-                  {item.title}
-                </span>
-                <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
-                  {item.subtitle}
-                </span>
-                {item.accentText && (
-                  <span className="mt-0.5 block text-[11px] font-semibold text-rose-600 dark:text-rose-400">
-                    {item.accentText}
-                  </span>
-                )}
+            {/* Vertical dot-to-square Uber input stack */}
+            <form onSubmit={handleQuickPlan} className="mt-6 max-w-md space-y-3">
+              <div className="relative space-y-2.5">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-[19px] top-[24px] bottom-[24px] w-[1.5px] bg-slate-900 dark:bg-slate-400"
+                />
+
+                <div className="relative flex items-center rounded-xl bg-slate-100 px-3.5 py-3 focus-within:ring-2 focus-within:ring-slate-950 dark:bg-slate-800 dark:focus-within:ring-white">
+                  <span aria-hidden="true" className="mr-3 h-2.5 w-2.5 shrink-0 rounded-full bg-slate-950 dark:bg-white" />
+                  <input
+                    type="text"
+                    value={pickupInput}
+                    onChange={(event) => setPickupInput(event.target.value)}
+                    placeholder="Pickup city or area"
+                    aria-label="Pickup city or area"
+                    className="w-full bg-transparent text-sm font-medium text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div className="relative flex items-center rounded-xl bg-slate-100 px-3.5 py-3 focus-within:ring-2 focus-within:ring-slate-950 dark:bg-slate-800 dark:focus-within:ring-white">
+                  <span aria-hidden="true" className="mr-3 h-2.5 w-2.5 shrink-0 bg-slate-950 dark:bg-white" />
+                  <input
+                    type="text"
+                    value={destinationInput}
+                    onChange={(event) => setDestinationInput(event.target.value)}
+                    placeholder="Drop-off city or service"
+                    aria-label="Drop-off city or service"
+                    className="w-full bg-transparent text-sm font-medium text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400"
+                  />
+                </div>
               </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-            </button>
-          );
-        })}
-      </div>
 
-      {/* 3. "For you" — Circular Icons + Labels Below (side-scrolling) */}
-      <div className="mt-5">
-        <h2 className="mb-3 text-lg font-extrabold tracking-tight text-slate-950 dark:text-white">
-          For you
-        </h2>
-        <div className="flex items-start gap-4 overflow-x-auto pt-2 pb-1 scrollbar-hide snap-x snap-mandatory">
-          {forYouCircles.map((tile) => (
-            <button
-              key={tile.title}
-              type="button"
-              onClick={tile.action}
-              className="group relative flex w-[72px] shrink-0 snap-start flex-col items-center text-center"
-            >
-              {tile.badge && (
-                <span className="absolute -top-2 z-10 rounded-md bg-rose-600 px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-white shadow-sm">
-                  {tile.badge}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="submit"
+                  className="rounded-lg bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 active:scale-[0.98] dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200"
+                >
+                  See shuttles
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/shuttles?tab=moving')}
+                  className="rounded-lg bg-slate-100 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-slate-200 active:scale-[0.98] dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700"
+                >
+                  Hire a truck
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Right visual panel (desktop) */}
+          <div className="hidden lg:col-span-6 lg:block">
+            <div className="relative overflow-hidden rounded-2xl bg-slate-950 shadow-xl">
+              <img
+                src="/loopout_for_everyone.png"
+                alt="LoopOut transport, services, and stays"
+                className="h-[340px] w-full object-cover opacity-90"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent" />
+              <div className="absolute bottom-5 left-6 right-6 flex items-end justify-between gap-4 text-white">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-rose-400">Live across South Africa</p>
+                  <p className="mt-1 text-lg font-extrabold">Shuttles, moving trucks, food & local pros in one place.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/shuttles')}
+                  className="shrink-0 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-slate-950 transition hover:bg-slate-100"
+                >
+                  Open radar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Uber "Suggestions" Cards (side-scrolling on mobile, clean grid on desktop) */}
+        <div className="mt-8">
+          <h2 className="mb-3.5 text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">
+            Suggestions
+          </h2>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory sm:grid sm:grid-cols-2 lg:grid-cols-3">
+            {suggestions.map((item) => (
+              <div
+                key={item.id}
+                onClick={item.action}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    item.action();
+                  }
+                }}
+                className="group relative flex w-[270px] shrink-0 snap-start cursor-pointer items-center justify-between gap-3 rounded-xl bg-[#F3F3F3] p-4 text-left transition-colors hover:bg-slate-200/80 dark:bg-slate-900 dark:hover:bg-slate-800 sm:w-auto"
+              >
+                <div className="flex min-w-0 flex-1 flex-col items-start">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-slate-950 dark:text-white">
+                      {item.title}
+                    </h3>
+                    {item.badge && (
+                      <span className="rounded-md bg-rose-600 px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                    {item.description}
+                  </p>
+                  <span className="mt-3 inline-flex items-center rounded-full bg-white px-3.5 py-1.5 text-xs font-bold text-slate-950 shadow-sm transition group-hover:bg-slate-950 group-hover:text-white dark:bg-slate-800 dark:text-white dark:group-hover:bg-white dark:group-hover:text-slate-950">
+                    {item.cta}
+                  </span>
+                </div>
+                <span className="shrink-0 text-4xl leading-none transition-transform group-hover:scale-105" aria-hidden="true">
+                  {item.emoji}
                 </span>
-              )}
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-3xl transition-transform group-hover:scale-105 group-active:scale-95 dark:bg-slate-800">
-                <span aria-hidden="true">{tile.emoji}</span>
-              </span>
-              <span className="mt-2 block w-full truncate text-xs font-semibold text-slate-900 dark:text-slate-100">
-                {tile.title}
-              </span>
-            </button>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -4225,7 +4279,7 @@ function MobileAppHomepage({
 
   const [activeTab, setActiveTab] = useState('RecentAdded');
   const [activeSubcategory, setActiveSubcategory] = useState('all');
-  const [visibleCount, setVisibleCount] = useState(12);
+  const [visibleCount, setVisibleCount] = useState(8);
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isCategoriesSheetOpen, setIsCategoriesSheetOpen] = useState(false);
   const [isRecentPopoutOpen, setIsRecentPopoutOpen] = useState(false);
@@ -4250,7 +4304,7 @@ function MobileAppHomepage({
   }, [isRecentPopoutOpen, isCategoriesSheetOpen, dispatch]);
 
   useEffect(() => {
-    setVisibleCount(12);
+    setVisibleCount(8);
   }, [activeTab, activeSubcategory]);
 
   const tabs = [
@@ -4598,10 +4652,6 @@ function MobileAppHomepage({
           )}
         </AnimatePresence>
 
-        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
-          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
-        )}
-
         {/* ── EXPLORE SECTION (listings-first) ── */}
         {activeTab !== 'Lunch' && <section id="explore-section" className="mb-8">
 
@@ -4674,7 +4724,7 @@ function MobileAppHomepage({
                         ? 'Community Needs & Requests'
                         : activeTab === 'Shuttle' || activeTab === 'Shuttles'
                         ? 'Book a Shuttle Seat'
-                        : <>Explore <span className="text-rose-500">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>}
+                        : <><span>Recent listings</span></>}
             </h2>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full shadow-sm">
               <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
@@ -4829,14 +4879,14 @@ function MobileAppHomepage({
                   <motion.button
                     whileHover={{ scale: 1.02, y: -2 }}
                     whileTap={{ scale: 0.96 }}
-                    onClick={() => setVisibleCount(prev => prev + 8)}
+                      onClick={() => setVisibleCount(prev => prev + 8)}
                     className="group relative flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full bg-gradient-to-r from-slate-950 via-gray-900 to-slate-900 text-white font-black text-xs uppercase tracking-wider shadow-lg hover:shadow-xl hover:shadow-rose-500/10 border border-white/10 hover:border-rose-500/40 transition-all duration-300 cursor-pointer overflow-hidden active:scale-95"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-rose-500/0 via-rose-500/10 to-orange-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                     <Sparkles className="w-3.5 h-3.5 text-rose-400 transition-transform group-hover:rotate-12 duration-300 shrink-0" />
                     <span className="tracking-wide">Load More {currentTabLabel}</span>
                     <span className="ml-1 px-2 py-0.5 rounded-full bg-white/10 text-rose-300 text-[10px] font-black tracking-tight border border-white/10">
-                      +{Math.min(8, filteredItems.length - visibleCount)}
+                        +{Math.min(8, filteredItems.length - visibleCount)}
                     </span>
                     <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:translate-y-0.5 transition-transform shrink-0" />
                   </motion.button>
@@ -5006,9 +5056,9 @@ function DesktopHomepage({
     return source.filter(item => matchItemToSubcategory(item, activeTab, activeSubcategory));
   }, [activeTab, activeSubcategory, getSourceForTabDesktop]);
 
-  const [visibleCount, setVisibleCount] = useState(16);
+  const [visibleCount, setVisibleCount] = useState(8);
   useEffect(() => {
-    setVisibleCount(16);
+    setVisibleCount(8);
   }, [activeTab, activeSubcategory]);
 
   const currentTabLabel = useMemo(() => {
@@ -5142,10 +5192,6 @@ function DesktopHomepage({
           </div>
         )}
 
-        {(activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent') && (
-          <RecentlyViewedStrip items={recentlyViewedItems} navigate={navigate} />
-        )}
-
         {activeTab !== 'Lunch' && <>
         {/* Section Header */}
         <div className="flex items-center justify-between mb-8">
@@ -5162,7 +5208,7 @@ function DesktopHomepage({
               ) : activeTab === 'LookingFor' || activeTab === 'Needs' ? (
                 <span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">Community Needs &amp; Requests</span>
               ) : (
-                <><span className="text-slate-900 dark:text-white">Explore </span><span className="bg-gradient-to-r from-rose-500 to-rose-600 bg-clip-text text-transparent">{activeTab === 'RecentAdded' || activeTab === 'Recent Added' || activeTab === 'Recent' ? 'Recent' : activeTab}</span></>
+                <span className="text-slate-900 dark:text-white">Recent listings</span>
               )}
             </h1>
             <p className="text-[10px] text-slate-400 font-bold mt-1.5 uppercase tracking-[0.2em]">Curated · South Africa &amp; Beyond</p>
