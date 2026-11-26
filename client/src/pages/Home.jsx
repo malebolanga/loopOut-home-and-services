@@ -205,7 +205,7 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
   return (
     <section
       aria-labelledby="welcome-choices-title"
-      className="mb-7 overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-4 shadow-[0_12px_36px_-26px_rgba(15,23,42,0.35)] dark:border-slate-800 dark:bg-slate-900 sm:p-6"
+      className="w-full bg-white px-4 pb-5 pt-3 dark:bg-gray-950 sm:px-8 sm:pt-5"
     >
       <h1 id="welcome-choices-title" className="sr-only">LoopOut — Shuttles, Moving, Services, Food, and Stays</h1>
 
@@ -4585,90 +4585,20 @@ function MobileAppHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── FIXED 3D CATEGORIES BAR — flush below header ── */}
-      <div
-        style={{ top: isHeaderVisible ? '92px' : '0px' }}
-        className="fixed left-0 right-0 z-40 rounded-b-2xl bg-white/95 px-3 pt-1.5 pb-0 shadow-[0_8px_22px_-16px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-[top] duration-[350ms] ease-in-out dark:bg-gray-950/95"
-      >
-        <div aria-label="Home categories" className="min-w-0 overflow-x-auto overscroll-x-contain scrollbar-hide snap-x snap-mandatory">
-          <div className="mx-auto flex w-max min-w-full translate-y-[2px] snap-x snap-mandatory items-center justify-center gap-1 px-1 py-0.5">
-          {visibleTabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-            const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food', Shuttle: 'shuttle' }[tab.id] || 'all';
-            const shortcutLabel = {
-              Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food', Shuttle: 'Shuttles'
-            }[tab.id] || tab.label;
-            return (
-              <motion.button
-                key={tab.id}
-                onClick={() => {
-                  if (tab.route) {
-                    navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
-                    return;
-                  }
-                  if (isRecentAdded) {
-                    if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
-                      setActiveTab(tab.id);
-                      setActiveSubcategory('all');
-                    }
-                    setIsRecentPopoutOpen((prev) => !prev);
-                    return;
-                  }
-                  setActiveTab(tab.id);
-                  setActiveSubcategory('all');
-                }}
-                whileHover={{ scale: 1.08, y: -2 }}
-                whileTap={{ scale: 0.92 }}
-                className={`relative flex min-w-[60px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors focus:outline-none sm:min-w-[75px] ${isActive ? 'bg-rose-50/90 dark:bg-rose-950/30' : 'hover:bg-slate-50 dark:hover:bg-gray-900'}`}
-                aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
-              >
-                <div className={`${isRecentAdded ? 'bg-rose-100/80 dark:bg-rose-900/40' : ''} flex h-[clamp(2.5rem,11vw,3.5rem)] w-[clamp(2.5rem,11vw,3.5rem)] items-center justify-center rounded-xl transition-transform group-hover:scale-105`} aria-hidden="true">
-                  <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-[clamp(1.5rem,6vw,2rem)] w-[clamp(1.5rem,6vw,2rem)] text-slate-700 dark:text-slate-200" />
-                </div>
-                <span className={`mt-0.5 text-center text-[clamp(10px,2.8vw,12px)] font-semibold leading-tight whitespace-nowrap ${isActive ? 'text-rose-800 dark:text-rose-200' : 'text-slate-700 dark:text-gray-200'}`}>
-                  {isRecentAdded ? 'New' : shortcutLabel}
-                </span>
-                {isRecentAdded && activeSubcategory !== 'all' && (
-                  <span className="absolute right-2 top-1 h-1.5 w-1.5 animate-pulse rounded-full bg-rose-500" />
-                )}
-              </motion.button>
-            );
-          })}
+      <WelcomeChoices
+        navigate={navigate}
+        onChoose={(choice) => {
+          if (choice === 'Shuttle') {
+            navigate('/shuttles');
+            return;
+          }
+          setActiveTab(choice);
+          setActiveSubcategory('all');
+        }}
+      />
 
-          {/* 'More categories' small 3D icon */}
-          <motion.button
-            onClick={() => setIsCategoriesSheetOpen(true)}
-            whileHover={{ scale: 1.08, y: -2 }}
-            whileTap={{ scale: 0.92 }}
-            className="flex min-w-[60px] shrink-0 snap-start cursor-pointer flex-col items-center justify-center rounded-xl px-1 py-1 transition-colors hover:bg-slate-50 focus:outline-none sm:min-w-[75px] dark:hover:bg-gray-900"
-            aria-label="Browse all categories"
-          >
-            <div className="flex h-[clamp(2.5rem,11vw,3.5rem)] w-[clamp(2.5rem,11vw,3.5rem)] items-center justify-center rounded-xl text-[clamp(28px,8vw,36px)] transition-transform group-hover:scale-105" aria-hidden="true">
-              <span role="img" aria-label="Browse categories">🗂️</span>
-            </div>
-            <span className="mt-0.5 text-center text-[clamp(10px,2.8vw,12px)] font-semibold leading-tight text-slate-700 whitespace-nowrap dark:text-gray-200">
-              More
-            </span>
-          </motion.button>
-          </div>
-        </div>
-      </div>
-
-      <main className="w-full bg-white px-4 pb-4 pt-6 dark:bg-gray-950">
+      <main className="w-full bg-white px-4 pb-4 pt-2 dark:bg-gray-950">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
-
-        <WelcomeChoices
-          navigate={navigate}
-          onChoose={(choice) => {
-            if (choice === 'Shuttle') {
-              navigate('/shuttles');
-              return;
-            }
-            setActiveTab(choice);
-            setActiveSubcategory('all');
-          }}
-        />
 
         {/* Keep food recommendations on the general feed; category selections
             show matching listings and headings below. */}
@@ -5171,113 +5101,20 @@ function DesktopHomepage({
         *::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── FIXED Elite 3D Categories Bar — flush below header ── */}
-      <div
-        style={{ top: isHeaderVisible ? '96px' : '0px' }}
-        className="fixed left-0 right-0 z-40 bg-white dark:bg-gray-950 py-1 shadow-sm border-b border-gray-100 dark:border-gray-800 transition-[top] duration-[350ms] ease-in-out"
-      >
-        <div className="max-w-7xl mx-auto translate-y-[2px] px-8 flex items-center justify-center relative">
-          <div className="flex items-center justify-center gap-4 overflow-x-auto scrollbar-hide py-0.5">
-            {(visibleTabs || tabs.slice(0, 4)).map((tab) => {
-              const isActive = activeTab === tab.id;
-              const isRecentAdded = tab.id === 'RecentAdded' || tab.id === 'Recent Added' || tab.id === 'Recent';
-              const shortcutIconId = { Property: 'property', Services: 'service', Helper: 'helper', Lunch: 'food', Shuttle: 'shuttle' }[tab.id] || 'all';
-              const shortcutLabel = {
-                Property: 'Properties', Services: 'Services', Helper: 'Services', Lunch: 'Food', Shuttle: 'Shuttles'
-              }[tab.id] || tab.label;
-              return (
-                <motion.button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.route) {
-                      navigate(tab.route, tab.routeState ? { state: tab.routeState } : undefined);
-                      return;
-                    }
-                    if (isRecentAdded) {
-                      if (activeTab !== 'RecentAdded' && activeTab !== 'Recent Added' && activeTab !== 'Recent') {
-                        setActiveTab(tab.id);
-                        setActiveSubcategory('all');
-                      }
-                      setIsRecentPopoutOpen((prev) => !prev);
-                      return;
-                    }
-                    setActiveTab(tab.id);
-                    setActiveSubcategory('all');
-                  }}
-                  whileHover={{ scale: 1.08, y: -2 }}
-                  whileTap={{ scale: 0.92 }}
-                  className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none relative"
-                  aria-label={isRecentAdded ? 'New listings' : shortcutLabel}
-                >
-                  <div className={`${isRecentAdded ? 'w-10 h-10 bg-rose-100/80 dark:bg-rose-900/40' : 'w-10 h-10 bg-slate-100 dark:bg-gray-800'} flex items-center justify-center rounded-2xl shadow-sm transition-transform group-hover:scale-105`} aria-hidden="true">
-                    <CategoryNavIcon id={isRecentAdded ? 'all' : shortcutIconId} className="h-6 w-6 text-slate-700 dark:text-slate-200" />
-                  </div>
-                  <div className="text-left">
-                    <span className={`block text-xs font-black uppercase tracking-wider leading-tight ${isActive ? 'text-rose-600' : 'text-slate-800 dark:text-gray-200'}`}>
-                      {isRecentAdded ? 'New listings' : shortcutLabel}
-                    </span>
-                    <span className="block text-xs text-gray-600 font-semibold leading-tight">
-                      {isRecentAdded ? 'Just added' : (tab.desc || '')}
-                    </span>
-                  </div>
-                  {isRecentAdded && activeSubcategory !== 'all' && (
-                    <span className="w-2 h-2 rounded-full bg-rose-500 absolute -top-0.5 right-0 animate-pulse" />
-                  )}
-                </motion.button>
-              );
-            })}
-
-            {/* More categories small 3D icon */}
-            <motion.button
-              onClick={() => setIsCategoriesSheetOpen(true)}
-              whileHover={{ scale: 1.08, y: -2 }}
-              whileTap={{ scale: 0.92 }}
-              className="shrink-0 flex items-center gap-2 cursor-pointer p-1 focus:outline-none"
-              aria-label="Browse all categories"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100/80 text-[26px] shadow-sm transition-transform group-hover:scale-105 dark:bg-amber-900/40" aria-hidden="true">
-                <span role="img" aria-label="Browse categories">🗂️</span>
-              </div>
-              <div className="text-left">
-                <span className="block text-xs font-black uppercase tracking-wider leading-tight text-rose-600">
-                  Browse categories
-                </span>
-                <span className="block text-xs text-gray-600 font-semibold leading-tight">
-                  See everything
-                </span>
-              </div>
-            </motion.button>
-          </div>
-
-          {/* Premium Filter Button */}
-          <button
-            onClick={() => navigate('/search')}
-            className="hidden md:flex items-center gap-2 px-5 py-2.5 border border-slate-200 rounded-full hover:border-slate-900 hover:bg-slate-50 transition-all font-black uppercase text-[9px] tracking-widest text-slate-600 bg-white shadow-sm hover:shadow-md active:scale-95 shrink-0 absolute right-8 cursor-pointer"
-          >
-            <FunnelIcon className="w-3.5 h-3.5" />
-            <span>Filters</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── HERO: brand intro, rotating campaigns ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
-        <HomeHero navigate={navigate} compact />
-      </div>
+      <WelcomeChoices
+        navigate={navigate}
+        onChoose={(choice) => {
+          if (choice === 'Shuttle') {
+            navigate('/shuttles');
+            return;
+          }
+          setActiveTab(choice);
+          setActiveSubcategory('all');
+        }}
+      />
 
       {/* Main Clean Feed Grid */}
-      <main className="max-w-7xl mx-auto px-8 py-8">
-        <WelcomeChoices
-          navigate={navigate}
-          onChoose={(choice) => {
-            if (choice === 'Shuttle') {
-              navigate('/shuttles');
-              return;
-            }
-            setActiveTab(choice);
-            setActiveSubcategory('all');
-          }}
-        />
+      <main className="max-w-7xl mx-auto px-8 py-6">
         {homeLoadError && <HomeDataErrorNotice onRetry={onRetryHomeData} />}
         {/* Subcategories Horizontal Bar - hidden on Recent as requested */}
         {currentCategoryObj?.subcategories &&
