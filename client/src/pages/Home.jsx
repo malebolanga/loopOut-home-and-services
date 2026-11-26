@@ -237,30 +237,8 @@ const WelcomeChoices = ({ onChoose, navigate }) => {
         })}
       </div>
 
-      {/* 2. Prominent Search Pill + Schedule Shortcut */}
-      <div className="mt-4 flex items-center gap-2 rounded-full bg-slate-100 p-1.5 pl-4 transition-colors hover:bg-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-800/90">
-        <button
-          type="button"
-          onClick={() => navigate('/search')}
-          className="flex min-w-0 flex-1 items-center gap-3 py-2 text-left"
-        >
-          <MagnifyingGlassIcon className="h-5 w-5 shrink-0 text-slate-900 dark:text-white" strokeWidth={2.3} />
-          <span className="truncate text-base font-semibold text-slate-700 dark:text-slate-200">
-            Where to? Or what do you need?
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/shuttles')}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-slate-900 shadow-sm transition hover:bg-slate-50 active:scale-95 dark:bg-slate-900 dark:text-white dark:hover:bg-slate-700"
-        >
-          <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>Later</span>
-        </button>
-      </div>
-
-      {/* 3. "Go anywhere" Transport & Moving Grid */}
-      <div className="mt-6">
+      {/* 2. "Go anywhere" Transport & Moving Grid */}
+      <div className="mt-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-extrabold tracking-tight text-slate-950 dark:text-white">
             Go anywhere
